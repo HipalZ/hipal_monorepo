@@ -1,46 +1,46 @@
-import { memo, useCallback, useMemo, lazy } from "react";
-import { useParams } from "react-router-dom";
-import { HomeIcon } from "lucide-react";
-import { MdTableBar } from "react-icons/md";
-import { useOrderStore } from "@/components/store/useOrderData";
-import { Separator } from "@/components/ui/separator";
-import SpinnerMemo from "@/components/atoms/loadingSpinner";
-import CommonBottomButton from "../bottomButton";
-import { Card, CardContent } from "@/components/ui/card";
-import { useScreenSize } from "@/hooks/useScreenSize";
-import BottomPopUp from "../universalPopup";
-import useBusinessData from "@/components/store/useBusinessData";
-import { useGetBill } from "@/components/hooks/useBill";
-import { useHomeNavigation } from "@/components/hooks/useNavigateHome.ts";
-import BillItemsList from "./BillItemsList.tsx";
-import type { IBillData } from "@/components/types/hiClientzData.ts";
+import SpinnerMemo from '@/components/atoms/loadingSpinner';
+import { useGetBill } from '@/components/hooks/useBill';
+import { useHomeNavigation } from '@/components/hooks/useNavigateHome.ts';
+import useBusinessData from '@/components/store/useBusinessData';
+import { useOrderStore } from '@/components/store/useOrderData';
+import type { IBillData } from '@/components/types/hiClientzData.ts';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { useScreenSize } from '@/hooks/useScreenSize';
+import { HomeIcon } from 'lucide-react';
+import { lazy, memo, useCallback, useMemo } from 'react';
+import { MdTableBar } from 'react-icons/md';
+import { useParams } from 'react-router-dom';
+import CommonBottomButton from '../bottomButton';
+import BottomPopUp from '../universalPopup';
+import BillItemsList from './BillItemsList.tsx';
 
 // Lazy imports
-const QrCodePreview = lazy(() => import("./qrCode"));
-const NormalSettle = lazy(() => import("./normalsettle"));
-const AddCoinz = lazy(() => import("./addCoinz"));
-const BillOptions = lazy(() => import("./BillOptions"));
-const EBill = lazy(() => import("./ebill.tsx"));
-const PasswordModal = lazy(() => import("../cartItem/PasswordModal.tsx"));
+const QrCodePreview = lazy(() => import('./qrCode'));
+const NormalSettle = lazy(() => import('./normalsettle'));
+const AddCoinz = lazy(() => import('./addCoinz'));
+const BillOptions = lazy(() => import('./BillOptions'));
+const EBill = lazy(() => import('./ebill.tsx'));
+const PasswordModal = lazy(() => import('../cartItem/PasswordModal.tsx'));
 
 // Component imports
-import LazyWrapper from "./bill/LazyWrapper";
-import SplitBillGrid from "./bill/SplitBillGrid";
-import ActionHistory from "./bill/ActionHistory";
-import BillHeader from "./bill/BillHeader";
-import PhoneActions from "./bill/PhoneActions";
-import BillSummary from "./bill/BillSummary";
+import ActionHistory from './bill/ActionHistory';
+import BillHeader from './bill/BillHeader';
+import BillSummary from './bill/BillSummary';
+import LazyWrapper from './bill/LazyWrapper';
+import PhoneActions from './bill/PhoneActions';
+import SplitBillGrid from './bill/SplitBillGrid';
 
 // Hook imports - Updated to use variant-aware hooks
-import { useBillActions } from "@/components/hooks/useBillActions";
-import { usePhoneActions } from "@/components/hooks/usePhoneActions";
-import { useRemoveCoinz } from "@/components/hooks/api/useCoinz.ts";
-import { useRemoveCoupon } from "@/components/hooks/api/useCoupon.ts";
-import { useRemoveServiceCharge } from "@/components/hooks/api/useServiceCharge.ts";
-import { useReprintBill } from "@/components/hooks/api/useSettle.ts";
-import toast from "react-hot-toast";
-import { cn } from "@/lib/utils.ts";
-import { Badge } from "@/components/ui/badge.tsx";
+import { useRemoveCoinz } from '@/components/hooks/api/useCoinz.ts';
+import { useRemoveCoupon } from '@/components/hooks/api/useCoupon.ts';
+import { useRemoveServiceCharge } from '@/components/hooks/api/useServiceCharge.ts';
+import { useReprintBill } from '@/components/hooks/api/useSettle.ts';
+import { useBillActions } from '@/components/hooks/useBillActions';
+import { usePhoneActions } from '@/components/hooks/usePhoneActions';
+import { Badge } from '@/components/ui/badge.tsx';
+import { cn } from '@/lib/utils.ts';
+import toast from 'react-hot-toast';
 
 const MemoGetBill = () => {
   const { businessId } = useParams();
@@ -74,13 +74,13 @@ const MemoGetBill = () => {
   // Memoized values
   const isSplitBill = useMemo(() => Array.isArray(billData), [billData]);
 
-const currentBill = useMemo(() => {
-  const selectedBillId = selectedBill?.variantId;
-  if (Array.isArray(billData)) {
-    return billData.find(b => b.variantId === selectedBillId) ?? null;
-  }
-  return billData as IBillData;
-}, [billData, selectedBill]);
+  const currentBill = useMemo(() => {
+    const selectedBillId = selectedBill?.variantId;
+    if (Array.isArray(billData)) {
+      return billData.find((b) => b.variantId === selectedBillId) ?? null;
+    }
+    return billData as IBillData;
+  }, [billData, selectedBill]);
 
   const allItems = useMemo(() => {
     if (!currentBill?.billItems) return [];
@@ -94,25 +94,10 @@ const currentBill = useMemo(() => {
   const { isPrinting, reprintBill } = useReprintBill(currentBill);
 
   // Custom hooks
-  const {
-    qrBillId,
-    isPending,
-    mutate,
-    removeClaimedCoins,
-    removeCouponHandler,
-    openServiceChargeModal,
-    clickOnKey,
-    toggleQr,
-  } = useBillActions(currentBill);
+  const { qrBillId, isPending, mutate, removeClaimedCoins, removeCouponHandler, openServiceChargeModal, clickOnKey, toggleQr } =
+    useBillActions(currentBill);
 
-  const {
-    isModalOpen,
-    isPhoneVerified,
-    copyTick,
-    handleProtectedAction,
-    handlePasswordVerify,
-    handleModalClose,
-  } = usePhoneActions(currentBill);
+  const { isModalOpen, isPhoneVerified, copyTick, handleProtectedAction, handlePasswordVerify, handleModalClose } = usePhoneActions(currentBill);
 
   // Handlers
   const handleSelectBill = useCallback((bill: IBillData) => {
@@ -125,19 +110,19 @@ const currentBill = useMemo(() => {
 
   const reprintBillHandler = useCallback(() => {
     reprintBill({
-      businessId: businessId || "",
-      tableName: selectedTable?.name || "",
+      businessId: businessId || '',
+      tableName: selectedTable?.name || '',
     });
   }, [reprintBill, businessId, selectedTable?.name]);
 
   const closeMoreOptions = useCallback(() => {
     setShowMoreOption(false);
-    setActiveModal("options");
+    setActiveModal('options');
   }, [setShowMoreOption, setActiveModal]);
 
   const openNormalSettle = useCallback(() => {
     if (currentBill?.isPaid) {
-      return toast.error("This bill is already settled.");
+      return toast.error('This bill is already settled.');
     }
     setNormalSettle(true);
   }, [setNormalSettle, currentBill]);
@@ -151,29 +136,23 @@ const currentBill = useMemo(() => {
   }, [setOpenAddCoinz]);
 
   // Loading states
-  if (
-    isLoading ||
-    removingServiceChargeLoader ||
-    removingCouponLoader ||
-    removingCoinzLoader ||
-    isPrinting
-  ) {
+  if (isLoading || removingServiceChargeLoader || removingCouponLoader || removingCoinzLoader || isPrinting) {
     return <SpinnerMemo />;
   }
 
   if (!billData) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <p className="text-gray-500">No bill available.</p>
         <CommonBottomButton
           fixed={true}
-          maxWidth={screenSize === "xs" ? "30rem" : "48rem"}
-          backgroundColor={screenSize === "xs" ? "" : "white"}
+          maxWidth={screenSize === 'xs' ? '30rem' : '48rem'}
+          backgroundColor={screenSize === 'xs' ? '' : 'white'}
           buttons={[
             {
-              text: "Back",
+              text: 'Back',
               onClick: closeOrderModalHandler,
-              className: "rounded-md w-full",
+              className: 'rounded-md w-full',
             },
           ]}
         />
@@ -184,28 +163,23 @@ const currentBill = useMemo(() => {
   // Show split bill grid
   if (isSplitBill && !selectedBill) {
     return (
-      <SplitBillGrid
-        billData={billData as IBillData[]}
-        onSelectBill={handleSelectBill}
-        onBack={closeOrderModalHandler}
-        screenSize={screenSize}
-      />
+      <SplitBillGrid billData={billData as IBillData[]} onSelectBill={handleSelectBill} onBack={closeOrderModalHandler} screenSize={screenSize} />
     );
   }
 
   if (!currentBill) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <p className="text-gray-500">No bill selected.</p>
         <CommonBottomButton
           fixed={true}
-          maxWidth={screenSize === "xs" ? "30rem" : "48rem"}
-          backgroundColor={screenSize === "xs" ? "" : "white"}
+          maxWidth={screenSize === 'xs' ? '30rem' : '48rem'}
+          backgroundColor={screenSize === 'xs' ? '' : 'white'}
           buttons={[
             {
-              text: "Back",
+              text: 'Back',
               onClick: isSplitBill ? handleBackToGrid : closeOrderModalHandler,
-              className: "rounded-md w-full",
+              className: 'rounded-md w-full',
             },
           ]}
         />
@@ -217,12 +191,10 @@ const currentBill = useMemo(() => {
     <>
       {!showqr && (
         <Card
-        key={currentBill.id}
+          key={currentBill.id}
           className={cn(
-            "max-w-lg py-[5rem] md:py-[8rem] h-[90dvh] mx-auto mb-8 border border-none shadow-none",
-            currentBill.isPaid
-              ? "bg-green-100 h-full overflow-auto"
-              : "bg-white",
+            'mx-auto mb-8 h-[90dvh] max-w-lg border border-none py-[5rem] shadow-none md:py-[8rem] lg:pb-20 lg:pt-0',
+            currentBill.isPaid ? 'h-full overflow-auto bg-green-100' : 'bg-white',
           )}
         >
           <BillHeader
@@ -242,17 +214,12 @@ const currentBill = useMemo(() => {
               onProtectedAction={handleProtectedAction}
             />
 
-            <div className="flex items-center gap-2 mb-4">
-              <MdTableBar className="w-5 h-5 text-gray-600" />
-              <p className="text-sm text-gray-700">
-                Table: {currentBill?.tableName}
-              </p>
+            <div className="mb-4 flex items-center gap-2">
+              <MdTableBar className="h-5 w-5 text-gray-600" />
+              <p className="text-sm text-gray-700">Table: {currentBill?.tableName}</p>
             </div>
             {currentBill.isPaid && (
-              <Badge
-                variant="outline"
-                className="flex items-center justify-center bg-green-900 text-white text-xl"
-              >
+              <Badge variant="outline" className="flex items-center justify-center bg-green-900 text-xl text-white">
                 Bill Paid
               </Badge>
             )}
@@ -261,12 +228,7 @@ const currentBill = useMemo(() => {
 
             <ActionHistory currentBill={currentBill} />
 
-            <BillItemsList
-              billData={currentBill}
-              isExpanded={isExpanded}
-              setIsExpanded={setIsExpanded}
-              allItems={allItems}
-            />
+            <BillItemsList billData={currentBill} isExpanded={isExpanded} setIsExpanded={setIsExpanded} allItems={allItems} />
 
             <Separator className="my-4" />
 
@@ -290,14 +252,7 @@ const currentBill = useMemo(() => {
 
       {/* Lazy loaded modals */}
       {showMoreOption && (
-        <BottomPopUp
-          width="w-[30rem]"
-          height="h-[100dvh] lg:h-[90dvh]"
-          hide
-          show={showMoreOption}
-          onClose={closeMoreOptions}
-          rightTopBack
-        >
+        <BottomPopUp width="w-[30rem]" height="h-[100dvh] lg:h-[90dvh]" hide show={showMoreOption} onClose={closeMoreOptions} rightTopBack>
           <LazyWrapper>
             <BillOptions data={currentBill} />
           </LazyWrapper>
@@ -305,13 +260,7 @@ const currentBill = useMemo(() => {
       )}
 
       {showEBill && (
-        <BottomPopUp
-          width="w-[30rem]"
-          hide
-          rightTopBack
-          show={showEBill}
-          onClose={() => setShowEBill(false)}
-        >
+        <BottomPopUp width="w-[30rem]" hide rightTopBack show={showEBill} onClose={() => setShowEBill(false)}>
           <LazyWrapper>
             <EBill />
           </LazyWrapper>
@@ -319,48 +268,23 @@ const currentBill = useMemo(() => {
       )}
 
       {showqr && (
-        <BottomPopUp
-          width="w-[30rem]"
-          hide
-          show={showqr}
-          onClose={() => setShowqr(false)}
-        >
+        <BottomPopUp width="w-[30rem]" hide show={showqr} onClose={() => setShowqr(false)}>
           <LazyWrapper>
-            <QrCodePreview
-              data={currentBill}
-              qrBillId={qrBillId}
-              toggleQr={toggleQr}
-            />
+            <QrCodePreview data={currentBill} qrBillId={qrBillId} toggleQr={toggleQr} />
           </LazyWrapper>
         </BottomPopUp>
       )}
 
       {normalSettle && (
-        <BottomPopUp
-          height="h-[100dvh] lg:h-[90dvh]"
-          hide
-          width="w-[30rem]"
-          show={normalSettle}
-          onClose={() => setNormalSettle(false)}
-        >
+        <BottomPopUp height="h-[100dvh] lg:h-[90dvh]" hide width="w-[30rem]" show={normalSettle} onClose={() => setNormalSettle(false)}>
           <LazyWrapper>
-            <NormalSettle
-              closeNormalSettle={closeNormalSettle}
-              data={currentBill}
-            />
+            <NormalSettle closeNormalSettle={closeNormalSettle} data={currentBill} />
           </LazyWrapper>
         </BottomPopUp>
       )}
 
       {openAddCoinz && (
-        <BottomPopUp
-          height="h-[100dvh] lg:h-[85dvh]"
-          width="w-[30rem]"
-          rightTopBack
-          hide
-          show={openAddCoinz}
-          onClose={() => setOpenAddCoinz(false)}
-        >
+        <BottomPopUp height="h-[100dvh] lg:h-[85dvh]" width="w-[30rem]" rightTopBack hide show={openAddCoinz} onClose={() => setOpenAddCoinz(false)}>
           <LazyWrapper>
             <AddCoinz data={currentBill} />
           </LazyWrapper>
@@ -369,51 +293,44 @@ const currentBill = useMemo(() => {
 
       {isModalOpen && (
         <LazyWrapper>
-          <PasswordModal
-            isOpen={isModalOpen}
-            onVerify={handlePasswordVerify}
-            onClose={handleModalClose}
-          />
+          <PasswordModal isOpen={isModalOpen} onVerify={handlePasswordVerify} onClose={handleModalClose} />
         </LazyWrapper>
       )}
 
       <CommonBottomButton
-        maxWidth={screenSize === "xs" ? "30rem" : "48rem"}
-        backgroundColor={screenSize === "xs" ? "white" : "white"}
+        maxWidth={screenSize === 'xs' ? '30rem' : '48rem'}
+        backgroundColor={screenSize === 'xs' ? 'white' : 'white'}
         fixed={true}
         buttons={[
           {
-            text: " ",
+            text: ' ',
             onClick: goHome,
             icon: <HomeIcon />,
-            className: "rounded-md !w-[8rem] pl-2 ",
+            className: 'rounded-md lg:hidden !w-[8rem] pl-2 ',
           },
           {
-            text: "",
+            text: '',
             isBackButton: true,
-            onClick:
-              isSplitBill && selectedBill
-                ? handleBackToGrid
-                : closeOrderModalHandler,
-            className: "rounded-md pl-3 md:pl-4 !w-[8rem] ml-4",
+            onClick: isSplitBill && selectedBill ? handleBackToGrid : closeOrderModalHandler,
+            className: 'rounded-md pl-3 md:pl-4 !w-[8rem] ml-4',
           },
           {
-            text: "Normal Settle",
+            text: 'Normal Settle',
             onClick: openNormalSettle,
-            className: "rounded-md !bg-purple-600",
+            className: 'rounded-md !bg-purple-600',
           },
           {
-            text: "Hi Settle",
+            text: 'Hi Settle',
             onClick: () => {
-              if(currentBill.isPaid) {
-                return toast.error("This bill is already settled.");
+              if (currentBill.isPaid) {
+                return toast.error('This bill is already settled.');
               }
               mutate();
             },
             disable: isPending,
             isLoading: isPending,
             highlight: true,
-            className: "rounded-md",
+            className: 'rounded-md',
           },
         ]}
       />

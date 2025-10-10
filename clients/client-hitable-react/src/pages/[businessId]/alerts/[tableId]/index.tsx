@@ -1,56 +1,41 @@
-import { useState, useCallback, Suspense, lazy, memo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useParams, useNavigate } from "react-router-dom";
-import { MdRestaurantMenu, MdReceipt } from "react-icons/md";
-import { motion } from "framer-motion";
-import { apiRpc } from "@hi/common";
-import { Button } from "@/components/ui/button";
-import type { TableData } from "@/components/store/useZonesAndTable";
-import {
-  type orderModal,
-  useOrderStore,
-} from "@/components/store/useOrderData";
-import { useCart } from "@/components/store/useCart";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import SpinnerMemo from "@/components/atoms/loadingSpinner";
-import DeleteKotPanel from "@/components/delete/DeleteKot.tsx";
-import TableHeader from "@/components/atoms/placeOrders/TableHeader.tsx";
-import { useHomeNavigation } from "@/components/hooks/useNavigateHome.ts";
-import { HomeIcon } from "lucide-react";
+import SpinnerMemo from '@/components/atoms/loadingSpinner';
+import TableHeader from '@/components/atoms/placeOrders/TableHeader.tsx';
+import DeleteKotPanel from '@/components/delete/DeleteKot.tsx';
+import DesktopTablePOS from '@/components/desktop/DesktopTablePOS';
+import { useHomeNavigation } from '@/components/hooks/useNavigateHome.ts';
+import { useCart } from '@/components/store/useCart';
+import { type orderModal, useOrderStore } from '@/components/store/useOrderData';
+import type { TableData } from '@/components/store/useZonesAndTable';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { apiRpc } from '@hi/common';
+import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { HomeIcon } from 'lucide-react';
+import { Suspense, lazy, memo, useCallback, useState } from 'react';
+import { MdReceipt, MdRestaurantMenu } from 'react-icons/md';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useIsMobile } from '../../../../hooks/use-mobile';
 
 // Lazy loaded components
-const PlaceOrders = lazy(() => import("@/components/atoms/placeOrders"));
-const BottomPopUp = lazy(() => import("@/components/atoms/universalPopup"));
-const CommonBottomButton = lazy(
-  () => import("@/components/atoms/bottomButton"),
-);
-const OrdersHeader = lazy(
-  () => import("@/components/atoms/placeOrders/header"),
-);
-const TableOptions = lazy(
-  () => import("@/components/atoms/placeOrders/tableOptions"),
-);
-const AddTableCount = lazy(
-  () => import("@/components/atoms/placeOrders/addTableCount"),
-);
-const Category = lazy(() => import("@/components/atoms/placeOrders/category"));
-const CartItem = lazy(() => import("@/components/atoms/placeOrders/cartItem"));
-const Bill = lazy(() => import("@/components/atoms/placeOrders/bill"));
-const AlertCount = lazy(
-  () => import("@/components/atoms/placeOrders/alertCount"),
-);
-const CustomerInformation = lazy(
-  () => import("@/components/atoms/placeOrders/customerInformation"),
-);
-const TransferItem = lazy(
-  () => import("@/components/atoms/placeOrders/transferItem"),
-);
-const EmptyTableList = lazy(() => import("@/components/tables"));
+const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));
+const BottomPopUp = lazy(() => import('@/components/atoms/universalPopup'));
+const CommonBottomButton = lazy(() => import('@/components/atoms/bottomButton'));
+const OrdersHeader = lazy(() => import('@/components/atoms/placeOrders/header'));
+const TableOptions = lazy(() => import('@/components/atoms/placeOrders/tableOptions'));
+const AddTableCount = lazy(() => import('@/components/atoms/placeOrders/addTableCount'));
+const Category = lazy(() => import('@/components/atoms/placeOrders/category'));
+const CartItem = lazy(() => import('@/components/atoms/placeOrders/cartItem'));
+const Bill = lazy(() => import('@/components/atoms/placeOrders/bill'));
+const AlertCount = lazy(() => import('@/components/atoms/placeOrders/alertCount'));
+const CustomerInformation = lazy(() => import('@/components/atoms/placeOrders/customerInformation'));
+const TransferItem = lazy(() => import('@/components/atoms/placeOrders/transferItem'));
+const EmptyTableList = lazy(() => import('@/components/tables'));
 
 const MemoTablePos = () => {
   const { tableId, businessId } = useParams();
   const navigate = useNavigate();
-  const { isPlacingNewOrder } = useCart();
+  const isPlacingNewOrder = useCart((s) => s.isPlacingNewOrder);
   const { goHome } = useHomeNavigation();
   const setSelectedTable = useOrderStore((s) => s.setSelectedTable);
   const setModalType = useOrderStore((s) => s.setModalType);
@@ -58,18 +43,20 @@ const MemoTablePos = () => {
   const openOrderModal = useOrderStore((s) => s.openOrderModal);
   const modalType = useOrderStore((s) => s.modalType);
   const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
+  const setIsPlacingNewOrder = useCart((s) => s.setIsPlacingNewOrder);
   const setPaymentSteps = useOrderStore((s) => s.setPaymentSteps);
   const transferTable = useOrderStore((s) => s.transferTable);
   const transferModal = useOrderStore((s) => s.transferModal);
   const setTransferModal = useOrderStore((s) => s.setTransferModal);
   const setTransferTable = useOrderStore((s) => s.setTransferTable);
+  const isMobile = useIsMobile();
 
   const closeTransferModal = () => {
     setTransferModal(false);
-    setTransferTable("");
+    setTransferTable('');
   };
 
-  const [activeTab, setActiveTab] = useState("orders");
+  const [activeTab, setActiveTab] = useState('orders');
 
   const goToAlerts = useCallback(() => {
     navigate(`/${businessId}/alerts`);
@@ -77,13 +64,14 @@ const MemoTablePos = () => {
 
   const openOrderModalHandler = useCallback(
     (type: orderModal) => {
-      if (type === "bill") {
+      if (type === 'bill') {
         setPaymentSteps(0);
       }
       setModalType(type);
       setOpenOrderModal(true);
+      setIsPlacingNewOrder(false);
     },
-    [setModalType, setOpenOrderModal],
+    [setModalType, setOpenOrderModal, setIsPlacingNewOrder],
   );
 
   const closeOrderModalHandler = useCallback(() => {
@@ -91,200 +79,157 @@ const MemoTablePos = () => {
   }, [setOpenOrderModal]);
 
   const fetchIndividualTable = async () => {
-    const response = await apiRpc.table[":tableId"].$get({
+    const response = await apiRpc.table[':tableId'].$get({
       param: { tableId },
     });
     const res = await response.json();
     const tableData = res?.data as TableData;
-
-    if (tableData?.status === "EMPTY" && isPlacingNewOrder) {
-      openOrderModalHandler("addItem");
+    if (tableData?.status === 'EMPTY' && isPlacingNewOrder) {
+      openOrderModalHandler('addItem');
     }
     setSelectedTable(tableData);
     return res?.data;
   };
 
   useQuery({
-    queryKey: ["fetchIndividualTable", tableId],
+    queryKey: ['fetchIndividualTable', tableId],
     queryFn: fetchIndividualTable,
     enabled: !!tableId,
   });
 
   return (
-    <div className="relative w-full max-w-[30rem] mx-auto min-h-[100dvh] bg-gray-50">
-      <Suspense fallback={<SpinnerMemo />}>
-        <OrdersHeader />
-      </Suspense>
-
-      {/* Tabs */}
-      <section className="sticky z-10 top-[4.25rem] py-2 bg-white shadow-sm">
-        {selectedTable?.status !== "EMPTY" && (
-          <div className="flex">
-            <Button
-              variant={activeTab === "orders" ? "default" : "ghost"}
-              className="flex-1 border border-black rounded-none"
-              onClick={() => setActiveTab("orders")}
-            >
-              <MdRestaurantMenu className="w-5 h-5 mr-2" />
-              Orders
-            </Button>
-            <Button
-              variant={activeTab === "bill" ? "default" : "ghost"}
-              className="flex-1 border border-black rounded-none"
-              onClick={() => openOrderModalHandler("bill")}
-            >
-              <MdReceipt className="w-5 h-5 mr-2" />
-              Bill
-            </Button>
-          </div>
-        )}
-      </section>
-
-      {/* Content Area */}
-      <ScrollArea className="flex-grow min-h-[100dvh]">
-        {activeTab === "orders" && (
+    <>
+      {isMobile ? (
+        <div className="relative mx-auto min-h-[100dvh] w-full max-w-[30rem] bg-gray-50 lg:hidden">
           <Suspense fallback={<SpinnerMemo />}>
-            <PlaceOrders />
+            <OrdersHeader />
           </Suspense>
-        )}
-      </ScrollArea>
 
-      {/* Bottom Navigation */}
-      <Suspense fallback={<SpinnerMemo />}>
-        <CommonBottomButton
-          position="mid"
-          maxWidth="30rem"
-          buttons={[
-            {
-              text: " ",
-              onClick: goHome,
-              icon: <HomeIcon />,
-              className: "rounded-md !w-[4rem] pl-2",
-            },
-            {
-              text: "",
-              onClick: goToAlerts,
-              isBackButton: true,
-              className: "rounded-md pl-3 ml-4 !w-[4rem]",
-            },
-            {
-              text: "Add items",
-              onClick: () => openOrderModalHandler("addItem"),
-              className: " ml-4 rounded-md",
-            },
-          ]}
-        />
-      </Suspense>
+          {/* Tabs */}
+          <section className="sticky top-[4.25rem] z-10 bg-white py-2 shadow-sm">
+            {selectedTable?.status !== 'EMPTY' && (
+              <div className="flex">
+                <Button
+                  variant={activeTab === 'orders' ? 'default' : 'ghost'}
+                  className="flex-1 rounded-none border border-black"
+                  onClick={() => setActiveTab('orders')}
+                >
+                  <MdRestaurantMenu className="mr-2 h-5 w-5" />
+                  Orders
+                </Button>
+                <Button
+                  variant={activeTab === 'bill' ? 'default' : 'ghost'}
+                  className="flex-1 rounded-none border border-black"
+                  onClick={() => openOrderModalHandler('bill')}
+                >
+                  <MdReceipt className="mr-2 h-5 w-5" />
+                  Bill
+                </Button>
+              </div>
+            )}
+          </section>
 
-      {/* Pop-Up Modal */}
+          {/* Content Area */}
+          <ScrollArea className="flex-grow overflow-auto">
+            {activeTab === 'orders' && (
+              <Suspense fallback={<SpinnerMemo />}>
+                <PlaceOrders />
+              </Suspense>
+            )}
+          </ScrollArea>
+
+          {/* Bottom Navigation */}
+          <Suspense fallback={<SpinnerMemo />}>
+            <CommonBottomButton
+              position="mid"
+              maxWidth="30rem"
+              buttons={[
+                {
+                  text: ' ',
+                  onClick: goHome,
+                  icon: <HomeIcon />,
+                  className: 'rounded-md !w-[4rem] pl-2',
+                },
+                {
+                  text: '',
+                  onClick: goToAlerts,
+                  isBackButton: true,
+                  className: 'rounded-md pl-3 ml-4 !w-[4rem]',
+                },
+                {
+                  text: 'Add items',
+                  onClick: () => openOrderModalHandler('addItem'),
+                  className: ' ml-4 rounded-md',
+                },
+              ]}
+            />
+          </Suspense>
+        </div>
+      ) : (
+        <DesktopTablePOS />
+      )}
       {openOrderModal && (
         <Suspense fallback={<SpinnerMemo />}>
           <BottomPopUp
             height="h-[100dvh]"
             hide
-            bottomCross={
-              modalType !== "addItem" &&
-              modalType !== "liveCart" &&
-              modalType !== "bill" &&
-              modalType !== "options"
-            }
+            bottomCross={modalType !== 'addItem' && modalType !== 'liveCart' && modalType !== 'bill' && modalType !== 'options'}
             show={openOrderModal}
             onClose={closeOrderModalHandler}
           >
-            {modalType === "bill" ? (
-              <TableHeader width="48rem" />
-            ) : (
-              <OrdersHeader width="48rem" />
-            )}
-            <ScrollArea className="lg:h-[100dvh] min-h-[100dvh]">
-              {modalType === "guest" && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className="p-4"
-                >
-                  <AddTableCount
-                    key={selectedTable?.capacity}
-                    selectedTable={selectedTable}
-                  />
+            {modalType === 'bill' ? <TableHeader width="48rem" /> : <OrdersHeader width="48rem" />}
+            <ScrollArea className="min-h-[100dvh] lg:h-[100dvh]">
+              {modalType === 'guest' && (
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="p-4">
+                  <AddTableCount key={selectedTable?.capacity} selectedTable={selectedTable} />
                 </motion.div>
               )}
-              {modalType === "options" && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className="p-4"
-                >
+              {modalType === 'options' && (
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="p-4">
                   <TableOptions />
                 </motion.div>
               )}
-              {modalType === "addItem" && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
+              {modalType === 'addItem' && (
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                   <Category />
                 </motion.div>
               )}
-              {modalType === "liveCart" && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
+              {modalType === 'liveCart' && (
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                   <CartItem />
                 </motion.div>
               )}
-              {modalType === "bill" && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
+              {modalType === 'bill' && (
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                   <Bill />
                 </motion.div>
               )}
-              {modalType === "customer" && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
+              {modalType === 'customer' && (
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                   <CustomerInformation />
                 </motion.div>
               )}
-              {modalType === "alerts" && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
+              {modalType === 'alerts' && (
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                   <AlertCount />
                 </motion.div>
               )}
             </ScrollArea>
           </BottomPopUp>
-          {transferModal && (
-            <BottomPopUp
-              hide
-              rightTopBack
-              show={transferModal}
-              onClose={closeTransferModal}
-            >
-              <Suspense fallback={<SpinnerMemo />}>
-                {transferTable === "ITEM" && <TransferItem />}
-                {transferTable === "TABLE" && <EmptyTableList transfer />}
-
-                {transferTable === "DELETE" && <DeleteKotPanel />}
-              </Suspense>
-            </BottomPopUp>
-          )}
         </Suspense>
       )}
-    </div>
+      {transferModal && (
+        <BottomPopUp hide rightTopBack show={transferModal} onClose={closeTransferModal}>
+          <Suspense fallback={<SpinnerMemo />}>
+            {transferTable === 'ITEM' && <TransferItem />}
+            {transferTable === 'TABLE' && <EmptyTableList transfer />}
+
+            {transferTable === 'DELETE' && <DeleteKotPanel />}
+          </Suspense>
+        </BottomPopUp>
+      )}
+      {/* {!isMobile && <DesktopTablePOS />} */}
+    </>
   );
 };
 

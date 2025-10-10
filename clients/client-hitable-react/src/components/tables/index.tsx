@@ -1,17 +1,15 @@
-import { memo, useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import SpinnerMemo from "../atoms/loadingSpinner";
-import { useNavigate, useParams } from "react-router-dom";
-import { useCart } from "../store/useCart";
-import CommonBottomButton from "../atoms/bottomButton";
-import {
-  useZonesAndTablesStore,
-  type TableData,
-} from "../store/useZonesAndTable";
-import { useTableData, useTableTransfer } from "../hooks/useTableData";
-import { useOrderStore } from "../store/useOrderData";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useIsMobile } from '../../hooks/use-mobile';
+import CommonBottomButton from '../atoms/bottomButton';
+import SpinnerMemo from '../atoms/loadingSpinner';
+import { useTableData, useTableTransfer } from '../hooks/useTableData';
+import { useCart } from '../store/useCart';
+import { useOrderStore } from '../store/useOrderData';
+import { useZonesAndTablesStore, type TableData } from '../store/useZonesAndTable';
 
 interface EmptyTableListProps {
   transfer?: boolean;
@@ -20,25 +18,17 @@ interface EmptyTableListProps {
 const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
   const navigate = useNavigate();
   const { businessId } = useParams();
-  const { setIsPlacingNewOrder } = useCart();
+  const setIsPlacingNewOrder = useCart((s) => s.setIsPlacingNewOrder);
   const { selectedTable, selectedItems } = useOrderStore();
-  const { isLoading, filteredTables, searchTerm, setSearchTerm } =
-    useTableData();
+  const { isLoading, filteredTables, searchTerm, setSearchTerm } = useTableData();
   const zones = useZonesAndTablesStore((s) => s.zones);
-  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null); // null means "All"
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
-  const {
-    toTable,
-    setToTable,
-    isConfirming,
-    setIsConfirming,
-    isPending,
-    closeTransferModal,
-    confirmTransfer,
-  } = useTableTransfer(businessId || "");
+  const { toTable, setToTable, isConfirming, setIsConfirming, isPending, closeTransferModal, confirmTransfer } = useTableTransfer(businessId || '');
 
   const tables = useZonesAndTablesStore((s) => s.tables);
 
@@ -47,7 +37,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
       [...arr].sort((a, b) =>
         a.name.localeCompare(b.name, undefined, {
           numeric: true,
-          sensitivity: "base",
+          sensitivity: 'base',
         }),
       ),
     [],
@@ -58,11 +48,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
       return sortByName(filteredTables);
     }
     if (selectedItems.length > 0) {
-      const merged = [
-        ...new Map(
-          [...tables, ...filteredTables].map((table) => [table._id, table]),
-        ).values(),
-      ];
+      const merged = [...new Map([...tables, ...filteredTables].map((table) => [table._id, table])).values()];
       return sortByName(merged);
     }
     return sortByName(filteredTables);
@@ -145,8 +131,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
 
   const checkScrollButtons = useCallback(() => {
     if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } =
-        scrollContainerRef.current;
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
     }
@@ -154,21 +139,21 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
     }
   };
 
   useEffect(() => {
     checkScrollButtons();
     const handleResize = () => checkScrollButtons();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [checkScrollButtons]);
 
   const handleTableClick = (table: TableData) => {
@@ -176,7 +161,9 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
       setToTable(table);
       return;
     }
-    setIsPlacingNewOrder(true);
+    if (isMobile) {
+      setIsPlacingNewOrder(true);
+    }
     return navigate(`/${businessId}/alerts/${table._id}`);
   };
 
@@ -185,15 +172,13 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
   return (
     <>
       {!isConfirming ? (
-        <div className="relative pb-8 mx-auto h-[100dvh] lg:h-[80dvh] overflow-y-auto hide-scrollbar">
-          <section className="sticky top-0 z-10 px-4 pt-4 pb-2 bg-white shadow-md rounded-t-2xl">
-            <h2 className="mb-2 text-xl font-bold md:text-xl lg:text-2xl">
-              {transfer ? "Transfer Table" : "Tables"}
-            </h2>
+        <div className="hide-scrollbar relative mx-auto h-[100dvh] overflow-y-auto pb-8 lg:h-[80dvh]">
+          <section className="sticky top-0 z-10 rounded-t-2xl bg-white px-4 pb-2 pt-4 shadow-md">
+            <h2 className="mb-2 text-xl font-bold md:text-xl lg:text-2xl">{transfer ? 'Transfer Table' : 'Tables'}</h2>
 
             <div className="mb-3">
               <div className="relative">
-                <Search className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-400" />
                 <Input
                   type="search"
                   placeholder="Search tables..."
@@ -204,61 +189,52 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
               </div>
             </div>
 
-            {/* Zone Selection Buttons */}
             {availableZones.length > 0 && (
               <div className="mb-3">
                 <div className="relative">
-                  {/* Left scroll button - hidden on mobile */}
                   <button
                     type="button"
                     onClick={scrollLeft}
-                    className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-50 transition-all ${
-                      canScrollLeft
-                        ? "opacity-100"
-                        : "opacity-0 pointer-events-none"
+                    className={`absolute left-0 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50 lg:flex ${
+                      canScrollLeft ? 'opacity-100' : 'pointer-events-none opacity-0'
                     }`}
                     disabled={!canScrollLeft}
                   >
-                    <ChevronLeft className="w-4 h-4 text-gray-600" />
+                    <ChevronLeft className="h-4 w-4 text-gray-600" />
                   </button>
 
-                  {/* Scrollable container */}
                   <div
                     ref={scrollContainerRef}
-                    className="flex gap-2 overflow-x-auto scrollbar-hide lg:scrollbar-hide px-0 lg:px-10"
+                    className="scrollbar-hide lg:scrollbar-hide flex gap-2 overflow-x-auto px-0 lg:px-10"
                     style={{
-                      scrollbarWidth: "none",
-                      msOverflowStyle: "none",
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none',
                     }}
                     onScroll={checkScrollButtons}
                   >
-                    {/* All Button */}
                     <Button
-                      variant={selectedZoneId === null ? "default" : "outline"}
+                      variant={selectedZoneId === null ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => handleZoneSelect(null)}
                       className={`flex-shrink-0 transition-colors ${
                         selectedZoneId === null
-                          ? "bg-blue-500 hover:bg-blue-600 text-white"
-                          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-300"
+                          ? 'bg-blue-500 text-white hover:bg-blue-600'
+                          : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                     >
                       All ({allTables.length})
                     </Button>
 
-                    {/* Zone Buttons */}
                     {availableZones.map((zone) => (
                       <Button
                         key={zone._id}
-                        variant={
-                          selectedZoneId === zone.zoneId ? "default" : "outline"
-                        }
+                        variant={selectedZoneId === zone.zoneId ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => handleZoneSelect(zone.zoneId)}
                         className={`flex-shrink-0 transition-colors ${
                           selectedZoneId === zone.zoneId
-                            ? "bg-blue-500 hover:bg-blue-600 text-white"
-                            : "bg-white hover:bg-gray-50 text-gray-700 border-gray-300"
+                            ? 'bg-blue-500 text-white hover:bg-blue-600'
+                            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                         }`}
                       >
                         {zone.name} ({zone.tableCount})
@@ -266,25 +242,22 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
                     ))}
                   </div>
 
-                  {/* Right scroll button - hidden on mobile */}
                   <button
                     type="button"
                     onClick={scrollRight}
-                    className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-50 transition-all ${
-                      canScrollRight
-                        ? "opacity-100"
-                        : "opacity-0 pointer-events-none"
+                    className={`absolute right-0 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50 lg:flex ${
+                      canScrollRight ? 'opacity-100' : 'pointer-events-none opacity-0'
                     }`}
                     disabled={!canScrollRight}
                   >
-                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                    <ChevronRight className="h-4 w-4 text-gray-600" />
                   </button>
                 </div>
               </div>
             )}
           </section>
 
-          <section className="px-4 pt-6 pb-20 overflow-y-auto hide-scrollbar">
+          <section className="hide-scrollbar overflow-y-auto px-4 pb-20 pt-6">
             {zonesWithTables.length === 0 ? (
               <div className="text-center text-gray-500">
                 <p>No tables found.</p>
@@ -294,11 +267,9 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
                 {zonesWithTables.map(({ zone, tables }) => (
                   <div key={zone._id} className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 flex-1">
-                        {zone.name}
-                      </h3>
-                      <span className="text-sm text-gray-500 ml-2">
-                        {tables.length} table{tables.length !== 1 ? "s" : ""}
+                      <h3 className="flex-1 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-800">{zone.name}</h3>
+                      <span className="ml-2 text-sm text-gray-500">
+                        {tables.length} table{tables.length !== 1 ? 's' : ''}
                       </span>
                     </div>
                     <div className="grid grid-cols-3 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
@@ -307,16 +278,12 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
                           type="button"
                           onClick={() => handleTableClick(table)}
                           key={table._id}
-                          className={`p-4 text-center transition-shadow duration-300 rounded-lg border ${
-                            toTable?._id === table._id
-                              ? "bg-blue-100 border-blue-500 shadow-lg"
-                              : "bg-white border-gray-200 hover:shadow-md"
+                          className={`rounded-lg border p-4 text-center transition-shadow duration-300 ${
+                            toTable?._id === table._id ? 'border-blue-500 bg-blue-100 shadow-lg' : 'border-gray-200 bg-white hover:shadow-md'
                           }`}
                         >
                           <h4 className="font-semibold">{table.name}</h4>
-                          <p className="text-xs text-gray-500 mt-1 capitalize">
-                            {table.status?.toLowerCase() || "empty"}
-                          </p>
+                          <p className="mt-1 text-xs capitalize text-gray-500">{table.status?.toLowerCase() || 'empty'}</p>
                         </button>
                       ))}
                     </div>
@@ -327,13 +294,10 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
           </section>
         </div>
       ) : (
-        <section className="flex flex-col items-center justify-center h-[80dvh] text-center px-4">
-          <h2 className="mb-4 text-xl font-bold text-red-600">
-            Warning: Please Confirm the Transfer!
-          </h2>
+        <section className="flex h-[80dvh] flex-col items-center justify-center px-4 text-center">
+          <h2 className="mb-4 text-xl font-bold text-red-600">Warning: Please Confirm the Transfer!</h2>
           <section>
-            Table is transferring from <strong>{selectedTable?.name}</strong> to{" "}
-            <strong>{toTable?.name}</strong>
+            Table is transferring from <strong>{selectedTable?.name}</strong> to <strong>{toTable?.name}</strong>
           </section>
         </section>
       )}
@@ -345,21 +309,17 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
           position="mid"
           buttons={[
             {
-              text: "Cancel",
-              onClick: isConfirming
-                ? () => setIsConfirming(false)
-                : closeTransferModal,
-              type: "button",
-              className: "pl-3 rounded-md",
+              text: 'Cancel',
+              onClick: isConfirming ? () => setIsConfirming(false) : closeTransferModal,
+              type: 'button',
+              className: 'pl-3 rounded-md',
               isBackButton: true,
             },
             {
-              text: isConfirming ? "Confirm" : "Transfer Table",
-              onClick: isConfirming
-                ? confirmTransfer
-                : () => setIsConfirming(true),
-              type: "button",
-              className: "rounded-full",
+              text: isConfirming ? 'Confirm' : 'Transfer Table',
+              onClick: isConfirming ? confirmTransfer : () => setIsConfirming(true),
+              type: 'button',
+              className: 'rounded-full',
               swipe: true,
               isLoading: isPending,
               disable: !toTable,

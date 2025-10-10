@@ -1,71 +1,73 @@
-import { useOrderStore } from "@/components/store/useOrderData";
-import { Input } from "@/components/ui/input";
-import { memo, useMemo, useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import DishQuantityButton from "./dishQuantityBtn";
-import { X, Search } from "lucide-react"; // Using Lucide icons
+import { useOrderStore } from '@/components/store/useOrderData';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import type { DishType } from '@hi/db-models/src/validators';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Search, X } from 'lucide-react';
+import { memo, useEffect, useMemo, useState } from 'react';
+import DishQuantityButton from './dishQuantityBtn';
 
 const AnimatedPlaceholder = ({ text }: { text: string }) => (
   <AnimatePresence mode="wait">
     <motion.span
-      key={text}
+      key={text || 'placeholder'}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
-      className="absolute left-[7.5rem] lg:left-[7rem] text-sm text-gray-400 pointer-events-none top-[0.55rem] md:top-[0.5]"
+      className="pointer-events-none absolute left-[7.5rem] top-[0.55rem] text-sm text-gray-400 md:top-[0.5] lg:left-[7rem]"
     >
-      {text}...
+      {text || 'Search by dish name'}...
     </motion.span>
   </AnimatePresence>
 );
 
 const MemoSearchComponent = () => {
-  const allDishes = useOrderStore((s) => s.allDishes);
+  const allCategories = useOrderStore((s) => s.allCategories);
   const searchActive = useOrderStore((s) => s.searchActive);
   const searchTerm = useOrderStore((s) => s.searchTerm);
   const setSearchActive = useOrderStore((s) => s.setSearchActive);
   const setSearchTerm = useOrderStore((s) => s.setSearchTerm);
-
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
+  const allDishes = useMemo(() => {
+    return allCategories?.flatMap((cat) => cat.dishIds) as DishType[];
+  }, [allCategories]);
+
+  // up to 5 names for animated placeholder (guard against empty list)
   const firstFiveDishNames = useMemo(() => {
-    return allDishes
+    return (allDishes || [])
       .slice(0, 5)
-      .map((dish) => dish.name)
-      .filter(Boolean);
+      .map((dish) => dish?.name)
+      .filter(Boolean) as string[];
   }, [allDishes]);
 
-
   const filteredDishes = useMemo(() => {
-    return allDishes.filter((dish) =>
-      dish.name.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+    const needle = (searchTerm || '').toLowerCase().trim();
+    if (!needle) return allDishes;
+    return (allDishes || []).filter((dish) => (dish?.name || '').toLowerCase().includes(needle));
   }, [allDishes, searchTerm]);
 
-  // Clear search input and deactivate search
   const handleClearSearch = () => {
-    setSearchTerm("");
+    setSearchTerm('');
     setSearchActive(false);
   };
 
-  // Cycle through placeholder dishes
+  // rotate placeholder every 3s, only if we have names
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPlaceholderIndex(
-        (prevIndex) => (prevIndex + 1) % firstFiveDishNames.length,
-      );
+    if (!firstFiveDishNames.length) return;
+    const id = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % firstFiveDishNames.length);
     }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(id);
+  }, [firstFiveDishNames.length]);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="sticky z-[1] px-2 pt-4 pb-2 -mx-2 -mt-4  bg-white border-b border-gray-300 placeholder:text-sm -top-2 md:-top-4 md:pb-3"
+      className="sticky -top-2 z-[1] -mx-2 -mt-4 border-b border-gray-300 bg-white px-2 pb-2 pt-4 placeholder:text-sm md:-top-4 md:pb-3 lg:mt-0 lg:border-none"
     >
       <div className="relative w-full">
         <Input
@@ -73,23 +75,22 @@ const MemoSearchComponent = () => {
           value={searchTerm}
           onFocus={() => setSearchActive(true)}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-10 border border-gray-300 rounded-md"
+          className="w-full rounded-md border border-gray-300 pl-10 pr-10"
           placeholder="Search for"
         />
-        {!searchTerm && (
-          <AnimatedPlaceholder text={firstFiveDishNames[placeholderIndex]} />
-        )}
-        <Search className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
+        {!searchTerm && <AnimatedPlaceholder text={firstFiveDishNames[placeholderIndex]} />}
+        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
         <button
           type="button"
           onClick={handleClearSearch}
-          className="absolute text-gray-500 -translate-y-1/2 top-1/2 right-3 hover:text-gray-700"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          aria-label="Clear search"
         >
-          <X className="w-5 h-5" />
+          <X className="h-5 w-5" />
         </button>
       </div>
 
-      {/* Search Results List */}
+      {/* Results */}
       <AnimatePresence>
         {searchActive && (
           <motion.div
@@ -97,30 +98,48 @@ const MemoSearchComponent = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.3 }}
-            className="mt-4 bg-white border border-gray-300 rounded-md shadow-md max-h-[55dvh] overflow-y-auto"
+            className="mt-4 max-h-[55dvh] overflow-y-auto rounded-md border border-gray-300 bg-white shadow-md"
           >
-            {filteredDishes.length > 0 ? (
-              filteredDishes.map((dish) => (
-                <motion.div
-                  key={dish._id}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center justify-between p-4 border-b last:border-none"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{dish.name}</p>
-                    <p className="text-xs text-gray-500">₹{dish.price}</p>
-                  </div>
-                  <DishQuantityButton dishData={dish} />
-                </motion.div>
-              ))
+            {filteredDishes?.length ? (
+              filteredDishes.map((dish) => {
+                const isUnavailable = !dish.availability;
+                const isHidden = !dish.visibility;
+
+                return (
+                  <motion.div
+                    key={dish._id}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className={cn(
+                      'flex items-center justify-between border-b p-4 last:border-none',
+                      (isUnavailable || isHidden) && 'bg-muted/20 opacity-90',
+                    )}
+                  >
+                    <div className="flex min-w-0 flex-col">
+                      <p className="truncate text-sm font-medium">{dish.name}</p>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                        <p className="text-xs text-gray-500">₹{dish.price}</p>
+
+                        {/* Availability badge */}
+                        <span className={cn('rounded px-2 py-[2px] text-[10px] font-semibold', isUnavailable ? 'bg-red-100 text-red-700' : '')}>
+                          {isUnavailable ? 'Not Available' : ''}
+                        </span>
+
+                        {/* Visibility badge */}
+                        <span className={cn('rounded px-2 py-[2px] text-[10px] font-semibold', isHidden ? 'bg-red-100 text-red-800' : '')}>
+                          {isHidden ? 'Hidden' : ''}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Still orderable */}
+                    <DishQuantityButton dishData={dish} />
+                  </motion.div>
+                );
+              })
             ) : (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="p-4 text-sm text-gray-500"
-              >
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 text-sm text-gray-500">
                 No matching dishes found.
               </motion.p>
             )}

@@ -1,9 +1,10 @@
-import { memo } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import type { DishType } from "@hi/db-models/src/validators";
-import FoodType from "../dishType";
-import DishQuantityButton from "./dishQuantityBtn";
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import type { DishType } from '@hi/db-models/src/validators';
+import { motion } from 'framer-motion';
+import { memo } from 'react';
+import FoodType from '../dishType';
+import DishQuantityButton from './dishQuantityBtn';
 
 interface CompactDishGridProps {
   selectedCategory: {
@@ -11,48 +12,59 @@ interface CompactDishGridProps {
   };
 }
 
-const MemoCompactDishGrid = ({ selectedCategory }:CompactDishGridProps) => {
-    return (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 pb-[7rem]">
-            {selectedCategory?.dishIds?.map((dish: DishType, index: number) => (
-                <motion.div
-                    key={dish?._id?.toString()}
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ scale: 1.02 }}
-                >
-                    <Card className="h-full overflow-hidden">
-                        <CardContent className="grid grid-rows-[auto_1fr_auto_auto] h-full p-3 gap-x-2 relative ">
-                            <h3 className="text-sm font-semibold">{dish.name}</h3>
+const MemoCompactDishGrid = ({ selectedCategory }: CompactDishGridProps) => {
+  return (
+    <div className="grid grid-cols-1 gap-3 pb-[7rem] md:grid-cols-2 2xl:grid-cols-3">
+      {selectedCategory?.dishIds?.map((dish: DishType, index: number) => {
+        const isUnavailable = !dish.availability;
+        const isHidden = !dish.visibility;
 
-                            <div className="grid grid-cols-[auto_1fr] gap-2 items-center mt-5">
-                                {dish.dishTypes && (
-                                    <div>
-                                        <FoodType types={dish.dishTypes} />
-                                    </div>
-                                )}
-                                <span className="text-sm font-semibold">₹{dish.portions?.length ? dish.portions[0].price : dish.price}</span>
-                            </div> 
+        let overlayLabel: string | null = null;
+        if (isHidden) overlayLabel = 'Not Visible';
+        else if (isUnavailable) overlayLabel = 'Not Available';
 
-                            {dish.availability && (
-                                <div className="flex items-center justify-end -mt-7">
-                                    <DishQuantityButton dishData={dish} />
-                                </div>
-                            )}
+        return (
+          <motion.div
+            key={dish?._id?.toString()}
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: index * 0.05 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <Card className={cn('relative h-full overflow-hidden border transition-all duration-200', overlayLabel && 'border-muted-foreground/20')}>
+              <CardContent className="relative grid h-full grid-rows-[auto_1fr_auto_auto] gap-x-2 p-3">
+                <h3 className={cn('text-sm font-semibold', overlayLabel && 'text-muted-foreground')}>{dish.name}</h3>
 
-                            {(dish.addOnIds?.length || dish.portions?.length) > 0 && (
-                                <span className="text-xs absolute bg-white h-4 right-10 bottom-1.5 opacity-50 text-[#000000] mt-1">
-                                    options
-                                </span>
-                            )}
-                        </CardContent>
-                    </Card>
-                </motion.div>
-            ))}
-        </div>
-    )
-}
+                <div className="mt-5 grid grid-cols-[auto_1fr] items-center gap-2">
+                  {dish.dishTypes && (
+                    <div>
+                      <FoodType types={dish.dishTypes} />
+                    </div>
+                  )}
+                  <span className="text-sm font-semibold">₹{dish.portions?.length ? dish.portions[0].price : dish.price}</span>
+                </div>
+
+                <div className="-mt-7 flex items-center justify-end">
+                  <DishQuantityButton dishData={dish} />
+                </div>
+
+                {(dish.addOnIds?.length || dish.portions?.length) > 0 && (
+                  <span className="absolute bottom-1.5 right-10 mt-1 h-4 bg-white text-xs text-[#000000] opacity-50">options</span>
+                )}
+
+                {overlayLabel && (
+                  <div className="absolute -right-3 -top-1 flex flex-col items-center justify-center px-2 py-1">
+                    <span className="rounded-none bg-red-600/80 px-1 py-[2px] text-xs font-semibold text-white shadow-md">{overlayLabel}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+};
 
 const CompactDishGrid = memo(MemoCompactDishGrid);
 export default CompactDishGrid;
