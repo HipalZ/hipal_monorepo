@@ -1,23 +1,23 @@
-import { lazy, useEffect } from "react";
-import { useLiteStore } from "./components/store/useLiteStore";
-import MainRouter from "./routes";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { useHiClientZ } from "./components/store/useHiClientzData";
-import { useFetchAlerts } from "./utils/apiService";
-import type { Alert, Cart } from "./components/types/hiClientzData";
-import SpinnerMemo from "./components/atoms/loadingSpinner";
-import toast from "react-hot-toast";
-import { NativeSettings, AndroidSettings } from "capacitor-native-settings";
-import { usePushNotifications } from "./hooks/usePushNotifications";
-import { useUserToken } from "@hi/common/src/useUserToken";
-import { apiRpc } from "@hi/common";
-import { useErrorHandling } from "./components/utils/helpers";
-import useBusinessData from "./components/store/useBusinessData";
-import { useEscalatedAlerts, useRoomAlerts } from "@/hooks/useHotelApis";
-const ErrorPopup = lazy(() => import("./components/ErrorPopup"));
-const InternetConnection = lazy(() => import("./components/atoms/internet"));
-const UpdateApp = lazy(() => import("./components/atoms/updateApp"));
+import { useEscalatedAlerts, useRoomAlerts } from '@/hooks/useHotelApis';
+import { apiRpc } from '@hi/common';
+import { useUserToken } from '@hi/common/src/useUserToken';
+import { useQuery } from '@tanstack/react-query';
+import { AndroidSettings, NativeSettings } from 'capacitor-native-settings';
+import { lazy, useEffect } from 'react';
+import toast from 'react-hot-toast';
+import { useLocation, useNavigate } from 'react-router-dom';
+import SpinnerMemo from './components/atoms/loadingSpinner';
+import useBusinessData from './components/store/useBusinessData';
+import { useHiClientZ } from './components/store/useHiClientzData';
+import { useLiteStore } from './components/store/useLiteStore';
+import type { Alert, Cart } from './components/types/hiClientzData';
+import { useErrorHandling } from './components/utils/helpers';
+import { usePushNotifications } from './hooks/usePushNotifications';
+import MainRouter from './routes';
+import { useFetchAlerts } from './utils/apiService';
+const ErrorPopup = lazy(() => import('./components/ErrorPopup'));
+const InternetConnection = lazy(() => import('./components/atoms/internet'));
+const UpdateApp = lazy(() => import('./components/atoms/updateApp'));
 
 function App() {
   const navigate = useNavigate();
@@ -44,8 +44,7 @@ function App() {
     setIsVersionPopup,
     setUpdateFeature,
   } = useLiteStore();
-  const { initializePushNotifications, initializedRef } =
-    usePushNotifications();
+  const { initializePushNotifications, initializedRef } = usePushNotifications();
   const { selectedBiz, pushToken, captainData } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
     pushToken: s.pushToken,
@@ -53,24 +52,10 @@ function App() {
   }));
 
   const checkAllowRedirectionConditions = () => {
-    const isValidBusiness = captainData?.customRole?.some(
-      (role) => role.businessId?._id === selectedBiz?.businessId?._id,
-    );
-    if (
-      accessToken &&
-      pushToken &&
-      selectedBiz?.businessId?.name &&
-      isValidBusiness &&
-      outletInfo?.outLetType !== "HOTEL"
-    ) {
+    const isValidBusiness = captainData?.customRole?.some((role) => role.businessId?._id === selectedBiz?.businessId?._id);
+    if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType !== 'HOTEL') {
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
-    } else if (
-      accessToken &&
-      pushToken &&
-      selectedBiz?.businessId?.name &&
-      isValidBusiness &&
-      outletInfo?.outLetType === "HOTEL"
-    ) {
+    } else if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType === 'HOTEL') {
       navigate(`hotel/${selectedBiz?.businessId?._id}/`);
     }
   };
@@ -86,7 +71,7 @@ function App() {
 
   const handleOnlineAlerts = async () => {
     if (!businessId) return;
-    const data: Alert[] = await fetchAlerts(businessId, "ONLINE");
+    const data: Alert[] = await fetchAlerts(businessId, 'ONLINE');
     setOnlineAlertData(data);
     setOnlineCount(data.length);
     return data;
@@ -94,11 +79,11 @@ function App() {
 
   const handleOfflineAlerts = async () => {
     if (!businessId) return;
-    const data: Alert[] = await fetchAlerts(businessId, "ALL");
+    const data: Alert[] = await fetchAlerts(businessId, 'ALL');
     setOfflineAlertData(data);
     setIsVersionPopup(Number(version) !== data[0]?.v);
     setUpdateUrl(data[0]?.appUrl);
-    console.log("alert version", data[0]?.v, "env version", version);
+    console.log('alert version', data[0]?.v, 'env version', version);
     if (data[0]?.v !== Number(version)) {
       setUpdateFeature(data[0]?.updateFeature);
     }
@@ -110,7 +95,7 @@ function App() {
     if (!businessId) return;
 
     if (outletInfo?.isPosEnabled) {
-      const response = await apiRpc.table.orders[":businessId"].$get({
+      const response = await apiRpc.table.orders[':businessId'].$get({
         param: {
           businessId: businessId,
         },
@@ -142,21 +127,21 @@ function App() {
 
   // UseQuery with adaptive polling based on pingTime and connection speed
   useQuery({
-    queryKey: ["onlineAlerts", businessId, selectedBiz],
+    queryKey: ['onlineAlerts', businessId, selectedBiz],
     queryFn: handleOnlineAlerts,
     enabled: !!businessId && !!selectedBiz,
     refetchInterval: isSlow ? 31000 : 17000,
   });
 
   useQuery({
-    queryKey: ["offlineAlerts", businessId, selectedBiz],
+    queryKey: ['offlineAlerts', businessId, selectedBiz],
     queryFn: handleOfflineAlerts,
     enabled: !!businessId && !!selectedBiz,
     refetchInterval: isSlow ? 23000 : 19000,
   });
 
   useQuery({
-    queryKey: ["carts", businessId],
+    queryKey: ['carts', businessId],
     queryFn: getAllCarts,
     enabled: !!businessId,
     refetchInterval: isSlow ? 29000 : 23000,
@@ -168,7 +153,7 @@ function App() {
   useEscalatedAlerts();
 
   return (
-    <main className="relative">
+    <main className="!lg:poppins relative">
       <InternetConnection />
       {/* {!notificationStatus && platform === "android" && (
         <div className="fixed z-20 top-0 left-1/2 -translate-x-1/2 w-full max-w-[30rem] flex items-center justify-between h-12 px-2 text-center text-black bg-[#6f2eff] border space-grotesk-700">

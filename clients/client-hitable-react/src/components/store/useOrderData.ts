@@ -225,7 +225,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   setFirstCat: (categories: CategoryType[]) => {
     set({ allCategories: categories });
-    if (get().selectedCategory === null && categories?.length > 0) {
+    if (categories?.length > 0) {
       set({ selectedCategory: categories[0] });
     }
   },

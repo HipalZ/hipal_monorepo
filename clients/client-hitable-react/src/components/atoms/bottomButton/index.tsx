@@ -1,14 +1,14 @@
-import { memo } from "react";
-import { motion, useMotionValue, useTransform } from "framer-motion";
-import { cn } from "@hi/common";
-import SpinnerMemo from "../loadingSpinner";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ShineBorder } from "../borderAnimations";
+import { cn } from '@hi/common';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { memo } from 'react';
+import { ShineBorder } from '../borderAnimations';
+import SpinnerMemo from '../loadingSpinner';
 
 interface ButtonConfig {
   text: string;
   onClick?: () => void;
-  type?: "button" | "reset" | "submit";
+  type?: 'button' | 'reset' | 'submit';
   isLoading?: boolean;
   disable?: boolean;
   hide?: boolean;
@@ -25,8 +25,8 @@ interface ButtonConfig {
 interface MemoBottomButtonProps {
   buttons: ButtonConfig[];
   fixed?: boolean;
-  position?: "left" | "right" | "mid";
-  align?: "top" | "bottom";
+  position?: 'left' | 'right' | 'mid';
+  align?: 'top' | 'bottom';
   backgroundColor?: string;
   offset?: string;
   maxWidth?: string;
@@ -40,23 +40,11 @@ const buttonVariants = {
 
 // Helper to return the inside label/spinner/back arrow
 function getButtonInnerContent(button: ButtonConfig) {
-  const {
-    highlight,
-    borderClasses,
-    isBackButton,
-    isLoading,
-    text,
-    icon: Icon,
-  } = button;
+  const { highlight, borderClasses, isBackButton, isLoading, text, icon: Icon } = button;
 
   if (highlight) {
     return (
-      <ShineBorder
-        color={["#FE8FB5", "#FFBE7B"]}
-        borderRadius={4}
-        duration={5}
-        className={borderClasses || ""}
-      >
+      <ShineBorder color={['#FE8FB5', '#FFBE7B']} borderRadius={4} duration={5} className={borderClasses || ''}>
         {isBackButton ? (
           <ChevronLeft />
         ) : isLoading ? (
@@ -82,47 +70,37 @@ function getButtonInnerContent(button: ButtonConfig) {
   );
 }
 
-function SwipeButton({
-  button,
-  index,
-  buttonsLength,
-}: {
-  button: ButtonConfig;
-  index: number;
-  buttonsLength: number;
-}) {
+function SwipeButton({ button, index, buttonsLength }: { button: ButtonConfig; index: number; buttonsLength: number }) {
   const x = useMotionValue(0);
-  const background = useTransform(x, [0, 200], ["#fff", "#22c55e"]);
+  const background = useTransform(x, [0, 200], ['#fff', '#22c55e']);
 
   const handleDragEnd = () => {
-    if (x.get() > 150 && button.onClick) button.onClick();
+    if (x.get() > 175 && button.onClick) button.onClick();
     x.set(0);
   };
 
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-full text-center py-3 transition-all duration-300",
+        'relative overflow-hidden rounded-full py-3 text-center transition-all duration-300',
         button.className,
-        button?.isLoading ? "pointer-events-none" : "",
+        button?.isLoading ? 'pointer-events-none' : '',
         {
-          "opacity-50 cursor-not-allowed": button.disable,
-          "flex-1": buttonsLength > 1 && !button.isBackButton,
-          "w-[54px]": button.isBackButton && index === 0,
-          "ml-4": index > 0 && !button.isBackButton,
+          'cursor-not-allowed opacity-50': button.disable,
+          'flex-1': buttonsLength > 1 && !button.isBackButton,
+          'w-[54px]': button.isBackButton && index === 0,
+          'ml-4': index > 0 && !button.isBackButton,
         },
       )}
       style={{
-        backgroundColor: button.disable ? "#cccccc" : button.color ?? "#000000",
-        color: button.textColor ?? "#ffffff",
+        backgroundColor: button.disable ? '#cccccc' : (button.color ?? '#000000'),
+        color: button.textColor ?? '#ffffff',
       }}
     >
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {getButtonInnerContent(button)}
-      </div>
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">{getButtonInnerContent(button)}</div>
 
       <motion.div
-        className="absolute flex items-center justify-center w-10 h-10 bg-green-500 rounded-full shadow-md left-1 top-1 cursor-grab active:cursor-grabbing"
+        className="absolute left-1 top-1 flex h-10 w-10 cursor-grab items-center justify-center rounded-full bg-green-500 shadow-md active:cursor-grabbing"
         drag="x"
         dragConstraints={{ left: 0, right: 200 }}
         dragElastic={0}
@@ -137,16 +115,7 @@ function SwipeButton({
 }
 
 const MemoBottomButton = (props: MemoBottomButtonProps) => {
-  const {
-    buttons,
-    fixed = true,
-    position = "mid",
-    align = "bottom",
-    backgroundColor = "#ffffff",
-    offset = "0",
-    maxWidth,
-    shadow,
-  } = props;
+  const { buttons, fixed = true, position = 'mid', align = 'bottom', backgroundColor = '#ffffff', offset = '0', maxWidth, shadow } = props;
 
   const visibleButtons = buttons.filter((b) => !b.hide);
   const isSingle = visibleButtons.length === 1;
@@ -154,68 +123,61 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
   return (
     <article
       className={cn(
-        "px-4 py-2 overflow-hidden md:bg-transparent z-10",
+        'z-10 overflow-hidden px-4 py-2 md:bg-transparent',
         {
           fixed: fixed,
           absolute: !fixed,
-          "left-0": position === "left",
-          "right-0": position === "right",
-          "left-1/2 -translate-x-1/2": position === "mid",
-          "w-full": !isSingle,
-          "w-auto": isSingle, 
+          'left-0': position === 'left',
+          'right-0': position === 'right',
+          'left-1/2 -translate-x-1/2': position === 'mid',
+          'w-full': !isSingle,
+          'w-auto': isSingle,
         },
-        shadow ? "shadow-[0_-2px_15px_rgba(0,0,0,0.1)]" : "",
+        shadow ? 'shadow-[0_-2px_15px_rgba(0,0,0,0.1)]' : '',
       )}
       style={{
         backgroundColor: backgroundColor,
         [align]: offset,
-        maxWidth: isSingle ? maxWidth ?? "min(640px, 92vw)" : maxWidth,
+        maxWidth: isSingle ? (maxWidth ?? 'min(640px, 92vw)') : maxWidth,
       }}
     >
       <div
-        className={cn("flex", {
-          "justify-between gap-4": visibleButtons.length === 2,
-          "justify-center": visibleButtons.length !== 2,
+        className={cn('flex', {
+          'justify-between gap-4': visibleButtons.length === 2,
+          'justify-center': visibleButtons.length !== 2,
         })}
       >
         {visibleButtons.map((button, index) =>
           button.swipe ? (
-            <SwipeButton
-              key={button.text}
-              button={button}
-              index={index}
-              buttonsLength={visibleButtons.length}
-            />
+            <SwipeButton key={button.text} button={button} index={index} buttonsLength={visibleButtons.length} />
           ) : (
             <motion.button
               key={button.text}
               className={cn(
-                "rounded-full text-center py-3 transition-all duration-300 relative overflow-hidden",
+                'relative overflow-hidden rounded-full py-3 text-center transition-all duration-300',
                 button.className,
-                button?.isLoading ? "pointer-events-none" : "",
+                button?.isLoading ? 'pointer-events-none' : '',
                 {
-                  "opacity-50 cursor-not-allowed": button.disable,
+                  'cursor-not-allowed opacity-50': button.disable,
                   // single vs multi width
-                  "w-auto px-6": isSingle && !button.isBackButton,
-                  "w-full": !isSingle && !button.isBackButton,
-                  "w-[54px]": button.isBackButton && index === 0,
-                  "ml-4": index > 0 && !button.isBackButton && !isSingle,
+                  'w-auto px-6': isSingle && !button.isBackButton,
+                  'w-full': !isSingle && !button.isBackButton,
+                  'w-[54px]': button.isBackButton && index === 0,
+                  'ml-4': index > 0 && !button.isBackButton && !isSingle,
                 },
               )}
               style={{
-                backgroundColor: button.disable
-                  ? "#cccccc"
-                  : button.color ?? "#000000",
-                color: button.textColor ?? "#ffffff",
+                backgroundColor: button.disable ? '#cccccc' : (button.color ?? '#000000'),
+                color: button.textColor ?? '#ffffff',
               }}
               onClick={!button.disable ? button.onClick : undefined}
-              type={button.type ?? "button"}
+              type={button.type ?? 'button'}
               disabled={button.disable}
               variants={buttonVariants}
               initial="idle"
               whileHover="hover"
               whileTap="tap"
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
             >
               {getButtonInnerContent(button)}
             </motion.button>

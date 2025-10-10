@@ -41,7 +41,7 @@ export interface CustomRole {
   customRoleId: string;
   role: string;
   accessControl: AccessControl;
-  permissions: Ipermissions
+  permissions: Ipermissions;
   permissionIds: string[];
   permissionGroupIds: string[];
   bookMark: boolean;
@@ -351,6 +351,14 @@ export interface ICategory {
   _id: string;
   businessId: string;
   name: string;
+  availability: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  rank: number;
+  description: string;
+  tags: string[];
   visibility: boolean;
   timerOn: boolean;
   timerStart: null;

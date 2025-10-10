@@ -1,13 +1,12 @@
-import type { FC } from "react"
-import { memo } from "react"
-import { IoClose } from "react-icons/io5"
-import { Button } from "@/components/ui/button"
-import { CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import type { BillSummaryProps } from "./bill.types.ts"
-import { formatCurrency } from "@/lib/utils.ts"
+import { Button } from '@/components/ui/button';
+import { CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { formatCurrency } from '@/lib/utils.ts';
+import { memo } from 'react';
+import { IoClose } from 'react-icons/io5';
+import type { BillSummaryProps } from './bill.types.ts';
 
-const BillSummary: FC<BillSummaryProps> = memo(
+const BillSummary = memo(
   ({
     currentBill,
     existingLoyalty,
@@ -17,18 +16,18 @@ const BillSummary: FC<BillSummaryProps> = memo(
     onRemoveCoupon,
     onOpenServiceChargeModal,
     onSetActiveModal,
-  }) => {
+  }: BillSummaryProps) => {
     const billItems = [
-      ["subTotal", currentBill.subTotal],
-      ["serviceCharge", currentBill.serviceCharge],
-      ["tips", currentBill.tips],
-      ["discount", currentBill.discount],
-      ["CGst", (currentBill.gst / 2)],
-      ["SGst", (currentBill.gst / 2)],
-      ["otherTax", currentBill.otherTax],
-      ["claimedCoins", currentBill.claimedCoins],
-      ["couponDiscount", currentBill.couponDiscount],
-    ].filter(([_, value]) => typeof value === "number" && value > 0)
+      ['subTotal', currentBill.subTotal],
+      ['serviceCharge', currentBill.serviceCharge],
+      ['tips', currentBill.tips],
+      ['discount', currentBill.discount],
+      ['CGst', currentBill.gst / 2],
+      ['SGst', currentBill.gst / 2],
+      ['otherTax', currentBill.otherTax],
+      ['claimedCoins', currentBill.claimedCoins],
+      ['couponDiscount', currentBill.couponDiscount],
+    ].filter(([_, value]) => typeof value === 'number' && value > 0);
 
     return (
       <>
@@ -36,7 +35,7 @@ const BillSummary: FC<BillSummaryProps> = memo(
           <>
             <CardTitle className="flex items-center justify-between">
               <span>Use customer Loyalty</span>
-              <Button variant="default" className="flex justify-end ml-auto" onClick={onTriggerAddCoinz}>
+              <Button variant="default" className="ml-auto flex justify-end" onClick={onTriggerAddCoinz}>
                 Use Coinz
               </Button>
             </CardTitle>
@@ -46,70 +45,58 @@ const BillSummary: FC<BillSummaryProps> = memo(
 
         <div className="mb-4 space-y-3">
           {billItems.map(([key, value]) => {
-            const isDeduction = key === "claimedCoins" || key === "discount" || key === "couponDiscount"
+            const isDeduction = key === 'claimedCoins' || key === 'discount' || key === 'couponDiscount';
             return (
               <div
                 key={key}
                 onClick={() => onClickKey(key)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    onClickKey(key)
+                  if (e.key === 'Enter') {
+                    onClickKey(key);
                   }
                 }}
-                className="flex justify-between items-center text-sm cursor-pointer"
+                className="flex cursor-pointer items-center justify-between text-sm"
               >
-                <p className="text-gray-700 capitalize flex gap-2 items-center">
-                  {key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
+                <p className="flex items-center gap-2 capitalize text-gray-700">
+                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
                 </p>
                 <div className="flex items-center space-x-2">
-                  <p className={`font-medium ${isDeduction ? "text-red-600" : "text-gray-900"}`}>
+                  <p className={`font-medium ${isDeduction ? 'text-red-600' : 'text-gray-900'}`}>
                     {isDeduction ? `-${formatCurrency(Number(value))}` : formatCurrency(Number(value))}
                   </p>
-                  {key === "claimedCoins" && (
-                    <button
-                      type="button"
-                      onClick={onRemoveClaimedCoins}
-                      className="text-red-600 text-2xl hover:underline"
-                    >
+                  {key === 'claimedCoins' && (
+                    <button type="button" onClick={onRemoveClaimedCoins} className="text-2xl text-red-600 hover:underline">
                       <IoClose />
                     </button>
                   )}
-                  {key === "couponDiscount" && (
-                    <button type="button" onClick={onRemoveCoupon} className="text-red-600 text-2xl hover:underline">
+                  {key === 'couponDiscount' && (
+                    <button type="button" onClick={onRemoveCoupon} className="text-2xl text-red-600 hover:underline">
                       <IoClose />
                     </button>
                   )}
-                  {key === "serviceCharge" && (
-                    <button
-                      type="button"
-                      onClick={onOpenServiceChargeModal}
-                      className="text-red-600 text-2xl hover:underline"
-                    >
+                  {key === 'serviceCharge' && (
+                    <button type="button" onClick={onOpenServiceChargeModal} className="text-2xl text-red-600 hover:underline">
                       <IoClose />
                     </button>
                   )}
-                  {key === "discount" && (
-                    <button
-                      type="button"
-                      onClick={() => onSetActiveModal("discount")}
-                      className="text-red-600 text-2xl hover:underline"
-                    >
+                  {key === 'discount' && (
+                    <button type="button" onClick={() => onSetActiveModal('discount')} className="text-2xl text-red-600 hover:underline">
                       <IoClose />
                     </button>
                   )}
                 </div>
               </div>
-            )
+            );
           })}
-          <div className="flex justify-between font-semibold text-base border-t pt-2">
+          <div className="flex justify-between border-t pb-[10rem] pt-2 text-base font-semibold">
             <p className="text-black">Total</p>
             <p className="text-black">{formatCurrency(currentBill.total)}</p>
           </div>
         </div>
       </>
-    )
+    );
   },
-)
+);
 
-BillSummary.displayName = "BillSummary"
-export default BillSummary
+BillSummary.displayName = 'BillSummary';
+export default BillSummary;
