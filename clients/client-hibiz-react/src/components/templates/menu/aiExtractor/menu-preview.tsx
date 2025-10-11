@@ -1,8 +1,8 @@
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
-import type { Category } from "@/lib/menu/types";
 import { dishNodeId, subNodeId } from "@/lib/utils";
 import { SortableDish } from "./sortable-dish";
 import { DroppableSubcategory } from "./droppable-subcategory";
+import type { Category } from "../../../store/useMenuCreationStore";
 
 interface MenuPreviewProps {
   categories: Category[];

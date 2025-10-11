@@ -1,62 +1,89 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Category } from "./types";
+import type { CategoryDraft, DishDraft, ExtractResponse } from "./types";
 
-interface MenuState {
-  categories: Category[];
-  isEditing: boolean;
-  setEditing: (val: boolean) => void;
-  setCategories: (cats: Category[]) => void;
-  moveDish: (
-    dishId: string,
-    from: { catId: string; subId: string; index: number },
-    to: { catId: string; subId: string; index: number },
+interface MenuBuilderState {
+  // Extract phase data
+  extractResponse: ExtractResponse | null;
+  categoriesDraft: CategoryDraft[];
+  dishesDraft: DishDraft[];
+
+  // UI state
+  currentPhase: "upload" | "extract" | "review" | "finalize" | "success";
+  isLoading: boolean;
+  error: string | null;
+  hasUnsavedChanges: boolean;
+
+  // Actions
+  setExtractResponse: (response: ExtractResponse) => void;
+  updateCategoryDraft: (
+    tempId: string,
+    updates: Partial<CategoryDraft>,
   ) => void;
-  clear: () => void;
+  updateDishDraft: (tempId: string, updates: Partial<DishDraft>) => void;
+  setPhase: (phase: MenuBuilderState["currentPhase"]) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  markUnsavedChanges: (hasChanges: boolean) => void;
+  reset: () => void;
 }
 
-export const useMenuStore = create<MenuState>()(
+export const useMenuBuilderStore = create<MenuBuilderState>()(
   persist(
     (set, get) => ({
-      categories: [],
-      isEditing: false,
-      setEditing: (val) => set({ isEditing: val }),
-      setCategories: (cats) => set({ categories: cats }),
-      clear: () => set({ categories: [] }),
-      moveDish: (dishId, from, to) => {
-        const state = get();
-        const cats = state.categories.map((c) => ({
-          ...c,
-          subcategories: c.subcategories.map((s) => ({
-            ...s,
-            dishes: [...s.dishes],
-          })),
-        }));
+      extractResponse: null,
+      categoriesDraft: [],
+      dishesDraft: [],
+      currentPhase: "upload",
+      isLoading: false,
+      error: null,
+      hasUnsavedChanges: false,
 
-        const fromCat = cats.find((c) => c.id === from.catId);
-        const toCat = cats.find((c) => c.id === to.catId);
-        if (!fromCat || !toCat) return;
-
-        const fromSub = fromCat.subcategories.find((s) => s.id === from.subId);
-        const toSub = toCat.subcategories.find((s) => s.id === to.subId);
-        if (!fromSub || !toSub) return;
-
-        const [moved] = fromSub.dishes.splice(from.index, 1);
-        if (!moved || moved.id !== dishId) {
-          const idx = fromSub.dishes.findIndex((d) => d.id === dishId);
-          if (idx >= 0) {
-            const [m] = fromSub.dishes.splice(idx, 1);
-            toSub.dishes.splice(to.index, 0, m);
-          } else {
-            return;
-          }
-        } else {
-          toSub.dishes.splice(to.index, 0, moved);
-        }
-
-        set({ categories: cats });
+      setExtractResponse: (response) => {
+        set({
+          extractResponse: response,
+          categoriesDraft: response.categoriesDraft,
+          dishesDraft: response.dishesDraft,
+          currentPhase: "review",
+          hasUnsavedChanges: true,
+        });
       },
+
+      updateCategoryDraft: (tempId, updates) => {
+        set((state) => ({
+          categoriesDraft: state.categoriesDraft.map((cat) =>
+            cat.tempId === tempId ? { ...cat, ...updates } : cat,
+          ),
+          hasUnsavedChanges: true,
+        }));
+      },
+
+      updateDishDraft: (tempId, updates) => {
+        set((state) => ({
+          dishesDraft: state.dishesDraft.map((dish) =>
+            dish.tempId === tempId ? { ...dish, ...updates } : dish,
+          ),
+          hasUnsavedChanges: true,
+        }));
+      },
+
+      setPhase: (phase) => set({ currentPhase: phase }),
+      setLoading: (loading) => set({ isLoading: loading }),
+      setError: (error) => set({ error }),
+      markUnsavedChanges: (hasChanges) =>
+        set({ hasUnsavedChanges: hasChanges }),
+
+      reset: () =>
+        set({
+          extractResponse: null,
+          categoriesDraft: [],
+          dishesDraft: [],
+          currentPhase: "upload",
+          isLoading: false,
+          error: null,
+          hasUnsavedChanges: false,
+        }),
     }),
-    { name: "ai-menu-categories" },
+    { name: "menu-builder-store" },
   ),
 );

@@ -1,10 +1,12 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Dish } from "@/lib/menu/types";
+// import type { Dish } from "@/lib/types";
 import { dishNodeId } from "@/lib/utils";
+import type { Dish } from "../../../store/useMenuCreationStore";
+import type { DishPayload } from "../../../../lib/menu/types";
 
 interface SortableDishProps {
-  dish: Dish;
+  dish: DishPayload;
   disabled?: boolean;
 }
 

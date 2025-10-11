@@ -1,235 +1,200 @@
-import { memo, useCallback, useState } from "react";
-import {
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  closestCorners,
-} from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import {
-  findLocationByDishNodeId,
-  resolveTarget,
-  isDishNode,
-  normalizeToCategories,
-  mergeCategories,
-  fileToBase64,
-} from "@/lib/utils";
-import { FileUpload } from "./file-upload";
-import { useMenuStore } from "@/lib/menu/store";
-import { MenuPreview } from "./menu-preview";
+import { useEffect, useState } from "react";
+import { useMenuBuilderStore } from "@/lib/menu/store";
+import { extractMenuFromFiles } from "@/lib/menu/ai-service";
+import { createCategoriesAPI, createDishesAPI } from "@/lib/menu/api-client";
+import { deduplicateCategories } from "@/lib/utils";
+import { UploadStep } from "./upload-step";
+import { ExtractionLoader } from "./extraction-loader";
+import { FinalizeStep } from "./finalize-step";
+import { SuccessModal } from "./success-modal";
+import { ReviewStep } from "./review-step";
+import { RefreshGuardModal } from "./refresh-gaurd-modal";
+import { useParams } from "react-router-dom";
 
-const API_KEY = "AIzaSyC8UMDIXpTc4-CNSUL0k_tdQP1b1EROWz4"; // ⚠️ Do not commit real keys
+export default function AIMenuExtractor() {
+  const {
+    currentPhase,
+    isLoading,
+    error,
+    hasUnsavedChanges,
+    categoriesDraft,
+    dishesDraft,
+    setExtractResponse,
+    setPhase,
+    setLoading,
+    setError,
+    markUnsavedChanges,
+    reset,
+  } = useMenuBuilderStore();
+  const { menuId, businessId } = useParams<{
+    menuId: string;
+    businessId: string;
+  }>();
 
-const MemoAIMenuExtractor = () => {
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+  const [showRefreshGuard, setShowRefreshGuard] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [finalizeStage, setFinalizeStage] = useState<
+    "creating-categories" | "linking-dishes" | "complete"
+  >("creating-categories");
 
-  const [files, setFiles] = useState<File[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Refresh guard
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && currentPhase === "review") {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
 
-  const { categories, setCategories, isEditing, setEditing } = useMenuStore();
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges, currentPhase]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-  );
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files;
-    const maxFiles = 3;
-    if (!selected) return;
-
-    if (selected.length > maxFiles) {
-      setError(`Please select no more than ${maxFiles} images.`);
-      setFiles([]);
-    } else {
-      setFiles(Array.from(selected));
-      setError(null);
-    }
-  };
-
-  const handleExtract = async () => {
-    if (files.length === 0) {
-      setError("Please select at least one image file first.");
-      return;
-    }
-    if (!API_KEY) {
-      setError("API Key is not set. Add your key.");
-      return;
-    }
-
-    setIsLoading(true);
+  const handleExtract = async (files: File[]) => {
+    setLoading(true);
     setError(null);
+    setPhase("extract");
 
     try {
-      const results = [];
-
-      for (const file of files) {
-        const base64 = await fileToBase64(file);
-        const prompt =
-          "Extract the menu grouped by category and subcategory (if shown). Always return subcategories; if the image has none, create a single subcategory named 'General'. For each dish, include dishName, price (number), and dishType: one of 'veg','nonveg','vegan','egg','alcoholic','nonalcoholic'. Return ONLY JSON with this exact schema: [{category, subcategories:[{subcategory, dishes:[{dishName, price, dishType}]}]}].";
-
-        const payload = {
-          contents: [
-            {
-              parts: [
-                { text: prompt },
-                { inlineData: { mimeType: file.type, data: base64 } },
-              ],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "ARRAY",
-              items: {
-                type: "OBJECT",
-                properties: {
-                  category: { type: "STRING" },
-                  subcategories: {
-                    type: "ARRAY",
-                    items: {
-                      type: "OBJECT",
-                      properties: {
-                        subcategory: { type: "STRING" },
-                        dishes: {
-                          type: "ARRAY",
-                          items: {
-                            type: "OBJECT",
-                            properties: {
-                              dishName: { type: "STRING" },
-                              price: { type: "NUMBER" },
-                              dishType: { type: "STRING" },
-                            },
-                            propertyOrdering: ["dishName", "price", "dishType"],
-                          },
-                        },
-                      },
-                      propertyOrdering: ["subcategory", "dishes"],
-                    },
-                  },
-                },
-                propertyOrdering: ["category", "subcategories"],
-              },
-            },
-          },
-        } as const;
-
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-
-        if (!res.ok) {
-          const detail = await res.json();
-          throw new Error(
-            `API error for ${file.name}: ${
-              detail?.error?.message || res.status
-            }`,
-          );
-        }
-
-        const json = await res.json();
-        const jsonText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!jsonText) throw new Error("No JSON returned.");
-
-        const raw = JSON.parse(jsonText);
-        const normalized = normalizeToCategories(raw);
-        results.push(...normalized);
-      }
-
-      const merged = mergeCategories(results);
-      setCategories(merged);
-    } catch (err: any) {
-      console.error(err);
-      setError(err?.message || "Extraction failed");
+      const response = await extractMenuFromFiles(files);
+      setExtractResponse(response);
+    } catch (err) {
+      console.error("[v0] Extraction error:", err);
+      setError(err instanceof Error ? err.message : "Failed to extract menu");
+      setPhase("upload");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const onDragEnd = useCallback(
-    (evt: DragEndEvent) => {
-      if (!evt.over || !evt.active) return;
-      const overId = String(evt.over.id);
-      const activeId = String(evt.active.id);
+  const handleProceed = async () => {
+    setPhase("finalize");
+    setFinalizeStage("creating-categories");
 
-      const locFrom = findLocationByDishNodeId(activeId, categories);
-      const locTo = resolveTarget(overId, categories);
-      if (!locFrom || !locTo) return;
+    try {
+      // Step 1: Create categories
+      const uniqueCategories = deduplicateCategories(categoriesDraft);
+      const categoryPayloads = uniqueCategories.map((cat) => ({
+        name: cat.name,
+        hierarchy: "CHILD" as const,
+        businessId,
+        menuId,
+      }));
 
-      const targetIndex = isDishNode(overId) ? locTo.index : locTo.index;
+      const {
+        success: catSuccess,
+        idMap,
+        errors: catErrors,
+      } = await createCategoriesAPI(categoryPayloads);
 
-      if (locFrom.catId === locTo.catId && locFrom.subId === locTo.subId) {
-        if (locFrom.index === targetIndex) return;
-        const cats = structuredClone(categories);
-        const cat = cats.find((c) => c.id === locFrom.catId)!;
-        const sub = cat.subcategories.find((s) => s.id === locFrom.subId)!;
-        sub.dishes = arrayMove(sub.dishes, locFrom.index, targetIndex);
-        setCategories(cats);
-      } else {
-        useMenuStore
-          .getState()
-          .moveDish(locFrom.dishId, locFrom, { ...locTo, index: targetIndex });
+      if (!catSuccess) {
+        throw new Error(`Category creation failed: ${catErrors.join(", ")}`);
       }
-    },
-    [categories, setCategories],
-  );
+
+      // Step 2: Create dishes
+      setFinalizeStage("linking-dishes");
+
+      const dishPayloads = dishesDraft.map((dish) => {
+        const categoryIds = dish.categoryRefs
+          .map((tempId) => {
+            const cat = categoriesDraft.find((c) => c.tempId === tempId);
+            return cat ? idMap[cat.name] : null;
+          })
+          .filter(Boolean) as string[];
+
+        return {
+          name: dish.name,
+          price: dish.price,
+          visibility: dish.visibility,
+          availability: dish.availability,
+          dishTypes: dish.dishTypes,
+          description: dish.description,
+          categoryIds,
+          portions: dish.portions,
+        };
+      });
+
+      const { success: dishSuccess, errors: dishErrors } =
+        await createDishesAPI(dishPayloads);
+
+      if (!dishSuccess) {
+        throw new Error(`Dish creation failed: ${dishErrors.join(", ")}`);
+      }
+
+      // Success!
+      setFinalizeStage("complete");
+      markUnsavedChanges(false);
+      setTimeout(() => {
+        setPhase("success");
+        setShowSuccess(true);
+      }, 1500);
+    } catch (err) {
+      console.error("[v0] Finalize error:", err);
+      setError(err instanceof Error ? err.message : "Failed to save menu");
+      setPhase("review");
+    }
+  };
+
+  const handleGoToMenu = () => {
+    // Navigate to menu page (implement your navigation logic)
+    console.log("[v0] Navigate to menu");
+    reset();
+    setShowSuccess(false);
+  };
+
+  const handleAddMore = () => {
+    reset();
+    setShowSuccess(false);
+  };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-6xl p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              AI Menu Extractor
-            </h1>
-            <p className="text-gray-600">
-              Upload up to 3 images to extract categories → subcategories →
-              dishes.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setEditing(!isEditing)}
-              className={`px-4 py-2 rounded-lg font-medium border ${
-                isEditing
-                  ? "bg-emerald-600 text-white border-emerald-600"
-                  : "bg-gray-100 text-gray-800 border-gray-300"
-              }`}
-            >
-              {isEditing ? "Done" : "Edit"}
-            </button>
-            <button
-              onClick={handleExtract}
-              disabled={isLoading || files.length === 0}
-              className="px-4 py-2 rounded-lg font-semibold bg-blue-600 text-white disabled:bg-blue-400"
-            >
-              {isLoading ? "Extracting…" : "Extract Menu"}
-            </button>
-          </div>
-        </div>
-
-        <FileUpload files={files} onFileChange={handleFileChange} />
-
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-12">
+        {/* Error Display */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {error}
+          <div className="max-w-3xl mx-auto mb-8 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
+            <p className="font-semibold">Error</p>
+            <p className="text-sm">{error}</p>
           </div>
         )}
 
-        <DndContext
-          sensors={sensors}
-          onDragEnd={onDragEnd}
-          collisionDetection={closestCorners}
-        >
-          <MenuPreview categories={categories} isEditing={isEditing} />
-        </DndContext>
+        {/* Phase Rendering */}
+        {currentPhase === "upload" && (
+          <UploadStep onExtract={handleExtract} isLoading={isLoading} />
+        )}
+
+        {currentPhase === "extract" && isLoading && (
+          <ExtractionLoader filesCount={1} />
+        )}
+
+        {currentPhase === "review" && <ReviewStep onProceed={handleProceed} />}
+
+        {currentPhase === "finalize" && (
+          <FinalizeStep
+            stage={finalizeStage}
+            categoriesCount={categoriesDraft.length}
+            dishesCount={dishesDraft.length}
+          />
+        )}
+
+        {/* Modals */}
+        <RefreshGuardModal
+          open={showRefreshGuard}
+          onStay={() => setShowRefreshGuard(false)}
+          onLeave={() => {
+            reset();
+            setShowRefreshGuard(false);
+          }}
+        />
+
+        <SuccessModal
+          open={showSuccess}
+          categoriesCount={categoriesDraft.length}
+          dishesCount={dishesDraft.length}
+          onGoToMenu={handleGoToMenu}
+          onAddMore={handleAddMore}
+        />
       </div>
     </div>
   );
-};
-const AIMenuExtractor = memo(MemoAIMenuExtractor);
-export default AIMenuExtractor;
+}
