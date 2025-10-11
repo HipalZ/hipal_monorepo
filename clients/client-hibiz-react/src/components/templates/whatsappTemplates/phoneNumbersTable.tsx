@@ -1,12 +1,12 @@
-import { lazy, memo, useCallback, useMemo } from "react";
-import { CloudDownload, Filter } from "lucide-react";
-import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
-import { CgClose } from "react-icons/cg";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { FILTER_OPTIONS, getStatusStyle } from "@/components/utils/helper";
+import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
+import { FILTER_OPTIONS, getStatusStyle } from '@/components/utils/helper';
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { CloudDownload, Filter } from 'lucide-react';
+import { lazy, memo, useCallback, useMemo } from 'react';
+import { CgClose } from 'react-icons/cg';
 
-const PhoneBottomButtons = lazy(() => import("./phoneBottomButtons"));
-const ExportOptions = lazy(() => import("./exportOptions"));
+const PhoneBottomButtons = lazy(() => import('./phoneBottomButtons'));
+const ExportOptions = lazy(() => import('./exportOptions'));
 const ITEMS_PER_PAGE = 40;
 
 const MemoPhoneNumbersTable = () => {
@@ -38,25 +38,19 @@ const MemoPhoneNumbersTable = () => {
     addMultiplePhones: s.addMultiplePhones,
   }));
   const isAllSelected = useMemo(
-    () =>
-      campaignsData?.campaignAnalytics?.length > 0 &&
-      campaignsData.campaignAnalytics.every((item) =>
-        selectedPhones.includes(item.phone),
-      ),
+    () => campaignsData?.campaignAnalytics?.length > 0 && campaignsData.campaignAnalytics.every((item) => selectedPhones.includes(item.phone)),
     [campaignsData.campaignAnalytics, selectedPhones],
   );
   const currentData = useMemo(() => {
     const startIndex = (pageNumber - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
 
-    const filteredData = campaignsData.campaignAnalytics.filter(
-      (item) => !status || item.status === status,
-    );
+    const filteredData = campaignsData.campaignAnalytics.filter((item) => !status || item.status === status);
     return filteredData.slice(startIndex, endIndex);
   }, [pageNumber, status, campaignsData.campaignAnalytics]);
 
   const clearFilter = useCallback(async () => {
-    setStatus("");
+    setStatus('');
     setPageNumber(1);
   }, [setStatus, setPageNumber]);
 
@@ -83,9 +77,7 @@ const MemoPhoneNumbersTable = () => {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.checked) {
         // Select all phone numbers across all filters
-        const allPhones = campaignsData.campaignAnalytics.map(
-          (item) => item.phone,
-        );
+        const allPhones = campaignsData.campaignAnalytics.map((item) => item.phone);
         addMultiplePhones(allPhones);
       } else {
         // Deselect all
@@ -96,50 +88,34 @@ const MemoPhoneNumbersTable = () => {
   );
 
   return (
-    <section
-      className="bg-white rounded-lg shadow-sm"
-      aria-label="Phone Numbers"
-    >
-      <div className="flex items-center justify-between px-4 py-2 border-b">
-        <h2 className="text-xl font-semibold text-gray-900">
-          Total {campaignsData?.campaignAnalytics?.length} contacts
-        </h2>
+    <section className="rounded-lg bg-white shadow-sm" aria-label="Phone Numbers">
+      <div className="flex items-center justify-between border-b px-4 py-2">
+        <h2 className="text-xl font-semibold text-gray-900">Total {campaignsData?.campaignAnalytics?.length} contacts</h2>
         <div className="flex items-center gap-4">
           {status && (
-            <span
-              className={`inline-flex items-center gap-2 px-3 py-1 text-sm rounded-full ${getStatusStyle(
-                status,
-              )}`}
-            >
+            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm ${getStatusStyle(status)}`}>
               {status.charAt(0).toUpperCase() + status.slice(1)}
-              <button
-                type="button"
-                onClick={clearFilter}
-                className="hover:opacity-75"
-              >
-                <CgClose className="w-4 h-4" />
+              <button type="button" onClick={clearFilter} className="hover:opacity-75">
+                <CgClose className="h-4 w-4" />
               </button>
             </span>
           )}
           <Menu as="div" className="relative inline-block text-left">
-            <MenuButton className="px-4 py-2 text-sm font-medium text-white bg-[#25D369] border rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              <Filter className="inline-block w-4 h-4 mr-2 " />
+            <MenuButton className="rounded-md border bg-[#25D369] px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+              <Filter className="mr-2 inline-block h-4 w-4" />
               Filter
             </MenuButton>
-            <MenuItems className="absolute right-0 z-10 mt-2 bg-white border rounded shadow-md">
-              <div className="py-1 min-w-28">
+            <MenuItems className="absolute right-0 z-10 mt-2 rounded border bg-white shadow-md">
+              <div className="min-w-28 py-1">
                 {FILTER_OPTIONS.map((filterOption) => (
                   <MenuItem key={filterOption?.id}>
                     {({ active }) => (
                       <button
                         type="button"
-                        className={`${
-                          active ? "bg-gray-100 text-gray-900" : "text-gray-700"
-                        } block w-full px-4 py-2 text-left text-sm`}
+                        className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} block w-full px-4 py-2 text-left text-sm`}
                         onClick={() => handleFilterClick(filterOption?.status)}
                       >
-                        {filterOption?.label.charAt(0).toUpperCase() +
-                          filterOption?.label.slice(1)}
+                        {filterOption?.label.charAt(0).toUpperCase() + filterOption?.label.slice(1)}
                       </button>
                     )}
                   </MenuItem>
@@ -148,10 +124,8 @@ const MemoPhoneNumbersTable = () => {
                   {({ active }) => (
                     <button
                       type="button"
-                      className={`${
-                        active ? "bg-gray-100 text-red-700" : "text-red-700"
-                      } block w-full px-4 py-2 text-left text-sm`}
-                      onClick={() => handleFilterClick("")}
+                      className={`${active ? 'bg-gray-100 text-red-700' : 'text-red-700'} block w-full px-4 py-2 text-left text-sm`}
+                      onClick={() => handleFilterClick('')}
                     >
                       Clear
                     </button>
@@ -164,82 +138,63 @@ const MemoPhoneNumbersTable = () => {
             type="button"
             onClick={() => setOpenExport(true)}
             disabled={currentData.length === 0}
-            className="px-4 py-2 text-sm text-white bg-purple-500 rounded-md disabled:cursor-not-allowed"
+            className="rounded-md bg-purple-500 px-4 py-2 text-sm text-white disabled:cursor-not-allowed"
           >
-            <CloudDownload className="inline-block w-4 h-4 mr-2" />
+            <CloudDownload className="mr-2 inline-block h-4 w-4" />
             Export
           </button>
         </div>
       </div>
       <div className="overflow-x-auto">
-        <div className="inline-block min-w-full overflow-hidden align-middle border-b border-gray-200 shadow sm:rounded-lg">
+        <div className="inline-block min-w-full overflow-hidden border-b border-gray-200 align-middle shadow sm:rounded-lg">
           {currentData.length > 0 ? (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-base font-medium tracking-wider text-left text-black"
-                  >
+                  <th scope="col" className="px-6 py-3 text-left text-base font-medium tracking-wider text-black">
                     PHONE NUMBER
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-base font-medium tracking-wider text-left text-black"
-                  >
+                  <th scope="col" className="px-6 py-3 text-left text-base font-medium tracking-wider text-black">
                     DATA
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-base font-medium tracking-wider text-left text-black"
-                  >
+                  <th scope="col" className="px-6 py-3 text-left text-base font-medium tracking-wider text-black">
                     STATUS
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-base font-medium tracking-wider text-left text-black"
-                  >
+                  <th scope="col" className="px-6 py-3 text-left text-base font-medium tracking-wider text-black">
                     <input
                       type="checkbox"
                       checked={isAllSelected}
                       onChange={handleSelectAll}
-                      className="inline-block w-4 h-4 mr-1 text-blue-600 rounded-sm form-checkbox"
-                    />{" "}
+                      className="form-checkbox mr-1 inline-block h-4 w-4 rounded-sm text-blue-600"
+                    />{' '}
                     SELECT (ALL)
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 bg-white">
                 {currentData.map((item) => (
-                  <tr
-                    key={item._id}
-                    className="transition-colors hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-base font-medium text-gray-900">
-                        {item?.userId?.phone}
-                      </div>
+                  <tr key={item._id} className="transition-colors hover:bg-gray-50">
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="text-base font-medium text-gray-900">{item?.userId?.phone || item?.phone}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-base text-gray-900">
-                        {item?.userId.name}
-                      </div>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="text-base text-gray-900">{item?.userId?.name || item?.name}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="whitespace-nowrap px-6 py-4">
                       <span
-                        className={`capitalize inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium ${getStatusStyle(
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-base font-medium capitalize ${getStatusStyle(
                           item.status,
                         )}`}
                       >
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="whitespace-nowrap px-6 py-4">
                       <input
                         type="checkbox"
                         checked={selectedPhones.includes(item.phone)}
                         onChange={() => handleCheckboxChange(item.phone)}
-                        className="w-4 h-4 text-blue-600 rounded-sm form-checkbox"
+                        className="form-checkbox h-4 w-4 rounded-sm text-blue-600"
                       />
                     </td>
                   </tr>
@@ -247,9 +202,7 @@ const MemoPhoneNumbersTable = () => {
               </tbody>
             </table>
           ) : (
-            <div className="p-4 text-center text-gray-500">
-              No data available for this campaign.
-            </div>
+            <div className="p-4 text-center text-gray-500">No data available for this campaign.</div>
           )}
         </div>
       </div>

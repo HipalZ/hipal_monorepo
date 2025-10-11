@@ -60,6 +60,10 @@ export interface Campaign {
 }
 
 export interface CampaignAnalytics {
+  userId: {
+    name: string;
+    phone: string;
+  };
   _id: string;
   businessId: string;
   name: string;
