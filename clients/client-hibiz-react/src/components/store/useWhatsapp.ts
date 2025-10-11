@@ -427,16 +427,16 @@ export const useWhatsapp = create(
         setTemplateId: (templateId: string) => set({ templateId }),
 
         setTemplateData: (data: any) => {
-          const headerComponent = data.components.find(
+          const headerComponent = data?.components?.find(
             (component: IWhatsappHeaderType) => component.type === "HEADER",
           );
-          const bodyComponent = data.components.find(
+          const bodyComponent = data?.components?.find(
             (component: IWhatsappHeaderType) => component.type === "BODY",
           );
-          const footerComponent = data.components.find(
+          const footerComponent = data?.components?.find(
             (component: IWhatsappHeaderType) => component.type === "FOOTER",
           );
-          const buttonsComponent = data.components.find(
+          const buttonsComponent = data?.components?.find(
             (component: IWhatsappHeaderType) => component.type === "BUTTONS",
           );
 
