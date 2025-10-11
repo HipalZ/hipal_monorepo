@@ -1,5 +1,5 @@
 import type { DishType } from "@hi/db-models/src/validators";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 interface IDishStore {
   dishes: DishType[];
@@ -7,7 +7,7 @@ interface IDishStore {
   resetDishesStore: () => void;
 }
 
-export const useDishesStore = create<IDishStore>((set) => ({
+export const useDishesStore = createWithEqualityFn<IDishStore>((set) => ({
   dishes: [],
   setDishes: (dishes) => set({ dishes: dishes }),
   resetDishesStore: () =>

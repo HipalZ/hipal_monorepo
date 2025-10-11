@@ -1,5 +1,5 @@
 import { BASE_URL } from "@/configs";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type {
   ICouponzLinks,
@@ -284,7 +284,7 @@ interface whatsappTemplate {
   setWhatzappFormEnabled: (value: boolean) => void;
 }
 
-export const useWhatsapp = create(
+export const useWhatsapp = createWithEqualityFn(
   persist<whatsappTemplate>(
     (set, get) => {
       const businessName = useBusinessData.getState().businessData?.name || "";

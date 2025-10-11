@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 interface IBirthday {
   imagePreview: string;
@@ -17,7 +17,7 @@ interface IBirthday {
   }) => void;
 }
 
-export const useBirthday = create<IBirthday>((set) => ({
+export const useBirthday = createWithEqualityFn<IBirthday>((set) => ({
   imagePreview: "",
   setImagePreview: (imagePreview) => set({ imagePreview }),
 

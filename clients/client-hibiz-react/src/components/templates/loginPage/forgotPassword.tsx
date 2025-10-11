@@ -8,12 +8,10 @@ import { LuArrowLeft } from "react-icons/lu";
 import { PiSealWarningBold } from "react-icons/pi";
 
 const ForgotPassword = () => {
-  const { setStep, phone, step, setPhone } = useLoginStore((state) => ({
-    setStep: state.setStep,
-    phone: state.phone,
-    step: state.step,
-    setPhone: state.setPhone,
-  }));
+  const setStep = useLoginStore((state) => state.setStep);
+  const phone = useLoginStore((state) => state.phone);
+  const step = useLoginStore((state) => state.step);
+  const setPhone = useLoginStore((state) => state.setPhone);
   const [validPhone, setValidPhone] = useState(true);
   const validPhoneNumber = () => {
     const phoneRegex = /^[6-9]\d{9}$/;
@@ -63,31 +61,30 @@ const ForgotPassword = () => {
         Forgot your Password
       </h3>
       <h3 className="flex leading-8">No worriez !</h3>
- 
-        <section className="mt-6 space-y-6">
-          <div>
-            {!validPhone && (
-              <small className="flex items-center text-[#F2634C]">
-                <PiSealWarningBold />
-                &nbsp; Enter a valid number
-              </small>
+      <section className="mt-6 space-y-6">
+        <div>
+          {!validPhone && (
+            <small className="flex items-center text-[#F2634C]">
+              <PiSealWarningBold />
+              &nbsp; Enter a valid number
+            </small>
+          )}
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className={cn(
+              "w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:border-transparent",
+              validPhone
+                ? "border-black focus:ring-black"
+                : "border-red-500 focus:ring-red-500",
             )}
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className={cn(
-                "w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:border-transparent",
-                validPhone
-                  ? "border-black focus:ring-black"
-                  : "border-red-500 focus:ring-red-500",
-              )}
-              placeholder="Enter phone number"
-              maxLength={10}
-              required
-            />
-          </div>
-        </section>
+            placeholder="Enter phone number"
+            maxLength={10}
+            required
+          />
+        </div>
+      </section>
       <button type="button" className="action_btn" onClick={handleSubmit}>
         Send Otp
       </button>

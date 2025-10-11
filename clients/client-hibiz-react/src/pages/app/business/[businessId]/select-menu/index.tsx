@@ -82,34 +82,22 @@ const MemoSelectMenu = () => {
     businessId as string,
   );
 
-  const {
-    currentStep,
-    resetStore,
-    setCurrentStep,
-    canProceed,
-    editingMenuId,
-    setMenuData,
-    showCreationFlow,
-    name: layoutName,
-    setShowCreationFlow,
-    setCopyMenuLayoutId,
-    setSourceMenuName,
-  } = useMenuCreationStore((state) => ({
-    currentStep: state.currentStep,
-    resetStore: state.resetStore,
-    editingMenuId: state.editingMenuId,
-    setMenuData: state.setMenuData,
-    showCreationFlow: state.showCreationFlow,
-    setShowCreationFlow: state.setShowCreationFlow,
-    setCurrentStep: state.setCurrentStep,
-    canProceed: state.canProceed,
-    name: state.name,
-    setCopyMenuLayoutId: state.setCopyMenuLayoutId,
-    setSourceMenuName: state.setSourceMenuName,
-    setCopyCompleteMenu: state.setCopyCompleteMenu,
-    copyMenuLayoutId: state.copyMenuLayoutId,
-    sourceMenuName: state.sourceMenuName,
-  }));
+  const currentStep = useMenuCreationStore((s) => s.currentStep);
+  const resetStore = useMenuCreationStore((s) => s.resetStore);
+  const setCurrentStep = useMenuCreationStore((s) => s.setCurrentStep);
+  const canProceed = useMenuCreationStore((s) => s.canProceed);
+  const editingMenuId = useMenuCreationStore((s) => s.editingMenuId);
+  const setMenuData = useMenuCreationStore((s) => s.setMenuData);
+  const showCreationFlow = useMenuCreationStore((s) => s.showCreationFlow);
+  const setShowCreationFlow = useMenuCreationStore(
+    (s) => s.setShowCreationFlow,
+  );
+  const layoutName = useMenuCreationStore((s) => s.name);
+  const setCopyMenuLayoutId = useMenuCreationStore(
+    (s) => s.setCopyMenuLayoutId,
+  );
+  const setSourceMenuName = useMenuCreationStore((s) => s.setSourceMenuName);
+
   const navigate = useNavigate();
 
   // State for modals
@@ -335,7 +323,6 @@ const MemoSelectMenu = () => {
               }
             >
               {renderStep()}
-              
             </Suspense>
           </div>
 

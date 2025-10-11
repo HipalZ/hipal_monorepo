@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 export type DashBoardState =
@@ -7,7 +7,7 @@ export type DashBoardState =
   | "Coupon_And_Loyalty"
   | "Marketing";
 
-export const useSelectedIcon = create(
+export const useSelectedIcon = createWithEqualityFn(
   persist<{
     selectedIcon: string;
     setSelectedIcon: (text: string) => void;

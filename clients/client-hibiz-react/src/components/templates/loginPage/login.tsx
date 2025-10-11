@@ -12,12 +12,10 @@ import { apiRpc } from "@hi/common";
 import type { ILoginProps } from "@/components/types/businessData";
 
 const Login: React.FC = () => {
-  const { phone, setPhone, step, setStep } = useLoginStore((state) => ({
-    phone: state.phone,
-    setPhone: state.setPhone,
-    step: state.step,
-    setStep: state.setStep,
-  }));
+  const phone = useLoginStore((state) => state.phone);
+  const setPhone = useLoginStore((state) => state.setPhone);
+  const step = useLoginStore((state) => state.step);
+  const setStep = useLoginStore((state) => state.setStep);
   const { setUser } = useOwnerLogin((state) => ({
     setUser: state.setUser,
   }));

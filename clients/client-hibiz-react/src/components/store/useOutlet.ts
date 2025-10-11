@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 export interface OutletFormState {
   formData: {
@@ -15,32 +15,34 @@ export interface OutletFormState {
   setFormData: (key: keyof OutletFormState["formData"], value: string) => void;
 }
 
-export const useOutletFormStore = create<OutletFormState>((set) => ({
-  formData: {
-    billingStartTime: "",
-    billingEndTime: "",
-    brandName: "",
-    branchName: "",
-    url: "",
-    _id: "",
-    placeId: "",
-    placeUrl: "",
-  },
-  setFormData: (key: keyof OutletFormState["formData"], value: string) =>
-    set((state) => ({
-      formData: {
-        ...state.formData,
-        [key]: value,
-      },
-    })),
-  setEntireFormData: (data: Partial<OutletFormState["formData"]>) =>
-    set((state) => ({
-      formData: {
-        ...state.formData,
-        ...data,
-      },
-    })),
-}));
+export const useOutletFormStore = createWithEqualityFn<OutletFormState>(
+  (set) => ({
+    formData: {
+      billingStartTime: "",
+      billingEndTime: "",
+      brandName: "",
+      branchName: "",
+      url: "",
+      _id: "",
+      placeId: "",
+      placeUrl: "",
+    },
+    setFormData: (key: keyof OutletFormState["formData"], value: string) =>
+      set((state) => ({
+        formData: {
+          ...state.formData,
+          [key]: value,
+        },
+      })),
+    setEntireFormData: (data: Partial<OutletFormState["formData"]>) =>
+      set((state) => ({
+        formData: {
+          ...state.formData,
+          ...data,
+        },
+      })),
+  }),
+);
 
 export interface BusinessFormState {
   businessFormData: {
@@ -72,39 +74,41 @@ export interface BusinessFormState {
   ) => void;
 }
 
-export const useBusinessFormStore = create<BusinessFormState>((set) => ({
-  businessFormData: {
-    registeredBusinessName: "",
-    registrationType: "",
-    businessType: "",
-    establishmentYear: "",
-    companyPan: "",
-    gstNumber: "",
-    gstYesNo: "",
-    accountNumber: "",
-    beneficiaryName: "",
-    ifscCode: "",
-    businessEmail: "",
-    businessContact: "",
-    authSignatoryName: "",
-    contactPanCard: "",
-    merchantId: "",
-    accessKeyId: "",
-    secretKey: "",
-    _id: undefined,
-  },
-  setBusinessFormData: (key, value) =>
-    set((state) => ({
-      businessFormData: {
-        ...state.businessFormData,
-        [key]: value,
-      },
-    })),
-  setEntireBusinessFormData: (data) =>
-    set((state) => ({
-      businessFormData: {
-        ...state.businessFormData,
-        ...data,
-      },
-    })),
-}));
+export const useBusinessFormStore = createWithEqualityFn<BusinessFormState>(
+  (set) => ({
+    businessFormData: {
+      registeredBusinessName: "",
+      registrationType: "",
+      businessType: "",
+      establishmentYear: "",
+      companyPan: "",
+      gstNumber: "",
+      gstYesNo: "",
+      accountNumber: "",
+      beneficiaryName: "",
+      ifscCode: "",
+      businessEmail: "",
+      businessContact: "",
+      authSignatoryName: "",
+      contactPanCard: "",
+      merchantId: "",
+      accessKeyId: "",
+      secretKey: "",
+      _id: undefined,
+    },
+    setBusinessFormData: (key, value) =>
+      set((state) => ({
+        businessFormData: {
+          ...state.businessFormData,
+          [key]: value,
+        },
+      })),
+    setEntireBusinessFormData: (data) =>
+      set((state) => ({
+        businessFormData: {
+          ...state.businessFormData,
+          ...data,
+        },
+      })),
+  }),
+);

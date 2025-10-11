@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 interface TaxStore {
   linkDishModal: boolean;
@@ -7,7 +7,7 @@ interface TaxStore {
   setSelectedTaxId: (taxId: string | null) => void;
 }
 
-export const useTaxStore = create<TaxStore>((set) => ({
+export const useTaxStore = createWithEqualityFn<TaxStore>((set) => ({
   linkDishModal: false,
   selectedTaxId: null,
   setLinkDishModal: (show) => set({ linkDishModal: show }),

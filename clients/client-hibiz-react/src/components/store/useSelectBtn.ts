@@ -1,11 +1,13 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from "zustand/traditional";
 
 type SelectedButtonState = {
   selectedButton: string | null;
   setSelectedButton: (text: string) => void;
 };
 
-export const useSelectedButtonStore = create<SelectedButtonState>((set) => ({
-  selectedButton: 'Dashboard',
-  setSelectedButton: (text) => set({ selectedButton: text }),
-}));
+export const useSelectedButtonStore = createWithEqualityFn<SelectedButtonState>(
+  (set) => ({
+    selectedButton: "Dashboard",
+    setSelectedButton: (text) => set({ selectedButton: text }),
+  }),
+);

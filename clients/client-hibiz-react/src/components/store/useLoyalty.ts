@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 export type LoyaltyPages = "GET_STARTED" | "CARD_SELECTION" | "LOYALTY_USER";
 
@@ -60,7 +60,7 @@ interface LoyaltyStore {
   resetFields: () => void;
 }
 
-export const useLoyalty = create<LoyaltyStore>((set) => ({
+export const useLoyalty = createWithEqualityFn<LoyaltyStore>((set) => ({
   loyaltyID: "",
   setLoyaltyID: (id: string) => set(() => ({ loyaltyID: id })),
 

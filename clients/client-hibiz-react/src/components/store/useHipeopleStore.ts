@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import type {
   ICoinzUsage,
   IHistory,
@@ -32,7 +32,7 @@ export type HiPeoplePages =
   | "TARGET GROUPS"
   | "TAGZ"
   | "ACTIONS"
-  | "CHECK IN USERS"
+  | "CHECK IN USERS";
 
 export type NavItems =
   | "RECENT BILLS"
@@ -316,10 +316,9 @@ interface IHiPeople {
 
   fetchGroupData: boolean;
   setFetchGroupData: (fetch: boolean) => void;
-
 }
 
-const useHiPeopleStore = create<IHiPeople>((set, get) => ({
+const useHiPeopleStore = createWithEqualityFn<IHiPeople>((set, get) => ({
   selectedPage: "SUMMARY",
   setSelectedPage: (page: HiPeoplePages) => set({ selectedPage: page }),
 

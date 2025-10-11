@@ -1,48 +1,48 @@
-import { create } from "zustand"
-import type { IHotelRoom } from "@/hooks/hotel/useRoomHook"
+import { createWithEqualityFn } from "zustand/traditional";
+import type { IHotelRoom } from "@/hooks/hotel/useRoomHook";
 
 // Update the errors interface to match RoomFormErrors
 interface RoomFormState {
   // Form mode
-  isEditMode: boolean
-  editRoomId: string | null
+  isEditMode: boolean;
+  editRoomId: string | null;
 
   // Form data
   roomInfo: {
-    name: string
-  }
-  roomTypeId: string
-  selectedFloorId: string
-  selectedStaffIds: string[]
+    name: string;
+  };
+  roomTypeId: string;
+  selectedFloorId: string;
+  selectedStaffIds: string[];
 
   // Form state
-  currentStep: number
+  currentStep: number;
   errors: {
-    name: string
-    roomTypeId: string
-    staffIds: string
-    zoneId: string
-  }
+    name: string;
+    roomTypeId: string;
+    staffIds: string;
+    zoneId: string;
+  };
 
   // Actions
-  setRoomInfo: (info: Partial<RoomFormState["roomInfo"]>) => void
-  setRoomTypeId: (id: string) => void
-  setSelectedFloorId: (floorId: string) => void
-  toggleStaff: (staffId: string) => void
-  setCurrentStep: (step: number) => void
-  resetForm: () => void
-  validateCurrentStep: () => boolean
-  clearErrors: () => void
-  setError: (field: keyof RoomFormState["errors"], message: string) => void
+  setRoomInfo: (info: Partial<RoomFormState["roomInfo"]>) => void;
+  setRoomTypeId: (id: string) => void;
+  setSelectedFloorId: (floorId: string) => void;
+  toggleStaff: (staffId: string) => void;
+  setCurrentStep: (step: number) => void;
+  resetForm: () => void;
+  validateCurrentStep: () => boolean;
+  clearErrors: () => void;
+  setError: (field: keyof RoomFormState["errors"], message: string) => void;
 
   // Edit mode actions
-  setEditMode: (isEdit: boolean) => void
-  setEditRoomId: (id: string | null) => void
-  initializeFormForEdit: (roomData: IHotelRoom) => void
+  setEditMode: (isEdit: boolean) => void;
+  setEditRoomId: (id: string | null) => void;
+  initializeFormForEdit: (roomData: IHotelRoom) => void;
 }
 
 // Update the initial errors state
-const useRoomFormStore = create<RoomFormState>((set, get) => ({
+const useRoomFormStore = createWithEqualityFn<RoomFormState>((set, get) => ({
   // Initial state
   isEditMode: false,
   editRoomId: null,
@@ -78,16 +78,18 @@ const useRoomFormStore = create<RoomFormState>((set, get) => ({
 
   toggleStaff: (staffId) =>
     set((state) => {
-      const isSelected = state.selectedStaffIds.includes(staffId)
+      const isSelected = state.selectedStaffIds.includes(staffId);
 
       if (isSelected) {
         return {
-          selectedStaffIds: state.selectedStaffIds.filter((id) => id !== staffId),
-        }
+          selectedStaffIds: state.selectedStaffIds.filter(
+            (id) => id !== staffId,
+          ),
+        };
       } else {
         return {
           selectedStaffIds: [...state.selectedStaffIds, staffId],
-        }
+        };
       }
     }),
 
@@ -114,40 +116,47 @@ const useRoomFormStore = create<RoomFormState>((set, get) => ({
 
   // Update the validateCurrentStep function to use zoneId instead of floor
   validateCurrentStep: () => {
-    const { currentStep, roomInfo, roomTypeId, selectedFloorId, clearErrors, setError } = get()
+    const {
+      currentStep,
+      roomInfo,
+      roomTypeId,
+      selectedFloorId,
+      clearErrors,
+      setError,
+    } = get();
 
     // Clear previous errors
-    clearErrors()
+    clearErrors();
 
     // Validate based on current step
     if (currentStep === 1) {
-      let isValid = true
+      let isValid = true;
 
       if (!roomInfo.name.trim()) {
-        setError("name", "Room name is required")
-        isValid = false
+        setError("name", "Room name is required");
+        isValid = false;
       }
 
       if (!roomTypeId) {
-        setError("roomTypeId", "Please select a room type")
-        isValid = false
+        setError("roomTypeId", "Please select a room type");
+        isValid = false;
       }
 
-      return isValid
+      return isValid;
     }
 
     if (currentStep === 3) {
-      let isValid = true
+      let isValid = true;
 
       if (!selectedFloorId) {
-        setError("zoneId", "Please select a floor")
-        isValid = false
+        setError("zoneId", "Please select a floor");
+        isValid = false;
       }
 
-      return isValid
+      return isValid;
     }
 
-    return true
+    return true;
   },
 
   // Update the clearErrors function
@@ -185,9 +194,8 @@ const useRoomFormStore = create<RoomFormState>((set, get) => ({
       selectedFloorId: roomData.zoneId || "",
       selectedStaffIds: roomData.staffIds || [],
       currentStep: 1,
-    })
+    });
   },
-}))
+}));
 
-export default useRoomFormStore
-
+export default useRoomFormStore;

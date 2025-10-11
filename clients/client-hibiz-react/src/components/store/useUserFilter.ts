@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 export type PeopleFilters = {
   search: string;
@@ -18,16 +18,18 @@ interface PeopleFiltersState {
   clearFilters: () => void;
 }
 
-export const usePeopleFiltersStore = create<PeopleFiltersState>((set) => ({
-  filters: {
-    search: "",
-  },
-  setFilter: (key, value) =>
-    set((state) => ({
-      filters: { ...state.filters, [key]: value },
-    })),
-  clearFilters: () =>
-    set({
-      filters: { search: "" },
-    }),
-}));
+export const usePeopleFiltersStore = createWithEqualityFn<PeopleFiltersState>(
+  (set) => ({
+    filters: {
+      search: "",
+    },
+    setFilter: (key, value) =>
+      set((state) => ({
+        filters: { ...state.filters, [key]: value },
+      })),
+    clearFilters: () =>
+      set({
+        filters: { search: "" },
+      }),
+  }),
+);

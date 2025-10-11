@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
+
 import { persist, createJSONStorage } from "zustand/middleware";
 
 // Reuse your enum (import if you keep it in a shared file)
@@ -16,7 +17,7 @@ type HotelInfoTabsState = {
   reset: () => void;
 };
 
-export const useHotelInfoTabs = create<HotelInfoTabsState>()(
+export const useHotelInfoTabs = createWithEqualityFn<HotelInfoTabsState>()(
   persist(
     (set) => ({
       selectedTab: HotelInfoTabs.Essentials,

@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { IBannerPayload, ICategory, IDish } from "../types/businessData";
 import { BannerPage } from "../utils/bannerLayouts";
@@ -63,7 +63,7 @@ interface IBannerStore {
   ) => void;
 }
 
-export const useBannerStore = create(
+export const useBannerStore = createWithEqualityFn(
   persist<IBannerStore>(
     (set) => ({
       selectedBannerType: "BANNER_TYPE_0",

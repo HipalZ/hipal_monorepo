@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { devtools } from "zustand/middleware";
 
 interface ICheckInQr {
@@ -44,7 +44,7 @@ const initialFormData: ICheckInForm = {
   name: "",
 };
 
-export const useCheckInStore = create<ICheckInStore>()(
+export const useCheckInStore = createWithEqualityFn<ICheckInStore>()(
   devtools(
     (set) => ({
       // Initial state

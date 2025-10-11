@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { type CropperRef, ViewType } from "../types/businessData";
 
 interface IBannerTemp {
@@ -113,7 +113,7 @@ interface IBannerTemp {
   handleOpenFilters: () => void;
 }
 
-export const useBannerTemp = create<IBannerTemp>((set) => ({
+export const useBannerTemp = createWithEqualityFn<IBannerTemp>((set) => ({
   itemName: "",
   setItemName: (name) => set({ itemName: name }),
 

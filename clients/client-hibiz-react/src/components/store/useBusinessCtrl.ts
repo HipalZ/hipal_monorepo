@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
+
 import useBusinessData from "./useBusinessData";
 
 export type bussinessControlPages =
@@ -83,7 +84,7 @@ interface BusinessCtrl {
   disableLayoutFlow: () => void;
 }
 
-const useBusinessCtrl = create<BusinessCtrl>((set) => {
+const useBusinessCtrl = createWithEqualityFn<BusinessCtrl>((set) => {
   const defaultPrimaryColor = "#EDDEB8";
   const defaultSecondaryColor = "#116D6E";
   const businessData = useBusinessData.getState().businessData;

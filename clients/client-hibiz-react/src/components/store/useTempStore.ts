@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import useBusinessData from "./useBusinessData";
 
 export enum OrderMode {
@@ -31,7 +31,7 @@ interface State {
   setVerificationType: (verificationType: VerificationType) => void;
 }
 
-const useTempStore = create<State>((set) => {
+const useTempStore = createWithEqualityFn<State>((set) => {
   const businessName = useBusinessData.getState().businessData?.name || "";
   return {
     selectedPos: "",

@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 export type PosAndKitchenPages = "POS" | "KITCHEN";
 
@@ -7,7 +7,7 @@ interface KitchenState {
   setPosAndKitchenPages: (posAndKitchenPages: PosAndKitchenPages) => void;
 }
 
-const usePosAndKitchen = create<KitchenState>((set) => ({
+const usePosAndKitchen = createWithEqualityFn<KitchenState>((set) => ({
   posAndKitchenPages: "POS",
   setPosAndKitchenPages: (posAndKitchenPages: PosAndKitchenPages) =>
     set({ posAndKitchenPages }),

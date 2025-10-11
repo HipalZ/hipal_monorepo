@@ -3,10 +3,10 @@ import type {
   ILoyaltyData,
   IOutletInfo,
 } from "@/components/types/businessData";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-export const useBusinessData = create(
+export const useBusinessData = createWithEqualityFn(
   persist<{
     businessData: IBusinessData | null;
     setBusinessData: (data: IBusinessData) => void;

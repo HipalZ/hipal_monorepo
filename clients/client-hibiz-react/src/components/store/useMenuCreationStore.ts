@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 export enum MenuType {
   MAIN_SUB_DISH = 1,
@@ -147,160 +147,162 @@ const initialState = {
   editingMenuId: "",
 };
 
-export const useMenuCreationStore = create<MenuCreationState>()((set, get) => ({
-  ...initialState,
+export const useMenuCreationStore = createWithEqualityFn<MenuCreationState>()(
+  (set, get) => ({
+    ...initialState,
 
-  showCreationFlow: false,
-  setShowCreationFlow: (show) => set({ showCreationFlow: show }),
+    showCreationFlow: false,
+    setShowCreationFlow: (show) => set({ showCreationFlow: show }),
 
-  showCopyMenuConfirmModal: false,
-  setShowCopyMenuConfirmModal: (show) =>
-    set({ showCopyMenuConfirmModal: show }),
+    showCopyMenuConfirmModal: false,
+    setShowCopyMenuConfirmModal: (show) =>
+      set({ showCopyMenuConfirmModal: show }),
 
-  setCopyMenuLayoutId: (id: string | null) => set({ copyMenuLayoutId: id }),
-  setCopyCompleteMenu: (copy: boolean) => set({ copyCompleteMenu: copy }),
-  setSourceMenuName: (name: string) => set({ sourceMenuName: name }),
+    setCopyMenuLayoutId: (id: string | null) => set({ copyMenuLayoutId: id }),
+    setCopyCompleteMenu: (copy: boolean) => set({ copyCompleteMenu: copy }),
+    setSourceMenuName: (name: string) => set({ sourceMenuName: name }),
 
-  setCurrentStep: (step) => set({ currentStep: step }),
+    setCurrentStep: (step) => set({ currentStep: step }),
 
-  setMenuType: (type) =>
-    set({
-      menuType: type,
-    }),
+    setMenuType: (type) =>
+      set({
+        menuType: type,
+      }),
 
-  setCategoryLayout: (layout) =>
-    set({
-      categoryLayout: layout,
-    }),
+    setCategoryLayout: (layout) =>
+      set({
+        categoryLayout: layout,
+      }),
 
-  setCardLayout: (layout) =>
-    set({
-      cardLayout: layout,
-    }),
+    setCardLayout: (layout) =>
+      set({
+        cardLayout: layout,
+      }),
 
-  setColors: (primary, secondary) =>
-    set({
-      primaryColor: primary,
-      secondaryColor: secondary,
-    }),
+    setColors: (primary, secondary) =>
+      set({
+        primaryColor: primary,
+        secondaryColor: secondary,
+      }),
 
-  setMenuName: (name) => set({ name: name }),
+    setMenuName: (name) => set({ name: name }),
 
-  setEditingMenuId: (menuId) => set({ editingMenuId: menuId }),
+    setEditingMenuId: (menuId) => set({ editingMenuId: menuId }),
 
-  setSelectedZoneIds: (zoneIds) => set({ selectedZoneIds: zoneIds }),
+    setSelectedZoneIds: (zoneIds) => set({ selectedZoneIds: zoneIds }),
 
-  toggleZoneSelection: (zoneId) =>
-    set((state) => {
-      const zones = [...state.selectedZoneIds];
-      const index = zones.indexOf(zoneId);
+    toggleZoneSelection: (zoneId) =>
+      set((state) => {
+        const zones = [...state.selectedZoneIds];
+        const index = zones.indexOf(zoneId);
 
-      if (index === -1) {
-        zones.push(zoneId);
-      } else {
-        zones.splice(index, 1);
+        if (index === -1) {
+          zones.push(zoneId);
+        } else {
+          zones.splice(index, 1);
+        }
+
+        return { selectedZoneIds: zones };
+      }),
+
+    toggleSelectedDay: (day) =>
+      set((state) => {
+        const days = [...state.selectedDays];
+        const index = days.indexOf(day);
+
+        if (index === -1) {
+          days.push(day);
+        } else {
+          days.splice(index, 1);
+        }
+
+        return { selectedDays: days };
+      }),
+
+    setTimeRange: (start: number, end: number) =>
+      set({
+        startTime: start,
+        endTime: end,
+      }),
+
+    setMenuData: (menu: MenuLayout) =>
+      set({
+        editingMenuId: menu._id,
+        menuType: menu.menuType,
+        categoryLayout: menu.categoryLayout,
+        cardLayout: menu.cardLayout,
+        primaryColor: menu.primaryColor,
+        secondaryColor: menu.secondaryColor,
+        name: menu.name,
+        selectedZoneIds: menu.zoneIds,
+        selectedDays: menu.days,
+        startTime: menu.startTime,
+        endTime: menu.endTime,
+        currentStep: 8,
+      }),
+
+    resetStore: () => set(initialState),
+
+    goPreviousStep: () =>
+      set((state) => ({
+        currentStep: state.currentStep > 1 ? state.currentStep - 1 : 1,
+      })),
+
+    getPayload: () => {
+      const payload: MenuCreationPayload = {
+        menuType: get().menuType,
+        categoryLayout: get().categoryLayout,
+        cardLayout: get().cardLayout,
+        primaryColor: get().primaryColor,
+        secondaryColor: get().secondaryColor,
+        name: get().name,
+        zoneIds: get().selectedZoneIds,
+        days: get().selectedDays,
+        startTime: get().startTime,
+        endTime: get().endTime,
+      };
+
+      // Add copy properties if copying a menu
+      if (get().copyMenuLayoutId) {
+        payload.sourceMenuId = get().copyMenuLayoutId;
+
+        if (get().copyCompleteMenu) {
+          payload.copyCompleteMenu = true;
+        }
       }
 
-      return { selectedZoneIds: zones };
-    }),
+      return payload;
+    },
 
-  toggleSelectedDay: (day) =>
-    set((state) => {
-      const days = [...state.selectedDays];
-      const index = days.indexOf(day);
-
-      if (index === -1) {
-        days.push(day);
-      } else {
-        days.splice(index, 1);
+    canProceed: () => {
+      const {
+        currentStep,
+        menuType,
+        categoryLayout,
+        cardLayout,
+        name,
+        selectedZoneIds,
+      } = get();
+      switch (currentStep) {
+        case 1:
+          return menuType !== null;
+        case 2:
+          return categoryLayout !== null;
+        case 3:
+          return cardLayout !== null;
+        case 4:
+          return true;
+        case 5:
+          return name.trim() !== "";
+        case 6:
+          return name.trim() !== "" && selectedZoneIds.length > 0;
+        case 7:
+          return true;
+        case 8:
+          return true;
+        default:
+          return true;
       }
-
-      return { selectedDays: days };
-    }),
-
-  setTimeRange: (start: number, end: number) =>
-    set({
-      startTime: start,
-      endTime: end,
-    }),
-
-  setMenuData: (menu: MenuLayout) =>
-    set({
-      editingMenuId: menu._id,
-      menuType: menu.menuType,
-      categoryLayout: menu.categoryLayout,
-      cardLayout: menu.cardLayout,
-      primaryColor: menu.primaryColor,
-      secondaryColor: menu.secondaryColor,
-      name: menu.name,
-      selectedZoneIds: menu.zoneIds,
-      selectedDays: menu.days,
-      startTime: menu.startTime,
-      endTime: menu.endTime,
-      currentStep: 8,
-    }),
-
-  resetStore: () => set(initialState),
-
-  goPreviousStep: () =>
-    set((state) => ({
-      currentStep: state.currentStep > 1 ? state.currentStep - 1 : 1,
-    })),
-
-  getPayload: () => {
-    const payload: MenuCreationPayload = {
-      menuType: get().menuType,
-      categoryLayout: get().categoryLayout,
-      cardLayout: get().cardLayout,
-      primaryColor: get().primaryColor,
-      secondaryColor: get().secondaryColor,
-      name: get().name,
-      zoneIds: get().selectedZoneIds,
-      days: get().selectedDays,
-      startTime: get().startTime,
-      endTime: get().endTime,
-    };
-
-    // Add copy properties if copying a menu
-    if (get().copyMenuLayoutId) {
-      payload.sourceMenuId = get().copyMenuLayoutId;
-
-      if (get().copyCompleteMenu) {
-        payload.copyCompleteMenu = true;
-      }
-    }
-
-    return payload;
-  },
-
-  canProceed: () => {
-    const {
-      currentStep,
-      menuType,
-      categoryLayout,
-      cardLayout,
-      name,
-      selectedZoneIds,
-    } = get();
-    switch (currentStep) {
-      case 1:
-        return menuType !== null;
-      case 2:
-        return categoryLayout !== null;
-      case 3:
-        return cardLayout !== null;
-      case 4:
-        return true;
-      case 5:
-        return name.trim() !== "";
-      case 6:
-        return name.trim() !== "" && selectedZoneIds.length > 0;
-      case 7:
-        return true;
-      case 8:
-        return true;
-      default:
-        return true;
-    }
-  },
-}));
+    },
+  }),
+);

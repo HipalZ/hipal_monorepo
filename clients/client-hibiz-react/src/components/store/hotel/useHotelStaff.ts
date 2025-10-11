@@ -1,5 +1,5 @@
 import type { IHotel_Roll, IHotelRoll } from "@/hooks/useHotelStaff";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 export interface IService {
   serviceIds?: {
@@ -97,132 +97,134 @@ interface IStaffData {
   batchAssignStaffToRooms: () => void;
 }
 
-export const useStaffDataStore = create<IStaffData>((set, get) => ({
-  staffData: [],
-  setStaffData: (data: IStaffMember[]) => set({ staffData: data }),
+export const useStaffDataStore = createWithEqualityFn<IStaffData>(
+  (set, get) => ({
+    staffData: [],
+    setStaffData: (data: IStaffMember[]) => set({ staffData: data }),
 
-  showStaffReport: false,
-  setShowStaffReport: (value: boolean) => set({ showStaffReport: value }),
+    showStaffReport: false,
+    setShowStaffReport: (value: boolean) => set({ showStaffReport: value }),
 
-  roomStaffAssignments: [],
-  selectedRooms: [],
-  selectedStaff: [],
+    roomStaffAssignments: [],
+    selectedRooms: [],
+    selectedStaff: [],
 
-  staffList: [],
+    staffList: [],
 
-  setStaffList: (staff) => set({ staffList: staff }),
+    setStaffList: (staff) => set({ staffList: staff }),
 
-  addStaff: (staff) =>
-    set((state) => ({
-      staffList: [...state.staffList, staff],
-    })),
-
-  updateStaff: (staffId, updates) =>
-    set((state) => ({
-      staffList: state.staffList.map((staff) =>
-        staff._id === staffId ? { ...staff, ...updates } : staff,
-      ),
-    })),
-
-  deleteStaff: (staffId) =>
-    set((state) => ({
-      staffList: state.staffList.filter((staff) => staff._id !== staffId),
-      roomStaffAssignments: state.roomStaffAssignments.map((assignment) => ({
-        ...assignment,
-        staffIds: assignment.staffIds.filter((id) => id !== staffId),
+    addStaff: (staff) =>
+      set((state) => ({
+        staffList: [...state.staffList, staff],
       })),
-    })),
 
-  linkStaffToRooms: (staffIds, roomIds) =>
-    set((state) => {
-      const newAssignments = [...state.roomStaffAssignments];
+    updateStaff: (staffId, updates) =>
+      set((state) => ({
+        staffList: state.staffList.map((staff) =>
+          staff._id === staffId ? { ...staff, ...updates } : staff,
+        ),
+      })),
 
-      roomIds.forEach((roomId) => {
-        const existingAssignment = newAssignments.find(
-          (a) => a.roomId === roomId,
-        );
+    deleteStaff: (staffId) =>
+      set((state) => ({
+        staffList: state.staffList.filter((staff) => staff._id !== staffId),
+        roomStaffAssignments: state.roomStaffAssignments.map((assignment) => ({
+          ...assignment,
+          staffIds: assignment.staffIds.filter((id) => id !== staffId),
+        })),
+      })),
 
-        if (existingAssignment) {
-          // Add new staff to existing room assignment
-          const uniqueStaffIds = [
-            ...new Set([...existingAssignment.staffIds, ...staffIds]),
-          ];
-          existingAssignment.staffIds = uniqueStaffIds;
-        } else {
-          // Create new room assignment
-          newAssignments.push({
-            roomId,
-            staffIds: [...staffIds],
-            assignedAt: new Date().toISOString(),
-          });
-        }
-      });
+    linkStaffToRooms: (staffIds, roomIds) =>
+      set((state) => {
+        const newAssignments = [...state.roomStaffAssignments];
 
-      return { roomStaffAssignments: newAssignments };
-    }),
+        roomIds.forEach((roomId) => {
+          const existingAssignment = newAssignments.find(
+            (a) => a.roomId === roomId,
+          );
 
-  unlinkStaffFromRooms: (staffIds, roomIds) =>
-    set((state) => ({
-      roomStaffAssignments: state.roomStaffAssignments
-        .map((assignment) =>
-          roomIds.includes(assignment.roomId)
-            ? {
-                ...assignment,
-                staffIds: assignment.staffIds.filter(
-                  (id) => !staffIds.includes(id),
-                ),
-              }
-            : assignment,
-        )
-        .filter((assignment) => assignment.staffIds.length > 0),
-    })),
+          if (existingAssignment) {
+            // Add new staff to existing room assignment
+            const uniqueStaffIds = [
+              ...new Set([...existingAssignment.staffIds, ...staffIds]),
+            ];
+            existingAssignment.staffIds = uniqueStaffIds;
+          } else {
+            // Create new room assignment
+            newAssignments.push({
+              roomId,
+              staffIds: [...staffIds],
+              assignedAt: new Date().toISOString(),
+            });
+          }
+        });
 
-  getStaffByRoom: (roomId) => {
-    const state = get();
-    const assignment = state.roomStaffAssignments.find(
-      (a) => a.roomId === roomId,
-    );
-    if (!assignment) return [];
+        return { roomStaffAssignments: newAssignments };
+      }),
 
-    return state.staffList.filter((staff) =>
-      assignment.staffIds.includes(staff._id),
-    );
-  },
+    unlinkStaffFromRooms: (staffIds, roomIds) =>
+      set((state) => ({
+        roomStaffAssignments: state.roomStaffAssignments
+          .map((assignment) =>
+            roomIds.includes(assignment.roomId)
+              ? {
+                  ...assignment,
+                  staffIds: assignment.staffIds.filter(
+                    (id) => !staffIds.includes(id),
+                  ),
+                }
+              : assignment,
+          )
+          .filter((assignment) => assignment.staffIds.length > 0),
+      })),
 
-  getRoomsByStaff: (staffId) => {
-    const state = get();
-    return state.roomStaffAssignments
-      .filter((assignment) => assignment.staffIds.includes(staffId))
-      .map((assignment) => assignment.roomId);
-  },
+    getStaffByRoom: (roomId) => {
+      const state = get();
+      const assignment = state.roomStaffAssignments.find(
+        (a) => a.roomId === roomId,
+      );
+      if (!assignment) return [];
 
-  setSelectedRooms: (roomIds) => set({ selectedRooms: roomIds }),
-  setSelectedStaff: (staffIds) => set({ selectedStaff: staffIds }),
+      return state.staffList.filter((staff) =>
+        assignment.staffIds.includes(staff._id),
+      );
+    },
 
-  toggleRoomSelection: (roomId) =>
-    set((state) => ({
-      selectedRooms: state.selectedRooms.includes(roomId)
-        ? state.selectedRooms.filter((id) => id !== roomId)
-        : [...state.selectedRooms, roomId],
-    })),
+    getRoomsByStaff: (staffId) => {
+      const state = get();
+      return state.roomStaffAssignments
+        .filter((assignment) => assignment.staffIds.includes(staffId))
+        .map((assignment) => assignment.roomId);
+    },
 
-  toggleStaffSelection: (staffId) =>
-    set((state) => ({
-      selectedStaff: state.selectedStaff.includes(staffId)
-        ? state.selectedStaff.filter((id) => id !== staffId)
-        : [...state.selectedStaff, staffId],
-    })),
+    setSelectedRooms: (roomIds) => set({ selectedRooms: roomIds }),
+    setSelectedStaff: (staffIds) => set({ selectedStaff: staffIds }),
 
-  clearSelections: () => set({ selectedRooms: [], selectedStaff: [] }),
+    toggleRoomSelection: (roomId) =>
+      set((state) => ({
+        selectedRooms: state.selectedRooms.includes(roomId)
+          ? state.selectedRooms.filter((id) => id !== roomId)
+          : [...state.selectedRooms, roomId],
+      })),
 
-  batchAssignStaffToRooms: () => {
-    const state = get();
-    if (state.selectedRooms.length > 0 && state.selectedStaff.length > 0) {
-      state.linkStaffToRooms(state.selectedStaff, state.selectedRooms);
-      state.clearSelections();
-    }
-  },
-}));
+    toggleStaffSelection: (staffId) =>
+      set((state) => ({
+        selectedStaff: state.selectedStaff.includes(staffId)
+          ? state.selectedStaff.filter((id) => id !== staffId)
+          : [...state.selectedStaff, staffId],
+      })),
+
+    clearSelections: () => set({ selectedRooms: [], selectedStaff: [] }),
+
+    batchAssignStaffToRooms: () => {
+      const state = get();
+      if (state.selectedRooms.length > 0 && state.selectedStaff.length > 0) {
+        state.linkStaffToRooms(state.selectedStaff, state.selectedRooms);
+        state.clearSelections();
+      }
+    },
+  }),
+);
 
 // Define the types for our store
 
@@ -274,7 +276,7 @@ interface StaffFormState {
 }
 
 // Create the store
-const useStaffStore = create<StaffFormState>((set, get) => ({
+const useStaffStore = createWithEqualityFn<StaffFormState>((set, get) => ({
   // Initial state
   personalInfo: {
     name: "",

@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { IBanner, IBizInfo, IDish } from "../types/businessData";
 export type ImageFiles = {
@@ -89,7 +89,7 @@ export type SetImagePreviewsFunction = (
   update: (prev: ImagePreviews) => ImagePreviews,
 ) => void;
 
-export const useExploreStore = create(
+export const useExploreStore = createWithEqualityFn(
   persist<IExploreStore>(
     (set) => ({
       bizInfo: {

@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 interface PaymentStore {
@@ -10,7 +10,7 @@ interface PaymentStore {
   setRazorPaySignature: (signature: string) => void;
 }
 
-const usePayment = create(
+const usePayment = createWithEqualityFn(
   persist<PaymentStore>(
     (set) => ({
       razorPayPaymentId: "",

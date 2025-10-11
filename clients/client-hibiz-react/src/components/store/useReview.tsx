@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import type { ReviewsType } from "@hi/db-models/src/validators";
 export type ReviewPages = "Review" | "Star Staff" | "user" | "message";
 
@@ -32,7 +32,7 @@ export interface ReviewState {
   reset: () => void;
 }
 
-export const useReview = create<ReviewState>((set) => ({
+export const useReview = createWithEqualityFn<ReviewState>((set) => ({
   page: "Review",
   setPage: (page) => set({ page }),
 

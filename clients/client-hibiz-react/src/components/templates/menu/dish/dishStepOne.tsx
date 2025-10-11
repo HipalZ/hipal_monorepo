@@ -23,67 +23,48 @@ import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import BottomButton from "@/components/atom/bottomButton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const MemoDishForm = () => {
-  const { businessId,menuId } = useParams<{ businessId?: string; menuId: string }>();
+  const { businessId, menuId } = useParams<{
+    businessId?: string;
+    menuId: string;
+  }>();
   const [displayedPrice, setDisplayedPrice] = useState("");
   const queryClient = useQueryClient();
   const errorToasts = useErrorToasts();
-  const {
-    setDishName,
-    setDishTypes,
-    setDishPrice,
-    setDishStep,
-    dishDescription,
-    calories,
-    tags,
-    recommendationIds,
-    dishName,
-    dishPrice,
-    visibility,
-    dishTypes,
-    availability,
-    portions,
-    selectedCatIds,
-    addonIds,
-    resetStore,
-    resetDishStore,
-    imageFiles,
-    imagePreviews,
-    dishStep,
-    setIsLoading,
-    isLoading,
-    setOpenMenu,
-  } = useMenuPageStore((s) => ({
-    setOpenMenu: s.setOpenMenu,
-    setDishName: s.setDishName,
-    selectedDish: s.selectedDish,
-    setSelectedDish: s.setSelectedDish,
-    setDishTypes: s.setDishTypes,
-    setDishPrice: s.setDishPrice,
-    setDishStep: s.setDishStep,
-    calories: s.calories,
-    dishDescription: s.dishDescription,
-    tags: s.tags,
-    recommendationIds: s.recommendationIds,
-    dishName: s.dishName,
-    dishPrice: s.dishPrice,
-    visibility: s.visibility,
-    dishTypes: s.dishTypes,
-    availability: s.availability,
-    portions: s.portions,
-    selectedCatIds: s.selectedCatIds,
-    addonIds: s.addonIds,
-    resetStore: s.resetStore,
-    resetDishStore: s.resetDishStore,
-    imageFiles: s.imageFiles,
-    imagePreviews: s.imagePreviews,
-    dishStep: s.dishStep,
-    setIsLoading: s.setIsLoading,
-    isLoading: s.isLoading,
-  }));
+
+  const isLoading = useMenuPageStore((s) => s.isLoading);
+  const setIsLoading = useMenuPageStore((s) => s.setIsLoading);
+  const setOpenMenu = useMenuPageStore((s) => s.setOpenMenu);
+  const setDishStep = useMenuPageStore((s) => s.setDishStep);
+  const dishStep = useMenuPageStore((s) => s.dishStep);
+  const dishName = useMenuPageStore((s) => s.dishName);
+  const setDishName = useMenuPageStore((s) => s.setDishName);
+  const dishPrice = useMenuPageStore((s) => s.dishPrice);
+  const setDishPrice = useMenuPageStore((s) => s.setDishPrice);
+  const dishTypes = useMenuPageStore((s) => s.dishTypes);
+  const setDishTypes = useMenuPageStore((s) => s.setDishTypes);
+  const dishDescription = useMenuPageStore((s) => s.dishDescription);
+  const calories = useMenuPageStore((s) => s.calories);
+  const tags = useMenuPageStore((s) => s.tags);
+  const recommendationIds = useMenuPageStore((s) => s.recommendationIds);
+  const visibility = useMenuPageStore((s) => s.visibility);
+  const availability = useMenuPageStore((s) => s.availability);
+  const portions = useMenuPageStore((s) => s.portions);
+  const selectedCatIds = useMenuPageStore((s) => s.selectedCatIds);
+  const addonIds = useMenuPageStore((s) => s.addonIds);
+  const imageFiles = useMenuPageStore((s) => s.imageFiles);
+  const imagePreviews = useMenuPageStore((s) => s.imagePreviews);
+  const resetStore = useMenuPageStore((s) => s.resetStore);
+  const resetDishStore = useMenuPageStore((s) => s.resetDishStore);
 
   useEffect(() => {
     if (dishTypes.length === 0) {
@@ -190,7 +171,7 @@ const MemoDishForm = () => {
       resetDishStore();
       setIsLoading(false);
       setOpenMenu(false);
-      queryClient.invalidateQueries({ queryKey: ["getAllDishes"]});
+      queryClient.invalidateQueries({ queryKey: ["getAllDishes"] });
       return toast.success(data?.message);
     }
     setIsLoading(false);
@@ -296,22 +277,22 @@ const MemoDishForm = () => {
           </section>
         </div>
         {portions.length > 0 ? (
-           <Table>
-           <TableHeader>
-             <TableRow>
-               <TableHead>Portion Name</TableHead>
-               <TableHead>Price</TableHead>
-             </TableRow>
-           </TableHeader>
-           <TableBody>
-             {portions.map((portion, index) => (
-               <TableRow key={`${portion.name}+${index}`}>
-                 <TableCell>{portion.name}</TableCell>
-                 <TableCell>{portion.price ?? "N/A"}</TableCell>
-               </TableRow>
-             ))}
-           </TableBody>
-         </Table>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Portion Name</TableHead>
+                <TableHead>Price</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {portions.map((portion, index) => (
+                <TableRow key={`${portion.name}+${index}`}>
+                  <TableCell>{portion.name}</TableCell>
+                  <TableCell>{portion.price ?? "N/A"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : null}
         <section
           onClick={() => redirectToSection(DishSteps.LINK_CATEGORY_STEP)}

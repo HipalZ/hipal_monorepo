@@ -1,8 +1,7 @@
 // src/store/useCategoryStore.ts
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-import type { CategoryType,AddOnType } from '@hi/db-models/src/validators';
-
+import { createWithEqualityFn } from "zustand/traditional";
+import { createJSONStorage, persist } from "zustand/middleware";
+import type { CategoryType, AddOnType } from "@hi/db-models/src/validators";
 
 interface ICatStore {
   categories: CategoryType[];
@@ -11,12 +10,11 @@ interface ICatStore {
   subCategories: CategoryType[];
   setSubCategories: (subCategories: CategoryType[]) => void;
 
-  addOns:AddOnType[];
-  setAddOnTypes:(addOns:AddOnType[])=>void;
-
+  addOns: AddOnType[];
+  setAddOnTypes: (addOns: AddOnType[]) => void;
 }
 
-export const useCategoryStore = create(
+export const useCategoryStore = createWithEqualityFn(
   persist<ICatStore>(
     (set) => ({
       categories: [],
@@ -25,13 +23,12 @@ export const useCategoryStore = create(
       subCategories: [],
       setSubCategories: (subCategories) => set({ subCategories }),
 
-      addOns:[],
-      setAddOnTypes:(addOns)=>set({addOns})
-
+      addOns: [],
+      setAddOnTypes: (addOns) => set({ addOns }),
     }),
     {
-      name: 'category-store', 
-      storage: createJSONStorage(() =>localStorage)
-    }
-  )
+      name: "category-store",
+      storage: createJSONStorage(() => localStorage),
+    },
+  ),
 );

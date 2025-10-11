@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 export type AddStaffProps =
   | ""
@@ -65,7 +65,7 @@ interface AddStaffState {
   removeStaffStore: () => void;
 }
 
-export const useAddStaffStore = create<AddStaffState>((set) => ({
+export const useAddStaffStore = createWithEqualityFn<AddStaffState>((set) => ({
   pageToggle: "ADD_STAFF",
 
   selectedPermissions: [],

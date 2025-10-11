@@ -1,83 +1,83 @@
-import {create} from 'zustand'
-import type { IExistingPayments } from '../types/businessData'
+import { createWithEqualityFn } from "zustand/traditional";
+import type { IExistingPayments } from "../types/businessData";
 
-export type salesViewMode = "grid" | "table"
+export type salesViewMode = "grid" | "table";
 
 export interface Filter {
-    key: string;
-    value: string[];
+  key: string;
+  value: string[];
 }
 
 export type Filters = Filter[];
 
 interface SalesStore {
-    open: boolean
-    setOpen: (open: boolean) => void
+  open: boolean;
+  setOpen: (open: boolean) => void;
 
-    downloadCsv: boolean
-    setDownloadCsv: (downloadCsv: boolean) => void
+  downloadCsv: boolean;
+  setDownloadCsv: (downloadCsv: boolean) => void;
 
-    salesData:IExistingPayments[]
-    setSalesData: (salesData: IExistingPayments[]) => void
+  salesData: IExistingPayments[];
+  setSalesData: (salesData: IExistingPayments[]) => void;
 
-    totalSales: number
-    setTotalSales: (totalSales: number) => void
+  totalSales: number;
+  setTotalSales: (totalSales: number) => void;
 
-    historyData:IExistingPayments[]
-    setHistoryData: (historyData: IExistingPayments[]) => void
+  historyData: IExistingPayments[];
+  setHistoryData: (historyData: IExistingPayments[]) => void;
 
-    viewMode: salesViewMode
-    setViewMode: (viewMode: salesViewMode) => void
+  viewMode: salesViewMode;
+  setViewMode: (viewMode: salesViewMode) => void;
 
-    selectedDiscountTypes: string[]
-    setSelectedDiscountTypes: (selectedDiscountTypes: string[]) => void
+  selectedDiscountTypes: string[];
+  setSelectedDiscountTypes: (selectedDiscountTypes: string[]) => void;
 
-    selectedWarnings: string[]
-    setSelectedWarnings: (selectedWarnings: string[]) => void
+  selectedWarnings: string[];
+  setSelectedWarnings: (selectedWarnings: string[]) => void;
 
-    selectedPaymentModes: string[]
-    setSelectedPaymentModes: (selectedPaymentModes: string[]) => void
+  selectedPaymentModes: string[];
+  setSelectedPaymentModes: (selectedPaymentModes: string[]) => void;
 
-    openFilterModal: boolean
-    setOpenFilterModal: (openFilterModal: boolean) => void
+  openFilterModal: boolean;
+  setOpenFilterModal: (openFilterModal: boolean) => void;
 
-    selectedFilters: Filters
-    setSelectedFilters: (selectedFilters: Filters) => void
-
+  selectedFilters: Filters;
+  setSelectedFilters: (selectedFilters: Filters) => void;
 }
 
-export const useSalesStore = create<SalesStore>((set) => ({
-    open: false,
-    setOpen: (open) => set({ open }),
+export const useSalesStore = createWithEqualityFn<SalesStore>((set) => ({
+  open: false,
+  setOpen: (open) => set({ open }),
 
-    downloadCsv: false,
-    setDownloadCsv: (downloadCsv) => set({ downloadCsv }),
+  downloadCsv: false,
+  setDownloadCsv: (downloadCsv) => set({ downloadCsv }),
 
-    salesData: [],
-    setSalesData: (salesData) => set({ salesData }),
+  salesData: [],
+  setSalesData: (salesData) => set({ salesData }),
 
-    totalSales: 0,
-    setTotalSales: (totalSales) => set({ totalSales }),
+  totalSales: 0,
+  setTotalSales: (totalSales) => set({ totalSales }),
 
-    historyData: [],
-    setHistoryData: (historyData) => set({ historyData }),
+  historyData: [],
+  setHistoryData: (historyData) => set({ historyData }),
 
-    viewMode: "grid",
-    setViewMode: (viewMode) => set({ viewMode }),
+  viewMode: "grid",
+  setViewMode: (viewMode) => set({ viewMode }),
 
-    selectedDiscountTypes: [],
-    setSelectedDiscountTypes: (selectedDiscountTypes) => set({ selectedDiscountTypes }),
+  selectedDiscountTypes: [],
+  setSelectedDiscountTypes: (selectedDiscountTypes) =>
+    set({ selectedDiscountTypes }),
 
-    selectedWarnings: [],
-    setSelectedWarnings: (selectedWarnings) => set({ selectedWarnings }),
+  selectedWarnings: [],
+  setSelectedWarnings: (selectedWarnings) => set({ selectedWarnings }),
 
-    selectedPaymentModes: [],
-    setSelectedPaymentModes: (selectedPaymentModes) => set({ selectedPaymentModes }),
+  selectedPaymentModes: [],
+  setSelectedPaymentModes: (selectedPaymentModes) =>
+    set({ selectedPaymentModes }),
 
-    openFilterModal: false,
-    setOpenFilterModal: (openFilterModal) => set({ openFilterModal }),
+  openFilterModal: false,
+  setOpenFilterModal: (openFilterModal) => set({ openFilterModal }),
 
-    selectedFilters: [],
-    setSelectedFilters: (selectedFilters) => set({ selectedFilters }),
-
-}))
+  selectedFilters: [],
+  setSelectedFilters: (selectedFilters) => set({ selectedFilters }),
+}));

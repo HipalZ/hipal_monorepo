@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 export type MenuBannerTypes = "PREVIEW" | "CREATE" | "LINK_DISHES" | "LIVE";
 
@@ -30,52 +30,54 @@ interface MenuBannerState {
   reset: () => void;
 }
 
-export const useMenuBanner = create<MenuBannerState>((set, get) => ({
-  menuBannerType: "PREVIEW",
-  setMenuBannerType: (type) => set({ menuBannerType: type }),
+export const useMenuBanner = createWithEqualityFn<MenuBannerState>(
+  (set, get) => ({
+    menuBannerType: "PREVIEW",
+    setMenuBannerType: (type) => set({ menuBannerType: type }),
 
-  isPublishing: false,
-  setIsPublishing: (isPublishing) => set({ isPublishing }),
+    isPublishing: false,
+    setIsPublishing: (isPublishing) => set({ isPublishing }),
 
-  headerTitle: "Preview",
-  setHeaderTitle: (headerTitle) => set({ headerTitle }),
+    headerTitle: "Preview",
+    setHeaderTitle: (headerTitle) => set({ headerTitle }),
 
-  timingId: "",
-  setTimingId: (timingId) => set({ timingId }),
+    timingId: "",
+    setTimingId: (timingId) => set({ timingId }),
 
-  selectedDishes: [],
-  setSelectedDishes: (dishes) => set({ selectedDishes: dishes }),
+    selectedDishes: [],
+    setSelectedDishes: (dishes) => set({ selectedDishes: dishes }),
 
-  addDish: (dishId: string) => {
-    const { selectedDishes } = get();
-    if (!selectedDishes.includes(dishId)) {
-      set({ selectedDishes: [...selectedDishes, dishId] });
-    }
-  },
+    addDish: (dishId: string) => {
+      const { selectedDishes } = get();
+      if (!selectedDishes.includes(dishId)) {
+        set({ selectedDishes: [...selectedDishes, dishId] });
+      }
+    },
 
-  removeDish: (dishId: string) => {
-    const { selectedDishes } = get();
-    set({
-      selectedDishes: selectedDishes.filter((id) => id !== dishId),
-    });
-  },
+    removeDish: (dishId: string) => {
+      const { selectedDishes } = get();
+      set({
+        selectedDishes: selectedDishes.filter((id) => id !== dishId),
+      });
+    },
 
-  searchItem: "",
-  setSearchItem: (searchItem) => set({ searchItem }),
+    searchItem: "",
+    setSearchItem: (searchItem) => set({ searchItem }),
 
-  showSelectAll: false,
-  setShowSelectAll: (showSelectAll) => set({ showSelectAll }),
+    showSelectAll: false,
+    setShowSelectAll: (showSelectAll) => set({ showSelectAll }),
 
-  // Reset function to reset all states to default values
-  reset: () => {
-    set({
-      menuBannerType: "PREVIEW",
-      isPublishing: false,
-      headerTitle: "Preview",
-      timingId: "",
-      selectedDishes: [],
-      searchItem: "",
-      showSelectAll: false,
-    });
-  },
-}));
+    // Reset function to reset all states to default values
+    reset: () => {
+      set({
+        menuBannerType: "PREVIEW",
+        isPublishing: false,
+        headerTitle: "Preview",
+        timingId: "",
+        selectedDishes: [],
+        searchItem: "",
+        showSelectAll: false,
+      });
+    },
+  }),
+);

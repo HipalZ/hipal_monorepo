@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 interface IPagination {
   pageNumber: number;
@@ -12,7 +12,7 @@ interface IPagination {
   setSelectedQrId: (id?: string) => void;
 }
 
-const usePaginationStore = create<IPagination>((set) => ({
+const usePaginationStore = createWithEqualityFn<IPagination>((set) => ({
   pageNumber: 1,
   setPageNumber: (pageNumber: number) => set({ pageNumber }),
 

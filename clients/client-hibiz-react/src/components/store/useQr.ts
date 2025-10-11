@@ -1,134 +1,133 @@
-import {create} from "zustand"
+import { createWithEqualityFn } from "zustand/traditional";
 
-type AspectRatio = "1:1" | "4:3" | "16:9" | "custom"
-
+type AspectRatio = "1:1" | "4:3" | "16:9" | "custom";
 
 interface QrState {
-    generateQr: boolean
-    setGenerateQr: (generateQr: boolean) => void
+  generateQr: boolean;
+  setGenerateQr: (generateQr: boolean) => void;
 
-    aspectRatio: AspectRatio
-    setAspectRatio: (aspectRatio: AspectRatio) => void
+  aspectRatio: AspectRatio;
+  setAspectRatio: (aspectRatio: AspectRatio) => void;
 
-    width: number
-    setWidth: (width: number) => void
+  width: number;
+  setWidth: (width: number) => void;
 
-    height: number
-    setHeight: (height: number) => void
+  height: number;
+  setHeight: (height: number) => void;
 
-    isPortrait: boolean
-    setIsPortrait: (isPortrait: boolean) => void
+  isPortrait: boolean;
+  setIsPortrait: (isPortrait: boolean) => void;
 
-    image: string | null
-    setImage: (image: string | null) => void
+  image: string | null;
+  setImage: (image: string | null) => void;
 
-    imageRotation: number
-    setImageRotation: (imageRotation: number) => void
+  imageRotation: number;
+  setImageRotation: (imageRotation: number) => void;
 
-    qrSize: number
-    setQrSize: (qrSize: number) => void
+  qrSize: number;
+  setQrSize: (qrSize: number) => void;
 
-    tableName: string
-    setTableName: (tableName: string) => void
+  tableName: string;
+  setTableName: (tableName: string) => void;
 
-    currentQrValue: string
-    setCurrentQrValue: (currentQrValue: string) => void
+  currentQrValue: string;
+  setCurrentQrValue: (currentQrValue: string) => void;
 
-    showTables: boolean
-    setShowTables: (showTables: boolean) => void
+  showTables: boolean;
+  setShowTables: (showTables: boolean) => void;
 
-    hideTableNames: boolean
-    setHideTableNames: (hideTableNames: boolean) => void
+  hideTableNames: boolean;
+  setHideTableNames: (hideTableNames: boolean) => void;
 
-    editTextModal: boolean
-    setEditTextModal: (editTextModal: boolean) => void
-    toggleEditTextModal: () => void
+  editTextModal: boolean;
+  setEditTextModal: (editTextModal: boolean) => void;
+  toggleEditTextModal: () => void;
 
-    textColor: string
-    setTextColor: (color: string) => void
+  textColor: string;
+  setTextColor: (color: string) => void;
 
-    textFont: string
-    setTextFont: (font: string) => void
+  textFont: string;
+  setTextFont: (font: string) => void;
 
-    hasBackground: boolean
-    setHasBackground: (has: boolean) => void
+  hasBackground: boolean;
+  setHasBackground: (has: boolean) => void;
 
-    backgroundColor: string
-    setBackgroundColor: (color: string) => void
+  backgroundColor: string;
+  setBackgroundColor: (color: string) => void;
 
-    textSize: number
-  setTextSize: (size: number) => void
+  textSize: number;
+  setTextSize: (size: number) => void;
 
-  fontWeight: string
-  setFontWeight: (weight: string) => void
+  fontWeight: string;
+  setFontWeight: (weight: string) => void;
 
-  isItalic: boolean
-  setIsItalic: (italic: boolean) => void
+  isItalic: boolean;
+  setIsItalic: (italic: boolean) => void;
 
-  isUnderlined: boolean
-  setIsUnderlined: (underlined: boolean) => void
-
+  isUnderlined: boolean;
+  setIsUnderlined: (underlined: boolean) => void;
 }
 
-export const useQr = create<QrState>((set) => ({
-    generateQr: false,
-    setGenerateQr: (generateQr) => set({generateQr}),
+export const useQr = createWithEqualityFn<QrState>((set) => ({
+  generateQr: false,
+  setGenerateQr: (generateQr) => set({ generateQr }),
 
-    aspectRatio: "1:1",
-    setAspectRatio: (aspectRatio) => set({aspectRatio}),
+  aspectRatio: "1:1",
+  setAspectRatio: (aspectRatio) => set({ aspectRatio }),
 
-    width: 300,
-    setWidth: (width) => set({width}),
+  width: 300,
+  setWidth: (width) => set({ width }),
 
-    height: 300,
-    setHeight: (height) => set({height}),
+  height: 300,
+  setHeight: (height) => set({ height }),
 
-    isPortrait: false,
-    setIsPortrait: (isPortrait) => set({isPortrait}),
+  isPortrait: false,
+  setIsPortrait: (isPortrait) => set({ isPortrait }),
 
-    image: null,
-    setImage: (image) => set({image}),
+  image: null,
+  setImage: (image) => set({ image }),
 
-    imageRotation: 0,
-    setImageRotation: (imageRotation) => set({imageRotation}),
+  imageRotation: 0,
+  setImageRotation: (imageRotation) => set({ imageRotation }),
 
-    qrSize: 1080,
-    setQrSize: (qrSize) => set({qrSize}),
+  qrSize: 1080,
+  setQrSize: (qrSize) => set({ qrSize }),
 
-    tableName: "Test",
-    setTableName: (tableName) => set({tableName}),
+  tableName: "Test",
+  setTableName: (tableName) => set({ tableName }),
 
-    currentQrValue: "https://example.com",
-    setCurrentQrValue: (currentQrValue) => set({currentQrValue}),
+  currentQrValue: "https://example.com",
+  setCurrentQrValue: (currentQrValue) => set({ currentQrValue }),
 
-    showTables: false,
-    setShowTables: (showTables) => set({showTables}),
+  showTables: false,
+  setShowTables: (showTables) => set({ showTables }),
 
-    hideTableNames: false,
-    setHideTableNames: (hideTableNames) => set({hideTableNames}),
+  hideTableNames: false,
+  setHideTableNames: (hideTableNames) => set({ hideTableNames }),
 
-    editTextModal: false,
-    setEditTextModal: (editTextModal) => set({editTextModal}),
-    toggleEditTextModal: () => set((state) => ({editTextModal: !state.editTextModal})),
+  editTextModal: false,
+  setEditTextModal: (editTextModal) => set({ editTextModal }),
+  toggleEditTextModal: () =>
+    set((state) => ({ editTextModal: !state.editTextModal })),
 
-    textColor: "black",
-    setTextColor: (textColor) => set({textColor}),
+  textColor: "black",
+  setTextColor: (textColor) => set({ textColor }),
 
-    textFont: "Arial",
-    setTextFont: (textFont) => set({textFont}),
+  textFont: "Arial",
+  setTextFont: (textFont) => set({ textFont }),
 
-    hasBackground: false,
-    setHasBackground: (hasBackground) => set({hasBackground}),
-    backgroundColor: "white",
-    setBackgroundColor: (backgroundColor) => set({backgroundColor}),
+  hasBackground: false,
+  setHasBackground: (hasBackground) => set({ hasBackground }),
+  backgroundColor: "white",
+  setBackgroundColor: (backgroundColor) => set({ backgroundColor }),
 
-    textSize: 16,
-    setTextSize: (size) => set({ textSize: size }),
-    
-    fontWeight: "font-normal",
-    setFontWeight: (weight) => set({ fontWeight: weight }),
-    isItalic: false,
-    setIsItalic: (italic) => set({ isItalic: italic }),
-    isUnderlined: false,
-    setIsUnderlined: (underlined) => set({ isUnderlined: underlined }),
-}))
+  textSize: 16,
+  setTextSize: (size) => set({ textSize: size }),
+
+  fontWeight: "font-normal",
+  setFontWeight: (weight) => set({ fontWeight: weight }),
+  isItalic: false,
+  setIsItalic: (italic) => set({ isItalic: italic }),
+  isUnderlined: false,
+  setIsUnderlined: (underlined) => set({ isUnderlined: underlined }),
+}));

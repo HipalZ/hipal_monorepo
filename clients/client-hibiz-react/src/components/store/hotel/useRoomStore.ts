@@ -1,34 +1,32 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import type { IHotelRoom } from "@/hooks/hotel/useRoomHook";
 import type { IAmenity } from "@/hooks/hotel/useAmenities";
 import type { IRoomType } from "@/hooks/hotel/useRoomTypeHook";
 
 interface Room {
+  roomType: IRoomType[];
+  setRoomType: (data: IRoomType[]) => void;
 
-    roomType: IRoomType[]
-    setRoomType: (data: IRoomType[]) => void
+  roomData: IHotelRoom[];
+  setRoomData: (data: IHotelRoom[]) => void;
 
-    roomData: IHotelRoom[]
-    setRoomData: (data: IHotelRoom[]) => void
+  amenitiesData: IAmenity[];
+  setAmenitiesData: (data: IAmenity[]) => void;
 
-    amenitiesData: IAmenity[]
-    setAmenitiesData: (data: IAmenity[]) => void
-
-    openAddRoomModal: boolean
-    setOpenAddRoomModal: (status: boolean) => void
+  openAddRoomModal: boolean;
+  setOpenAddRoomModal: (status: boolean) => void;
 }
 
-export const useRoomStore = create<Room>((set) => ({
-    roomType: [] ,
-    setRoomType: (data: IRoomType[]) => set({ roomType: data }),
-    
-    roomData: [],
-    setRoomData: (data: IHotelRoom[]) => set({ roomData: data }),
+export const useRoomStore = createWithEqualityFn<Room>((set) => ({
+  roomType: [],
+  setRoomType: (data: IRoomType[]) => set({ roomType: data }),
 
-    amenitiesData: [],
-    setAmenitiesData: (data: IAmenity[]) => set({ amenitiesData: data }),
+  roomData: [],
+  setRoomData: (data: IHotelRoom[]) => set({ roomData: data }),
 
-    openAddRoomModal: false,
-    setOpenAddRoomModal: (status: boolean) => set({ openAddRoomModal: status })
-}))
+  amenitiesData: [],
+  setAmenitiesData: (data: IAmenity[]) => set({ amenitiesData: data }),
 
+  openAddRoomModal: false,
+  setOpenAddRoomModal: (status: boolean) => set({ openAddRoomModal: status }),
+}));

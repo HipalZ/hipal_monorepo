@@ -1,5 +1,5 @@
 import { toast } from "react-hot-toast";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 interface Group {
@@ -48,104 +48,107 @@ interface MessageRecipientsState {
   clearMessageRecipientsStore: () => void;
 }
 
-export const useMessageRecipientsStore = create<MessageRecipientsState>()(
-  persist(
-    (set) => ({
-      selectedOptions: ["allCustomers"],
-      selectedGroups: [],
-      customerPhone: "",
-      groups: [],
-      setGroups: (groups) => set({ groups }),
-      uploadedFileName: null,
-      setUploadedFileName: (name) => set({ uploadedFileName: name }),
-      bulkCustomers: [],
-      handleOptionChange: (option) => {
-        set((state) => {
-          const isSelected = state.selectedOptions.includes(option);
-          const newSelection = isSelected
-            ? state.selectedOptions.filter((item) => item !== option)
-            : [option];
-          return { selectedOptions: newSelection };
-        });
+export const useMessageRecipientsStore =
+  createWithEqualityFn<MessageRecipientsState>()(
+    persist(
+      (set) => ({
+        selectedOptions: ["allCustomers"],
+        selectedGroups: [],
+        customerPhone: "",
+        groups: [],
+        setGroups: (groups) => set({ groups }),
+        uploadedFileName: null,
+        setUploadedFileName: (name) => set({ uploadedFileName: name }),
+        bulkCustomers: [],
+        handleOptionChange: (option) => {
+          set((state) => {
+            const isSelected = state.selectedOptions.includes(option);
+            const newSelection = isSelected
+              ? state.selectedOptions.filter((item) => item !== option)
+              : [option];
+            return { selectedOptions: newSelection };
+          });
+        },
+        handleGroupToggle: (groupId) => {
+          set((state) => {
+            const isSelected = state.selectedGroups.includes(groupId);
+            const newSelection = isSelected
+              ? state.selectedGroups.filter((id) => id !== groupId)
+              : [...state.selectedGroups, groupId];
+
+            if (newSelection.length > 2) {
+              toast.error("You can select only 2 groups at a time.");
+              return state;
+            }
+
+            newSelection.reduce((sum, id) => {
+              const group = state.groups.find((g) => g._id === id);
+              return sum + (group?.userIds?.length || 0);
+            }, 0);
+
+            return {
+              selectedGroups: newSelection,
+            };
+          });
+        },
+        setCustomerPhone: (phone) => set({ customerPhone: phone }),
+        handleFileUpload: (file) => {
+          set({ uploadedFileName: file.name });
+          toast.success(`${file.name} has been successfully uploaded.`);
+        },
+        handleRemoveFile: () =>
+          set({ uploadedFileName: null, bulkCustomers: [] }),
+        setBulkCustomers: (customers) => {
+          set((state) => {
+            const newSelectedOptions = [...state.selectedOptions];
+            if (
+              !newSelectedOptions.includes(ShowOptions.BULK_UPLOAD_CUSTOMERS)
+            ) {
+              newSelectedOptions.push(ShowOptions.BULK_UPLOAD_CUSTOMERS);
+            }
+            return {
+              bulkCustomers: customers,
+              selectedOptions: newSelectedOptions,
+            };
+          });
+          toast.success(
+            `${customers.length} customers have been added to bulk upload.`,
+          );
+        },
+
+        sendLaterTime: 0,
+        setSendLaterTime: (time) => set({ sendLaterTime: time }),
+
+        sendOptions: "sendNow",
+        setSendOptions: (options) => set({ sendOptions: options }),
+
+        scheduledTime: "",
+        setScheduledTime: (time) => set({ scheduledTime: time }),
+
+        scheduledDate: "",
+        setScheduledDate: (date) => set({ scheduledDate: date }),
+
+        testNumber: "",
+        setTestNumber: (number) => set({ testNumber: number }),
+
+        clearMessageRecipientsStore: () =>
+          set({
+            selectedOptions: [],
+            selectedGroups: [],
+            customerPhone: "",
+            groups: [],
+            uploadedFileName: null,
+            bulkCustomers: [],
+            sendLaterTime: 0,
+            sendOptions: "sendNow",
+            scheduledTime: "",
+            scheduledDate: "",
+            testNumber: "",
+          }),
+      }),
+      {
+        name: "message-recipients-storage",
+        storage: createJSONStorage(() => localStorage),
       },
-      handleGroupToggle: (groupId) => {
-        set((state) => {
-          const isSelected = state.selectedGroups.includes(groupId);
-          const newSelection = isSelected
-            ? state.selectedGroups.filter((id) => id !== groupId)
-            : [...state.selectedGroups, groupId];
-
-          if (newSelection.length > 2) {
-            toast.error("You can select only 2 groups at a time.");
-            return state;
-          }
-
-          newSelection.reduce((sum, id) => {
-            const group = state.groups.find((g) => g._id === id);
-            return sum + (group?.userIds?.length || 0);
-          }, 0);
-
-          return {
-            selectedGroups: newSelection,
-          };
-        });
-      },
-      setCustomerPhone: (phone) => set({ customerPhone: phone }),
-      handleFileUpload: (file) => {
-        set({ uploadedFileName: file.name });
-        toast.success(`${file.name} has been successfully uploaded.`);
-      },
-      handleRemoveFile: () =>
-        set({ uploadedFileName: null, bulkCustomers: [] }),
-      setBulkCustomers: (customers) => {
-        set((state) => {
-          const newSelectedOptions = [...state.selectedOptions];
-          if (!newSelectedOptions.includes(ShowOptions.BULK_UPLOAD_CUSTOMERS)) {
-            newSelectedOptions.push(ShowOptions.BULK_UPLOAD_CUSTOMERS);
-          }
-          return {
-            bulkCustomers: customers,
-            selectedOptions: newSelectedOptions,
-          };
-        });
-        toast.success(
-          `${customers.length} customers have been added to bulk upload.`,
-        );
-      },
-
-      sendLaterTime: 0,
-      setSendLaterTime: (time) => set({ sendLaterTime: time }),
-
-      sendOptions: "sendNow",
-      setSendOptions: (options) => set({ sendOptions: options }),
-
-      scheduledTime: "",
-      setScheduledTime: (time) => set({ scheduledTime: time }),
-
-      scheduledDate: "",
-      setScheduledDate: (date) => set({ scheduledDate: date }),
-
-      testNumber: "",
-      setTestNumber: (number) => set({ testNumber: number }),
-
-      clearMessageRecipientsStore: () =>
-        set({
-          selectedOptions: [],
-          selectedGroups: [],
-          customerPhone: "",
-          groups: [],
-          uploadedFileName: null,
-          bulkCustomers: [],
-          sendLaterTime: 0,
-          sendOptions: "sendNow",
-          scheduledTime: "",
-          scheduledDate: "",
-          testNumber: "",
-        }),
-    }),
-    {
-      name: "message-recipients-storage",
-      storage: createJSONStorage(() => localStorage),
-    },
-  ),
-);
+    ),
+  );

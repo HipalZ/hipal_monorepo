@@ -4,7 +4,7 @@ import type {
   DishTypeEnumType,
   PortionType,
 } from "@hi/db-models/src/validators";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 export type MenuPageType =
   | "DISHES"
@@ -15,6 +15,7 @@ export type MenuPageType =
   | "SERVICES"
   | "CATALOGUE"
   | "QUICK_MENU"
+  | "AI"
   | "";
 export type CategoryTypeToggle = "MAIN_CATEGORY" | "SUB_CATEGORY" | "";
 export type CategoryStep =
@@ -340,7 +341,7 @@ interface MenuPageStore {
   removeTiming: (idx: number) => void;
 }
 
-const useMenuPageStore = create<MenuPageStore>((set) => ({
+const useMenuPageStore = createWithEqualityFn<MenuPageStore>((set) => ({
   selectedPage: "DISHES",
   setSelectedPage: (page: MenuPageType) => set({ selectedPage: page }),
 

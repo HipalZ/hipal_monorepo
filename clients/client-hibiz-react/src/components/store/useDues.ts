@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 export interface ISettleMode {
   _id: string;
   name: string;
@@ -16,7 +16,7 @@ interface IDues {
   removeSettleMode: (modeId: string) => void;
 }
 
-export const useDues = create<IDues>((set, get) => ({
+export const useDues = createWithEqualityFn<IDues>((set, get) => ({
   isUserAdded: false,
   setIsUserAdded: (value: boolean) => set({ isUserAdded: value }),
 

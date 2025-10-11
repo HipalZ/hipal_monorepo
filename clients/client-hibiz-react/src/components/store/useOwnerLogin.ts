@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface User {
@@ -39,7 +39,7 @@ export interface IUserLogin {
   setUser: (d: User) => void;
 }
 
-export const useOwnerLogin = create(
+export const useOwnerLogin = createWithEqualityFn(
   persist<IUserLogin>(
     (set) => ({
       phoneNumber: "",

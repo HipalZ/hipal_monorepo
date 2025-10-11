@@ -1,5 +1,5 @@
 // store/useReviewsFilterStore.ts
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type {
   ratingType,
@@ -73,7 +73,7 @@ export interface ReviewsFilterState {
   resetDatesToToday: () => void;
 }
 
-export const useReviewsFilterStore = create<ReviewsFilterState>()(
+export const useReviewsFilterStore = createWithEqualityFn<ReviewsFilterState>()(
   persist(
     (set, get) => ({
       currentBusinessId: undefined,

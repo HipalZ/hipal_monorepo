@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import type {
   IWhatsAppFlows,
   IWhatsAppMessage,
@@ -207,7 +207,7 @@ interface ITempStore {
   setFlow: (flow: ExampleFlow) => void;
 }
 
-export const useWhatsappTempStore = create<ITempStore>((set) => ({
+export const useWhatsappTempStore = createWithEqualityFn<ITempStore>((set) => ({
   isLoading: false,
   setIsLoading: (value: boolean) => set({ isLoading: value }),
 

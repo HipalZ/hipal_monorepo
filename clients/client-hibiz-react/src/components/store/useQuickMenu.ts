@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 interface DishEdit {
   _id: string;
@@ -13,19 +13,21 @@ interface EditDishesState {
   clearEditedDishes: () => void;
 }
 
-export const useEditDishesStore = create<EditDishesState>((set) => ({
-  editedDishes: [],
-  addEditedDish: (edit) =>
-    set((state) => {
-      const idx = state.editedDishes.findIndex((d) => d._id === edit._id);
-      if (idx > -1) {
-        // Update existing dish edit
-        const updated = [...state.editedDishes];
-        updated[idx] = { ...updated[idx], ...edit };
-        return { editedDishes: updated };
-      } else {
-        return { editedDishes: [...state.editedDishes, edit] };
-      }
-    }),
-  clearEditedDishes: () => set({ editedDishes: [] }),
-}));
+export const useEditDishesStore = createWithEqualityFn<EditDishesState>(
+  (set) => ({
+    editedDishes: [],
+    addEditedDish: (edit) =>
+      set((state) => {
+        const idx = state.editedDishes.findIndex((d) => d._id === edit._id);
+        if (idx > -1) {
+          // Update existing dish edit
+          const updated = [...state.editedDishes];
+          updated[idx] = { ...updated[idx], ...edit };
+          return { editedDishes: updated };
+        } else {
+          return { editedDishes: [...state.editedDishes, edit] };
+        }
+      }),
+    clearEditedDishes: () => set({ editedDishes: [] }),
+  }),
+);

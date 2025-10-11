@@ -5,7 +5,7 @@ import type {
   BusinessItemReport,
   ServiceChargeReport,
 } from "@/hooks/useReportHook.ts";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 export type ReportsTypes =
   | "category"
@@ -37,10 +37,9 @@ interface ReportsState {
 
   layoutType: LayoutType;
   setLayoutType: (layoutType: LayoutType) => void;
-
 }
 
-const useReports = create<ReportsState>((set) => ({
+const useReports = createWithEqualityFn<ReportsState>((set) => ({
   reportPage: "category",
   setReportPage: (reportPage: ReportsTypes) => set({ reportPage }),
 
@@ -66,7 +65,6 @@ const useReports = create<ReportsState>((set) => ({
 
   layoutType: "cards",
   setLayoutType: (layoutType: LayoutType) => set({ layoutType }),
-
 }));
 
 export default useReports;

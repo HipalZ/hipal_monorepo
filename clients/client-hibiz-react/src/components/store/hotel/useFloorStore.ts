@@ -1,6 +1,6 @@
 import type { IHotelRoom } from "@/hooks/hotel/useRoomHook";
 import type { IHotelFloor } from "@/hooks/useFloorHook";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 interface Floor {
   floorData: IHotelFloor[];
@@ -10,7 +10,7 @@ interface Floor {
   setAddFloorModal: (status: boolean) => void;
 }
 
-export const useFloorStore = create<Floor>((set) => ({
+export const useFloorStore = createWithEqualityFn<Floor>((set) => ({
   floorData: [],
   setFloorData: (data: IHotelFloor[]) => set({ floorData: data }),
 
@@ -62,7 +62,7 @@ interface FloorFormState {
   toggleStaffSelection: (staffId: string) => void;
 }
 
-const useFloorFormStore = create<FloorFormState>((set, get) => ({
+const useFloorFormStore = createWithEqualityFn<FloorFormState>((set, get) => ({
   // Initial state
   isEditMode: false,
   editFloorId: null,

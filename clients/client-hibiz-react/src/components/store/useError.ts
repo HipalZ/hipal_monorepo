@@ -1,21 +1,21 @@
-import {create} from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 interface IErrorState {
-    error: string;
-    setError: (error: string) => void;
+  error: string;
+  setError: (error: string) => void;
 
-    openErrorModal: boolean;
-    setOpenErrorModal: (open: boolean) => void;
+  openErrorModal: boolean;
+  setOpenErrorModal: (open: boolean) => void;
 
-    resetErrorStates: () => void;
+  resetErrorStates: () => void;
 }
 
-export const useError = create<IErrorState>((set) => ({
-    error: "",
-    setError: (error) => set({ error }),
+export const useError = createWithEqualityFn<IErrorState>((set) => ({
+  error: "",
+  setError: (error) => set({ error }),
 
-    openErrorModal: false,
-    setOpenErrorModal: (open) => set({ openErrorModal: open }),
+  openErrorModal: false,
+  setOpenErrorModal: (open) => set({ openErrorModal: open }),
 
-    resetErrorStates: () => set({ error: "", openErrorModal: false }),
+  resetErrorStates: () => set({ error: "", openErrorModal: false }),
 }));

@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
 import BulkUploadModal from "@/components/templates/menu/dish/BulkUploadModal.tsx";
+import AIMenuExtractor from "@/components/templates/menu/aiExtractor/index.tsx";
 
 const MemoizeDishAndCat = () => {
   const navigate = useNavigate();
@@ -151,6 +152,12 @@ const MemoizeDishAndCat = () => {
         onClick: () => setSelectedPage("SUB_CATEGORY"),
       },
       { text: "Add On", onClick: () => setSelectedPage("ADD_ON") },
+      {
+        text: "AI",
+        onClick: () => {
+          setSelectedPage("AI");
+        },
+      },
     ];
 
     // Only include Main-category for hierarchical menus
@@ -284,6 +291,12 @@ const MemoizeDishAndCat = () => {
         )}
         {selectedPage === "SUB_CATEGORY" && <ListOfChildCategory />}
         {selectedPage === "ADD_ON" && <ListOfAddOn />}
+        {selectedPage === "AI" && (
+          <div className="flex flex-col items-center justify-center h-[60dvh]">
+            <h2 className="mb-4 text-2xl font-semibold">AI Features</h2>
+          <AIMenuExtractor />
+          </div>
+        )}
       </section>
 
       {/* Edit popup */}

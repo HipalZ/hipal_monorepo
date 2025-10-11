@@ -1,5 +1,5 @@
 import type { SelectedUsersDetails } from "@/hooks/useCoupon";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 export type CouponFlow =
   | "CREATE"
@@ -196,7 +196,7 @@ interface ICoupon {
   setFilter: (value: "active" | "inactive") => void;
 }
 
-const useCouponsStore = create<ICoupon>((set) => ({
+const useCouponsStore = createWithEqualityFn<ICoupon>((set) => ({
   selectedPage: "MANAGE",
   setSelectedPage: (page: CouponFlow) => set(() => ({ selectedPage: page })),
 

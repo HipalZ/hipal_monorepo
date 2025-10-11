@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { createWithEqualityFn } from "zustand/traditional";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface PaymentMethod {
   _id: string;
@@ -15,7 +15,7 @@ interface PaymentMethodsState {
   setPaymentMethods: (paymentMethods: PaymentMethod[]) => void;
 }
 
-export const usePaymentMethodsStore = create(
+export const usePaymentMethodsStore = createWithEqualityFn(
   persist<PaymentMethodsState>(
     (set) => ({
       paymentMethods: [],
@@ -28,7 +28,7 @@ export const usePaymentMethodsStore = create(
         })),
     }),
     {
-      name: 'hibiz-payment-storage',
+      name: "hibiz-payment-storage",
       storage: createJSONStorage(() => localStorage),
     },
   ),
