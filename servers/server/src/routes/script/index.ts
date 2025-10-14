@@ -1770,6 +1770,66 @@ const scriptRouter = new Hono()
   )
 
   .post(
+    "/bulk/upload_customers",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(10, "Invalid business ID"),
+        users: z.array(
+          z.object({
+            name: z.string().min(1).max(50),
+            phone: z.string().min(10).max(10),
+            dob: z.number().optional(),
+          }),
+        ),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+
+      const requestData = await c.req.json();
+      const { users, businessId } = requestData;
+
+      const business = await Business.findById(businessId);
+      if (!business) {
+        return respond(c, "Invalid businessId — business not found", true, 404);
+      }
+
+      for (const user of users) {
+        const { phone, name, dob } = user;
+        let existingUser = await User.findOne({ phone });
+        if (!existingUser) {
+          existingUser = new User({
+            phone,
+            dob,
+            name,
+            businessId,
+          });
+          await existingUser.save();
+        }
+        const existingAnalytic = await UserAnalytic.findOne({
+          userId: existingUser._id,
+          businessId,
+        });
+
+        if (!existingAnalytic) {
+          const userAnalytics = new UserAnalytic({
+            businessId,
+            userId: existingUser._id,
+            visitCount: 0,
+            totalSpend: 0,
+            avgSpend: 0,
+          });
+          await userAnalytics.save();
+        }
+      }
+
+      return respond(c, "Customers uploaded successfully", false, 200, {});
+    },
+  )
+
+  .post(
     "/enable_bill_summary_template",
     zValidator(
       "json",
