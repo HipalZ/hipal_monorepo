@@ -613,3 +613,34 @@ export const useDeleteNotes = () => {
 
   return mutation;
 };
+
+export function useUploadCustomers() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (payload: {
+      businessId: string;
+      users: { name: string; phone: string; dob?: string }[];
+    }) => {
+      const res = await apiRpc.script.bulk.upload_customers.$post({
+        json: payload,
+      });
+      return res.data;
+    },
+
+    onSuccess: (data) => {
+      toast.success("Customers uploaded successfully!");
+      queryClient.invalidateQueries({ queryKey: ["getAllPeoples"] });
+    },
+
+    onError: (error: any) => {
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to upload customers";
+      toast.error(msg);
+    },
+  });
+
+  return mutation;
+}
