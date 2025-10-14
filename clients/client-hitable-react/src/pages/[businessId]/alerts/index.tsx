@@ -1,43 +1,33 @@
-import { memo, useCallback, useState, Suspense, lazy } from "react";
-import { useLiteStore } from "@/components/store/useLiteStore";
-import { useZonesAndTablesStore } from "@/components/store/useZonesAndTable";
-import { useScreenSize } from "@/hooks/useScreenSize";
-import { useFilters } from "@/components/store/useFilters";
-import SpinnerMemo from "@/components/atoms/loadingSpinner";
-import { NavItemTypesEnum } from "@/components/types/hiClientzData";
-import { useParams } from "react-router-dom";
+import SpinnerMemo from '@/components/atoms/loadingSpinner';
+import { useFilters } from '@/components/store/useFilters';
+import { useLiteStore } from '@/components/store/useLiteStore';
+import { useZonesAndTablesStore } from '@/components/store/useZonesAndTable';
+import { NavItemTypesEnum } from '@/components/types/hiClientzData';
+import { useScreenSize } from '@/hooks/useScreenSize';
+import { Suspense, lazy, memo, useCallback, useState } from 'react';
 
 // Lazy loaded components
-const HeaderAlerts = lazy(() => import("@/components/liteAlerts/headerAlerts"));
-const OnlineAlerts = lazy(() => import("@/components/liteAlerts/onlineAlerts"));
-const BillPopUpMemo = lazy(() => import("@/components/atoms/billPopUp"));
-const CartItems = lazy(() => import("@/components/atoms/cartItem"));
-const NavItems = lazy(() => import("@/components/atoms/navItems"));
-const Zones = lazy(() => import("@/components/zones"));
-const BottomPopUp = lazy(() => import("@/components/atoms/universalPopup"));
-const ZoneFilters = lazy(() => import("@/components/zones/zoneFilters"));
-const SalesLiteMemo = lazy(() => import("@/components/atoms/salesLite"));
-const HistoryMemo = lazy(() => import("@/components/liteAlerts/history"));
-const CommonBottomButton = lazy(
-  () => import("@/components/atoms/bottomButton"),
-);
-const EmptyTableList = lazy(() => import("@/components/tables"));
-const CallCaptanMainComp = lazy(
-  () => import("@/components/liteAlerts/callWaiter"),
-);
-
-const a19BusinesId = "67fcedb208625bf313027ee6";
+const HeaderAlerts = lazy(() => import('@/components/liteAlerts/headerAlerts'));
+const OnlineAlerts = lazy(() => import('@/components/liteAlerts/onlineAlerts'));
+const BillPopUpMemo = lazy(() => import('@/components/atoms/billPopUp'));
+const CartItems = lazy(() => import('@/components/atoms/cartItem'));
+const NavItems = lazy(() => import('@/components/atoms/navItems'));
+const Zones = lazy(() => import('@/components/zones'));
+const BottomPopUp = lazy(() => import('@/components/atoms/universalPopup'));
+const ZoneFilters = lazy(() => import('@/components/zones/zoneFilters'));
+const SalesLiteMemo = lazy(() => import('@/components/atoms/salesLite'));
+const HistoryMemo = lazy(() => import('@/components/liteAlerts/history'));
+const CommonBottomButton = lazy(() => import('@/components/atoms/bottomButton'));
+const EmptyTableList = lazy(() => import('@/components/tables'));
+const CallCaptanMainComp = lazy(() => import('@/components/liteAlerts/callWaiter'));
 
 const AlertsMemo = () => {
   const { selectedNavItem } = useLiteStore();
-  const businessId = useParams<{ businessId: string }>().businessId;
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const { setIsFilterOpen, isFilterOpen } = useZonesAndTablesStore((s) => ({
     setIsFilterOpen: s.setIsFilterOpen,
     isFilterOpen: s.isFilterOpen,
   }));
-
-  const hideAlerts = businessId === a19BusinesId;
 
   const [openTable, setOpenTable] = useState<boolean>(false);
   const { payFilter } = useFilters((s) => ({
@@ -57,18 +47,18 @@ const AlertsMemo = () => {
       <section>
         {selectedNavItem === NavItemTypesEnum.ALERTS && (
           <>
-            {payFilter === "ALL" && (
+            {payFilter === 'ALL' && (
               <Suspense fallback={<SpinnerMemo />}>
                 <OnlineAlerts />
                 <CallCaptanMainComp />
               </Suspense>
             )}
-            {payFilter === "ONLINE" && (
+            {payFilter === 'ONLINE' && (
               <Suspense fallback={<SpinnerMemo />}>
                 <OnlineAlerts />
               </Suspense>
             )}
-            {payFilter === "CALL_CAPTAIN" && (
+            {payFilter === 'CALL_CAPTAIN' && (
               <Suspense fallback={<SpinnerMemo />}>
                 <CallCaptanMainComp />
               </Suspense>
@@ -85,47 +75,34 @@ const AlertsMemo = () => {
             <HistoryMemo />
           </Suspense>
         )}
-        {selectedNavItem === NavItemTypesEnum.SALES && !hideAlerts && (
+        {selectedNavItem === NavItemTypesEnum.SALES && (
           <Suspense fallback={<SpinnerMemo />}>
             <SalesLiteMemo />
           </Suspense>
         )}
-        {selectedNavItem === NavItemTypesEnum.SALES && hideAlerts && (
-          <section>U Dont have access to this</section>
-        )}
+
         {selectedNavItem === NavItemTypesEnum.CART && (
           <Suspense fallback={<SpinnerMemo />}>
             <CartItems />
           </Suspense>
         )}
-        <Suspense fallback={<SpinnerMemo />}>
-          {clickViewMore && <BillPopUpMemo />}
-        </Suspense>
+        <Suspense fallback={<SpinnerMemo />}>{clickViewMore && <BillPopUpMemo />}</Suspense>
         {isFilterOpen && (
           <Suspense fallback={<SpinnerMemo />}>
-            <BottomPopUp
-              onClose={() => setIsFilterOpen(false)}
-              show={isFilterOpen}
-              height="h-[90dvh] lg:h-[80dvh]"
-            >
+            <BottomPopUp onClose={() => setIsFilterOpen(false)} show={isFilterOpen} height="h-[90dvh] lg:h-[80dvh]">
               <ZoneFilters />
             </BottomPopUp>
           </Suspense>
         )}
         {openTable && (
           <Suspense fallback={<SpinnerMemo />}>
-            <BottomPopUp
-              onClose={toggleEmptyTableModal}
-              show={openTable}
-              bottomCross
-              hide
-            >
+            <BottomPopUp onClose={toggleEmptyTableModal} show={openTable} bottomCross hide>
               <EmptyTableList />
             </BottomPopUp>
           </Suspense>
         )}
-        <div className="fixed bottom-0 h-[4.5rem] lg:hidden bg-white w-full shadow-2xl flex justify-around items-center">
-          <nav className="flex w-full p-2 mx-4 bg-gray-100 rounded-full">
+        <div className="fixed bottom-0 flex h-[4.5rem] w-full items-center justify-around bg-white shadow-2xl lg:hidden">
+          <nav className="mx-4 flex w-full rounded-full bg-gray-100 p-2">
             <Suspense fallback={<SpinnerMemo />}>
               <NavItems />
             </Suspense>
@@ -136,19 +113,15 @@ const AlertsMemo = () => {
             <CommonBottomButton
               fixed
               backgroundColor="transperant"
-              offset={
-                screenSize === "xs" || screenSize === "md" ? "4.5rem" : "0rem"
-              }
-              position={
-                screenSize === "xs" || screenSize === "md" ? "right" : "mid"
-              }
+              offset={screenSize === 'xs' || screenSize === 'md' ? '4.5rem' : '0rem'}
+              position={screenSize === 'xs' || screenSize === 'md' ? 'right' : 'mid'}
               maxWidth="max-w-[30rem]"
               buttons={[
                 {
-                  text: "Start Table",
+                  text: 'Start Table',
                   onClick: toggleEmptyTableModal,
-                  type: "button",
-                  className: "px-8 w-full max-w-[28rem]",
+                  type: 'button',
+                  className: 'px-8 w-full max-w-[28rem]',
                 },
               ]}
             />

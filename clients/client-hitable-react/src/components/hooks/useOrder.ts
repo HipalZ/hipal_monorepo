@@ -26,12 +26,12 @@ export const useGetAllOrders = () => {
     return res.data;
   }, [tableId]);
 
-  const { isLoading, data } = useQuery({
+  const { isLoading, data, refetch } = useQuery({
     queryKey: ["getTableOrders", tableId],
     queryFn: getTableOrders,
     enabled: !!tableId,
   });
-  return { isLoading, data };
+  return { isLoading, data, refetch };
 };
 
 interface DeleteKotItems {
