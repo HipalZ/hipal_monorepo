@@ -783,7 +783,7 @@ const tableRouter = new Hono()
               tableNo: table?.name,
             };
 
-            await Table.findByIdAndUpdate(
+            const tableInfo = await Table.findByIdAndUpdate(
               tableId,
               {
                 status: "EMPTY",
@@ -895,6 +895,15 @@ const tableRouter = new Hono()
                 tableName: table?.name,
               },
               { session },
+            );
+
+            await MergeTable.deleteOne(
+              {
+                parentTableId: tableInfo?._id,
+              },
+              {
+                session,
+              },
             );
           }
 
@@ -1053,7 +1062,7 @@ const tableRouter = new Hono()
             { session },
           );
         }
-        await Table.findByIdAndUpdate(
+        const tableInfo = await Table.findByIdAndUpdate(
           tableId,
           {
             status: "EMPTY",
@@ -1165,6 +1174,14 @@ const tableRouter = new Hono()
             tableName: table?.name,
           },
           { session },
+        );
+        await MergeTable.deleteOne(
+          {
+            parentTableId: tableInfo?._id,
+          },
+          {
+            session,
+          },
         );
         await PaymentAlert.updateOne(
           {
@@ -1425,7 +1442,7 @@ const tableRouter = new Hono()
           totalBillCount += totalBill || 0;
           totalItemCount += kots?.cart?.length || 0;
 
-          await Table.findByIdAndUpdate(
+          const tableInfo = await Table.findByIdAndUpdate(
             sourceTable._id,
             {
               status: "EMPTY",
@@ -1446,6 +1463,14 @@ const tableRouter = new Hono()
           await UserSession.deleteOne(
             { businessId: sourceTable.businessId, tableName: sourceTable.name },
             { session },
+          );
+          await MergeTable.deleteOne(
+            {
+              parentTableId: tableInfo?._id,
+            },
+            {
+              session,
+            },
           );
         }
 
@@ -1911,6 +1936,14 @@ const tableRouter = new Hono()
             isTransfer: true,
           },
           { session },
+        );
+        await MergeTable.deleteOne(
+          {
+            parentTableId: fromTableId,
+          },
+          {
+            session,
+          },
         );
 
         return c.json(

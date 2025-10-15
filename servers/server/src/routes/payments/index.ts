@@ -10,6 +10,7 @@ import {
   GroupAnalytic,
   KotOrder,
   LoyaltySettings,
+  MergeTable,
   NpcUser,
   Order,
   OutLetInfo,
@@ -2444,7 +2445,7 @@ const paymentsRouter = new Hono()
                   },
                 );
 
-                await Table.findOneAndUpdate(
+                const tableInfo = await Table.findOneAndUpdate(
                   {
                     businessId: getOrder.businessId,
                     name: getOrder.tableName,
@@ -2462,6 +2463,15 @@ const paymentsRouter = new Hono()
                       mergeTableIds: [],
                       mergedBy: null,
                     },
+                  },
+                  {
+                    session,
+                  },
+                );
+
+                await MergeTable.deleteOne(
+                  {
+                    parentTableId: tableInfo?._id,
                   },
                   {
                     session,
@@ -2798,7 +2808,7 @@ const paymentsRouter = new Hono()
 
             console.log("step_14");
 
-            await Table.findOneAndUpdate(
+            const tableInfo = await Table.findOneAndUpdate(
               {
                 businessId: getOrder.businessId,
                 name: getOrder.tableName,
@@ -2816,6 +2826,15 @@ const paymentsRouter = new Hono()
                   mergeTableIds: [],
                   mergedBy: null,
                 },
+              },
+              {
+                session,
+              },
+            );
+
+            await MergeTable.deleteOne(
+              {
+                parentTableId: tableInfo?._id,
               },
               {
                 session,
@@ -3906,7 +3925,7 @@ const paymentsRouter = new Hono()
                         },
                       );
 
-                      await Table.findOneAndUpdate(
+                      const tableInfo = await Table.findOneAndUpdate(
                         {
                           businessId: order.businessId,
                           name: order.tableName,
@@ -3934,6 +3953,14 @@ const paymentsRouter = new Hono()
                         {
                           tableName: order.tableName,
                           businessId: order.businessId,
+                        },
+                        {
+                          session,
+                        },
+                      );
+                      await MergeTable.deleteOne(
+                        {
+                          parentTableId: tableInfo?._id,
                         },
                         {
                           session,
@@ -4219,7 +4246,7 @@ const paymentsRouter = new Hono()
                   },
                 );
 
-                await Table.findOneAndUpdate(
+                const tableInfo = await Table.findOneAndUpdate(
                   {
                     businessId: order.businessId,
                     name: order.tableName,
@@ -4260,6 +4287,15 @@ const paymentsRouter = new Hono()
                   {
                     tableName: order.tableName,
                     businessId: order.businessId,
+                  },
+                  {
+                    session,
+                  },
+                );
+
+                await MergeTable.deleteOne(
+                  {
+                    parentTableId: tableInfo?._id,
                   },
                   {
                     session,

@@ -2,6 +2,7 @@ import {
   BusinessPosConfig,
   BusinessSettings,
   KotOrder,
+  MergeTable,
   Order,
   Payment,
   PaymentAlert,
@@ -576,7 +577,7 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                   },
                 );
 
-                await Table.findOneAndUpdate(
+                const tableInfo = await Table.findOneAndUpdate(
                   {
                     businessId: getOrder.businessId,
                     name: getOrder.tableName,
@@ -594,6 +595,15 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                       mergeTableIds: [],
                       mergedBy: null,
                     },
+                  },
+                  {
+                    session,
+                  },
+                );
+
+                await MergeTable.deleteOne(
+                  {
+                    parentTableId: tableInfo?._id,
                   },
                   {
                     session,
@@ -829,7 +839,7 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
 
             console.log("step_14");
 
-            await Table.findOneAndUpdate(
+            const tableInfo = await Table.findOneAndUpdate(
               {
                 businessId: getOrder.businessId,
                 name: getOrder.tableName,
@@ -847,6 +857,15 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                   mergeTableIds: [],
                   mergedBy: null,
                 },
+              },
+              {
+                session,
+              },
+            );
+
+            await MergeTable.deleteOne(
+              {
+                parentTableId: tableInfo?._id,
               },
               {
                 session,

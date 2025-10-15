@@ -3,6 +3,7 @@ import {
   DuesUser,
   KotOrder,
   LoyaltySettings,
+  MergeTable,
   NpcUser,
   Order,
   Payment,
@@ -1034,7 +1035,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                       },
                     );
 
-                    await Table.findOneAndUpdate(
+                    const tableInfo = await Table.findOneAndUpdate(
                       {
                         businessId: order.businessId,
                         name: order.tableName,
@@ -1062,6 +1063,14 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                       {
                         tableName: order.tableName,
                         businessId: order.businessId,
+                      },
+                      {
+                        session,
+                      },
+                    );
+                    await MergeTable.deleteOne(
+                      {
+                        parentTableId: tableInfo?._id,
                       },
                       {
                         session,
@@ -1247,7 +1256,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                 },
               );
 
-              await Table.findOneAndUpdate(
+              const tableInfo = await Table.findOneAndUpdate(
                 {
                   businessId: order.businessId,
                   name: order.tableName,
@@ -1288,6 +1297,15 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                 {
                   tableName: order.tableName,
                   businessId: order.businessId,
+                },
+                {
+                  session,
+                },
+              );
+
+              await MergeTable.deleteOne(
+                {
+                  parentTableId: tableInfo?._id,
                 },
                 {
                   session,
@@ -1798,7 +1816,7 @@ async function hipalzPosNormalSettleHandler(payload: {
             }
           }
 
-          await Table.findByIdAndUpdate(
+          const tableInfo = await Table.findByIdAndUpdate(
             tableId,
             {
               status: "EMPTY",
@@ -1822,6 +1840,15 @@ async function hipalzPosNormalSettleHandler(payload: {
               tableName: table?.name,
             },
             { session },
+          );
+
+          await MergeTable.deleteOne(
+            {
+              parentTableId: tableInfo?._id,
+            },
+            {
+              session,
+            },
           );
         }
 
@@ -1971,7 +1998,7 @@ async function hipalzPosNormalSettleHandler(payload: {
           { session },
         );
       }
-      await Table.findByIdAndUpdate(
+      const tableInfo = await Table.findByIdAndUpdate(
         tableId,
         {
           status: "EMPTY",
@@ -1996,6 +2023,16 @@ async function hipalzPosNormalSettleHandler(payload: {
         },
         { session },
       );
+
+      await MergeTable.deleteOne(
+        {
+          parentTableId: tableInfo?._id,
+        },
+        {
+          session,
+        },
+      );
+
       await PaymentAlert.updateOne(
         {
           tableName: table?.name,
