@@ -115,6 +115,23 @@ const tableSchema = new mongoose.Schema<TableType>(
       required: false,
       default: false,
     },
+    isMerge: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    mergeTableIds: {
+      type: [ObjectId],
+      required: false,
+      default: [],
+      ref: "table",
+    },
+    mergeBy: {
+      type: ObjectId,
+      required: false,
+      ref: "User",
+      default: null,
+    },
   },
   {
     timestamps: true,

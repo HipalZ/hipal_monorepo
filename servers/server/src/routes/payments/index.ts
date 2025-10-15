@@ -64,6 +64,7 @@ import {
   getISTDateRange,
   isTodayIST,
 } from "../../utils/defaultBillingTime";
+import { executePosHandler } from "../../utils/executePoshandlers.ts";
 import { convertToPetpoojaCart } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
@@ -450,7 +451,7 @@ const paymentsRouter = new Hono()
         couponId,
         channelId,
         cashbackAvailable,
-        posBillId,
+
         variantId,
       } = requestData;
 
@@ -468,6 +469,30 @@ const paymentsRouter = new Hono()
       if (businessPosConfig) {
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const result = await executePosHandler(
+          businessPosConfig.posName,
+          "online_order",
+          {
+            businessId: tableSession.businessId,
+            variantId: variantId,
+            total: total,
+            billValue: billValue,
+            tips: tips,
+            claimedCoins: claimedCoins,
+            couponId: couponId,
+            channelId: channelId,
+            cashbackAvailable,
+            currency: currency,
+            userId: userId,
+            tableName: tableName,
+            merchantId: c.req.param().merchantId,
+          },
+        );
+
+        if (!result.success) {
+          return respond(c, result.message, true, 400);
         }
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
@@ -974,7 +999,6 @@ const paymentsRouter = new Hono()
         couponId,
         channelId,
         cashbackAvailable,
-        posBillId,
         variantId,
       } = requestData;
 
@@ -1009,6 +1033,30 @@ const paymentsRouter = new Hono()
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
+
+        const result = await executePosHandler(
+          businessPosConfig.posName,
+          "offline_order",
+          {
+            businessId: tableSession.businessId,
+            variantId: variantId,
+            total: total,
+            billValue: billValue,
+            tips: tips,
+            claimedCoins: claimedCoins,
+            couponId: couponId,
+            channelId: channelId,
+            cashbackAvailable,
+            currency: currency,
+            userId: userId,
+            tableName: tableName,
+          },
+        );
+
+        if (!result.success) {
+          return respond(c, result.message, true, 400);
+        }
+
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
 
         if (originBillIsSplit) {
@@ -1487,6 +1535,7 @@ const paymentsRouter = new Hono()
       });
     },
   )
+
   .post(
     "/validPayment/:merchantId",
     authTokenValidator,
@@ -1787,6 +1836,27 @@ const paymentsRouter = new Hono()
         businessId: getOrder?.businessId,
         tableName: getOrder?.tableName,
       });
+
+      const businessPosConfig = await BusinessPosConfig.findOne({
+        businessId: getOrder?.businessId,
+        isDeleted: false,
+        active: true,
+      });
+      if (businessPosConfig) {
+        const result = await executePosHandler(
+          businessPosConfig.posName,
+          "razorpay_webhook",
+          {
+            merchantId: merchantId,
+            body: body,
+            headers: headersResult.data,
+          },
+        );
+
+        if (!result.success) {
+          return respond(c, result.message, true, 400);
+        }
+      }
       console.log("step_5");
 
       const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
@@ -2378,6 +2448,9 @@ const paymentsRouter = new Hono()
                       capacity: 0,
                       hiCode: "",
                       isTransfer: false,
+                      isMerged: false,
+                      mergeTableIds: [],
+                      mergedBy: null,
                     },
                   },
                   {
@@ -2729,6 +2802,9 @@ const paymentsRouter = new Hono()
                   capacity: 0,
                   hiCode: "",
                   isTransfer: false,
+                  isMerged: false,
+                  mergeTableIds: [],
+                  mergedBy: null,
                 },
               },
               {
@@ -3134,6 +3210,7 @@ const paymentsRouter = new Hono()
         duesUserId,
         npcUserId,
       } = requestData;
+
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const alert = await PaymentAlert.findOne(
@@ -3194,6 +3271,25 @@ const paymentsRouter = new Hono()
                 if (!tableSession) {
                   return respond(c, "Table session not found", true, 404, {});
                 }
+
+                const result = await executePosHandler(
+                  isHavePos.posName,
+                  "offline_order_accept",
+                  {
+                    businessId: order.businessId,
+                    alertId: alertId,
+                    comment,
+                    waiterName,
+                    settleModes,
+                    duesUserId,
+                    npcUserId,
+                  },
+                );
+
+                if (!result.success) {
+                  return respond(c, result.message, true, 400);
+                }
+
                 const originBillIsSplit =
                   await checkOriginBillIsSplit(tableSession);
                 if (originBillIsSplit) {
@@ -3804,6 +3900,9 @@ const paymentsRouter = new Hono()
                             capacity: 0,
                             hiCode: "",
                             isTransfer: false,
+                            isMerged: false,
+                            mergeTableIds: [],
+                            mergedBy: null,
                           },
                         },
                         {
@@ -4114,6 +4213,9 @@ const paymentsRouter = new Hono()
                       capacity: 0,
                       hiCode: "",
                       isTransfer: false,
+                      isMerged: false,
+                      mergeTableIds: [],
+                      mergedBy: null,
                     },
                   },
                   {

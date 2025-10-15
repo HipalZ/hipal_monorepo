@@ -54,6 +54,9 @@ const categoriesRouter = new Hono()
           businessId,
           isDeleted: false,
           active: true,
+          posName: {
+            $ne: "HIPAL_Z",
+          },
         });
 
         if (businessPosConfig) {
@@ -150,6 +153,9 @@ const categoriesRouter = new Hono()
           businessId,
           isDeleted: false,
           active: true,
+          posName: {
+            $ne: "HIPAL_Z",
+          },
         });
 
         if (businessPosConfig) {
@@ -274,6 +280,9 @@ const categoriesRouter = new Hono()
           businessId: fetchCategory.businessId,
           isDeleted: false,
           active: true,
+          posName: {
+            $ne: "HIPAL_Z",
+          },
         });
 
         if (businessPosConfig) {

@@ -28,6 +28,9 @@ const addonRouter = new Hono()
           businessId: requestData.businessId,
           isDeleted: false,
           active: true,
+          posName: {
+            $ne: "HIPAL_Z",
+          },
         });
 
         if (businessPosConfig) {
@@ -78,6 +81,9 @@ const addonRouter = new Hono()
           businessId: requestData.businessId,
           isDeleted: false,
           active: true,
+          posName: {
+            $ne: "HIPAL_Z",
+          },
         });
 
         if (businessPosConfig) {
@@ -163,6 +169,9 @@ const addonRouter = new Hono()
           businessId: fetchAddOn.businessId,
           isDeleted: false,
           active: true,
+          posName: {
+            $ne: "HIPAL_Z",
+          },
         });
 
         if (businessPosConfig) {

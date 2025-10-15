@@ -371,7 +371,13 @@ const menuRouter = new Hono()
 
       if (
         sourceMenuId &&
-        (await BusinessPosConfig.exists({ businessId, isDeleted: false }))
+        (await BusinessPosConfig.exists({
+          businessId,
+          isDeleted: false,
+          posName: {
+            $ne: "HIPAL_Z",
+          },
+        }))
       ) {
         return respond(
           c,
@@ -479,6 +485,9 @@ const menuRouter = new Hono()
         businessId: businessId,
         isDeleted: false,
         active: true,
+        posName: {
+          $ne: "HIPAL_Z",
+        },
       });
 
       const activeMenus = await Menu.find({

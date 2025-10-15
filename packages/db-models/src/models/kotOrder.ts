@@ -42,6 +42,15 @@ const KotItemSchema = new Schema<KotOrderItemType>({
     type: Number,
     default: 0,
   },
+  itemStatus: {
+    type: String,
+    enum: ["IN_PROGRESS", "COOKED", "DELIVERED", "CANCELLED"],
+    default: "IN_PROGRESS",
+  },
+  priority: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Main Cart Schema
@@ -153,6 +162,15 @@ const KotOrderSchema = new Schema<KotOrderType>(
     kotInvoiceNumber: {
       type: Number,
       default: 0,
+    },
+    kotStatus: {
+      type: String,
+      enum: ["IN_PROGRESS", "COMPLETED"],
+      default: "IN_PROGRESS",
+    },
+    priority: {
+      type: Boolean,
+      default: false,
     },
   },
   {

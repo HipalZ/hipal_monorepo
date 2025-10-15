@@ -122,12 +122,18 @@ const dishesRouter = new Hono()
           removeRecommendationIds = [],
           kitchenId,
           removeKitchenId,
+          timings,
+          avgPrepTime,
+          gst,
         } = dish;
 
         const businessPosConfig = await BusinessPosConfig.findOne({
           businessId: dish.businessId,
           isDeleted: false,
           active: true,
+          posName: {
+            $ne: "HIPAL_Z",
+          },
         });
 
         if (businessPosConfig) {
@@ -178,6 +184,9 @@ const dishesRouter = new Hono()
             tags,
             kitchenId,
             removeKitchenId,
+            timings,
+            avgPrepTime,
+            gst,
           },
           {
             new: true,
@@ -303,6 +312,9 @@ const dishesRouter = new Hono()
           businessId: fetchDish.businessId,
           isDeleted: false,
           active: true,
+          posName: {
+            $ne: "HIPAL_Z",
+          },
         });
 
         if (businessPosConfig) {
@@ -348,20 +360,14 @@ const dishesRouter = new Hono()
           businessId: dish.businessId,
           isDeleted: false,
           active: true,
+          posName: {
+            $ne: "HIPAL_Z",
+          },
         });
 
         if (businessPosConfig) {
           return respond(c, "You cannot create a dish with POS", true, 400, {});
         }
-
-        const dishAlreadyExists = await Dish.findOne({
-          businessId: dish.businessId,
-          name: dish.name,
-          isDeleted: false,
-          active: true,
-        });
-        if (dishAlreadyExists)
-          return respond(c, "Already exists", true, 400, {});
 
         const createDish = await Dish.create([dish], { session });
         if (!createDish) return respond(c, "Error in creating", true, 400, {});
@@ -484,6 +490,9 @@ const dishesRouter = new Hono()
           businessId: dishes[0].businessId,
           isDeleted: false,
           active: true,
+          posName: {
+            $ne: "HIPAL_Z",
+          },
         });
 
         if (businessPosConfig) {

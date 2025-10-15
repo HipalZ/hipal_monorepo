@@ -20,6 +20,7 @@ class RazorPayWrapper {
   private _instances: Map<string, RazorpayInstance> = new Map();
 
   async create(merchantId: string) {
+    //@ts-ignore
     let config: MerchantConfig | null = await getMerchantConfig(merchantId);
     if (!config) {
       const merchant = await BusinessSettings.findOne({

@@ -170,6 +170,7 @@ export const outLetInfoSchema = z.object({
   shareCart: z.boolean().optional().default(false),
   isPosSynced: z.boolean().optional().default(false),
   posProgress: z.number().optional().default(0),
+  isHipalzPos: z.boolean().optional().default(false),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;
