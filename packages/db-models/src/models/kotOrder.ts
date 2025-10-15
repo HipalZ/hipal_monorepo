@@ -51,6 +51,8 @@ const KotItemSchema = new Schema<KotOrderItemType>({
     type: Boolean,
     default: false,
   },
+  cookedBy: { type: String, default: "" },
+  deliveredBy: { type: String, default: "" },
 });
 
 // Main Cart Schema

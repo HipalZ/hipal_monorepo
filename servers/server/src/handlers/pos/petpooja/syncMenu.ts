@@ -28,10 +28,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
 
     const businessInfo = await Business.findById(businessId).session(session);
     if (!businessInfo) {
-      return {
-        success: false,
-        message: "Business not found",
-      };
+      throw new Error("Business not found");
     }
 
     const businessPosConfig = await BusinessPosConfig.findOne({
@@ -45,17 +42,11 @@ async function petPoojaPosSyncMenuHandler(payload: {
     );
 
     if (!menu) {
-      return {
-        success: false,
-        message: "Menu not found",
-      };
+      throw new Error("Active menu not found for business");
     }
 
     if (!businessPosConfig) {
-      return {
-        success: false,
-        message: "BusinessPosConfig not found",
-      };
+      throw new Error("POS not configured for this business");
     }
 
     const modelsToUpdate = [Dish, Category, AddOn, Zone, Table];
@@ -342,10 +333,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
       }
     }
   } catch (error) {
-    return {
-      success: false,
-      message: (error as Error).message || "Internal error in POS setup",
-    };
+    console.error("Error in petPoojaPosSyncMenuHandler:", error);
   }
 }
 

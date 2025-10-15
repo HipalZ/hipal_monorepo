@@ -50,6 +50,12 @@ const zonesAndTablesRouter = new Hono()
           409,
         );
       }
+      const hipalZPos = await BusinessPosConfig.findOne({
+        businessId: businessId,
+        isDeleted: false,
+        active: true,
+        posName: "HIPAL_Z",
+      });
 
       const alreadyExists = await Zone.findOne({
         businessId,
@@ -76,6 +82,7 @@ const zonesAndTablesRouter = new Hono()
         couponIds,
         tableIds,
         zoneId: nanoid(10),
+        pos: !!hipalZPos,
       });
 
       await zone.save({ session });
@@ -226,6 +233,13 @@ const zonesAndTablesRouter = new Hono()
         );
       }
 
+      const hipalZPos = await BusinessPosConfig.findOne({
+        businessId: businessId,
+        isDeleted: false,
+        active: true,
+        posName: "HIPAL_Z",
+      });
+
       const zoneData = await Zone.findById(internalZoneId);
 
       if (!zoneData) {
@@ -306,6 +320,7 @@ const zonesAndTablesRouter = new Hono()
             tableLink: createShortUrl[0].shortUrl,
             tableId: nanoid(10),
             zoneId: zoneData.zoneId,
+            pos: !!hipalZPos,
           });
 
           await table.save({ session });
@@ -373,6 +388,7 @@ const zonesAndTablesRouter = new Hono()
         tableLink: createShortUrl[0].shortUrl,
         tableId: nanoid(10),
         zoneId: zoneData.zoneId,
+        pos: !!hipalZPos,
       });
 
       await table.save({ session });

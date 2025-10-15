@@ -551,11 +551,11 @@ const posRouter = new Hono()
           session,
         });
 
-        if (!result.success) {
-          return respond(c, result.message, true, 400);
+        if (!result) {
+          throw new Error("Internal error in POS setup");
         }
 
-        return respond(c, result.message, false, 200, { success: true });
+        return respond(c, "", false, 200, result);
       });
     },
   )
@@ -594,8 +594,8 @@ const posRouter = new Hono()
           },
         );
 
-        if (!result.success) {
-          return respond(c, result.message, true, 400);
+        if (!result) {
+          throw new Error("Internal error in POS sync menu");
         }
 
         return c.json({

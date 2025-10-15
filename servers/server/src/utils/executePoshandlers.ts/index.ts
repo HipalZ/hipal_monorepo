@@ -21,16 +21,11 @@ export async function executePosHandler(
     }
 
     const result = await handler(params);
-    return {
-      success: true,
-      message: `${posName} ${action} executed successfully`,
-      data: result,
-    };
+    return result;
   } catch (error) {
     console.error(`[${posName}.${action}] ERROR:`, error);
     return {
-      success: false,
-      message: (error as Error).message || "Internal error in POS handler",
+      error: (error as Error).message || "Internal error in POS handler",
     };
   }
 }

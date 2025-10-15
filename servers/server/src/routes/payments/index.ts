@@ -491,8 +491,11 @@ const paymentsRouter = new Hono()
           },
         );
 
-        if (!result.success) {
-          return respond(c, result.message, true, 400);
+        if (!result) {
+          throw new Error("Error in POS handler");
+        }
+        if (result) {
+          return respond(c, "success", false, 200, result);
         }
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
@@ -1053,8 +1056,11 @@ const paymentsRouter = new Hono()
           },
         );
 
-        if (!result.success) {
-          return respond(c, result.message, true, 400);
+        if (!result) {
+          throw new Error("Error in POS handler");
+        }
+        if (result) {
+          return respond(c, "success", false, 200, result);
         }
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
@@ -1853,8 +1859,12 @@ const paymentsRouter = new Hono()
           },
         );
 
-        if (!result.success) {
-          return respond(c, result.message, true, 400);
+        if (!result) {
+          throw new Error("Error in POS handler");
+        }
+
+        if (result) {
+          return respond(c, "success", false, 200, result);
         }
       }
       console.log("step_5");
@@ -3286,8 +3296,18 @@ const paymentsRouter = new Hono()
                   },
                 );
 
-                if (!result.success) {
-                  return respond(c, result.message, true, 400);
+                if (!result) {
+                  throw new Error("Failed to process POS offline order");
+                }
+
+                if (result) {
+                  return respond(
+                    c,
+                    "Order accepted successfully",
+                    false,
+                    200,
+                    result,
+                  );
                 }
 
                 const originBillIsSplit =

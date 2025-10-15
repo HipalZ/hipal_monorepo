@@ -44,10 +44,7 @@ async function petPoojaPosSetupHandler(payload: {
     });
 
     if (businessPosConfig) {
-      return {
-        success: false,
-        message: "Business already configured for this POS",
-      };
+      throw new Error("Business already configured for this POS");
     }
 
     const businessInfo = await Business.findById(businessId).session(session);
@@ -97,10 +94,7 @@ async function petPoojaPosSetupHandler(payload: {
     );
 
     if (areaTableRes.success !== "1")
-      return {
-        success: false,
-        message: "POS area/table fetch failed",
-      };
+      throw new Error("POS area/table fetch failed");
 
     const areas = areaTableRes.areas || [];
     const tables = areaTableRes.tables || [];
@@ -420,10 +414,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
     });
 
     if (businessPosConfig) {
-      return {
-        success: false,
-        message: "Business already configured for this POS",
-      };
+      throw new Error("Business already configured for this POS");
     }
 
     const businessInfo = await Business.findById(businessId).session(session);
@@ -473,10 +464,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
     );
 
     if (areaTableRes.success !== "1")
-      return {
-        success: false,
-        message: "POS area/table fetch failed",
-      };
+      throw new Error("POS area/table fetch failed");
 
     const areas = areaTableRes.areas || [];
     const tables = areaTableRes.tables || [];

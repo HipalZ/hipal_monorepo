@@ -128,7 +128,7 @@ const kotRouter = new Hono()
         tableName: z.string().min(1).max(100),
         businessId: z.string().min(24).max(24),
         itemName: z.string().min(1).max(100),
-        itemPrice: z.number().min(1).max(100).positive(),
+        itemPrice: z.number().min(1).max(2000).positive(),
         itemQuantity: z.number().min(1).max(100),
       }),
     ),
@@ -827,63 +827,43 @@ const kotRouter = new Hono()
         staffId: z.string(),
       }),
     ),
-
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { itemIds, itemStatus, staffId } = await c.req.json();
-        const staff = await User.findById(staffId);
+
+        const staff = await User.findById(staffId).session(session);
         if (!staff) {
           return c.json(
-            {
-              message: "Staff not found",
-              err: true,
-              data: {},
-            },
+            { message: "Staff not found", err: true, data: {} },
             404,
           );
         }
 
-        const kotDocs = await KotOrder.find(
-          { "cart._id": { $in: itemIds } },
+        const setFields: Record<string, any> = {
+          "cart.$[elem].itemStatus": itemStatus,
+        };
+        if (itemStatus === "COOKED")
+          setFields["cart.$[elem].cookedBy"] = staff.name;
+        if (itemStatus === "DELIVERED")
+          setFields["cart.$[elem].deliveredBy"] = staff.name;
+
+        const res = await KotOrder.updateMany(
+          { "cart._id": { $in: itemIds } }, // or ids if casting
+          { $set: setFields },
           {
-            cart: 1,
-            businessId: 1,
-            acceptedBy: 1,
-            tableName: 1,
-            name: 1,
-            phone: 1,
-            isDeleted: 1,
-            kotInvoiceNumber: 1,
+            arrayFilters: [{ "elem._id": { $in: itemIds } }], // or ids
+            session,
           },
-        ).session(session);
+        );
 
-        if (!kotDocs.length) {
+        if (res.matchedCount === 0) {
           return c.json(
-            {
-              message: "KOT items not found",
-              err: true,
-              data: {},
-            },
+            { message: "KOT items not found", err: true, data: {} },
             404,
           );
         }
-        for (const kd of kotDocs) {
-          await KotOrder.findByIdAndUpdate(
-            {
-              _id: kd._id,
-              "cart._id": { $in: itemIds },
-            },
-            {
-              $set: {
-                "cart.$.itemStatus": itemStatus,
-                ...(itemStatus === "COOKED" ? { cookedBy: staffId } : {}),
-                ...(itemStatus === "DELIVERED" ? { deliveredBy: staffId } : {}),
-              },
-            },
-            { session },
-          );
-        }
+
         return respond(c, "Item status updated successfully", false, 200, {});
       });
     },

@@ -24,6 +24,8 @@ const KotOrderSchema = z.object({
     .default("IN_PROGRESS")
     .optional(),
   priority: z.boolean().default(false).optional(),
+  deliveredBy: z.string().min(1).max(150).optional(),
+  cookedBy: z.string().min(1).max(150).optional(),
 });
 
 // Define the main cart schema
@@ -60,8 +62,6 @@ export const kotSchema = z.object({
     .default("IN_PROGRESS")
     .optional(),
   priority: z.boolean().default(false).optional(),
-  deliveredBy: ObjectIdSchema.optional(),
-  cookedBy: ObjectIdSchema.optional(),
 });
 
 export type KotOrderType = z.infer<typeof kotSchema>;

@@ -68,15 +68,12 @@ const categoriesRouter = new Hono()
             {},
           );
         }
-
-        const existingCategory = await Category.findOne({
-          name: requestData.name,
-          businessId,
+        const hipalZPos = await BusinessPosConfig.findOne({
+          businessId: businessId,
           isDeleted: false,
           active: true,
-        }).select("_id");
-        if (existingCategory)
-          return respond(c, "Already exists", true, 409, {});
+          posName: "HIPAL_Z",
+        });
 
         const creatingCategory = await Category.create(
           [
@@ -91,6 +88,9 @@ const categoriesRouter = new Hono()
               dishIds: dishIds || [],
               subCategoryIds: subCategoryIds || [],
               menuId: menuId,
+              pos: !!hipalZPos,
+              timings: requestData.timings,
+              active: true,
             },
           ],
           {

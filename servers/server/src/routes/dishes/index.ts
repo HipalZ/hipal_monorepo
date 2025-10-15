@@ -369,7 +369,16 @@ const dishesRouter = new Hono()
           return respond(c, "You cannot create a dish with POS", true, 400, {});
         }
 
-        const createDish = await Dish.create([dish], { session });
+        const hipalZPos = await BusinessPosConfig.findOne({
+          businessId: dish.businessId,
+          isDeleted: false,
+          active: true,
+          posName: "HIPAL_Z",
+        });
+
+        const createDish = await Dish.create([{ ...dish, pos: !!hipalZPos }], {
+          session,
+        });
         if (!createDish) return respond(c, "Error in creating", true, 400, {});
 
         await Category.updateMany(
