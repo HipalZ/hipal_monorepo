@@ -67,7 +67,7 @@ const MemoSearchComponent = () => {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="sticky -top-2 z-[1] -mx-2 -mt-4 border-b border-gray-300 bg-white px-2 pb-2 pt-4 placeholder:text-sm md:-top-4 md:pb-3 lg:mt-0 lg:border-none"
+      className="sticky -top-2 z-[1] -mx-2 -mt-4 w-full max-w-[87dvw] border-b border-gray-300 bg-white px-2 pb-2 pt-4 placeholder:text-base md:-top-4 md:pb-3 lg:mt-0 lg:border-none"
     >
       <div className="relative w-full">
         <Input

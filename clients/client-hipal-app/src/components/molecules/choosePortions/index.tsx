@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo } from "react";
 import type { DishType } from "@hi/db-models/src/validators";
 import { useCartStore } from "@/components/store/useCartStore";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
@@ -11,6 +11,13 @@ function MemoChoosePortions({ dishData }: { dishData: DishType }) {
 
   const portions = useMemo(() => dishData?.portions || [], [dishData]);
   const outletInfo = useBusinessDetails((s) => s.businessDetails);
+
+    useEffect(() => {
+    if (portions.length === 1 && selectedPortion?._id !== portions[0]._id) {
+      setSelectedPortion(portions[0]);
+    }
+  }, [portions, selectedPortion, setSelectedPortion]);
+
   return (
     <>
       {portions?.length > 0 ? (
