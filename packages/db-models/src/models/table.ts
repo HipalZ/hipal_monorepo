@@ -126,7 +126,7 @@ const tableSchema = new mongoose.Schema<TableType>(
       default: [],
       ref: "table",
     },
-    mergeBy: {
+    mergedBy: {
       type: ObjectId,
       required: false,
       ref: "User",

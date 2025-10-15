@@ -278,6 +278,21 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
+  isMerge: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  mergeTableNames: {
+    type: [String],
+    required: false,
+    default: [],
+  },
+  coinAppliedBy: {
+    type: ObjectId,
+    default: null,
+    ref: "User",
+  },
 });
 
 userSessionSchema.plugin(autoIncrement.plugin, {

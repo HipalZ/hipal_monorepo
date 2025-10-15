@@ -5,6 +5,7 @@ import {
   DuesUser,
   KotOrder,
   LoyaltySettings,
+  MergeTable,
   NpcUser,
   Order,
   Payment,
@@ -56,15 +57,27 @@ const tableRouter = new Hono()
         active: true,
       });
 
+      const allMergeTables = await MergeTable.find({ businessId }).lean();
+      const mergedTableIds = [];
+      for (const mergeTable of allMergeTables) {
+        mergedTableIds.push(...mergeTable.childTableIds);
+      }
+
       const tables = await Table.find({
         businessId,
         active: true,
         status: "ACTIVE",
         pos: !!businessPosConfig,
-      }).populate({
-        path: "userIds",
-        select: "name phone",
-      });
+        _id: { $nin: mergedTableIds },
+      })
+        .populate({
+          path: "userIds",
+          select: "name phone",
+        })
+        .populate({
+          path: "mergeTableIds",
+          select: "name -_id",
+        });
 
       return c.json(
         {
@@ -151,6 +164,12 @@ const tableRouter = new Hono()
         active: true,
       });
 
+      const allMergeTables = await MergeTable.find({ businessId }).lean();
+      const mergedTableIds = [];
+      for (const mergeTable of allMergeTables) {
+        mergedTableIds.push(...mergeTable.childTableIds);
+      }
+
       const tables = await Table.find({
         businessId,
         status: "EMPTY",
@@ -164,6 +183,7 @@ const tableRouter = new Hono()
             zoneId: { $lte: "0" },
           },
         ],
+        _id: { $nin: mergedTableIds },
       });
 
       return c.json(
@@ -1337,6 +1357,15 @@ const tableRouter = new Hono()
           );
         }
 
+        const isTableAlreadyMerged = await MergeTable.exists({
+          businessId: destTable.businessId,
+          childTableIds: { $in: fromTableIds },
+        });
+
+        if (isTableAlreadyMerged) {
+          return respond(c, " source tables is already merged", true, 400, {});
+        }
+
         const sourceTables = await Table.find({
           businessId: destTable.businessId,
           _id: { $in: fromTableIds },
@@ -1424,6 +1453,7 @@ const tableRouter = new Hono()
           businessId: destTable.businessId,
           isDeleted: false,
           active: true,
+          posName: "HIPAL_Z",
         });
 
         if (!posConfigData) {
@@ -1474,7 +1504,7 @@ const tableRouter = new Hono()
           await Table.findByIdAndUpdate(
             destTable._id,
             {
-              isMerged: true,
+              isMerge: true,
               status: "ACTIVE",
               mergedBy: staffData._id,
               mergeTableIds: fromTableIds,
@@ -1505,7 +1535,7 @@ const tableRouter = new Hono()
           await Table.findByIdAndUpdate(
             destTable._id,
             {
-              isMerged: true,
+              isMerge: true,
 
               mergedBy: staffData._id,
               mergeTableIds: fromTableIds,
@@ -1518,6 +1548,14 @@ const tableRouter = new Hono()
             { session },
           );
         }
+
+        const saveMergetables = new MergeTable({
+          businessId: destTable.businessId,
+          parentTableId: toTableId,
+          childTableIds: fromTableIds,
+        });
+
+        await saveMergetables.save({ session });
 
         return respond(c, "Tables merged successfully", false, 200, {});
       });

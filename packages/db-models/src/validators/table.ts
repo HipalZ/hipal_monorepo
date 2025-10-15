@@ -40,7 +40,7 @@ export const tableSchema = z.object({
   pos: z.boolean().default(false).optional(),
   isMerge: z.boolean().default(false).optional(),
   mergeTableIds: z.array(ObjectIdSchema).optional(),
-  mergeBy: ObjectIdSchema.optional(),
+  mergedBy: ObjectIdSchema.optional(),
 });
 
 export const createTableSchema = z.object({
