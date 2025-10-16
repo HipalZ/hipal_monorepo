@@ -167,7 +167,7 @@ const syncPosMenuConfigRouter = new Hono()
           );
 
           // create short URL once per table
-          const longUrl = `https://hipal-test.hipalz.com/${business.customLink}/explore?tableName=${tableDoc.name}`;
+          const longUrl = `https://hipalz.com/${business.customLink}/explore?tableName=${tableDoc.name}`;
           const existingShort = await UrlModel.exists({
             businessId,
             longUrl,
@@ -179,7 +179,7 @@ const syncPosMenuConfigRouter = new Hono()
                 {
                   businessId,
                   longUrl,
-                  shortUrl: `https://api.test.hipalz.com/surl/${shortCode}`,
+                  shortUrl: `https://api.hipalz.com/surl/${shortCode}`,
                   urlCode: shortCode,
                 },
               ],
