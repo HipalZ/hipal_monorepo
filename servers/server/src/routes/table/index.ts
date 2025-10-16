@@ -140,7 +140,20 @@ const tableRouter = new Hono()
     async (c) => {
       const { tableId } = c.req.param();
 
-      const table = await Table.findById(tableId);
+      const table = await Table.findById(tableId)
+        .populate({
+          path: "userIds",
+          select: "name phone",
+        })
+        .populate({
+          path: "mergeTableIds",
+          select: "name",
+        })
+
+        .populate({
+          path: "mergedBy",
+          select: "name",
+        });
 
       return c.json(
         {
