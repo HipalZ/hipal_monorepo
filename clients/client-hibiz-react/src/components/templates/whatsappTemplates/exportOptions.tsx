@@ -1,33 +1,29 @@
-import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
-import { lazy, memo } from "react";
-import toast from "react-hot-toast";
-import { FILTER_OPTIONS, formatDate } from "@/components/utils/helper";
+import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
+import { FILTER_OPTIONS, formatDate } from '@/components/utils/helper';
+import { lazy, memo } from 'react';
+import toast from 'react-hot-toast';
 
-const MiddlePopUp = lazy(() => import("@/components/atom/middlePopUp"));
+const MiddlePopUp = lazy(() => import('@/components/atom/middlePopUp'));
 
 const MemoExportOptions = () => {
-  const { openExport, setOpenExport, campaignsData } = useWhatsappTempStore(
-    (s) => ({
-      openExport: s.openExport,
-      setOpenExport: s.setOpenExport,
-      campaignsData: s.campaignsData,
-    }),
-  );
+  const { openExport, setOpenExport, campaignsData } = useWhatsappTempStore((s) => ({
+    openExport: s.openExport,
+    setOpenExport: s.setOpenExport,
+    campaignsData: s.campaignsData,
+  }));
 
   const handleExport = async (option: string) => {
     setOpenExport(false);
 
-    if (option === "all") {
+    if (option === 'all') {
       // Export all data
       if (campaignsData?.campaignAnalytics.length === 0) {
-        return toast.error("No data available for this campaign.");
+        return toast.error('No data available for this campaign.');
       }
-      downloadCSV(campaignsData?.campaignAnalytics, "all_campaign_data.csv");
+      downloadCSV(campaignsData?.campaignAnalytics, 'all_campaign_data.csv');
     } else {
       // Export filtered data
-      const filtered = campaignsData.campaignAnalytics.filter(
-        (item) => item.status === option,
-      );
+      const filtered = campaignsData.campaignAnalytics.filter((item) => item.status === option);
       if (filtered.length === 0) {
         return toast.error(`No ${option} data available.`);
       }
@@ -35,39 +31,47 @@ const MemoExportOptions = () => {
     }
   };
   const downloadCSV = (data: any[], filename: string) => {
-    // Define the order of fields in the CSV
-    const fields = ["name", "phone", "status", "date"];
+    const fields = ['name', 'phone', 'status', 'date'];
+    const header = fields.join(',');
 
-    // Create the CSV header
-    const header = fields.join(",");
-
-    // Create the CSV rows
     const csvRows = data.map((row) =>
       fields
         .map((field) => {
-          let value =
-            field === "date" ? formatDate(row[field]) : row[field] || "";
-          if (value.toString().includes(",")) {
-            value = `"${value}"`;
+          let value = '';
+
+          switch (field) {
+            case 'name':
+              value = row.name || row?.userId?.name || '';
+              break;
+            case 'phone':
+              value = row.phone || row?.userId?.phone || '';
+              break;
+            case 'date':
+              value = row.date ? formatDate(row.date) : '';
+              break;
+            default:
+              value = row[field] || '';
           }
+
+          // escape commas and quotes safely
+          if (typeof value === 'string' && value.includes(',')) {
+            value = `"${value.replace(/"/g, '""')}"`;
+          }
+
           return value;
         })
-        .join(","),
+        .join(','),
     );
 
-    // Combine header and rows
-    const csvContent = [header, ...csvRows].join("\n");
+    const csvContent = [header, ...csvRows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
-    // Create a Blob with the CSV content
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-
-    // Create a download link
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", filename);
-      link.style.visibility = "hidden";
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -75,21 +79,11 @@ const MemoExportOptions = () => {
   };
 
   return (
-    <MiddlePopUp
-      onlyPopUp
-      show={openExport}
-      onClose={() => setOpenExport(false)}
-    >
-      <div className="p-4 space-y-4">
-        <article className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Export Options
-          </h3>
-          <button
-            className="p-2 text-white bg-red-500 rounded-lg on_active_bounce"
-            type="button"
-            onClick={() => setOpenExport(false)}
-          >
+    <MiddlePopUp onlyPopUp show={openExport} onClose={() => setOpenExport(false)}>
+      <div className="space-y-4 p-4">
+        <article className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">Export Options</h3>
+          <button className="on_active_bounce rounded-lg bg-red-500 p-2 text-white" type="button" onClick={() => setOpenExport(false)}>
             Cancel
           </button>
         </article>
@@ -99,20 +93,16 @@ const MemoExportOptions = () => {
               <button
                 type="button"
                 onClick={() => handleExport(option.status)}
-                className="flex items-center justify-between w-full p-3 text-left transition-all rounded-md hover:bg-gray-300 focus:ring-2 focus:ring-indigo-500"
-                title={!option.count ? "No data available for export" : ""}
+                className="flex w-full items-center justify-between rounded-md p-3 text-left transition-all hover:bg-gray-300 focus:ring-2 focus:ring-indigo-500"
+                title={!option.count ? 'No data available for export' : ''}
               >
                 <div className="flex items-center gap-3">
                   <div className="text-gray-700">
-                    <option.icon className="w-5 h-5" />
+                    <option.icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {option.label}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-600">
-                      {option.description}
-                    </p>
+                    <p className="text-sm font-medium text-gray-900">{option.label}</p>
+                    <p className="mt-1 text-xs text-gray-600">{option.description}</p>
                   </div>
                 </div>
               </button>
