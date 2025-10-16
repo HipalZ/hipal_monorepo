@@ -6,7 +6,7 @@ import whatsAppApiBaseUrl from "../whatsAppApiBaseUrl/apiPaths";
 async function sendWhatsAppTemplateForCouponQr(
   whatsAppBusinessConfigData: WhatsAppBusinessConfigType,
   userPhone: string,
-  bodyMessage: string,
+  couponQrShortUrl: string,
 ) {
   try {
     await axios({
@@ -14,9 +14,24 @@ async function sendWhatsAppTemplateForCouponQr(
       url: `${whatsAppApiBaseUrl.BASE_URL}/${whatsAppBusinessConfigData?.version}/${whatsAppBusinessConfigData.phoneId}/messages?access_token=${whatsAppBusinessConfigData?.token}`,
       data: {
         messaging_product: "whatsapp",
+        recipient_type: "individual",
         to: userPhone,
-        text: {
-          body: `🎉 *${whatsAppBusinessConfigData?.businessName}* offers you exclusive benefits.\n🔗 Click below to grab your special coupon curated just for you. \n${bodyMessage}`,
+        type: "interactive",
+        interactive: {
+          type: "cta_url",
+          body: {
+            text: `🎉 *${whatsAppBusinessConfigData?.businessName}* brings you exclusive rewards!\n\nTap below to grab your special coupon curated just for you. 💝`,
+          },
+          action: {
+            name: "cta_url",
+            parameters: {
+              display_text: "Grab My Coupon",
+              url: couponQrShortUrl,
+            },
+          },
+          footer: {
+            text: "Limited-time offer — redeem before it expires!",
+          },
         },
       },
       headers: {
@@ -24,7 +39,7 @@ async function sendWhatsAppTemplateForCouponQr(
       },
     });
   } catch (error) {
-    console.error("Error sendWhatsAppTemplateForCheckInQr:", error);
+    console.error("Error sendWhatsAppInteractiveForCouponQr:", error);
   }
 }
 
@@ -48,7 +63,7 @@ async function couponQrHandler(
     await sendWhatsAppTemplateForCouponQr(
       whatsAppBusinessConfigData,
       userPhone,
-      `🎉 *${whatsAppBusinessConfigData?.businessName}* offers you exclusive benefits.\n🔗 Click below to grab your special coupon curated just for you. \n${couponQrShortUrl}`,
+      couponQrShortUrl,
     );
   } catch (error) {
     console.error("Error in sendWhatsAppTemplateForCouponQr:", error);
