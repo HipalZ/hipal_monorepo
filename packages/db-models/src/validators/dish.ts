@@ -64,6 +64,7 @@ export const portionSchema = z.object({
   ),
 
   posPortionId: z.string().optional(),
+  availability: z.boolean().default(true).optional(),
 });
 
 export const dishSchema = z.object({
