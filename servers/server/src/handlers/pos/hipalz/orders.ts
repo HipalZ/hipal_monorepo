@@ -616,6 +616,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                     }
 
                     if (existingLoyalty?.loyaltyId && order.userId.toString()) {
+                      console.log("cashBack", cashBack);
                       finalCashBack = await addCoins(
                         cashBack,
                         order.userId.toString(),
@@ -1095,6 +1096,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
               );
 
               if (existingLoyalty?.loyaltyId && order.claimedCoins > 0) {
+                console.log("order.claimedCoins", order.claimedCoins);
                 await removeCoins(
                   Number(order?.claimedCoins),
                   order.tableName,
@@ -1106,19 +1108,18 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                 if (order.cashbackAvailable === false) {
                   cashBack = 0;
                 }
+                finalCashBack = await addCoins(
+                  cashBack,
+                  order.userId.toString(),
+                  order._id.toString(),
+                  order.tableName || "",
+                  order.businessId.toString(),
+
+                  existingLoyalty?.loyaltyId.toString() || "",
+
+                  session,
+                );
               }
-
-              finalCashBack = await addCoins(
-                cashBack,
-                order.userId.toString(),
-                order._id.toString(),
-                order.tableName || "",
-                order.businessId.toString(),
-
-                existingLoyalty?.loyaltyId.toString() || "",
-
-                session,
-              );
             }
 
             const npcUser = await NpcUser.findById(npcUserId);

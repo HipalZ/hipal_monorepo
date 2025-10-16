@@ -4000,19 +4000,18 @@ const paymentsRouter = new Hono()
                   if (order.cashbackAvailable === false) {
                     cashBack = 0;
                   }
+                  finalCashBack = await addCoins(
+                    cashBack,
+                    order.userId.toString(),
+                    order._id.toString(),
+                    order.tableName || "",
+                    order.businessId.toString(),
+
+                    existingLoyalty?.loyaltyId.toString() || "",
+
+                    session,
+                  );
                 }
-
-                finalCashBack = await addCoins(
-                  cashBack,
-                  order.userId.toString(),
-                  order._id.toString(),
-                  order.tableName || "",
-                  order.businessId.toString(),
-
-                  existingLoyalty?.loyaltyId.toString() || "",
-
-                  session,
-                );
               }
 
               const npcUser = await NpcUser.findById(npcUserId);
