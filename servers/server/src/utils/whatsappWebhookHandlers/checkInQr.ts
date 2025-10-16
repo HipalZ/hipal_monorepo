@@ -6,7 +6,9 @@ import whatsAppApiBaseUrl from "../whatsAppApiBaseUrl/apiPaths";
 async function sendWhatsAppTemplateForCheckInQr(
   whatsAppBusinessConfigData: WhatsAppBusinessConfigType,
   userPhone: string,
-  bodyMessage: string,
+  code: string,
+  checkInQrShortUrl: string,
+  websiteLink: string,
 ) {
   try {
     await axios({
@@ -14,9 +16,26 @@ async function sendWhatsAppTemplateForCheckInQr(
       url: `${whatsAppApiBaseUrl.BASE_URL}/${whatsAppBusinessConfigData?.version}/${whatsAppBusinessConfigData.phoneId}/messages?access_token=${whatsAppBusinessConfigData?.token}`,
       data: {
         messaging_product: "whatsapp",
+        recipient_type: "individual",
         to: userPhone,
-        text: {
-          body: bodyMessage,
+        type: "interactive",
+        interactive: {
+          type: "cta_url",
+          body: {
+            text: `Welcome to ${whatsAppBusinessConfigData?.businessName}! 👋\n\nThank you for being with us today. 🙏\nYour code: *${code}*\n\nWe hope you have a great experience! 😊`,
+          },
+          action: {
+            name: "cta_url",
+            parameters: {
+              display_text: "Discover Us",
+              url: checkInQrShortUrl,
+            },
+          },
+          footer: websiteLink
+            ? {
+                text: `Find Us: ${websiteLink}`,
+              }
+            : undefined,
         },
       },
       headers: {
@@ -24,7 +43,7 @@ async function sendWhatsAppTemplateForCheckInQr(
       },
     });
   } catch (error) {
-    console.error("Error sendWhatsAppTemplateForCheckInQr:", error);
+    console.error("Error sendWhatsAppInteractiveForCheckInQr:", error);
   }
 }
 
@@ -46,7 +65,7 @@ async function sendCheckInQrAnanthDiamonds(
         ],
       },
     ];
-    const response = await axios({
+    await axios({
       method: "POST",
       url: `${whatsAppApiBaseUrl.BASE_URL}/${whatsAppBusinessConfigData?.version}/${whatsAppBusinessConfigData.phoneId}/messages?access_token=${whatsAppBusinessConfigData?.token}`,
       data: {
@@ -123,11 +142,9 @@ async function checkInQrHandler(
       await sendWhatsAppTemplateForCheckInQr(
         whatsAppBusinessConfigData,
         userPhone,
-        `Welcome to ${
-          whatsAppBusinessConfigData?.businessName
-        }! 👋\n\n Thank you for being with us today. 🙏\nYour code: *${code}*\n\n *Discover Us*: ${checkInQrShortUrl}\n\nWe hope you have a great experience! 😊\n\n *Find Us*: ${
-          websiteLink || ""
-        }`,
+        code,
+        checkInQrShortUrl,
+        websiteLink,
       );
     }
   } catch (error) {

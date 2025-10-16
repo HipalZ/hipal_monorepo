@@ -6,7 +6,7 @@ import whatsAppApiBaseUrl from "../whatsAppApiBaseUrl/apiPaths";
 async function sendWhatsAppTemplateForTableQr(
   whatsAppBusinessConfigData: WhatsAppBusinessConfigType,
   userPhone: string,
-  bodyMessage: string,
+  tableQrShortUrl: string,
 ) {
   try {
     await axios({
@@ -14,9 +14,21 @@ async function sendWhatsAppTemplateForTableQr(
       url: `${whatsAppApiBaseUrl.BASE_URL}/${whatsAppBusinessConfigData?.version}/${whatsAppBusinessConfigData.phoneId}/messages?access_token=${whatsAppBusinessConfigData?.token}`,
       data: {
         messaging_product: "whatsapp",
+        recipient_type: "individual",
         to: userPhone,
-        text: {
-          body: bodyMessage,
+        type: "interactive",
+        interactive: {
+          type: "cta_url",
+          body: {
+            text: `Welcome to ${whatsAppBusinessConfigData?.businessName}! 🍽️\n\nWe’re excited to offer you an exceptional dining experience.\n\nClick below to explore our curated menu of handcrafted delights.`,
+          },
+          action: {
+            name: "cta_url",
+            parameters: {
+              display_text: "Explore Menu",
+              url: tableQrShortUrl,
+            },
+          },
         },
       },
       headers: {
@@ -24,7 +36,7 @@ async function sendWhatsAppTemplateForTableQr(
       },
     });
   } catch (error) {
-    console.error("Error sendWhatsAppTemplateForTableQr:", error);
+    console.error("Error sendWhatsAppInteractiveForTableQr:", error);
   }
 }
 
@@ -48,7 +60,7 @@ async function tableQrHandler(
     await sendWhatsAppTemplateForTableQr(
       whatsAppBusinessConfigData,
       userPhone,
-      `Welcome to ${whatsAppBusinessConfigData?.businessName}! \n\n We’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${tableQrShortUrl}\n\n🍽️ View our curated menu featuring handcrafted delights.`,
+      tableQrShortUrl,
     );
   } catch (error) {
     console.error("Error in tableQrHandler:", error);
