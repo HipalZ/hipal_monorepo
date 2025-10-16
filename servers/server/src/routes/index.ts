@@ -17,6 +17,7 @@ import hipalzRouter from "./hipalz";
 import hotelRouter from "./hotel";
 import iconRouter from "./icon";
 import jewelleryRouter from "./jewellery";
+import kdsRouter from "./kds";
 import kitchenRouter from "./kitchen";
 import kotRouter from "./kot";
 import loyaltyRouter from "./loyalty";
@@ -99,6 +100,7 @@ export const routes = app
   .route("/split_bill", splitBillRouter)
   .route("/jewellery", jewelleryRouter)
   .route("/attendence", staffAttendenceRouter)
-  .route("/sync_pos_menu_config", syncPosMenuConfigRouter);
+  .route("/sync_pos_menu_config", syncPosMenuConfigRouter)
+  .route("/kds", kdsRouter);
 
 export type AppType = typeof routes;

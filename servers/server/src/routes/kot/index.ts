@@ -848,20 +848,39 @@ const kotRouter = new Hono()
         if (itemStatus === "DELIVERED")
           setFields["cart.$[elem].deliveredBy"] = staff.name;
 
-        const res = await KotOrder.updateMany(
-          { "cart._id": { $in: itemIds } }, // or ids if casting
+        const updateRes = await KotOrder.updateMany(
+          { "cart._id": { $in: itemIds } },
           { $set: setFields },
           {
-            arrayFilters: [{ "elem._id": { $in: itemIds } }], // or ids
+            arrayFilters: [{ "elem._id": { $in: itemIds } }],
             session,
           },
         );
 
-        if (res.matchedCount === 0) {
+        if (updateRes.matchedCount === 0) {
           return c.json(
             { message: "KOT items not found", err: true, data: {} },
             404,
           );
+        }
+
+        const affectedKots = await KotOrder.find({
+          "cart._id": { $in: itemIds },
+        })
+          .session(session)
+          .lean();
+
+        for (const kot of affectedKots) {
+          const allCooked = kot.cart.every(
+            (item) => item.itemStatus === "COOKED",
+          );
+          if (allCooked && kot.kotStatus !== "COMPLETED") {
+            await KotOrder.updateOne(
+              { _id: kot._id },
+              { $set: { kotStatus: "COMPLETED" } },
+              { session },
+            );
+          }
         }
 
         return respond(c, "Item status updated successfully", false, 200, {});
