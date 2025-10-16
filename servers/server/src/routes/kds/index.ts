@@ -17,7 +17,7 @@ const kdsRouter = new Hono()
         kotStatus: "IN_PROGRESS",
         "cart.dish.kitchenId": kitchenId,
       })
-        .sort({ priority: -1 })
+        .sort({ priority: -1, date: -1 })
         .lean();
 
       const filteredKots = kots.map((kot) => ({

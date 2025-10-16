@@ -812,7 +812,7 @@ const tableRouter = new Hono()
                 userIds: [],
                 isTransfer: false,
                 edited: false,
-                isMerged: false,
+                isMerge: false,
                 mergeTableIds: [],
                 mergedBy: null,
               },
@@ -1091,7 +1091,7 @@ const tableRouter = new Hono()
             userIds: [],
             isTransfer: false,
             edited: false,
-            isMerged: false,
+            isMerge: false,
             mergeTableIds: [],
             mergedBy: null,
           },
@@ -1471,7 +1471,7 @@ const tableRouter = new Hono()
               userIds: [],
               isTransfer: false,
               edited: false,
-              isMerged: false,
+              isMerge: false,
               mergedBy: null,
               mergeTableNames: [],
             },
@@ -1481,14 +1481,6 @@ const tableRouter = new Hono()
           await UserSession.deleteOne(
             { businessId: sourceTable.businessId, tableName: sourceTable.name },
             { session },
-          );
-          await MergeTable.deleteOne(
-            {
-              parentTableId: tableInfo?._id,
-            },
-            {
-              session,
-            },
           );
         }
 
@@ -1935,7 +1927,7 @@ const tableRouter = new Hono()
             totalItemCount: 0,
             userIds: [],
             isTransfer: false,
-            isMerged: false,
+            isMerge: false,
             mergeTableIds: [],
             mergedBy: null,
           },
