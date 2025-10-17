@@ -509,7 +509,7 @@ const paymentsRouter = new Hono()
             c,
             "totalDishTotal is not equal to subTotal",
             true,
-            403,
+            400,
             {},
           );
         }
