@@ -42,13 +42,12 @@ async function whatsAppUserAndTextMessage(
     phone: userPhone,
   });
 
-  if (!isAlreadyRegisteredUser) {
-    isAlreadyRegisteredUser = await User.create({
-      phone: userPhone,
-      name: userName,
-      role: ["HIPAL_CUSTOMER", "OWNER", "MANAGER", "CAPTAIN", "CO_OWNER"],
-    });
+  const isAlreadySubscribed = await Subscriber.findOne({
+    userId: isAlreadyRegisteredUser?._id.toString(),
+    businessId: whatsAppBusinessConfigData?.businessId,
+  });
 
+  if (!isAlreadySubscribed) {
     await Subscriber.findOneAndUpdate(
       {
         userId: isAlreadyRegisteredUser?._id.toString(),
@@ -61,6 +60,14 @@ async function whatsAppUserAndTextMessage(
       },
       { upsert: true, new: true },
     );
+  }
+
+  if (!isAlreadyRegisteredUser) {
+    isAlreadyRegisteredUser = await User.create({
+      phone: userPhone,
+      name: userName,
+      role: ["HIPAL_CUSTOMER", "OWNER", "MANAGER", "CAPTAIN", "CO_OWNER"],
+    });
   }
 
   return {
