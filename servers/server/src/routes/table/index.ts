@@ -1543,7 +1543,7 @@ const tableRouter = new Hono()
               status: "ACTIVE",
               mergedBy: staff._id,
               mergeTableIds: fromTableIds,
-              hiCode,
+              hiCode: hiCode,
               currentTableAmount: totalBillCount,
               totalItemCount,
               userIds,
@@ -1551,6 +1551,8 @@ const tableRouter = new Hono()
             { session },
           );
         } else {
+          const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
+          const tenDigitCode = generateTenDigitCode();
           await UserSession.findByIdAndUpdate(
             destSession._id,
             {
@@ -1561,6 +1563,8 @@ const tableRouter = new Hono()
               $set: {
                 isMerged: true,
                 mergedBy: staff._id,
+                hiCode: hiCode,
+                pin: tenDigitCode,
               },
             },
             { session },
@@ -1570,6 +1574,7 @@ const tableRouter = new Hono()
             destTable._id,
             {
               isMerge: true,
+              hiCode: hiCode,
               mergedBy: staff._id,
               mergeTableIds: fromTableIds,
               userIds: userIds,
