@@ -58,7 +58,7 @@ import {
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
-import type { KotOrderTypes } from "../../utils/bill";
+import { type KotOrderTypes, calculateBillTotals } from "../../utils/bill";
 import { getMerchantConfig } from "../../utils/cacheHelper";
 import {
   adjustFromToTimestamps,
@@ -470,6 +470,25 @@ const paymentsRouter = new Hono()
       if (businessPosConfig) {
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const kotItems = (await KotOrder.find({
+          tableName: tableSession.tableName,
+          settled: false,
+          accepted: true,
+          businessId,
+        }).lean()) as KotOrderTypes[];
+
+        const { totalDishTotal } = calculateBillTotals(kotItems);
+
+        if (totalDishTotal !== tableSession.subTotal) {
+          return respond(
+            c,
+            "totalDishTotal is not equal to subTotal",
+            true,
+            403,
+            {},
+          );
         }
 
         const result = await executePosHandler(
