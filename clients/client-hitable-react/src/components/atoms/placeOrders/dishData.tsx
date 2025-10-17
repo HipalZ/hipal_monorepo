@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import type { DishType } from '@hi/db-models/src/validators';
 import { motion } from 'framer-motion';
 import { memo } from 'react';
+import { gradientForFood, normalizeFoodTypes } from '../../utils/helpers';
 import FoodType from '../dishType';
 import DishQuantityButton from './dishQuantityBtn';
 
@@ -19,6 +20,8 @@ const MemoCompactDishGrid = ({ selectedCategory }: CompactDishGridProps) => {
         const isUnavailable = !dish.availability;
         const isHidden = !dish.visibility;
 
+        const types = normalizeFoodTypes(dish.dishTypes);
+
         let overlayLabel: string | null = null;
         if (isHidden) overlayLabel = 'Not Visible';
         else if (isUnavailable) overlayLabel = 'Not Available';
@@ -31,7 +34,13 @@ const MemoCompactDishGrid = ({ selectedCategory }: CompactDishGridProps) => {
             transition={{ delay: index * 0.05 }}
             whileHover={{ scale: 1.02 }}
           >
-            <Card className={cn('relative h-full overflow-hidden border transition-all duration-200', overlayLabel && 'border-muted-foreground/20')}>
+            <Card
+              className={cn(
+                'relative h-full overflow-hidden border transition-all duration-200',
+                overlayLabel && 'border-muted-foreground/20',
+                gradientForFood(types),
+              )}
+            >
               <CardContent className="relative grid h-full grid-rows-[auto_1fr_auto_auto] gap-x-2 p-3">
                 <h3 className={cn('text-sm font-semibold', overlayLabel && 'text-muted-foreground')}>{dish.name}</h3>
 

@@ -1,18 +1,18 @@
-import { memo, useCallback, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRpc } from "@hi/common";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import toast from "react-hot-toast";
-import { useParams } from "react-router-dom";
-import PosOnlyMenu from "./posOnlyMenu";
-import { Switch } from "@/components/ui/switch";
-import useBusinessData from "@/components/store/useBusinessData";
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import useBusinessData from '@/components/store/useBusinessData';
+import { Switch } from '@/components/ui/switch';
+import { apiRpc } from '@hi/common';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { memo, useCallback, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useParams } from 'react-router-dom';
+import PosOnlyMenu from './posOnlyMenu';
 
 interface PosData {
   _id: string;
   name: string;
 }
-export type VerificationType = "CAPTAIN" | "USER";
+export type VerificationType = 'CAPTAIN' | 'USER';
 
 interface PosConfigData {
   _id: string;
@@ -39,15 +39,11 @@ interface PosSetupModalPayload {
   orderVerificationType?: VerificationType;
 }
 
-const MemoPosSetupModal = ({
-  onComplete,
-  onClose,
-  existingConfig,
-}: PosSetupModalProps) => {
+const MemoPosSetupModal = ({ onComplete, onClose, existingConfig }: PosSetupModalProps) => {
   const businessId = useParams<{ businessId: string }>().businessId;
   const [step, setStep] = useState(existingConfig ? 2 : 1);
   const [selectedPos, setSelectedPos] = useState<PosData | null>(null);
-  const posWithOnlyMenu = useBusinessData((s)=>s.outletInfo?.posWithOnlyMenu)
+  const posWithOnlyMenu = useBusinessData((s) => s.outletInfo?.posWithOnlyMenu);
   const [posMenuWithoutOrdering, setPosMenuWithoutOrdering] = useState(posWithOnlyMenu);
 
   const handleMenuWithoutOrderingChange = useCallback((checked: boolean) => {
@@ -55,9 +51,8 @@ const MemoPosSetupModal = ({
   }, []);
 
   const [formData, setFormData] = useState({
-    restId: existingConfig?.restId || "",
-    orderVerificationType:
-      existingConfig?.orderVerificationType || ("USER" as "CAPTAIN" | "USER"),
+    restId: existingConfig?.restId || '',
+    orderVerificationType: existingConfig?.orderVerificationType || ('USER' as 'CAPTAIN' | 'USER'),
   });
   const fetchAllPos = useCallback(async (businessId: string) => {
     try {
@@ -68,13 +63,13 @@ const MemoPosSetupModal = ({
       return res.data as PosData[];
     } catch (e) {
       console.error(e);
-      throw new Error("Failed to fetch POS data");
+      throw new Error('Failed to fetch POS data');
     }
   }, []);
 
   const { data: posList, isLoading } = useQuery({
-    queryKey: ["fetchAllPos", businessId],
-    queryFn: () => fetchAllPos(businessId || ""),
+    queryKey: ['fetchAllPos', businessId],
+    queryFn: () => fetchAllPos(businessId || ''),
     enabled: !!businessId && step === 1,
   });
 
@@ -98,22 +93,13 @@ const MemoPosSetupModal = ({
     onSuccess: (data) => {
       if (data.err) {
         toast.error(data.message);
-        return console.error("Error:", data.message);
+        return console.error('Error:', data.message);
       }
-      toast.success(
-        existingConfig
-          ? "POS configuration updated successfully!"
-          : "POS setup completed successfully!",
-      );
+      toast.success(existingConfig ? 'POS configuration updated successfully!' : 'POS setup completed successfully!');
       onComplete();
     },
     onError: (error: any) => {
-      toast.error(
-        error?.message ||
-        (existingConfig
-          ? "Failed to update POS configuration."
-          : "Failed to submit POS details."),
-      );
+      toast.error(error?.message || (existingConfig ? 'Failed to update POS configuration.' : 'Failed to submit POS details.'));
     },
   });
 
@@ -143,34 +129,36 @@ const MemoPosSetupModal = ({
     }
   };
 
+  useEffect(() => {
+    if (selectedPos?.name === 'HIPAL_Z') {
+      setFormData((prev) => ({
+        ...prev,
+        restId: selectedPos.name || '',
+      }));
+    }
+  }, [selectedPos, businessId, formData.restId]);
+
   const renderStep1 = () => (
     <div className="overflow-y-auto">
       {isLoading ? (
         <LoadingSpinner />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {posList?.map((pos) => (
             <button
               type="button"
               key={pos._id}
               onClick={() => handlePosSelect(pos)}
-              className="bg-white border-2 border-gray-200 hover:border-blue-500 rounded-xl p-1 text-left transition-all hover:shadow-md"
+              className="rounded-xl border-2 border-gray-200 bg-white p-1 text-left transition-all hover:border-blue-500 hover:shadow-md"
             >
-              <div className="flex items-center justify-center mb-4">
-                {pos.name === "petPooja" ? (
-                  <img
-                    alt="petPooja"
-                    src="https://www.indifi.com/blog/wp-content/uploads/2019/12/How-To-Successfully-Sell-On-Petpooja-.jpg"
-                  />
+              <div className="mb-4 flex items-center justify-center">
+                {pos.name === 'petPooja' ? (
+                  <img alt="petPooja" src="https://www.indifi.com/blog/wp-content/uploads/2019/12/How-To-Successfully-Sell-On-Petpooja-.jpg" />
                 ) : (
-                  <div className="text-2xl font-bold text-gray-700 capitalize">
-                    {pos.name}
-                  </div>
+                  <div className="text-2xl font-bold capitalize text-gray-700">{pos.name}</div>
                 )}
               </div>
-              <h3 className="text-lg font-semibold text-center capitalize">
-                {pos.name}
-              </h3>
+              <h3 className="text-center text-lg font-semibold capitalize">{pos.name}</h3>
             </button>
           ))}
         </div>
@@ -179,40 +167,29 @@ const MemoPosSetupModal = ({
   );
 
   const renderStep2 = () => (
-    <form
-      onSubmit={handleFormSubmitAction}
-      className="h-[70vh] overflow-y-auto"
-    >
+    <form onSubmit={handleFormSubmitAction} className="h-[70vh] overflow-y-auto">
       <div className="space-y-6">
         {!existingConfig && (
           <div>
-            <label
-              htmlFor="restId"
-              className="block text-sm font-semibold text-gray-700 mb-2"
-            >
+            <label htmlFor="restId" className="mb-2 block text-sm font-semibold text-gray-700">
               Restaurant ID <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               id="restId"
               value={formData.restId}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, restId: e.target.value }))
-              }
+              onChange={(e) => setFormData((prev) => ({ ...prev, restId: e.target.value }))}
               placeholder="Enter your restaurant ID"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
               required
+              readOnly={selectedPos?.name === 'HIPAL_Z'}
             />
-            <p className="mt-1 text-sm text-gray-500">
-              Your unique restaurant identifier in the POS system
-            </p>
+            <p className="mt-1 text-sm text-gray-500">Your unique restaurant identifier in the POS system</p>
           </div>
         )}
         {existingConfig && (
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">
-              Current Configuration
-            </h3>
+          <div className="rounded-lg bg-gray-50 p-4">
+            <h3 className="mb-2 text-sm font-semibold text-gray-700">Current Configuration</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-600">POS Name:</span>
@@ -228,39 +205,34 @@ const MemoPosSetupModal = ({
 
         <div>
           <fieldset>
-            <legend className="block text-sm font-semibold text-gray-700 mb-3">
+            <legend className="mb-3 block text-sm font-semibold text-gray-700">
               Order Verification Method <span className="text-red-500">*</span>
             </legend>
             <div className="space-y-4">
               <label
-                className={`relative flex p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.orderVerificationType === "USER"
-                  ? "border-green-500 bg-green-50 ring-2 ring-green-200"
-                  : "border-gray-200 hover:border-green-200"
-                  }`}
+                className={`relative flex cursor-pointer rounded-xl border-2 p-4 transition-all ${
+                  formData.orderVerificationType === 'USER'
+                    ? 'border-green-500 bg-green-50 ring-2 ring-green-200'
+                    : 'border-gray-200 hover:border-green-200'
+                }`}
               >
                 <input
                   type="radio"
                   name="orderVerificationType"
                   value="USER"
-                  checked={formData.orderVerificationType === "USER"}
+                  checked={formData.orderVerificationType === 'USER'}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      orderVerificationType: e.target.value as
-                        | "USER"
-                        | "CAPTAIN",
+                      orderVerificationType: e.target.value as 'USER' | 'CAPTAIN',
                     }))
                   }
                   className="sr-only"
                 />
                 <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-gray-900">
-                      Direct to Kitchen
-                    </span>
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                      FASTER
-                    </span>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="font-semibold text-gray-900">Direct to Kitchen</span>
+                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-800">FASTER</span>
                   </div>
                   <p className="text-sm text-gray-600">
                     Orders go directly to the kitchen without any approval.
@@ -270,42 +242,33 @@ const MemoPosSetupModal = ({
               </label>
 
               <label
-                className={`relative flex p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.orderVerificationType === "CAPTAIN"
-                  ? "border-orange-500 bg-orange-50 ring-2 ring-orange-200"
-                  : "border-gray-200 hover:border-orange-200"
-                  }`}
+                className={`relative flex cursor-pointer rounded-xl border-2 p-4 transition-all ${
+                  formData.orderVerificationType === 'CAPTAIN'
+                    ? 'border-orange-500 bg-orange-50 ring-2 ring-orange-200'
+                    : 'border-gray-200 hover:border-orange-200'
+                }`}
               >
                 <input
                   type="radio"
                   name="orderVerificationType"
                   value="CAPTAIN"
-                  checked={formData.orderVerificationType === "CAPTAIN"}
+                  checked={formData.orderVerificationType === 'CAPTAIN'}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      orderVerificationType: e.target.value as
-                        | "USER"
-                        | "CAPTAIN",
+                      orderVerificationType: e.target.value as 'USER' | 'CAPTAIN',
                     }))
                   }
                   className="sr-only"
                 />
                 <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-gray-900">
-                      Captain Approval Required
-                    </span>
-                    <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
-                      SECURE
-                    </span>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="font-semibold text-gray-900">Captain Approval Required</span>
+                    <span className="rounded-full bg-orange-100 px-2 py-1 text-xs text-orange-800">SECURE</span>
                   </div>
                   <p className="text-sm text-gray-600">
-                    Orders require captain/manager approval before going to
-                    kitchen.
-                    <strong>
-                      {" "}
-                      Best for quality control and order verification.
-                    </strong>
+                    Orders require captain/manager approval before going to kitchen.
+                    <strong> Best for quality control and order verification.</strong>
                   </p>
                 </div>
               </label>
@@ -314,65 +277,53 @@ const MemoPosSetupModal = ({
         </div>
       </div>
 
-      <div className="flex gap-3 mt-8 pt-6 border-t">
+      <div className="mt-8 flex gap-3 border-t pt-6">
         <button
           type="button"
           onClick={existingConfig ? onClose : () => setStep(1)}
-          className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
         >
-          {existingConfig ? "Cancel" : "Back"}
+          {existingConfig ? 'Cancel' : 'Back'}
         </button>
         <button
           type="submit"
           disabled={handleFormSubmit.isPending}
-          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
         >
           {handleFormSubmit.isPending
             ? existingConfig
-              ? "Updating..."
-              : "Setting up..."
+              ? 'Updating...'
+              : 'Setting up...'
             : existingConfig
-              ? "Update Configuration"
-              : "Complete Setup"}
+              ? 'Update Configuration'
+              : 'Complete Setup'}
         </button>
       </div>
     </form>
   );
 
   const renderStep3 = () => <PosOnlyMenu />;
+
   return (
-    <div className="bg-white rounded-xl shadow-lg max-w-2xl mx-auto">
-      <div className="text-center mt-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">
-          {existingConfig ? "Edit POS Configuration" : "Configure POS Settings"}
-        </h2>
-        <p className="text-gray-600">
-          {existingConfig
-            ? "Update your POS settings"
-            : "Set up your POS configuration"}
-        </p>
+    <div className="mx-auto max-w-2xl rounded-xl bg-white shadow-lg">
+      <div className="mt-6 text-center">
+        <h2 className="mb-1 text-2xl font-bold text-gray-900">{existingConfig ? 'Edit POS Configuration' : 'Configure POS Settings'}</h2>
+        <p className="text-gray-600">{existingConfig ? 'Update your POS settings' : 'Set up your POS configuration'}</p>
       </div>
       <div className="p-6">
-        {step === 1
-          ? renderStep1()
-          : (
-            <>
-              <div className="flex flex-row justify-between gap-2 mb-6">
-                <label
-                  htmlFor="restId"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                  Pos Menu Without Ordering
-                </label>
-                <Switch
-                  checked={posMenuWithoutOrdering}
-                  onCheckedChange={handleMenuWithoutOrderingChange}
-                />
-              </div>
-              {posMenuWithoutOrdering ? renderStep3() : renderStep2()}
-            </>
-          )
-        }
+        {step === 1 ? (
+          renderStep1()
+        ) : (
+          <>
+            <div className="mb-6 flex flex-row justify-between gap-2">
+              <label htmlFor="restId" className="mb-2 block text-sm font-semibold text-gray-700">
+                Pos Menu Without Ordering
+              </label>
+              <Switch checked={posMenuWithoutOrdering} onCheckedChange={handleMenuWithoutOrderingChange} />
+            </div>
+            {posMenuWithoutOrdering ? renderStep3() : renderStep2()}
+          </>
+        )}
       </div>
     </div>
   );

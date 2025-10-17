@@ -28,7 +28,7 @@ const DesktopTablePOS = () => {
   const [rightPanelView, setRightPanelView] = useState<RightPanelView>('cart');
   const selectedBill = useOrderStore((s) => s.selectedBill);
   const cartData = useLiteStore((s) => s.cartData);
-
+  const selectedTable = useOrderStore((s) => s.selectedTable);
   const cart = useCartStore((s) => s.cart);
   const { data: orders, isLoading: ordersLoading, refetch: refetchOrders } = useGetAllOrders();
 
@@ -53,16 +53,16 @@ const DesktopTablePOS = () => {
       ) : null}
 
       <SidebarProvider defaultOpen={true}>
-        <div className="hidden h-[100dvh] w-full overflow-hidden md:flex">
+        <div className="hidden h-[100dvh] w-full overflow-hidden bg-gray-300 md:flex">
           <SidebarCategories />
           <SidebarInset className="flex-1 overflow-hidden">
             <div className="grid h-full grid-cols-[60%_40%] overflow-hidden">
-              <main className="bg-muted/30 flex flex-col border-r">
-                <div className="bg-background border-b">
-                  <div className="space-y-3 p-4">
-                    <TableQuickNav />
+              <main className="bg-muted/30 flex flex-col rounded-xl border-r-2 bg-gray-300">
+                <div className="bg-background border-b-2">
+                  <div className="px-4 pb-2 pt-4">
+                    <TableQuickNav key={selectedCategory?._id} />
                     <SearchComponent />
-                    <h2 className="text-xl font-semibold">{selectedCategory ? selectedCategory.name : 'Select a category'}</h2>
+                    <h2 className="mt-3 text-xl font-semibold">{selectedCategory ? selectedCategory.name : 'Select a category'}</h2>
                   </div>
                 </div>
                 <ScrollArea className="flex-1">
@@ -111,7 +111,7 @@ const DesktopTablePOS = () => {
                 </div>
 
                 <ScrollArea className="flex-1">
-                  <div className="hide-scrollbar h-[90dvh] overflow-auto bg-gray-50 p-3">
+                  <div className="hide-scrollbar h-[90dvh] overflow-auto bg-gray-200 p-3">
                     <Suspense fallback={<SpinnerMemo />}>
                       {rightPanelView === 'cart' && (
                         <>
@@ -132,7 +132,7 @@ const DesktopTablePOS = () => {
                           {ordersLoading ? (
                             <SpinnerMemo />
                           ) : orders && orders.length > 0 ? (
-                            <div className="hide-scrollbar h-[90dvh] space-y-4 overflow-auto pb-[8rem]">
+                            <div className="hide-scrollbar h-[90dvh] overflow-auto pb-[8rem]">
                               {orders.map((order: any) => (
                                 <EnhancedOrderCard key={order._id} order={order} />
                               ))}
@@ -147,7 +147,7 @@ const DesktopTablePOS = () => {
                         </>
                       )}
 
-                      {rightPanelView === 'bill' && orders && orders.length > 0 && <GetBill />}
+                      {rightPanelView === 'bill' && selectedTable?.active && orders && orders.length > 0 && <GetBill />}
                     </Suspense>
                   </div>
                 </ScrollArea>

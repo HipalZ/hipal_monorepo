@@ -1,75 +1,44 @@
-import { type ChangeEvent, memo, useCallback } from "react";
-import { RiLinkUnlink } from "react-icons/ri";
-import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
-import Background from "@/components/atom/feildBackground";
-import { useParams } from "react-router-dom";
-import type { DishType } from "@hi/db-models/src/validators";
-import {
-  compressImage,
-  filterPayload,
-  storeImageAfterSave,
-} from "@/components/utils/helper";
-import useErrorToasts from "@/hooks/useError";
-import { postDishData } from "@/hooks/useDish";
-import toast from "react-hot-toast";
-import DishImages from "./[editDish]/dishImages";
-import SectionLoader from "@/components/atom/sectionLoader";
-import { useQueryClient } from "@tanstack/react-query";
+import Background from '@/components/atom/feildBackground';
+import useMenuPageStore, { DishSteps } from '@/components/store/useMenuStorage';
+import { compressImage, filterPayload, storeImageAfterSave } from '@/components/utils/helper';
+import { postDishData } from '@/hooks/useDish';
+import useErrorToasts from '@/hooks/useError';
+import type { DishType } from '@hi/db-models/src/validators';
+import { useQueryClient } from '@tanstack/react-query';
+import { type ChangeEvent, memo, useCallback } from 'react';
+import toast from 'react-hot-toast';
+import { RiLinkUnlink } from 'react-icons/ri';
+import { useParams } from 'react-router-dom';
+import AdvancedBottomButton from '../../../atom/bottomButton/advancedBottomButton';
+import DishImages from './[editDish]/dishImages';
 
 const MemoDishFormTwo = () => {
-  const { businessId,menuId } = useParams<{ businessId?: string; menuId: string }>();
+  const { businessId, menuId } = useParams<{ businessId?: string; menuId: string }>();
 
-  const {
-    setDishStep,
-    dishStep,
-    dishDescription,
-    calories,
-    setDishDescription,
-    setCalories,
-    tags,
-    recommendationIds,
-    dishName,
-    dishPrice,
-    visibility,
-    dishTypes,
-    availability,
-    portions,
-    selectedCatIds,
-    addonIds,
-    imageFiles,
-    imagePreviews,
-    setCropping,
-    resetStore,
-    resetDishStore,
-    isLoading,
-    setIsLoading,
-    setOpenMenu,
-  } = useMenuPageStore((s) => ({
-    dishStep: s.dishStep,
-    setDishStep: s.setDishStep,
-    calories: s.calories,
-    dishDescription: s.dishDescription,
-    setDishDescription: s.setDishDescription,
-    setCalories: s.setCalories,
-    tags: s.tags,
-    recommendationIds: s.recommendationIds,
-    dishName: s.dishName,
-    dishPrice: s.dishPrice,
-    visibility: s.visibility,
-    dishTypes: s.dishTypes,
-    availability: s.availability,
-    portions: s.portions,
-    selectedCatIds: s.selectedCatIds,
-    addonIds: s.addonIds,
-    imageFiles: s.imageFiles,
-    imagePreviews: s.imagePreviews,
-    setCropping: s.setCropping,
-    resetStore: s.resetStore,
-    resetDishStore: s.resetDishStore,
-    isLoading: s.isLoading,
-    setIsLoading: s.setIsLoading,
-    setOpenMenu: s.setOpenMenu,
-  }));
+  const setOpenMenu = useMenuPageStore((s) => s.setOpenMenu);
+  const setDishStep = useMenuPageStore((s) => s.setDishStep);
+  const dishStep = useMenuPageStore((s) => s.dishStep);
+  const dishDescription = useMenuPageStore((s) => s.dishDescription);
+  const setDishDescription = useMenuPageStore((s) => s.setDishDescription);
+  const calories = useMenuPageStore((s) => s.calories);
+  const setCalories = useMenuPageStore((s) => s.setCalories);
+  const tags = useMenuPageStore((s) => s.tags);
+  const recommendationIds = useMenuPageStore((s) => s.recommendationIds);
+  const dishName = useMenuPageStore((s) => s.dishName);
+  const dishPrice = useMenuPageStore((s) => s.dishPrice);
+  const visibility = useMenuPageStore((s) => s.visibility);
+  const dishTypes = useMenuPageStore((s) => s.dishTypes);
+  const availability = useMenuPageStore((s) => s.availability);
+  const portions = useMenuPageStore((s) => s.portions);
+  const selectedCatIds = useMenuPageStore((s) => s.selectedCatIds);
+  const addonIds = useMenuPageStore((s) => s.addonIds);
+  const imageFiles = useMenuPageStore((s) => s.imageFiles);
+  const imagePreviews = useMenuPageStore((s) => s.imagePreviews);
+  const setCropping = useMenuPageStore((s) => s.setCropping);
+  const resetStore = useMenuPageStore((s) => s.resetStore);
+  const resetDishStore = useMenuPageStore((s) => s.resetDishStore);
+  const isLoading = useMenuPageStore((s) => s.isLoading);
+  const setIsLoading = useMenuPageStore((s) => s.setIsLoading);
 
   const queryClient = useQueryClient();
 
@@ -77,38 +46,24 @@ const MemoDishFormTwo = () => {
 
   const handleAddDish = async () => {
     if (dishTypes.length === 0 || dishName.length === 0 || dishPrice === 0) {
-      return toast.error("Please fill all the required fields");
+      return toast.error('Please fill all the required fields');
     }
     setIsLoading(true);
     let firstImage: string | undefined;
     let secondImage: string | undefined;
     let thirdImage: string | undefined;
 
-    if (imagePreviews?.first !== "") {
-      firstImage = await storeImageAfterSave(
-        imageFiles?.first as File,
-        imagePreviews?.first as string,
-        setIsLoading,
-      );
+    if (imagePreviews?.first !== '') {
+      firstImage = await storeImageAfterSave(imageFiles?.first as File, imagePreviews?.first as string, setIsLoading);
     }
-    if (imagePreviews?.second !== "") {
-      secondImage = await storeImageAfterSave(
-        imageFiles?.second as File,
-        imagePreviews?.second as string,
-        setIsLoading,
-      );
+    if (imagePreviews?.second !== '') {
+      secondImage = await storeImageAfterSave(imageFiles?.second as File, imagePreviews?.second as string, setIsLoading);
     }
-    if (imagePreviews?.third !== "") {
-      thirdImage = await storeImageAfterSave(
-        imageFiles?.third as File,
-        imagePreviews?.third as string,
-        setIsLoading,
-      );
+    if (imagePreviews?.third !== '') {
+      thirdImage = await storeImageAfterSave(imageFiles?.third as File, imagePreviews?.third as string, setIsLoading);
     }
 
-    const images: string[] = [firstImage, secondImage, thirdImage].filter(
-      Boolean,
-    );
+    const images: string[] = [firstImage, secondImage, thirdImage].filter(Boolean);
 
     const payload: DishType = {
       businessId: Object(businessId),
@@ -134,7 +89,7 @@ const MemoDishFormTwo = () => {
       resetDishStore();
       setIsLoading(false);
       setOpenMenu(false);
-      queryClient.invalidateQueries({ queryKey: ["getAllDishes"] });
+      queryClient.invalidateQueries({ queryKey: ['getAllDishes'] });
       return toast.success(data?.message);
     }
     setIsLoading(false);
@@ -179,11 +134,11 @@ const MemoDishFormTwo = () => {
   );
 
   const redirectRecommendations = useCallback(() => {
-    setDishStep("LINK_RECOMMENDATION_STEP");
+    setDishStep('LINK_RECOMMENDATION_STEP');
   }, [dishStep]);
 
   const redirectTags = useCallback(() => {
-    setDishStep("LINK_ADD_TAGS");
+    setDishStep('LINK_ADD_TAGS');
   }, [dishStep]);
 
   return (
@@ -193,88 +148,76 @@ const MemoDishFormTwo = () => {
           Dish Images
         </label>
         <Background>
-          <DishImages
-            handleImageChange={handleImageChange}
-            img={imagePreviews}
-          />
+          <DishImages handleImageChange={handleImageChange} img={imagePreviews} />
         </Background>
       </article>
-      <article className="mx-6 lg:mx-16 lg:mt-6">
-        <label className="font-semibold opacity-50" htmlFor="type">
-          Dish Description
-        </label>
-        <div className="relative p-3 my-2 bg-white rounded-2xl">
-          <textarea
-            value={dishDescription}
-            onChange={handleDescription}
-            className="w-full resize-none rounded-2xl h-[8rem]"
-            placeholder="Add description"
-          />
-          <small className="absolute bottom-6 right-6">
-            {dishDescription.length}/350
-          </small>
-        </div>
-      </article>
-      <article className="mx-6 lg:mx-16 lg:mt-6">
-        <label className="font-semibold opacity-50" htmlFor="price">
-          Calories
-        </label>
-        <Background>
-          <div className="relative">
-            <input
-              placeholder="Add calories"
-              type="number"
-              value={calories}
-              className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
-              onChange={handleCalories}
+      <section className="mx-6 flex flex-col gap-4 lg:mx-16 lg:mt-6 lg:flex-row">
+        <article className="flex-1">
+          <label className="font-semibold opacity-50" htmlFor="type">
+            Dish Description
+          </label>
+          <div className="relative my-2 rounded-2xl bg-white p-3">
+            <textarea
+              value={dishDescription}
+              onChange={handleDescription}
+              className="h-[8rem] w-full resize-none rounded-2xl"
+              placeholder="Add description"
             />
-            <small className="absolute bottom-2 right-4">Kcal</small>
+            <small className="absolute bottom-6 right-6">{dishDescription.length}/350</small>
           </div>
-        </Background>
-        <section onClick={redirectRecommendations}>
-          <label className="font-semibold opacity-50" htmlFor="name">
-            Recommendation ({recommendationIds.length})
+        </article>
+        <article className="flex-1">
+          <label className="font-semibold opacity-50" htmlFor="price">
+            Calories
           </label>
           <Background>
-            <button
-              type="button"
-              className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
-            >
-              <RiLinkUnlink className="mr-2" /> Link Recommendation
-            </button>
-          </Background>
-        </section>
-        <section onClick={redirectTags}>
-          <label className="font-semibold opacity-50" htmlFor="name">
-            Tags ({tags.length})
-          </label>
-          <Background>
-            <button
-              type="button"
-              className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
-            >
-              <RiLinkUnlink className="mr-2" /> Link Tags
-            </button>
-          </Background>
-        </section>
-      </article>
-      <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
-        <button
-          type="button"
-          onClick={handleAddDish}
-          className="w-full py-3 text-white bg-black rounded-full"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <SectionLoader />
-              Loading...
+            <div className="relative">
+              <input
+                placeholder="Add calories"
+                type="number"
+                value={calories}
+                className="w-full rounded-xl border border-black bg-white p-2 focus:border-[#8C63FF] focus:bg-white focus:ring-0"
+                onChange={handleCalories}
+              />
+              <small className="absolute bottom-2 right-4">Kcal</small>
             </div>
-          ) : (
-            "Save"
-          )}
-        </button>
-      </footer>
+          </Background>
+          <section onClick={redirectRecommendations}>
+            <label className="font-semibold opacity-50" htmlFor="name">
+              Recommendation ({recommendationIds.length})
+            </label>
+            <Background>
+              <button type="button" className="flex w-full items-center justify-center rounded-full bg-[#f4f4f4] py-2">
+                <RiLinkUnlink className="mr-2" /> Link Recommendation
+              </button>
+            </Background>
+          </section>
+          <section onClick={redirectTags}>
+            <label className="font-semibold opacity-50" htmlFor="name">
+              Tags ({tags.length})
+            </label>
+            <Background>
+              <button type="button" className="flex w-full items-center justify-center rounded-full bg-[#f4f4f4] py-2">
+                <RiLinkUnlink className="mr-2" /> Link Tags
+              </button>
+            </Background>
+          </section>
+        </article>
+      </section>
+
+      <AdvancedBottomButton
+        fixed={true}
+        backgroundColor="#fff"
+        maxWidth="30rem"
+        buttons={[
+          {
+            text: 'Save',
+            onClick: handleAddDish,
+            isLoading: isLoading,
+            className: ' w-full',
+          },
+        ]}
+      />
     </>
   );
 };

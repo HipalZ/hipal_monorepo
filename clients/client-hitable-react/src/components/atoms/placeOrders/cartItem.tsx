@@ -67,6 +67,8 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
     const extrasPrice = cartItem.extras?.reduce((total, extra) => (total + extra.price) * extra.quantity, 0) || 0;
     const portionPrice = cartItem.portion?.price || 0;
 
+    if (portionPrice > 0) return (extrasPrice + portionPrice) * cartItem.quantity;
+
     return (basePrice + extrasPrice + portionPrice) * cartItem.quantity;
   }, []);
 

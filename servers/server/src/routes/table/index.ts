@@ -76,12 +76,7 @@ const tableRouter = new Hono()
         })
         .populate({
           path: "mergeTableIds",
-          select: "name",
-        })
-
-        .populate({
-          path: "mergedBy",
-          select: "name",
+          select: "name _id",
         });
 
       return c.json(

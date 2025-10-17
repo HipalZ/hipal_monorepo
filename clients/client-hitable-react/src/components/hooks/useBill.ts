@@ -6,11 +6,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useOrderStore } from "../store/useOrderData.ts";
 import { useHiClientZ } from "../store/useHiClientzData.ts";
 import toast from "react-hot-toast";
-import {
-  ApiResponse,
+import type {
   SplitBillPayload,
   ItemWiseSplitPayload,
-} from "../types/api.types.ts";
+} from "../types/split.types.ts";
+import type { ApiResponse } from "../types/api.types.ts";
 
 export const useGetBill = () => {
   const { businessId } = useParams();
@@ -19,6 +19,10 @@ export const useGetBill = () => {
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const setIsBillSplit = useOrderStore((s) => s.setIsBillSplit);
   const { captainData: userData } = useHiClientZ();
+
+  if (!selectedTable?.active) {
+    return;
+  }
 
   const getTableBill = async () => {
     const response = await apiRpc.pos.get_bill.$get({
@@ -29,15 +33,14 @@ export const useGetBill = () => {
       },
     });
 
-    if (response.status === 400) {
-      return Promise.reject({
-        status: 400,
-        message: "Server timeout occurred",
-      });
-    }
     if (response.status === 403 || response.status === 401) {
       setOpenErrorModal(true);
       setError("You are not authorized to perform this action");
+      return;
+    }
+
+    if (response.status === 400 || response.status === 404) {
+      console.log("Error 400 or 404 received");
       return;
     }
 

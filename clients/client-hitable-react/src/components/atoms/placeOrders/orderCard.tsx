@@ -7,9 +7,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Separator } from '@/components/ui/separator';
 import { motion } from 'framer-motion';
 import { GripVertical, MessageSquare, User } from 'lucide-react'; // Added Trash2, Eye, EyeOff icons
-import { memo, useCallback, useMemo, useState } from 'react'; // Added useState and useMemo
+import { memo, useCallback, useMemo } from 'react'; // Added useState and useMemo
 import { BiSync } from 'react-icons/bi';
 import { MdInfo, MdPerson, MdRestaurantMenu } from 'react-icons/md';
+import type { ICartItem } from '../../store/useCartStore';
 
 interface CompactOrderCardProps {
   order: OrderData;
@@ -17,7 +18,6 @@ interface CompactOrderCardProps {
 
 const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
   const { isPending, mutateAsync } = useReprintKot();
-  const [showDeletedOnly, setShowDeletedOnly] = useState(false); // New state for filtering
 
   const reprintKotHandler = useCallback((kotId: string) => {
     mutateAsync(kotId);
@@ -25,11 +25,20 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
 
   // Filter items based on showDeletedOnly state
   const filteredCartItems = useMemo(() => {
-    if (showDeletedOnly) {
-      return order?.cart.filter((item) => item.isDeleted);
-    }
     return order?.cart;
-  }, [order?.cart, showDeletedOnly]);
+  }, [order?.cart]);
+
+  const calculateTotalPrice = useCallback((cartItem: ICartItem) => {
+    const hasPortion = !!cartItem.portion?.price;
+
+    // if portion exists → skip dish price
+    const basePrice = hasPortion ? 0 : cartItem.dish.price * cartItem.quantity;
+    const portionPrice = hasPortion ? cartItem.portion!.price * cartItem.quantity : 0;
+
+    const extrasPrice = (cartItem.extras?.reduce((sum, extra) => sum + extra.price * extra.quantity, 0) || 0) * cartItem.quantity;
+
+    return basePrice + portionPrice + extrasPrice;
+  }, []);
 
   return (
     <motion.div
@@ -38,7 +47,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
       transition={{ duration: 0.3 }}
       className="relative mx-auto w-full max-w-lg"
     >
-      <Card className="mb-8 overflow-hidden">
+      <Card className="mb-4 overflow-hidden">
         <CardContent className="p-3">
           <div className="absolute right-2 top-2 z-[1] flex items-center gap-1">
             <DropdownMenu>
@@ -83,9 +92,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
           </div>
           <Separator className="my-2" />
           <div className="space-y-4">
-            {filteredCartItems.length === 0 && showDeletedOnly ? (
-              <div className="py-4 text-center text-gray-500">No deleted items to show.</div>
-            ) : filteredCartItems.length === 0 && !showDeletedOnly ? (
+            {filteredCartItems.length === 0 ? (
               <div className="py-4 text-center text-gray-500">No items in this order.</div>
             ) : (
               filteredCartItems.map((item) => {
@@ -93,10 +100,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                 const itemContainerClasses = isItemDeleted ? 'bg-red-50 border border-red-200' : '';
                 const itemTextClasses = isItemDeleted ? 'line-through text-red-700' : '';
 
-                const itemTotal =
-                  item.dish.price * item.quantity +
-                  (item.portion ? item.portion.price * item.quantity : 0) +
-                  (item.extras?.reduce((sum, extra) => sum + extra.price * extra.quantity, 0) || 0);
+                const itemTotal = calculateTotalPrice(item);
 
                 return (
                   <motion.div
@@ -107,15 +111,15 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                     className={`grid grid-cols-12 gap-2 rounded-md p-2 text-sm ${itemContainerClasses}`}
                   >
                     {/* Dish Name */}
-                    <div className="col-span-8 flex items-center">
-                      <MdRestaurantMenu className="mr-2 text-gray-500" />
-                      <span className={itemTextClasses}>{item?.dish?.name}</span>
-                      {item?.portion && <span className={`ml-1 text-xs text-gray-500 ${itemTextClasses}`}>({item?.portion?.name})</span>}
+                    <div className="relative col-span-8 items-center pl-1">
+                      <MdRestaurantMenu className="absolute -left-4 top-1 mr-2 text-gray-500" />
+                      <h6 className={itemTextClasses}>{item?.dish?.name}</h6>
                       {isItemDeleted && (
                         <Badge variant="destructive" className="ml-2">
                           Deleted
                         </Badge>
                       )}
+                      {item?.portion && <p className={`ml-1 text-xs text-gray-500 ${itemTextClasses}`}>({item?.portion?.name})</p>}
                     </div>
 
                     {/* Quantity */}
@@ -178,10 +182,13 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
               ₹
               {order?.cart
                 ?.reduce((total, item) => {
-                  const itemTotal = item.dish.price * item.quantity;
-                  const portionTotal = item.portion ? item.portion.price * item.quantity : 0;
+                  const hasPortion = !!item.portion?.price;
+
+                  const baseTotal = hasPortion ? 0 : item.dish.price * item.quantity;
+                  const portionTotal = hasPortion ? item?.portion?.price * item.quantity : 0;
                   const extrasTotal = (item.extras?.reduce((sum, extra) => sum + extra.price * extra.quantity, 0) || 0) * item.quantity;
-                  return total + itemTotal + portionTotal + extrasTotal;
+
+                  return total + baseTotal + portionTotal + extrasTotal;
                 }, 0)
                 .toFixed(2)}
             </span>

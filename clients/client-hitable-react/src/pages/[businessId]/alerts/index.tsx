@@ -89,14 +89,21 @@ const AlertsMemo = () => {
         <Suspense fallback={<SpinnerMemo />}>{clickViewMore && <BillPopUpMemo />}</Suspense>
         {isFilterOpen && (
           <Suspense fallback={<SpinnerMemo />}>
-            <BottomPopUp onClose={() => setIsFilterOpen(false)} show={isFilterOpen} height="h-[90dvh] lg:h-[80dvh]">
+            <BottomPopUp onClose={() => setIsFilterOpen(false)} show={isFilterOpen} height="h-[90dvh] lg:h-[90dvh]">
               <ZoneFilters />
             </BottomPopUp>
           </Suspense>
         )}
         {openTable && (
           <Suspense fallback={<SpinnerMemo />}>
-            <BottomPopUp onClose={toggleEmptyTableModal} show={openTable} bottomCross hide>
+            <BottomPopUp
+              width="w-full lg:w-[90dvw]"
+              height="h-[90dvh] lg:h-[90dvh]"
+              onClose={toggleEmptyTableModal}
+              show={openTable}
+              rightTopBack
+              hide
+            >
               <EmptyTableList />
             </BottomPopUp>
           </Suspense>

@@ -12,6 +12,7 @@ import { memo, useMemo } from 'react';
 import { MdPerson, MdTableBar } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { cn } from '../../lib/utils.ts';
 import { useCart } from '../store/useCart';
 import { useOrderStore } from '../store/useOrderData.ts';
 const MemoZones = () => {
@@ -60,7 +61,6 @@ const MemoZones = () => {
     queryKey: ['tables', businessId],
     queryFn: () => fetchTables(businessId || ''),
     enabled: !!businessId,
-    refetchInterval: 1000 * 30,
   });
 
   const filteredTables = useMemo(() => {
@@ -135,32 +135,62 @@ const MemoZones = () => {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                     >
-                      {tablesByZone[zone?.zoneId].map((table) => (
+                      {tablesByZone[zone?.zoneId]?.map((table) => (
                         <motion.div
                           key={table?._id}
-                          className="relative"
+                          className={cn('relative', table.isMerge && 'col-span-2')}
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => goToTable(table)}
                         >
-                          <Card className="overflow-hidden border border-gray-200 transition-shadow duration-300 hover:shadow-md">
+                          <Card
+                            className={cn(
+                              'overflow-hidden border transition-shadow duration-300 hover:shadow-md',
+                              table.isMerge
+                                ? 'border-purple-200 bg-gradient-to-r from-white via-white to-purple-50 dark:from-purple-950 dark:via-slate-900 dark:to-purple-950'
+                                : 'border-gray-200 bg-white dark:bg-slate-900',
+                            )}
+                          >
+                            {' '}
                             <CardContent className="p-3">
-                              <div className="mb-2 flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                  <MdTableBar className="text-lg text-blue-600" />
-                                  <h4 className="text-base font-semibold text-gray-900">{table?.name}</h4>
-                                </div>
-                                <Badge className={`${getStatusColor(table?.status)} absolute -right-1 -top-2 px-1.5 py-0.5 text-xs`}>
-                                  {table?.status}
-                                </Badge>
+                              <Badge className={`${getStatusColor(table?.status)} absolute -right-1 -top-2 px-1.5 py-0.5 text-xs`}>
+                                {table?.status}
+                              </Badge>
+                              <div className="flex items-center space-x-2">
+                                <MdTableBar className="text-lg text-blue-600" />
+                                <h4 className="text-base font-semibold text-gray-900">{table?.name}</h4>
+                                {/* show hiCode only if ACTIVE */}
                               </div>
-
-                              {/* 👇 Show hiCode only if ACTIVE */}
                               {table?.status?.toUpperCase() === 'ACTIVE' && table?.hiCode && (
-                                <div className="mb-2 text-sm font-medium text-purple-600">Code: {table.hiCode}</div>
+                                <div className="mb-2 text-sm font-semibold text-purple-700 opacity-80">Code: {table.hiCode}</div>
+                              )}
+
+                              {/* merged table names */}
+                              {table.isMerge && table.mergeTableIds?.length > 0 && (
+                                <>
+                                  <div className="flex flex-wrap items-center gap-1">
+                                    <span className="text-primary text-xs font-semibold">Merged with:</span>
+                                    {table.mergeTableIds.map((m, i) => (
+                                      <div key={m._id} className="flex items-center">
+                                        <Badge
+                                          variant="secondary"
+                                          className="rounded-full bg-purple-50 text-xs text-purple-800 dark:bg-purple-900/40 dark:text-purple-300"
+                                        >
+                                          <MdTableBar className="pr-1 text-lg text-purple-600" />
+
+                                          {m.name}
+                                        </Badge>
+                                        {i !== table.mergeTableIds.length - 1 && (
+                                          <Separator orientation="vertical" className="mx-1 h-4 w-px bg-purple-300/50 dark:bg-purple-700/50" />
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </>
                               )}
 
                               <Separator className="my-2" />
+
                               <div className="mt-2 flex items-center justify-between">
                                 <div className="flex items-center space-x-1">
                                   <MdPerson className="text-gray-600" />

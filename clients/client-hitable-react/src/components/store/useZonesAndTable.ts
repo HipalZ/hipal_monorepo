@@ -31,6 +31,11 @@ export interface TableData {
   updatedAt: string;
   tableItemCount: number;
   userIds: string[];
+  isMerge: boolean;
+  mergeTableIds: {
+    _id: string;
+    name: string;
+  }[];
   zoneId: string;
   hiCode?: string;
   _id: string;
