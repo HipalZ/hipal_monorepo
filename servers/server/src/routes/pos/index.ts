@@ -720,12 +720,6 @@ const posRouter = new Hono()
           );
         }
 
-        const ifOrderAlreadyExists = userTableSession.isOrderInitiated;
-
-        if (ifOrderAlreadyExists) {
-          return respond(c, "Order already initiated", true, 400, {});
-        }
-
         if (registrationToken.length > 0) {
           for (const obj of registrationToken) {
             if (obj.notification) {
@@ -739,6 +733,12 @@ const posRouter = new Hono()
         }
 
         if (userTableSession) {
+          const ifOrderAlreadyExists = userTableSession.isOrderInitiated;
+
+          if (ifOrderAlreadyExists) {
+            return respond(c, "Order already initiated", true, 400, {});
+          }
+
           if (
             !userTableSession.phoneNumbers.includes(userData.phone) &&
             // if captain place the order then we need to check if the table is already occupied by user
