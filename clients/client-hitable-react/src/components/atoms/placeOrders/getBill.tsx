@@ -193,7 +193,7 @@ const MemoGetBill = () => {
         <Card
           key={currentBill.id}
           className={cn(
-            'mx-auto mb-8 h-[90dvh] max-w-lg border border-none py-[5rem] shadow-none md:py-[8rem] lg:pb-20 lg:pt-0',
+            'mx-auto mb-8 min-h-[90dvh] max-w-lg border border-none py-[5rem] shadow-none md:py-[8rem] lg:pb-20 lg:pt-0',
             currentBill.isPaid ? 'h-full overflow-auto bg-green-100' : 'bg-white',
           )}
         >

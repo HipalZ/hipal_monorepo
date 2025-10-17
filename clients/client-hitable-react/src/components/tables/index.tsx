@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useIsMobile } from '../../hooks/use-mobile';
+import { cn } from '../../lib/utils';
 import CommonBottomButton from '../atoms/bottomButton';
 import SpinnerMemo from '../atoms/loadingSpinner';
 import { useTableData, useTableTransfer } from '../hooks/useTableData';
@@ -289,9 +290,11 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
                           type="button"
                           onClick={() => handleTableClick(table)}
                           key={table._id}
-                          className={`rounded-lg border p-4 text-center transition-shadow duration-300 ${
-                            toTable?._id === table._id ? 'border-blue-500 bg-blue-100 shadow-lg' : 'border-gray-200 bg-white hover:shadow-md'
-                          }`}
+                          className={cn(
+                            `rounded-lg border p-4 text-center transition-shadow duration-300 ${
+                              toTable?._id === table._id ? 'border-blue-500 bg-blue-100 shadow-lg' : 'border-gray-200 bg-white hover:shadow-md'
+                            }`,
+                          )}
                         >
                           <h4 className="font-semibold">{table.name}</h4>
                           <p className="mt-1 text-xs capitalize text-gray-500">{table.status?.toLowerCase() || 'empty'}</p>

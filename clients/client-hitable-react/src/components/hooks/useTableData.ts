@@ -268,35 +268,3 @@ export const useCustomerLogin = () => {
 
   return { sendOtp, verifyOtp };
 };
-
-export const useUpdateBill = () => {
-  const queryClient = useQueryClient();
-  const updateBill = async (data) => {
-    const { coinz, couponId, tableName, total, businessId, userId } = data;
-    const response = await apiRpc.payments.fetch_update_bill[
-      ":businessId"
-    ].$post({
-      param: {
-        businessId,
-      },
-      json: {
-        tableName: tableName,
-        total: total,
-        ...(coinz && { claimedCoins: coinz }),
-        ...(coinz === 0 && { removeCoins: true }),
-        ...(couponId && { couponId }),
-        ...(userId && { userId }),
-      },
-    });
-    const res = await response.json();
-    if (response.status === 200 || response.status === 201) {
-      toast.success("Bill updated successfully");
-      queryClient.invalidateQueries({
-        queryKey: ["getTableBill"],
-      });
-    }
-    return res;
-  };
-
-  return { updateBill };
-};
