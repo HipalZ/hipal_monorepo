@@ -502,6 +502,8 @@ const paymentsRouter = new Hono()
 
         const { totalDishTotal } = calculateBillTotals(kotItems);
 
+        console.log("totalDishTotal", totalDishTotal);
+
         if (totalDishTotal !== tableSession.subTotal) {
           return respond(
             c,
