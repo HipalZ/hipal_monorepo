@@ -1,18 +1,16 @@
-import { memo, useMemo, useEffect } from "react";
-import type { DishType } from "@hi/db-models/src/validators";
-import { useCartStore } from "@/components/store/useCartStore";
+import { useCartStore } from '@/components/store/useCartStore';
+import type { DishType } from '@hi/db-models/src/validators';
+import { memo, useEffect, useMemo } from 'react';
 
 function MemoChoosePortions({ dishData }: { dishData: DishType }) {
-  const { selectedPortion, setSelectedPortion } = useCartStore((state) => ({
-    selectedPortion: state.selectedPortion,
-    setSelectedPortion: state.setSelectedPortion,
-  }));
+  const selectedPortion = useCartStore((state) => state.selectedPortion);
+  const setSelectedPortion = useCartStore((state) => state.setSelectedPortion);
 
   const portions = useMemo(() => dishData?.portions || [], [dishData]);
 
   // Auto-select when there's exactly one option
   useEffect(() => {
-    if (portions.length === 1 && selectedPortion?._id !== portions[0]._id) {
+    if (selectedPortion?._id !== portions[0]._id) {
       setSelectedPortion(portions[0]);
     }
   }, [portions, selectedPortion, setSelectedPortion]);
@@ -24,35 +22,31 @@ function MemoChoosePortions({ dishData }: { dishData: DishType }) {
   return (
     <div className="mx-4">
       <div className="prose">
-        <h3 className="text-[#000000] !text-xl">Choose a portion</h3>
+        <h3 className="!text-xl text-[#000000]">Choose a portion</h3>
       </div>
 
-      <div className="my-2 overflow-x-auto border rounded-lg border-[#000000]">
-        <table className="table w-full my-0 overflow-hidden table-compact table-zebra">
+      <div className="my-2 overflow-x-auto rounded-lg border border-[#000000]">
+        <table className="table-compact table-zebra my-0 table w-full overflow-hidden">
           <tbody>
             {portions.map((portion, index) => (
               <tr
-                className={`flex flex-row my-3 ${
-                  selectedPortion?._id === portion._id ? "bg-gray-100" : ""
-                }`}
-                key={`${portion?.name?.replaceAll(" ", "") || ""}${index}`}
+                className={`my-3 flex flex-row ${selectedPortion?._id === portion._id ? 'bg-gray-100' : ''}`}
+                key={`${portion?.name?.replaceAll(' ', '') || ''}${index}`}
                 onClick={() => setSelectedPortion(portion)}
               >
-                <td className="!text-xs w-[2rem] text-center flex flex-row">
+                <td className="flex w-[2rem] flex-row text-center !text-xs">
                   <input
                     type="radio"
                     name="portion"
-                    className="p-1 ml-auto mr-2 text-2xl text-black radio"
+                    className="radio ml-auto mr-2 p-1 text-2xl text-black"
                     checked={selectedPortion?._id === portion._id}
                     readOnly
                   />
                 </td>
-                <td className="!text-sm w-[90%] flex flex-row flex-wrap">
-                  <span className="w-full my-auto capitalize whitespace-pre-wrap">
-                    {portion?.name || ""}
-                  </span>
+                <td className="flex w-[90%] flex-row flex-wrap !text-sm">
+                  <span className="my-auto w-full whitespace-pre-wrap capitalize">{portion?.name || ''}</span>
                 </td>
-                <td className="!text-sm w-[20%] text-center font-semibold flex flex-row">
+                <td className="flex w-[20%] flex-row text-center !text-sm font-semibold">
                   <span className="mx-auto">₹ {portion?.price || 0}</span>
                 </td>
               </tr>

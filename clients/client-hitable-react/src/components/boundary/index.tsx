@@ -1,29 +1,62 @@
-import { type ReactNode, Suspense, useEffect, useRef } from "react";
-import { ErrorBoundary } from "react-error-boundary";
-import { useNavigate } from "react-router-dom";
-import { useUserToken } from "@hi/common/src/useUserToken";
-import SpinnerMemo from "../atoms/loadingSpinner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useUserToken } from '@hi/common/src/useUserToken';
+import { type ReactNode, Suspense, useCallback, useEffect, useRef } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useUpdateNotifications } from '../../utils/apiService';
+import SpinnerMemo from '../atoms/loadingSpinner';
+import { useHiClientZ } from '../store/useHiClientzData';
 
-// Custom Fallback Component
+/** Fallback shown when something blows up */
 const ErrorFallback = ({ resetErrorBoundary }: { resetErrorBoundary: () => void }) => {
   const navigate = useNavigate();
+  const setAccessToken = useUserToken((s) => s.setAccessToken);
+  const setRefreshToken = useUserToken((s) => s.setRefreshToken);
+  const setSelectedBiz = useHiClientZ((s) => s.setSelectedBiz);
+  const updateNotificationsApi = useUpdateNotifications();
+
+  // One place that clears local state and reloads the app cleanly
+  const hardRefresh = useCallback(async () => {
+    try {
+      setAccessToken('');
+      setRefreshToken('');
+      setSelectedBiz({});
+      await updateNotificationsApi(false);
+    } catch {
+    } finally {
+      resetErrorBoundary();
+      window.location.replace('/');
+    }
+  }, [resetErrorBoundary, setAccessToken, setRefreshToken, setSelectedBiz, updateNotificationsApi]);
+
+  const goHome = useCallback(() => {
+    resetErrorBoundary();
+    navigate('/');
+  }, [navigate, resetErrorBoundary]);
+
+  useEffect(() => {
+    const onOnline = () => {
+      resetErrorBoundary();
+    };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [resetErrorBoundary]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="max-w-md text-center">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Something went wrong</CardTitle>
+          <CardTitle className="text-lg font-semibold">Internet connection lost</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-muted-foreground">An unexpected error occurred. You can try refreshing the page or go back.</p>
+          <p className="text-muted-foreground">If your connection dropped or the app crashed, refresh to restart.</p>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button onClick={resetErrorBoundary} variant="outline" className="w-full">
+            <Button onClick={goHome} variant="outline" className="w-full">
               Refresh
             </Button>
-            <Button onClick={() => navigate(-1)} variant="default" className="w-full">
-              Go Back
+            <Button onClick={hardRefresh} className="w-full">
+              Go Home
             </Button>
           </div>
         </CardContent>
@@ -34,21 +67,25 @@ const ErrorFallback = ({ resetErrorBoundary }: { resetErrorBoundary: () => void 
 
 const Boundary = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const validateToken = useUserToken((s) => s.validateToken);
   const renderRef = useRef(false);
 
+  // On first mount, kick to login if token is invalid
   useEffect(() => {
     if (renderRef.current) return;
-
     if (!validateToken()) {
-      navigate("/");
+      navigate('/');
     }
-
     renderRef.current = true;
   }, [validateToken, navigate]);
 
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      // When these change, ErrorBoundary resets its internal error state
+      resetKeys={[location.pathname, location.search, location.hash]}
+    >
       <Suspense fallback={<SpinnerMemo />}>{children}</Suspense>
     </ErrorBoundary>
   );

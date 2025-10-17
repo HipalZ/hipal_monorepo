@@ -106,7 +106,7 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
   };
 
   return (
-    <section className="min-h-screen lg:pt-0">
+    <section className="min-h-screen md:pt-20 lg:pt-0">
       <AnimatePresence>
         {filteredCart.length > 0 ? (
           <div className="mx-4 grid gap-4 py-[5.5rem] md:grid-cols-2 md:py-[2rem] lg:mx-0 lg:grid-cols-1 lg:py-0 2xl:grid-cols-2">
@@ -217,11 +217,18 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
           )}
           <CommonBottomButton
             maxWidth="30rem"
+            fixed={true}
             buttons={[
+              {
+                text: '',
+                isBackButton: true,
+                onClick: () => setShowInstructionPopup(false),
+                className: 'rounded-md pl-2',
+              },
               {
                 text: 'Save',
                 onClick: handleSaveInstruction,
-                className: 'rounded-md w-full shadow-md',
+                className: 'rounded-md shadow-md',
                 disable: instructionText.length === 0,
                 isLoading: isPending,
               },

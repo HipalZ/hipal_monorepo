@@ -4,16 +4,15 @@ import { useCartStore } from "@/components/store/useCartStore";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 function MemoChoosePortions({ dishData }: { dishData: DishType }) {
-  const { selectedPortion, setSelectedPortion } = useCartStore((state) => ({
-    selectedPortion: state.selectedPortion,
-    setSelectedPortion: state.setSelectedPortion,
-  }));
+  const selectedPortion = useCartStore((state) => state.selectedPortion);
+  const setSelectedPortion = useCartStore((state) => state.setSelectedPortion);
+
 
   const portions = useMemo(() => dishData?.portions || [], [dishData]);
   const outletInfo = useBusinessDetails((s) => s.businessDetails);
 
     useEffect(() => {
-    if (portions.length === 1 && selectedPortion?._id !== portions[0]._id) {
+    if (selectedPortion?._id !== portions[0]._id) {
       setSelectedPortion(portions[0]);
     }
   }, [portions, selectedPortion, setSelectedPortion]);
