@@ -1376,92 +1376,112 @@ const tableRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { fromTableIds, toTableId, staffId } = await c.req.json();
 
-        const staffData = await User.findById(staffId);
-        if (!staffData) {
-          return respond(c, "Staff not found", true, 404, {});
-        }
+        const staff = await User.findById(staffId).session(session);
+        if (!staff) return respond(c, "Staff not found", true, 404, {});
 
-        const destTable = await Table.findById(toTableId);
-        if (!destTable || destTable.isMerge) {
+        const destTable = await Table.findById(toTableId).session(session);
+        if (!destTable || destTable.isMerge)
           return respond(
             c,
-            "Destination table not found or is merged",
+            "Destination table not found or already merged",
             true,
             404,
             {},
           );
-        }
 
-        const isTableAlreadyMerged = await MergeTable.exists({
+        const alreadyMerged = await MergeTable.exists({
           businessId: destTable.businessId,
           childTableIds: { $in: fromTableIds },
-        });
-
-        if (isTableAlreadyMerged) {
-          return respond(c, " source tables is already merged", true, 400, {});
-        }
+        }).session(session);
+        if (alreadyMerged)
+          return respond(
+            c,
+            "One or more source tables already merged",
+            true,
+            400,
+            {},
+          );
 
         const sourceTables = await Table.find({
           businessId: destTable.businessId,
           _id: { $in: fromTableIds },
-        });
+        }).session(session);
 
-        if (!sourceTables.length) {
+        if (!sourceTables.length)
           return respond(c, "No valid source tables found", true, 404, {});
-        }
-        const phoneNumbers = [];
-        const customerNames = [] as string[];
-        const userIds = [] as string[];
+
+        const posConfig = await BusinessPosConfig.findOne({
+          businessId: destTable.businessId,
+          isDeleted: false,
+          active: true,
+          posName: "HIPAL_Z",
+        }).session(session);
+
+        if (!posConfig) return respond(c, "POS not found", true, 404, {});
+
+        const phoneNumbers: string[] = [];
+        const customerNames: string[] = [];
+        const userIds: string[] = [];
         let totalBillCount = 0;
         let totalItemCount = 0;
-        const destTableSession = await UserSession.findOne({
+
+        const destSession = await UserSession.findOne({
           businessId: destTable.businessId,
           tableName: destTable.name,
-        });
+        }).session(session);
 
-        for (const sourceTable of sourceTables) {
-          const sourceTableSession = await UserSession.findOne({
-            businessId: sourceTable.businessId,
-            tableName: sourceTable.name,
-          });
-          //@ts-ignore
-          const billAlreadySplit = checkOriginBillIsSplit(sourceTableSession);
-          if (billAlreadySplit) {
-            throw new Error("Bill already split you cannot merge");
-          }
-          const orderAlreadyExist = await PaymentAlert.findOne({
-            businessId: sourceTable.businessId,
-            tableName: sourceTable.name,
+        for (const srcTable of sourceTables) {
+          const srcSession = await UserSession.findOne({
+            businessId: srcTable.businessId,
+            tableName: srcTable.name,
+          }).session(session);
+
+          if (srcSession && checkOriginBillIsSplit(srcSession))
+            throw new Error(`Bill already split for table ${srcTable.name}`);
+
+          const pendingAlert = await PaymentAlert.findOne({
+            businessId: srcTable.businessId,
+            tableName: srcTable.name,
             alertType: "OFFLINE",
             isAccepted: false,
-          });
+          }).session(session);
 
-          if (orderAlreadyExist)
+          if (pendingAlert)
             throw new Error(
-              "A request for this service is already in progress. Please wait for the staff to take action",
+              `Pending payment alert on ${srcTable.name}, merge not allowed.`,
             );
 
-          phoneNumbers.push(...(sourceTableSession?.phoneNumbers || []));
-          customerNames.push(sourceTableSession?.customerName || "");
-          userIds.push(...(sourceTable?.userIds || []));
+          if (srcSession) {
+            phoneNumbers.push(...(srcSession.phoneNumbers || []));
+            if (srcSession.customerName)
+              customerNames.push(srcSession.customerName);
+          }
+          userIds.push(...(srcTable.userIds || []));
 
-          const kots = await KotOrder.findOneAndUpdate(
-            {
-              businessId: sourceTable.businessId,
-              tableName: sourceTable.name,
-              settled: false,
-              accepted: true,
-            },
-            { $set: { tableName: destTable.name, tableId: destTable._id } },
-            { session },
-          );
+          const kotOrders = await KotOrder.find({
+            businessId: srcTable.businessId,
+            tableName: srcTable.name,
+            settled: false,
+            accepted: true,
+          })
+            .session(session)
+            .lean();
 
-          const totalBill = calculateCartBill(kots?.cart || []);
-          totalBillCount += totalBill || 0;
-          totalItemCount += kots?.cart?.length || 0;
+          if (kotOrders.length) {
+            await KotOrder.updateMany(
+              { _id: { $in: kotOrders.map((k) => k._id) } },
+              { $set: { tableName: destTable.name, tableId: destTable._id } },
+              { session },
+            );
 
-          const tableInfo = await Table.findByIdAndUpdate(
-            sourceTable._id,
+            for (const kot of kotOrders) {
+              totalBillCount += calculateCartBill(kot.cart || []);
+              totalItemCount += kot.cart?.length || 0;
+            }
+          }
+
+          await Table.findByIdAndUpdate(
+            srcTable._id,
             {
               status: "EMPTY",
               capacity: 0,
@@ -1479,89 +1499,73 @@ const tableRouter = new Hono()
           );
 
           await UserSession.deleteOne(
-            { businessId: sourceTable.businessId, tableName: sourceTable.name },
+            { businessId: srcTable.businessId, tableName: srcTable.name },
             { session },
           );
         }
 
-        const posConfigData = await BusinessPosConfig.findOne({
-          businessId: destTable.businessId,
-          isDeleted: false,
-          active: true,
-          posName: "HIPAL_Z",
-        });
-
-        if (!posConfigData) {
-          return respond(c, "POS not found", true, 404, {});
-        }
-
-        const orderAlreadyExist = await PaymentAlert.findOne({
+        const destAlert = await PaymentAlert.findOne({
           businessId: destTable.businessId,
           tableName: destTable.name,
           alertType: "OFFLINE",
           isAccepted: false,
-        });
+        }).session(session);
 
-        if (orderAlreadyExist)
+        if (destAlert)
           throw new Error(
-            "A request for this service is already in progress. Please wait for the staff to take action",
+            "Pending payment alert on destination table. Merge not allowed.",
           );
-        //@ts-ignore
-        const billAlreadySplit = checkOriginBillIsSplit(destTableSession);
-        if (billAlreadySplit) {
-          throw new Error("Bill already split you cannot merge");
-        }
 
-        if (!destTableSession) {
-          const tenDigitCode = generateTenDigitCode();
+        if (destSession && checkOriginBillIsSplit(destSession))
+          throw new Error("Destination bill already split. Cannot merge.");
+
+        if (!destSession) {
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
-          const userSession = new UserSession(
+          const tenDigitCode = generateTenDigitCode();
+
+          const newSession = new UserSession(
             {
               businessId: destTable.businessId,
-              hiCode: hiCode,
-
+              hiCode,
               pin: tenDigitCode,
               tableName: destTable.name,
               customerName: customerNames[0] || "Guest",
-              phoneNumbers: phoneNumbers,
+              phoneNumbers,
               performedBy: "captain",
               date: Date.now(),
               isMerged: true,
-              mergedBy: staffData._id,
+              mergedBy: staff._id,
               mergeTableNames: sourceTables.map((t) => t.name),
             },
-            {
-              session,
-            },
+            { session },
           );
-          await userSession.save();
+          await newSession.save();
 
           await Table.findByIdAndUpdate(
             destTable._id,
             {
               isMerge: true,
               status: "ACTIVE",
-              mergedBy: staffData._id,
+              mergedBy: staff._id,
               mergeTableIds: fromTableIds,
-              hiCode: hiCode,
+              hiCode,
               currentTableAmount: totalBillCount,
-              totalItemCount: totalItemCount,
-              userIds: userIds,
+              totalItemCount,
+              userIds,
             },
             { session },
           );
         } else {
-          await UserSession.findOneAndUpdate(
-            {
-              businessId: destTable.businessId,
-              tableName: destTable.name,
-            },
+          await UserSession.findByIdAndUpdate(
+            destSession._id,
             {
               $addToSet: {
                 phoneNumbers: { $each: phoneNumbers },
                 mergeTableNames: { $each: sourceTables.map((t) => t.name) },
+              },
+              $set: {
                 isMerged: true,
-                mergedBy: staffData._id,
+                mergedBy: staff._id,
               },
             },
             { session },
@@ -1571,10 +1575,8 @@ const tableRouter = new Hono()
             destTable._id,
             {
               isMerge: true,
-
-              mergedBy: staffData._id,
+              mergedBy: staff._id,
               mergeTableIds: fromTableIds,
-
               userIds: userIds,
               currentTableAmount:
                 totalBillCount + (destTable.currentTableAmount || 0),
@@ -1584,18 +1586,17 @@ const tableRouter = new Hono()
           );
         }
 
-        const saveMergetables = new MergeTable({
+        await new MergeTable({
           businessId: destTable.businessId,
           parentTableId: toTableId,
           childTableIds: fromTableIds,
-        });
-
-        await saveMergetables.save({ session });
+        }).save({ session });
 
         return respond(c, "Tables merged successfully", false, 200, {});
       });
     },
   )
+
   .get(
     "/qr_webhook/:billId/:variantId",
     zValidator(
