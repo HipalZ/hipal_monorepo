@@ -491,6 +491,11 @@ const paymentsRouter = new Hono()
           );
         }
 
+        const ifOrderAlreadyInitiated = tableSession.isOrderInitiated;
+        if (ifOrderAlreadyInitiated) {
+          return respond(c, "order already generated ", true, 403, {});
+        }
+
         const result = await executePosHandler(
           businessPosConfig.posName,
           "online_order",

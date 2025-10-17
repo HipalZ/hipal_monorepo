@@ -62,6 +62,7 @@ export const userSessionSchema = z.object({
   isMerge: z.boolean().optional().default(false),
   mergeTableNames: z.array(z.string()).optional().default([]),
   coinAppliedBy: ObjectIdSchema.optional(),
+  isOrderInitiated: z.boolean().default(false),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;

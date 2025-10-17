@@ -161,7 +161,7 @@ const KotOrderSchema = new Schema<KotOrderType>(
     },
     kotInvoiceNumber: {
       type: Number,
-      default: 0,
+      default: Math.floor(100000 + Math.random() * 900000),
     },
     kotStatus: {
       type: String,

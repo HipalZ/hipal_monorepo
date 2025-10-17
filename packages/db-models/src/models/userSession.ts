@@ -1,6 +1,7 @@
 import type { Model } from "mongoose";
 import mongoose from "mongoose";
 import type { UserSessionSchemaType } from "../validators";
+import { nanoid } from "nanoid";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
   businessId: {
@@ -219,7 +220,7 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
   billInvoiceNumber: {
     type: Number,
     required: false,
-    default: 0,
+    default: Math.floor(100000 + Math.random() * 900000),
   },
   isSplit: {
     type: Boolean,
@@ -290,6 +291,10 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: ObjectId,
     default: null,
     ref: "User",
+  },
+  isOrderInitiated: {
+    type: Boolean,
+    default: false,
   },
 });
 
