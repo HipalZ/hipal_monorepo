@@ -208,13 +208,15 @@ const MemoizeDishAndCat = () => {
     <main>
       <div className="sticky top-0 z-50 w-full">
         {/* Header */}
-        <article className="linear_gradient_background">
-          <MemoizedHeader
-            title={dynamicHeading()}
-            leftIcon={<FaArrowLeft />}
-            onBack={handleBack}
-          />
-        </article>
+        {selectedPage === "AI" ? null : (
+          <article className="linear_gradient_background">
+            <MemoizedHeader
+              title={dynamicHeading()}
+              leftIcon={<FaArrowLeft />}
+              onBack={handleBack}
+            />
+          </article>
+        )}
 
         {/* Mobile navigation */}
         <section className="absolute w-full px-4 space-x-4 text-sm mobile-only">
@@ -236,10 +238,12 @@ const MemoizeDishAndCat = () => {
         </section>
 
         {/* Search and filter */}
-        <section className="w-full bg-base-100">
-          <Filter />
-          <Search />
-        </section>
+        {selectedPage === "AI" ? null : (
+          <section className="w-full bg-base-100">
+            <Filter />
+            <Search />
+          </section>
+        )}
       </div>
 
       {/* Breadcrumb navigation */}
@@ -292,9 +296,8 @@ const MemoizeDishAndCat = () => {
         {selectedPage === "SUB_CATEGORY" && <ListOfChildCategory />}
         {selectedPage === "ADD_ON" && <ListOfAddOn />}
         {selectedPage === "AI" && (
-          <div className="flex flex-col items-center justify-center h-[60dvh]">
-            <h2 className="mb-4 text-2xl font-semibold">AI Features</h2>
-          <AIMenuExtractor />
+          <div className="flex flex-col items-center justify-center">
+            <AIMenuExtractor />
           </div>
         )}
       </section>
@@ -342,24 +345,29 @@ const MemoizeDishAndCat = () => {
 
       {/* Action buttons */}
       <div
-        className={`${
-          selectedPage === "MAIN_CATEGORY" ? "bottom-16" : "bottom-6"
-        }  fixed z-50 flex flex-col items-end space-y-4 lg:sticky lg:float-right lg:bottom-6 right-6`}
+        className={cn(
+          "fixed z-50 flex flex-col items-end space-y-4 right-6",
+          selectedPage === "MAIN_CATEGORY" ? "bottom-16" : "bottom-6",
+          selectedPage === "AI" ? "hidden" : "",
+          "lg:sticky lg:float-right lg:bottom-6",
+        )}
       >
         {selectedPage === "DISHES" && (
-          <>
-            <button
-              onClick={bulkUpload}
-              className="z-50 flex items-center h-10 px-4 py-2 text-white bg-black rounded-full"
-              type="button"
-            >
-              <BiPlus size={20} /> Bulk Upload Dishes
-            </button>
-          </>
+          <button
+            onClick={bulkUpload}
+            className={cn(
+              "z-50 flex items-center h-10 px-4 py-2 text-white bg-black rounded-full",
+            )}
+            type="button"
+          >
+            <BiPlus size={20} /> Bulk Upload Dishes
+          </button>
         )}
         <button
           onClick={openMenuModel}
-          className="z-50 flex items-center h-10 px-4 py-2 text-white capitalize bg-black rounded-full"
+          className={cn(
+            "z-50 flex items-center h-10 px-4 py-2 text-white capitalize bg-black rounded-full",
+          )}
           type="button"
         >
           <BiPlus size={20} /> {selectedPage?.toLowerCase()}

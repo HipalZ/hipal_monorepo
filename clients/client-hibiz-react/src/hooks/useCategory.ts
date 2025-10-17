@@ -74,13 +74,17 @@ export const useChildCategories = () => {
     return data;
   }, [businessData?._id]);
 
-  const { data: categories, isLoading } = useQuery({
+  const {
+    data: categories,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["getAllChildCategory", businessData?._id],
     queryFn: getAllChildCategory,
     enabled: !!businessData?._id,
   });
 
-  return { categories, isLoading };
+  return { categories, isLoading, refetch };
 };
 
 export const useSaveCategory = () => {
@@ -307,29 +311,33 @@ const normalizeDescription = (description: string): string => {
 
 // Function to normalize portions
 const normalizePortions = (portionsString: string): any[] => {
-  if (!portionsString || typeof portionsString !== 'string') {
-    return []
+  if (!portionsString || typeof portionsString !== "string") {
+    return [];
   }
 
   try {
     // Handle pipe-separated format: "Regular:299:NON_VEG:true|Large:399:NON_VEG:false"
-    const portionStrings = portionsString.split('|').filter(p => p.trim())
-    
-    return portionStrings.map((portionStr, index) => {
-      const [name, price, type, isDefault] = portionStr.split(':').map(s => s.trim())
-      
-      return {
-        name: normalizeDishName(name || `Portion ${index + 1}`),
-        price: normalizePrice(price || '0'),
-        portionTypes: [normalizeDishType(type || 'VEG')],
-        default: isDefault === 'true' || index === 0, // First portion is default if not specified
-      }
-    }).filter(portion => portion.name.length >= 3 && portion.price > 0)
+    const portionStrings = portionsString.split("|").filter((p) => p.trim());
+
+    return portionStrings
+      .map((portionStr, index) => {
+        const [name, price, type, isDefault] = portionStr
+          .split(":")
+          .map((s) => s.trim());
+
+        return {
+          name: normalizeDishName(name || `Portion ${index + 1}`),
+          price: normalizePrice(price || "0"),
+          portionTypes: [normalizeDishType(type || "VEG")],
+          default: isDefault === "true" || index === 0, // First portion is default if not specified
+        };
+      })
+      .filter((portion) => portion.name.length >= 3 && portion.price > 0);
   } catch (error) {
-    console.warn('Failed to parse portions:', portionsString, error)
-    return []
+    console.warn("Failed to parse portions:", portionsString, error);
+    return [];
   }
-}
+};
 
 // Enhanced normalizeAndMapKeys function
 const normalizeAndMapKeys = (item: any, keyMap: Record<string, string>) => {
@@ -348,38 +356,40 @@ const normalizeAndMapKeys = (item: any, keyMap: Record<string, string>) => {
 };
 
 export const useBulkUploadDishes = () => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const { businessId, menuId } = useParams<{
-    businessId: string
-    menuId: string
-  }>()
-  const { setOpenMenu, resetStore, setShowBulkUploadModal } = useMenuPageStore((s) => ({
-    setOpenMenu: s.setOpenMenu,
-    resetStore: s.resetStore,
-    setShowBulkUploadModal: s.setShowBulkUploadModal,
-  }))
+    businessId: string;
+    menuId: string;
+  }>();
+  const { setOpenMenu, resetStore, setShowBulkUploadModal } = useMenuPageStore(
+    (s) => ({
+      setOpenMenu: s.setOpenMenu,
+      resetStore: s.resetStore,
+      setShowBulkUploadModal: s.setShowBulkUploadModal,
+    }),
+  );
 
   const handleApiResponse = useCallback(
     (res: any) => {
       if (res.status === 400 || res.status === 403) {
-        toast.error("Please upload a valid format")
+        toast.error("Please upload a valid format");
       } else if (res.status === 201 || res.status === 200) {
-        toast.success("Dishes uploaded successfully")
-        setOpenMenu(false)
+        toast.success("Dishes uploaded successfully");
+        setOpenMenu(false);
         queryClient.invalidateQueries({
           queryKey: ["getAllDishes", businessId],
-        })
-        resetStore()
+        });
+        resetStore();
         // Close the modal on success
         if (typeof setShowBulkUploadModal === "function") {
-          setShowBulkUploadModal(false)
+          setShowBulkUploadModal(false);
         }
       } else {
-        toast.error("An unexpected error occurred")
+        toast.error("An unexpected error occurred");
       }
     },
     [queryClient, setOpenMenu, resetStore, businessId, setShowBulkUploadModal],
-  )
+  );
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (file: File) => {
@@ -410,20 +420,28 @@ export const useBulkUploadDishes = () => {
               "dish portions": "portions",
               "portion sizes": "portions",
               sizes: "portions",
-            }
+            };
 
-            const data = result.data.map((item: any) => normalizeAndMapKeys(item, keyMap)) as DishType[]
+            const data = result.data.map((item: any) =>
+              normalizeAndMapKeys(item, keyMap),
+            ) as DishType[];
 
             const validData = data
               .filter((item: DishType) => {
                 // More robust filtering
-                const hasName = item.name && typeof item.name === "string" && item.name.trim().length > 0
-                const hasPrice = item.price !== undefined && item.price !== null
-                return hasName && hasPrice
+                const hasName =
+                  item.name &&
+                  typeof item.name === "string" &&
+                  item.name.trim().length > 0;
+                const hasPrice =
+                  item.price !== undefined && item.price !== null;
+                return hasName && hasPrice;
               })
               .map((item: DishType) => {
                 // Parse portions if provided
-                const portions = item.portions ? normalizePortions(item.portions as string) : []
+                const portions = item.portions
+                  ? normalizePortions(item.portions as string)
+                  : [];
 
                 // Normalize all fields
                 const normalizedItem = {
@@ -435,17 +453,17 @@ export const useBulkUploadDishes = () => {
                   portions: portions,
                   businessId: businessId,
                   menuId: menuId,
-                }
+                };
 
-                return normalizedItem
+                return normalizedItem;
               })
               .filter((item: DishType) => {
                 // Final validation after normalization
-                return item.name.length >= 3 && item.price > 0
-              })
+                return item.name.length >= 3 && item.price > 0;
+              });
 
             if (validData.length === 0) {
-              throw new Error("No valid dishes found in the uploaded file")
+              throw new Error("No valid dishes found in the uploaded file");
             }
 
             try {
@@ -454,30 +472,30 @@ export const useBulkUploadDishes = () => {
                   businessId: businessId || "",
                 },
                 json: validData,
-              })
+              });
 
-              resolve(res)
+              resolve(res);
             } catch (error) {
-              reject(error)
+              reject(error);
             }
           },
           error: (error) => {
-            reject(new Error(`Failed to parse CSV file: ${error.message}`))
+            reject(new Error(`Failed to parse CSV file: ${error.message}`));
           },
-        })
-      })
+        });
+      });
     },
     onSuccess: (data) => {
-      handleApiResponse(data)
+      handleApiResponse(data);
     },
     onError: (error) => {
-      toast.error("Failed to upload dishes")
-      console.error("Error uploading dishes:", error)
+      toast.error("Failed to upload dishes");
+      console.error("Error uploading dishes:", error);
     },
-  })
+  });
 
-  return { mutate: mutateAsync, isPending }
-}
+  return { mutate: mutateAsync, isPending };
+};
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
   const { setOpenMenu, resetStore, categoryStep, setIsCatDelete } =
@@ -514,6 +532,36 @@ export const useDeleteCategory = () => {
           id,
         },
         json: {},
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      handleApiResponse(data);
+    },
+  });
+  return { mutate: mutateAsync, isPending };
+};
+
+export const useSaveAiCategory = () => {
+  const { resetStore } = useMenuPageStore((s) => ({
+    resetStore: s.resetStore,
+  }));
+
+  const handleApiResponse = useCallback((res) => {
+    if (res.err) {
+      toast.error(res.message);
+      return;
+    }
+    if (res) {
+      toast.success("Saved successfully");
+      resetStore();
+    }
+  }, []);
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await apiRpc.categories.$post({
+        json: payload,
       });
       return res.json();
     },
