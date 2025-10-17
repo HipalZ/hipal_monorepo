@@ -456,9 +456,20 @@ const paymentsRouter = new Hono()
         variantId,
       } = requestData;
 
+      const tInfo = await Table.findOne({ businessId, name: tableName });
+
+      if (!tInfo) {
+        return respond(c, "Table not found", true, 404, {});
+      }
+
+      const isTableMerge = await MergeTable.findOne({
+        businessId: businessId,
+        childTableIds: tInfo._id.toString(),
+      }).populate("parentTableId");
+
       const tableSession = await UserSession.findOne({
         businessId,
-        tableName,
+        tableName: isTableMerge?.parentTableId?.name || tableName,
       });
 
       const businessPosConfig = await BusinessPosConfig.findOne({
@@ -475,7 +486,7 @@ const paymentsRouter = new Hono()
         await UserSession.findOneAndUpdate(
           {
             businessId,
-            tableName,
+            tableName: isTableMerge?.parentTableId?.name || tableName,
           },
           {
             isOrderInitiated: true,
@@ -483,7 +494,7 @@ const paymentsRouter = new Hono()
         );
 
         const kotItems = (await KotOrder.find({
-          tableName: tableSession.tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
           settled: false,
           accepted: true,
           businessId,
@@ -516,7 +527,7 @@ const paymentsRouter = new Hono()
             cashbackAvailable,
             currency: currency,
             userId: userId,
-            tableName: tableName,
+            tableName: isTableMerge?.parentTableId?.name || tableName,
             merchantId: c.req.param().merchantId,
           },
         );
@@ -573,7 +584,7 @@ const paymentsRouter = new Hono()
                     userId,
                     claimedCoins:
                       splitBillTableSession?.claimedCoins || claimedCoins,
-                    tableName,
+                    tableName: isTableMerge?.parentTableId?.name || tableName,
                     order_id: response.id,
                     tips: splitBillTableSession?.tips || tips,
                     couponId,
@@ -600,7 +611,7 @@ const paymentsRouter = new Hono()
 
           if (tableSession.variantsCounts === 1) {
             const kotOrders = (await KotOrder.find({
-              tableName,
+              tableName: isTableMerge?.parentTableId?.name || tableName,
               settled: false,
               accepted: true,
               businessId,
@@ -673,7 +684,7 @@ const paymentsRouter = new Hono()
 
             await UserSession.findOneAndUpdate(
               {
-                tableName: tableName,
+                tableName: isTableMerge?.parentTableId?.name || tableName,
                 businessId: businessId,
               },
               {
@@ -698,7 +709,7 @@ const paymentsRouter = new Hono()
 
               await KotOrder.updateMany(
                 {
-                  tableName,
+                  tableName: isTableMerge?.parentTableId?.name || tableName,
                   settled: false,
                   accepted: true,
                   businessId,
@@ -712,7 +723,7 @@ const paymentsRouter = new Hono()
 
               await UserSession.findOneAndUpdate(
                 {
-                  tableName,
+                  tableName: isTableMerge?.parentTableId?.name || tableName,
                   businessId,
                 },
                 {
@@ -766,7 +777,7 @@ const paymentsRouter = new Hono()
                     userId,
                     claimedCoins:
                       splitBillTableSession?.claimedCoins || claimedCoins,
-                    tableName,
+                    tableName: isTableMerge?.parentTableId?.name || tableName,
                     order_id: response.id,
                     tips: splitBillTableSession?.tips || tips,
                     couponId,
@@ -793,7 +804,7 @@ const paymentsRouter = new Hono()
         }
 
         const kotOrders = (await KotOrder.find({
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
           settled: false,
           accepted: true,
           businessId,
@@ -862,7 +873,7 @@ const paymentsRouter = new Hono()
 
         await UserSession.findOneAndUpdate(
           {
-            tableName: tableName,
+            tableName: isTableMerge?.parentTableId?.name || tableName,
             businessId: businessId,
           },
           {
@@ -879,7 +890,7 @@ const paymentsRouter = new Hono()
             businessPosConfig.restId,
             tableSession?.customerName,
             tableSession?.pin,
-            tableName,
+            isTableMerge?.parentTableId?.name || tableName,
             businessPosConfig.accessKey,
             businessPosConfig.secretKey,
             businessPosConfig.authToken,
@@ -887,7 +898,7 @@ const paymentsRouter = new Hono()
 
           await KotOrder.updateMany(
             {
-              tableName,
+              tableName: isTableMerge?.parentTableId?.name || tableName,
               settled: false,
               accepted: true,
               businessId,
@@ -901,7 +912,7 @@ const paymentsRouter = new Hono()
 
           await UserSession.findOneAndUpdate(
             {
-              tableName,
+              tableName: isTableMerge?.parentTableId?.name || tableName,
               businessId,
             },
             {
@@ -941,7 +952,7 @@ const paymentsRouter = new Hono()
               receipt: uniqueOrderId,
               userId,
               claimedCoins: tableSession?.claimedCoins || claimedCoins,
-              tableName,
+              tableName: isTableMerge?.parentTableId?.name || tableName,
               order_id: response.id,
               tips: tableSession?.tips || tips,
               couponId,
@@ -1034,15 +1045,25 @@ const paymentsRouter = new Hono()
         cashbackAvailable,
         variantId,
       } = requestData;
+      const tInfo = await Table.findOne({ businessId, name: tableName });
+
+      if (!tInfo) {
+        return respond(c, "Table not found", true, 404, {});
+      }
+
+      const isTableMerge = await MergeTable.findOne({
+        businessId: businessId,
+        childTableIds: tInfo._id.toString(),
+      }).populate("parentTableId");
 
       const tableSession = await UserSession.findOne({
-        tableName,
+        tableName: isTableMerge?.parentTableId?.name || tableName,
         businessId,
       });
 
       const orderAlreadyExist = await PaymentAlert.findOne({
         businessId,
-        tableName,
+        tableName: isTableMerge?.parentTableId?.name || tableName,
         alertType: "OFFLINE",
         isAccepted: false,
       });
@@ -1082,7 +1103,7 @@ const paymentsRouter = new Hono()
             cashbackAvailable,
             currency: currency,
             userId: userId,
-            tableName: tableName,
+            tableName: isTableMerge?.parentTableId?.name || tableName,
           },
         );
 
@@ -1125,7 +1146,7 @@ const paymentsRouter = new Hono()
                     userId,
                     claimedCoins:
                       splitBillTableSessionData?.claimedCoins || claimedCoins,
-                    tableName,
+                    tableName: isTableMerge?.parentTableId?.name || tableName,
                     tips: splitBillTableSessionData?.tips || tips,
                     billValue: splitBillTableSessionData?.subTotal || billValue,
                     businessId,
@@ -1154,7 +1175,7 @@ const paymentsRouter = new Hono()
                     alertType: "OFFLINE",
                     order_id: saveOrder?.[0]._id,
                     status: "SUCCESS",
-                    tableName: tableName,
+                    tableName: isTableMerge?.parentTableId?.name || tableName,
                     coinsApplied: !!(
                       splitBillTableSessionData?.claimedCoins &&
                       splitBillTableSessionData.claimedCoins > 0
@@ -1176,7 +1197,7 @@ const paymentsRouter = new Hono()
 
           if (tableSession.variantsCounts === 1) {
             const kotOrders = (await KotOrder.find({
-              tableName,
+              tableName: isTableMerge?.parentTableId?.name || tableName,
               settled: false,
               accepted: true,
               businessId,
@@ -1249,7 +1270,7 @@ const paymentsRouter = new Hono()
 
             await UserSession.findOneAndUpdate(
               {
-                tableName: tableName,
+                tableName: isTableMerge?.parentTableId?.name || tableName,
                 businessId: businessId,
               },
               {
@@ -1266,7 +1287,7 @@ const paymentsRouter = new Hono()
                 businessPosConfig.restId,
                 kotOrders[0].name,
                 tableSession?.pin,
-                tableName,
+                isTableMerge?.parentTableId?.name || tableName,
                 businessPosConfig.accessKey,
                 businessPosConfig.secretKey,
 
@@ -1275,7 +1296,7 @@ const paymentsRouter = new Hono()
 
               await KotOrder.updateMany(
                 {
-                  tableName,
+                  tableName: isTableMerge?.parentTableId?.name || tableName,
                   settled: false,
                   accepted: true,
                   businessId,
@@ -1289,7 +1310,7 @@ const paymentsRouter = new Hono()
 
               await UserSession.findOneAndUpdate(
                 {
-                  tableName,
+                  tableName: isTableMerge?.parentTableId?.name || tableName,
                   businessId,
                 },
                 {
@@ -1331,7 +1352,7 @@ const paymentsRouter = new Hono()
                     userId,
                     claimedCoins:
                       splitBillTableSessionData?.claimedCoins || claimedCoins,
-                    tableName,
+                    tableName: isTableMerge?.parentTableId?.name || tableName,
                     tips: splitBillTableSessionData?.tips || tips,
                     billValue: splitBillTableSessionData?.subTotal || billValue,
                     businessId,
@@ -1360,7 +1381,7 @@ const paymentsRouter = new Hono()
                     alertType: "OFFLINE",
                     order_id: saveOrder?.[0]._id,
                     status: "SUCCESS",
-                    tableName: tableName,
+                    tableName: isTableMerge?.parentTableId?.name || tableName,
                     coinsApplied: !!(
                       splitBillTableSessionData?.claimedCoins &&
                       splitBillTableSessionData.claimedCoins > 0
@@ -1382,7 +1403,7 @@ const paymentsRouter = new Hono()
         }
 
         const kotOrders = (await KotOrder.find({
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
           settled: false,
           accepted: true,
           businessId,
@@ -1451,7 +1472,7 @@ const paymentsRouter = new Hono()
 
         await UserSession.findOneAndUpdate(
           {
-            tableName: tableName,
+            tableName: isTableMerge?.parentTableId?.name || tableName,
             businessId: businessId,
           },
           {
@@ -1468,7 +1489,7 @@ const paymentsRouter = new Hono()
             businessPosConfig.restId,
             kotOrders[0].name,
             tableSession?.pin,
-            tableName,
+            isTableMerge?.parentTableId?.name || tableName,
             businessPosConfig.accessKey,
             businessPosConfig.secretKey,
 
@@ -1477,7 +1498,7 @@ const paymentsRouter = new Hono()
 
           await KotOrder.updateMany(
             {
-              tableName,
+              tableName: isTableMerge?.parentTableId?.name || tableName,
               settled: false,
               accepted: true,
               businessId,
@@ -1491,7 +1512,7 @@ const paymentsRouter = new Hono()
 
           await UserSession.findOneAndUpdate(
             {
-              tableName,
+              tableName: isTableMerge?.parentTableId?.name || tableName,
               businessId,
             },
             {
@@ -1522,7 +1543,7 @@ const paymentsRouter = new Hono()
               receipt: uniqueOrderId,
               userId,
               claimedCoins: tableSession?.claimedCoins || claimedCoins,
-              tableName,
+              tableName: isTableMerge?.parentTableId?.name || tableName,
               tips: tableSession?.tips || tips,
               billValue: tableSession?.subTotal || billValue,
               businessId,
@@ -1549,7 +1570,7 @@ const paymentsRouter = new Hono()
               alertType: "OFFLINE",
               order_id: saveOrder?.[0]._id,
               status: "SUCCESS",
-              tableName: tableName,
+              tableName: isTableMerge?.parentTableId?.name || tableName,
               coinsApplied: !!(
                 tableSession?.claimedCoins && tableSession.claimedCoins > 0
               ),

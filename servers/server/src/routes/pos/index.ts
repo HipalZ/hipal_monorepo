@@ -3424,9 +3424,20 @@ const posRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, value, variantId } = await c.req.json();
 
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
 
         if (!tableSession) {
@@ -3479,7 +3490,10 @@ const posRouter = new Hono()
         }
 
         await UserSession.findOneAndUpdate(
-          { businessId, tableName },
+          {
+            businessId,
+            tableName: isTableMerge?.parentTableId?.name || tableName,
+          },
           {
             $set: {
               tips: value,
@@ -3508,9 +3522,20 @@ const posRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, variantId } = await c.req.json();
 
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
 
         if (!tableSession) {
@@ -3563,7 +3588,10 @@ const posRouter = new Hono()
         }
 
         await UserSession.findOneAndUpdate(
-          { businessId, tableName },
+          {
+            businessId,
+            tableName: isTableMerge?.parentTableId?.name || tableName,
+          },
           {
             $set: {
               tips: 0,
