@@ -63,10 +63,6 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
   );
 
   const calculateTotalPrice = useCallback((cartItem: ICartItem) => {
-    const basePrice = cartItem.dish.price;
-    const extrasPrice = cartItem.extras?.reduce((total, extra) => (total + extra.price) * extra.quantity, 0) || 0;
-    const portionPrice = cartItem.portion?.price || 0;
-
     const basePrice = hasPortion ? 0 : cartItem.dish.price * cartItem.quantity;
     const portionPrice = hasPortion ? cartItem.portion!.price * cartItem.quantity : 0;
 
