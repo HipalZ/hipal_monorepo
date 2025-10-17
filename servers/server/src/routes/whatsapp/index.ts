@@ -1785,6 +1785,7 @@ const whatsappRouter = new Hono()
           const { userData, userInput } = await whatsAppUserAndTextMessage(
             contacts,
             messages,
+            whatsAppBusinessConfigData,
           );
 
           const qrType = identifyQrTypeFromMessage(userInput);
