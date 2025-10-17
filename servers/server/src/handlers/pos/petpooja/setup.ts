@@ -385,10 +385,7 @@ async function petPoojaPosSetupHandler(payload: {
     }
     return true;
   } catch (error) {
-    return {
-      success: false,
-      message: (error as Error).message || "Internal error in POS setup",
-    };
+    throw new Error((error as Error).message || "Internal error in POS setup");
   }
 }
 
@@ -755,10 +752,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
     }
     return true;
   } catch (error) {
-    return {
-      success: false,
-      message: (error as Error).message || "Internal error in POS setup",
-    };
+    throw new Error((error as Error).message || "Internal error in POS setup");
   }
 }
 

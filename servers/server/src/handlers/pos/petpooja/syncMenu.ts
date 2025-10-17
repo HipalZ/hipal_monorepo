@@ -333,7 +333,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
       }
     }
   } catch (error) {
-    console.error("Error in petPoojaPosSyncMenuHandler:", error);
+    throw new Error((error as Error).message || "Internal error in POS setup");
   }
 }
 
