@@ -1090,6 +1090,27 @@ const paymentsRouter = new Hono()
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
+
+        const kotItems = (await KotOrder.find({
+          tableName: isTableMerge?.parentTableId?.name || tableName,
+          settled: false,
+          accepted: true,
+          businessId,
+        }).lean()) as KotOrderTypes[];
+
+        const { totalDishTotal } = calculateBillTotals(kotItems);
+
+        console.log("totalDishTotal", totalDishTotal);
+
+        if (totalDishTotal !== tableSession.subTotal) {
+          return respond(
+            c,
+            "totalDishTotal is not equal to subTotal",
+            true,
+            400,
+            {},
+          );
+        }
         if (businessPosConfig.posName === "HIPAL_Z") {
           const result = await executePosHandler(
             businessPosConfig.posName,
