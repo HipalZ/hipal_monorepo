@@ -18,6 +18,7 @@ export const useGetBill = () => {
   const { setError, setOpenErrorModal } = useError();
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const setIsBillSplit = useOrderStore((s) => s.setIsBillSplit);
+  const isBillSplit = useOrderStore((s) => s.isBillSplit);
   const { captainData: userData } = useHiClientZ();
 
   if (!selectedTable?.active) {
@@ -41,6 +42,9 @@ export const useGetBill = () => {
 
     if (response.status === 400 || response.status === 404) {
       console.log("Error 400 or 404 received");
+      if (isBillSplit) {
+        navigate(`/${businessId}/alerts`);
+      }
       return;
     }
 
