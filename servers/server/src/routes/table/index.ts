@@ -1822,8 +1822,14 @@ const tableRouter = new Hono()
       const sourceTable = await Table.findById(fromTableId);
       const destinationTable = await Table.findById(toTableId);
 
-      if (sourceTable === destinationTable) {
-        return respond(c, "Cannot transfer to the same table", true, 400, {});
+      if (fromTableId === toTableId) {
+        return respond(
+          c,
+          "Cannot switch tables to the same table",
+          true,
+          400,
+          {},
+        );
       }
 
       const posConfigData = await BusinessPosConfig.findOne({
@@ -1831,16 +1837,21 @@ const tableRouter = new Hono()
         isDeleted: false,
         active: true,
       });
-      if (!posConfigData) return respond(c, "POS not found", true, 400, {});
 
-      if (!sourceTable || !destinationTable)
+      if (!posConfigData) {
+        return respond(c, "Pos not found", true, 400, {});
+      }
+
+      if (!sourceTable || !destinationTable) {
         return respond(c, "Table not found", true, 404, {});
+      }
 
       const tableSession = await UserSession.findOne({
         tableName: sourceTable.name,
         businessId,
       });
-      if (!tableSession || sourceTable.status === "EMPTY")
+
+      if (!tableSession || sourceTable.status === "EMPTY") {
         return respond(
           c,
           `No active session found for table ${sourceTable.name}`,
@@ -1848,16 +1859,18 @@ const tableRouter = new Hono()
           400,
           {},
         );
+      }
 
       const billAlreadySplit = checkOriginBillIsSplit(tableSession);
-      if (billAlreadySplit)
+      if (billAlreadySplit) {
         return respond(
           c,
-          "Bill already split — cannot transfer table or items",
+          "Bill already split you cannot transfer the table and items",
           true,
           400,
           {},
         );
+      }
 
       if (transferType === "TABLE") {
         await KotOrder.updateMany(
@@ -1881,7 +1894,10 @@ const tableRouter = new Hono()
         );
 
         await UserSession.findOneAndUpdate(
-          { tableName: sourceTable.name, businessId },
+          {
+            tableName: sourceTable.name,
+            businessId,
+          },
           {
             $set: {
               tableName: destinationTable.name,
@@ -1918,24 +1934,30 @@ const tableRouter = new Hono()
           toTableId,
           {
             status: sourceTable.status,
-            capacity: sourceTable.capacity,
-            hiCode: sourceTable.hiCode,
-            currentTableAmount: sourceTable.currentTableAmount,
-            totalItemCount: sourceTable.totalItemCount,
-            userIds: sourceTable.userIds,
+            capacity: sourceTable?.capacity,
+            hiCode: sourceTable?.hiCode,
+            currentTableAmount: sourceTable?.currentTableAmount,
+            totalItemCount: sourceTable?.totalItemCount,
+            userIds: sourceTable?.userIds,
             isTransfer: true,
           },
           { session },
         );
+        await MergeTable.deleteOne(
+          {
+            parentTableId: fromTableId,
+          },
+          {
+            session,
+          },
+        );
 
-        await MergeTable.deleteOne({ parentTableId: fromTableId }, { session });
-
-        return respond(c, "Table transferred successfully", false, 200, {});
+        return c.json(
+          { message: "Table transfer successfully", err: false, data: {} },
+          200,
+        );
       }
 
-      // ======================================================
-      //  TRANSFER SPECIFIC ITEMS
-      // ======================================================
       if (transferType === "ITEM") {
         const kotOrders = await KotOrder.find({
           cart: { $elemMatch: { _id: { $in: itemIds } } },
@@ -1944,8 +1966,9 @@ const tableRouter = new Hono()
           tableName: sourceTable.name,
         });
 
-        if (kotOrders.length === 0)
-          return respond(c, "No matching items found in KOTs", true, 400, {});
+        if (kotOrders.length === 0) {
+          return respond(c, "No items found in the KotOrder", true, 400, {});
+        }
 
         const destinationTableSession = await UserSession.findOne({
           tableName: destinationTable.name,
@@ -1956,16 +1979,18 @@ const tableRouter = new Hono()
           const removedItems = kotOrder.cart.filter((item) =>
             itemIds.includes(item._id.toString()),
           );
+
           kotOrder.cart = kotOrder.cart.filter(
             (item) => !itemIds.includes(item._id.toString()),
           );
 
-          if (kotOrder.cart.length === 0)
+          if (kotOrder.cart.length === 0) {
             await KotOrder.deleteOne({ _id: kotOrder._id }, { session });
-          else await kotOrder.save({ session });
+          } else {
+            await kotOrder.save({ session });
+          }
 
-          const { _id, kotInvoiceNumber, ...newKotOrderData } =
-            kotOrder.toObject();
+          const { _id, ...newKotOrderData } = kotOrder.toObject();
 
           const calculateBillDishIds = removedItems.filter(
             (item) => !item.dish.isDeleted,
@@ -2012,7 +2037,11 @@ const tableRouter = new Hono()
                   transferType: "ITEM",
                 },
               },
-              { upsert: true, session, new: true },
+              {
+                upsert: true,
+                session,
+                new: true,
+              },
             );
           }
 
@@ -2043,7 +2072,14 @@ const tableRouter = new Hono()
           );
         }
 
-        return respond(c, "Items transferred successfully", false, 200, {});
+        return c.json(
+          {
+            message: "Items transferred successfully",
+            err: false,
+            data: {},
+          },
+          200,
+        );
       }
     });
   })
