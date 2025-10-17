@@ -472,6 +472,16 @@ const paymentsRouter = new Hono()
           return respond(c, "Table session not found", true, 404, {});
         }
 
+        await UserSession.findOneAndUpdate(
+          {
+            businessId,
+            tableName,
+          },
+          {
+            isOrderInitiated: true,
+          },
+        );
+
         const kotItems = (await KotOrder.find({
           tableName: tableSession.tableName,
           settled: false,
@@ -489,11 +499,6 @@ const paymentsRouter = new Hono()
             403,
             {},
           );
-        }
-
-        const ifOrderAlreadyInitiated = tableSession.isOrderInitiated;
-        if (ifOrderAlreadyInitiated) {
-          return respond(c, "order already generated ", true, 403, {});
         }
 
         const result = await executePosHandler(

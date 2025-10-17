@@ -720,6 +720,12 @@ const posRouter = new Hono()
           );
         }
 
+        const ifOrderAlreadyExists = userTableSession.isOrderInitiated;
+
+        if (ifOrderAlreadyExists) {
+          return respond(c, "Order already initiated", true, 400, {});
+        }
+
         if (registrationToken.length > 0) {
           for (const obj of registrationToken) {
             if (obj.notification) {
