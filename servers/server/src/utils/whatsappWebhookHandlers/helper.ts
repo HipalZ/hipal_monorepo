@@ -1,4 +1,4 @@
-import { User, WhatsAppBusinessConfig } from "@hi/db-models";
+import { Subscriber, User, WhatsAppBusinessConfig } from "@hi/db-models";
 import type { QrParseResult, QrType } from "./whatsAppHandlerTypes";
 //@ts-ignore
 async function whatsAppEventData(whatsAppWebhookEventBody) {
@@ -26,7 +26,14 @@ async function whatsAppEventData(whatsAppWebhookEventBody) {
   };
 }
 //@ts-ignore
-async function whatsAppUserAndTextMessage(contacts, messages) {
+async function whatsAppUserAndTextMessage(
+  //@ts-ignore
+  contacts,
+  //@ts-ignore
+  messages,
+  //@ts-ignore
+  whatsAppBusinessConfigData,
+) {
   const userName = contacts?.profile?.name;
   const userPhone = contacts?.wa_id?.toString().slice(2);
   const userInput = messages?.text?.body;
@@ -41,6 +48,19 @@ async function whatsAppUserAndTextMessage(contacts, messages) {
       name: userName,
       role: ["HIPAL_CUSTOMER", "OWNER", "MANAGER", "CAPTAIN", "CO_OWNER"],
     });
+
+    await Subscriber.findOneAndUpdate(
+      {
+        userId: isAlreadyRegisteredUser?._id.toString(),
+        businessId: whatsAppBusinessConfigData?.businessId,
+      },
+      {
+        date: Date.now(),
+        userCount: 0,
+        whatsappMsgUnseenCount: 0,
+      },
+      { upsert: true, new: true },
+    );
   }
 
   return {
