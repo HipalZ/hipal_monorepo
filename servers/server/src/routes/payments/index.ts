@@ -512,31 +512,32 @@ const paymentsRouter = new Hono()
           );
         }
 
-        const result = await executePosHandler(
-          businessPosConfig.posName,
-          "online_order",
-          {
-            businessId: tableSession.businessId,
-            variantId: variantId,
-            total: total,
-            billValue: billValue,
-            tips: tips,
-            claimedCoins: claimedCoins,
-            couponId: couponId,
-            channelId: channelId,
-            cashbackAvailable,
-            currency: currency,
-            userId: userId,
-            tableName: isTableMerge?.parentTableId?.name || tableName,
-            merchantId: c.req.param().merchantId,
-          },
-        );
-
-        if (!result) {
-          throw new Error("Error in POS handler");
-        }
-        if (result) {
-          return respond(c, "success", false, 200, result);
+        if (businessPosConfig.posName === "HIPAL_Z") {
+          const result = await executePosHandler(
+            businessPosConfig.posName,
+            "online_order",
+            {
+              businessId: tableSession.businessId,
+              variantId: variantId,
+              total: total,
+              billValue: billValue,
+              tips: tips,
+              claimedCoins: claimedCoins,
+              couponId: couponId,
+              channelId: channelId,
+              cashbackAvailable,
+              currency: currency,
+              userId: userId,
+              tableName: isTableMerge?.parentTableId?.name || tableName,
+              merchantId: c.req.param().merchantId,
+            },
+          );
+          if (!result) {
+            throw new Error("Error in POS handler");
+          }
+          if (result) {
+            return respond(c, "success", false, 200, result);
+          }
         }
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
@@ -1087,31 +1088,32 @@ const paymentsRouter = new Hono()
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
+        if (businessPosConfig.posName === "HIPAL_Z") {
+          const result = await executePosHandler(
+            businessPosConfig.posName,
+            "offline_order",
+            {
+              businessId: tableSession.businessId,
+              variantId: variantId,
+              total: total,
+              billValue: billValue,
+              tips: tips,
+              claimedCoins: claimedCoins,
+              couponId: couponId,
+              channelId: channelId,
+              cashbackAvailable,
+              currency: currency,
+              userId: userId,
+              tableName: isTableMerge?.parentTableId?.name || tableName,
+            },
+          );
 
-        const result = await executePosHandler(
-          businessPosConfig.posName,
-          "offline_order",
-          {
-            businessId: tableSession.businessId,
-            variantId: variantId,
-            total: total,
-            billValue: billValue,
-            tips: tips,
-            claimedCoins: claimedCoins,
-            couponId: couponId,
-            channelId: channelId,
-            cashbackAvailable,
-            currency: currency,
-            userId: userId,
-            tableName: isTableMerge?.parentTableId?.name || tableName,
-          },
-        );
-
-        if (!result) {
-          throw new Error("Error in POS handler");
-        }
-        if (result) {
-          return respond(c, "success", false, 200, result);
+          if (!result) {
+            throw new Error("Error in POS handler");
+          }
+          if (result) {
+            return respond(c, "success", false, 200, result);
+          }
         }
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
@@ -1900,22 +1902,24 @@ const paymentsRouter = new Hono()
         active: true,
       });
       if (businessPosConfig) {
-        const result = await executePosHandler(
-          businessPosConfig.posName,
-          "razorpay_webhook",
-          {
-            merchantId: merchantId,
-            body: body,
-            headers: headersResult.data,
-          },
-        );
+        if (businessPosConfig.posName === "HIPAL_Z") {
+          const result = await executePosHandler(
+            businessPosConfig.posName,
+            "razorpay_webhook",
+            {
+              merchantId: merchantId,
+              body: body,
+              headers: headersResult.data,
+            },
+          );
 
-        if (!result) {
-          throw new Error("Error in POS handler");
-        }
+          if (!result) {
+            throw new Error("Error in POS handler");
+          }
 
-        if (result) {
-          return respond(c, "success", false, 200, result);
+          if (result) {
+            return respond(c, "success", false, 200, result);
+          }
         }
       }
       console.log("step_5");
@@ -3350,33 +3354,34 @@ const paymentsRouter = new Hono()
                 if (!tableSession) {
                   return respond(c, "Table session not found", true, 404, {});
                 }
-
-                const result = await executePosHandler(
-                  isHavePos.posName,
-                  "offline_order_accept",
-                  {
-                    businessId: order.businessId,
-                    alertId: alertId,
-                    comment,
-                    waiterName,
-                    settleModes,
-                    duesUserId,
-                    npcUserId,
-                  },
-                );
-
-                if (!result) {
-                  throw new Error("Failed to process POS offline order");
-                }
-
-                if (result) {
-                  return respond(
-                    c,
-                    "Order accepted successfully",
-                    false,
-                    200,
-                    result,
+                if (isHavePos.posName === "HIPAL_Z") {
+                  const result = await executePosHandler(
+                    isHavePos.posName,
+                    "offline_order_accept",
+                    {
+                      businessId: order.businessId,
+                      alertId: alertId,
+                      comment,
+                      waiterName,
+                      settleModes,
+                      duesUserId,
+                      npcUserId,
+                    },
                   );
+
+                  if (!result) {
+                    throw new Error("Failed to process POS offline order");
+                  }
+
+                  if (result) {
+                    return respond(
+                      c,
+                      "Order accepted successfully",
+                      false,
+                      200,
+                      result,
+                    );
+                  }
                 }
 
                 const originBillIsSplit =

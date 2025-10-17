@@ -33,6 +33,7 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
+import { executePosHandler } from "../../utils/executePoshandlers.ts";
 import { calculateCartBill } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
@@ -349,6 +350,26 @@ const tableRouter = new Hono()
         });
         if (!pos) {
           return respond(c, "Pos not found", true, 400, {});
+        }
+
+        if (pos.posName === "HIPAL_Z") {
+          const result = await executePosHandler(pos.posName, "normal_settle", {
+            tableId: table._id,
+            captainId: captain._id,
+            billId: variantId ? variantId : billId,
+            settleModes,
+            duesUserId,
+            npcUserId,
+            variantId,
+          });
+
+          if (!result) {
+            throw new Error("Failed to process POS offline order");
+          }
+
+          if (result) {
+            return respond(c, "success", false, 200, result);
+          }
         }
 
         const npcUser = await NpcUser.findById(npcUserId);
