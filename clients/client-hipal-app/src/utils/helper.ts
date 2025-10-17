@@ -44,41 +44,39 @@ export const useGoNext = () => {
 
   const goNext = useCallback(() => {
     let newUrl = `/${customLink}/explore?pay=${isPayment}`;
-
-    if (direction && direction.startsWith("room")) {
-      newUrl = `/${customLink}/hotel/checkin?${direction}`;
-    } else {
-      switch (direction) {
-        case "loyalty":
-          newUrl = `/${customLink}/loyalty`;
-          break;
-        case "category":
-          newUrl = `/${customLink}/category?pay=${isPayment}&tableName=${tableName}`;
-          break;
-        case "explore":
-          newUrl = `/${customLink}/explore?pay=${isPayment}`;
-          break;
-        case "invoice":
-          newUrl = invoiceUrl;
-          break;
-        case "posPayment":
-          newUrl = urlFrom;
-          break;
-        case "payment":
-          newUrl = urlFrom;
-          break;
-        case "couponz":
-          newUrl = urlFrom;
-          break;
-        case "explore-googleReview":
-          newUrl = `/${customLink}/explore`;
-          break;
-        default:
-          break;
-      }
-    }
-
-    window.location.href = newUrl;
+    console.log("direction", newUrl);
+    // if (direction && direction.startsWith("room")) {
+    //   newUrl = `/${customLink}/hotel/checkin?${direction}`;
+    // } else {
+    //   switch (direction) {
+    //     case "loyalty":
+    //       newUrl = `/${customLink}/loyalty`;
+    //       break;
+    //     case "category":
+    //       newUrl = `/${customLink}/category?pay=${isPayment}&tableName=${tableName}`;
+    //       break;
+    //     case "explore":
+    //       newUrl = `/${customLink}/explore?pay=${isPayment}`;
+    //       break;
+    //     case "invoice":
+    //       newUrl = invoiceUrl;
+    //       break;
+    //     case "posPayment":
+    //       newUrl = urlFrom;
+    //       break;
+    //     case "payment":
+    //       newUrl = urlFrom;
+    //       break;
+    //     case "couponz":
+    //       newUrl = urlFrom;
+    //       break;
+    //     case "explore-googleReview":
+    //       newUrl = `/${customLink}/explore`;
+    //       break;
+    //     default:
+    //       break;
+    //   }
+    // }
   }, [direction, customLink, isPayment, urlFrom, invoiceUrl]);
 
   return { goNext };
