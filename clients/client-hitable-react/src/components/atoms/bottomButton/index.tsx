@@ -143,7 +143,7 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
     >
       <div
         className={cn('flex', {
-          'justify-between gap-4': visibleButtons.length === 2,
+          'justify-between': visibleButtons.length === 2,
           'justify-center': visibleButtons.length !== 2,
         })}
       >
@@ -159,10 +159,9 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
                 button?.isLoading ? 'pointer-events-none' : '',
                 {
                   'cursor-not-allowed opacity-50': button.disable,
-                  // single vs multi width
-                  'w-auto px-6': isSingle && !button.isBackButton,
+                  'w-full px-6': isSingle && !button.isBackButton,
                   'w-full': !isSingle && !button.isBackButton,
-                  'w-[54px]': button.isBackButton && index === 0,
+                  'w-[54px]': button.isBackButton,
                   'ml-4': index > 0 && !button.isBackButton && !isSingle,
                 },
               )}

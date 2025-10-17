@@ -298,7 +298,7 @@ const MemoGetBill = () => {
       )}
 
       <CommonBottomButton
-        maxWidth={screenSize === 'xs' ? '30rem' : '48rem'}
+        maxWidth="30rem"
         backgroundColor={screenSize === 'xs' ? 'white' : 'white'}
         fixed={true}
         buttons={[
@@ -312,12 +312,12 @@ const MemoGetBill = () => {
             text: '',
             isBackButton: true,
             onClick: isSplitBill && selectedBill ? handleBackToGrid : closeOrderModalHandler,
-            className: 'rounded-md pl-3 md:pl-4 !w-[8rem] ml-4',
+            className: 'lg:hidden rounded-md pl-3 md:pl-4 !w-[8rem] ml-4',
           },
           {
-            text: 'Normal Settle',
+            text: 'Settle',
             onClick: openNormalSettle,
-            className: 'rounded-md !bg-purple-600',
+            className: 'rounded-md !bg-purple-600 ',
           },
           {
             text: 'Hi Settle',
