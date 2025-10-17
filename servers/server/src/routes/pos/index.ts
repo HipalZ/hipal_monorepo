@@ -2292,7 +2292,7 @@ const posRouter = new Hono()
         tableName: z.string().min(1).max(200),
         value: z.number().positive(),
         variantId: z.string().min(24).max(24).optional(),
-        userId: z.string().min(24).max(24),
+        userId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
