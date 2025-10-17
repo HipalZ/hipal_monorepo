@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Separator } from '@/components/ui/separator';
 import { motion } from 'framer-motion';
 import { GripVertical, MessageSquare, User } from 'lucide-react'; // Added Trash2, Eye, EyeOff icons
-import { memo, useCallback, useMemo, useState } from 'react'; // Added useState and useMemo
+import { memo, useCallback, useMemo } from 'react'; // Added useState and useMemo
 import { BiSync } from 'react-icons/bi';
 import { MdInfo, MdPerson, MdRestaurantMenu } from 'react-icons/md';
 
@@ -17,19 +17,28 @@ interface CompactOrderCardProps {
 
 const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
   const { isPending, mutateAsync } = useReprintKot();
-  const [showDeletedOnly, setShowDeletedOnly] = useState(false); // New state for filtering
 
-  const reprintKotHandler = useCallback((kotId: string) => {
-    mutateAsync(kotId);
-  }, []);
+  const reprintKotHandler = useCallback(
+    (kotId: string) => {
+      mutateAsync(kotId);
+    },
+    [mutateAsync],
+  );
 
-  // Filter items based on showDeletedOnly state
   const filteredCartItems = useMemo(() => {
-    if (showDeletedOnly) {
-      return order?.cart.filter((item) => item.isDeleted);
-    }
     return order?.cart;
-  }, [order?.cart, showDeletedOnly]);
+  }, [order?.cart]);
+
+  const calculateTotalPrice = useCallback((cartItem: ICartItem) => {
+    const hasPortion = !!cartItem.portion?.price;
+
+    const basePrice = hasPortion ? 0 : cartItem.dish.price * cartItem.quantity;
+    const portionPrice = hasPortion ? cartItem.portion!.price * cartItem.quantity : 0;
+
+    const extrasPrice = (cartItem.extras?.reduce((sum, extra) => sum + extra.price * extra.quantity, 0) || 0) * cartItem.quantity;
+
+    return basePrice + portionPrice + extrasPrice;
+  }, []);
 
   return (
     <motion.div
@@ -64,6 +73,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+
           {order?.transferd && (
             <section className="flex items-center justify-between gap-2">
               <Badge variant="destructive" className="mb-2">
@@ -81,7 +91,9 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
             </div>
             <h3 className="pr-4 text-sm font-semibold opacity-60">{new Date(order?.date).toLocaleString('en-In')}</h3>
           </div>
+
           <Separator className="my-2" />
+
           <div className="space-y-4">
             {filteredCartItems.length === 0 && showDeletedOnly ? (
               <div className="py-4 text-center text-gray-500">No deleted items to show.</div>
@@ -116,6 +128,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                           Deleted
                         </Badge>
                       )}
+                      {item?.portion && <p className={`ml-1 text-xs text-gray-500 ${itemTextClasses}`}>({item?.portion?.name})</p>}
                     </div>
 
                     {/* Quantity */}
@@ -153,7 +166,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                       </div>
                     )}
 
-                    {/* Deletion Details (if item is deleted) */}
+                    {/* Deletion Details */}
                     {isItemDeleted && (
                       <div className="col-span-12 mt-2 rounded-md bg-red-100 p-2 text-xs text-gray-800">
                         <div className="flex items-center gap-1">
@@ -171,7 +184,9 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
               })
             )}
           </div>
+
           <Separator className="my-2" />
+
           <div className="flex items-center justify-between text-sm font-medium">
             <span className="text-lg font-semibold">Total</span>
             <span className="text-lg font-semibold">
