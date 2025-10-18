@@ -57,7 +57,7 @@ import {
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
-import type { KotOrderTypes } from "../../utils/bill";
+import { calculateBillTotals, type KotOrderTypes } from "../../utils/bill";
 import { getMerchantConfig } from "../../utils/cacheHelper";
 import {
   adjustFromToTimestamps,
@@ -68,8 +68,8 @@ import { convertToPetpoojaCart } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
 import {
-  type MerchantConfig,
   razorpayWrapper,
+  type MerchantConfig,
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
@@ -471,6 +471,27 @@ const paymentsRouter = new Hono()
         }
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+
+        if (!originBillIsSplit) {
+          const kotItems = (await KotOrder.find({
+            tableName: tableSession.tableName,
+            settled: false,
+            accepted: true,
+            businessId,
+          }).lean()) as KotOrderTypes[];
+
+          const { totalDishTotal } = calculateBillTotals(kotItems);
+
+          if (totalDishTotal !== tableSession.subTotal) {
+            return respond(
+              c,
+              "totalDishTotal is not equal to subTotal",
+              true,
+              400,
+              {},
+            );
+          }
+        }
 
         if (originBillIsSplit) {
           if (!variantId) {
@@ -1010,6 +1031,27 @@ const paymentsRouter = new Hono()
           return respond(c, "Table session not found", true, 404, {});
         }
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+
+        if (!originBillIsSplit) {
+          const kotItems = (await KotOrder.find({
+            tableName: tableSession.tableName,
+            settled: false,
+            accepted: true,
+            businessId,
+          }).lean()) as KotOrderTypes[];
+
+          const { totalDishTotal } = calculateBillTotals(kotItems);
+
+          if (totalDishTotal !== tableSession.subTotal) {
+            return respond(
+              c,
+              "totalDishTotal is not equal to subTotal",
+              true,
+              400,
+              {},
+            );
+          }
+        }
 
         if (originBillIsSplit) {
           if (!variantId) {
