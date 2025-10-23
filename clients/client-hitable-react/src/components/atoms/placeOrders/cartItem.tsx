@@ -106,7 +106,7 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
   };
 
   return (
-    <section className="min-h-screen md:pt-20 lg:pt-0">
+    <section className="hide-scrollbar h-[calc(100dvh-4rem)] overflow-auto pb-20 md:pt-20 lg:pt-0">
       <AnimatePresence>
         {filteredCart.length > 0 ? (
           <div className="mx-4 grid gap-4 py-[5.5rem] md:grid-cols-2 md:py-[2rem] lg:mx-0 lg:grid-cols-1 lg:py-0 2xl:grid-cols-2">
