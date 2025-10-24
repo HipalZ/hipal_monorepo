@@ -4,7 +4,6 @@ import {
   BusinessPosConfig,
   DuesUser,
   KotOrder,
-  LoyaltySettings,
   MergeTable,
   NpcUser,
   Order,
@@ -340,9 +339,7 @@ const tableRouter = new Hono()
         if (!table || !tableSession || !captain) {
           return respond(c, "Table or Captain not found", true, 404, {});
         }
-        const businessLoyalty = await LoyaltySettings.findOne({
-          businessId: table?.businessId,
-        });
+
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
           isDeleted: false,
@@ -351,8 +348,10 @@ const tableRouter = new Hono()
         if (!pos) {
           return respond(c, "Pos not found", true, 400, {});
         }
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
 
         if (pos.posName === "HIPAL_Z") {
+          console.log("jk");
           const result = await executePosHandler(pos.posName, "normal_settle", {
             tableId: table._id,
             captainId: captain._id,
@@ -373,9 +372,7 @@ const tableRouter = new Hono()
         }
 
         const npcUser = await NpcUser.findById(npcUserId);
-        //no
 
-        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
         if (originBillIsSplit) {
           if (!variantId) {
             return respond(

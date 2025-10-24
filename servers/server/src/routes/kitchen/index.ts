@@ -151,7 +151,7 @@ const kitchenRouter = new Hono()
     },
   )
   .get(
-    "/:businessId/:staffId",
+    "/staff/:businessId/:staffId",
     zValidator(
       "param",
       z.object({

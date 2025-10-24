@@ -1921,6 +1921,14 @@ const posRouter = new Hono()
           order.cart.filter((item) => !item.isDeleted),
         ) as Item[];
 
+        const { totalDishTotal } = calculateBillTotals(KotOrders);
+
+        if (!billAlreadySplit) {
+          if (totalDishTotal !== tableSession.subTotal) {
+            return respond(c, "please sync all kots", true, 401, {});
+          }
+        }
+
         const billItems = groupItemsByGST(cartItems);
 
         sendBillPrintEvent({
