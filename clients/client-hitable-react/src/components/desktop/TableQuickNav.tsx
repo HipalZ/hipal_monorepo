@@ -12,6 +12,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useIsMobile } from '../../hooks/use-mobile';
 import SpinnerMemo from '../atoms/loadingSpinner';
 import { useTableData } from '../hooks/useTableData';
+import useBusinessData from '../store/useBusinessData';
 import { useHiClientZ } from '../store/useHiClientzData';
 import { useMergeTableStore } from '../store/useMergeTableStore';
 import { useTempItemStore } from '../store/useTempItemStore';
@@ -27,6 +28,8 @@ const TableQuickNav = () => {
   const { setIsPlacingNewOrder } = useCart((s) => ({
     setIsPlacingNewOrder: s.setIsPlacingNewOrder,
   }));
+
+  const isHipalzPos = useBusinessData((s) => s?.outletInfo?.isHipalzPos);
 
   const userDetails = useHiClientZ((s) => s.captainData);
   const setShowMergeModal = useMergeTableStore((s) => s.setShowMergeModal);
@@ -121,7 +124,8 @@ const TableQuickNav = () => {
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Add Item</span>
           </Button>
-          {!selectedTable?.isMerge && (
+
+          {isHipalzPos && !selectedTable?.isMerge && (
             <Button variant="outline" size="default" className="gap-2 bg-transparent font-semibold" onClick={handleMergeClick}>
               <Merge className="h-4 w-4" />
               <span className="hidden sm:inline">Merge</span>
