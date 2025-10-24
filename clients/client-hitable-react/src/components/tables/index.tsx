@@ -9,6 +9,7 @@ import { cn } from '../../lib/utils';
 import CommonBottomButton from '../atoms/bottomButton';
 import SpinnerMemo from '../atoms/loadingSpinner';
 import { useTableData, useTableTransfer } from '../hooks/useTableData';
+import useBusinessData from '../store/useBusinessData';
 import { useCart } from '../store/useCart';
 import { useHiClientZ } from '../store/useHiClientzData';
 import { useMergeTableStore } from '../store/useMergeTableStore';
@@ -28,6 +29,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
     businessIdOverride: businessId,
     enabled: true,
   });
+  const isHipalzPos = useBusinessData((s) => s?.outletInfo?.isHipalzPos);
   const zones = useZonesAndTablesStore((s) => s.zones);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -325,7 +327,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
         />
       )}
 
-      {!transfer && (
+      {!transfer && isHipalzPos && (
         <CommonBottomButton
           fixed={true}
           position="mid"
