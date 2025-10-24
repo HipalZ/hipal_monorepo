@@ -69,7 +69,7 @@ const MemoGetBill = () => {
     setOpenOrderModal(false);
   }, [setOpenOrderModal]);
 
-  const { isLoading, data: billData } = useGetBill();
+  const { isLoading, data: billData, getBillCall } = useGetBill();
 
   // Memoized values
   const isSplitBill = useMemo(() => Array.isArray(billData), [billData]);
@@ -108,12 +108,13 @@ const MemoGetBill = () => {
     setSelectedBill(null);
   }, []);
 
-  const reprintBillHandler = useCallback(() => {
+  const reprintBillHandler = useCallback(async () => {
+    await getBillCall();
     reprintBill({
       businessId: businessId || '',
       tableName: selectedTable?.name || '',
     });
-  }, [reprintBill, businessId, selectedTable?.name]);
+  }, [reprintBill, businessId, selectedTable?.name, getBillCall]);
 
   const closeMoreOptions = useCallback(() => {
     setShowMoreOption(false);
