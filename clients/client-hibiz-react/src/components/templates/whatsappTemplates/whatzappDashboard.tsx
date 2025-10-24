@@ -10,6 +10,7 @@ import { lazy, memo, useCallback, useState } from 'react';
 import { HiOutlineTemplate } from 'react-icons/hi';
 import { MdCampaign } from 'react-icons/md';
 import { TbSettingsAutomation } from 'react-icons/tb';
+import WhatsAppFlowBuilderWithReactFlow from './flows';
 
 const LinkTemplatePopup = lazy(() => import('./linkTemplatePopup'));
 const WhatsappFlowSection = lazy(() => import('./whatsappFlows'));
@@ -61,8 +62,8 @@ const MemoWhatzappDashboard = () => {
         return <MdCampaign className="mr-2 h-5 w-5" />;
       case Tabs.TEMPLATES:
         return <HiOutlineTemplate className="mr-2 h-5 w-5" />;
-      // case Tabs.FLOWS:
-      //   return <Workflow className="w-5 h-5 mr-2" />;
+      case Tabs.FLOWS:
+        return <Workflow className="mr-2 h-5 w-5" />;
       // case Tabs.AUTOMATION:
       //   return <TbSettingsAutomation className="w-5 h-5 mr-2" />;
       case Tabs.CHATS:
@@ -185,6 +186,7 @@ const MemoWhatzappDashboard = () => {
       {/* {activeTab === Tabs.AUTOMATION && createEditFlow && (
         <WhatsAppAutomationFlow />
       )} */}
+      {activeTab === Tabs.FLOWS && <WhatsAppFlowBuilderWithReactFlow />}
       {activeTab === Tabs.CHATS && <WhatsappChats />}
       {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}
       {activeTab === Tabs.CAMPAIGNS && openAnalytics && <CampaignAdvancedAnalytics />}

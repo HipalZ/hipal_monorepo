@@ -64,6 +64,7 @@ import {
   whatsAppUserAndTextMessage,
 } from "../../utils/whatsappWebhookHandlers/helper";
 import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
+import { waWebhookHandler } from "../../handlers/pos/hipalz/flows";
 interface AxiosError {
   response?: {
     status?: number;
@@ -1762,74 +1763,7 @@ const whatsappRouter = new Hono()
     },
   )
 
-  .post(
-    "/wa-webhooks",
-
-    async (c) => {
-      const body = await c.req.json();
-      if (body.action === "ping") {
-        return c.json(
-          {
-            version: "3.0",
-            data: { status: "active" },
-          },
-          200,
-        );
-      }
-      if (!body?.object) {
-        return c.json({ message: "ignored", err: false }, 200);
-      }
-      if (body.object) {
-        const { messages, contacts, statuses, whatsAppBusinessConfigData } =
-          await whatsAppEventData(body);
-
-        if (
-          messages &&
-          messages?.text?.body?.length > 1 &&
-          whatsAppBusinessConfigData
-        ) {
-          const { userData, userInput } = await whatsAppUserAndTextMessage(
-            contacts,
-            messages,
-            whatsAppBusinessConfigData,
-          );
-
-          const qrType = identifyQrTypeFromMessage(userInput);
-
-          if (qrType?.qrType && qrHandlers[qrType.qrType]) {
-            await qrHandlers[qrType.qrType](
-              qrType.value,
-              userData.phone,
-              userData._id.toString(),
-              userData.name || "Guest",
-              whatsAppBusinessConfigData,
-            );
-          }
-          if (whatsAppBusinessConfigData.chat) {
-            await whatsAppChatHandler(
-              messages?.text?.body,
-              userData._id.toString(),
-              whatsAppBusinessConfigData,
-            );
-          }
-
-          await whatsAppBlockUserHandler(
-            whatsAppBusinessConfigData,
-            userData?.phone,
-            userData._id.toString(),
-            messages?.id,
-            messages?.text?.body,
-          );
-        }
-
-        if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
-          await whatsAppCampaignHandler(whatsAppBusinessConfigData, statuses);
-        }
-
-        return respond(c, "event received", false, 200, {});
-      }
-    },
-  )
+  .post("/wa-webhooks", waWebhookHandler)
 
   .get(
     "/whatsapp_config/:businessId",
