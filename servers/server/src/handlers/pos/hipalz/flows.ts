@@ -22,8 +22,8 @@ const FLOW: {
     { keywords: ["train"], start: "t_img_welcome" },
     { keywords: ["weather"], start: "w_list_cities" },
     {
-      keywords: ["hi"],
-      start: "h56m2w43",
+      keywords: ["hoi"],
+      start: "sx685mle",
     },
   ],
   // nodes: [
@@ -362,47 +362,87 @@ const FLOW: {
   // ],
   nodes: [
     {
-      id: "h56m2w43",
-      type: "interactive_message",
-      layout: "button",
-      header: {
-        type: "image",
-        mediaUrl:
-          "https://t-static.blr1.digitaloceanspaces.com/a768f19b-4704-4f55-b9d7-b8967d1c8963.jpeg",
-        fileName: "ChatGPT Image Oct 11, 2025, 07_28_13 PM.png",
-      },
-      bodyText: "This is the leena support",
-      footerText: "powered by hipalz",
-      buttons: [
-        {
-          id: "opt_v0kd3ay7",
-          title: "image",
-          description: "best image",
-        },
-        {
-          id: "opt_5izy8cls",
-          title: "text",
-          description: "best text",
-        },
-      ],
-      routes: {},
-      next: "9nb2nkud",
+      id: "sx685mle",
+      type: "ask_question",
+      next: "dyz24qrl",
+      prompt: "please enter your email address",
+      variable: "email",
+      inputType: "text",
+      required: true,
     },
     {
-      id: "k0mmgdkr",
-      type: "send_message",
+      id: "dyz24qrl",
+      type: "set_condition",
+      logic: [
+        {
+          var: "email",
+          op: "eq",
+          value: "mvvk96@gmail.com",
+        },
+      ],
+      trueNext: "zqj1a4rq",
+      falseNext: "s4zlrzwa",
+    },
+    {
+      id: "zqj1a4rq",
+      type: "ask_question",
       next: null,
+      prompt: "enter correct email address",
+      variable: "email",
+      inputType: "text",
+      required: true,
+    },
+    {
+      id: "s4zlrzwa",
+      type: "send_message",
+      next: "29n4t766",
       contentType: "text",
-      text: "img",
+      text: "thank you",
       mediaUrl: "",
       fileName: "",
     },
     {
-      id: "9nb2nkud",
+      id: "29n4t766",
+      type: "interactive_message",
+      layout: "button",
+      header: {
+        type: "",
+        mediaUrl: "",
+        fileName: "",
+      },
+      bodyText:
+        "This is the question, and lets choose the options and when you are choosing the option",
+      footerText: "powered by hipalz",
+      buttons: [
+        {
+          id: "opt_6swb9rhe",
+          title: "option 1",
+          description: "",
+        },
+        {
+          id: "opt_illrk8b9",
+          title: "option 2",
+          description: "",
+        },
+      ],
+      routes: {},
+      next: "65e7inur",
+    },
+    {
+      id: "x8piqdbc",
       type: "send_message",
       next: null,
       contentType: "text",
-      text: "txt",
+      text: "You have chosen option 1",
+      mediaUrl: "",
+      fileName: "",
+    },
+    {
+      id: "65e7inur",
+      type: "send_message",
+      next: null,
+      contentType: "text",
+      text: "You have chosen option 2",
       mediaUrl: "",
       fileName: "",
     },
@@ -458,27 +498,28 @@ function evalRow(
   vars: Record<string, any>,
 ) {
   const left = vars[row.var];
+  const right = row.value;
   switch (row.op) {
     case "exists":
-      return !isEmpty(left);
+      return left && left.trim() !== "";
     case "eq":
-      return String(left ?? "") === String(row.value ?? "");
+      return String(left).trim() === String(right).trim();
     case "ne":
-      return String(left ?? "") !== String(row.value ?? "");
+      return String(left).trim() !== String(right).trim();
     case "gt":
-      return Number(left) > Number(row.value);
+      return Number(left) > Number(right);
     case "lt":
-      return Number(left) < Number(row.value);
+      return Number(left) < Number(right);
     case "contains":
-      return String(left ?? "").includes(String(row.value ?? ""));
+      return String(left ?? "").includes(String(right ?? ""));
     default:
       return false;
   }
 }
 function evalCondition(node: any, vars: Record<string, any>) {
-  const logic = node.logic || [];
-  return logic.length ? logic.every((r: any) => evalRow(r, vars)) : false;
+  return node.logic.every((r: any) => evalRow(r, vars));
 }
+
 function matchTriggerStart(userId: string, text?: string) {
   const msg = (text || "").trim().toLowerCase();
   const trig = FLOW.triggers.find((t) =>
@@ -690,12 +731,14 @@ async function advance(
     }
 
     if (node.type === "set_condition") {
-      const ok = evalCondition(node, s.variables);
+      const ok = evalCondition(node, s.variables); // ✅ evaluates true or false
+
       setSession(userId, {
-        currentNodeId: (ok ? node.trueNext : node.falseNext) || null,
+        currentNodeId: (ok ? node.trueNext : node.falseNext) || null, // ✅ if true → go to trueNext, else → falseNext
       });
+
       s = getSession(userId);
-      continue;
+      continue; // ✅ continue advancing the flow to the next node
     }
 
     if (node.type === "interactive_message") {

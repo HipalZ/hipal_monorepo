@@ -1,8 +1,35 @@
 import { useWhatsapp } from '@/components/store/useWhatsapp';
-import { ChevronLeft, ChevronRight, PanelLeftOpen, PanelRightOpen } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/components/utils/helper';
+import {
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  FileText,
+  GripVertical,
+  Hash,
+  ImageIcon,
+  MessageSquare,
+  PanelLeftOpen,
+  PanelRightOpen,
+  Plus,
+  Upload,
+  Variable,
+  X,
+  XCircle,
+} from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
+  BaseEdge,
   Controls,
   Handle,
   MiniMap,
@@ -11,6 +38,7 @@ import ReactFlow, {
   addEdge,
   applyEdgeChanges,
   applyNodeChanges,
+  getBezierPath,
   useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -38,6 +66,15 @@ const NodeTypes = {
   FORM: 'form',
 };
 
+function ButtonEdge({ id, sourceX, sourceY, targetX, targetY, markerEnd }) {
+  const [path] = getBezierPath({ sourceX, sourceY, targetX, targetY });
+  return <BaseEdge id={id} path={path} markerEnd={markerEnd} />;
+}
+
+const edgeTypes = {
+  button: ButtonEdge,
+};
+
 const INPUT_TYPES = [
   { id: 'text', label: 'Text' },
   { id: 'phone', label: 'Phone' },
@@ -46,9 +83,6 @@ const INPUT_TYPES = [
 ];
 
 const nid = () => Math.random().toString(36).slice(2, 10);
-const cls = (...arr) => arr.filter(Boolean).join(' ');
-
-// ----------------- Custom Node UIs -----------------
 function BaseNode({ data, selected, children, border = '#262626' }) {
   return (
     <div className="min-w-[260px] rounded-xl border bg-white text-neutral-100" style={{ borderColor: selected ? '#10b981' : border }}>
@@ -56,11 +90,7 @@ function BaseNode({ data, selected, children, border = '#262626' }) {
         <span className="text-lg" role="img" aria-label="icon">
           {data.icon}
         </span>
-        <input
-          value={data.name || 'Untitled'}
-          onChange={(e) => data.onPatch({ name: e.target.value })}
-          className="flex-1 bg-transparent outline-none"
-        />
+        <h1 className="flex-1 font-semibold text-neutral-900">{data.name}</h1>
       </div>
       <div className="space-y-2 p-3 text-sm">{children}</div>
     </div>
@@ -73,130 +103,250 @@ function SendNode({ data, selected }) {
   const { setImageFiles } = useWhatsapp((s) => ({
     setImageFiles: s.setImageFiles,
   }));
+
+  const [newVar, setNewVar] = useState('');
+  const [showAddVar, setShowAddVar] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const textRef = useRef(null);
+
+  const insertVariable = (variable) => {
+    if (!variable) return;
+    const el = textRef.current;
+    const placeholder = `{{${variable}}}`;
+    if (!el) return;
+
+    const start = el.selectionStart || 0;
+    const end = el.selectionEnd || 0;
+    const currentText = m.text || '';
+    const newText = currentText.substring(0, start) + placeholder + currentText.substring(end);
+
+    data.onPatch({ meta: { ...m, text: newText } });
+
+    // Restore focus and cursor position
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(start + placeholder.length, start + placeholder.length);
+    }, 0);
+  };
+
+  const handleAddVariable = () => {
+    const v = newVar.trim();
+    if (!v || data.variables.includes(v)) return;
+
+    const updated = [...data.variables, v];
+    data.onPatch({ variables: updated });
+    data.updateGlobalVariables?.([v]);
+    insertVariable(v);
+    setNewVar('');
+    setShowAddVar(false);
+  };
+
+  const handleFileChange = async (file) => {
+    if (!file) return;
+    setImageFiles(file);
+    data.onPatch({ meta: { ...m, uploading: true } });
+
+    try {
+      const { url } = await uploadMedia();
+      data.onPatch({
+        meta: {
+          ...m,
+          mediaUrl: url,
+          fileName: file.name,
+          uploading: false,
+        },
+      });
+    } catch (err) {
+      console.error('Upload failed', err);
+      data.onPatch({ meta: { ...m, uploading: false } });
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      handleFileChange(file);
+    }
+  };
+
+  const contentTypes = [
+    { value: 'text', label: 'Text', icon: <FileText className="h-3 w-3" /> },
+    { value: 'image', label: 'Image', icon: <ImageIcon className="h-3 w-3" /> },
+    { value: 'document', label: 'Document', icon: <FileText className="h-3 w-3" /> },
+  ];
+
   return (
-    <div>
-      <Handle type="target" position={Position.Left} />
-      <BaseNode data={data} selected={selected}>
-        <div className="flex gap-2">
-          {['text', 'image', 'document'].map((t) => (
-            <button
-              type="button"
-              key={t}
-              onClick={() => data.onPatch({ meta: { ...m, contentType: t } })}
-              className={cls(
-                'rounded border px-2 py-1 text-xs',
-                m.contentType === t ? 'border-emerald-500 bg-emerald-600' : 'border-neutral-700 bg-neutral-800',
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-        {m.contentType === 'text' && (
-          <textarea
-            value={m.text || ''}
-            onChange={(e) => data.onPatch({ meta: { ...m, text: e.target.value } })}
-            placeholder="Message... use {{name}}"
-            rows={4}
-            className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
-          />
+    <div className="relative">
+      <Handle type="target" position={Position.Left} className="opacity-0" />
+
+      <Card
+        className={cn(
+          'w-80 border-2 shadow-lg transition-all',
+          selected ? 'border-emerald-500 ring-2 ring-emerald-500 ring-opacity-20' : 'border-neutral-700',
+          'bg-gray-200 text-gray-900',
         )}
-        {m.contentType === 'image' && (
-          <div className="space-y-3">
-            <select
-              value={m.mediaType || 'url'}
-              onChange={(e) => data.onPatch({ meta: { ...m, mediaType: e.target.value } })}
-              className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
-            >
-              <option value="url">Use URL</option>
-              <option value="upload">Upload Image</option>
-            </select>
+      >
+        <div className="space-y-4 p-4">
+          {/* Header: Content Type Tabs */}
+          <div className="flex gap-1 rounded-lg p-1">
+            {contentTypes.map((type) => (
+              <Button
+                key={type.value}
+                variant={m.contentType === type.value ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => data.onPatch({ meta: { ...m, contentType: type.value } })}
+                className={cn(
+                  'flex-1 gap-1 text-xs font-medium',
+                  m.contentType === type.value
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    : 'text-gray-400 hover:bg-gray-700 hover:text-white',
+                )}
+              >
+                {type.icon}
+                {type.label}
+              </Button>
+            ))}
+          </div>
 
-            {m.mediaType === 'url' ? (
-              <input
-                value={m.mediaUrl || ''}
-                onChange={(e) => data.onPatch({ meta: { ...m, mediaUrl: e.target.value } })}
-                placeholder="Paste image URL..."
-                className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
-              />
-            ) : (
+          {/* TEXT CONTENT */}
+          {m.contentType === 'text' && (
+            <div className="space-y-3">
+              {/* Variables */}
               <div className="space-y-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
+                <div className="flex flex-wrap gap-1">
+                  {data.variables.map((v) => (
+                    <Badge
+                      key={v}
+                      variant="secondary"
+                      className="cursor-pointer px-2 py-0.5 text-xs font-medium transition-colors hover:bg-emerald-600"
+                      onClick={() => insertVariable(v)}
+                    >
+                      {v}
+                    </Badge>
+                  ))}
+                  {data.variables.length === 0 && <p className="text-xs italic text-gray-500">No variables yet</p>}
+                </div>
 
-                    // store file in global store for upload hook
-                    setImageFiles(file);
-
-                    try {
-                      data.onPatch({ meta: { ...m, uploading: true } });
-                      const { url, handle } = await uploadMedia();
-
-                      // update the node with uploaded file info
-                      data.onPatch({
-                        meta: {
-                          ...m,
-                          mediaUrl: url,
-                          fileHandle: handle,
-                          fileName: file.name,
-                          uploading: false,
-                        },
-                      });
-                    } catch (err) {
-                      console.error('Upload failed', err);
-                      data.onPatch({ meta: { ...m, uploading: false } });
-                    }
-                  }}
-                  className="w-full text-xs"
-                />
-
-                {m.uploading && <div className="text-xs text-neutral-400">Uploading...</div>}
-
-                {m.mediaUrl && (
-                  <div className="mt-2">
-                    <img src={m.mediaUrl} alt="preview" className="rounded-lg border border-neutral-800" />
-                    <div className="mt-1 text-xs text-neutral-400">Uploaded: {m.fileName}</div>
+                {/* Add variable form */}
+                {showAddVar ? (
+                  <div className="flex gap-2">
+                    <Input
+                      value={newVar}
+                      onChange={(e) => setNewVar(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddVariable()}
+                      placeholder="new_variable"
+                      className="h-8 text-xs"
+                      autoFocus
+                    />
+                    <Button size="sm" onClick={handleAddVariable} className="h-8 px-3">
+                      Add
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setShowAddVar(false)} className="h-8 px-3">
+                      <X className="h-3 w-3" />
+                    </Button>
                   </div>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setShowAddVar(true)} className="h-8 w-full text-xs">
+                    <Plus className="mr-1 h-3 w-3" /> Add Variable
+                  </Button>
                 )}
               </div>
-            )}
 
-            <input
-              value={m.caption || ''}
-              onChange={(e) => data.onPatch({ meta: { ...m, caption: e.target.value } })}
-              placeholder="Caption (optional)"
-              className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
-            />
-          </div>
-        )}
+              {/* Message Textarea */}
+              <Textarea
+                ref={textRef}
+                value={m.text || ''}
+                onChange={(e) => data.onPatch({ meta: { ...m, text: e.target.value } })}
+                placeholder="Type your message... use {{variable}} for dynamic content"
+                className="min-h-24 resize-none border-neutral-700 text-sm placeholder:text-gray-500"
+              />
+            </div>
+          )}
 
-        {m.contentType === 'document' && (
-          <div className="space-y-2">
-            <input
-              value={m.mediaUrl || ''}
-              onChange={(e) => data.onPatch({ meta: { ...m, mediaUrl: e.target.value } })}
-              placeholder="Document URL"
-              className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
-            />
-            <input
-              value={m.fileName || ''}
-              onChange={(e) => data.onPatch({ meta: { ...m, fileName: e.target.value } })}
-              placeholder="File name"
-              className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
-            />
-          </div>
-        )}
-      </BaseNode>
-      <Handle type="source" position={Position.Right} />
+          {/* IMAGE CONTENT */}
+          {m.contentType === 'image' && (
+            <div className="space-y-3">
+              {/* Upload Area */}
+              <div
+                className={cn(
+                  'rounded-lg border-2 border-dashed p-4 text-center transition-colors',
+                  isDragging ? 'border-emerald-500 bg-emerald-900/20' : 'border-neutral-700',
+                  m.mediaUrl && 'border-solid',
+                )}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+              >
+                {m.uploading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-32 w-full rounded" />
+                    <p className="text-xs text-gray-400">Uploading...</p>
+                  </div>
+                ) : m.mediaUrl ? (
+                  <div className="space-y-2">
+                    <img src={m.mediaUrl} alt="Preview" className="mx-auto h-32 w-32 rounded-lg border border-neutral-700 object-cover" />
+                    <p className="truncate text-xs text-gray-400">{m.fileName}</p>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => data.onPatch({ meta: { ...m, mediaUrl: '', fileName: '', uploading: false } })}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <label className="block cursor-pointer">
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e.target.files?.[0])} />
+                    <Upload className="mx-auto mb-2 h-8 w-8 text-gray-500" />
+                    <p className="text-xs text-gray-400">Drop image or click to upload</p>
+                  </label>
+                )}
+              </div>
+
+              {/* Caption */}
+              <Input
+                value={m.caption || ''}
+                onChange={(e) => data.onPatch({ meta: { ...m, caption: e.target.value } })}
+                placeholder="Caption (optional)"
+                className="text-sm"
+              />
+            </div>
+          )}
+
+          {/* DOCUMENT CONTENT */}
+          {m.contentType === 'document' && (
+            <div className="space-y-3">
+              <Input
+                value={m.mediaUrl || ''}
+                onChange={(e) => data.onPatch({ meta: { ...m, mediaUrl: e.target.value } })}
+                placeholder="Document URL"
+                className="text-sm"
+              />
+              <Input
+                value={m.fileName || ''}
+                onChange={(e) => data.onPatch({ meta: { ...m, fileName: e.target.value } })}
+                placeholder="Display file name"
+                className="text-sm"
+              />
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Handle type="source" position={Position.Right} className="opacity-0" />
     </div>
   );
 }
 
 function InteractiveNode({ data, selected }) {
   const m = data.meta || {};
+  console.log('InteractiveNode meta', m);
   const { uploadMedia } = useMediaUpload();
   const { setImageFiles } = useWhatsapp((s) => ({
     setImageFiles: s.setImageFiles,
@@ -230,7 +380,7 @@ function InteractiveNode({ data, selected }) {
                 meta: { ...m, header: { type: e.target.value, mediaUrl: '' } },
               })
             }
-            className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+            className="w-full rounded border border-neutral-800 px-3 py-2"
           >
             <option value="">None</option>
             <option value="image">Image</option>
@@ -279,31 +429,31 @@ function InteractiveNode({ data, selected }) {
           onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
           placeholder="Body text..."
           rows={3}
-          className="mt-3 w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+          className="mt-3 w-full rounded border border-neutral-800 px-3 py-2"
         />
         <input
           value={m.footerText || ''}
           onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
           placeholder="Footer (optional)"
-          className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+          className="w-full rounded border border-neutral-800 px-3 py-2"
         />
 
         {/* Buttons */}
         <div className="mt-3 space-y-2 border-t border-neutral-800 pt-2">
           <div className="flex items-center justify-between">
             <div className="text-xs text-neutral-400">Buttons</div>
-            <Button onClick={addButton} className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs hover:bg-neutral-700">
+            <Button onClick={addButton} className="rounded border border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-700">
               + Add
             </Button>
           </div>
 
           {(m.buttons || []).map((btn, i) => (
-            <div key={i} className="flex flex-col gap-2 rounded-lg border border-neutral-800 bg-neutral-900 p-2">
+            <div key={i} className="flex flex-col gap-2 rounded-lg border border-neutral-800 p-2">
               <div className="flex items-center gap-2">
                 <select
                   value={btn.type}
                   onChange={(e) => updateButton(i, { type: e.target.value, url: '' })}
-                  className="rounded border border-neutral-800 bg-neutral-950 px-2 py-1 text-xs"
+                  className="rounded border border-neutral-800 px-2 py-1 text-xs"
                 >
                   <option value="reply">Reply</option>
                   <option value="url">URL</option>
@@ -312,7 +462,7 @@ function InteractiveNode({ data, selected }) {
                   value={btn.title}
                   onChange={(e) => updateButton(i, { title: e.target.value })}
                   placeholder="Button Title"
-                  className="flex-1 rounded border border-neutral-800 bg-neutral-950 px-2 py-1 text-xs"
+                  className="flex-1 rounded border border-neutral-800 px-2 py-1 text-xs"
                 />
                 <Button onClick={() => removeButton(i)} className="rounded bg-red-600 px-2 py-1 text-xs">
                   ✕
@@ -323,7 +473,7 @@ function InteractiveNode({ data, selected }) {
                   value={btn.url || ''}
                   onChange={(e) => updateButton(i, { url: e.target.value })}
                   placeholder="https://..."
-                  className="w-full rounded border border-neutral-800 bg-neutral-950 px-2 py-1 text-xs"
+                  className="w-full rounded border border-neutral-800 px-2 py-1 text-xs"
                 />
               )}
             </div>
@@ -345,13 +495,13 @@ function AskNode({ data, selected }) {
           value={m.prompt || ''}
           onChange={(e) => data.onPatch({ meta: { ...m, prompt: e.target.value } })}
           placeholder="Ask something..."
-          className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+          className="w-full rounded border border-neutral-800 px-3 py-2"
         />
         <div className="grid grid-cols-2 gap-2">
           <select
             value={m.variable || ''}
             onChange={(e) => data.onPatch({ meta: { ...m, variable: e.target.value } })}
-            className="rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+            className="rounded border border-neutral-800 px-3 py-2"
           >
             <option value="">store in variable</option>
             {data.variables.map((v) => (
@@ -363,7 +513,7 @@ function AskNode({ data, selected }) {
           <select
             value={m.inputType || 'text'}
             onChange={(e) => data.onPatch({ meta: { ...m, inputType: e.target.value } })}
-            className="rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+            className="rounded border border-neutral-800 px-3 py-2"
           >
             {INPUT_TYPES.map((t) => (
               <option key={t.id} value={t.id}>
@@ -383,58 +533,11 @@ function AskNode({ data, selected }) {
 }
 
 function CondNode({ data, selected }) {
-  const logic = data.meta.logic || [];
   return (
     <div>
       <Handle type="target" position={Position.Left} />
       <BaseNode data={data} selected={selected} border="#fbbf24">
-        <div className="space-y-2">
-          {logic.map((l, i) => (
-            <div key={i} className="grid grid-cols-12 items-center gap-2">
-              <select
-                value={l.var || ''}
-                onChange={(e) => data.updateLogic(i, { var: e.target.value })}
-                className="col-span-5 rounded border border-neutral-800 bg-neutral-950 px-2 py-1"
-              >
-                <option value="">variable</option>
-                {data.variables.map((v) => (
-                  <option key={v} value={v}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={l.op || 'eq'}
-                onChange={(e) => data.updateLogic(i, { op: e.target.value })}
-                className="col-span-3 rounded border border-neutral-800 bg-neutral-950 px-2 py-1"
-              >
-                <option value="exists">exists</option>
-                <option value="eq">=</option>
-                <option value="ne">≠</option>
-                <option value="gt">&gt;</option>
-                <option value="lt">&lt;</option>
-                <option value="contains">contains</option>
-              </select>
-              <input
-                value={l.value ?? ''}
-                onChange={(e) => data.updateLogic(i, { value: e.target.value })}
-                placeholder="value"
-                className="col-span-3 rounded border border-neutral-800 bg-neutral-950 px-2 py-1"
-              />
-              <Button className="col-span-1 rounded bg-red-600 px-2 py-1" onClick={() => data.removeLogic(i)}>
-                ✕
-              </Button>
-            </div>
-          ))}
-          <Button
-            type="button"
-            className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1 text-xs hover:bg-neutral-700"
-            onClick={data.addLogic}
-          >
-            + Add condition
-          </Button>
-          <div className="text-xs text-neutral-400">Handles: right = TRUE, bottom = FALSE.</div>
-        </div>
+        <div className="space-y-2" />
       </BaseNode>
       <Handle id="true" type="source" position={Position.Right} />
       <Handle id="false" type="source" position={Position.Bottom} />
@@ -452,7 +555,7 @@ function TemplateNode({ data, selected }) {
           value={data.meta.templateId || ''}
           onChange={(e) => data.onPatch({ meta: { ...data.meta, templateId: e.target.value } })}
           placeholder="template id"
-          className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+          className="w-full rounded border border-neutral-800 px-3 py-2"
         />
         <div className="space-y-1">
           {entries.map(([k]) => (
@@ -463,7 +566,7 @@ function TemplateNode({ data, selected }) {
         </div>
         <button
           type="button"
-          className="mt-2 rounded border border-neutral-700 bg-neutral-800 px-3 py-1 text-xs hover:bg-neutral-700"
+          className="mt-2 rounded border border-neutral-700 px-3 py-1 text-xs hover:bg-neutral-700"
           onClick={() => {
             const key = prompt('Enter button payload/text key') || '';
             if (!key) return;
@@ -492,25 +595,14 @@ function TriggerNode({ data, selected }) {
       <BaseNode data={data} selected={selected}>
         <div className="flex flex-wrap gap-2">
           {(data.meta.keywords || []).map((k) => (
-            <span key={k} className="rounded-full border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs">
+            <span key={k} className="rounded-full border border-neutral-700 px-2 py-1 text-xs">
               {k}
             </span>
           ))}
         </div>
-        <div className="flex gap-2">
-          <input
-            placeholder="add keyword"
-            value={data._kw || ''}
-            onChange={(e) => data._setKw(e.target.value)}
-            className="flex-1 rounded border border-neutral-800 bg-neutral-950 px-2 py-1"
-          />
-          <Button type="button" className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs" onClick={() => data.addKeyword()}>
-            Add
-          </Button>
-        </div>
-        <div className="text-xs text-neutral-400">Connect bottom handle to first node.</div>
+        <div className="text-xs text-neutral-400">Connect handle to first node.</div>
       </BaseNode>
-      <Handle id="start" type="source" position={Position.Bottom} />
+      <Handle id="start" type="source" position={Position.Right} />
     </div>
   );
 }
@@ -538,7 +630,22 @@ function EditorShell() {
   const [rfEdges, setRfEdges] = useState([]);
   const [selId, setSelId] = useState(null);
   const [variables, setVariables] = useState(['name', 'phone', 'email']);
-  const [templates, setTemplates] = useState([]);
+  const updateGlobalVariables = (newVars) => {
+    setVariables((prev) => {
+      const merged = Array.from(new Set([...prev, ...newVars]));
+      return merged;
+    });
+
+    // Also patch all nodes to refresh their local variable list
+    setRfNodes((nds) =>
+      nds.map((n) => ({
+        ...n,
+        data: { ...n.data, variables: Array.from(new Set([...n.data.variables, ...newVars])) },
+      })),
+    );
+  };
+
+  // const [templates, setTemplates] = useState([]);
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
 
@@ -560,28 +667,26 @@ function EditorShell() {
     setRfEdges((eds) => addEdge(edge, eds));
   }, []);
 
-  const addNode = useCallback(
-    (type, position) => {
-      const id = nid();
-      setRfNodes((nds) => [
-        ...nds,
-        makeNode({
-          id,
-          type,
-          position,
-          variables,
-          patch: (p) => patchNode(id, p),
-          addKw: (kw) => addKeyword(id, kw),
-          setKw: (v) => setKwDraft(id, v),
-          addLogic: () => addLogic(id),
-          removeLogic: (i) => removeLogic(id, i),
-          updateLogic: (i, p) => updateLogic(id, i, p),
-        }),
-      ]);
-      setSelId(id);
-    },
-    [variables],
-  );
+  function addNode(type, position) {
+    const id = nid();
+    setRfNodes((nds) => [
+      ...nds,
+      makeNode({
+        id,
+        type,
+        position,
+        variables,
+        patch: (p) => patchNode(id, p),
+        addKw: (kw) => addKeyword(id, kw),
+        setKw: (v) => setKwDraft(id, v),
+        addLogic: () => addLogic(id),
+        removeLogic: (i) => removeLogic(id, i),
+        updateLogic: (i, p) => updateLogic(id, i, p),
+        updateGlobalVariables, // 👈 passed here
+      }),
+    ]);
+    setSelId(id);
+  }
 
   const onDrop = useCallback(
     (event) => {
@@ -677,28 +782,35 @@ function EditorShell() {
   const finalObject = useMemo(() => buildFinalFromGraph(rfNodes, rfEdges), [rfNodes, rfEdges]);
 
   return (
-    <div className="flex h-[100vh] w-full overflow-hidden bg-neutral-950 text-neutral-100">
+    <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden text-neutral-100">
       {/* LEFT SIDEBAR */}
       <div className={`relative border-r border-neutral-800 transition-all duration-300 ${leftOpen ? 'w-[300px]' : 'w-[44px]'}`}>
         <div className="absolute right-4 top-3 z-20">
-          <button onClick={() => setLeftOpen((v) => !v)} className="rounded-full border border-neutral-700 bg-neutral-800 p-1 hover:bg-neutral-700">
+          <button type="button" onClick={() => setLeftOpen((v) => !v)} className="rounded-full border border-neutral-700 p-1 hover:bg-neutral-700">
             {leftOpen ? <ChevronLeft className="h-4 w-4 text-neutral-300" /> : <PanelLeftOpen className="h-4 w-4 text-neutral-300" />}
           </button>
         </div>
 
         {leftOpen && (
           <div className="h-full space-y-3 overflow-y-auto p-4">
-            <h2 className="text-xl font-semibold">Add blocks</h2>
+            <h2 className="text-xl font-semibold">Chat Bot</h2>
             <PaletteItem label="Send Message" type={NodeTypes.SEND} icon="💬" />
             <PaletteItem label="Ask a Question" type={NodeTypes.ASK} icon="❓" />
             <PaletteItem label="Set a Condition" type={NodeTypes.COND} icon="🔀" />
             <PaletteItem label="Trigger Keyword" type={NodeTypes.TRIGGER} icon="🏁" />
             <PaletteItem label="Interactive Form" type={NodeTypes.FORM} icon="🧩" />
 
-            {/* <div className="pt-6">
+            <div className="pt-6">
               <h3 className="mb-2 text-sm uppercase tracking-wide text-neutral-400">Variables</h3>
-              <VariableEditor variables={variables} setVariables={setVariables} />
-            </div> */}
+              <VariableEditor
+                variables={variables}
+                setVariables={setVariables}
+                onNext={() => {
+                  setLeftOpen(false);
+                  alert('Variables saved. You can now start building your flow!');
+                }}
+              />
+            </div>
 
             {/* <div className="pt-6">
               <h3 className="mb-2 text-sm uppercase tracking-wide text-neutral-400">Templates</h3>
@@ -709,7 +821,7 @@ function EditorShell() {
               <Button className="w-full rounded-lg bg-emerald-600 py-2 hover:bg-emerald-500" onClick={() => downloadJSON(finalObject)}>
                 Export JSON
               </Button>
-              <Button className="w-full rounded-lg bg-neutral-800 py-2 hover:bg-neutral-700" onClick={() => loadSample(setRfNodes, setRfEdges)}>
+              <Button className="w-full rounded-lg py-2 hover:bg-neutral-700" onClick={() => loadSample(setRfNodes, setRfEdges)}>
                 Load Sample
               </Button>
             </div>
@@ -729,6 +841,7 @@ function EditorShell() {
           onDragOver={onDragOver}
           onNodeClick={(_, n) => setSelId(n.id)}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
         >
           <Background />
@@ -740,7 +853,7 @@ function EditorShell() {
       {/* RIGHT SIDEBAR */}
       <div className={`relative border-l border-neutral-800 transition-all duration-300 ${rightOpen ? 'w-[380px]' : 'w-[44px]'}`}>
         <div className="absolute left-0 top-3 z-20">
-          <button onClick={() => setRightOpen((v) => !v)} className="rounded-full border border-neutral-700 bg-neutral-800 p-1 hover:bg-neutral-700">
+          <button type="button" onClick={() => setRightOpen((v) => !v)} className="rounded-full border border-neutral-700 p-1 hover:bg-neutral-700">
             {rightOpen ? <ChevronRight className="h-4 w-4 text-neutral-300" /> : <PanelRightOpen className="h-4 w-4 text-neutral-300" />}
           </button>
         </div>
@@ -754,7 +867,7 @@ function EditorShell() {
             )}
             <div className="pt-4">
               <h3 className="mb-2 text-sm uppercase tracking-wide text-neutral-400">Live JSON</h3>
-              <pre className="max-h-[40vh] overflow-auto rounded-lg border border-neutral-800 bg-neutral-900 p-3 text-xs">
+              <pre className="max-h-[40vh] overflow-auto rounded-lg border border-neutral-800 p-3 text-xs">
                 {JSON.stringify(finalObject, null, 2)}
               </pre>
             </div>
@@ -780,7 +893,7 @@ function PaletteItem({ label, type, icon }) {
     <div
       draggable
       onDragStart={onDragStart}
-      className="flex cursor-move items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 hover:bg-neutral-700"
+      className="flex cursor-move items-center gap-2 rounded-lg border border-neutral-700 px-3 py-2 hover:bg-neutral-700"
     >
       <span className="text-lg">{icon}</span>
       <span>{label}</span>
@@ -788,46 +901,87 @@ function PaletteItem({ label, type, icon }) {
   );
 }
 
-function VariableEditor({ variables, setVariables }) {
+function VariableEditor({ variables, setVariables, onNext }) {
   const [v, setV] = useState('');
+  const [step, setStep] = useState<'list' | 'add'>('list');
+  const [error, setError] = useState('');
 
-  const addVar = () => {
+  const handleAdd = () => {
     const name = v.trim();
-    if (!name) return;
-    if (!variables.includes(name)) {
-      setVariables((prev) => [...prev, name]);
+    if (!name) {
+      setError('Variable name required');
+      return;
     }
+    if (variables.includes(name)) {
+      setError('Variable already exists');
+      return;
+    }
+    setVariables([...variables, name]);
     setV('');
-  };
-
-  const removeVar = (name) => {
-    setVariables((prev) => prev.filter((x) => x !== name));
+    setError('');
+    setStep('list'); // go back to list view after adding
   };
 
   return (
-    <div className="space-y-2 rounded-xl border border-neutral-800 p-3">
-      <div className="flex gap-2">
-        <input
-          value={v}
-          onChange={(e) => setV(e.target.value)}
-          placeholder="variable_name"
-          className="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 focus:outline-none"
-        />
-        <Button onClick={addVar} className="rounded-lg bg-emerald-600 px-3 py-2 hover:bg-emerald-500">
-          Add
-        </Button>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {variables.map((vv) => (
-          <span key={vv} className="flex items-center gap-1 rounded-full border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs">
-            {vv}
-            <Button onClick={() => removeVar(vv)} className="text-red-400 hover:text-red-300">
-              ✕
+    <div className="space-y-3 rounded-xl border border-neutral-800 p-4">
+      {step === 'list' && (
+        <>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm uppercase tracking-wide text-neutral-400">Variables</h3>
+            <Button className="rounded-lg border border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-700" onClick={() => setStep('add')}>
+              + Add
             </Button>
-          </span>
-        ))}
-      </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {variables.length === 0 && <span className="text-xs text-neutral-500">No variables added yet.</span>}
+            {variables.map((vv) => (
+              <span key={vv} className="flex items-center gap-1 rounded-full border border-neutral-700 px-2 py-1 text-xs">
+                {vv}
+                <button onClick={() => setVariables((prev) => prev.filter((x) => x !== vv))} className="text-red-400 hover:text-red-300">
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+
+          {variables.length > 0 && (
+            <div className="pt-3">
+              <Button className="w-full rounded-lg bg-emerald-600 py-2 text-sm font-semibold hover:bg-emerald-500" onClick={() => onNext?.()}>
+                Next →
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+
+      {step === 'add' && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-neutral-300">Add a New Variable</h3>
+          <input
+            value={v}
+            onChange={(e) => setV(e.target.value)}
+            placeholder="Enter variable name (e.g. name, phone)"
+            className="w-full rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-100 focus:outline-none"
+          />
+          {error && <div className="text-xs text-red-400">{error}</div>}
+          <div className="flex gap-2">
+            <Button onClick={handleAdd} className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold hover:bg-emerald-500">
+              Add Variable
+            </Button>
+            <Button
+              onClick={() => {
+                setStep('list');
+                setV('');
+                setError('');
+              }}
+              className="rounded-lg py-2 text-sm font-semibold hover:bg-neutral-700"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -840,7 +994,7 @@ function TemplateList({ templates, onUpdate }) {
   return (
     <div className="space-y-3 rounded-xl border border-neutral-800 p-3">
       <label className="text-sm text-neutral-300">Select Template</label>
-      <select value={sel} onChange={(e) => setSel(e.target.value)} className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2">
+      <select value={sel} onChange={(e) => setSel(e.target.value)} className="w-full rounded-lg border border-neutral-700 px-3 py-2">
         {templates.map((t) => (
           <option key={t.id} value={t.id}>
             {t.name}
@@ -865,17 +1019,17 @@ function TemplateList({ templates, onUpdate }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Name"
-          className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+          className="w-full rounded-lg border border-neutral-700 px-3 py-2"
         />
         <div className="flex gap-2">
           <input
             value={btn}
             onChange={(e) => setBtn(e.target.value)}
             placeholder="Button text"
-            className="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+            className="flex-1 rounded-lg border border-neutral-700 px-3 py-2"
           />
           <Button
-            className="rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 hover:bg-neutral-700"
+            className="rounded-lg border border-neutral-700 px-3 py-2 hover:bg-neutral-700"
             onClick={() => {
               if (!name.trim()) return;
               const t = {
@@ -905,7 +1059,7 @@ export function ButtonListEditor({ buttons, onChange }) {
     <div>
       <div className="flex gap-2">
         <input
-          className="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+          className="flex-1 rounded-lg border border-neutral-700 px-3 py-2"
           placeholder="Button title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -942,14 +1096,14 @@ export function ListEditor({ list, onChange }) {
         placeholder="List button text"
         value={list.buttonText}
         onChange={(e) => onChange({ ...list, buttonText: e.target.value })}
-        className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+        className="w-full rounded-lg border border-neutral-700 px-3 py-2"
       />
       <input
         type="text"
         placeholder="Section title"
         value={section}
         onChange={(e) => setSection(e.target.value)}
-        className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+        className="w-full rounded-lg border border-neutral-700 px-3 py-2"
       />
       <button
         className="rounded-lg bg-emerald-600 px-3 py-2"
@@ -972,15 +1126,11 @@ export function ListEditor({ list, onChange }) {
 function NodeInspector({ node, onPatch, remove, vars }) {
   const data = node.data || {};
   return (
-    <div className="space-y-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
+    <div className="space-y-3 rounded-xl border border-neutral-800 p-3">
       <div className="flex items-center justify-between gap-2">
         <div>
           <label className="text-xs text-neutral-400">Display name</label>
-          <input
-            value={data.name || 'Untitled'}
-            onChange={(e) => onPatch({ name: e.target.value })}
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2"
-          />
+          <h1 className="flex-1 font-semibold text-neutral-900">{data.name || 'Untitled'}</h1>
         </div>
         <Button className="rounded bg-red-600 px-3 py-2" onClick={remove}>
           Delete
@@ -998,7 +1148,7 @@ function NodeInspector({ node, onPatch, remove, vars }) {
           <select
             value={node.data.layout || 'button'}
             onChange={(e) => onPatch({ layout: e.target.value })}
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+            className="w-full rounded-lg border border-neutral-700 px-3 py-2"
           >
             <option value="button">Button</option>
             <option value="list">List</option>
@@ -1011,14 +1161,14 @@ function NodeInspector({ node, onPatch, remove, vars }) {
             value={node.data.bodyText || ''}
             onChange={(e) => onPatch({ bodyText: e.target.value })}
             placeholder="Body Text"
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+            className="w-full rounded-lg border border-neutral-700 px-3 py-2"
           />
           <input
             type="text"
             value={node.data.footerText || ''}
             onChange={(e) => onPatch({ footerText: e.target.value })}
             placeholder="Footer Text"
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+            className="w-full rounded-lg border border-neutral-700 px-3 py-2"
           />
 
           {/* Header section */}
@@ -1027,7 +1177,7 @@ function NodeInspector({ node, onPatch, remove, vars }) {
             <select
               value={node.data.header?.type || ''}
               onChange={(e) => onPatch({ header: { ...node.data.header, type: e.target.value } })}
-              className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+              className="w-full rounded-lg border border-neutral-700 px-3 py-2"
             >
               <option value="">None</option>
               <option value="image">Image</option>
@@ -1045,7 +1195,7 @@ function NodeInspector({ node, onPatch, remove, vars }) {
                   })
                 }
                 placeholder="Header Media URL"
-                className="mt-2 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+                className="mt-2 w-full rounded-lg border border-neutral-700 px-3 py-2"
               />
             )}
           </div>
@@ -1064,14 +1214,14 @@ function NodeInspector({ node, onPatch, remove, vars }) {
                 value={node.data.cta?.label || ''}
                 onChange={(e) => onPatch({ cta: { ...node.data.cta, label: e.target.value } })}
                 placeholder="Button Label"
-                className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+                className="w-full rounded-lg border border-neutral-700 px-3 py-2"
               />
               <input
                 type="text"
                 value={node.data.cta?.url || ''}
                 onChange={(e) => onPatch({ cta: { ...node.data.cta, url: e.target.value } })}
                 placeholder="Button URL"
-                className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2"
+                className="w-full rounded-lg border border-neutral-700 px-3 py-2"
               />
             </div>
           )}
@@ -1081,64 +1231,104 @@ function NodeInspector({ node, onPatch, remove, vars }) {
   );
 }
 
-function SendQuick({
-  meta = {
-    contentType: 'text',
-    mediaUrl: '',
-    text: '',
-    fileName: '',
-  },
-  onPatch,
-}) {
+const contentTypes = [
+  { id: 'text', label: 'Text', icon: MessageSquare },
+  { id: 'image', label: 'Image', icon: Image },
+  { id: 'document', label: 'Document', icon: FileText },
+];
+
+function SendQuick({ meta = {}, onPatch }) {
+  const currentMeta = { ...meta };
+  const { contentType, text, mediaUrl, fileName } = currentMeta;
+
   return (
-    <div className="space-y-2">
-      <div className="flex gap-2">
-        {['text', 'image', 'document'].map((t) => (
-          <Button
-            key={t}
-            onClick={() => onPatch({ ...meta, contentType: t })}
-            className={cls(
-              'rounded border px-2 py-1 text-xs',
-              meta.contentType === t ? 'border-emerald-500 bg-emerald-600' : 'border-neutral-700 bg-neutral-800',
-            )}
-          >
-            {t}
-          </Button>
-        ))}
-      </div>
-      {meta.contentType === 'text' && (
-        <textarea
-          value={meta.text || ''}
-          onChange={(e) => onPatch({ ...meta, text: e.target.value })}
-          placeholder="Message..."
-          rows={4}
-          className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
-        />
-      )}
-      {meta.contentType === 'image' && (
-        <input
-          value={meta.mediaUrl || ''}
-          onChange={(e) => onPatch({ ...meta, mediaUrl: e.target.value })}
-          placeholder="Image URL"
-          className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
-        />
-      )}
-      {meta.contentType === 'document' && (
-        <div className="space-y-2">
-          <input
-            value={meta.mediaUrl || ''}
-            onChange={(e) => onPatch({ ...meta, mediaUrl: e.target.value })}
-            placeholder="Document URL"
-            className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
-          />
-          <input
-            value={meta.fileName || ''}
-            onChange={(e) => onPatch({ ...meta, fileName: e.target.value })}
-            placeholder="File name"
-            className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
-          />
+    // 1. Main Card Wrapper
+    <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="space-y-4">
+        {/* 2. Segmented Control for Type Selection */}
+        <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
+          {contentTypes.map((type) => (
+            <button
+              key={type.id}
+              onClick={() => onPatch({ ...currentMeta, contentType: type.id })}
+              className={cn(
+                'flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+                'flex items-center justify-center gap-2',
+                contentType === type.id ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:bg-white hover:shadow-sm',
+              )}
+            >
+              {/* <type.icon className="h-4 w-4" /> */}
+              <span>{type.label}</span>
+            </button>
+          ))}
         </div>
-      )}
+
+        {/* 3. Inputs Area */}
+        <div className="space-y-3">
+          {contentType === 'text' && (
+            <div>
+              <label htmlFor="messageText" className="mb-1.5 block text-sm font-medium text-gray-700">
+                Message
+              </label>
+              <textarea
+                id="messageText"
+                value={text || ''}
+                onChange={(e) => onPatch({ ...currentMeta, text: e.target.value })}
+                placeholder="Type your message..."
+                rows={4}
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              />
+            </div>
+          )}
+
+          {contentType === 'image' && (
+            <div>
+              <label htmlFor="imageUrl" className="mb-1.5 block text-sm font-medium text-gray-700">
+                Image URL
+              </label>
+              <input
+                id="imageUrl"
+                type="text"
+                value={mediaUrl || ''}
+                onChange={(e) => onPatch({ ...currentMeta, mediaUrl: e.target.value })}
+                placeholder="https://example.com/image.png"
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              />
+            </div>
+          )}
+
+          {contentType === 'document' && (
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="docUrl" className="mb-1.5 block text-sm font-medium text-gray-700">
+                  Document URL
+                </label>
+                <input
+                  id="docUrl"
+                  type="text"
+                  value={mediaUrl || ''}
+                  onChange={(e) => onPatch({ ...currentMeta, mediaUrl: e.target.value })}
+                  placeholder="https://example.com/document.pdf"
+                  className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="fileName" className="mb-1.5 block text-sm font-medium text-gray-700">
+                  File Name (e.g., receipt.pdf)
+                </label>
+                <input
+                  id="fileName"
+                  type="text"
+                  value={fileName || ''}
+                  onChange={(e) => onPatch({ ...currentMeta, fileName: e.target.value })}
+                  placeholder="Annual_Report.pdf"
+                  className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1157,13 +1347,13 @@ function AskQuick({
         value={meta.prompt || ''}
         onChange={(e) => onPatch({ ...meta, prompt: e.target.value })}
         placeholder="Prompt"
-        className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+        className="w-full rounded border border-neutral-800 px-3 py-2"
       />
       <div className="grid grid-cols-2 gap-2">
         <select
           value={meta.variable || ''}
           onChange={(e) => onPatch({ ...meta, variable: e.target.value })}
-          className="rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+          className="rounded border border-neutral-800 px-3 py-2"
         >
           <option value="">store in variable</option>
           {variables.map((v) => (
@@ -1175,7 +1365,7 @@ function AskQuick({
         <select
           value={meta.inputType || 'text'}
           onChange={(e) => onPatch({ ...meta, inputType: e.target.value })}
-          className="rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+          className="rounded border border-neutral-800 px-3 py-2"
         >
           {INPUT_TYPES.map((t) => (
             <option key={t.id} value={t.id}>
@@ -1193,53 +1383,196 @@ function AskQuick({
 
 function CondQuick({ meta = { logic: [] }, onPatch, variables }) {
   const logic = meta.logic || [];
-  const update = (i, patch) => onPatch({ ...meta, logic: logic.map((x, idx) => (idx === i ? { ...x, ...patch } : x)) });
+  const [openDropdown, setOpenDropdown] = useState(false);
+  const activeFieldRef = useRef(null); // Tracks which field is focused
+
+  const update = (i, patch) => {
+    const updatedLogic = logic.map((x, idx) => (idx === i ? { ...x, ...patch } : x));
+    onPatch({ ...meta, logic: updatedLogic });
+  };
+
+  const addCondition = () => {
+    onPatch({
+      ...meta,
+      logic: [...logic, { var: variables[0] || '', op: 'eq', value: '' }],
+    });
+  };
+
+  const removeCondition = (i) => {
+    onPatch({
+      ...meta,
+      logic: logic.filter((_, j) => j !== i),
+    });
+  };
+
+  const insertVariable = (varName) => {
+    if (!activeFieldRef.current) return;
+
+    const field = activeFieldRef.current;
+    const start = field.selectionStart || 0;
+    const end = field.selectionEnd || 0;
+    const currentValue = field.value || '';
+    const newValue = currentValue.substring(0, start) + varName + currentValue.substring(end);
+
+    // Find which condition & field
+    const conditionIndex = parseInt(field.dataset.conditionIndex);
+    const fieldType = field.dataset.fieldType;
+
+    if (fieldType === 'var') {
+      update(conditionIndex, { var: varName });
+    } else if (fieldType === 'value') {
+      update(conditionIndex, { value: newValue });
+    }
+
+    setOpenDropdown(false);
+  };
+
   return (
-    <div className="space-y-2">
-      {logic.map((l, i) => (
-        <div key={i} className="grid grid-cols-12 gap-2">
-          <select
-            value={l.var || ''}
-            onChange={(e) => update(i, { var: e.target.value })}
-            className="col-span-5 rounded border border-neutral-800 bg-neutral-950 px-2 py-1"
-          >
-            <option value="">variable</option>
-            {variables.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
-          <select
-            value={l.op || 'eq'}
-            onChange={(e) => update(i, { op: e.target.value })}
-            className="col-span-3 rounded border border-neutral-800 bg-neutral-950 px-2 py-1"
-          >
-            <option value="exists">exists</option>
-            <option value="eq">=</option>
-            <option value="ne">≠</option>
-            <option value="gt">&gt;</option>
-            <option value="lt">&lt;</option>
-            <option value="contains">contains</option>
-          </select>
-          <input
-            value={l.value ?? ''}
-            onChange={(e) => update(i, { value: e.target.value })}
-            placeholder="value"
-            className="col-span-3 rounded border border-neutral-800 bg-neutral-950 px-2 py-1"
-          />
-          <Button className="col-span-1 rounded bg-red-600 px-2 py-1" onClick={() => onPatch({ ...meta, logic: logic.filter((_, j) => j !== i) })}>
-            ✕
-          </Button>
+    <div className="relative">
+      <Card className="border-0 bg-neutral-100 p-4 shadow-sm">
+        <div className="space-y-3">
+          {logic.length === 0 ? (
+            <div className="rounded-xl bg-emerald-50 p-8 text-center">
+              <p className="text-sm text-emerald-700">No conditions added</p>
+              <p className="mt-1 text-xs text-emerald-600">Click + to add a condition</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {logic.map((l, i) => (
+                <div key={i} className="relative rounded-xl bg-emerald-50 p-4 shadow-sm ring-1 ring-emerald-200">
+                  <div className="grid grid-cols-1 gap-3">
+                    {/* IF + Variable */}
+                    <div className="flex items-center gap-2">
+                      {i === 0 && <span className="rounded bg-emerald-600 px-2 py-1 text-xs font-bold text-white">IF</span>}
+                      {i > 0 && <span className="w-8 text-xs font-medium text-emerald-600">AND</span>}
+                      <Select value={l.var || ''} onValueChange={(v) => update(i, { var: v })}>
+                        <SelectTrigger
+                          className="h-10 flex-1 border-emerald-300 bg-white text-sm"
+                          onFocus={(e) => {
+                            activeFieldRef.current = e.target.querySelector('input') || e.target;
+                            activeFieldRef.current.dataset.conditionIndex = i;
+                            activeFieldRef.current.dataset.fieldType = 'var';
+                          }}
+                        >
+                          <SelectValue placeholder="Type or select a variable" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {variables.map((v) => (
+                            <SelectItem key={v} value={v}>
+                              {v}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Operator */}
+                    <Select value={l.op || 'eq'} onValueChange={(op) => update(i, { op })}>
+                      <SelectTrigger className="h-10 border-emerald-300 bg-white text-sm">
+                        <SelectValue>
+                          {l.op === 'exists' && 'Exists'}
+                          {l.op === 'eq' && 'Equal to'}
+                          {l.op === 'ne' && 'Not equal to'}
+                          {l.op === 'gt' && 'Greater than'}
+                          {l.op === 'lt' && 'Less than'}
+                          {l.op === 'contains' && 'Contains'}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="exists">Exists</SelectItem>
+                        <SelectItem value="eq">Equal to</SelectItem>
+                        <SelectItem value="ne">Not equal to</SelectItem>
+                        <SelectItem value="gt">Greater than</SelectItem>
+                        <SelectItem value="lt">Less than</SelectItem>
+                        <SelectItem value="contains">Contains</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {/* Value Input */}
+                    <Input
+                      value={l.value ?? ''}
+                      onChange={(e) => update(i, { value: e.target.value })}
+                      onFocus={(e) => {
+                        activeFieldRef.current = e.target;
+                        e.target.dataset.conditionIndex = i;
+                        e.target.dataset.fieldType = 'value';
+                      }}
+                      placeholder="Type a value"
+                      className="h-10 border-emerald-300 bg-white text-sm placeholder:text-neutral-400"
+                    />
+                  </div>
+
+                  {/* Cross Button */}
+                  {logic.length > 1 && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="absolute -right-2 -top-2 h-7 w-7 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                      onClick={() => removeCondition(i)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      ))}
+
+        {/* VARIABLES Dropdown Button */}
+        <div className="relative">
+          <Button
+            variant="outline"
+            className="mt-3 w-full justify-between border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+            onClick={() => setOpenDropdown(!openDropdown)}
+          >
+            <span>VARIABLES</span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${openDropdown ? 'rotate-180' : ''}`} />
+          </Button>
+
+          {openDropdown && (
+            <div className="absolute bottom-full left-0 right-0 z-50 mb-1 rounded-lg border border-emerald-300 bg-white shadow-lg">
+              <div className="max-h-48 overflow-auto p-2">
+                {variables.length === 0 ? (
+                  <p className="px-3 py-2 text-xs text-neutral-500">No variables</p>
+                ) : (
+                  variables.map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => insertVariable(v)}
+                      className="block w-full rounded px-3 py-2 text-left text-sm text-neutral-700 hover:bg-emerald-50"
+                    >
+                      {v}
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* Floating + Button */}
       <Button
-        className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1 text-xs hover:bg-neutral-700"
-        onClick={() => onPatch({ ...meta, logic: [...logic, { var: variables[0] || '', op: 'exists', value: '' }] })}
+        size="icon"
+        className="absolute -bottom-6 right-4 h-12 w-12 rounded-full bg-emerald-500 text-white shadow-lg hover:bg-emerald-600"
+        onClick={addCondition}
+        disabled={variables.length === 0}
       >
-        + Add condition
+        <Plus className="h-6 w-6" />
       </Button>
-      <div className="text-xs text-neutral-400">Use handles: right = TRUE, bottom = FALSE.</div>
+
+      {/* Footer */}
+      <div className="mt-12 text-center text-xs text-neutral-500">
+        <span className="inline-flex items-center">
+          <div className="mr-1 h-2 w-2 rounded-full bg-emerald-500"></div>
+          Right = TRUE
+        </span>{' '}
+        <span className="inline-flex items-center">
+          <div className="mr-1 h-2 w-2 rounded-full bg-red-500"></div>
+          Bottom = FALSE
+        </span>
+      </div>
     </div>
   );
 }
@@ -1252,7 +1585,7 @@ function TemplateQuick({ meta = { buttonRoutes: {} }, onPatch }) {
         value={meta.templateId || ''}
         onChange={(e) => onPatch({ ...meta, templateId: e.target.value })}
         placeholder="template id"
-        className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+        className="w-full rounded border border-neutral-800 px-3 py-2"
       />
       <div className="space-y-1 text-xs">
         {entries.map(([k, v]) => (
@@ -1262,7 +1595,7 @@ function TemplateQuick({ meta = { buttonRoutes: {} }, onPatch }) {
         ))}
       </div>
       <Button
-        className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1 text-xs hover:bg-neutral-700"
+        className="rounded border border-neutral-700 px-3 py-1 text-xs hover:bg-neutral-700"
         onClick={() => {
           const key = prompt('Enter button payload/text key') || '';
           if (!key) return;
@@ -1288,10 +1621,10 @@ function TriggerQuick({ meta = { keywords: [] }, onPatch }) {
           value={kw}
           onChange={(e) => setKw(e.target.value)}
           placeholder="keyword"
-          className="flex-1 rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+          className="flex-1 rounded border border-neutral-800 px-3 py-2"
         />
         <Button
-          className="rounded border border-neutral-700 bg-neutral-800 px-3 py-2"
+          className="rounded border border-neutral-700 px-3 py-2"
           onClick={() => {
             const v = kw.trim();
             if (!v) return;
@@ -1306,7 +1639,7 @@ function TriggerQuick({ meta = { keywords: [] }, onPatch }) {
       </div>
       <div className="flex flex-wrap gap-2">
         {(meta.keywords || []).map((k) => (
-          <span key={k} className="rounded-full border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs">
+          <span key={k} className="rounded-full border border-neutral-700 px-2 py-1 text-xs">
             {k}
           </span>
         ))}
@@ -1317,8 +1650,8 @@ function TriggerQuick({ meta = { keywords: [] }, onPatch }) {
 }
 
 // --------------- Graph Helpers ---------------
-function makeNode({ id, type, position, variables, patch, addKw, setKw, addLogic, removeLogic, updateLogic }) {
-  const base = {
+function makeNode({ id, type, position, variables, patch, addKw, setKw, addLogic, removeLogic, updateLogic, updateGlobalVariables }) {
+  return {
     id,
     type,
     position,
@@ -1328,6 +1661,7 @@ function makeNode({ id, type, position, variables, patch, addKw, setKw, addLogic
       meta: defaultMeta(type),
       variables,
       onPatch: patch,
+      updateGlobalVariables, // 👈 added here
       addLogic: () => addLogic(id),
       removeLogic: (i) => removeLogic(id, i),
       updateLogic: (i, p) => updateLogic(id, i, p),
@@ -1336,7 +1670,6 @@ function makeNode({ id, type, position, variables, patch, addKw, setKw, addLogic
       addKeyword: () => addKw(id, 'start'),
     },
   };
-  return base;
 }
 
 function labelFor(t) {
@@ -1380,7 +1713,7 @@ function FormNode({ data, selected }) {
   };
 
   return (
-    <div>
+    <div className="relative">
       <Handle type="target" position={Position.Left} />
       <BaseNode data={data} selected={selected} border="#22c55e">
         <div className="space-y-3">
@@ -1421,37 +1754,37 @@ function FormNode({ data, selected }) {
             onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
             placeholder="Form message text..."
             rows={3}
-            className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+            className="w-full rounded border border-neutral-800 px-3 py-2"
           />
           <input
             value={m.footerText || ''}
             onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
             placeholder="Footer (optional)"
-            className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2"
+            className="w-full rounded border border-neutral-800 px-3 py-2"
           />
 
           {/* Options */}
           <div className="border-t border-neutral-800 pt-2">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-xs text-neutral-400">Interactive Options</div>
-              <Button className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs hover:bg-neutral-700" onClick={addOption}>
+              <Button className="rounded border border-neutral-700 px-2 py-1 text-xs" onClick={addOption}>
                 + Add
               </Button>
             </div>
 
             {(m.options || []).map((opt, i) => (
-              <div key={opt.id} className="space-y-1 rounded-lg border border-neutral-800 bg-neutral-900 p-2">
+              <div key={opt.id} className="space-y-1 rounded-lg border border-neutral-800 p-2">
                 <input
                   value={opt.title}
                   onChange={(e) => updateOption(i, { title: e.target.value })}
                   placeholder="Option title"
-                  className="w-full rounded border border-neutral-800 bg-neutral-950 px-2 py-1 text-xs"
+                  className="w-full rounded border border-neutral-800 px-2 py-1 text-xs"
                 />
                 <input
                   value={opt.description}
                   onChange={(e) => updateOption(i, { description: e.target.value })}
                   placeholder="Description (optional)"
-                  className="w-full rounded border border-neutral-800 bg-neutral-950 px-2 py-1 text-xs"
+                  className="w-full rounded border border-neutral-800 px-2 py-1 text-xs"
                 />
                 <Button onClick={() => removeOption(i)} className="mt-1 rounded bg-red-600 px-2 py-1 text-xs hover:bg-red-500">
                   ✕ Remove
@@ -1461,8 +1794,9 @@ function FormNode({ data, selected }) {
           </div>
         </div>
       </BaseNode>
+      <Handle type="source" position={Position.Right} />
       {/* Dynamic option connectors */}
-      <div className="relative h-0">
+      <div className="absolute right-0 top-3/4 h-0">
         {(m.options || []).map((opt, i) => (
           <Handle key={opt.id} id={`opt:${opt.id}`} type="source" position={Position.Right} style={{ top: 40 + i * 18, right: -6 }} />
         ))}
