@@ -98,9 +98,18 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
       const getOrder = await Order.findOne({
         order_id: payload.payment.entity.order_id,
       });
+      const tInfo = await Table.findOne({
+        businessId: getOrder?.businessId,
+        name: getOrder?.tableName,
+      });
+      const isTableMerge = await MergeTable.findOne({
+        businessId: getOrder?.businessId,
+        childTableIds: tInfo?._id?.toString(),
+      }).populate("parentTableId");
+
       const tableSession = await UserSession.findOne({
         businessId: getOrder?.businessId,
-        tableName: getOrder?.tableName,
+        tableName: isTableMerge?.parentTableId?.name || getOrder?.tableName,
       });
       console.log("step_5");
       //@ts-ignore
