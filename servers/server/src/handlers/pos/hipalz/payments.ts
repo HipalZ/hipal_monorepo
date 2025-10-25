@@ -152,7 +152,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                     order_id: getOrder?._id,
                     userId: getOrder?.userId,
                     status: "FAIL",
-                    tableName: getOrder?.tableName,
+                    tableName:
+                      isTableMerge?.parentTableId?.name || getOrder?.tableName,
                     coinsApplied:
                       splitTableSessionData?.claimedCoins || claimCoins > 0,
                     isAccepted: false,
@@ -198,7 +199,7 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                 if (claimCoins > 0) {
                   await removeCoins(
                     claimCoins,
-                    getOrder.tableName,
+                    isTableMerge?.parentTableId?.name || getOrder?.tableName,
                     payload.payment.entity.notes.loyaltyId || "",
                     getOrder?._id.toString() || "",
                     getOrder?.userId.toString() || "",
@@ -223,7 +224,7 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                   getOrder?.userId.toString() || "",
                   getOrder?._id.toString() || "",
 
-                  getOrder?.tableName,
+                  isTableMerge?.parentTableId?.name || getOrder?.tableName,
                   getOrder?.businessId.toString() || "",
                   payload.payment.entity.notes.loyaltyId || "",
 
@@ -235,7 +236,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
 
               await PaymentAlert.updateOne(
                 {
-                  tableName: getOrder?.tableName,
+                  tableName:
+                    isTableMerge?.parentTableId?.name || getOrder?.tableName,
                   isAccepted: false,
                   alertType: "OFFLINE",
                 },
@@ -253,7 +255,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                     userId: getOrder?.userId,
                     order_id: getOrder?._id,
                     paymentMode: "online",
-                    tableName: getOrder?.tableName,
+                    tableName:
+                      isTableMerge?.parentTableId?.name || getOrder?.tableName,
                     claimedCoins: getOrder?.claimedCoins,
                     tips: getOrder?.tips,
                     razorpayPaymentId: payload.payment.entity.id,
@@ -289,7 +292,9 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                     status: "SUCCESS",
                     order_id: getOrder?._id,
                     message: `Paid ${getOrder?.total}`,
-                    tableName: `T-${getOrder?.tableName?.slice(-2)}`,
+                    tableName: `${
+                      isTableMerge?.parentTableId?.name || getOrder?.tableName
+                    }`,
                     isAccepted: false,
                     userId: getOrder?.userId,
                     date: Date.now(),
@@ -310,7 +315,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
               );
               await UserSession.findOneAndUpdate(
                 {
-                  tableName: getOrder?.tableName,
+                  tableName:
+                    isTableMerge?.parentTableId?.name || getOrder?.tableName,
                   businessId: getOrder?.businessId,
                 },
                 {
@@ -361,7 +367,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                     order_id: getOrder?._id,
                     userId: getOrder?.userId,
                     status: "FAIL",
-                    tableName: getOrder?.tableName,
+                    tableName:
+                      isTableMerge?.parentTableId?.name || getOrder?.tableName,
                     coinsApplied:
                       splitTableSessionData?.claimedCoins || claimCoins > 0,
                     isAccepted: false,
@@ -412,7 +419,7 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                 if (claimCoins > 0) {
                   await removeCoins(
                     claimCoins,
-                    getOrder.tableName,
+                    isTableMerge?.parentTableId?.name || getOrder?.tableName,
                     payload.payment.entity.notes.loyaltyId || "",
                     getOrder?._id.toString() || "",
                     getOrder?.userId.toString() || "",
@@ -437,7 +444,7 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                   getOrder?.userId.toString() || "",
                   getOrder?._id.toString() || "",
 
-                  getOrder?.tableName,
+                  isTableMerge?.parentTableId?.name || getOrder?.tableName,
                   getOrder?.businessId.toString() || "",
                   payload.payment.entity.notes.loyaltyId || "",
 
@@ -448,7 +455,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
               }
               await PaymentAlert.updateOne(
                 {
-                  tableName: getOrder?.tableName,
+                  tableName:
+                    isTableMerge?.parentTableId?.name || getOrder?.tableName,
                   businessId: getOrder?.businessId,
                   isAccepted: false,
                   alertType: "OFFLINE",
@@ -467,7 +475,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                     userId: getOrder?.userId,
                     order_id: getOrder?._id,
                     paymentMode: "online",
-                    tableName: getOrder?.tableName,
+                    tableName:
+                      isTableMerge?.parentTableId?.name || getOrder?.tableName,
                     claimedCoins: getOrder?.claimedCoins,
                     tips: getOrder?.tips,
                     razorpayPaymentId: payload.payment.entity.id,
@@ -503,7 +512,9 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                     status: "SUCCESS",
                     order_id: getOrder?._id,
                     message: `Paid ${getOrder?.total}`,
-                    tableName: `T-${getOrder?.tableName?.slice(-2)}`,
+                    tableName: `${
+                      isTableMerge?.parentTableId?.name || getOrder?.tableName
+                    }`,
                     isAccepted: false,
                     userId: getOrder?.userId,
                     date: Date.now(),
@@ -524,7 +535,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
               );
               await UserSession.findOneAndUpdate(
                 {
-                  tableName: getOrder?.tableName,
+                  tableName:
+                    isTableMerge?.parentTableId?.name || getOrder?.tableName,
                   businessId: getOrder?.businessId,
                 },
                 {
@@ -562,7 +574,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
               if (pos) {
                 await UserSession.deleteOne(
                   {
-                    tableName: getOrder.tableName,
+                    tableName:
+                      isTableMerge?.parentTableId?.name || getOrder.tableName,
                     businessId: getOrder.businessId,
                   },
                   {
@@ -572,7 +585,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
 
                 await KotOrder.updateMany(
                   {
-                    tableName: getOrder.tableName,
+                    tableName:
+                      isTableMerge?.parentTableId?.name || getOrder.tableName,
                     businessId: getOrder.businessId,
 
                     settled: false,
@@ -590,7 +604,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                 const tableInfo = await Table.findOneAndUpdate(
                   {
                     businessId: getOrder.businessId,
-                    name: getOrder.tableName,
+                    name:
+                      isTableMerge?.parentTableId?.name || getOrder?.tableName,
                   },
                   {
                     $set: {
@@ -651,7 +666,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                 order_id: getOrder?._id,
                 userId: getOrder?.userId,
                 status: "FAIL",
-                tableName: getOrder?.tableName,
+                tableName:
+                  isTableMerge?.parentTableId?.name || getOrder?.tableName,
                 coinsApplied: tableSession?.claimedCoins || claimCoins > 0,
                 isAccepted: false,
                 date: Date.now(),
@@ -688,7 +704,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
           const claimCoins = Number(getOrder?.claimedCoins) || 0;
           await PaymentAlert.updateOne(
             {
-              tableName: getOrder?.tableName,
+              tableName:
+                isTableMerge?.parentTableId?.name || getOrder?.tableName,
               businessId: getOrder?.businessId,
               isAccepted: false,
               alertType: "OFFLINE",
@@ -707,7 +724,7 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
             if (claimCoins > 0) {
               await removeCoins(
                 claimCoins,
-                getOrder.tableName,
+                isTableMerge?.parentTableId?.name || getOrder?.tableName,
                 payload.payment.entity.notes.loyaltyId || "",
                 getOrder?._id.toString() || "",
                 getOrder?.userId.toString() || "",
@@ -732,7 +749,7 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
               getOrder?.userId.toString() || "",
               getOrder?._id.toString() || "",
 
-              getOrder?.tableName,
+              isTableMerge?.parentTableId?.name || getOrder?.tableName,
               getOrder?.businessId.toString() || "",
               payload.payment.entity.notes.loyaltyId || "",
 
@@ -754,7 +771,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                 userId: getOrder?.userId,
                 order_id: getOrder?._id,
                 paymentMode: "online",
-                tableName: getOrder?.tableName,
+                tableName:
+                  isTableMerge?.parentTableId?.name || getOrder?.tableName,
                 claimedCoins: getOrder?.claimedCoins,
                 tips: getOrder?.tips,
                 razorpayPaymentId: payload.payment.entity.id || nanoid(15),
@@ -789,7 +807,9 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                 status: "SUCCESS",
                 order_id: getOrder?._id,
                 message: `Paid ${getOrder?.total}`,
-                tableName: `${getOrder?.tableName?.slice(-2)}`,
+                tableName: `${
+                  isTableMerge?.parentTableId?.name || getOrder?.tableName
+                }`,
                 isAccepted: false,
                 userId: getOrder?.userId,
                 date: Date.now(),
@@ -820,7 +840,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
 
             await UserSession.deleteOne(
               {
-                tableName: getOrder.tableName,
+                tableName:
+                  isTableMerge?.parentTableId?.name || getOrder?.tableName,
                 businessId: getOrder.businessId,
               },
               {
@@ -832,7 +853,8 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
 
             await KotOrder.updateMany(
               {
-                tableName: getOrder.tableName,
+                tableName:
+                  isTableMerge?.parentTableId?.name || getOrder?.tableName,
                 businessId: getOrder.businessId,
 
                 settled: false,
@@ -852,7 +874,7 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
             const tableInfo = await Table.findOneAndUpdate(
               {
                 businessId: getOrder.businessId,
-                name: getOrder.tableName,
+                name: isTableMerge?.parentTableId?.name || getOrder?.tableName,
               },
               {
                 $set: {
