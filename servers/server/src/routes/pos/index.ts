@@ -302,6 +302,10 @@ const posRouter = new Hono()
           order.cart.filter((item) => !item.isDeleted),
         ) as Item[];
 
+        if (cartItems.length === 0) {
+          return respond(c, "No items in the cart", true, 400, {});
+        }
+
         const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
 
         const billItems = groupItemsByGST(cartItems);
