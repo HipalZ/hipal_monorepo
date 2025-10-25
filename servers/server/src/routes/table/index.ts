@@ -1543,7 +1543,8 @@ const tableRouter = new Hono()
               pin: tenDigitCode,
               tableName: destTable.name,
               customerName: customerNames[0] || "Guest",
-              phoneNumbers,
+              phoneNumbers:
+                phoneNumbers.length > 0 ? phoneNumbers : [staff.phone],
               performedBy: "captain",
               date: Date.now(),
               isMerged: true,
