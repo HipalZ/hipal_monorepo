@@ -120,10 +120,12 @@ const TableQuickNav = () => {
             <span className="hidden sm:inline">Switch</span>
             <MdTableBar className="mt-0.5 h-4 w-4" />
           </Button>
-          <Button onClick={() => setOpenItem(true)} variant="outline" size="default" className="gap-2 bg-transparent font-semibold">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add Item</span>
-          </Button>
+          {isHipalzPos && (
+            <Button onClick={() => setOpenItem(true)} variant="outline" size="default" className="gap-2 bg-transparent font-semibold">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Item</span>
+            </Button>
+          )}
 
           {isHipalzPos && !selectedTable?.isMerge && (
             <Button variant="outline" size="default" className="gap-2 bg-transparent font-semibold" onClick={handleMergeClick}>

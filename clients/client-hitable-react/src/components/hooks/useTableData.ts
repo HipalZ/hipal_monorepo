@@ -104,7 +104,7 @@ export const useTableTransfer = (businessId: string) => {
     onSuccess: (data) => {
       if (!data?.ok) {
         setOpenErrorModal(true);
-        setError("Bill already fetched");
+        setError(data.message || "Failed to transfer table");
       }
       if (data?.ok) {
         toast.success("Transferred successfully");
