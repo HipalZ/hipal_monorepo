@@ -150,6 +150,28 @@ const kitchenRouter = new Hono()
       });
     },
   )
+  .get(
+    "/staff/:businessId/:staffId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string().min(24).max(24),
+        staffId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, staffId } = c.req.param();
+
+        const kitchens = await Kitchen.find({
+          businessId,
+          staffIds: { $in: [staffId] },
+        }).select("name");
+        return respond(c, "fetched successfully", false, 200, kitchens);
+      });
+    },
+  )
 
   .get(
     "/printer/kot",

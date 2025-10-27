@@ -1,7 +1,5 @@
 import mongoose, { Schema, type Model } from "mongoose";
-import autoIncrement from "mongoose-auto-increment";
 import type { KotOrderItemType, KotOrderType } from "../validators";
-autoIncrement.initialize(mongoose.connection);
 // Define ObjectId for convenience
 const ObjectId = Schema.Types.ObjectId;
 
@@ -42,6 +40,17 @@ const KotItemSchema = new Schema<KotOrderItemType>({
     type: Number,
     default: 0,
   },
+  itemStatus: {
+    type: String,
+    enum: ["IN_PROGRESS", "COOKED", "DELIVERED", "CANCELLED"],
+    default: "IN_PROGRESS",
+  },
+  priority: {
+    type: Boolean,
+    default: false,
+  },
+  cookedBy: { type: String, default: "" },
+  deliveredBy: { type: String, default: "" },
 });
 
 // Main Cart Schema
@@ -152,20 +161,22 @@ const KotOrderSchema = new Schema<KotOrderType>(
     },
     kotInvoiceNumber: {
       type: Number,
-      default: 0,
+      default: Math.floor(100000 + Math.random() * 900000),
+    },
+    kotStatus: {
+      type: String,
+      enum: ["IN_PROGRESS", "COMPLETED"],
+      default: "IN_PROGRESS",
+    },
+    priority: {
+      type: Boolean,
+      default: false,
     },
   },
   {
     timestamps: true,
   },
 );
-
-KotOrderSchema.plugin(autoIncrement.plugin, {
-  model: "kotorder",
-  field: "kotInvoiceNumber", // <-- Will be added automatically
-  startAt: 1,
-  incrementBy: 1,
-});
 
 const KotOrder: Model<KotOrderType> = mongoose.model<KotOrderType>(
   "kotorder",

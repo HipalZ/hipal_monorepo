@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { timingSchema } from "./category";
 import { ObjectIdSchema } from "./common";
 
 export const DishTypeEnum = [
@@ -63,6 +64,7 @@ export const portionSchema = z.object({
   ),
 
   posPortionId: z.string().optional(),
+  availability: z.boolean().default(true).optional(),
 });
 
 export const dishSchema = z.object({
@@ -88,11 +90,13 @@ export const dishSchema = z.object({
       { message: "price must have at most 2 decimal places" },
     ),
   visibility: z.boolean().default(true),
-  avgTime: z.coerce
+  avgPrepTime: z.coerce
     .number({
-      message: "avgTime is required",
+      message: "avgPrepTime is required",
     })
-    .optional(),
+
+    .optional()
+    .default(0),
   dishTypes: z.array(
     z.enum(DishTypeEnum, {
       message: "dishType is required",
@@ -178,20 +182,20 @@ export const dishSchema = z.object({
     })
     .default([])
     .optional(),
-  delayTime: z.coerce.number().optional().default(0),
+
   availability: z.boolean().default(true).optional(),
   isDeleted: z.boolean().default(false).optional(),
   menuId: ObjectIdSchema,
 
   posDishId: z.string().min(3).max(100).optional(),
   rank: z.number().min(1).max(100).optional(),
-  posTax: z.string().min(3).max(100).optional(),
-  ignoreTax: z.string().min(3).max(100).optional(),
   ignoreDiscount: z.string().min(3).max(100).optional(),
   pos: z.boolean().default(false).optional(),
   active: z.boolean().default(true).optional(),
   gst: z.coerce.number().positive().optional(),
   vat: z.coerce.number().positive().optional(),
+  discount: z.coerce.number().min(0).max(100).optional(),
+  timings: z.array(timingSchema).optional(),
 });
 
 export const serviceChema = z.object({
@@ -279,6 +283,7 @@ export const serviceChema = z.object({
   active: z.boolean().default(true).optional(),
   gst: z.coerce.number().positive().optional(),
   vat: z.coerce.number().positive().optional(),
+  timings: z.array(timingSchema).optional(),
 });
 
 export const updateDishSchema = z
@@ -314,9 +319,10 @@ export const updateDishSchema = z
     removeKitchenId: ObjectIdSchema.optional(),
     menuId: ObjectIdSchema.optional(),
     gst: z.coerce.number().optional(),
+    timings: z.array(timingSchema).optional(),
+    avgPrepTime: z.coerce.number().optional().default(0),
   })
   .strict();
-
 
 export const updateServiceSchema = z
   .object({
@@ -345,6 +351,7 @@ export const updateServiceSchema = z
     removeAddOnIds: z.array(ObjectIdSchema).optional(),
     removeRecommendationIds: z.array(ObjectIdSchema).optional(),
     gst: z.coerce.number().optional(),
+    timings: z.array(timingSchema).optional(),
   })
   .strict();
 export type DishType = z.infer<typeof dishSchema>;

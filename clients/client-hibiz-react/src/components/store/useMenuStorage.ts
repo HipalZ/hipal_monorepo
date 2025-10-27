@@ -74,7 +74,7 @@ export type ImageFiles = {
   third: File | null;
 };
 
-interface Timing {
+export interface Timing {
   day: number;
   start: number;
   end: number;
@@ -174,6 +174,9 @@ interface MenuPageStore {
 
   dishPrice: number;
   setDishPrice: (price: number) => void;
+
+  avgPrepTime: number;
+  setAvgPrepTime: (time: number) => void;
 
   visibility: boolean;
   setVisibility: (visibility: boolean) => void;
@@ -485,6 +488,8 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
     description: "",
     addOnIds: [],
     categoryIds: [],
+    timings: [],
+    avgPrepTime: 0,
   },
   setEditDish: (dish: DishType) => set({ editDish: dish }),
 
@@ -496,6 +501,9 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
 
   dishPrice: 0,
   setDishPrice: (price: number) => set({ dishPrice: price }),
+
+  avgPrepTime: 0,
+  setAvgPrepTime: (time: number) => set({ avgPrepTime: time }),
 
   visibility: true,
   setVisibility: (visibility: boolean) => set({ visibility: visibility }),
@@ -625,6 +633,8 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
         third: editDish?.images?.[2] ?? null,
       },
       visibility: editDish?.visibility,
+      timings: editDish?.timings ?? [],
+      avgPrepTime: editDish?.avgPrepTime ?? 0,
     });
   },
 

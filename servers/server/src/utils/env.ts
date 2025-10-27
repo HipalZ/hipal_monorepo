@@ -1,6 +1,5 @@
-
-import { z } from 'zod';
-
+import { z } from "zod";
+//
 const envSchema = z.object({
   //   APP_DOMAIN: z.string(),
   //   APP_FRONTEND_DOMAIN: z.string(),
@@ -63,8 +62,8 @@ envSchema.parse(process.env);
 
 declare global {
   namespace NodeJS {
-    interface ProcessEnv extends Omit<z.infer<typeof envSchema>, 'NODE_ENV'> {
-      NODE_ENV: 'development' | 'production' | 'test';
+    interface ProcessEnv extends Omit<z.infer<typeof envSchema>, "NODE_ENV"> {
+      NODE_ENV: "development" | "production" | "test";
     }
   }
 }

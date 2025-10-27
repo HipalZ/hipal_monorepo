@@ -105,6 +105,7 @@ export * from "./zone";
 
 export * from "./attendence";
 export * from "./discount";
+export * from "./mergeTable";
 export * from "./qrs";
 export * from "./splitBill";
 export * from "./termsAndConditions";

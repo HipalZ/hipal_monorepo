@@ -1,8 +1,7 @@
 import type { Model } from "mongoose";
 import mongoose from "mongoose";
-import autoIncrement from "mongoose-auto-increment";
 import type { UserSessionSchemaType } from "../validators";
-autoIncrement.initialize(mongoose.connection);
+import { nanoid } from "nanoid";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
   businessId: {
@@ -221,7 +220,7 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
   billInvoiceNumber: {
     type: Number,
     required: false,
-    default: 0,
+    default: Math.floor(100000 + Math.random() * 900000),
   },
   isSplit: {
     type: Boolean,
@@ -278,13 +277,25 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
-});
-
-userSessionSchema.plugin(autoIncrement.plugin, {
-  model: "usersession",
-  field: "billInvoiceNumber", // <-- Will be added automatically
-  startAt: 1,
-  incrementBy: 1,
+  isMerge: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  mergeTableNames: {
+    type: [String],
+    required: false,
+    default: [],
+  },
+  coinAppliedBy: {
+    type: ObjectId,
+    default: null,
+    ref: "User",
+  },
+  isOrderInitiated: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });

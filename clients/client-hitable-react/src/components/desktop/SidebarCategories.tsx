@@ -49,7 +49,7 @@ const SidebarCategories = () => {
   }
 
   return (
-    <div className="bg-background flex h-screen w-full max-w-[12rem] flex-col border-r">
+    <div className="bg-background flex h-screen w-full max-w-[12rem] flex-col border-r-2">
       {/* Header */}
       <div className="flex items-center justify-between border-b p-3">
         <div className="flex items-center gap-2">
@@ -62,7 +62,7 @@ const SidebarCategories = () => {
       </div>
 
       {/* Scrollable Category List */}
-      <div className="flex-1 overflow-y-auto py-2">
+      <div className="hide-scrollbar flex-1 overflow-y-auto py-2">
         {categories?.map((cat) => (
           <Button
             key={cat._id}

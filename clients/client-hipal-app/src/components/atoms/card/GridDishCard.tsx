@@ -179,14 +179,14 @@ const GridDishCard = ({
       {isModalOpen && (
         <ItemDescriptionPopup show={isModalOpen} onClose={closeModal}>
           <MemoDishPopup dishData={isSelectedDish} />
-          <CommonBottomButton
+          {/* <CommonBottomButton
             buttons={[
               {
                 text: "Go to cart",
                 onClick: openCart,
               },
             ]}
-          />
+          /> */}
         </ItemDescriptionPopup>
       )}
     </div>

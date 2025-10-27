@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { cn } from "@hi/common";
+import { cn } from '@hi/common';
+import type { ReactNode } from 'react';
 
 interface BackgroundProps {
   children: ReactNode;
@@ -7,11 +7,7 @@ interface BackgroundProps {
 }
 
 const Background = ({ children, className }: BackgroundProps) => {
-  return (
-    <div className={cn("p-3 my-2 bg-white rounded-2xl", className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('my-2 rounded-2xl bg-white p-3', className)}>{children}</div>;
 };
 
 export default Background;

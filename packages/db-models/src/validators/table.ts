@@ -38,6 +38,9 @@ export const tableSchema = z.object({
   internalZoneId: ObjectIdSchema.optional(),
   tableLink: z.string().min(3).max(60).optional(),
   pos: z.boolean().default(false).optional(),
+  isMerge: z.boolean().default(false).optional(),
+  mergeTableIds: z.array(ObjectIdSchema).optional(),
+  mergedBy: ObjectIdSchema.optional(),
 });
 
 export const createTableSchema = z.object({

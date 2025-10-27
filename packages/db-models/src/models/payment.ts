@@ -253,6 +253,11 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       default: false,
     },
+    coinAppliedBy: {
+      type: ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
 
   { timestamps: true },

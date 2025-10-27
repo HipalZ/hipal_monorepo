@@ -171,10 +171,10 @@ const MemoTablePos = () => {
       {openOrderModal && (
         <Suspense fallback={<SpinnerMemo />}>
           <BottomPopUp
-            height="h-[100dvh]"
+            height="h-[100dvh] lg:h-[90dvh]"
             hide
-            bottomCross={modalType !== 'addItem' && modalType !== 'liveCart' && modalType !== 'bill' && modalType !== 'options'}
             show={openOrderModal}
+            bottomCross={modalType !== 'addItem' && modalType !== 'liveCart' && modalType !== 'bill' && modalType !== 'options'}
             onClose={closeOrderModalHandler}
           >
             {modalType === 'bill' ? <TableHeader width="48rem" /> : <OrdersHeader width="48rem" />}

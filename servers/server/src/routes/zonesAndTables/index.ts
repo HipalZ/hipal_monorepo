@@ -16,6 +16,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import { respond } from "../../utils/response";
 //
 const zonesAndTablesRouter = new Hono()
   .post("/zone", zValidator("json", zoneChema), async (c) => {
@@ -35,6 +36,9 @@ const zonesAndTablesRouter = new Hono()
         businessId,
         isDeleted: false,
         active: true,
+        posName: {
+          $ne: "HIPAL_Z",
+        },
       });
 
       if (isHavePos) {
@@ -46,6 +50,12 @@ const zonesAndTablesRouter = new Hono()
           409,
         );
       }
+      const hipalZPos = await BusinessPosConfig.findOne({
+        businessId: businessId,
+        isDeleted: false,
+        active: true,
+        posName: "HIPAL_Z",
+      });
 
       const alreadyExists = await Zone.findOne({
         businessId,
@@ -71,6 +81,8 @@ const zonesAndTablesRouter = new Hono()
         taxes,
         couponIds,
         tableIds,
+        zoneId: nanoid(10),
+        pos: !!hipalZPos,
       });
 
       await zone.save({ session });
@@ -105,6 +117,9 @@ const zonesAndTablesRouter = new Hono()
         businessId,
         isDeleted: false,
         active: true,
+        posName: {
+          $ne: "HIPAL_Z",
+        },
       });
 
       if (isHavePos) {
@@ -203,6 +218,9 @@ const zonesAndTablesRouter = new Hono()
         businessId,
         isDeleted: false,
         active: true,
+        posName: {
+          $ne: "HIPAL_Z",
+        },
       });
 
       if (isHavePos) {
@@ -213,6 +231,19 @@ const zonesAndTablesRouter = new Hono()
           },
           409,
         );
+      }
+
+      const hipalZPos = await BusinessPosConfig.findOne({
+        businessId: businessId,
+        isDeleted: false,
+        active: true,
+        posName: "HIPAL_Z",
+      });
+
+      const zoneData = await Zone.findById(internalZoneId);
+
+      if (!zoneData) {
+        return respond(c, "Zone not found", true, 404, {});
       }
 
       const alreadyExists = await Table.findOne({
@@ -287,6 +318,9 @@ const zonesAndTablesRouter = new Hono()
             capacity,
             internalZoneId,
             tableLink: createShortUrl[0].shortUrl,
+            tableId: nanoid(10),
+            zoneId: zoneData.zoneId,
+            pos: !!hipalZPos,
           });
 
           await table.save({ session });
@@ -352,6 +386,9 @@ const zonesAndTablesRouter = new Hono()
         capacity,
         internalZoneId,
         tableLink: createShortUrl[0].shortUrl,
+        tableId: nanoid(10),
+        zoneId: zoneData.zoneId,
+        pos: !!hipalZPos,
       });
 
       await table.save({ session });
@@ -397,6 +434,9 @@ const zonesAndTablesRouter = new Hono()
         businessId,
         isDeleted: false,
         active: true,
+        posName: {
+          $ne: "HIPAL_Z",
+        },
       });
 
       if (isHavePos) {

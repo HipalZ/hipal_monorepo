@@ -313,6 +313,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Boolean,
     default: false,
   },
+  isHipalzPos: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 //middlewares

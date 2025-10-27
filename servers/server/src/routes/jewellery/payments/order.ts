@@ -155,7 +155,7 @@ const orderRouter = new Hono()
 
       const orderDetails = await JewelleryOrder.findById(orderId)
         .select(
-          "total userId tips claimedCoins discount couponId couponDiscount gst subTotal",
+          "total userId tips claimedCoins discount couponId couponDiscount gst subTotal isPaid",
         )
         .populate({
           path: "userId",

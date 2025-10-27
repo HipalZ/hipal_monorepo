@@ -1,6 +1,6 @@
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import type { IMode } from "../atoms/placeOrders/normalsettle";
@@ -19,39 +19,62 @@ export interface ITransferPayload {
   itemIds?: string[];
 }
 
-export const useTableData = () => {
+type UseTableDataOptions = {
+  enabled?: boolean;
+  businessIdOverride?: string | null;
+  staleTimeMs?: number;
+};
+
+export const useTableData = (opts: UseTableDataOptions = {}) => {
+  const {
+    enabled = false,
+    businessIdOverride = null,
+    staleTimeMs = 10_000,
+  } = opts;
+
   const [searchTerm, setSearchTerm] = useState("");
   const outletInfo = useBusinessData((s) => s.outletInfo);
+  const businessId = businessIdOverride ?? outletInfo?.businessId ?? null;
 
   const getAllTables = async (): Promise<TableData[]> => {
     const response = await apiRpc.table.empty_table[":businessId"].$get({
-      param: {
-        businessId: outletInfo?.businessId,
-      },
+      param: { businessId: businessId as string },
     });
     const res = await response.json();
     return res?.data || [];
   };
 
-  const { isLoading, data } = useQuery({
-    queryKey: ["getAllTables", outletInfo?.businessId],
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ["getAllTables", businessId],
     queryFn: getAllTables,
-    enabled: !!outletInfo?.businessId,
+    enabled: !!businessId && enabled,
+    staleTime: staleTimeMs,
   });
 
   const filteredTables = useMemo(
     () =>
-      data?.filter((t) =>
-        t?.name.toLowerCase().includes(searchTerm.toLowerCase()),
-      ) || [],
+      (data || []).filter((t) =>
+        (t?.name || "").toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
     [data, searchTerm],
   );
 
+  const fetchNow = useCallback(() => {
+    if (businessId) return refetch();
+  }, [refetch, businessId]);
+
   return {
-    isLoading,
+    // data
     filteredTables,
+    raw: data || [],
+    // search
     searchTerm,
     setSearchTerm,
+    // network state
+    isLoading,
+    isFetching,
+    // manual trigger
+    fetchNow,
   };
 };
 
@@ -81,7 +104,7 @@ export const useTableTransfer = (businessId: string) => {
     onSuccess: (data) => {
       if (!data?.ok) {
         setOpenErrorModal(true);
-        setError("Bill already fetched");
+        setError(data.message || "Failed to transfer table");
       }
       if (data?.ok) {
         toast.success("Transferred successfully");
@@ -244,36 +267,4 @@ export const useCustomerLogin = () => {
   });
 
   return { sendOtp, verifyOtp };
-};
-
-export const useUpdateBill = () => {
-  const queryClient = useQueryClient();
-  const updateBill = async (data) => {
-    const { coinz, couponId, tableName, total, businessId, userId } = data;
-    const response = await apiRpc.payments.fetch_update_bill[
-      ":businessId"
-    ].$post({
-      param: {
-        businessId,
-      },
-      json: {
-        tableName: tableName,
-        total: total,
-        ...(coinz && { claimedCoins: coinz }),
-        ...(coinz === 0 && { removeCoins: true }),
-        ...(couponId && { couponId }),
-        ...(userId && { userId }),
-      },
-    });
-    const res = await response.json();
-    if (response.status === 200 || response.status === 201) {
-      toast.success("Bill updated successfully");
-      queryClient.invalidateQueries({
-        queryKey: ["getTableBill"],
-      });
-    }
-    return res;
-  };
-
-  return { updateBill };
 };

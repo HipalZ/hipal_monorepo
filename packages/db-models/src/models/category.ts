@@ -4,7 +4,7 @@ import type { CategoryType, TimingType } from "../validators";
 import { HierarchyEnum } from "../validators/category";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
-const timingSchema = new mongoose.Schema<TimingType>(
+export const timingSchema = new mongoose.Schema<TimingType>(
   {
     day: {
       type: Number,

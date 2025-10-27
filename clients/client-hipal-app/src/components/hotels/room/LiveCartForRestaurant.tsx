@@ -90,7 +90,7 @@ const MemoLiveCart = () => {
                 )}
             </AnimatePresence>
             {showCart && (
-                <BottomPopUp bottomCross show={showCart} onClose={() => setShowCart(false)} hide>
+                <BottomPopUp rightTopBack show={showCart} onClose={() => setShowCart(false)} hide>
                     <MemoRestaurantCart />
                 </BottomPopUp>
             )}

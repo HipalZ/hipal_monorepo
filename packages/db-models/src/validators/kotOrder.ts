@@ -19,6 +19,13 @@ const KotOrderSchema = z.object({
   deletedBy: z.string().min(2).max(150).optional(),
   reasonOfDeletion: z.string().min(1).max(500).optional(),
   discount: z.number().default(0).optional(),
+  itemStatus: z
+    .enum(["IN_PROGRESS", "COOKED", "DELIVERED", "CANCELLED"])
+    .default("IN_PROGRESS")
+    .optional(),
+  priority: z.boolean().default(false).optional(),
+  deliveredBy: z.string().min(1).max(150).optional(),
+  cookedBy: z.string().min(1).max(150).optional(),
 });
 
 // Define the main cart schema
@@ -50,6 +57,11 @@ export const kotSchema = z.object({
   isDeleted: z.boolean().default(false).optional(),
   isSync: z.boolean().default(false).optional(),
   kotInvoiceNumber: z.number().default(0).optional(),
+  kotStatus: z
+    .enum(["IN_PROGRESS", "COMPLETED"])
+    .default("IN_PROGRESS")
+    .optional(),
+  priority: z.boolean().default(false).optional(),
 });
 
 export type KotOrderType = z.infer<typeof kotSchema>;

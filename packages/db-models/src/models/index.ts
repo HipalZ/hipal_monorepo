@@ -89,6 +89,7 @@ export * from "./attendence";
 export * from "./discount";
 export * from "./dues";
 export * from "./jewellery";
+export * from "./mergeTable";
 export * from "./passwordManager/passwordManager";
 export * from "./petpoojaCartItem";
 export * from "./printerConfig";

@@ -27,16 +27,8 @@ const businessPosConfigSchema = new mongoose.Schema<BusinessPosConfigType>(
       enum: OrderVerificationTypeEnum,
     },
 
-    restName: {
-      type: String,
-      required: true,
-    },
     date: {
       type: Number,
-      required: true,
-    },
-    branchId: {
-      type: String,
       required: true,
     },
 
@@ -69,10 +61,6 @@ const businessPosConfigSchema = new mongoose.Schema<BusinessPosConfigType>(
       type: String,
       required: true,
       default: "PETPOOJA",
-    },
-    posId: {
-      type: String,
-      required: false,
     },
     defaultTableName: {
       type: String,

@@ -1,6 +1,5 @@
 import {
   AddOn,
-  Business,
   BusinessPosConfig,
   Category,
   Couponz,
@@ -8,7 +7,7 @@ import {
   Dish,
   Kitchen,
   KotOrder,
-  Menu,
+  MergeTable,
   OutLetInfo,
   PasswordManager,
   Payment,
@@ -18,7 +17,6 @@ import {
   Table,
   Tax,
   UnsettleTable,
-  UrlModel,
   User,
   UserAnalytic,
   UserSession,
@@ -34,7 +32,6 @@ import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
-import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import {
@@ -65,14 +62,10 @@ import {
   updateTableSession,
 } from "../../utils/bill";
 import type { Item } from "../../utils/billTypes";
-import {
-  calculateCartBill,
-  convertToPetpoojaCart,
-  transformData,
-  transformParentCategories,
-} from "../../utils/helper";
+import { executePosHandler } from "../../utils/executePoshandlers.ts";
+import { calculateCartBill, convertToPetpoojaCart } from "../../utils/helper";
 import { sendBillPrintEvent, sendKOTPrintEvent } from "../../utils/kot";
-import { petpoojaPosConfig, posApiPaths } from "../../utils/posConfig/petPooja";
+import { posApiPaths } from "../../utils/posConfig/petPooja";
 import { respond } from "../../utils/response";
 const admin = require("firebase-admin");
 export const generateTenDigitCode = (): string => {
@@ -82,7 +75,7 @@ export const generateTenDigitCode = (): string => {
   return randomNumber.toString();
 };
 
-const saveKotOrder = async (
+export const saveKotOrder = async (
   tableName: string,
   businessId: string,
   customerName: string,
@@ -254,11 +247,21 @@ const posRouter = new Hono()
         if (!businessPosConfig) {
           return respond(c, "Pos not found", true, 400, {});
         }
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
 
         // Get the table session
         let tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId.name || tableName,
         }).populate({
           path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
           select: "name phone",
@@ -289,7 +292,7 @@ const posRouter = new Hono()
           return respond(c, "success", false, 200, splitBillVariants);
         }
         const kotOrders = (await KotOrder.find({
-          tableName,
+          tableName: tableSession.tableName,
           settled: false,
           accepted: true,
           businessId,
@@ -298,6 +301,10 @@ const posRouter = new Hono()
         const cartItems = kotOrders.flatMap((order) =>
           order.cart.filter((item) => !item.isDeleted),
         ) as Item[];
+
+        if (cartItems.length === 0) {
+          return respond(c, "No items in the cart", true, 400, {});
+        }
 
         const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
 
@@ -349,7 +356,7 @@ const posRouter = new Hono()
         // Update table session with new values
         tableSession = await updateTableSession(
           businessId,
-          tableName,
+          tableSession.tableName,
           session,
           {
             gst: Number(newGst.toFixed(2)),
@@ -418,6 +425,7 @@ const posRouter = new Hono()
         const posConfig = await BusinessPosConfig.findOne({
           businessId: businessId,
           isDeleted: false,
+          active: true,
         });
         if (!posConfig) {
           return c.json(
@@ -547,416 +555,22 @@ const posRouter = new Hono()
         const { businessId, restId, orderVerificationType, posId } =
           await c.req.json();
 
-        await Menu.updateMany(
-          {
-            businessId,
-          },
-          {
-            $set: {
-              isActive: false,
-              default: false,
-            },
-          },
-          {
-            session,
-          },
-        );
+        const posData = await Pos.findById(posId);
+        if (!posData) return respond(c, "POS not found", true, 404);
 
-        const business = await Business.findById(businessId).session(session);
-        if (!business) throw new Error("Business not found");
-
-        let businessPosConfig = await BusinessPosConfig.findOne({
+        const result = await executePosHandler(posData.name, "setup", {
           businessId,
-          isDeleted: false,
-          active: true,
+          restId,
+          orderVerificationType,
+          posId,
+          session,
         });
 
-        if (businessPosConfig) {
-          return respond(c, "POS already configured", true, 400, {});
+        if (!result) {
+          throw new Error("Internal error in POS setup");
         }
 
-        await Dish.updateMany(
-          { businessId },
-          {
-            isDeleted: true,
-          },
-          { session },
-        );
-        await Category.updateMany(
-          { businessId },
-          {
-            isDeleted: true,
-          },
-          { session },
-        );
-
-        await AddOn.updateMany(
-          { businessId },
-          {
-            isDeleted: true,
-          },
-          { session },
-        );
-
-        await Zone.updateMany(
-          {
-            businessId,
-          },
-          {
-            isDeleted: true,
-          },
-          { session },
-        );
-
-        await Table.updateMany(
-          {
-            businessId,
-          },
-          {
-            isDeleted: true,
-          },
-          { session },
-        );
-        let zoneSyncCount = 0;
-        let tableSyncCount = 0;
-
-        if (!businessPosConfig) {
-          if (!petpoojaPosConfig)
-            throw new Error("Petpooja keys missing in env/config");
-
-          businessPosConfig = new BusinessPosConfig({
-            businessId,
-            branchId: business._id,
-            restName: business.name,
-            orderMode: "WITH_ORDER",
-            accessKey: petpoojaPosConfig.accessKey,
-            secretKey: petpoojaPosConfig.secretKey,
-            authToken: petpoojaPosConfig.authToken,
-            restId,
-            orderVerificationType,
-            posName: "Petpooja",
-            posId,
-            isDeleted: false,
-            date: Date.now(),
-            active: true,
-          });
-          await businessPosConfig.save({ session });
-        }
-
-        const { data: areaTableRes } = await axios.post(
-          posApiPaths.fetchAreaAndTables,
-          {
-            "app-key": businessPosConfig.accessKey,
-            "app-secret": businessPosConfig.secretKey,
-            "access-token": businessPosConfig.authToken,
-            restID: restId,
-            tableNo: "",
-          },
-        );
-
-        if (areaTableRes.success !== "1")
-          throw new Error("POS area/table fetch failed");
-
-        const areas = areaTableRes.areas || [];
-        const tables = areaTableRes.tables || [];
-
-        let defaultZone = null;
-
-        if (areas.length === 0) {
-          defaultZone = new Zone({
-            businessId,
-            name: "POS",
-            zoneId: nanoid(5),
-            active: true,
-            tableIds: [],
-            visibility: true,
-            pos: true,
-          });
-          await defaultZone.save({ session });
-        }
-
-        for (const area of areas) {
-          defaultZone = await Zone.findOneAndUpdate(
-            { zoneId: area.restaurantareaid },
-            {
-              businessId,
-              name: area.displayname,
-              zoneId: area.restaurantareaid,
-              active: area.active === "1",
-              rank: area.rank,
-              tableIds: [],
-              pos: true,
-            },
-            { upsert: true, new: true, session },
-          );
-
-          zoneSyncCount += 1;
-        }
-
-        for (const table of tables) {
-          const zoneIdToLink =
-            areas.length === 0 ? defaultZone?.zoneId : table.restaurantareaid;
-
-          const tableDoc = await Table.findOneAndUpdate(
-            { tableId: table.id },
-            {
-              name: table.table_no,
-              businessId,
-              zoneId: zoneIdToLink,
-              active: table.active === "1",
-              rank: table.rank,
-              tableId: table.id,
-              internalZoneId: defaultZone?._id,
-              pos: true,
-            },
-            { upsert: true, new: true, session },
-          );
-
-          tableSyncCount += 1;
-
-          await BusinessPosConfig.findOneAndUpdate(
-            { businessId },
-            { $set: { defaultTableName: tableDoc.name } },
-            { session },
-          );
-
-          // make sure zone has reference
-          await Zone.findOneAndUpdate(
-            { zoneId: zoneIdToLink },
-            { $addToSet: { tableIds: tableDoc._id } },
-            { session },
-          );
-
-          // create short URL once per table
-          const longUrl = `https://hipalz.com/${business.customLink}/explore?tableName=${tableDoc.name}`;
-          const existingShort = await UrlModel.exists({
-            businessId,
-            longUrl,
-          }).session(session);
-          if (!existingShort) {
-            const shortCode = nanoid(5);
-            const [{ shortUrl }] = await UrlModel.create(
-              [
-                {
-                  businessId,
-                  longUrl,
-                  shortUrl: `https://api.hipalz.com/surl/${shortCode}`,
-                  urlCode: shortCode,
-                },
-              ],
-              { session },
-            );
-            await Table.findOneAndUpdate(
-              { _id: tableDoc._id },
-              { tableLink: shortUrl },
-              { session },
-            );
-          }
-        }
-
-        const zoneIds = (await Zone.find({ businessId }).session(session)).map(
-          (z) => z._id.toString(),
-        );
-
-        const [menuDoc] = await Menu.create(
-          [
-            {
-              name: "Default",
-              businessId,
-              zoneIds,
-              menuType: 2,
-              days: [1, 2, 3, 4, 5, 6, 7],
-              startTime: 240,
-              endTime: 239,
-              isActive: true,
-              isDeleted: false,
-              categoryLayout: 2,
-              cardLayout: 2,
-              primaryColor: "#ec4899",
-              secondaryColor: "#fce7f3",
-              default: true,
-            },
-          ],
-          { session },
-        );
-
-        const dtableName = await Table.findOne({
-          businessId: businessId,
-        }).session(session);
-
-        const { data: menuRes } = await axios.post(posApiPaths.fetchMenu, {
-          "app-key": businessPosConfig.accessKey,
-          "app-secret": businessPosConfig.secretKey,
-          "access-token": businessPosConfig.authToken,
-          restID: businessPosConfig.restId,
-          tableNo: dtableName?.name,
-        });
-        let dishSyncCount = 0;
-        let categorySyncCount = 0;
-        let addOnSyncCount = 0;
-
-        const parentCategories = transformParentCategories(
-          menuRes.group_categories || [],
-          menuRes.categories || [],
-          businessId,
-        );
-        const transformedCategories = transformData(menuRes);
-
-        for (const pc of parentCategories) {
-          await Category.findOneAndUpdate(
-            { businessId, posCategoryId: pc?._id },
-            {
-              businessId,
-              visibility: true,
-              availability: true,
-              name: pc?.name,
-              hierarchy: "PARENT",
-              posCategoryId: pc?._id,
-              parentCategoryIds: [],
-              subCategoryIds: [],
-              dishIds: [],
-              coverImage: pc?.coverImage,
-              pos: true,
-              rank: pc?.rank,
-              active: pc?.active === "1",
-            },
-            { upsert: true, new: true, session },
-          );
-        }
-
-        for (const cat of transformedCategories) {
-          const childCat = await Category.findOneAndUpdate(
-            { businessId, posCategoryId: cat._id },
-            {
-              pos: true,
-              name: cat.name,
-              visibility: cat.visibility,
-              availability: cat.availability,
-              rank: cat.categoryrank,
-              businessId,
-              coverImage: cat.coverImage,
-              hierarchy: cat.hierarchy,
-              menuId: menuDoc._id,
-              parentCategoryIds: [], // we fill below
-              subCategoryIds: [],
-              dishIds: [],
-              active: cat.active === "1",
-              timings: cat.timings,
-            },
-            { upsert: true, new: true, session },
-          );
-
-          categorySyncCount += 1;
-
-          for (const pId of cat.parentCategoryIds || []) {
-            const parentCat = await Category.findOne({
-              businessId,
-              posCategoryId: pId,
-            });
-            if (parentCat) {
-              await Category.findOneAndUpdate(
-                { _id: parentCat._id },
-                { $addToSet: { subCategoryIds: childCat._id } },
-                { session },
-              );
-              await Category.findOneAndUpdate(
-                { _id: childCat._id },
-                { $addToSet: { parentCategoryIds: parentCat._id } },
-                { session },
-              );
-            }
-          }
-
-          // 10‑c. upsert dishes in this category
-          for (const dish of cat.dishIds || []) {
-            const dishDoc = await Dish.findOneAndUpdate(
-              { businessId, posDishId: dish._id },
-              {
-                pos: true,
-                visibility: dish.visibility,
-                availability: dish.availability,
-                name: dish.name,
-                price: dish.price,
-                description: dish.description,
-                dishTypes: dish.dishTypes,
-                images: dish.images,
-                portions: dish.portions,
-                rank: dish.itemrank,
-                ignoreDiscount: dish.ignoreDiscount,
-                ignoreTax: dish.ignoreTax,
-                posDishId: dish._id,
-                menuId: menuDoc._id,
-                categoryIds: [],
-                addOnIds: [],
-                recommendationIds: [],
-                businessId,
-                posTax: dish.posTax,
-                active: dish.active === "1",
-              },
-              { upsert: true, new: true, session },
-            );
-
-            dishSyncCount += 1;
-
-            await Dish.findByIdAndUpdate(
-              dishDoc._id,
-              { $addToSet: { categoryIds: childCat._id } },
-              { session },
-            );
-            await Category.findByIdAndUpdate(
-              childCat._id,
-              { $addToSet: { dishIds: dishDoc._id } },
-              { session },
-            );
-
-            for (const addOn of dish.addOnIds || []) {
-              const addOnDoc = await AddOn.findOneAndUpdate(
-                { businessId, posAddOnId: addOn._id },
-                {
-                  pos: true,
-                  posAddOnId: addOn._id,
-                  businessId,
-                  name: addOn.name,
-                  visibility: addOn.visibility,
-                  availability: addOn.availability,
-                  addOnMaxQuantity: addOn.addOnMaxQuantity,
-                  compulsory: addOn.addon_item_selection_min === "1" ? 1 : 0,
-                  choiceType: addOn.choiceType,
-                  choices: addOn.choices,
-                  menuId: menuDoc._id,
-                  dishIds: [],
-                  active: addOn.active === "1",
-                },
-                { upsert: true, new: true, session },
-              );
-
-              addOnSyncCount += 1;
-
-              await Dish.findByIdAndUpdate(
-                dishDoc._id,
-                { $addToSet: { addOnIds: addOnDoc._id } },
-                { session },
-              );
-              await AddOn.findByIdAndUpdate(
-                addOnDoc._id,
-                { $addToSet: { dishIds: dishDoc._id } },
-                { session },
-              );
-            }
-          }
-        }
-
-        return c.json({
-          message: "POS Config saved successfully",
-          err: false,
-          data: {
-            dishSyncCount,
-            categorySyncCount,
-            addOnSyncCount,
-            zoneSyncCount,
-            tableSyncCount,
-          },
-        });
+        return respond(c, "", false, 200, result);
       });
     },
   )
@@ -975,358 +589,34 @@ const posRouter = new Hono()
       return runInTransaction(async (session) => {
         const { businessId, restId } = await c.req.json();
 
-        const business = await Business.findById(businessId).session(session);
-        if (!business) throw new Error("Business not found");
-
-        await Dish.updateMany(
-          { businessId, active: true, isDeleted: false },
-          {
-            active: false,
-          },
-          { session },
-        );
-        await Category.updateMany(
-          { businessId, active: true, isDeleted: false },
-          {
-            active: false,
-          },
-          { session },
-        );
-
-        await AddOn.updateMany(
-          { businessId, active: true, isDeleted: false },
-          {
-            active: false,
-          },
-          { session },
-        );
-        await Zone.updateMany(
-          {
-            businessId,
-            active: true,
-          },
-          {
-            active: false,
-          },
-          { session },
-        );
-
-        await Table.updateMany(
-          {
-            businessId,
-            active: true,
-          },
-          {
-            active: false,
-          },
-          { session },
-        );
-
-        let dishSyncCount = 0;
-        let categorySyncCount = 0;
-        let addOnSyncCount = 0;
-        let zoneSyncCount = 0;
-        let tableSyncCount = 0;
-
         const businessPosConfig = await BusinessPosConfig.findOne({
           businessId,
           isDeleted: false,
           active: true,
-        });
-
-        const menu = await Menu.findOne({ businessId, isActive: true }).session(
-          session,
-        );
-
-        if (!menu) {
-          throw new Error("Menu not found");
-        }
+        }).session(session);
 
         if (!businessPosConfig) {
-          throw new Error("BusinessPosConfig not found");
+          return respond(c, "POS not found", true, 404);
         }
 
-        const { data: areaTableRes } = await axios.post(
-          posApiPaths.fetchAreaAndTables,
+        const result = await executePosHandler(
+          businessPosConfig.posName,
+          "sync_menu",
           {
-            "app-key": businessPosConfig.accessKey,
-            "app-secret": businessPosConfig.secretKey,
-            "access-token": businessPosConfig.authToken,
-            restID: restId,
-            tableNo: "",
+            businessId,
+            restId,
+            session,
           },
         );
 
-        if (areaTableRes.success !== "1")
-          throw new Error("POS area/table fetch failed");
-
-        const areas = areaTableRes.areas || [];
-        const tables = areaTableRes.tables || [];
-
-        let defaultZone = null;
-
-        if (areas.length === 0) {
-          defaultZone = new Zone({
-            businessId,
-            name: "POS",
-            zoneId: nanoid(5),
-            active: true,
-            tableIds: [],
-            visibility: true,
-            pos: true,
-          });
-          await defaultZone.save({ session });
-        }
-
-        for (const area of areas) {
-          defaultZone = await Zone.findOneAndUpdate(
-            { zoneId: area.restaurantareaid },
-            {
-              businessId,
-              name: area.displayname,
-              zoneId: area.restaurantareaid,
-              active: area.active === "1",
-              rank: area.rank,
-              pos: true,
-              tableIds: [],
-            },
-            { upsert: true, new: true, session },
-          );
-          zoneSyncCount += 1;
-        }
-
-        for (const table of tables) {
-          tableSyncCount += 1;
-
-          const zoneIdToLink =
-            areas.length === 0 ? defaultZone?.zoneId : table.restaurantareaid;
-
-          const tableDoc = await Table.findOneAndUpdate(
-            { tableId: table.id },
-            {
-              name: table.table_no,
-              businessId,
-              zoneId: zoneIdToLink,
-              active: table.active === "1",
-              rank: table.rank,
-              tableId: table.id,
-              pos: true,
-              internalZoneId: defaultZone?._id,
-            },
-            { upsert: true, new: true, session },
-          );
-
-          // make sure zone has reference
-          await Zone.findOneAndUpdate(
-            { zoneId: zoneIdToLink },
-            { $addToSet: { tableIds: tableDoc._id } },
-            { session },
-          );
-
-          // create short URL once per table
-          const longUrl = `https://hipalz.com/${business.customLink}/explore?tableName=${tableDoc.name}`;
-          const existingShort = await UrlModel.exists({
-            businessId,
-            longUrl,
-          }).session(session);
-          if (!existingShort) {
-            const shortCode = nanoid(5);
-            const [{ shortUrl }] = await UrlModel.create(
-              [
-                {
-                  businessId,
-                  longUrl,
-                  shortUrl: `https://api.hipalz.com/surl/${shortCode}`,
-                  urlCode: shortCode,
-                },
-              ],
-              { session },
-            );
-            await Table.findOneAndUpdate(
-              { _id: tableDoc._id },
-              { tableLink: shortUrl },
-              { session },
-            );
-          }
-        }
-
-        const zoneIds = (await Zone.find({ businessId }).session(session)).map(
-          (z) => z._id.toString(),
-        );
-
-        await Menu.findOneAndUpdate(
-          { businessId, isActive: true },
-          { zoneIds },
-          { session },
-        );
-
-        const { data: menuRes } = await axios.post(posApiPaths.fetchMenu, {
-          "app-key": businessPosConfig.accessKey,
-          "app-secret": businessPosConfig.secretKey,
-          "access-token": businessPosConfig.authToken,
-          restID: businessPosConfig.restId,
-          tableNo: businessPosConfig.defaultTableName,
-        });
-
-        const parentCategories = transformParentCategories(
-          menuRes.group_categories || [],
-          menuRes.categories || [],
-          businessId,
-        );
-        const transformedCategories = transformData(menuRes);
-
-        for (const pc of parentCategories) {
-          await Category.findOneAndUpdate(
-            { businessId, posCategoryId: pc?._id },
-            {
-              businessId,
-              visibility: true,
-              availability: true,
-              name: pc?.name,
-              hierarchy: "PARENT",
-              posCategoryId: pc?._id,
-              parentCategoryIds: [],
-              subCategoryIds: [],
-              dishIds: [],
-              coverImage: pc?.coverImage,
-              menuId: menu._id,
-              pos: true,
-              rank: pc?.rank,
-              active: pc?.active === "1",
-            },
-            { upsert: true, new: true, session },
-          );
-        }
-
-        for (const cat of transformedCategories) {
-          categorySyncCount += 1;
-          const childCat = await Category.findOneAndUpdate(
-            { businessId, posCategoryId: cat._id },
-            {
-              pos: true,
-              name: cat.name,
-              visibility: cat.visibility,
-              availability: cat.availability,
-              rank: cat.categoryrank,
-              businessId,
-              coverImage: cat.coverImage,
-              hierarchy: cat.hierarchy,
-              menuId: menu._id,
-              parentCategoryIds: [], // we fill below
-              subCategoryIds: [],
-              dishIds: [],
-              active: cat.active === "1",
-              timings: cat.timings,
-            },
-            { upsert: true, new: true, session },
-          );
-
-          for (const pId of cat.parentCategoryIds || []) {
-            const parentCat = await Category.findOne({
-              businessId,
-              posCategoryId: pId,
-            });
-            if (parentCat) {
-              await Category.findOneAndUpdate(
-                { _id: parentCat._id },
-                { $addToSet: { subCategoryIds: childCat._id } },
-                { session },
-              );
-              await Category.findOneAndUpdate(
-                { _id: childCat._id },
-                { $addToSet: { parentCategoryIds: parentCat._id } },
-                { session },
-              );
-            }
-          }
-
-          // 10‑c. upsert dishes in this category
-          for (const dish of cat.dishIds || []) {
-            dishSyncCount += 1;
-            const dishDoc = await Dish.findOneAndUpdate(
-              { businessId, posDishId: dish._id },
-              {
-                pos: true,
-                visibility: dish.visibility,
-                availability: dish.availability,
-                name: dish.name,
-                price: dish.price,
-                description: dish.description,
-                dishTypes: dish.dishTypes,
-                images: dish.images,
-                portions: dish.portions,
-                rank: dish.itemrank,
-                ignoreDiscount: dish.ignoreDiscount,
-                ignoreTax: dish.ignoreTax,
-                posDishId: dish._id,
-                menuId: menu._id,
-                categoryIds: [],
-                addOnIds: [],
-
-                businessId,
-                posTax: dish.posTax,
-                active: dish.active === "1",
-              },
-              { upsert: true, new: true, session },
-            );
-
-            await Dish.findByIdAndUpdate(
-              dishDoc._id,
-              { $addToSet: { categoryIds: childCat._id } },
-              { session },
-            );
-            await Category.findByIdAndUpdate(
-              childCat._id,
-              { $addToSet: { dishIds: dishDoc._id } },
-              { session },
-            );
-
-            for (const addOn of dish.addOnIds || []) {
-              addOnSyncCount += 1;
-              const addOnDoc = await AddOn.findOneAndUpdate(
-                { businessId, posAddOnId: addOn._id },
-                {
-                  pos: true,
-                  posAddOnId: addOn._id,
-                  businessId,
-                  name: addOn.name,
-                  visibility: addOn.visibility,
-                  availability: addOn.availability,
-                  addOnMaxQuantity: addOn.addOnMaxQuantity,
-                  compulsory: addOn.addon_item_selection_min === "1" ? 1 : 0,
-                  choiceType: addOn.choiceType,
-                  choices: addOn.choices,
-                  menuId: menu._id,
-                  dishIds: [],
-                  active: addOn.active === "1",
-                },
-                { upsert: true, new: true, session },
-              );
-
-              await Dish.findByIdAndUpdate(
-                dishDoc._id,
-                { $addToSet: { addOnIds: addOnDoc._id } },
-                { session },
-              );
-              await AddOn.findByIdAndUpdate(
-                addOnDoc._id,
-                { $addToSet: { dishIds: dishDoc._id } },
-                { session },
-              );
-            }
-          }
+        if (!result) {
+          throw new Error("Internal error in POS sync menu");
         }
 
         return c.json({
-          message: "POS Config saved successfully",
+          message: "Menu synced successfully",
           err: false,
-          data: {
-            dishSyncCount,
-            categorySyncCount,
-            addOnSyncCount,
-            zoneSyncCount,
-            tableSyncCount,
-          },
+          data: {},
         });
       });
     },
@@ -1350,11 +640,31 @@ const posRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { internalCart, tableName, businessId, userId, customerPhone } =
           await c.req.json();
-        //  table info
-        const tableData = await Table.findOne({
+
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        let tableData = null;
+
+        const isTableMerge = await MergeTable.findOne({
           businessId: businessId,
-          name: tableName,
-        });
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
+        if (isTableMerge) {
+          tableData = await Table.findOne({
+            businessId: businessId,
+            name: isTableMerge.parentTableId.name,
+          });
+        } else {
+          tableData = await Table.findOne({
+            businessId: businessId,
+            name: tableName,
+          });
+        }
 
         if (!tableData) {
           return respond(c, "Table not found", true, 404, {});
@@ -1380,7 +690,7 @@ const posRouter = new Hono()
 
         const orderAlreadyExist = await PaymentAlert.findOne({
           businessId,
-          tableName,
+          tableName: tableData.name,
           alertType: "OFFLINE",
           isAccepted: false,
         });
@@ -1398,7 +708,7 @@ const posRouter = new Hono()
           businessId: businessId,
         });
         const userTableSession = (await UserSession.findOne({
-          tableName: tableName,
+          tableName: tableData.name,
           businessId: businessId,
         })) as UserSessionSchemaType;
 
@@ -1423,23 +733,6 @@ const posRouter = new Hono()
               );
             }
           }
-        }
-
-        if (userTableSession && userTableSession?.tableName !== tableName) {
-          return c.json(
-            {
-              message: `User already active on table ${userTableSession.tableName} please close that table first`,
-              err: true,
-              data: {
-                success: false,
-                data: {
-                  tableName: userTableSession.tableName,
-                  hiCode: userTableSession.hiCode,
-                },
-              },
-            },
-            409,
-          );
         }
 
         if (userTableSession) {
@@ -1470,7 +763,7 @@ const posRouter = new Hono()
           await Table.findOneAndUpdate(
             {
               businessId: businessId,
-              name: tableName,
+              name: tableData.name,
             },
             {
               hiCode: hiCode,
@@ -1486,7 +779,7 @@ const posRouter = new Hono()
               businessId: businessId,
               hiCode: hiCode,
               pin: tenDigitCode,
-              tableName: tableName,
+              tableName: tableData.name,
               customerName: userData.name,
               phoneNumbers: [userData.phone],
               customerIds: [userData._id],
@@ -1500,7 +793,7 @@ const posRouter = new Hono()
           await userSession.save();
           if (posConfigData.orderVerificationType === "USER") {
             const result = await saveOrder(
-              tableName,
+              tableData.name,
               businessId,
               userData.name as string,
               userData.phone as string,
@@ -1515,7 +808,7 @@ const posRouter = new Hono()
             );
 
             sendKOTPrintEvent({
-              tableName,
+              tableName: tableData.name,
               businessId,
               customerName: userData.name as string,
               customerPhone: userData.phone as string,
@@ -1531,7 +824,7 @@ const posRouter = new Hono()
           }
 
           await saveKotOrder(
-            tableName,
+            tableData.name,
             businessId,
             userData.name as string,
             userData.phone as string,
@@ -1561,7 +854,7 @@ const posRouter = new Hono()
 
         if (posConfigData.orderVerificationType === "USER") {
           const result = await saveOrder(
-            tableName,
+            tableData.name,
             businessId,
             userData.name as string,
             userData.phone as string,
@@ -1576,7 +869,7 @@ const posRouter = new Hono()
           );
 
           const res = sendKOTPrintEvent({
-            tableName,
+            tableName: tableData.name,
             businessId,
             customerName: userData.name as string,
             customerPhone: userData.phone as string,
@@ -1592,7 +885,7 @@ const posRouter = new Hono()
         }
 
         await saveKotOrder(
-          tableName,
+          tableData.name,
           businessId,
           userData.name as string,
           userData.phone as string,
@@ -1716,10 +1009,31 @@ const posRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { internalCart, tableName, businessId, userId } =
           await c.req.json();
-        const tableInfo = await Table.findOne({
+
+        let tableInfo = null;
+
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
           businessId: businessId,
-          name: tableName,
-        });
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
+        if (isTableMerge) {
+          tableInfo = await Table.findOne({
+            businessId: businessId,
+            name: isTableMerge.parentTableId.name,
+          });
+        } else {
+          tableInfo = await Table.findOne({
+            businessId: businessId,
+            name: tableName,
+          });
+        }
 
         if (!tableInfo) {
           return respond(c, "Table not found", true, 404, {});
@@ -1742,7 +1056,7 @@ const posRouter = new Hono()
         }
 
         const tableSession = (await UserSession.findOne({
-          tableName: tableName,
+          tableName: tableInfo.name,
           businessId: businessId,
         })) as UserSessionSchemaType;
 
@@ -1759,7 +1073,7 @@ const posRouter = new Hono()
 
         const orderAlreadyExist = await PaymentAlert.findOne({
           businessId,
-          tableName,
+          tableName: tableInfo.name,
           alertType: "OFFLINE",
           isAccepted: false,
         });
@@ -1782,7 +1096,7 @@ const posRouter = new Hono()
               businessId: businessId,
               hiCode: hiCode,
               pin: tenDigitCode,
-              tableName: tableName,
+              tableName: tableInfo.name,
               customerName: user.name as string,
               phoneNumbers: [user.phone],
               performedBy: "captain",
@@ -1795,7 +1109,7 @@ const posRouter = new Hono()
           await userSession.save();
 
           const res = await saveKotOrder(
-            tableName,
+            tableInfo.name,
             businessId,
             user.name as string,
             user.phone as string,
@@ -1811,7 +1125,7 @@ const posRouter = new Hono()
           await Table.findOneAndUpdate(
             {
               businessId: businessId,
-              name: tableName,
+              name: tableInfo.name,
             },
             {
               $inc: {
@@ -1831,7 +1145,7 @@ const posRouter = new Hono()
           );
 
           sendKOTPrintEvent({
-            tableName,
+            tableName: tableInfo.name,
             businessId,
             customerName: user.name as string,
             customerPhone: user.phone as string,
@@ -1849,7 +1163,7 @@ const posRouter = new Hono()
         }
 
         const res = await saveKotOrder(
-          tableName,
+          tableInfo.name,
           businessId,
           tableInfo?.edited ? tableSession.customerName : (user.name as string),
           user.phone as string,
@@ -1865,7 +1179,7 @@ const posRouter = new Hono()
         await Table.findOneAndUpdate(
           {
             businessId: businessId,
-            name: tableName,
+            name: tableInfo.name,
           },
           {
             $inc: {
@@ -1886,7 +1200,7 @@ const posRouter = new Hono()
         );
 
         sendKOTPrintEvent({
-          tableName,
+          tableName: tableInfo.name,
           businessId,
           customerName: user.name as string,
           customerPhone: user.phone as string,
@@ -1964,10 +1278,30 @@ const posRouter = new Hono()
     async (c) => {
       const { tableName, businessId, userId } = c.req.query();
 
-      const tableData = await Table.findOne({
+      const tInfo = await Table.findOne({ businessId, name: tableName });
+
+      if (!tInfo) {
+        return respond(c, "Table not found", true, 404, {});
+      }
+
+      let tableData = null;
+
+      const isTableMerge = await MergeTable.findOne({
         businessId: businessId,
-        name: tableName,
-      });
+        childTableIds: tInfo._id.toString(),
+      }).populate("parentTableId");
+
+      if (isTableMerge) {
+        tableData = await Table.findOne({
+          businessId: businessId,
+          name: isTableMerge.parentTableId.name,
+        });
+      } else {
+        tableData = await Table.findOne({
+          businessId: businessId,
+          name: tableName,
+        });
+      }
 
       if (!tableData) {
         return c.json(
@@ -2059,10 +1393,30 @@ const posRouter = new Hono()
         );
       }
 
-      const tableData = await Table.findOne({
+      const tInfo = await Table.findOne({ businessId, name: tableName });
+
+      if (!tInfo) {
+        return respond(c, "Table not found", true, 404, {});
+      }
+
+      let tableData = null;
+
+      const isTableMerge = await MergeTable.findOne({
         businessId: businessId,
-        name: tableName,
-      });
+        childTableIds: tInfo._id.toString(),
+      }).populate("parentTableId");
+
+      if (isTableMerge) {
+        tableData = await Table.findOne({
+          businessId: businessId,
+          name: isTableMerge.parentTableId.name,
+        });
+      } else {
+        tableData = await Table.findOne({
+          businessId: businessId,
+          name: tableName,
+        });
+      }
 
       if (!tableData) {
         return c.json(
@@ -2078,7 +1432,7 @@ const posRouter = new Hono()
       }
 
       const userTableSession = await UserSession.findOne({
-        tableName: tableName,
+        tableName: tableData.name,
         businessId: businessId,
       });
 
@@ -2564,6 +1918,14 @@ const posRouter = new Hono()
           order.cart.filter((item) => !item.isDeleted),
         ) as Item[];
 
+        const { totalDishTotal } = calculateBillTotals(KotOrders);
+
+        if (!billAlreadySplit) {
+          if (totalDishTotal !== tableSession.subTotal) {
+            return respond(c, "please sync all kots", true, 401, {});
+          }
+        }
+
         const billItems = groupItemsByGST(cartItems);
 
         sendBillPrintEvent({
@@ -2710,6 +2072,17 @@ const posRouter = new Hono()
           variantId,
         } = await c.req.json();
 
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
         if (password) {
           const passwordManager = await PasswordManager.findOne({
             businessId,
@@ -2732,7 +2105,7 @@ const posRouter = new Hono()
         // Fetch the table session
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -2800,7 +2173,7 @@ const posRouter = new Hono()
           // Calculate discount on selected dishes
           const kotOrder = (await KotOrder.find({
             "cart._id": { $in: itemIds },
-            tableName,
+            tableName: isTableMerge?.parentTableId?.name || tableName,
             businessId,
             settled: false,
             accepted: true,
@@ -2883,21 +2256,29 @@ const posRouter = new Hono()
         );
 
         // Update session after applying the discount
-        await updateTableSession(businessId, tableName, session, {
-          gst: itemGst ? Number(itemGst.toFixed(2)) : Number(newGst.toFixed(2)),
-          total: newTotal,
-          reasonOfDiscount,
-          discountAppliedOn,
-          discountAppliedBy,
-          isDiscountApplied: true,
-          discountRemovedBy: null,
-          discount: discountAmount,
-          discountPercentage:
-            discountAppliedOn === "ON_BILL" ? Number(value.toFixed(2)) : 0,
-          itemIds: itemIds ? itemIds : [],
-          itemGst: itemGst ? Number(itemGst.toFixed(2)) : 0,
-          itemGstAfterDiscount: Number(saveGstAfterDiscount.toFixed(2)),
-        });
+        await updateTableSession(
+          businessId,
+          isTableMerge?.parentTableId?.name || tableName,
+          session,
+          {
+            gst: itemGst
+              ? Number(itemGst.toFixed(2))
+              : Number(newGst.toFixed(2)),
+            total: newTotal,
+            reasonOfDiscount,
+            discountAppliedOn,
+            discountAppliedBy,
+            isDiscountApplied: true,
+            discountRemovedBy: null,
+            discount: discountAmount,
+
+            discountPercentage:
+              discountAppliedOn === "ON_BILL" ? Number(value.toFixed(2)) : 0,
+            itemIds: itemIds ? itemIds : [],
+            itemGst: itemGst ? Number(itemGst.toFixed(2)) : 0,
+            itemGstAfterDiscount: Number(saveGstAfterDiscount.toFixed(2)),
+          },
+        );
 
         return respond(c, "Success", true, 200, {});
       });
@@ -2913,15 +2294,28 @@ const posRouter = new Hono()
         tableName: z.string().min(1).max(200),
         value: z.number().positive(),
         variantId: z.string().min(24).max(24).optional(),
+        userId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, value, variantId } = await c.req.json();
+
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
 
         if (!tableSession) {
@@ -3009,15 +2403,20 @@ const posRouter = new Hono()
           tableSession.tips,
         );
 
-        await updateTableSession(businessId, tableName, session, {
-          gst: Number(newGst.toFixed(2)),
-          total: newTotal,
-          isDiscountApplied: true,
-          claimedCoins: coins,
-          coinPercentage: Number(
-            ((coins / tableSession.subTotal) * 100).toFixed(2),
-          ),
-        });
+        await updateTableSession(
+          businessId,
+          isTableMerge?.parentTableId?.name || tableName,
+          session,
+          {
+            gst: Number(newGst.toFixed(2)),
+            total: newTotal,
+            isDiscountApplied: true,
+            claimedCoins: coins,
+            coinPercentage: Number(
+              ((coins / tableSession.subTotal) * 100).toFixed(2),
+            ),
+          },
+        );
 
         return respond(c, "Success", true, 200, {});
       });
@@ -3040,9 +2439,21 @@ const posRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, couponId, variantId } =
           await c.req.json();
+
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -3152,16 +2563,21 @@ const posRouter = new Hono()
           tableSession.tips,
         );
 
-        await updateTableSession(businessId, tableName, session, {
-          gst: Number(newGst.toFixed(2)),
-          total: newTotal,
-          isDiscountApplied: true,
-          couponDiscount: Number(couponDiscount.toFixed(2)),
-          couponId,
-          couponPercentage: Number(
-            ((couponDiscount / tableSession.subTotal) * 100).toFixed(2),
-          ),
-        });
+        await updateTableSession(
+          businessId,
+          isTableMerge?.parentTableId?.name || tableName,
+          session,
+          {
+            gst: Number(newGst.toFixed(2)),
+            total: newTotal,
+            isDiscountApplied: true,
+            couponDiscount: Number(couponDiscount.toFixed(2)),
+            couponId,
+            couponPercentage: Number(
+              ((couponDiscount / tableSession.subTotal) * 100).toFixed(2),
+            ),
+          },
+        );
 
         return respond(c, "Success", true, 200, {});
       });
@@ -3190,9 +2606,21 @@ const posRouter = new Hono()
           reasonOfDiscount,
           variantId,
         } = await c.req.json();
+
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
 
         if (!tableSession) {
@@ -3264,19 +2692,24 @@ const posRouter = new Hono()
         const isDiscountApplied =
           tableSession.claimedCoins > 0 || tableSession.couponDiscount > 0;
 
-        await updateTableSession(businessId, tableName, session, {
-          gst: Number(newGst).toFixed(2),
-          total: newTotal,
-          reasonOfDiscount,
-          isDiscountApplied,
-          discount: 0,
-          discountAppliedBy: null,
-          discountRemovedBy,
-          newDishGst: 0,
-          discountPercentage: 0,
-          itemIds: [],
-          itemGst: 0,
-        });
+        await updateTableSession(
+          businessId,
+          isTableMerge?.parentTableId?.name || tableName,
+          session,
+          {
+            gst: Number(newGst).toFixed(2),
+            total: newTotal,
+            reasonOfDiscount,
+            isDiscountApplied,
+            discount: 0,
+            discountAppliedBy: null,
+            discountRemovedBy,
+            newDishGst: 0,
+            discountPercentage: 0,
+            itemIds: [],
+            itemGst: 0,
+          },
+        );
 
         return respond(c, "Success", true, 200, {});
       });
@@ -3297,9 +2730,20 @@ const posRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, variantId } = await c.req.json();
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
 
         if (!tableSession) {
@@ -3370,13 +2814,18 @@ const posRouter = new Hono()
           tableSession.tips,
         );
 
-        await updateTableSession(businessId, tableName, session, {
-          gst: newGst.toFixed(2),
-          total: newTotal,
-          isDiscountApplied,
-          claimedCoins: 0,
-          coinPercentage: 0,
-        });
+        await updateTableSession(
+          businessId,
+          isTableMerge?.parentTableId?.name || tableName,
+          session,
+          {
+            gst: newGst.toFixed(2),
+            total: newTotal,
+            isDiscountApplied,
+            claimedCoins: 0,
+            coinPercentage: 0,
+          },
+        );
 
         return respond(c, "Success", true, 200, {});
       });
@@ -3397,10 +2846,20 @@ const posRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, variantId } = await c.req.json();
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
 
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
 
         if (!tableSession) {
@@ -3470,14 +2929,19 @@ const posRouter = new Hono()
           tableSession.tips,
         );
 
-        await updateTableSession(businessId, tableName, session, {
-          gst: Number(newGst.toFixed(2)),
-          total: newTotal,
-          couponId: null,
-          isDiscountApplied,
-          couponDiscount: 0,
-          couponPercentage: 0,
-        });
+        await updateTableSession(
+          businessId,
+          isTableMerge?.parentTableId?.name || tableName,
+          session,
+          {
+            gst: Number(newGst.toFixed(2)),
+            total: newTotal,
+            couponId: null,
+            isDiscountApplied,
+            couponDiscount: 0,
+            couponPercentage: 0,
+          },
+        );
 
         return respond(c, "Success", true, 200, {});
       });
@@ -3559,9 +3023,20 @@ const posRouter = new Hono()
         const { businessId, tableName, serviceChargeAppliedBy, variantId } =
           await c.req.json();
 
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
 
         if (!tableSession) {
@@ -3605,11 +3080,16 @@ const posRouter = new Hono()
           return respond(c, "Success", true, 200, {});
         }
 
-        await updateTableSession(businessId, tableName, session, {
-          serviceChargeAppliedBy,
-          isServiceChargeRemoved: false,
-          serviceChargeRemovedBy: null,
-        });
+        await updateTableSession(
+          businessId,
+          isTableMerge?.parentTableId?.name || tableName,
+          session,
+          {
+            serviceChargeAppliedBy,
+            isServiceChargeRemoved: false,
+            serviceChargeRemovedBy: null,
+          },
+        );
 
         return respond(c, "Success", true, 200, {});
       });
@@ -3641,6 +3121,17 @@ const posRouter = new Hono()
           variantId,
         } = await c.req.json();
 
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
         if (password) {
           const passwordManager = await PasswordManager.findOne({
             businessId,
@@ -3662,7 +3153,7 @@ const posRouter = new Hono()
 
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
 
         if (!tableSession) {
@@ -3723,7 +3214,10 @@ const posRouter = new Hono()
         }
 
         await UserSession.findOneAndUpdate(
-          { businessId, tableName },
+          {
+            businessId,
+            tableName: isTableMerge?.parentTableId?.name || tableName,
+          },
           {
             $set: {
               serviceCharge: 0,
@@ -3779,6 +3273,10 @@ const posRouter = new Hono()
 
       if (!pos) {
         return respond(c, "Pos not found", true, 400, {});
+      }
+
+      if (pos.posName === "HIPAL_Z") {
+        return respond(c, "Success", true, 200, {});
       }
       const unsettleTable = await UnsettleTable.find({
         businessId,
@@ -3930,9 +3428,20 @@ const posRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, value, variantId } = await c.req.json();
 
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
 
         if (!tableSession) {
@@ -3985,7 +3494,10 @@ const posRouter = new Hono()
         }
 
         await UserSession.findOneAndUpdate(
-          { businessId, tableName },
+          {
+            businessId,
+            tableName: isTableMerge?.parentTableId?.name || tableName,
+          },
           {
             $set: {
               tips: value,
@@ -4014,9 +3526,20 @@ const posRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, variantId } = await c.req.json();
 
+        const tInfo = await Table.findOne({ businessId, name: tableName });
+
+        if (!tInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const isTableMerge = await MergeTable.findOne({
+          businessId: businessId,
+          childTableIds: tInfo._id.toString(),
+        }).populate("parentTableId");
+
         const tableSession = await UserSession.findOne({
           businessId,
-          tableName,
+          tableName: isTableMerge?.parentTableId?.name || tableName,
         }).session(session);
 
         if (!tableSession) {
@@ -4069,7 +3592,10 @@ const posRouter = new Hono()
         }
 
         await UserSession.findOneAndUpdate(
-          { businessId, tableName },
+          {
+            businessId,
+            tableName: isTableMerge?.parentTableId?.name || tableName,
+          },
           {
             $set: {
               tips: 0,

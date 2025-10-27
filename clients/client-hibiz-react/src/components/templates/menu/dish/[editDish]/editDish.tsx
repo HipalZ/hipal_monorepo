@@ -1,30 +1,25 @@
-import MemoizedHeader from "@/components/molecules/header";
-import { FaArrowLeft } from "react-icons/fa";
-import Hi from "@/assets/svg/hi.svg";
-import DishStepOne from "./dishStepOne";
-import { memo, useCallback, useRef } from "react";
-import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
-import DishStepTwo from "./dishStepTwo";
-import PortionStep from "./portionStep";
-import LinkItems from "./linkItems";
-import {
-  deleteDishData,
-  useAddons,
-  useChildCategories,
-  useDishes,
-} from "@/hooks/useDish";
-import LinkTags from "./linkTags";
-import LinkAddons from "./linkAddons";
-import { cn, handleCrop } from "@/components/utils/helper";
-import DeleteDish from "./deleteDish";
-import { useDishesStore } from "@/components/store/useDishesStore";
-import toast from "react-hot-toast";
-import useErrorToasts from "@/hooks/useError";
-import AlertClosePopup from "@/components/common/alertClosePopup";
-import SectionLoader from "@/components/atom/sectionLoader";
-import EasyReactCropper from "@/components/cropper/cropper";
+import Hi from '@/assets/svg/hi.svg';
+import SectionLoader from '@/components/atom/sectionLoader';
+import AlertClosePopup from '@/components/common/alertClosePopup';
+import EasyReactCropper from '@/components/cropper/cropper';
+import MemoizedHeader from '@/components/molecules/header';
+import { useDishesStore } from '@/components/store/useDishesStore';
+import useMenuPageStore, { DishSteps } from '@/components/store/useMenuStorage';
+import { cn, handleCrop } from '@/components/utils/helper';
+import { deleteDishData, useAddons, useChildCategories, useDishes } from '@/hooks/useDish';
+import useErrorToasts from '@/hooks/useError';
+import { memo, useCallback, useRef } from 'react';
+import toast from 'react-hot-toast';
+import { FaArrowLeft } from 'react-icons/fa';
+import DeleteDish from './deleteDish';
+import DishStepOne from './dishStepOne';
+import DishStepTwo from './dishStepTwo';
+import LinkAddons from './linkAddons';
+import LinkItems from './linkItems';
+import LinkTags from './linkTags';
+import PortionStep from './portionStep';
 
-import type { Area } from "react-easy-crop";
+import type { Area } from 'react-easy-crop';
 interface CropperRef {
   getCroppedAreaPixels: () => Area | null;
 }
@@ -36,34 +31,18 @@ const MemoEditDish = () => {
 
   const cropperRef = useRef<CropperRef>(null);
 
-  const {
-    setEditOpenMenu,
-    setDishStep,
-    cropping,
-    dishStep,
-    setImageFiles,
-    setImagePreviews,
-    imageFiles,
-    showCropper,
-    resetStore,
-    editDish,
-    isLoading,
-    resetDishStore,
-  } = useMenuPageStore((s) => ({
-    setEditOpenMenu: s.setEditOpenMenu,
-    setDishStep: s.setDishStep,
-    dishStep: s.dishStep,
-    showCropper: s.showCropper,
-    cropping: s.cropping,
-    setImageFiles: s.setImageFiles,
-    imageFiles: s.imageFiles,
-    setImagePreviews: s.setImagePreviews,
-    selectedPage: s.selectedPage,
-    resetStore: s.resetStore,
-    editDish: s.editDish,
-    resetDishStore: s.resetDishStore,
-    isLoading: s.isLoading,
-  }));
+  const setEditOpenMenu = useMenuPageStore((s) => s.setEditOpenMenu);
+  const setDishStep = useMenuPageStore((s) => s.setDishStep);
+  const cropping = useMenuPageStore((s) => s.cropping);
+  const setImageFiles = useMenuPageStore((s) => s.setImageFiles);
+  const imageFiles = useMenuPageStore((s) => s.imageFiles);
+  const setImagePreviews = useMenuPageStore((s) => s.setImagePreviews);
+  const resetStore = useMenuPageStore((s) => s.resetStore);
+  const editDish = useMenuPageStore((s) => s.editDish);
+  const resetDishStore = useMenuPageStore((s) => s.resetDishStore);
+  const isLoading = useMenuPageStore((s) => s.isLoading);
+  const dishStep = useMenuPageStore((s) => s.dishStep);
+  const showCropper = useMenuPageStore((s) => s.showCropper);
 
   const errorToasts = useErrorToasts();
 
@@ -135,66 +114,41 @@ const MemoEditDish = () => {
   };
 
   const handleSaveCropper = () => {
-    handleCrop(
-      cropping,
-      cropperRef,
-      imageFiles,
-      setImageFiles,
-      setImagePreviews,
-      setDishStep,
-    );
+    handleCrop(cropping, cropperRef, imageFiles, setImageFiles, setImagePreviews, setDishStep);
   };
 
   return (
     <>
       <div
         className={cn({
-          "pointer-events-none": showCropper,
+          'pointer-events-none': showCropper,
         })}
       >
-        <header className="sticky top-0 z-10 w-full rounded-t-2xl bg-base-100">
-          <MemoizedHeader
-            title={handleHeader()}
-            onBack={goBack}
-            leftIcon={<FaArrowLeft />}
-            rightImage={Hi}
-            isIconBusinessShow={false}
-          />
+        <header className="bg-base-100 sticky top-0 z-10 w-full rounded-t-2xl">
+          <MemoizedHeader title={handleHeader()} onBack={goBack} leftIcon={<FaArrowLeft />} rightImage={Hi} isIconBusinessShow={false} />
         </header>
-        {dishStep === "DISH_STEP_1" && <DishStepOne />}
-        {dishStep === "DISH_STEP_2" && <DishStepTwo />}
-        {dishStep === "PORTION_STEP" && <PortionStep />}
-        {dishStep === "LINK_CATEGORY_STEP" && <LinkItems />}
-        {dishStep === "LINK_RECOMMENDATION_STEP" && <LinkItems />}
-        {dishStep === "LINK_ADD_TAGS" && <LinkTags />}
-        {dishStep === "LINK_ADDON_STEP" && <LinkAddons data={addons || []} />}
-        {dishStep === "CONFIRM_DELETE" && (
-          <DeleteDish handleDelete={handleDelete} />
-        )}
-        {dishStep === "ALERT" && <AlertClosePopup />}
+        {dishStep === 'DISH_STEP_1' && <DishStepOne />}
+        {dishStep === 'DISH_STEP_2' && <DishStepTwo />}
+        {dishStep === 'PORTION_STEP' && <PortionStep />}
+        {dishStep === 'LINK_CATEGORY_STEP' && <LinkItems />}
+        {dishStep === 'LINK_RECOMMENDATION_STEP' && <LinkItems />}
+        {dishStep === 'LINK_ADD_TAGS' && <LinkTags />}
+        {dishStep === 'LINK_ADDON_STEP' && <LinkAddons data={addons || []} />}
+        {dishStep === 'CONFIRM_DELETE' && <DeleteDish handleDelete={handleDelete} />}
+        {dishStep === 'ALERT' && <AlertClosePopup />}
       </div>
-      {dishStep === "SHOW_CROPPER" && (
+      {dishStep === 'SHOW_CROPPER' && (
         <>
-          <EasyReactCropper
-            image={cropping.image}
-            ref={cropperRef}
-            width={400}
-            height={400}
-          />
-          <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
-            <button
-              type="button"
-              onClick={handleSaveCropper}
-              className="w-full py-3 text-white rounded-full bg-[#7D68FE]"
-              disabled={isLoading}
-            >
+          <EasyReactCropper image={cropping.image} ref={cropperRef} width={400} height={400} />
+          <footer className="absolute bottom-4 mx-4 flex w-[92%] gap-4 lg:w-[96%]">
+            <button type="button" onClick={handleSaveCropper} className="w-full rounded-full bg-[#7D68FE] py-3 text-white" disabled={isLoading}>
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <SectionLoader />
                   Loading...
                 </div>
               ) : (
-                "Save"
+                'Save'
               )}
             </button>
           </footer>

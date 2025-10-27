@@ -76,13 +76,13 @@ const tableRouter = new Hono()
 
           const uniqueOrderId = nanoid(5);
 
-          const longUrl = `https://hipal-test.hipalz.com/${businessInfo?.customLink}/explore?tableName=${tableName}`;
+          const longUrl = `https://hipalz.com/${businessInfo?.customLink}/explore?tableName=${tableName}`;
 
           const createShortUrl = await UrlModel.create(
             [
               {
                 longUrl: longUrl,
-                shortUrl: `https://api.test.hipalz.com/surl/${uniqueOrderId}`,
+                shortUrl: `https://api.hipalz.com/surl/${uniqueOrderId}`,
                 urlCode: uniqueOrderId,
                 businessId: businessId,
               },
@@ -141,13 +141,13 @@ const tableRouter = new Hono()
         );
       }
 
-      const longUrl = `https://hipal-test.hipalz.com/${businessInfo?.customLink}/explore?tableName=${name}`;
+      const longUrl = `https://hipalz.com/${businessInfo?.customLink}/explore?tableName=${name}`;
 
       const createShortUrl = await UrlModel.create(
         [
           {
             longUrl: longUrl,
-            shortUrl: `https://api.test.hipalz.com/surl/${uniqueOrderId}`,
+            shortUrl: `https://api.hipalz.com/surl/${uniqueOrderId}`,
             urlCode: uniqueOrderId,
             businessId: businessId,
           },
@@ -402,7 +402,7 @@ const tableRouter = new Hono()
           },
           {
             $set: {
-              longUrl: `https://hipal-test.hipalz.com/${businessId}/explore?tableName=${name}`,
+              longUrl: `https://hipalz.com/${businessId}/explore?tableName=${name}`,
             },
           },
           { session },

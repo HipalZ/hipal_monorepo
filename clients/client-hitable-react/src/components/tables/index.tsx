@@ -1,13 +1,18 @@
+import MergeTablesModal from '@/components/desktop/MergeTableModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useIsMobile } from '../../hooks/use-mobile';
+import { cn } from '../../lib/utils';
 import CommonBottomButton from '../atoms/bottomButton';
 import SpinnerMemo from '../atoms/loadingSpinner';
 import { useTableData, useTableTransfer } from '../hooks/useTableData';
+import useBusinessData from '../store/useBusinessData';
 import { useCart } from '../store/useCart';
+import { useHiClientZ } from '../store/useHiClientzData';
+import { useMergeTableStore } from '../store/useMergeTableStore';
 import { useOrderStore } from '../store/useOrderData';
 import { useZonesAndTablesStore, type TableData } from '../store/useZonesAndTable';
 
@@ -20,17 +25,26 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
   const { businessId } = useParams();
   const setIsPlacingNewOrder = useCart((s) => s.setIsPlacingNewOrder);
   const { selectedTable, selectedItems } = useOrderStore();
-  const { isLoading, filteredTables, searchTerm, setSearchTerm } = useTableData();
+  const { isLoading, filteredTables, searchTerm, setSearchTerm } = useTableData({
+    businessIdOverride: businessId,
+    enabled: true,
+  });
+  const isHipalzPos = useBusinessData((s) => s?.outletInfo?.isHipalzPos);
   const zones = useZonesAndTablesStore((s) => s.zones);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const setShowMergeModal = useMergeTableStore((s) => s.setShowMergeModal);
+  const showMergeModal = useMergeTableStore((s) => s.showMergeModal);
+  const userDetails = useHiClientZ((s) => s.captainData);
 
   const { toTable, setToTable, isConfirming, setIsConfirming, isPending, closeTransferModal, confirmTransfer } = useTableTransfer(businessId || '');
 
   const tables = useZonesAndTablesStore((s) => s.tables);
+  const handleMergeClick = () => setShowMergeModal(true);
+  const handleMergeCancel = () => setShowMergeModal(false);
 
   const sortByName = useCallback(
     (arr: TableData[]) =>
@@ -278,9 +292,11 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
                           type="button"
                           onClick={() => handleTableClick(table)}
                           key={table._id}
-                          className={`rounded-lg border p-4 text-center transition-shadow duration-300 ${
-                            toTable?._id === table._id ? 'border-blue-500 bg-blue-100 shadow-lg' : 'border-gray-200 bg-white hover:shadow-md'
-                          }`}
+                          className={cn(
+                            `rounded-lg border p-4 text-center transition-shadow duration-300 ${
+                              toTable?._id === table._id ? 'border-blue-500 bg-blue-100 shadow-lg' : 'border-gray-200 bg-white hover:shadow-md'
+                            }`,
+                          )}
                         >
                           <h4 className="font-semibold">{table.name}</h4>
                           <p className="mt-1 text-xs capitalize text-gray-500">{table.status?.toLowerCase() || 'empty'}</p>
@@ -302,9 +318,33 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
         </section>
       )}
 
+      {showMergeModal && (
+        <MergeTablesModal
+          show={showMergeModal}
+          onClose={handleMergeCancel}
+          staffId={userDetails?._id || ''}
+          tables={[...filteredTables, ...tables]}
+        />
+      )}
+
+      {!transfer && isHipalzPos && (
+        <CommonBottomButton
+          fixed={true}
+          position="mid"
+          buttons={[
+            {
+              text: 'Merge Tables',
+              onClick: handleMergeClick,
+              type: 'button',
+              className: 'rounded-full !w-[90dvh] !max-w-[26rem] flex-none',
+            },
+          ]}
+        />
+      )}
+
       {transfer && (
         <CommonBottomButton
-          fixed
+          fixed={true}
           maxWidth="30rem"
           position="mid"
           buttons={[

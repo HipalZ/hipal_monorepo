@@ -1,14 +1,14 @@
-import { type ClassValue, clsx } from 'clsx';
-import toast from 'react-hot-toast';
-import type { IconType } from 'react-icons';
-import { BsGraphUpArrow } from 'react-icons/bs';
-import { CiGlobe } from 'react-icons/ci';
-import { HiOutlineShoppingCart } from 'react-icons/hi';
-import { MdOutlineHistory, MdOutlineTableBar } from 'react-icons/md';
-import { useNavigate } from 'react-router-dom';
-import { twMerge } from 'tailwind-merge';
-import { useHiClientZ } from '../store/useHiClientzData';
-import type { NavItemTypes } from '../types/hiClientzData';
+import { type ClassValue, clsx } from "clsx";
+import toast from "react-hot-toast";
+import type { IconType } from "react-icons";
+import { BsGraphUpArrow } from "react-icons/bs";
+import { CiGlobe } from "react-icons/ci";
+import { HiOutlineShoppingCart } from "react-icons/hi";
+import { MdOutlineHistory, MdOutlineTableBar } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
+import { twMerge } from "tailwind-merge";
+import { useHiClientZ } from "../store/useHiClientzData";
+import type { NavItemTypes } from "../types/hiClientzData";
 
 export function timestampToDateTime(timestamp: number): string {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
@@ -16,7 +16,20 @@ export function timestampToDateTime(timestamp: number): string {
   const hours = date.getUTCHours();
   const minutes = date.getUTCMinutes();
   const day = date.getUTCDate();
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
   const month = monthNames[date.getUTCMonth()];
 
   // Determine the day suffix
@@ -25,24 +38,24 @@ export function timestampToDateTime(timestamp: number): string {
     case 1:
     case 21:
     case 31:
-      daySuffix = 'st';
+      daySuffix = "st";
       break;
     case 2:
     case 22:
-      daySuffix = 'nd';
+      daySuffix = "nd";
       break;
     case 3:
     case 23:
-      daySuffix = 'rd';
+      daySuffix = "rd";
       break;
     default:
-      daySuffix = 'th';
+      daySuffix = "th";
   }
 
   // Convert to 12-hour format
   const hourFormatted = hours % 12 || 12; // Converts 0 to 12 for midnight
   const minuteFormatted = minutes < 10 ? `0${minutes}` : minutes;
-  const amPm = hours < 12 ? 'AM' : 'PM';
+  const amPm = hours < 12 ? "AM" : "PM";
 
   return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
 }
@@ -54,10 +67,10 @@ export const cn = (...inputs: ClassValue[]) => {
 
 export const getDate = (timeStampStart: number) => {
   const date = new Date(timeStampStart);
-  return date.toLocaleDateString('en-IN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  return date.toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 };
 
@@ -65,9 +78,9 @@ export const useErrorHandling = () => {
   const navigate = useNavigate();
 
   const errorText = () => {
-    let message = '';
-    navigate('/');
-    message = 'Session Expired: Please log in again to continue.';
+    let message = "";
+    navigate("/");
+    message = "Session Expired: Please log in again to continue.";
     toast.error(message);
     return message;
   };
@@ -82,19 +95,21 @@ export function createNavItems(isPos: boolean): Array<{
   const permissions = useHiClientZ((s) => s.selectedBiz?.permissions);
 
   let navItems = [
-    { type: 'Cart' as NavItemTypes, icon: HiOutlineShoppingCart },
-    { type: 'Alerts' as NavItemTypes, icon: CiGlobe },
-    { type: 'Sales' as NavItemTypes, icon: BsGraphUpArrow },
-    { type: 'History' as NavItemTypes, icon: MdOutlineHistory },
+    { type: "Cart" as NavItemTypes, icon: HiOutlineShoppingCart },
+    { type: "Alerts" as NavItemTypes, icon: CiGlobe },
+    { type: "Sales" as NavItemTypes, icon: BsGraphUpArrow },
+    { type: "History" as NavItemTypes, icon: MdOutlineHistory },
   ];
 
   if (permissions?.sale_summary === false) {
-    navItems = navItems.filter((item) => item.type !== 'Sales' && item.type !== 'History');
+    navItems = navItems.filter(
+      (item) => item.type !== "Sales" && item.type !== "History",
+    );
   }
 
   if (isPos) {
     navItems.unshift({
-      type: 'Tables' as NavItemTypes,
+      type: "Tables" as NavItemTypes,
       icon: MdOutlineTableBar,
     });
   }
@@ -103,10 +118,84 @@ export function createNavItems(isPos: boolean): Array<{
 }
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+export type FOOD_TYPES =
+  | "VEG"
+  | "NON_VEG"
+  | "EGG"
+  | "VEGAN"
+  | "ALCOHOL"
+  | "NON_ALCOHOL"
+  | "GLUTEN_FREE"
+  | "MIX";
+
+// --- 2) Normalizers
+const FOOD_CANON_MAP: Record<string, FOOD_TYPES> = {
+  VEG: "VEG",
+  NON_VEG: "NON_VEG",
+  NONVEG: "NON_VEG",
+  "NON VEG": "NON_VEG",
+
+  EGG: "EGG",
+  VEGAN: "VEGAN",
+
+  ALCOHOL: "ALCOHOL",
+  NON_ALCOHOL: "NON_ALCOHOL",
+  NONALCOHOL: "NON_ALCOHOL",
+  "NON ALCOHOL": "NON_ALCOHOL",
+
+  GLUTEN_FREE: "GLUTEN_FREE",
+  GLUTENFREE: "GLUTEN_FREE",
+  "GLUTEN FREE": "GLUTEN_FREE",
+
+  MIX: "MIX",
+};
+
+export function normalizeFoodType(raw: string): FOOD_TYPES | null {
+  const key = raw.replace(/[\s-]+/g, "_").toUpperCase(); // "non veg" -> "NON_VEG"
+  return (
+    FOOD_CANON_MAP[key] ??
+    FOOD_CANON_MAP[key.replace(/_/g, "")] ?? // also try compact: "NONVEG"
+    null
+  );
+}
+
+export function normalizeFoodTypes(raw?: string[] | null): FOOD_TYPES[] {
+  if (!raw?.length) return [];
+  const out = new Set<FOOD_TYPES>();
+  for (const r of raw) {
+    const n = normalizeFoodType(r);
+    if (n) out.add(n);
+  }
+  return Array.from(out);
+}
+
+export function gradientForFood(types: FOOD_TYPES[]): string {
+  const has = (t: FOOD_TYPES) => types.includes(t);
+
+  if (has("VEG"))
+    return "bg-gradient-to-r from-green-50 via-white to-green-100";
+  if (has("NON_VEG"))
+    return "bg-gradient-to-r from-red-50 via-white to-red-100";
+  if (has("EGG"))
+    return "bg-gradient-to-r from-yellow-50 via-white to-yellow-100";
+  if (has("VEGAN"))
+    return "bg-gradient-to-r from-green-50 via-white to-green-100";
+  if (has("GLUTEN_FREE"))
+    return "bg-gradient-to-r from-blue-50 via-white to-blue-100";
+  if (has("ALCOHOL"))
+    return "bg-gradient-to-r from-gray-50 via-white to-gray-100";
+  if (has("NON_ALCOHOL"))
+    return "bg-gradient-to-r from-gray-50 via-white to-gray-100";
+  if (has("MIX"))
+    return "bg-gradient-to-r from-indigo-50 via-white to-indigo-100";
+
+  return "bg-gradient-to-r from-white via-white to-purple-50"; // default
 }

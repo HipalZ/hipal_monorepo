@@ -4,6 +4,7 @@ import type { DishType, PortionType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 import { DishTypeEnum } from "../validators/dish";
+import { timingSchema } from "./category";
 const portionSchema = new mongoose.Schema<PortionType>(
   {
     name: {
@@ -57,10 +58,6 @@ const dishSchema = new mongoose.Schema<DishType>(
       default: true,
     },
 
-    avgTime: {
-      type: Number,
-      required: false,
-    },
     dishTypes: {
       type: [String],
       enum: DishTypeEnum,
@@ -100,10 +97,6 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
     },
 
-    delayTime: {
-      type: Number,
-      required: false,
-    },
     availability: {
       type: Boolean,
       required: false,
@@ -166,6 +159,20 @@ const dishSchema = new mongoose.Schema<DishType>(
       default: 5,
     },
     vat: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    avgPrepTime: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    timings: {
+      type: [timingSchema],
+      required: false,
+    },
+    discount: {
       type: Number,
       required: false,
       default: 0,

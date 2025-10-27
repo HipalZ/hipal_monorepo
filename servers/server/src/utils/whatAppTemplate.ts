@@ -10,3 +10,5 @@ export const whatsAppConfig = {
   whatAppAccountId: "378623998675618",
   version: "v21.0",
 };
+
+// no more than 20 templates

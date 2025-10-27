@@ -192,7 +192,7 @@ const HorizontalCard = ({
       {isModalOpen && (
         <ItemDescriptionPopup show={isModalOpen} onClose={closeModal}>
           <DishPopup dishData={isSelectedDish} />
-          <CommonBottomButton
+          {/* <CommonBottomButton
             buttons={[
               {
                 text: "Go to cart",
@@ -200,7 +200,7 @@ const HorizontalCard = ({
                 className: "shadow-md",
               },
             ]}
-          />
+          /> */}
         </ItemDescriptionPopup>
       )}
       {isDishInCart && (

@@ -98,7 +98,7 @@ const MemoSearchComponent = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.3 }}
-            className="mt-4 max-h-[55dvh] overflow-y-auto rounded-md border border-gray-300 bg-white shadow-md"
+            className="mt-4 grid max-h-[55dvh] grid-cols-1 overflow-y-auto rounded-md border border-gray-300 bg-white shadow-md md:grid-cols-2"
           >
             {filteredDishes?.length ? (
               filteredDishes.map((dish) => {
@@ -117,9 +117,9 @@ const MemoSearchComponent = () => {
                     )}
                   >
                     <div className="flex min-w-0 flex-col">
-                      <p className="truncate text-sm font-medium">{dish.name}</p>
+                      <p className="text-sm font-semibold">{dish.name}</p>
                       <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                        <p className="text-xs text-gray-500">₹{dish.price}</p>
+                        <p className="text-sm font-semibold opacity-60">₹{dish.price}</p>
 
                         {/* Availability badge */}
                         <span className={cn('rounded px-2 py-[2px] text-[10px] font-semibold', isUnavailable ? 'bg-red-100 text-red-700' : '')}>

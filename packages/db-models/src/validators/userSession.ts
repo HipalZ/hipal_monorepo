@@ -59,6 +59,10 @@ export const userSessionSchema = z.object({
   itemIds: z.array(z.string()).optional(),
   itemGst: z.coerce.number().optional().default(0),
   itemGstAfterDiscount: z.coerce.number().optional().default(0),
+  isMerge: z.boolean().optional().default(false),
+  mergeTableNames: z.array(z.string()).optional().default([]),
+  coinAppliedBy: ObjectIdSchema.optional(),
+  isOrderInitiated: z.boolean().default(false),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;
