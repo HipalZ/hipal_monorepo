@@ -1,30 +1,41 @@
 import { useWhatsapp } from '@/components/store/useWhatsapp';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/components/utils/helper';
 import {
-  Check,
+  AlertCircle,
+  ArrowRight,
+  CheckCircle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
+  Code,
+  Diamond,
+  Download,
+  FileInputIcon,
   FileText,
   GripVertical,
   Hash,
-  ImageIcon,
+  HelpCircle,
+  Image,
+  Info,
+  List,
+  MessageCircle,
   MessageSquare,
   PanelLeftOpen,
   PanelRightOpen,
+  Play,
   Plus,
+  Share,
   Upload,
   Variable,
   X,
   XCircle,
+  Zap,
 } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
@@ -44,6 +55,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { useMediaUpload } from '../../../hooks/useTemplates';
 import { Button } from '../../ui/button';
+import { Checkbox } from '../../ui/checkbox';
+import { ScrollArea } from '../../ui/scroll-area';
 
 // =============================
 // WhatsApp Flow Builder (React Flow)
@@ -174,24 +187,30 @@ function SendNode({ data, selected }) {
 
   const contentTypes = [
     { value: 'text', label: 'Text', icon: <FileText className="h-3 w-3" /> },
-    { value: 'image', label: 'Image', icon: <ImageIcon className="h-3 w-3" /> },
+    { value: 'image', label: 'Image', icon: <Image className="h-3 w-3" /> },
     { value: 'document', label: 'Document', icon: <FileText className="h-3 w-3" /> },
   ];
 
   return (
     <div className="relative">
-      <Handle type="target" position={Position.Left} className="opacity-0" />
-
+      <Handle type="target" position={Position.Left} />
       <Card
         className={cn(
-          'w-80 border-2 shadow-lg transition-all',
-          selected ? 'border-emerald-500 ring-2 ring-emerald-500 ring-opacity-20' : 'border-neutral-700',
-          'bg-gray-200 text-gray-900',
+          'relative w-80 overflow-hidden border-2 shadow-lg transition-all',
+          selected ? 'border-emerald-500 ring-2 ring-emerald-500 ring-opacity-20' : 'border-gray-300',
         )}
       >
-        <div className="space-y-4 p-4">
-          {/* Header: Content Type Tabs */}
-          <div className="flex gap-1 rounded-lg p-1">
+        {/* Animated Header */}
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 text-white">
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
+            <h3 className="text-lg font-bold">Send Message</h3>
+          </div>
+        </div>
+
+        <CardContent className="space-y-4 bg-gray-100 p-4">
+          {/* Content Type Tabs */}
+          <div className="flex gap-1 rounded-lg bg-white p-1 shadow-sm">
             {contentTypes.map((type) => (
               <Button
                 key={type.value}
@@ -202,7 +221,7 @@ function SendNode({ data, selected }) {
                   'flex-1 gap-1 text-xs font-medium',
                   m.contentType === type.value
                     ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                    : 'text-gray-400 hover:bg-gray-700 hover:text-white',
+                    : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700',
                 )}
               >
                 {type.icon}
@@ -214,55 +233,45 @@ function SendNode({ data, selected }) {
           {/* TEXT CONTENT */}
           {m.contentType === 'text' && (
             <div className="space-y-3">
-              {/* Variables */}
-              <div className="space-y-2">
-                <div className="flex flex-wrap gap-1">
-                  {data.variables.map((v) => (
-                    <Badge
-                      key={v}
-                      variant="secondary"
-                      className="cursor-pointer px-2 py-0.5 text-xs font-medium transition-colors hover:bg-emerald-600"
-                      onClick={() => insertVariable(v)}
-                    >
-                      {v}
-                    </Badge>
-                  ))}
-                  {data.variables.length === 0 && <p className="text-xs italic text-gray-500">No variables yet</p>}
-                </div>
-
-                {/* Add variable form */}
-                {showAddVar ? (
-                  <div className="flex gap-2">
-                    <Input
-                      value={newVar}
-                      onChange={(e) => setNewVar(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddVariable()}
-                      placeholder="new_variable"
-                      className="h-8 text-xs"
-                      autoFocus
-                    />
-                    <Button size="sm" onClick={handleAddVariable} className="h-8 px-3">
-                      Add
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setShowAddVar(false)} className="h-8 px-3">
-                      <X className="h-3 w-3" />
-                    </Button>
+              {/* Variables Section */}
+              <Card className="border-0 bg-white shadow-sm">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <Variable className="h-4 w-4 text-gray-600" />
+                    <CardTitle className="text-sm font-medium text-gray-700">Variables</CardTitle>
                   </div>
-                ) : (
-                  <Button variant="outline" size="sm" onClick={() => setShowAddVar(true)} className="h-8 w-full text-xs">
-                    <Plus className="mr-1 h-3 w-3" /> Add Variable
-                  </Button>
-                )}
-              </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex flex-wrap gap-1">
+                    {data.variables.map((v) => (
+                      <Badge
+                        key={v}
+                        variant="secondary"
+                        className="cursor-pointer px-2 py-0.5 text-xs font-medium transition-colors hover:bg-emerald-600"
+                        onClick={() => insertVariable(v)}
+                      >
+                        {v}
+                      </Badge>
+                    ))}
+                    {data.variables.length === 0 && <p className="text-xs italic text-gray-500">No variables yet</p>}
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Message Textarea */}
-              <Textarea
-                ref={textRef}
-                value={m.text || ''}
-                onChange={(e) => data.onPatch({ meta: { ...m, text: e.target.value } })}
-                placeholder="Type your message... use {{variable}} for dynamic content"
-                className="min-h-24 resize-none border-neutral-700 text-sm placeholder:text-gray-500"
-              />
+              <div>
+                <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">
+                  <FileText className="h-3 w-3" />
+                  Message Text
+                </label>
+                <Textarea
+                  ref={textRef}
+                  value={m.text || ''}
+                  onChange={(e) => data.onPatch({ meta: { ...m, text: e.target.value } })}
+                  placeholder="Type your message... use {{variable}} for dynamic content"
+                  className="min-h-24 resize-none border-gray-300 text-sm placeholder:text-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
             </div>
           )}
 
@@ -270,89 +279,122 @@ function SendNode({ data, selected }) {
           {m.contentType === 'image' && (
             <div className="space-y-3">
               {/* Upload Area */}
-              <div
-                className={cn(
-                  'rounded-lg border-2 border-dashed p-4 text-center transition-colors',
-                  isDragging ? 'border-emerald-500 bg-emerald-900/20' : 'border-neutral-700',
-                  m.mediaUrl && 'border-solid',
-                )}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
-              >
-                {m.uploading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-32 w-full rounded" />
-                    <p className="text-xs text-gray-400">Uploading...</p>
+              <Card className="border-0 bg-white shadow-sm">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <Image className="h-4 w-4 text-gray-600" />
+                    <CardTitle className="text-sm font-medium text-gray-700">Image Upload</CardTitle>
                   </div>
-                ) : m.mediaUrl ? (
-                  <div className="space-y-2">
-                    <img src={m.mediaUrl} alt="Preview" className="mx-auto h-32 w-32 rounded-lg border border-neutral-700 object-cover" />
-                    <p className="truncate text-xs text-gray-400">{m.fileName}</p>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => data.onPatch({ meta: { ...m, mediaUrl: '', fileName: '', uploading: false } })}
-                    >
-                      Remove
-                    </Button>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div
+                    className={cn(
+                      'rounded-lg border-2 border-dashed p-4 text-center transition-all',
+                      isDragging ? 'border-emerald-500 bg-emerald-50' : 'border-gray-300',
+                      m.mediaUrl && 'border-solid border-gray-300',
+                    )}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDragging(true);
+                    }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                  >
+                    {m.uploading ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-32 w-full rounded" />
+                        <div className="flex animate-pulse items-center gap-2 text-xs text-blue-500">
+                          <div className="h-3 w-3 animate-spin rounded-full bg-blue-500" />
+                          Uploading...
+                        </div>
+                      </div>
+                    ) : m.mediaUrl ? (
+                      <div className="space-y-2">
+                        <img src={m.mediaUrl} alt="Preview" className="mx-auto h-32 w-32 rounded-lg border border-gray-200 object-cover" />
+                        <p className="truncate text-xs text-gray-600">{m.fileName}</p>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => data.onPatch({ meta: { ...m, mediaUrl: '', fileName: '', uploading: false } })}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ) : (
+                      <label className="block cursor-pointer">
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e.target.files?.[0])} />
+                        <Upload className="mx-auto mb-2 h-8 w-8 text-gray-500 transition-colors hover:text-emerald-500" />
+                        <p className="text-xs text-gray-500">Drop image or click to upload</p>
+                      </label>
+                    )}
                   </div>
-                ) : (
-                  <label className="block cursor-pointer">
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e.target.files?.[0])} />
-                    <Upload className="mx-auto mb-2 h-8 w-8 text-gray-500" />
-                    <p className="text-xs text-gray-400">Drop image or click to upload</p>
-                  </label>
-                )}
-              </div>
+                </CardContent>
+              </Card>
 
               {/* Caption */}
-              <Input
-                value={m.caption || ''}
-                onChange={(e) => data.onPatch({ meta: { ...m, caption: e.target.value } })}
-                placeholder="Caption (optional)"
-                className="text-sm"
-              />
+              <div>
+                <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">Caption (Optional)</label>
+                <Input
+                  value={m.caption || ''}
+                  onChange={(e) => data.onPatch({ meta: { ...m, caption: e.target.value } })}
+                  placeholder="Add a caption for your image..."
+                  className="border-gray-300 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
             </div>
           )}
 
           {/* DOCUMENT CONTENT */}
           {m.contentType === 'document' && (
-            <div className="space-y-3">
-              <Input
-                value={m.mediaUrl || ''}
-                onChange={(e) => data.onPatch({ meta: { ...m, mediaUrl: e.target.value } })}
-                placeholder="Document URL"
-                className="text-sm"
-              />
-              <Input
-                value={m.fileName || ''}
-                onChange={(e) => data.onPatch({ meta: { ...m, fileName: e.target.value } })}
-                placeholder="Display file name"
-                className="text-sm"
-              />
-            </div>
+            <Card className="border-0 bg-white shadow-sm">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-gray-600" />
+                  <CardTitle className="text-sm font-medium text-gray-700">Document Details</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">Document URL</label>
+                  <Input
+                    value={m.mediaUrl || ''}
+                    onChange={(e) => data.onPatch({ meta: { ...m, mediaUrl: e.target.value } })}
+                    placeholder="https://example.com/document.pdf"
+                    className="border-gray-300 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">Display File Name</label>
+                  <Input
+                    value={m.fileName || ''}
+                    onChange={(e) => data.onPatch({ meta: { ...m, fileName: e.target.value } })}
+                    placeholder="document.pdf"
+                    className="border-gray-300 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+              </CardContent>
+            </Card>
           )}
-        </div>
+        </CardContent>
       </Card>
 
-      <Handle type="source" position={Position.Right} className="opacity-0" />
+      <Handle type="source" position={Position.Right} />
     </div>
   );
 }
 
 function InteractiveNode({ data, selected }) {
   const m = data.meta || {};
-  console.log('InteractiveNode meta', m);
   const { uploadMedia } = useMediaUpload();
   const { setImageFiles } = useWhatsapp((s) => ({
     setImageFiles: s.setImageFiles,
   }));
 
-  // Handle button add/remove/update
+  // Generate unique IDs
+  const nid = () => Math.random().toString(36).substr(2, 9);
+
+  // Add / Update / Remove Buttons
   const addButton = () => {
     const newBtn = { id: `btn_${nid()}`, type: 'reply', title: '', url: '' };
     data.onPatch({ meta: { ...m, buttons: [...(m.buttons || []), newBtn] } });
@@ -366,120 +408,253 @@ function InteractiveNode({ data, selected }) {
     data.onPatch({ meta: { ...m, buttons } });
   };
 
+  // Add / Update / Remove List Sections
+  const addListSection = () => {
+    const newSection = { id: `sec_${nid()}`, title: '', rows: [] };
+    data.onPatch({ meta: { ...m, list: { ...(m.list || {}), sections: [...(m.list?.sections || []), newSection] } } });
+  };
+  const addListRow = (sectionIndex) => {
+    const sections = (m.list?.sections || []).map((s, idx) =>
+      idx === sectionIndex ? { ...s, rows: [...(s.rows || []), { id: `row_${nid()}`, title: '', description: '' }] } : s,
+    );
+    data.onPatch({ meta: { ...m, list: { ...(m.list || {}), sections } } });
+  };
+  const updateListRow = (sectionIndex, rowIndex, patch) => {
+    const sections = (m.list?.sections || []).map((s, idx) => {
+      if (idx !== sectionIndex) return s;
+      const rows = (s.rows || []).map((r, i) => (i === rowIndex ? { ...r, ...patch } : r));
+      return { ...s, rows };
+    });
+    data.onPatch({ meta: { ...m, list: { ...(m.list || {}), sections } } });
+  };
+
+  const removeListSection = (sectionIndex) => {
+    const sections = (m.list?.sections || []).filter((_, idx) => idx !== sectionIndex);
+    data.onPatch({ meta: { ...m, list: { ...(m.list || {}), sections } } });
+  };
+
   return (
     <div>
       <Handle type="target" position={Position.Left} />
-      <BaseNode data={data} selected={selected} border="#3b82f6">
-        {/* Header upload */}
-        <div className="space-y-2">
-          <label className="text-xs text-neutral-400">Header (optional)</label>
-          <select
-            value={m.header?.type || ''}
-            onChange={(e) =>
-              data.onPatch({
-                meta: { ...m, header: { type: e.target.value, mediaUrl: '' } },
-              })
-            }
-            className="w-full rounded border border-neutral-800 px-3 py-2"
-          >
-            <option value="">None</option>
-            <option value="image">Image</option>
-          </select>
-
-          {m.header?.type === 'image' && (
-            <div className="space-y-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setImageFiles(file);
-                  try {
-                    data.onPatch({ meta: { ...m, uploadingHeader: true } });
-                    const { url, handle } = await uploadMedia();
-                    data.onPatch({
-                      meta: {
-                        ...m,
-                        header: {
-                          type: 'image',
-                          mediaUrl: url,
-                          handle,
-                          fileName: file.name,
-                        },
-                        uploadingHeader: false,
-                      },
-                    });
-                  } catch (err) {
-                    console.error('Header upload failed', err);
-                    data.onPatch({ meta: { ...m, uploadingHeader: false } });
-                  }
-                }}
-                className="w-full text-xs"
-              />
-              {m.uploadingHeader && <div className="text-xs text-neutral-400">Uploading header...</div>}
-              {m.header?.mediaUrl && <img src={m.header.mediaUrl} alt="header" className="rounded-lg border border-neutral-800" />}
+      <Card
+        className={cn(
+          'relative w-96 overflow-hidden border-2 shadow-lg transition-all',
+          selected ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-20' : 'border-gray-300',
+        )}
+      >
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5" />
+              <h3 className="text-lg font-bold">Interactive Message</h3>
             </div>
-          )}
+            {/* Layout Switcher */}
+            <Select value={m.layout || 'button'} onValueChange={(layout) => data.onPatch({ meta: { ...m, layout } })}>
+              <SelectTrigger className="h-8 w-28 bg-white/10 text-xs text-white">
+                <SelectValue placeholder="Layout" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="button">Buttons</SelectItem>
+                <SelectItem value="list">List</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Body & Footer */}
-        <textarea
-          value={m.bodyText || ''}
-          onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
-          placeholder="Body text..."
-          rows={3}
-          className="mt-3 w-full rounded border border-neutral-800 px-3 py-2"
-        />
-        <input
-          value={m.footerText || ''}
-          onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
-          placeholder="Footer (optional)"
-          className="w-full rounded border border-neutral-800 px-3 py-2"
-        />
+        {/* BODY */}
+        <CardContent className="space-y-4 bg-gray-100 p-4">
+          {/* Header Upload Section */}
+          <Card className="border-0 bg-white shadow-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Image className="h-4 w-4 text-gray-600" />
+                <CardTitle className="text-sm font-medium text-gray-700">Header (Optional)</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Select value={m.header?.type || ''} onValueChange={(type) => data.onPatch({ meta: { ...m, header: { type, mediaUrl: '' } } })}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Choose header type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="image">Image</SelectItem>
+                </SelectContent>
+              </Select>
 
-        {/* Buttons */}
-        <div className="mt-3 space-y-2 border-t border-neutral-800 pt-2">
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-neutral-400">Buttons</div>
-            <Button onClick={addButton} className="rounded border border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-700">
-              + Add
-            </Button>
+              {m.header?.type === 'image' && (
+                <div className="space-y-2">
+                  <label className="cursor-pointer text-xs text-gray-600 hover:text-blue-500">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setImageFiles(file);
+                        try {
+                          data.onPatch({ meta: { ...m, uploadingHeader: true } });
+                          const { url, handle } = await uploadMedia();
+                          data.onPatch({
+                            meta: {
+                              ...m,
+                              header: { type: 'image', mediaUrl: url, handle, fileName: file.name },
+                              uploadingHeader: false,
+                            },
+                          });
+                        } catch (err) {
+                          console.error('Header upload failed', err);
+                          data.onPatch({ meta: { ...m, uploadingHeader: false } });
+                        }
+                      }}
+                    />
+                    Upload Image
+                  </label>
+                  {m.uploadingHeader && <div className="animate-pulse text-xs text-blue-500">Uploading...</div>}
+                  {m.header?.mediaUrl && <img src={m.header.mediaUrl} className="h-24 w-full rounded-lg border object-cover" />}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Body and Footer */}
+          <div>
+            <label className="text-xs font-medium text-gray-700">Body Text</label>
+            <Textarea
+              value={m.bodyText || ''}
+              onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
+              placeholder="Message content..."
+              className="min-h-20 border-gray-300 focus:border-blue-500"
+            />
           </div>
 
-          {(m.buttons || []).map((btn, i) => (
-            <div key={i} className="flex flex-col gap-2 rounded-lg border border-neutral-800 p-2">
-              <div className="flex items-center gap-2">
-                <select
-                  value={btn.type}
-                  onChange={(e) => updateButton(i, { type: e.target.value, url: '' })}
-                  className="rounded border border-neutral-800 px-2 py-1 text-xs"
-                >
-                  <option value="reply">Reply</option>
-                  <option value="url">URL</option>
-                </select>
-                <input
-                  value={btn.title}
-                  onChange={(e) => updateButton(i, { title: e.target.value })}
-                  placeholder="Button Title"
-                  className="flex-1 rounded border border-neutral-800 px-2 py-1 text-xs"
-                />
-                <Button onClick={() => removeButton(i)} className="rounded bg-red-600 px-2 py-1 text-xs">
-                  ✕
-                </Button>
-              </div>
-              {btn.type === 'url' && (
-                <input
-                  value={btn.url || ''}
-                  onChange={(e) => updateButton(i, { url: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full rounded border border-neutral-800 px-2 py-1 text-xs"
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      </BaseNode>
+          <div>
+            <label className="text-xs font-medium text-gray-700">Footer (Optional)</label>
+            <Input
+              value={m.footerText || ''}
+              onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
+              placeholder="Footer note..."
+              className="border-gray-300 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Conditional Rendering */}
+          {m.layout === 'button' && (
+            <Card className="border-0 bg-white shadow-sm">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-blue-500" />
+                    <CardTitle className="text-sm font-medium text-gray-700">Interactive Buttons</CardTitle>
+                  </div>
+                  <Button
+                    onClick={addButton}
+                    disabled={(m.buttons || []).length >= 3}
+                    className="bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600"
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Add
+                  </Button>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-3">
+                {(m.buttons || []).map((btn, i) => (
+                  <div key={i} className="rounded-lg border border-gray-200 p-3 hover:border-blue-300">
+                    <div className="flex items-center justify-between">
+                      <Select value={btn.type} onValueChange={(type) => updateButton(i, { type, ...(type !== 'reply' ? { url: '' } : {}) })}>
+                        <SelectTrigger className="h-8 w-24 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="reply">Reply</SelectItem>
+                          <SelectItem value="url">URL</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="destructive" size="icon" onClick={() => removeButton(i)} className="h-6 w-6 bg-red-500">
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <Input
+                      value={btn.title}
+                      onChange={(e) => updateButton(i, { title: e.target.value })}
+                      placeholder="Button title"
+                      className="mt-2 border-gray-300"
+                    />
+                    {btn.type === 'url' && (
+                      <Input
+                        value={btn.url || ''}
+                        onChange={(e) => updateButton(i, { url: e.target.value })}
+                        placeholder="https://example.com"
+                        className="mt-1 border-gray-300"
+                      />
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {m.layout === 'list' && (
+            <Card className="border-0 bg-white shadow-sm">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-gray-700">List Sections</CardTitle>
+                  <Button onClick={addListSection} className="bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600">
+                    <Plus className="mr-1 h-3 w-3" />
+                    Add Section
+                  </Button>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-3">
+                {(m.list?.sections || []).map((section, si) => (
+                  <div key={section.id} className="rounded-lg border border-gray-200 p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <Input
+                        value={section.title}
+                        onChange={(e) => {
+                          const sections = [...(m.list?.sections || [])];
+                          sections[si].title = e.target.value;
+                          data.onPatch({ meta: { ...m, list: { ...(m.list || {}), sections } } });
+                        }}
+                        placeholder="Section Title"
+                        className="border-gray-300"
+                      />
+                      <Button size="icon" variant="destructive" onClick={() => removeListSection(si)} className="h-6 w-6 bg-red-500">
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+
+                    {(section.rows || []).map((row, ri) => (
+                      <div key={row.id} className="mb-2 rounded border p-2">
+                        <Input
+                          value={row.title}
+                          onChange={(e) => updateListRow(si, ri, { title: e.target.value })}
+                          placeholder="Row title"
+                          className="mb-1 border-gray-300"
+                        />
+                        <Input
+                          value={row.description}
+                          onChange={(e) => updateListRow(si, ri, { description: e.target.value })}
+                          placeholder="Row description (optional)"
+                          className="border-gray-300"
+                        />
+                      </div>
+                    ))}
+
+                    <Button onClick={() => addListRow(si)} className="mt-2 w-full bg-blue-500 text-xs text-white hover:bg-blue-600">
+                      + Add Row
+                    </Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </CardContent>
+      </Card>
       <Handle type="source" position={Position.Right} />
     </div>
   );
@@ -487,122 +662,270 @@ function InteractiveNode({ data, selected }) {
 
 function AskNode({ data, selected }) {
   const m = data.meta || {};
+
   return (
-    <div>
+    <div className="relative">
       <Handle type="target" position={Position.Left} />
-      <BaseNode data={data} selected={selected}>
-        <input
-          value={m.prompt || ''}
-          onChange={(e) => data.onPatch({ meta: { ...m, prompt: e.target.value } })}
-          placeholder="Ask something..."
-          className="w-full rounded border border-neutral-800 px-3 py-2"
-        />
-        <div className="grid grid-cols-2 gap-2">
-          <select
-            value={m.variable || ''}
-            onChange={(e) => data.onPatch({ meta: { ...m, variable: e.target.value } })}
-            className="rounded border border-neutral-800 px-3 py-2"
-          >
-            <option value="">store in variable</option>
-            {data.variables.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
-          <select
-            value={m.inputType || 'text'}
-            onChange={(e) => data.onPatch({ meta: { ...m, inputType: e.target.value } })}
-            className="rounded border border-neutral-800 px-3 py-2"
-          >
-            {INPUT_TYPES.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+      <Card
+        className={cn(
+          'relative w-80 overflow-hidden border-2 shadow-lg transition-all',
+          selected ? 'border-indigo-500 ring-2 ring-indigo-500 ring-opacity-20' : 'border-gray-300',
+        )}
+      >
+        {/* Animated Header */}
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 text-white">
+          <div className="flex items-center gap-2">
+            <FileInputIcon className="h-5 w-5" />
+            <h3 className="text-lg font-bold">Ask User</h3>
+          </div>
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={m.required ?? true} onChange={(e) => data.onPatch({ meta: { ...m, required: !!e.target.checked } })} />
-          Required
-        </label>
-      </BaseNode>
+
+        <CardContent className="space-y-4 bg-gray-100 p-4">
+          {/* Prompt Input */}
+          <div>
+            <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">
+              <FileText className="h-3 w-3" />
+              Question Prompt
+            </label>
+            <Textarea
+              value={m.prompt || ''}
+              onChange={(e) => data.onPatch({ meta: { ...m, prompt: e.target.value } })}
+              placeholder="Ask something... (e.g., 'What's your name?')"
+              className="min-h-16 resize-none border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* Controls Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Store Variable */}
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">
+                <Variable className="h-3 w-3" />
+                Store in Variable
+              </label>
+              <Select value={m.variable || ''} onValueChange={(v) => data.onPatch({ meta: { ...m, variable: v } })}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Select variable" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {data.variables.map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {v}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Input Type */}
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">
+                <FileInputIcon className="h-3 w-3" />
+                Input Type
+              </label>
+              <Select value={m.inputType || 'text'} onValueChange={(t) => data.onPatch({ meta: { ...m, inputType: t } })}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {INPUT_TYPES.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Required Checkbox */}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="required"
+              checked={m.required ?? true}
+              onCheckedChange={(checked) => data.onPatch({ meta: { ...m, required: !!checked } })}
+              className="border-gray-300 focus:border-indigo-500"
+            />
+            <label htmlFor="required" className="text-xs font-medium text-gray-700">
+              Required Field
+            </label>
+          </div>
+
+          {/* Preview Badge */}
+          {m.prompt && (
+            <Badge variant="outline" className="text-xs">
+              Preview: {m.prompt.substring(0, 30)}...
+            </Badge>
+          )}
+        </CardContent>
+      </Card>
       <Handle type="source" position={Position.Right} />
     </div>
   );
 }
 
 function CondNode({ data, selected }) {
-  return (
-    <div>
-      <Handle type="target" position={Position.Left} />
-      <BaseNode data={data} selected={selected} border="#fbbf24">
-        <div className="space-y-2" />
-      </BaseNode>
-      <Handle id="true" type="source" position={Position.Right} />
-      <Handle id="false" type="source" position={Position.Bottom} />
-    </div>
-  );
-}
+  const logic = data.meta?.logic || [];
+  const hasLogic = logic.length > 0;
+  const [expanded, setExpanded] = useState(false);
 
-function TemplateNode({ data, selected }) {
-  const entries = Object.entries(data.meta.buttonRoutes || {});
+  const conditionPreview = hasLogic
+    ? logic.map((l, i) => `${i === 0 ? 'IF' : 'AND'} ${l.var} ${l.op} "${l.value || '...'}"`).join(' ')
+    : 'No conditions set';
+
   return (
-    <div>
-      <Handle type="target" position={Position.Left} />
-      <BaseNode data={data} selected={selected}>
-        <input
-          value={data.meta.templateId || ''}
-          onChange={(e) => data.onPatch({ meta: { ...data.meta, templateId: e.target.value } })}
-          placeholder="template id"
-          className="w-full rounded border border-neutral-800 px-3 py-2"
-        />
-        <div className="space-y-1">
-          {entries.map(([k]) => (
-            <div key={k} className="text-xs">
-              • {k} — drag from small handle to target
-            </div>
-          ))}
+    <div className="relative">
+      <Handle type="target" position={Position.Left} className="opacity-0" />
+
+      <Card
+        className={cn(
+          'group relative w-64 overflow-hidden transition-all duration-300',
+          selected
+            ? 'scale-105 transform border-2 border-amber-500 shadow-2xl ring-2 ring-amber-500/30'
+            : 'border-amber-300 hover:border-amber-400 hover:shadow-lg',
+        )}
+      >
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-amber-100 to-amber-200 opacity-80" />
+
+        {/* Diamond Icon Header */}
+        <div className="relative z-10 p-4 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 transform items-center justify-center rounded-full bg-gradient-to-r from-amber-400 to-amber-600 shadow-lg transition-transform group-hover:rotate-12">
+            <Diamond className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="mb-1 text-sm font-bold text-amber-800">Condition</h3>
+          <p className="text-xs text-amber-600">Branch your flow</p>
         </div>
-        <button
-          type="button"
-          className="mt-2 rounded border border-neutral-700 px-3 py-1 text-xs hover:bg-neutral-700"
-          onClick={() => {
-            const key = prompt('Enter button payload/text key') || '';
-            if (!key) return;
-            const br = { ...(data.meta.buttonRoutes || {}) };
-            if (br[key]) return alert('Key exists');
-            br[key] = null;
-            data.onPatch({ meta: { ...data.meta, buttonRoutes: br } });
-          }}
+
+        {/* Expandable Content */}
+        <div className="relative z-10 space-y-3 px-4 pb-4">
+          {hasLogic ? (
+            <div className="space-y-2">
+              {/* Preview Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-between text-amber-700 hover:bg-amber-100"
+                onClick={() => setExpanded(!expanded)}
+              >
+                <span className="text-xs">Preview Logic</span>
+                <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+              </Button>
+
+              {expanded && (
+                <div className="max-h-24 overflow-y-auto rounded-lg border border-amber-200 bg-white/80 p-3">
+                  <code className="block whitespace-pre-wrap font-mono text-xs text-amber-800">{conditionPreview}</code>
+                </div>
+              )}
+
+              {/* Status Badges */}
+              <div className="flex gap-2">
+                <Badge variant="default" className="border-green-200 bg-green-100 text-green-800">
+                  <CheckCircle className="mr-1 h-3 w-3" />
+                  True Path
+                </Badge>
+                <Badge variant="secondary" className="border-red-200 bg-red-100 text-red-800">
+                  <XCircle className="mr-1 h-3 w-3" />
+                  False Path
+                </Badge>
+              </div>
+            </div>
+          ) : (
+            <div className="py-4 text-center">
+              <p className="text-xs italic text-amber-500">Add conditions in the inspector</p>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* Colored Output Handles with Labels */}
+      <div className="absolute -top-2 right-2 flex flex-col gap-1">
+        <Handle
+          id="true"
+          type="source"
+          position={Position.Right}
+          className="h-3 w-3 transform rounded-full bg-green-500 shadow-md transition-all hover:scale-110 hover:bg-green-600"
+          style={{ top: '20%' }}
         >
-          + Add button mapping
-        </button>
-      </BaseNode>
-      {/* Dynamic source handles per button */}
-      <div className="relative h-0">
-        {Object.keys(data.meta.buttonRoutes || {}).map((k, i) => (
-          <Handle key={k} id={`btn:${k}`} type="source" position={Position.Right} style={{ top: 28 + i * 18, right: -6 }} />
-        ))}
+          <div className="pointer-events-none absolute -right-8 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-green-500 px-2 py-1 text-xs text-white shadow-lg">
+            True
+            <ArrowRight className="ml-1 inline h-3 w-3" />
+          </div>
+        </Handle>
+      </div>
+      <div className="absolute -bottom-2 right-2 flex flex-col gap-1">
+        <Handle
+          id="false"
+          type="source"
+          position={Position.Bottom}
+          className="h-3 w-3 transform rounded-full bg-red-500 shadow-md transition-all hover:scale-110 hover:bg-red-600"
+          style={{ bottom: '20%' }}
+        >
+          <div className="pointer-events-none absolute -right-8 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-red-500 px-2 py-1 text-xs text-white shadow-lg">
+            False
+            <ArrowRight className="ml-1 inline h-3 w-3" />
+          </div>
+        </Handle>
       </div>
     </div>
   );
 }
 
 function TriggerNode({ data, selected }) {
+  const m = data.meta || {};
+
   return (
-    <div>
-      <BaseNode data={data} selected={selected}>
-        <div className="flex flex-wrap gap-2">
-          {(data.meta.keywords || []).map((k) => (
-            <span key={k} className="rounded-full border border-neutral-700 px-2 py-1 text-xs">
-              {k}
-            </span>
-          ))}
-        </div>
-        <div className="text-xs text-neutral-400">Connect handle to first node.</div>
-      </BaseNode>
+    <div className="relative">
       <Handle id="start" type="source" position={Position.Right} />
+      <Card
+        className={cn(
+          'relative w-80 overflow-hidden border-2 shadow-lg transition-all',
+          selected ? 'border-orange-500 ring-2 ring-orange-500 ring-opacity-20' : 'border-gray-300',
+        )}
+      >
+        {/* Animated Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-red-600 p-4 text-white">
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            <h3 className="text-lg font-bold">Trigger</h3>
+          </div>
+        </div>
+
+        <CardContent className="space-y-4 bg-gray-100 p-4">
+          {/* Keywords Badges */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+              <Hash className="h-3 w-3" />
+              Trigger Keywords
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {(m.keywords || []).map((k, i) => (
+                <Badge key={i} variant="secondary" className="bg-orange-100 text-xs text-orange-800">
+                  {k}
+                </Badge>
+              ))}
+              {(m.keywords || []).length === 0 && <p className="text-xs italic text-gray-500">No keywords set</p>}
+            </div>
+          </div>
+
+          {/* Hint */}
+          <div className="rounded-lg bg-gray-50 p-3">
+            <p className="flex items-center gap-1 text-xs text-gray-600">
+              <CheckCircle className="h-3 w-3 text-green-500" />
+              Connect handle to first node to start the flow.
+            </p>
+          </div>
+
+          {/* Preview */}
+          {(m.keywords || []).length > 0 && (
+            <Badge variant="outline" className="text-xs">
+              Triggers on: {m.keywords.join(', ')}
+            </Badge>
+          )}
+        </CardContent>
+      </Card>
+      <Handle type="target" position={Position.Left} className="opacity-0" />
     </div>
   );
 }
@@ -630,7 +953,13 @@ function EditorShell() {
   const [rfEdges, setRfEdges] = useState([]);
   const [selId, setSelId] = useState(null);
   const [variables, setVariables] = useState(['name', 'phone', 'email']);
-  const updateGlobalVariables = (newVars) => {
+  const [leftOpen, setLeftOpen] = useState(true);
+  const [rightOpen, setRightOpen] = useState(true);
+
+  const reactFlowWrapper = useRef(null);
+  const { screenToFlowPosition } = useReactFlow();
+
+  const updateGlobalVariables = useCallback((newVars) => {
     setVariables((prev) => {
       const merged = Array.from(new Set([...prev, ...newVars]));
       return merged;
@@ -640,32 +969,29 @@ function EditorShell() {
     setRfNodes((nds) =>
       nds.map((n) => ({
         ...n,
-        data: { ...n.data, variables: Array.from(new Set([...n.data.variables, ...newVars])) },
+        data: { ...n.data, variables: Array.from(new Set([...(n.data.variables || []), ...newVars])) },
       })),
     );
-  };
-
-  // const [templates, setTemplates] = useState([]);
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
-
-  const { screenToFlowPosition } = useReactFlow();
-  const wrapperRef = useRef(null);
+  }, []);
 
   const onNodesChange = useCallback((changes) => setRfNodes((nds) => applyNodeChanges(changes, nds)), []);
   const onEdgesChange = useCallback((changes) => setRfEdges((eds) => applyEdgeChanges(changes, eds)), []);
 
   const onConnect = useCallback((params) => {
     const edge = { ...params, id: `e-${nid()}`, data: {} };
-    if (params.sourceHandle === 'true') edge.data.kind = 'cond:true';
-    if (params.sourceHandle === 'false') edge.data.kind = 'cond:false';
+
     if (params.sourceHandle?.startsWith('btn:')) {
-      edge.data.kind = 'template:btn';
-      edge.data.btnKey = params.sourceHandle.slice(4);
-    }
-    if (params.sourceHandle === 'start') edge.data.kind = 'trigger:start';
+      edge.data.kind = `btn:${params.sourceHandle.slice(4)}`;
+    } else if (params.sourceHandle?.startsWith('opt:')) {
+      edge.data.kind = `opt:${params.sourceHandle.slice(4)}`;
+    } else if (params.sourceHandle === 'true') edge.data.kind = 'cond:true';
+    else if (params.sourceHandle === 'false') edge.data.kind = 'cond:false';
+    else if (params.sourceHandle === 'start') edge.data.kind = 'trigger:start';
+
     setRfEdges((eds) => addEdge(edge, eds));
   }, []);
+
+  const onNodeClick = useCallback((_, node) => setSelId(node.id), []);
 
   function addNode(type, position) {
     const id = nid();
@@ -682,7 +1008,7 @@ function EditorShell() {
         addLogic: () => addLogic(id),
         removeLogic: (i) => removeLogic(id, i),
         updateLogic: (i, p) => updateLogic(id, i, p),
-        updateGlobalVariables, // 👈 passed here
+        updateGlobalVariables,
       }),
     ]);
     setSelId(id);
@@ -693,11 +1019,12 @@ function EditorShell() {
       event.preventDefault();
       const type = event.dataTransfer.getData('application/reactflow');
       if (!type) return;
-      const pos = screenToFlowPosition({
+
+      const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
-      addNode(type, { x: pos.x, y: pos.y });
+      addNode(type, position);
     },
     [screenToFlowPosition, addNode],
   );
@@ -708,7 +1035,7 @@ function EditorShell() {
   }, []);
 
   // Node patchers
-  const patchNode = (id, patch) => {
+  const patchNode = useCallback((id, patch) => {
     setRfNodes((nds) =>
       nds.map((n) =>
         n.id === id
@@ -723,8 +1050,9 @@ function EditorShell() {
           : n,
       ),
     );
-  };
-  const addKeyword = (id, kw) => {
+  }, []);
+
+  const addKeyword = useCallback((id, kw) => {
     setRfNodes((nds) =>
       nds.map((n) => {
         if (n.id !== id) return n;
@@ -737,19 +1065,25 @@ function EditorShell() {
         };
       }),
     );
-  };
-  const setKwDraft = (id, v) => patchNode(id, { _kw: v });
-  const addLogic = (id) => {
-    setRfNodes((nds) =>
-      nds.map((n) => {
-        if (n.id !== id) return n;
-        const m = n.data.meta || { logic: [] };
-        const logic = [...(m.logic || []), { var: variables[0] || '', op: 'exists', value: '' }];
-        return { ...n, data: { ...n.data, meta: { ...m, logic } } };
-      }),
-    );
-  };
-  const removeLogic = (id, idx) => {
+  }, []);
+
+  const setKwDraft = useCallback((id, v) => patchNode(id, { _kw: v }), [patchNode]);
+
+  const addLogic = useCallback(
+    (id) => {
+      setRfNodes((nds) =>
+        nds.map((n) => {
+          if (n.id !== id) return n;
+          const m = n.data.meta || { logic: [] };
+          const logic = [...(m.logic || []), { var: variables[0] || '', op: 'exists', value: '' }];
+          return { ...n, data: { ...n.data, meta: { ...m, logic } } };
+        }),
+      );
+    },
+    [variables],
+  );
+
+  const removeLogic = useCallback((id, idx) => {
     setRfNodes((nds) =>
       nds.map((n) => {
         if (n.id !== id) return n;
@@ -766,8 +1100,9 @@ function EditorShell() {
         };
       }),
     );
-  };
-  const updateLogic = (id, idx, patch) => {
+  }, []);
+
+  const updateLogic = useCallback((id, idx, patch) => {
     setRfNodes((nds) =>
       nds.map((n) => {
         if (n.id !== id) return n;
@@ -776,61 +1111,103 @@ function EditorShell() {
         return { ...n, data: { ...n.data, meta: { ...m, logic } } };
       }),
     );
-  };
+  }, []);
 
-  const selected = rfNodes.find((n) => n.id === selId) || null;
+  const selected = useMemo(() => rfNodes.find((n) => n.id === selId) || null, [rfNodes, selId]);
   const finalObject = useMemo(() => buildFinalFromGraph(rfNodes, rfEdges), [rfNodes, rfEdges]);
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden text-neutral-100">
+    <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden bg-gray-100">
       {/* LEFT SIDEBAR */}
-      <div className={`relative border-r border-neutral-800 transition-all duration-300 ${leftOpen ? 'w-[300px]' : 'w-[44px]'}`}>
-        <div className="absolute right-4 top-3 z-20">
-          <button type="button" onClick={() => setLeftOpen((v) => !v)} className="rounded-full border border-neutral-700 p-1 hover:bg-neutral-700">
-            {leftOpen ? <ChevronLeft className="h-4 w-4 text-neutral-300" /> : <PanelLeftOpen className="h-4 w-4 text-neutral-300" />}
-          </button>
+      <div className={cn('relative border-r border-gray-200 bg-white shadow-lg transition-all duration-300', leftOpen ? 'w-[320px]' : 'w-11')}>
+        {/* Toggle Button */}
+        <div className="absolute right-0 top-4 z-20">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLeftOpen((v) => !v)}
+            className="h-9 w-9 rounded-full border-gray-200 hover:bg-gray-100"
+          >
+            {leftOpen ? <ChevronLeft className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+          </Button>
         </div>
 
         {leftOpen && (
-          <div className="h-full space-y-3 overflow-y-auto p-4">
-            <h2 className="text-xl font-semibold">Chat Bot</h2>
-            <PaletteItem label="Send Message" type={NodeTypes.SEND} icon="💬" />
-            <PaletteItem label="Ask a Question" type={NodeTypes.ASK} icon="❓" />
-            <PaletteItem label="Set a Condition" type={NodeTypes.COND} icon="🔀" />
-            <PaletteItem label="Trigger Keyword" type={NodeTypes.TRIGGER} icon="🏁" />
-            <PaletteItem label="Interactive Form" type={NodeTypes.FORM} icon="🧩" />
+          <ScrollArea className="h-full">
+            <div>
+              {/* Header */}
+              <Card className="border-0 bg-gradient-to-r from-gray-50 to-gray-100">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-indigo-600" />
+                    <CardTitle className="text-lg font-semibold text-gray-800">Chat Bot Builder</CardTitle>
+                  </div>
+                </CardHeader>
+              </Card>
 
-            <div className="pt-6">
-              <h3 className="mb-2 text-sm uppercase tracking-wide text-neutral-400">Variables</h3>
-              <VariableEditor
-                variables={variables}
-                setVariables={setVariables}
-                onNext={() => {
-                  setLeftOpen(false);
-                  alert('Variables saved. You can now start building your flow!');
-                }}
-              />
+              {/* Palette */}
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <MessageCircle className="h-4 w-4" />
+                    Node Palette
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <PaletteItem label="Send Message" type={NodeTypes.SEND} icon="💬" />
+                  <PaletteItem label="Ask a Question" type={NodeTypes.ASK} icon="❓" />
+                  <PaletteItem label="Set a Condition" type={NodeTypes.COND} icon="🔀" />
+                  <PaletteItem label="Trigger Keyword" type={NodeTypes.TRIGGER} icon="🏁" />
+                  <PaletteItem label="Interactive Form" type={NodeTypes.FORM} icon="🧩" />
+                </CardContent>
+              </Card>
+
+              {/* Variables */}
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <Variable className="h-4 w-4" />
+                    Global Variables
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <VariableEditor
+                    variables={variables}
+                    setVariables={setVariables}
+                    onNext={() => {
+                      setLeftOpen(false);
+                      // Optional: Add toast or notification
+                    }}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Actions */}
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-700">Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button
+                    className="w-full bg-blue-500 text-white shadow-md transition-all hover:bg-blue-600"
+                    onClick={() => downloadJSON(finalObject)}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Export JSON
+                  </Button>
+                  <Button variant="outline" className="w-full border-gray-300 hover:bg-gray-50" onClick={() => loadSample(setRfNodes, setRfEdges)}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Load Sample
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
-
-            {/* <div className="pt-6">
-              <h3 className="mb-2 text-sm uppercase tracking-wide text-neutral-400">Templates</h3>
-              <TemplateList templates={templates} onUpdate={setTemplates} />
-            </div> */}
-
-            <div className="space-y-2 pt-6">
-              <Button className="w-full rounded-lg bg-emerald-600 py-2 hover:bg-emerald-500" onClick={() => downloadJSON(finalObject)}>
-                Export JSON
-              </Button>
-              <Button className="w-full rounded-lg py-2 hover:bg-neutral-700" onClick={() => loadSample(setRfNodes, setRfEdges)}>
-                Load Sample
-              </Button>
-            </div>
-          </div>
+          </ScrollArea>
         )}
       </div>
 
       {/* CANVAS */}
-      <div className="relative flex-1" ref={wrapperRef}>
+      <div className="relative flex-1" ref={reactFlowWrapper}>
         <ReactFlow
           nodes={rfNodes}
           edges={rfEdges}
@@ -839,39 +1216,90 @@ function EditorShell() {
           onConnect={onConnect}
           onDrop={onDrop}
           onDragOver={onDragOver}
-          onNodeClick={(_, n) => setSelId(n.id)}
+          onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
+          className="bg-gray-50"
+          proOptions={{ hideAttribution: true }}
         >
-          <Background />
-          <MiniMap />
-          <Controls />
+          <Background variant="dots" gap={12} size={1} className="bg-gray-100" />
+          {/* <MiniMap
+            maskColor="rgb(240, 249, 255)"
+            nodeColor={(n) => {
+              switch (n.type) {
+                case NodeTypes.SEND:
+                  return 'rgb(34 197 94)';
+                case NodeTypes.ASK:
+                  return 'rgb(99 102 241)';
+                case NodeTypes.COND:
+                  return 'rgb(245 158 11)';
+                case NodeTypes.TRIGGER:
+                  return 'rgb(251 146 60)';
+                case NodeTypes.FORM:
+                  return 'rgb(59 130 246)';
+                default:
+                  return 'rgb(0 0 0)';
+              }
+            }}
+          /> */}
+          <Controls className="rounded-lg border border-gray-200 bg-white shadow-md" />
         </ReactFlow>
       </div>
 
       {/* RIGHT SIDEBAR */}
-      <div className={`relative border-l border-neutral-800 transition-all duration-300 ${rightOpen ? 'w-[380px]' : 'w-[44px]'}`}>
-        <div className="absolute left-0 top-3 z-20">
-          <button type="button" onClick={() => setRightOpen((v) => !v)} className="rounded-full border border-neutral-700 p-1 hover:bg-neutral-700">
-            {rightOpen ? <ChevronRight className="h-4 w-4 text-neutral-300" /> : <PanelRightOpen className="h-4 w-4 text-neutral-300" />}
-          </button>
+      <div className={cn('relative border-l border-gray-200 bg-white shadow-lg transition-all duration-300', rightOpen ? 'w-[400px]' : 'w-11')}>
+        {/* Toggle Button */}
+        <div className="absolute left-0 top-4 z-20">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setRightOpen((v) => !v)}
+            className="h-9 w-9 rounded-full border-gray-200 hover:bg-gray-100"
+          >
+            {rightOpen ? <ChevronRight className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+          </Button>
         </div>
 
         {rightOpen && (
-          <div className="h-full space-y-3 overflow-y-auto p-4">
-            <h2 className="pl-4 text-xl font-semibold">Inspector</h2>
-            {!selected && <div className="rounded-xl border border-neutral-800 p-4 text-neutral-300">Select a node to edit.</div>}
-            {selected && (
-              <NodeInspector node={selected} onPatch={(p) => patchNode(selected.id, p)} remove={() => removeNode(selected.id)} vars={variables} />
-            )}
-            <div className="pt-4">
-              <h3 className="mb-2 text-sm uppercase tracking-wide text-neutral-400">Live JSON</h3>
-              <pre className="max-h-[40vh] overflow-auto rounded-lg border border-neutral-800 p-3 text-xs">
-                {JSON.stringify(finalObject, null, 2)}
-              </pre>
+          <ScrollArea className="h-full">
+            <div className="space-y-6 p-4">
+              {/* Header */}
+              <Card className="border-0 bg-gradient-to-r from-gray-50 to-gray-100">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <Play className="h-5 w-5 text-indigo-600" />
+                    <CardTitle className="text-lg font-semibold text-gray-800">Inspector</CardTitle>
+                  </div>
+                </CardHeader>
+              </Card>
+
+              {/* Node Inspector */}
+              {!selected ? (
+                <Card className="border-0 bg-gray-50 text-center">
+                  <CardContent className="p-8">
+                    <MessageCircle className="mx-auto mb-2 h-12 w-12 text-gray-300" />
+                    <p className="text-sm text-gray-500">Select a node to edit its properties.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <NodeInspector node={selected} onPatch={(p) => patchNode(selected.id, p)} remove={() => removeNode(selected.id)} vars={variables} />
+              )}
+
+              {/* Live JSON */}
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <Code className="h-4 w-4 text-gray-600" />
+                    <CardTitle className="text-sm font-medium text-gray-700">Live JSON Preview</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="max-h-[40vh] overflow-auto">
+                  <pre className="rounded-lg bg-gray-900 p-3 font-mono text-xs text-gray-100">{JSON.stringify(finalObject, null, 2)}</pre>
+                </CardContent>
+              </Card>
             </div>
-          </div>
+          </ScrollArea>
         )}
       </div>
     </div>
@@ -885,19 +1313,50 @@ function EditorShell() {
 }
 
 function PaletteItem({ label, type, icon }) {
-  const onDragStart = (event) => {
-    event.dataTransfer.setData('application/reactflow', type);
+  const onDragStart = (event, nodeType) => {
+    event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
   };
+
+  const getIcon = (type) => {
+    switch (type) {
+      case 'send':
+        return <MessageCircle className="h-5 w-5" />;
+      case 'ask':
+        return <HelpCircle className="h-5 w-5" />;
+      case 'cond':
+        return <Share className="h-5 w-5" />;
+      case 'trigger':
+        return <Zap className="h-5 w-5" />;
+      case 'form':
+        return <List className="h-5 w-5" />;
+      default:
+        return icon || <MessageCircle className="h-5 w-5" />;
+    }
+  };
+
   return (
-    <div
+    <Card
+      className={cn(
+        'relative cursor-grab border-gray-200 bg-white shadow-sm transition-all hover:scale-[1.02] hover:shadow-md active:cursor-grabbing active:opacity-80',
+        'group',
+      )}
+      onDragStart={(e) => onDragStart(e, type)}
       draggable
-      onDragStart={onDragStart}
-      className="flex cursor-move items-center gap-2 rounded-lg border border-neutral-700 px-3 py-2 hover:bg-neutral-700"
     >
-      <span className="text-lg">{icon}</span>
-      <span>{label}</span>
-    </div>
+      <CardContent className="flex items-center gap-3 p-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 transition-colors group-hover:from-emerald-50 group-hover:to-blue-50">
+          <span className="text-lg">{icon || getIcon(type)}</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <h4 className="truncate text-sm font-medium text-gray-900">{label}</h4>
+          <p className="text-xs text-gray-500">Drag to canvas</p>
+        </div>
+        <div className="opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="h-2 w-2 rounded-full bg-emerald-500" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -916,140 +1375,131 @@ function VariableEditor({ variables, setVariables, onNext }) {
       setError('Variable already exists');
       return;
     }
-    setVariables([...variables, name]);
+    setVariables((prev) => [...prev, name]);
     setV('');
     setError('');
-    setStep('list'); // go back to list view after adding
+    setStep('list');
+  };
+
+  const handleDelete = (varToDelete) => {
+    setVariables((prev) => prev.filter((x) => x !== varToDelete));
   };
 
   return (
-    <div className="space-y-3 rounded-xl border border-neutral-800 p-4">
-      {step === 'list' && (
-        <>
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm uppercase tracking-wide text-neutral-400">Variables</h3>
-            <Button className="rounded-lg border border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-700" onClick={() => setStep('add')}>
-              + Add
-            </Button>
-          </div>
+    <Card className="overflow-hidden border-0 bg-white shadow-lg transition-all hover:shadow-xl">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-3">
+        <div className="flex items-center gap-2">
+          <Variable className="h-5 w-5 text-blue-600" />
+          <CardTitle className="text-sm font-semibold text-gray-800">Global Variables</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4 p-4">
+        {step === 'list' && (
+          <>
+            {/* Variables List */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-medium uppercase tracking-wide text-gray-600">Your Variables</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setStep('add')}
+                  className="h-8 border-gray-300 px-3 text-blue-600 hover:bg-blue-50"
+                >
+                  <Plus className="mr-1 h-3 w-3" />
+                  Add
+                </Button>
+              </div>
 
-          <div className="flex flex-wrap gap-2">
-            {variables.length === 0 && <span className="text-xs text-neutral-500">No variables added yet.</span>}
-            {variables.map((vv) => (
-              <span key={vv} className="flex items-center gap-1 rounded-full border border-neutral-700 px-2 py-1 text-xs">
-                {vv}
-                <button onClick={() => setVariables((prev) => prev.filter((x) => x !== vv))} className="text-red-400 hover:text-red-300">
-                  ✕
-                </button>
-              </span>
-            ))}
-          </div>
+              {variables.length === 0 ? (
+                <div className="rounded-lg bg-gray-50 py-8 text-center">
+                  <Variable className="mx-auto mb-2 h-8 w-8 text-gray-400" />
+                  <p className="text-sm text-gray-500">No variables added yet.</p>
+                  <p className="mt-1 text-xs text-gray-400">Add your first variable to get started!</p>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {variables.map((vv) => (
+                    <Badge
+                      key={vv}
+                      variant="secondary"
+                      className="group relative flex items-center gap-1 border-blue-200 bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800 transition-all hover:bg-blue-200"
+                    >
+                      {vv}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-red-500 p-0 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+                        onClick={() => handleDelete(vv)}
+                      >
+                        <X className="h-2 w-2" />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          {variables.length > 0 && (
-            <div className="pt-3">
-              <Button className="w-full rounded-lg bg-emerald-600 py-2 text-sm font-semibold hover:bg-emerald-500" onClick={() => onNext?.()}>
+            {/* Next Button */}
+            {variables.length > 0 && (
+              <Button
+                className="flex h-10 w-full transform items-center gap-2 bg-blue-500 font-semibold text-white shadow-md transition-all hover:scale-[1.02] hover:bg-blue-600"
+                onClick={onNext}
+              >
+                <CheckCircle className="h-4 w-4" />
                 Next →
               </Button>
+            )}
+          </>
+        )}
+
+        {step === 'add' && (
+          <div className="animate-in fade-in space-y-4 duration-200">
+            <div className="flex items-center gap-2">
+              <Variable className="h-4 w-4 text-gray-600" />
+              <h3 className="text-sm font-semibold text-gray-800">Add New Variable</h3>
             </div>
-          )}
-        </>
-      )}
 
-      {step === 'add' && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-neutral-300">Add a New Variable</h3>
-          <input
-            value={v}
-            onChange={(e) => setV(e.target.value)}
-            placeholder="Enter variable name (e.g. name, phone)"
-            className="w-full rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-100 focus:outline-none"
-          />
-          {error && <div className="text-xs text-red-400">{error}</div>}
-          <div className="flex gap-2">
-            <Button onClick={handleAdd} className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold hover:bg-emerald-500">
-              Add Variable
-            </Button>
-            <Button
-              onClick={() => {
-                setStep('list');
-                setV('');
-                setError('');
+            <Input
+              value={v}
+              onChange={(e) => {
+                setV(e.target.value);
+                setError(''); // Clear error on type
               }}
-              className="rounded-lg py-2 text-sm font-semibold hover:bg-neutral-700"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+              placeholder="e.g. user_name, phone_number"
+              className={cn(
+                'h-10 w-full border-gray-300 text-sm transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+                error && 'border-red-300 focus:border-red-500 focus:ring-red-500',
+              )}
+            />
 
-function TemplateList({ templates, onUpdate }) {
-  const [name, setName] = useState('');
-  const [btn, setBtn] = useState('');
-  const [sel, setSel] = useState(templates[0]?.id ?? '');
-  const current = templates.find((t) => t.id === sel) || null;
-  return (
-    <div className="space-y-3 rounded-xl border border-neutral-800 p-3">
-      <label className="text-sm text-neutral-300">Select Template</label>
-      <select value={sel} onChange={(e) => setSel(e.target.value)} className="w-full rounded-lg border border-neutral-700 px-3 py-2">
-        {templates.map((t) => (
-          <option key={t.id} value={t.id}>
-            {t.name}
-          </option>
-        ))}
-      </select>
-      {current && (
-        <div className="space-y-2">
-          <div className="text-xs text-neutral-400">Buttons</div>
-          <ul className="space-y-1">
-            {current.buttons.map((b) => (
-              <li key={b.id} className="text-sm text-neutral-200">
-                • {b.text}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <div className="space-y-2 border-t border-neutral-800 pt-3">
-        <div className="text-xs text-neutral-400">Create New Template (local)</div>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Name"
-          className="w-full rounded-lg border border-neutral-700 px-3 py-2"
-        />
-        <div className="flex gap-2">
-          <input
-            value={btn}
-            onChange={(e) => setBtn(e.target.value)}
-            placeholder="Button text"
-            className="flex-1 rounded-lg border border-neutral-700 px-3 py-2"
-          />
-          <Button
-            className="rounded-lg border border-neutral-700 px-3 py-2 hover:bg-neutral-700"
-            onClick={() => {
-              if (!name.trim()) return;
-              const t = {
-                id: `tpl_${nid()}`,
-                name: name.trim(),
-                language: 'en',
-                components: [{ type: 'BODY', text: `Hello {{1}}` }],
-                buttons: btn.trim() ? [{ id: `b_${nid()}`, type: 'QUICK_REPLY', text: btn.trim() }] : [],
-              };
-              onUpdate([...templates, t]);
-              setName('');
-              setBtn('');
-              setSel(t.id);
-            }}
-          >
-            Add Template
-          </Button>
-        </div>
-      </div>
-    </div>
+            {error && (
+              <div className="flex items-center gap-2 rounded-md bg-red-50 p-2 text-xs text-red-600">
+                <AlertCircle className="h-3 w-3" />
+                {error}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button className="h-10 flex-1 bg-blue-500 font-semibold text-white shadow-md transition-all hover:bg-blue-600" onClick={handleAdd}>
+                Add Variable
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10 border-gray-300 px-4 text-gray-700 hover:bg-gray-50"
+                onClick={() => {
+                  setStep('list');
+                  setV('');
+                  setError('');
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -1106,6 +1556,7 @@ export function ListEditor({ list, onChange }) {
         className="w-full rounded-lg border border-neutral-700 px-3 py-2"
       />
       <button
+        type="button"
         className="rounded-lg bg-emerald-600 px-3 py-2"
         onClick={() => {
           if (!section.trim()) return;
@@ -1141,8 +1592,8 @@ function NodeInspector({ node, onPatch, remove, vars }) {
       {node.type === NodeTypes.ASK && <AskQuick meta={data.meta} onPatch={(m) => onPatch({ meta: m })} variables={vars} />}
       {node.type === NodeTypes.COND && <CondQuick meta={data.meta} onPatch={(m) => onPatch({ meta: m })} variables={vars} />}
       {node.type === NodeTypes.TRIGGER && <TriggerQuick meta={data.meta} onPatch={(m) => onPatch({ meta: m })} />}
-      {node.type === 'interactive_message' && (
-        <div className="space-y-4">
+      {node.type === NodeTypes.FORM && (
+        <div className="w-72 space-y-4">
           {/* Layout selector */}
           <label className="block text-sm font-semibold">Layout Type</label>
           <select
@@ -1249,6 +1700,7 @@ function SendQuick({ meta = {}, onPatch }) {
         <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
           {contentTypes.map((type) => (
             <button
+              type="button"
               key={type.id}
               onClick={() => onPatch({ ...currentMeta, contentType: type.id })}
               className={cn(
@@ -1257,7 +1709,6 @@ function SendQuick({ meta = {}, onPatch }) {
                 contentType === type.id ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:bg-white hover:shadow-sm',
               )}
             >
-              {/* <type.icon className="h-4 w-4" /> */}
               <span>{type.label}</span>
             </button>
           ))}
@@ -1384,7 +1835,8 @@ function AskQuick({
 function CondQuick({ meta = { logic: [] }, onPatch, variables }) {
   const logic = meta.logic || [];
   const [openDropdown, setOpenDropdown] = useState(false);
-  const activeFieldRef = useRef(null); // Tracks which field is focused
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const activeFieldRef = useRef(null);
 
   const update = (i, patch) => {
     const updatedLogic = logic.map((x, idx) => (idx === i ? { ...x, ...patch } : x));
@@ -1392,17 +1844,16 @@ function CondQuick({ meta = { logic: [] }, onPatch, variables }) {
   };
 
   const addCondition = () => {
+    if (variables.length === 0) return;
     onPatch({
       ...meta,
-      logic: [...logic, { var: variables[0] || '', op: 'eq', value: '' }],
+      logic: [...logic, { var: variables[0], op: 'eq', value: '' }],
     });
   };
 
   const removeCondition = (i) => {
-    onPatch({
-      ...meta,
-      logic: logic.filter((_, j) => j !== i),
-    });
+    const updated = logic.filter((_, j) => j !== i);
+    onPatch({ ...meta, logic: updated });
   };
 
   const insertVariable = (varName) => {
@@ -1414,8 +1865,7 @@ function CondQuick({ meta = { logic: [] }, onPatch, variables }) {
     const currentValue = field.value || '';
     const newValue = currentValue.substring(0, start) + varName + currentValue.substring(end);
 
-    // Find which condition & field
-    const conditionIndex = parseInt(field.dataset.conditionIndex);
+    const conditionIndex = Number.parseInt(field.dataset.conditionIndex);
     const fieldType = field.dataset.fieldType;
 
     if (fieldType === 'var') {
@@ -1427,38 +1877,108 @@ function CondQuick({ meta = { logic: [] }, onPatch, variables }) {
     setOpenDropdown(false);
   };
 
+  const generatePreview = () => {
+    if (logic.length === 0) return 'No conditions';
+    return logic
+      .map((l, i) => {
+        const connector = i === 0 ? 'IF' : 'AND';
+        const opLabel = {
+          exists: 'exists',
+          eq: 'equals',
+          ne: 'not equals',
+          gt: 'greater than',
+          lt: 'less than',
+          contains: 'contains',
+        }[l.op];
+        return `${connector} ${l.var} ${opLabel} "${l.value || 'any'}"`;
+      })
+      .join(' ');
+  };
+
+  const hasInvalidConditions = logic.some((l) => !l.var || !l.value?.trim());
+
   return (
     <div className="relative">
-      <Card className="border-0 bg-neutral-100 p-4 shadow-sm">
-        <div className="space-y-3">
+      <Card className="border-0 bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 shadow-md">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="border-emerald-300 text-emerald-700">
+              <Info className="mr-1 h-3 w-3" />
+              Conditional Logic
+            </Badge>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => setPreviewVisible(!previewVisible)} className="text-emerald-600 hover:text-emerald-700">
+            <span className="sr-only">Toggle preview</span>
+            {previewVisible ? 'Hide' : 'Preview'} Logic
+          </Button>
+        </div>
+
+        {previewVisible && (
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-white p-3">
+            <div className="mb-1 flex items-center gap-2 font-mono text-sm text-emerald-800">
+              <AlertCircle className="h-4 w-4 text-emerald-500" />
+              <span>Preview:</span>
+            </div>
+            <code className="block whitespace-pre-wrap rounded bg-emerald-50 p-2 text-xs">
+              {generatePreview()}
+              {hasInvalidConditions && <span className="ml-2 text-xs text-red-500">⚠️ Incomplete fields</span>}
+            </code>
+          </div>
+        )}
+
+        <div className="space-y-4">
           {logic.length === 0 ? (
-            <div className="rounded-xl bg-emerald-50 p-8 text-center">
-              <p className="text-sm text-emerald-700">No conditions added</p>
-              <p className="mt-1 text-xs text-emerald-600">Click + to add a condition</p>
+            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-emerald-300 bg-white p-8 text-center">
+              <Plus className="mb-3 h-12 w-12 text-emerald-400" />
+              <p className="mb-1 text-sm font-medium text-emerald-700">No conditions yet</p>
+              <p className="text-xs text-emerald-600">Add your first condition to get started</p>
+              {variables.length === 0 && (
+                <p className="mt-2 flex items-center text-xs text-red-500">
+                  <AlertCircle className="mr-1 h-3 w-3" />
+                  No variables available. Create some first.
+                </p>
+              )}
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {logic.map((l, i) => (
-                <div key={i} className="relative rounded-xl bg-emerald-50 p-4 shadow-sm ring-1 ring-emerald-200">
-                  <div className="grid grid-cols-1 gap-3">
-                    {/* IF + Variable */}
-                    <div className="flex items-center gap-2">
-                      {i === 0 && <span className="rounded bg-emerald-600 px-2 py-1 text-xs font-bold text-white">IF</span>}
-                      {i > 0 && <span className="w-8 text-xs font-medium text-emerald-600">AND</span>}
+                <div
+                  key={i}
+                  className={cn(
+                    'relative rounded-xl border border-emerald-200 bg-white p-4 shadow-sm transition-all hover:shadow-md',
+                    hasInvalidConditions && 'border-red-300 ring-2 ring-red-200',
+                  )}
+                >
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* Condition Header */}
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        variant="secondary"
+                        className={cn('px-3 py-1 text-xs font-semibold', i === 0 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700')}
+                      >
+                        {i === 0 ? 'IF' : 'AND'}
+                      </Badge>
+                      {hasInvalidConditions && <AlertCircle className="h-4 w-4 text-red-500" title="Incomplete condition" />}
+                    </div>
+
+                    {/* Variable Select */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-emerald-700">Variable</label>
                       <Select value={l.var || ''} onValueChange={(v) => update(i, { var: v })}>
                         <SelectTrigger
-                          className="h-10 flex-1 border-emerald-300 bg-white text-sm"
+                          className="h-10 border-emerald-300 bg-white text-sm focus:border-emerald-500"
                           onFocus={(e) => {
-                            activeFieldRef.current = e.target.querySelector('input') || e.target;
-                            activeFieldRef.current.dataset.conditionIndex = i;
-                            activeFieldRef.current.dataset.fieldType = 'var';
+                            const input = e.target.querySelector('input') || e.target;
+                            activeFieldRef.current = input;
+                            input.dataset.conditionIndex = i;
+                            input.dataset.fieldType = 'var';
                           }}
                         >
-                          <SelectValue placeholder="Type or select a variable" />
+                          <SelectValue placeholder="Select or type a variable" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="border-emerald-300">
                           {variables.map((v) => (
-                            <SelectItem key={v} value={v}>
+                            <SelectItem key={v} value={v} className="text-sm">
                               {v}
                             </SelectItem>
                           ))}
@@ -1466,51 +1986,50 @@ function CondQuick({ meta = { logic: [] }, onPatch, variables }) {
                       </Select>
                     </div>
 
-                    {/* Operator */}
-                    <Select value={l.op || 'eq'} onValueChange={(op) => update(i, { op })}>
-                      <SelectTrigger className="h-10 border-emerald-300 bg-white text-sm">
-                        <SelectValue>
-                          {l.op === 'exists' && 'Exists'}
-                          {l.op === 'eq' && 'Equal to'}
-                          {l.op === 'ne' && 'Not equal to'}
-                          {l.op === 'gt' && 'Greater than'}
-                          {l.op === 'lt' && 'Less than'}
-                          {l.op === 'contains' && 'Contains'}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="exists">Exists</SelectItem>
-                        <SelectItem value="eq">Equal to</SelectItem>
-                        <SelectItem value="ne">Not equal to</SelectItem>
-                        <SelectItem value="gt">Greater than</SelectItem>
-                        <SelectItem value="lt">Less than</SelectItem>
-                        <SelectItem value="contains">Contains</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {/* Operator Select */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-emerald-700">Operator</label>
+                      <Select value={l.op || 'eq'} onValueChange={(op) => update(i, { op })}>
+                        <SelectTrigger className="h-10 border-emerald-300 bg-white text-sm focus:border-emerald-500">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="border-emerald-300">
+                          <SelectItem value="exists">Exists</SelectItem>
+                          <SelectItem value="eq">Equal to</SelectItem>
+                          <SelectItem value="ne">Not equal to</SelectItem>
+                          <SelectItem value="gt">Greater than</SelectItem>
+                          <SelectItem value="lt">Less than</SelectItem>
+                          <SelectItem value="contains">Contains</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
                     {/* Value Input */}
-                    <Input
-                      value={l.value ?? ''}
-                      onChange={(e) => update(i, { value: e.target.value })}
-                      onFocus={(e) => {
-                        activeFieldRef.current = e.target;
-                        e.target.dataset.conditionIndex = i;
-                        e.target.dataset.fieldType = 'value';
-                      }}
-                      placeholder="Type a value"
-                      className="h-10 border-emerald-300 bg-white text-sm placeholder:text-neutral-400"
-                    />
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-emerald-700">Value</label>
+                      <Input
+                        value={l.value ?? ''}
+                        onChange={(e) => update(i, { value: e.target.value })}
+                        onFocus={(e) => {
+                          activeFieldRef.current = e.target;
+                          e.target.dataset.conditionIndex = i;
+                          e.target.dataset.fieldType = 'value';
+                        }}
+                        placeholder="Enter value (e.g., 'hello', 42)"
+                        className="h-10 border-emerald-300 bg-white text-sm placeholder:text-emerald-400 focus:border-emerald-500"
+                      />
+                    </div>
                   </div>
 
-                  {/* Cross Button */}
+                  {/* Remove Button */}
                   {logic.length > 1 && (
                     <Button
-                      size="icon"
+                      size="sm"
                       variant="ghost"
-                      className="absolute -right-2 -top-2 h-7 w-7 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                      className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
                       onClick={() => removeCondition(i)}
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3 w-3" />
                     </Button>
                   )}
                 </div>
@@ -1519,31 +2038,36 @@ function CondQuick({ meta = { logic: [] }, onPatch, variables }) {
           )}
         </div>
 
-        {/* VARIABLES Dropdown Button */}
-        <div className="relative">
+        {/* Variables Dropdown */}
+        <div className="relative mt-4">
           <Button
             variant="outline"
-            className="mt-3 w-full justify-between border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+            size="sm"
+            className="w-full justify-between border-emerald-300 text-emerald-700 hover:bg-emerald-50"
             onClick={() => setOpenDropdown(!openDropdown)}
           >
-            <span>VARIABLES</span>
+            <span className="flex items-center gap-1">
+              <span>VARIABLES ({variables.length})</span>
+            </span>
             <ChevronDown className={`h-4 w-4 transition-transform ${openDropdown ? 'rotate-180' : ''}`} />
           </Button>
 
           {openDropdown && (
-            <div className="absolute bottom-full left-0 right-0 z-50 mb-1 rounded-lg border border-emerald-300 bg-white shadow-lg">
-              <div className="max-h-48 overflow-auto p-2">
+            <div className="absolute left-0 right-0 z-50 mt-1 max-h-48 overflow-auto rounded-lg border border-emerald-300 bg-white shadow-lg">
+              <div className="p-2">
                 {variables.length === 0 ? (
-                  <p className="px-3 py-2 text-xs text-neutral-500">No variables</p>
+                  <p className="px-3 py-2 text-xs italic text-neutral-500">No variables available</p>
                 ) : (
                   variables.map((v) => (
-                    <button
+                    <Button
                       key={v}
+                      variant="ghost"
+                      className="w-full justify-start px-3 py-2 text-left text-sm hover:bg-emerald-50"
                       onClick={() => insertVariable(v)}
-                      className="block w-full rounded px-3 py-2 text-left text-sm text-neutral-700 hover:bg-emerald-50"
                     >
-                      {v}
-                    </button>
+                      <code className="mr-2 font-mono">{`{{${v}}}`}</code>
+                      <span>{v}</span>
+                    </Button>
                   ))
                 )}
               </div>
@@ -1552,62 +2076,28 @@ function CondQuick({ meta = { logic: [] }, onPatch, variables }) {
         </div>
       </Card>
 
-      {/* Floating + Button */}
+      {/* Floating Add Button */}
       <Button
         size="icon"
-        className="absolute -bottom-6 right-4 h-12 w-12 rounded-full bg-emerald-500 text-white shadow-lg hover:bg-emerald-600"
+        className="absolute bottom-4 right-4 h-14 w-14 transform rounded-full bg-emerald-600 text-white shadow-xl transition-all hover:scale-105 hover:bg-emerald-700"
         onClick={addCondition}
         disabled={variables.length === 0}
+        title={variables.length === 0 ? 'No variables available' : 'Add condition'}
       >
         <Plus className="h-6 w-6" />
       </Button>
 
-      {/* Footer */}
-      <div className="mt-12 text-center text-xs text-neutral-500">
-        <span className="inline-flex items-center">
-          <div className="mr-1 h-2 w-2 rounded-full bg-emerald-500"></div>
-          Right = TRUE
-        </span>{' '}
-        <span className="inline-flex items-center">
-          <div className="mr-1 h-2 w-2 rounded-full bg-red-500"></div>
-          Bottom = FALSE
-        </span>
+      {/* Footer Legend */}
+      <div className="mt-6 flex justify-center gap-6 rounded-lg bg-white/50 p-3 text-xs text-neutral-600">
+        <div className="flex items-center gap-1">
+          <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+          <span>Right = TRUE</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="h-2 w-2 rounded-full bg-red-500" />
+          <span>Bottom = FALSE</span>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function TemplateQuick({ meta = { buttonRoutes: {} }, onPatch }) {
-  const entries = Object.entries(meta.buttonRoutes || {});
-  return (
-    <div className="space-y-2">
-      <input
-        value={meta.templateId || ''}
-        onChange={(e) => onPatch({ ...meta, templateId: e.target.value })}
-        placeholder="template id"
-        className="w-full rounded border border-neutral-800 px-3 py-2"
-      />
-      <div className="space-y-1 text-xs">
-        {entries.map(([k, v]) => (
-          <div key={k}>
-            • {k} → {v || '(connect edge)'}
-          </div>
-        ))}
-      </div>
-      <Button
-        className="rounded border border-neutral-700 px-3 py-1 text-xs hover:bg-neutral-700"
-        onClick={() => {
-          const key = prompt('Enter button payload/text key') || '';
-          if (!key) return;
-          const br = { ...(meta.buttonRoutes || {}) };
-          if (br[key]) return alert('Key exists');
-          br[key] = null;
-          onPatch({ ...meta, buttonRoutes: br });
-        }}
-      >
-        + Add button mapping
-      </Button>
-      <div className="text-xs text-neutral-400">Drag edge from button handle to target node.</div>
     </div>
   );
 }
@@ -1697,6 +2187,8 @@ function FormNode({ data, selected }) {
     setImageFiles: s.setImageFiles,
   }));
 
+  const nid = () => Math.random().toString(36).substr(2, 9);
+
   const addOption = () => {
     const newOpt = { id: `opt_${nid()}`, title: '', description: '', next: null };
     data.onPatch({ meta: { ...m, options: [...(m.options || []), newOpt] } });
@@ -1715,90 +2207,174 @@ function FormNode({ data, selected }) {
   return (
     <div className="relative">
       <Handle type="target" position={Position.Left} />
-      <BaseNode data={data} selected={selected} border="#22c55e">
-        <div className="space-y-3">
-          {/* Header image upload */}
-          <label className="text-xs text-neutral-400">Header (optional image)</label>
-          <div className="flex h-[200px] w-[200px] items-center gap-2">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setImageFiles(file);
-                try {
-                  data.onPatch({ meta: { ...m, uploadingHeader: true } });
-                  const { url } = await uploadMedia();
-                  data.onPatch({
-                    meta: {
-                      ...m,
-                      header: { type: 'image', mediaUrl: url, fileName: file.name },
-                      uploadingHeader: false,
-                    },
-                  });
-                } catch (err) {
-                  console.error('Header upload failed', err);
-                  data.onPatch({ meta: { ...m, uploadingHeader: false } });
-                }
-              }}
-              className="h-[150px] w-[150px] text-xs"
-            />
-            {m.uploadingHeader && <span className="text-xs text-neutral-400">Uploading...</span>}
+      <Card
+        className={cn(
+          'relative w-96 overflow-hidden border-2 shadow-lg transition-all',
+          selected ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-20' : 'border-gray-300',
+        )}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between bg-gradient-to-r from-blue-500 to-indigo-600 p-4 text-white">
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
+            <h3 className="text-lg font-bold">{m.layout === 'list' ? 'List Message' : 'Button Message'}</h3>
           </div>
-          {m.header?.mediaUrl && <img src={m.header.mediaUrl} alt="header" className="rounded-lg border border-neutral-800" />}
 
-          {/* Body / Footer */}
-          <textarea
-            value={m.bodyText || ''}
-            onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
-            placeholder="Form message text..."
-            rows={3}
-            className="w-full rounded border border-neutral-800 px-3 py-2"
-          />
-          <input
-            value={m.footerText || ''}
-            onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
-            placeholder="Footer (optional)"
-            className="w-full rounded border border-neutral-800 px-3 py-2"
-          />
+          {/* Layout selector */}
+          <Select value={m.layout || 'button'} onValueChange={(layout) => data.onPatch({ meta: { ...m, layout } })}>
+            <SelectTrigger className="h-8 w-28 bg-white/10 text-xs text-white">
+              <SelectValue placeholder="Layout" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="button">Buttons</SelectItem>
+              <SelectItem value="list">List</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          {/* Options */}
-          <div className="border-t border-neutral-800 pt-2">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="text-xs text-neutral-400">Interactive Options</div>
-              <Button className="rounded border border-neutral-700 px-2 py-1 text-xs" onClick={addOption}>
-                + Add
-              </Button>
-            </div>
+        <CardContent className="space-y-4 bg-gray-100 p-4">
+          {/* Header Image Upload */}
+          <Card className="border-0 bg-white shadow-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-gray-700">Header Image (Optional)</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div
+                className={cn(
+                  'group relative mx-auto flex h-32 w-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-gray-500 transition-all hover:border-blue-400 hover:bg-blue-50',
+                  m.uploadingHeader && 'animate-pulse',
+                )}
+              >
+                <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center">
+                  <Upload className="mb-2 h-6 w-6 transition-colors group-hover:text-blue-500" />
+                  <span className="text-center text-xs">Drop image here or click to upload</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setImageFiles(file);
+                      try {
+                        data.onPatch({ meta: { ...m, uploadingHeader: true } });
+                        const { url } = await uploadMedia();
+                        data.onPatch({
+                          meta: {
+                            ...m,
+                            header: { type: 'image', mediaUrl: url, fileName: file.name },
+                            uploadingHeader: false,
+                          },
+                        });
+                      } catch (err) {
+                        console.error('Header upload failed', err);
+                        data.onPatch({ meta: { ...m, uploadingHeader: false } });
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+              {m.header?.mediaUrl && (
+                <div className="relative">
+                  <img src={m.header.mediaUrl} alt="Header preview" className="mx-auto h-32 w-32 rounded-lg border border-gray-200 object-cover" />
+                  <Badge className="absolute right-2 top-2 bg-gray-800 text-xs text-white">{m.header.fileName}</Badge>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            {(m.options || []).map((opt, i) => (
-              <div key={opt.id} className="space-y-1 rounded-lg border border-neutral-800 p-2">
-                <input
-                  value={opt.title}
-                  onChange={(e) => updateOption(i, { title: e.target.value })}
-                  placeholder="Option title"
-                  className="w-full rounded border border-neutral-800 px-2 py-1 text-xs"
-                />
-                <input
-                  value={opt.description}
-                  onChange={(e) => updateOption(i, { description: e.target.value })}
-                  placeholder="Description (optional)"
-                  className="w-full rounded border border-neutral-800 px-2 py-1 text-xs"
-                />
-                <Button onClick={() => removeOption(i)} className="mt-1 rounded bg-red-600 px-2 py-1 text-xs hover:bg-red-500">
-                  ✕ Remove
+          {/* Body */}
+          <div>
+            <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">
+              <FileText className="h-3 w-3" />
+              Body Text
+            </label>
+            <Textarea
+              value={m.bodyText || ''}
+              onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
+              placeholder="Enter your message..."
+              className="min-h-20 resize-none border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Footer */}
+          <div>
+            <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">Footer (Optional)</label>
+            <Input
+              value={m.footerText || ''}
+              onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
+              placeholder="Footer note..."
+              className="border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Options (common for both layouts) */}
+          <Card className="border-0 bg-white shadow-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-blue-500" />
+                  <CardTitle className="text-sm font-medium text-gray-700">{m.layout === 'list' ? 'List Items' : 'Interactive Buttons'}</CardTitle>
+                  <Badge variant="secondary" className="text-xs">
+                    {m.layout === 'list' ? 'Up to 10' : 'Up to 3'}
+                  </Badge>
+                </div>
+                <Button
+                  onClick={addOption}
+                  className="bg-blue-500 px-3 py-1 text-xs text-white shadow-md hover:bg-blue-600"
+                  disabled={m.layout === 'list' ? (m.options || []).length >= 10 : (m.options || []).length >= 3}
+                >
+                  <Plus className="mr-1 h-3 w-3" /> Add
                 </Button>
               </div>
-            ))}
-          </div>
-        </div>
-      </BaseNode>
+            </CardHeader>
+
+            <CardContent className="space-y-3">
+              {(m.options || []).map((opt, i) => (
+                <div
+                  key={opt.id}
+                  className="group relative rounded-lg border border-gray-200 bg-gradient-to-r to-gray-50 p-3 transition-all hover:border-blue-300 hover:from-blue-50 hover:shadow-md"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <GripVertical className="h-4 w-4 cursor-grab text-gray-400 group-hover:text-blue-500" />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="h-6 w-6 bg-red-500 opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+                      onClick={() => removeOption(i)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+
+                  <Input
+                    value={opt.title}
+                    onChange={(e) => updateOption(i, { title: e.target.value })}
+                    placeholder={m.layout === 'list' ? 'Item title' : 'Button label'}
+                    className="mb-2 border-gray-300 focus:border-blue-500"
+                  />
+
+                  <Input
+                    value={opt.description || ''}
+                    onChange={(e) => updateOption(i, { description: e.target.value })}
+                    placeholder={m.layout === 'list' ? 'Item description (optional)' : 'Description (optional)'}
+                    className="border-gray-300 focus:border-blue-500"
+                  />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+
       <Handle type="source" position={Position.Right} />
-      {/* Dynamic option connectors */}
+
+      {/* Dynamic connectors */}
       <div className="absolute right-0 top-3/4 h-0">
         {(m.options || []).map((opt, i) => (
-          <Handle key={opt.id} id={`opt:${opt.id}`} type="source" position={Position.Right} style={{ top: 40 + i * 18, right: -6 }} />
+          <Handle key={opt.id} id={`opt:${opt.id}`} type="source" position={Position.Right} style={{ top: `${40 + i * 18}px`, right: '-6px' }} />
         ))}
       </div>
     </div>
@@ -1815,6 +2391,7 @@ function defaultMeta(t) {
       options: [],
       routes: {},
     };
+
   if (t === NodeTypes.SEND)
     return {
       contentType: 'text',
@@ -1822,25 +2399,29 @@ function defaultMeta(t) {
       mediaUrl: '',
       mediaType: 'url',
       fileName: '',
-      fileHandle: '',
       caption: '',
       uploading: false,
     };
 
+  // 🟣 INTERACTIVE MESSAGE
   if (t === NodeTypes.INTERACTIVE)
     return {
-      layout: 'button',
+      layout: 'button', // or list
       bodyText: '',
       footerText: '',
-      header: { type: '', mediaUrl: '', fileName: '', handle: '' },
+      header: { type: '', mediaUrl: '', fileName: '' },
       buttons: [],
+      list: { buttonText: '', sections: [] },
       routes: {},
       uploadingHeader: false,
     };
 
   if (t === NodeTypes.ASK) return { prompt: '', variable: '', inputType: 'text', required: true };
+
   if (t === NodeTypes.COND) return { logic: [] };
+
   if (t === NodeTypes.TRIGGER) return { keywords: [] };
+
   return {};
 }
 
@@ -1856,6 +2437,7 @@ function buildFinalFromGraph(nodes, edges) {
     const sNode = byId[source];
     if (!sNode) continue;
     const m = metaById[source] || {};
+
     if (sNode.type === NodeTypes.COND) {
       if (data?.kind === 'cond:true') m.trueNext = target;
       else if (data?.kind === 'cond:false') m.falseNext = target;
@@ -1863,6 +2445,10 @@ function buildFinalFromGraph(nodes, edges) {
       const optKey = data.kind.split(':')[1];
       if (!m.routes) m.routes = {};
       m.routes[optKey] = target;
+    } else if (data?.kind?.startsWith('btn:')) {
+      const btnKey = data.kind.split(':')[1];
+      if (!m.routes) m.routes = {};
+      m.routes[btnKey] = target;
     } else if (sNode.type === NodeTypes.TRIGGER && data?.kind === 'trigger:start') {
       m.startNext = target;
     } else {
@@ -1871,12 +2457,68 @@ function buildFinalFromGraph(nodes, edges) {
     metaById[source] = m;
   }
 
+  // generate final structure
   for (const n of nodes) {
     const m = metaById[n.id] || {};
+
+    // 🟡 Trigger
     if (n.type === NodeTypes.TRIGGER) {
       triggers.push({ keywords: m.keywords || [], start: m.startNext || null });
       continue;
     }
+
+    // 🟢 Send message
+    if (n.type === NodeTypes.SEND) {
+      runtimeNodes.push({
+        id: n.id,
+        type: 'send_message',
+        next: m.next || null,
+        contentType: m.contentType || 'text',
+        text: m.text || '',
+        mediaUrl: m.mediaUrl || '',
+        fileName: m.fileName || '',
+      });
+      continue;
+    }
+
+    // 🔵 Ask question
+    if (n.type === NodeTypes.ASK) {
+      runtimeNodes.push({
+        id: n.id,
+        type: 'ask_question',
+        next: m.next || null,
+        prompt: m.prompt || '',
+        variable: m.variable || '',
+        inputType: m.inputType || 'text',
+        required: !!(m.required ?? true),
+      });
+      continue;
+    }
+
+    // 🟣 Interactive message (button or list)
+    if (n.type === NodeTypes.INTERACTIVE) {
+      const base = {
+        id: n.id,
+        type: 'interactive_message',
+        layout: m.layout || 'button',
+        bodyText: m.bodyText || '',
+        footerText: m.footerText || '',
+        header: m.header || { type: '', mediaUrl: '', fileName: '' },
+        routes: m.routes || {},
+        next: m.next || null,
+      };
+
+      if (m.layout === 'list') {
+        base.list = m.list || { buttonText: '', sections: [] };
+      } else {
+        base.buttons = m.buttons || [];
+      }
+
+      runtimeNodes.push(base);
+      continue;
+    }
+
+    // 🧩 Form node maps to interactive_message
     if (n.type === NodeTypes.FORM) {
       const routes = {};
       (m.options || []).forEach((o) => {
@@ -1885,57 +2527,29 @@ function buildFinalFromGraph(nodes, edges) {
       runtimeNodes.push({
         id: n.id,
         type: 'interactive_message',
-        layout: m.layout,
+        layout: 'button',
         header: m.header,
         bodyText: m.bodyText,
         footerText: m.footerText,
-        list: undefined,
-        buttons: (m.options || []).map((o) => ({ id: o.id, title: o.title, description: o.description })),
+        buttons: (m.options || []).map((o) => ({
+          id: o.id,
+          title: o.title,
+          description: o.description,
+        })),
         routes,
         next: m.next || null,
       });
       continue;
     }
-    // rest existing node mapping...
-    if (n.type === NodeTypes.SEND) {
+
+    // 🟠 Condition node
+    if (n.type === NodeTypes.COND) {
       runtimeNodes.push({
         id: n.id,
-        type: n.type,
-        next: m.next || null,
-        contentType: m.contentType,
-        text: m.text || '',
-        mediaUrl: m.mediaUrl || '',
-        fileName: m.fileName || '',
-      });
-    } else if (n.type === NodeTypes.ASK) {
-      runtimeNodes.push({
-        id: n.id,
-        type: n.type,
-        next: m.next || null,
-        prompt: m.prompt || '',
-        variable: m.variable || '',
-        inputType: m.inputType || 'text',
-        required: !!(m.required ?? true),
-      });
-    } else if (n.type === NodeTypes.COND) {
-      runtimeNodes.push({
-        id: n.id,
-        type: n.type,
+        type: 'set_condition',
         logic: m.logic || [],
         trueNext: m.trueNext || null,
         falseNext: m.falseNext || null,
-      });
-    } else if (n.type === NodeTypes.INTERACTIVE) {
-      runtimeNodes.push({
-        id: n.id,
-        type: n.type,
-        layout: m.layout,
-        bodyText: m.bodyText,
-        footerText: m.footerText,
-        header: m.header,
-        buttons: m.buttons,
-        routes: m.routes,
-        next: m.next || null,
       });
     }
   }

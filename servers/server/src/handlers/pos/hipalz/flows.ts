@@ -22,8 +22,19 @@ const FLOW: {
     { keywords: ["train"], start: "t_img_welcome" },
     { keywords: ["weather"], start: "w_list_cities" },
     {
-      keywords: ["hoi"],
-      start: "sx685mle",
+      keywords: ["hii"],
+      start: "5k5brww4",
+    },
+  ],
+  nodes: [
+    {
+      id: "5k5brww4",
+      type: "ask_question",
+      next: null,
+      prompt: "what is your name?",
+      variable: "name",
+      inputType: "text",
+      required: true,
     },
   ],
   // nodes: [
@@ -360,93 +371,6 @@ const FLOW: {
   //     fileName: "",
   //   },
   // ],
-  nodes: [
-    {
-      id: "sx685mle",
-      type: "ask_question",
-      next: "dyz24qrl",
-      prompt: "please enter your email address",
-      variable: "email",
-      inputType: "text",
-      required: true,
-    },
-    {
-      id: "dyz24qrl",
-      type: "set_condition",
-      logic: [
-        {
-          var: "email",
-          op: "eq",
-          value: "mvvk96@gmail.com",
-        },
-      ],
-      trueNext: "zqj1a4rq",
-      falseNext: "s4zlrzwa",
-    },
-    {
-      id: "zqj1a4rq",
-      type: "ask_question",
-      next: null,
-      prompt: "enter correct email address",
-      variable: "email",
-      inputType: "text",
-      required: true,
-    },
-    {
-      id: "s4zlrzwa",
-      type: "send_message",
-      next: "29n4t766",
-      contentType: "text",
-      text: "thank you",
-      mediaUrl: "",
-      fileName: "",
-    },
-    {
-      id: "29n4t766",
-      type: "interactive_message",
-      layout: "button",
-      header: {
-        type: "",
-        mediaUrl: "",
-        fileName: "",
-      },
-      bodyText:
-        "This is the question, and lets choose the options and when you are choosing the option",
-      footerText: "powered by hipalz",
-      buttons: [
-        {
-          id: "opt_6swb9rhe",
-          title: "option 1",
-          description: "",
-        },
-        {
-          id: "opt_illrk8b9",
-          title: "option 2",
-          description: "",
-        },
-      ],
-      routes: {},
-      next: "65e7inur",
-    },
-    {
-      id: "x8piqdbc",
-      type: "send_message",
-      next: null,
-      contentType: "text",
-      text: "You have chosen option 1",
-      mediaUrl: "",
-      fileName: "",
-    },
-    {
-      id: "65e7inur",
-      type: "send_message",
-      next: null,
-      contentType: "text",
-      text: "You have chosen option 2",
-      mediaUrl: "",
-      fileName: "",
-    },
-  ],
 };
 
 // ---- Runtime state + helpers ----
@@ -835,14 +759,22 @@ async function advance(
           type: "interactive",
           interactive: {
             type: "button",
-            ...(header ? { header } : {}),
             body: { text: body },
             ...(footer ? { footer: { text: footer } } : {}),
             action: {
-              buttons: node.buttons.map((b) => ({
-                type: "reply",
-                reply: { id: b.id, title: b.title },
-              })),
+              buttons: node.buttons.map((b) => {
+                if (b.type === "url" && b.url) {
+                  return {
+                    type: "url",
+                    url: b.url,
+                    text: b.title,
+                  };
+                }
+                return {
+                  type: "reply",
+                  reply: { id: b.id, title: b.title },
+                };
+              }),
             },
           },
         });
