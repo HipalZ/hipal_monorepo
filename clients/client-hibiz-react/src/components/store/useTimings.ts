@@ -1,4 +1,5 @@
-import { create } from 'zustand';
+import { endOfDay, startOfDay } from "date-fns";
+import { create } from "zustand";
 
 interface State {
   inTime: string;
@@ -21,29 +22,37 @@ interface State {
   setDayOut: (dayOut: string) => void;
   setStatus: (status: string) => void;
   setRating: (rating: string) => void;
+  startDate: Date;
+  endDate: Date;
+  setStartDate: (startDate: Date) => void;
+  setEndDate: (endDate: Date) => void;
 }
 
 const useTimings = create<State>((set) => ({
-  inTime: '',
-  outTime: '',
+  inTime: "",
+  outTime: "",
   timeStampStart: 0,
   timeStampEnd: 0,
-  dayIn: '',
-  dayOut: '',
-  pickDate: '',
-  status: '',
-  rating: '',
-  selectedRange: 'today',
-  setSelectedRange: (selectedRange:string) => set({ selectedRange }),
-  setInTime: (inTime:string) => set({ inTime }),
-  setOutTime: (outTime:string) => set({ outTime }),
-  setTimeStampStart: (timeStampStart:number) => set({ timeStampStart }),
-  setTimeStampEnd: (timeStampEnd:number) => set({ timeStampEnd }),
-  setDayIn: (dayIn:string) => set({ dayIn }),
-  setPickDate: (pickDate:string) => set({ pickDate }),
-  setDayOut: (dayOut:string) => set({ dayOut }),
-  setStatus: (status:string) => set({ status }),
-  setRating: (rating:string) => set({ rating }),
+  dayIn: "",
+  dayOut: "",
+  pickDate: "",
+  status: "",
+  rating: "",
+  selectedRange: "today",
+  setSelectedRange: (selectedRange: string) => set({ selectedRange }),
+  setInTime: (inTime: string) => set({ inTime }),
+  setOutTime: (outTime: string) => set({ outTime }),
+  setTimeStampStart: (timeStampStart: number) => set({ timeStampStart }),
+  setTimeStampEnd: (timeStampEnd: number) => set({ timeStampEnd }),
+  setDayIn: (dayIn: string) => set({ dayIn }),
+  setPickDate: (pickDate: string) => set({ pickDate }),
+  setDayOut: (dayOut: string) => set({ dayOut }),
+  setStatus: (status: string) => set({ status }),
+  setRating: (rating: string) => set({ rating }),
+  startDate: startOfDay(new Date()),
+  endDate: endOfDay(new Date()),
+  setStartDate: (startDate: Date) => set({ startDate }),
+  setEndDate: (endDate: Date) => set({ endDate }),
 }));
 
 export default useTimings;
