@@ -18,6 +18,7 @@ export interface StaffAlertReportOverAll {
 }
 
 export interface StaffAlertReportItem {
+  totalActiveMinutes: number;
   staffId: string;
   staffName: string;
   acceptanceOnTime: number;

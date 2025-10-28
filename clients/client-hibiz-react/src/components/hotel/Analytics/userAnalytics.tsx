@@ -1,4 +1,3 @@
-import MiddlePopUp from '@/components/atom/middlePopUp';
 import useBusinessData from '@/components/store/useBusinessData';
 import useTimings from '@/components/store/useTimings';
 import { Badge } from '@/components/ui/badge';
@@ -6,9 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useStaffServices, type StaffAlertReportData } from '@/hooks/hotel/useStaffAlertReport.ts';
 import { motion } from 'framer-motion';
-import { ChevronDown, Clock, Download, TrendingUp } from 'lucide-react';
+import { ChevronDown, Clock, Download, History, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import PopUp from '../../atom/popUp';
+import { cn } from '../../utils/helper';
+import MetricItem from './metrics';
 import ServicesData from './servicesData';
 
 interface StaffPerformanceDashboardProps {
@@ -24,6 +26,7 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
   const [servicesData, setServicesData] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // inside StaffPerformanceDashboard
   const handleServices = async (staff: any) => {
     setIsDialogOpen(true);
 
@@ -33,13 +36,7 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
       to: timeStampEnd || 0,
       staffId: staff.staffId,
     });
-
-    // result is the alerts array
-    const serviceNames: string[] = (Array.isArray(result) ? result : [])
-      .flatMap((alert: any) => (Array.isArray(alert?.serviceIds) ? alert.serviceIds : []))
-      .map((s: any) => (typeof s?.name === 'string' ? s.name.trim() : ''))
-      .filter(Boolean);
-    setServicesData(serviceNames);
+    setServicesData(Array.isArray(result) ? result : []);
   };
 
   if (isLoading) {
@@ -217,6 +214,7 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
               <CardTitle className="text-2xl font-semibold">Individual Staff Performance</CardTitle>
               <CardDescription>Detailed breakdown of each staff member's metrics</CardDescription>
             </CardHeader>
+
             <CardContent>
               <div className="space-y-6">
                 {filteredData.map((staff, index) => (
@@ -224,93 +222,83 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
                     key={staff.staffName}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.01, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-                    className="rounded-xl border bg-white/70 p-5 transition-all"
+                    transition={{ delay: index * 0.1, type: 'spring', stiffness: 120 }}
+                    whileHover={{ scale: 1.015, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}
+                    className="group rounded-2xl border bg-white/80 p-3 shadow-sm transition-all duration-300"
                   >
-                    <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                      {/* Staff Info */}
-                      <div className="flex items-start gap-4">
-                        <div className="space-y-2">
-                          <h3 className="text-lg font-semibold text-gray-800">{staff.staffName}</h3>
-                          <button onClick={() => handleServices(staff)} className="text-sm font-medium text-blue-600 hover:underline">
-                            View Services
-                          </button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleServices(staff)}
+                      aria-label={`View service history for ${staff.staffName}`}
+                      className="float-right text-base font-medium text-indigo-600 hover:text-indigo-700"
+                    >
+                      <History />
+                      Service History
+                    </Button>
+                    <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                      {/* ---------- Staff Info ---------- */}
+                      <div className="flex items-start gap-5">
+                        {/* Avatar */}
+                        <div className="shrink-0">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-2xl font-bold text-white shadow-md">
+                            {staff.staffName.charAt(0).toUpperCase()}
+                          </div>
+                        </div>
 
-                          <div className="flex flex-wrap gap-2">
-                            <Badge className="rounded-full px-3 py-1 font-medium">{staff.servicesHandled} Services</Badge>
+                        <div className="space-y-3">
+                          <article className="flex items-center justify-between gap-4">
+                            <h3 className="text-xl font-semibold text-gray-900">{staff.staffName}</h3>
+                          </article>
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge className="rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-105">
+                              {staff.servicesHandled} Services Handled
+                            </Badge>
+
                             <Badge
-                              className="rounded-full px-3 py-1 font-medium"
-                              style={{
-                                backgroundColor: staff.overallPerformanceScore === 'on-time' ? 'hsl(142 76% 36%)' : 'hsl(0 84% 60%)',
-                                color: 'white',
-                              }}
+                              className={cn(
+                                'rounded-full px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-105',
+                                staff.overallPerformanceScore === 'on-time'
+                                  ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                                  : 'bg-gradient-to-r from-red-500 to-rose-600',
+                              )}
                             >
                               {staff.overallPerformanceScore}
                             </Badge>
                           </div>
+
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">Total Active :</span> {staff?.totalActiveMinutes?.toLocaleString() || 0} mins
+                          </p>
                         </div>
                       </div>
 
-                      {/* Metrics */}
+                      {/* ---------- Metrics Grid ---------- */}
                       <div className="grid w-full flex-1 grid-cols-1 gap-6 sm:grid-cols-2 lg:max-w-3xl lg:grid-cols-3">
                         {/* Acceptance */}
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Acceptance Rate</span>
-                            <span className="font-semibold text-gray-800">{staff.acceptancePercent}%</span>
-                          </div>
-                          <div className="h-3 w-full overflow-hidden rounded-full bg-gray-100">
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                width: `${staff.acceptancePercent}%`,
-                                background: 'linear-gradient(to right, #22c55e, #16a34a)',
-                              }}
-                            />
-                          </div>
-                          <p className="text-muted-foreground text-xs">
-                            {staff.acceptanceOnTime}/{staff.acceptanceTotal} on time
-                          </p>
-                        </div>
+                        <MetricItem
+                          title="Acceptance Rate"
+                          percent={staff?.acceptancePercent}
+                          onTime={`${staff?.acceptanceOnTime}/${staff?.acceptanceTotal}`}
+                          gradient="from-emerald-400 to-emerald-600"
+                        />
 
                         {/* Completion */}
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Completion Rate</span>
-                            <span className="font-semibold text-gray-800">{staff.completionPercent}%</span>
-                          </div>
-                          <div className="h-3 w-full overflow-hidden rounded-full bg-gray-100">
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                width: `${staff.completionPercent}%`,
-                                background: 'linear-gradient(to right, #f59e0b, #d97706)',
-                              }}
-                            />
-                          </div>
-                          <p className="text-muted-foreground text-xs">
-                            {staff.completionOnTime}/{staff.completionTotal} on time
-                          </p>
-                        </div>
+                        <MetricItem
+                          title="Completion Rate"
+                          percent={staff?.completionPercent}
+                          onTime={`${staff?.completionOnTime}/${staff?.completionTotal}`}
+                          gradient="from-amber-400 to-amber-600"
+                        />
 
                         {/* Efficiency */}
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Efficiency</span>
-                            <span className="font-semibold text-gray-800">{staff.efficiencyPercent}%</span>
-                          </div>
-                          <div className="h-3 w-full overflow-hidden rounded-full bg-gray-100">
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                width: `${staff.efficiencyPercent}%`,
-                                background: 'linear-gradient(to right, #ef4444, #dc2626)',
-                              }}
-                            />
-                          </div>
-                          <p className="text-muted-foreground text-xs">Overall efficiency rating</p>
-                        </div>
+                        <MetricItem
+                          title="Efficiency"
+                          percent={staff?.efficiencyPercent}
+                          onTime="Overall efficiency rating"
+                          gradient="from-rose-400 to-rose-600"
+                        />
                       </div>
                     </div>
                   </motion.div>
@@ -320,9 +308,9 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
           </Card>
         </motion.div>
       </motion.div>
-      <MiddlePopUp onlyPopUp show={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
+      <PopUp hide show={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
         <ServicesData servicesData={servicesData} setIsDialogOpen={setIsDialogOpen} />
-      </MiddlePopUp>
+      </PopUp>
     </div>
   );
 }
