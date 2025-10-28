@@ -1060,6 +1060,7 @@ const hotelAlertRouter = new Hono()
         deliverOnTime: number;
         deliverTotal: number;
         alertIds: Set<string>;
+        totalActiveMinutes: number;
       };
       const byStaff: Record<string, Totals> = {};
 
@@ -1076,6 +1077,7 @@ const hotelAlertRouter = new Hono()
             deliverOnTime: 0,
             deliverTotal: 0,
             alertIds: new Set<string>(),
+            totalActiveMinutes: 0,
           };
         }
         return byStaff[id];
@@ -1092,6 +1094,7 @@ const hotelAlertRouter = new Hono()
       let gDeliverActualSum = 0; // sum of actual times
       let gDeliverSLASum = 0; // sum of SLA times
       let gDeliverCount = 0; // count of events with SLA
+      let totalActiveMinutes = 0;
 
       for (const a of alerts) {
         const createdAt = Number(a?.createdAt);
@@ -1106,9 +1109,11 @@ const hotelAlertRouter = new Hono()
         ) {
           const s = ensureStaff(a.acceptedBy);
           const actualAcceptMin = Math.ceil((acceptedAt - createdAt) / 60000);
+          totalActiveMinutes += actualAcceptMin;
 
           if (s) {
             s.acceptTotal += 1;
+            s.totalActiveMinutes += actualAcceptMin;
             s.alertIds.add(String(a._id));
             if (avgAccept === 0 || actualAcceptMin <= avgAccept)
               s.acceptOnTime += 1;
@@ -1135,9 +1140,11 @@ const hotelAlertRouter = new Hono()
           const actualDeliverMin = Math.ceil(
             (deliveredAt - acceptedAt) / 60000,
           );
+          totalActiveMinutes += actualDeliverMin;
 
           if (s) {
             s.deliverTotal += 1;
+            s.totalActiveMinutes += actualDeliverMin;
             s.alertIds.add(String(a._id));
             if (avgDeliver === 0 || actualDeliverMin <= avgDeliver)
               s.deliverOnTime += 1;
@@ -1181,6 +1188,7 @@ const hotelAlertRouter = new Hono()
           overallPerformanceScore: overAllPerformance,
           efficiencyPercent: efficiencyPercentage,
           servicesHandled: s.alertIds.size,
+          totalActiveMinutes,
         };
       });
 
