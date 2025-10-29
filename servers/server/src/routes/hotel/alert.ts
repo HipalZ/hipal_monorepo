@@ -1094,7 +1094,6 @@ const hotelAlertRouter = new Hono()
       let gDeliverActualSum = 0; // sum of actual times
       let gDeliverSLASum = 0; // sum of SLA times
       let gDeliverCount = 0; // count of events with SLA
-      let totalActiveMinutes = 0;
 
       for (const a of alerts) {
         const createdAt = Number(a?.createdAt);
@@ -1108,8 +1107,7 @@ const hotelAlertRouter = new Hono()
           Number.isFinite(acceptedAt)
         ) {
           const s = ensureStaff(a.acceptedBy);
-          const actualAcceptMin = Math.ceil((acceptedAt - createdAt) / 60000);
-          totalActiveMinutes += actualAcceptMin;
+          const actualAcceptMin = (acceptedAt - createdAt) / 60000;
 
           if (s) {
             s.acceptTotal += 1;
@@ -1137,10 +1135,7 @@ const hotelAlertRouter = new Hono()
           Number.isFinite(deliveredAt)
         ) {
           const s = ensureStaff(a.deliveredBy);
-          const actualDeliverMin = Math.ceil(
-            (deliveredAt - acceptedAt) / 60000,
-          );
-          totalActiveMinutes += actualDeliverMin;
+          const actualDeliverMin = (deliveredAt - acceptedAt) / 60000;
 
           if (s) {
             s.deliverTotal += 1;
@@ -1188,7 +1183,6 @@ const hotelAlertRouter = new Hono()
           overallPerformanceScore: overAllPerformance,
           efficiencyPercent: efficiencyPercentage,
           servicesHandled: s.alertIds.size,
-          totalActiveMinutes,
         };
       });
 
@@ -1197,13 +1191,15 @@ const hotelAlertRouter = new Hono()
       const grandLate = Math.max(grandTotal - grandOnTime, 0);
 
       const totalActualCount = gAcceptCount + gDeliverCount;
+
       const totalActualAvg =
         totalActualCount > 0
           ? (gAcceptActualSum + gDeliverActualSum) / totalActualCount
           : 0;
+
       const totalSLAAvg =
         totalActualCount > 0
-          ? (gAcceptSLASum + gDeliverSLASum) / totalActualCount
+          ? (gAcceptActualSum + gDeliverActualSum) / totalActualCount
           : 0;
 
       const overAll = {
