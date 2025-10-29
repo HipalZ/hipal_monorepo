@@ -8,6 +8,7 @@ import type { RoomChat } from "@/components/types/hotelTypes";
 import { useRouter } from "next/navigation";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
+import { useLogin } from "../../store/useLogin";
 
 const ChatHeader = dynamic(
     () => import("./ChatHotelComponents").then((mod) => mod.ChatHeader),
@@ -41,7 +42,7 @@ const Chats = ({
     const [selectedReplyId, setSelectedReplyId] = useState<string>('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [userResponses, setUserResponses] = useState<Record<string, string>>({});
-
+    const userDetails = useLogin(s => s.userDetails)
     const onClose = useCallback(() => {
         router.back();
     }, [router]);
@@ -66,12 +67,12 @@ const Chats = ({
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [chatData, userResponses, isOpenChat]);
 
-    const handleReviewSubmit = (userId: string, rating: number) => {
-        reviewChat({
+    const handleReviewSubmit = async(userId: string, rating: number) => {
+        await reviewChat({
             roomChatReplyId: selectedReplyId,
             reviewRating: rating,
             businessId,
-            userId,
+            userId: userDetails?._id || '',
         })
         setOpenReview(false);
     }
