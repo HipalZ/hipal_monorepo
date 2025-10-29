@@ -190,6 +190,7 @@ const pushToQueue = async (
     templateName: string;
     languageCode: string;
     templateId: string;
+    category: string;
   },
   businessName: string,
   address: string,
@@ -244,6 +245,7 @@ const pushToQueue = async (
     templateId,
     campaignId: createCampaign._id.toString(),
     customersArray: customersArray,
+    category: template.category,
   };
 
   await enqueueWhatsAppJob("pushCustomerIntoQueue", payload, {

@@ -28,6 +28,7 @@ export const sendTemplateSchema = z.object({
   templateId: z.string(),
   campaignId: z.string(),
   userId: z.string(),
+  category: z.string(),
 });
 
 export type sendTemplateTypeValidator = z.infer<typeof sendTemplateSchema>;
@@ -48,6 +49,7 @@ export const pushCustomerIntoQueueSchema = z.object({
   templateId: z.string(),
   campaignId: z.string(),
   customersArray: z.array(z.object({})),
+  category: z.string(),
 });
 
 export type pushCustomerIntoQueueTypeValidator = z.infer<
