@@ -150,19 +150,18 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
               </Card>
             </motion.div>
 
-            {/* Avg Completion Card */}
-            <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+            {/* <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
               <Card className="border-l-accent border-l-4">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">Avg Completion</CardTitle>
                   <TrendingUp className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
-                {/* <CardContent>
+                <CardContent>
                   <div className="text-foreground text-2xl font-bold">{data.overAll.totalAvgCompletionMinutes}m</div>
                   <p className="text-muted-foreground text-xs">Average completion time</p>
-                </CardContent> */}
+                </CardContent>
               </Card>
-            </motion.div>
+            </motion.div> */}
 
             {/* Avg SLA Time Card */}
             <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
