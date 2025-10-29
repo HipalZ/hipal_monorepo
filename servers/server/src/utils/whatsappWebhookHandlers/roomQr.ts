@@ -102,6 +102,11 @@ async function roomQrHandler(
       businessId: whatsAppBusinessConfigData?.businessId,
       name: roomNumber,
     });
+
+    console.log("businessId", whatsAppBusinessConfigData?.businessId);
+    console.log("roomNumber", roomNumber);
+
+    console.log("roomInfo", roomInfo);
     if (!roomInfo) {
       return null;
     }
@@ -190,6 +195,8 @@ async function roomQrHandler(
       "   ",
       userName,
     );
+
+    console.log("aaya");
   } catch (error) {
     console.error("Error in tableQrHandler:", error);
   }

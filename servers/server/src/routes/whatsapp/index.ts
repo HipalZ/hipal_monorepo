@@ -1795,6 +1795,7 @@ const whatsappRouter = new Hono()
           );
 
           const qrType = identifyQrTypeFromMessage(userInput);
+          console.log("qrType", qrType);
 
           if (qrType?.qrType && qrHandlers[qrType.qrType]) {
             await qrHandlers[qrType.qrType](
