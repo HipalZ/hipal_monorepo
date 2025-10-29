@@ -22,11 +22,15 @@ async function sendTemplate(job: Job) {
     templateId,
     campaignId,
     userId,
+    category,
   } = job.data as sendTemplateTypeValidator;
+
+  const apiEndpoint =
+    category === "UTILITY" ? "messages" : "marketing_messages";
 
   try {
     const res = await axios.post(
-      `${whatsAppApiBaseUrl}${version}/${phoneId}/messages`,
+      `${whatsAppApiBaseUrl}${version}/${phoneId}/${apiEndpoint}`,
       {
         messaging_product: "whatsapp",
         to: to.toString(),
@@ -99,7 +103,9 @@ async function pushCustomerIntoQueue(job: Job) {
     templateId,
     campaignId,
     customersArray,
+    category,
   } = job.data;
+
   for (const customer of customersArray) {
     // return components for the body
     const components = await returnBodyComponents(
@@ -124,6 +130,7 @@ async function pushCustomerIntoQueue(job: Job) {
       templateId,
       campaignId: campaignId,
       userId: customer._id,
+      category: category,
     };
     console.log("Enqueuing for ", customer?.phone?.toString());
     await enqueueWhatsAppJob("sendTemplate", payload);
