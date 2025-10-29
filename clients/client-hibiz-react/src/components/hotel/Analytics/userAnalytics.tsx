@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useStaffServices, type StaffAlertReportData } from '@/hooks/hotel/useStaffAlertReport.ts';
 import { motion } from 'framer-motion';
-import { ChevronDown, Clock, Download, History, TrendingUp } from 'lucide-react';
+import { ChevronDown, Clock, Download, History } from 'lucide-react';
 import { useState } from 'react';
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import PopUp from '../../atom/popUp';
@@ -150,6 +150,7 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
               </Card>
             </motion.div>
 
+            {/* Avg Completion Card */}
             {/* <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
               <Card className="border-l-accent border-l-4">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
