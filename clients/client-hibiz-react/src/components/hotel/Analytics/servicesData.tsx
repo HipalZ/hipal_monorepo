@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-import { CheckCircle, Clock, Package } from 'lucide-react';
+import { CheckCircle, Clock, Package, Timer } from 'lucide-react';
 import { memo } from 'react';
 
 interface Alert {
@@ -24,14 +24,28 @@ interface Props {
   setIsDialogOpen: (isOpen: boolean) => void;
 }
 
-const mins = (ms: number) => (ms / 1000 / 60).toFixed(1);
+const minsToHours = (minutes: number) => (minutes / 60).toFixed(2);
 
 const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
+  const totalActiveMinutes = servicesData.reduce((sum, alert) => {
+    const acceptM = (alert.acceptedAt - alert.createdAt) / 1000 / 60;
+    const deliverM = (alert.deliveredAt - alert.acceptedAt) / 1000 / 60;
+    return sum + acceptM + deliverM;
+  }, 0);
+
+  const totalActiveHours = minsToHours(totalActiveMinutes);
+
   return (
     <div className="bg-card flex h-full max-h-[80vh] flex-col overflow-hidden rounded-lg border shadow-lg">
-      {/* Header - Sticky */}
+      {/* Sticky Header - Now Shows Total Active Hours */}
       <div className="bg-card sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3">
-        <h2 className="text-lg font-semibold tracking-tight">Service History</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold tracking-tight">Service History</h2>
+          <Badge variant="outline" className="flex items-center gap-1 text-sm font-medium">
+            <Timer className="h-4 w-4" />
+            Total Active: {totalActiveHours} hrs
+          </Badge>
+        </div>
         <Button size="sm" variant="destructive" onClick={() => setIsDialogOpen(false)} className="text-white">
           Close
         </Button>
@@ -45,8 +59,8 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
           <div className="space-y-4 pb-4">
             {servicesData.map((alert) => {
               const svc = alert.serviceIds[0];
-              const acceptM = mins(alert.acceptedAt - alert.createdAt);
-              const deliverM = mins(alert.deliveredAt - alert.acceptedAt);
+              const acceptM = ((alert.acceptedAt - alert.createdAt) / 1000 / 60).toFixed(1);
+              const deliverM = ((alert.deliveredAt - alert.acceptedAt) / 1000 / 60).toFixed(1);
               const lateAccept = Number(acceptM) > svc.avgAcceptanceTime;
               const lateDeliver = Number(deliverM) > svc.avgDeliveryTime;
 
