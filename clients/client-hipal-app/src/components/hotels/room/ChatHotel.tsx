@@ -7,6 +7,7 @@ import { ChatHeader, ChatMessageHotel } from "./ChatHotelComponents";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import type { HotelWelcomeCardProps } from "./RoomWelcome";
 import type { RoomChat } from "@/components/types/hotelTypes";
+import { useLogin } from "../../store/useLogin";
 
 const MemoChatHotel = ({
     hotelName,
@@ -25,7 +26,7 @@ const MemoChatHotel = ({
     const [selectedReplyId, setSelectedReplyId] = useState<string>('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [userResponses, setUserResponses] = useState<Record<string, string>>({});
-
+    const userDetails = useLogin(s=>s.userDetails)
     const onClose = useCallback(() => {
         setIsOpenChat(false);
     }, [setIsOpenChat]);
@@ -50,12 +51,12 @@ const MemoChatHotel = ({
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [chatData, userResponses, isOpenChat]);
 
-    const handleReviewSubmit = (userId:string, rating:number) =>{
-        reviewChat({
+    const handleReviewSubmit = async(userId:string, rating:number) =>{
+       await reviewChat({
             roomChatReplyId: selectedReplyId,
             reviewRating: rating,
             businessId,
-            userId,
+            userId: userDetails?._id || '',
         })    
         setOpenReview(false);
     }
