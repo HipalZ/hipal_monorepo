@@ -267,10 +267,6 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
                               {staff.overallPerformanceScore}
                             </Badge>
                           </div>
-
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">Total Active :</span> {staff?.totalActiveMinutes?.toLocaleString() || 0} mins
-                          </p>
                         </div>
                       </div>
 
