@@ -157,10 +157,10 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
                   <CardTitle className="text-sm font-medium">Avg Completion</CardTitle>
                   <TrendingUp className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
-                <CardContent>
+                {/* <CardContent>
                   <div className="text-foreground text-2xl font-bold">{data.overAll.totalAvgCompletionMinutes}m</div>
                   <p className="text-muted-foreground text-xs">Average completion time</p>
-                </CardContent>
+                </CardContent> */}
               </Card>
             </motion.div>
 
