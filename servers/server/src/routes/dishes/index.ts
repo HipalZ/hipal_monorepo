@@ -514,21 +514,23 @@ const dishesRouter = new Hono()
           );
         }
 
+        const hipalZPos = await BusinessPosConfig.findOne({
+          businessId: dishes[0].businessId,
+          isDeleted: false,
+          active: true,
+          posName: "HIPAL_Z",
+        });
+
         for (const dish of dishes) {
-          const dishAlreadyExists = await Dish.findOne({
-            businessId: dish.businessId,
-            name: dish.name,
-            isDeleted: false,
-            active: true,
-          });
-          if (!dishAlreadyExists) {
-            const createDish = await Dish.create([dish], { session });
-            if (!createDish) {
-              return c.json(
-                { err: true, message: "Error in creating", data: {} },
-                400,
-              );
-            }
+          const createDish = await Dish.create(
+            [{ ...dish, pos: !!hipalZPos }],
+            { session },
+          );
+          if (!createDish) {
+            return c.json(
+              { err: true, message: "Error in creating", data: {} },
+              400,
+            );
           }
         }
         return c.json({
