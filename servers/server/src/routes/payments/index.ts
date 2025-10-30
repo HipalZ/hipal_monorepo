@@ -5187,18 +5187,36 @@ const paymentsRouter = new Hono()
       z.object({
         businessId: z.string(),
 
-        dateOfJoining: z.string().optional(),
         avgSpend: z.string().optional(),
         visitCount: z.string().optional(),
         pageNumber: z.string().optional(),
+        from: z.string().optional(),
+        to: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { businessId } = c.req.query();
+      const { businessId, from, to, avgSpend, visitCount } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      const PAGE_SIZE = 100;
+      const pageNumber = c.req.query("pageNumber") as string;
+      const skip: number = (Number(pageNumber || 1) - 1) * PAGE_SIZE;
 
       const existingUserAnalytics = await UserAnalytic.find({
         businessId,
-      }).populate("userId");
+      })
+        .populate("userId")
+        .skip(skip)
+        .limit(PAGE_SIZE);
 
       return c.json(
         {
