@@ -315,40 +315,24 @@ const tableRouter = new Hono()
           npcUserId,
           variantId,
         } = await c.req.json();
-        const paymentMode = await UpiMode.findById(settleModes[0]?._id);
-
-        if (!paymentMode) {
-          return respond(c, "Payment mode not found", true, 404, {});
-        }
-
-        const billAlreadySettled = await Payment.findOne({
-          billId: variantId ? variantId : billId,
-        });
-
-        if (billAlreadySettled) {
-          return respond(c, "Bill already settled", true, 409, {});
-        }
 
         const table = await Table.findById(tableId);
-        const tableSession = await UserSession.findOne({
-          businessId: table?.businessId,
-          tableName: table?.name,
-        });
-        const captain = await User.findById(captainId);
 
-        if (!table || !tableSession || !captain) {
-          return respond(c, "Table or Captain not found", true, 404, {});
-        }
+        const captain = await User.findById(captainId);
 
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
           isDeleted: false,
           active: true,
         });
+
         if (!pos) {
           return respond(c, "Pos not found", true, 400, {});
         }
-        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+
+        if (!table || !captain) {
+          return respond(c, "Table or Captain not found", true, 404, {});
+        }
 
         if (pos.posName === "HIPAL_Z") {
           console.log("jk");
@@ -370,6 +354,33 @@ const tableRouter = new Hono()
             return respond(c, "success", false, 200, result);
           }
         }
+
+        const paymentMode = await UpiMode.findById(settleModes[0]?._id);
+
+        if (!paymentMode) {
+          return respond(c, "Payment mode not found", true, 404, {});
+        }
+
+        const billAlreadySettled = await Payment.findOne({
+          billId: variantId ? variantId : billId,
+        });
+
+        if (billAlreadySettled) {
+          return respond(c, "Bill already settled", true, 409, {});
+        }
+
+        const tableSession = await UserSession.findOne({
+          businessId: table?.businessId,
+          tableName: table?.name,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+
+        console.log("norold");
 
         const npcUser = await NpcUser.findById(npcUserId);
 
