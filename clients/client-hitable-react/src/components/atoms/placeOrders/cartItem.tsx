@@ -106,7 +106,7 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
   };
 
   return (
-    <section className="hide-scrollbar h-[calc(100dvh-4rem)] overflow-auto pb-20 md:pt-20 lg:pt-0">
+    <section className="hide-scrollbar h-[100dvh] overflow-auto pb-20 md:pt-20 lg:pt-0">
       <AnimatePresence>
         {filteredCart.length > 0 ? (
           <div className="mx-4 grid gap-4 py-[5.5rem] md:grid-cols-2 md:py-[2rem] lg:mx-0 lg:grid-cols-1 lg:py-0 2xl:grid-cols-2">
@@ -187,7 +187,6 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
           </motion.div>
         )}
       </AnimatePresence>
-
       {showOrderError && (
         <BottomPopUp width="w-[30rem]" height="h-[50dvh]" show={showOrderError} onClose={() => setShowOrderError(false)}>
           <div className="p-6">
@@ -199,7 +198,6 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
           </div>
         </BottomPopUp>
       )}
-
       {showInstructionPopup && (
         <BottomPopUp width="w-[30rem]" height="h-[50dvh]" show={showInstructionPopup} onClose={() => setShowInstructionPopup(false)}>
           {outletInfo?.outLetType === 'OTHER' ? null : (
@@ -236,7 +234,6 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
           />
         </BottomPopUp>
       )}
-
       {!hide && (
         <CommonBottomButton
           maxWidth="30rem"
