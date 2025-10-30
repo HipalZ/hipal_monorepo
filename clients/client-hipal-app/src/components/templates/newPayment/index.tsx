@@ -134,7 +134,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         ) : (
           <>
             {showBillPage ? (
-              <BillPage />
+              <BillPage bizData={data} />
             ) : (
               <>
                 <section>
@@ -147,7 +147,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                     <CoinzRewardSection />
                     <section className="absolute z-30 w-full mt-10 bg-white rounded-2xl">
                       {/* <CouponzBlink /> */}
-                      <RefferalCouponz />
+                      {/* <RefferalCouponz /> */}
                       <BillSummary />
                       <SuggestCouponz />
                       <TotalBillButton />

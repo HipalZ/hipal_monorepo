@@ -206,7 +206,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
       </section>
       <section className="relative">
         {/* <CouponzBlink /> */}
-        <RefferalCouponz />
+        {/* <RefferalCouponz /> */}
       </section>
       {/* history buttons */}
 

@@ -1,7 +1,13 @@
 import { apiRpc } from "@hi/common";
 import type { IBillData } from "../types/hiClientzData.ts";
 import { useError } from "../store/useError.ts";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+  type QueryObserverResult,
+} from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { useOrderStore } from "../store/useOrderData.ts";
 import { useHiClientZ } from "../store/useHiClientzData.ts";
@@ -12,72 +18,82 @@ import type {
 } from "../types/split.types.ts";
 import type { ApiResponse } from "../types/api.types.ts";
 
-export const useGetBill = () => {
+type BillResponse = IBillData | IBillData[] | undefined;
+
+export type UseGetBillResult = UseQueryResult<BillResponse, unknown> & {
+  getBillCall: () => Promise<QueryObserverResult<BillResponse, unknown>>;
+};
+
+export const useGetBill = (): UseGetBillResult => {
   const { businessId } = useParams();
   const navigate = useNavigate();
+
   const { setError, setOpenErrorModal } = useError();
+
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const setIsBillSplit = useOrderStore((s) => s.setIsBillSplit);
   const isBillSplit = useOrderStore((s) => s.isBillSplit);
-  const { captainData: userData } = useHiClientZ();
 
-  if (!selectedTable?.active) {
-    return;
-  }
+  const userData = useHiClientZ((s) => s.captainData);
 
-  const getTableBill = async () => {
+  const getTableBill = async (): Promise<BillResponse> => {
+    // Guard at runtime as well (enabled flag also prevents fetch)
+    if (!businessId || !selectedTable?.name || !userData?.name)
+      return undefined;
+
     const response = await apiRpc.pos.get_bill.$get({
       query: {
-        businessId: businessId || "",
-        tableName: selectedTable?.name || "",
-        generatedBy: userData?.name || "",
+        businessId,
+        tableName: selectedTable.name,
+        generatedBy: userData.name,
       },
     });
 
-    if (response.status === 403 || response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
       setOpenErrorModal(true);
       setError("You are not authorized to perform this action");
-      return;
+      return undefined;
     }
 
     if (response.status === 400 || response.status === 404) {
-      console.log("Error 400 or 404 received");
+      // If user was in split-bill flow but bill no longer available, route back to alerts
       if (isBillSplit) {
         navigate(`/${businessId}/alerts`);
       }
-      return;
+      return undefined;
     }
 
     const res = await response.json();
-    const payment = res?.data as IBillData | IBillData[];
+    const payment = res?.data as IBillData | IBillData[] | undefined;
 
-    // 1. If it's a non-array and has no keys → empty object
-    if (!Array.isArray(payment) && Object.keys(payment).length === 0) {
+    // If non-array empty object → treat as no bill & route to alerts
+    if (
+      !Array.isArray(payment) &&
+      payment &&
+      Object.keys(payment).length === 0
+    ) {
       navigate(`/${businessId}/alerts`);
-      return payment;
+      return payment; // empty object returned (keeps type soundness)
     }
 
-    // 2. Otherwise, handle split vs. single as before
-    const isSplit = Array.isArray(payment);
-    setIsBillSplit(isSplit);
+    // Track split state
+    const split = Array.isArray(payment);
+    setIsBillSplit(split);
 
     return payment;
   };
 
-  const {
-    isLoading,
-    data,
-    refetch: getBillCall,
-  } = useQuery({
+  const query = useQuery<BillResponse, unknown>({
     queryKey: ["getTableBill", businessId, selectedTable?.name, userData?.name],
     queryFn: getTableBill,
-    enabled: !!businessId && !!selectedTable && !!userData,
+    enabled: Boolean(
+      businessId && selectedTable && selectedTable.active && userData,
+    ),
   });
 
   return {
-    isLoading,
-    data,
-    getBillCall,
+    ...query,
+    getBillCall: query.refetch,
   };
 };
 
