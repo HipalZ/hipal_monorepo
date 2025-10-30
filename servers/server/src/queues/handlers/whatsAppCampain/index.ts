@@ -28,6 +28,8 @@ async function sendTemplate(job: Job) {
   const apiEndpoint =
     category === "UTILITY" ? "messages" : "marketing_messages";
 
+  console.log("endpoint", apiEndpoint);
+
   try {
     const res = await axios.post(
       `${whatsAppApiBaseUrl}${version}/${phoneId}/${apiEndpoint}`,
