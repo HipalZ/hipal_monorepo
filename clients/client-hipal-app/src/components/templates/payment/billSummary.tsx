@@ -31,11 +31,11 @@ const BillSummary = () => {
     useBillSummary();
 
   return (
-    <>
+    <section className="poppins-regular pb-36">
       {outletInfo?.isPosEnabled ? (
         <PosBillBreakdown />
       ) : (
-        <section className="flex flex-col pb-36 space-y-2 text-4xl transition-all rounded-t-3xl text-[#101018] poppins-regular mt-4">
+        <section className="flex flex-col pb-4 space-y-2 text-4xl transition-all rounded-t-3xl text-[#101018] poppins-regular mt-4">
           <h6 className="mx-4 mt-4 mb-2 text-xl">Bill Detailz</h6>
           <div
             style={{
@@ -185,7 +185,7 @@ const BillSummary = () => {
           </div>
         </section>
       )}
-    </>
+    </section>
   );
 };
 

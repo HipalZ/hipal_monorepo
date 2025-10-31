@@ -2,14 +2,14 @@ import { useBulkUploadContacts } from '@/components/helpers/whatzAppHelpers';
 import { useMessageRecipientsStore } from '@/components/store/useMessageRecipientsStore';
 import { Button } from '@/components/ui/button';
 import { CloudDownload, Upload, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 
 type Props = {
   setShowConfirmPopup: (value: boolean) => void;
   setUploadPreview: (value: { name: string; phone: string; dob?: number }[]) => void;
 };
 
-const BulkUpload = ({ setShowConfirmPopup, setUploadPreview }: Props) => {
+const MemoBulkUpload = ({ setShowConfirmPopup, setUploadPreview }: Props) => {
   const { mutate: uploadContacts } = useBulkUploadContacts();
   const bulkCustomers = useMessageRecipientsStore((s) => s.bulkCustomers);
 
@@ -90,4 +90,5 @@ const BulkUpload = ({ setShowConfirmPopup, setUploadPreview }: Props) => {
   );
 };
 
+const BulkUpload = memo(MemoBulkUpload);
 export default BulkUpload;

@@ -5,7 +5,7 @@ import { useHotelStore } from '@/components/store/useHotelStore';
 import useTimings from '@/components/store/useTimings';
 import type { Alert, Cart } from '@/components/types/hotelData';
 import { apiRpc } from '@hi/common';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
@@ -116,35 +116,44 @@ export const useCheckOut = () => {
   return { checkOut };
 };
 
-export const useRoomAlerts = () => {
+export type UseRoomAlertsResult = UseQueryResult<Alert[], unknown> & {
+  roomAlerts: () => Promise<Alert[]>;
+};
+
+export const useRoomAlerts = (): UseRoomAlertsResult => {
+  const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
+  const isHotel = outletType === 'HOTEL';
+
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
-  const captainData = useHiClientZ((s) => s.captainData);
-  const userId = captainData?._id;
+  const userId = useHiClientZ((s) => s.captainData?._id);
 
   const { setAlerts } = useAlertsStore();
   const { setHotelAlertsCount } = useHotelStore();
 
-  const roomAlerts = async () => {
+  const roomAlerts = async (): Promise<Alert[]> => {
+    if (!businessId || !userId) return [];
     const response = await apiRpc.hotel.alert.fetch_room_alerts.$get({
       query: { businessId, userId },
     });
+
     const res = await response.json();
     if (response.status === 200 || response.status === 201) {
-      setAlerts(res.data);
-      setHotelAlertsCount(res.data.length);
-      return res.data;
+      const data: Alert[] = res?.data ?? [];
+      setAlerts(data);
+      setHotelAlertsCount(data.length);
+      return data;
     }
     return [];
   };
 
-  useQuery({
-    queryKey: ['roomAlerts', businessId],
+  const query = useQuery<Alert[], unknown>({
+    queryKey: ['roomAlerts', businessId, userId],
     queryFn: roomAlerts,
-    enabled: !!businessId,
-    refetchInterval: 11000,
+    enabled: isHotel && !!businessId && !!userId,
+    refetchInterval: 11_000,
   });
 
-  return { roomAlerts };
+  return { ...query };
 };
 
 export const useAllServices = () => {
@@ -302,6 +311,10 @@ export const useReviewChat = () => {
 };
 
 export const useEscalatedAlerts = () => {
+  const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
+  if (outletType !== 'HOTEL') {
+    return;
+  }
   const { setHotelEscalationCount, setEscalatedData } = useHotelStore();
   const captainData = useHiClientZ((s) => s.captainData);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
@@ -336,7 +349,6 @@ export const useEscalatedAlerts = () => {
     enabled: isEnabled,
     refetchInterval: 13000,
   });
-  return { escalatedAlerts };
 };
 
 type UpdateSourcePayload = {

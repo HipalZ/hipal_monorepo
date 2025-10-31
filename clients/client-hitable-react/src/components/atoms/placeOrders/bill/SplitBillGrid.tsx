@@ -127,7 +127,7 @@ const SplitBillGrid = memo<SplitBillGridProps>(({ billData, onSelectBill, onBack
 
   return (
     <>
-      <Card className="mx-auto mb-8 h-[90dvh] max-w-lg border border-none pb-[7rem] pt-[5rem] shadow-none md:pb-[8rem] md:pt-16 lg:pt-0">
+      <Card className="mx-auto mb-8 min-h-[90dvh] max-w-lg border border-none pb-[7rem] pt-[5rem] shadow-none md:pb-[8rem] md:pt-16 lg:pt-0">
         <CardHeader className="p-2 md:p-6">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
