@@ -46,7 +46,6 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { enqueueWhatsAppJob } from "../../queues/enqueue";
 import { getMerchantConfig } from "../../utils/cacheHelper";
 import { getFutureSeconds } from "../../utils/dateAndTime";
 import {
@@ -248,9 +247,9 @@ const pushToQueue = async (
     category: template.category,
   };
 
-  await enqueueWhatsAppJob("pushCustomerIntoQueue", payload, {
-    delay: delay,
-  });
+  // await enqueueWhatsAppJob("pushCustomerIntoQueue", payload, {
+  //   delay: delay,
+  // });
 
   return true;
 };
