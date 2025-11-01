@@ -111,7 +111,7 @@ const DesktopTablePOS = () => {
                 </div>
 
                 <ScrollArea className="flex-1">
-                  <div className="hide-scrollbar h-[90dvh] overflow-auto bg-gray-200 p-3">
+                  <div className="hide-scrollbar h-[90dvh] overflow-auto bg-gray-200 p-0.5">
                     <Suspense fallback={<SpinnerMemo />}>
                       {rightPanelView === 'cart' && (
                         <>
