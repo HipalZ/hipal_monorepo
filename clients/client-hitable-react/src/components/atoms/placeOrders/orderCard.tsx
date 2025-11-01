@@ -97,19 +97,26 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={cn('relative mx-auto w-full max-w-lg')}
+      className={cn('lg:-pl-6 relative mx-auto w-full max-w-lg')}
     >
       <Card className={cn('mb-4 overflow-hidden', order?.priority && 'border-y-[1rem] border-red-900')}>
         <CardContent className="p-3">
           {/* Header: name | datetime | menu */}
-          <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="mb-2 flex items-start justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <MdPerson className="h-4 w-4 flex-shrink-0 text-gray-500" />
               <span className="truncate font-semibold">{order?.name}</span>
             </div>
-
-            <div className="hidden shrink-0 text-sm font-semibold opacity-60 sm:block">{new Date(order?.date).toLocaleString('en-In')}</div>
-
+            <section className="pr-4">
+              <div className="hidden shrink-0 text-sm font-semibold opacity-60 sm:block">
+                {new Date(order?.date).toLocaleString('en-In').slice(0, 9)}
+              </div>
+              <div className="hidden shrink-0 text-sm font-semibold opacity-60 sm:block">
+                {new Date(order?.date).toLocaleString('en-In').slice(11)}
+              </div>
+            </section>
+          </div>
+          <section className="absolute right-1 top-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -144,7 +151,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </section>
 
           {/* Date (mobile) */}
           <div className="mb-1 block text-xs font-semibold opacity-60 sm:hidden">{new Date(order?.date).toLocaleString('en-In')}</div>
@@ -170,7 +177,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                 const status: 'IN_PROGRESS' | 'COOKED' | 'DELIVERED' | 'CANCELLED' | undefined = item?.itemStatus;
 
                 const eligible = !isItemDeleted && status !== 'DELIVERED' && status !== 'CANCELLED';
-                const itemTextClasses = isItemDeleted ? 'line-through text-red-700' : '';
+                const itemTextClasses = isItemDeleted ? 'line-through text-red-700' : 'font-semibold';
                 const lineTotal = calculateTotalPrice(item);
 
                 const addOns = item?.extras?.length ? item.extras.map((e: any) => `${e.name} x${e.quantity * item.quantity}`).join(', ') : '';
@@ -190,8 +197,8 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                     )}
                   >
                     {/* Row 1 */}
-                    <div className="grid grid-cols-12 items-center gap-2">
-                      <div className="col-span-1 -ml-4 flex justify-center">
+                    <div className="grid grid-cols-12 items-start gap-2">
+                      <div className="col-span-1 -ml-4 mt-1 flex justify-center">
                         {eligible ? (
                           <input
                             type="checkbox"
@@ -208,7 +215,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                       <div className="col-span-7 -ml-4 min-w-0">
                         <div className="flex items-start gap-1">
                           <MdRestaurantMenu className="mt-1 h-4 w-4 text-gray-500" />
-                          <h6 className={cn('truncate', itemTextClasses)} title={item?.dish?.name}>
+                          <h6 className={cn('line-clamp-2 h-[3rem]', itemTextClasses)} title={item?.dish?.name}>
                             {item?.dish?.name}
                           </h6>
                           {isItemDeleted && <Badge variant="destructive">Deleted</Badge>}
