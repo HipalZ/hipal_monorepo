@@ -421,12 +421,13 @@ const dishesRouter = new Hono()
         if (!menu) {
           return respond(c, "Menu not found", true, 404, {});
         }
-        if (
-          menu.serviceType === "BASE" &&
-          (dish.categoryIds?.length || dish.addOnIds?.length || dish.kitchenId)
-        ) {
-          return respond(c, "linking dish to menu not allowed", true, 400, {});
-        }
+
+        // if (
+        //   menu.serviceType === "BASE" &&
+        //   (dish.categoryIds?.length || dish.addOnIds?.length || dish.kitchenId)
+        // ) {
+        //   return respond(c, "linking dish to menu not allowed", true, 400, {});
+        // }
 
         const createDish = await Dish.create([{ ...dish, pos: !!hipalZPos }], {
           session,
