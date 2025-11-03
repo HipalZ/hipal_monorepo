@@ -419,7 +419,7 @@ function calculateCartBill(cart: unknown) {
     let dishPrice = item.dish.price * item.quantity || 1;
 
     // Portion price if applicable
-    let portionPrice = item?.portion ? item.portion.price * item.quantity : 1;
+    let portionPrice = item?.portion ? item.portion.price * item.quantity : 0;
 
     // Extras price
     let extrasPrice = item.extras.reduce(
