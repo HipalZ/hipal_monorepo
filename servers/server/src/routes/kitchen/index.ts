@@ -1,9 +1,10 @@
-import { Dish, Kitchen, PrinterConfig, Table, Zone } from "@hi/db-models";
+import { Dish, Kitchen, Menu, PrinterConfig, Table, Zone } from "@hi/db-models";
 import { KitchenAttrs, updateKitchenAttrs } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { addInTempMenuChanges } from "../../services/tempMenuChanges";
 import { respond } from "../../utils/response";
 //
 //dates
@@ -30,6 +31,7 @@ const kitchenRouter = new Hono()
       const existingKitchen = await Kitchen.exists({
         name: updateName,
         businessId,
+        menuId,
       }).session(session);
 
       if (existingKitchen) {
@@ -41,6 +43,17 @@ const kitchenRouter = new Hono()
           },
           409,
         );
+      }
+
+      const menu = await Menu.findById(menuId);
+      if (!menu) {
+        return respond(c, "Menu not found", true, 404, {});
+      }
+      if (
+        (menu.serviceType === "BASE" && dishIds?.length) ||
+        staffIds?.length
+      ) {
+        return respond(c, "linking kitchen to menu not allowed", true, 400, {});
       }
 
       const allKitchens = await Kitchen.find({
@@ -78,6 +91,14 @@ const kitchenRouter = new Hono()
             err: true,
           },
           400,
+        );
+      }
+
+      if (menu.serviceType === "BASE") {
+        await addInTempMenuChanges(
+          "kitchen",
+          kitchen._id.toString(),
+          menu.businessId,
         );
       }
 
@@ -321,6 +342,18 @@ const kitchenRouter = new Hono()
         return respond(c, "Kitchen not found", true, 404, {});
       }
 
+      const menu = await Menu.findById(kitchenData.menuId);
+      if (!menu) {
+        return respond(c, "Menu not found", true, 404, {});
+      }
+      if (
+        (menu.serviceType === "BASE" && removeDishIds?.length) ||
+        dishIds?.length ||
+        staffIds?.length
+      ) {
+        return respond(c, "linking kitchen to menu not allowed", true, 400, {});
+      }
+
       const allKitchens = await Kitchen.find({
         businessId: kitchenData.businessId,
         menuId: kitchenData.menuId,
@@ -356,6 +389,14 @@ const kitchenRouter = new Hono()
             err: true,
           },
           404,
+        );
+      }
+
+      if (menu.serviceType === "BASE") {
+        await addInTempMenuChanges(
+          "kitchen",
+          kitchen._id.toString(),
+          menu.businessId,
         );
       }
 

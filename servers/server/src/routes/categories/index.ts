@@ -23,6 +23,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { addInTempMenuChanges } from "../../services/tempMenuChanges";
 import indianHoursInMinutes from "../../utils/indianHoursInMinutes";
 import { respond } from "../../utils/response";
 
@@ -75,6 +76,26 @@ const categoriesRouter = new Hono()
           posName: "HIPAL_Z",
         });
 
+        const menu = await Menu.findById(requestData.menuId);
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404, {});
+        }
+
+        if (
+          menu.serviceType === "BASE" &&
+          (parentCategoryIds?.length ||
+            dishIds?.length ||
+            subCategoryIds?.length)
+        ) {
+          return respond(
+            c,
+            "linking category to menu not allowed",
+            true,
+            400,
+            {},
+          );
+        }
+
         const creatingCategory = await Category.create(
           [
             {
@@ -100,6 +121,14 @@ const categoriesRouter = new Hono()
 
         if (!creatingCategory)
           return respond(c, "Creation failed", true, 400, {});
+
+        if (menu.serviceType === "BASE") {
+          await addInTempMenuChanges(
+            "category",
+            creatingCategory[0]._id.toString(),
+            menu.businessId,
+          );
+        }
 
         if (subCategoryIds.length > 0) {
           await Category.updateMany(
@@ -168,6 +197,29 @@ const categoriesRouter = new Hono()
           );
         }
 
+        const menu = await Menu.findById(requestData.menuId);
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404, {});
+        }
+
+        if (
+          menu.serviceType === "BASE" &&
+          (parentCategoryIds?.length ||
+            dishIds?.length ||
+            subCategoryIds?.length ||
+            removeSubCategoryIds?.length ||
+            removeDishIds?.length ||
+            removeParentCategoryIds?.length)
+        ) {
+          return respond(
+            c,
+            "linking category to menu not allowed",
+            true,
+            400,
+            {},
+          );
+        }
+
         const updatedCategory = await Category.findByIdAndUpdate(
           id,
           {
@@ -180,6 +232,14 @@ const categoriesRouter = new Hono()
           { session },
         );
         if (!updatedCategory) return respond(c, "Not found", true, 404, {});
+
+        if (menu.serviceType === "BASE") {
+          await addInTempMenuChanges(
+            "category",
+            updatedCategory._id.toString(),
+            menu.businessId,
+          );
+        }
 
         if (removeSubCategoryIds.length > 0) {
           //extra check for subCategoryIds
@@ -276,6 +336,11 @@ const categoriesRouter = new Hono()
           return respond(c, "not found", true, 404, {});
         }
 
+        const menu = await Menu.findById(fetchCategory.menuId);
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404, {});
+        }
+
         const businessPosConfig = await BusinessPosConfig.findOne({
           businessId: fetchCategory.businessId,
           isDeleted: false,
@@ -292,6 +357,14 @@ const categoriesRouter = new Hono()
             true,
             400,
             {},
+          );
+        }
+
+        if (menu.serviceType === "BASE") {
+          await addInTempMenuChanges(
+            "category",
+            fetchCategory._id.toString(),
+            menu.businessId,
           );
         }
 

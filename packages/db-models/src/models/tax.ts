@@ -36,7 +36,19 @@ const taxTypeschema = new mongoose.Schema<TaxTypes>(
     menuId: {
       type: ObjectId,
       required: false,
-      ref: "Menu",
+      ref: "menu",
+    },
+    baseMenuTaxId: {
+      type: ObjectId,
+      required: false,
+      ref: "tax",
+      default: null,
+    },
+    baseMenuId: {
+      type: ObjectId,
+      required: false,
+      ref: "menu",
+      default: null,
     },
   },
   {

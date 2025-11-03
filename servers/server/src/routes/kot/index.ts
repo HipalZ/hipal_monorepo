@@ -876,7 +876,8 @@ const kotRouter = new Hono()
 
         for (const kot of affectedKots) {
           const allCooked = kot.cart.every(
-            (item) => item.itemStatus === "COOKED",
+            (item) =>
+              item.itemStatus === "COOKED" || item.itemStatus === "DELIVERED",
           );
           if (allCooked && kot.kotStatus !== "COMPLETED") {
             await KotOrder.updateOne(

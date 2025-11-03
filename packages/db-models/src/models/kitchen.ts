@@ -30,6 +30,18 @@ const kitchenSchema = new mongoose.Schema<KitchenType>(
       required: true,
       ref: "menu",
     },
+    baseMenuKitchenId: {
+      type: ObjectId,
+      required: false,
+      ref: "Kitchen",
+      default: null,
+    },
+    baseMenuId: {
+      type: ObjectId,
+      required: false,
+      ref: "menu",
+      default: null,
+    },
   },
   {
     timestamps: true,

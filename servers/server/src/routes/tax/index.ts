@@ -1,4 +1,4 @@
-import { Dish, Tax, TaxName } from "@hi/db-models";
+import { Dish, Menu, Tax, TaxName } from "@hi/db-models";
 import {
   TaxTypeSchema,
   updateTaxTypeSchema,
@@ -7,6 +7,7 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { addInTempMenuChanges } from "../../services/tempMenuChanges";
 import { respond } from "../../utils/response";
 //
 
@@ -49,6 +50,11 @@ const taxRouter = new Hono()
       );
     }
 
+    const menu = await Menu.findById(requestData.menuId);
+    if (!menu) {
+      return respond(c, "Menu not found", true, 404, {});
+    }
+
     const createTax = await Tax.create({
       ...requestData,
       name: taxName,
@@ -62,6 +68,14 @@ const taxRouter = new Hono()
           data: {},
         },
         400,
+      );
+    }
+
+    if (menu.serviceType === "BASE") {
+      await addInTempMenuChanges(
+        "tax",
+        createTax._id.toString(),
+        menu.businessId,
       );
     }
 
@@ -94,6 +108,15 @@ const taxRouter = new Hono()
         const tax = await Tax.findById(taxId).session(session);
         if (!tax) {
           return respond(c, "Tax not found", true, 404, {});
+        }
+
+        const menu = await Menu.findById(tax.menuId);
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404, {});
+        }
+
+        if (menu.serviceType === "BASE" && dishIds?.length) {
+          return respond(c, "linking tax to menu not allowed", true, 400, {});
         }
 
         const result = await Dish.updateMany(
@@ -138,6 +161,15 @@ const taxRouter = new Hono()
           return respond(c, "Tax not found", true, 404, {});
         }
 
+        const menu = await Menu.findById(tax.menuId);
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404, {});
+        }
+
+        if (menu.serviceType === "BASE" && dishIds?.length) {
+          return respond(c, "linking tax to menu not allowed", true, 400, {});
+        }
+
         const result = await Dish.updateMany(
           { _id: { $in: dishIds } },
           { $set: { gst: 0 } },
@@ -170,6 +202,11 @@ const taxRouter = new Hono()
       }
     }
 
+    const menu = await Menu.findById(menuId);
+    if (!menu) {
+      return respond(c, "Menu not found", true, 404, {});
+    }
+
     const tax = await Tax.findByIdAndUpdate(
       taxId,
       { $set: { value, menuId } },
@@ -178,6 +215,10 @@ const taxRouter = new Hono()
 
     if (!tax) {
       return respond(c, "Tax not found", true, 404, {});
+    }
+
+    if (menu.serviceType === "BASE") {
+      await addInTempMenuChanges("tax", tax._id.toString(), menu.businessId);
     }
 
     return respond(c, "Tax updated successfully", false, 200, {
@@ -201,9 +242,18 @@ const taxRouter = new Hono()
         { $set: { isActive } },
         { new: true },
       );
-
       if (!tax) {
-        return respond(c, "Tax not found", true, 404, {});
+        return respond(c, "Menu not found", true, 404, {});
+      }
+
+      const menu = await Menu.findById(tax.menuId);
+
+      if (!menu) {
+        return respond(c, "Menu not found", true, 404, {});
+      }
+
+      if (menu.serviceType === "BASE") {
+        await addInTempMenuChanges("tax", tax._id.toString(), menu.businessId);
       }
 
       return respond(c, "Tax updated successfully", false, 200, {
