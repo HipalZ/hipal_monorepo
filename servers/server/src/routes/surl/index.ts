@@ -26,7 +26,9 @@ const surlRouter = new Hono()
       const { q, id, sessionId } = c.req.query();
       const queryParams = c.req.query();
 
-      const result = await UrlModel.findOne({ urlCode });
+      const shortUrl = `https://api.hipalz.com/surl/${urlCode}`;
+
+      const result = await UrlModel.findOne({ shortUrl: shortUrl });
 
       if (!result) {
         return c.json(
