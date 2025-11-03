@@ -84,7 +84,7 @@ const MemoWhatzappDashboard = () => {
       {/* --- SIDEBAR --- */}
       {!openAnalytics && !createEditFlow && !flowBuilderOpen && (
         <nav
-          className={`hide-scrollbar fixed left-0 top-20 z-50 flex h-[calc(100vh-8rem)] flex-col justify-between overflow-auto rounded-r-lg border bg-gray-100 shadow-2xl transition-all duration-300 ${isSidebarExpanded ? 'w-48 p-4' : 'w-16 p-2'} `}
+          className={`hide-scrollbar fixed left-0 top-24 z-50 flex h-[calc(100dvh-8rem)] flex-col justify-between overflow-auto rounded-r-lg border bg-gray-100 shadow-2xl transition-all duration-300 ${isSidebarExpanded ? 'w-48 p-4' : 'w-16 p-2'} `}
           style={{
             transitionProperty: 'width, padding',
           }}

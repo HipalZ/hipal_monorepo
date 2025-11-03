@@ -27,6 +27,7 @@
     "@types/papaparse": "^5.3.14",
     "@types/pdfkit": "^0.13.9",
     "@types/recharts": "^1.8.29",
+    "@xyflow/react": "^12.9.2",
     "argon2": "^0.40.3",
     "axios": "^1.7.2",
     "bottleneck": "^2.19.5",

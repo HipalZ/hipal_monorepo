@@ -329,8 +329,48 @@ export const useMediaUpload = () => {
     }
   };
 
+  const uploadMediaPassFile = async (
+    file: File | Blob,
+  ): Promise<{ url: string; handle: string }> => {
+    if (!file) throw new Error("No file provided for upload");
+    if (!businessId) throw new Error("Missing businessId");
+
+    try {
+      setIsUploading(true);
+      const imageId = crypto.randomUUID();
+      const storageFormData = new FormData();
+      storageFormData.append("fileData", file);
+      storageFormData.append("fileName", `${imageId}`);
+      storageFormData.append("bucketName", "assets");
+
+      const storageResponse = await axios.post(
+        "https://storage.test.hipalz.com/upload",
+        storageFormData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+
+      if (storageResponse.status !== 200 && storageResponse.status !== 201) {
+        throw new Error("Failed to upload to Hipalz storage");
+      }
+
+      const uploadedUrl = storageResponse.data.url;
+      setImageUrl(uploadedUrl);
+      setIsUploading(false);
+      return {
+        url: uploadedUrl,
+      };
+    } catch (error) {
+      setIsUploading(false);
+      console.error("Upload failed:", error);
+      throw error;
+    }
+  };
+
   return {
     uploadMedia,
+    uploadMediaPassFile,
     isUploading,
   };
 };
