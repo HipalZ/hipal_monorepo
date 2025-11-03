@@ -416,19 +416,19 @@ function calculateCartBill(cart: unknown) {
 
   cart.forEach((item: unknown) => {
     // Base dish price
-    let dishPrice = item.dish.price * item.quantity;
+    let dishPrice = item.dish.price * item.quantity || 1;
 
     // Portion price if applicable
-    let portionPrice = item.portion ? item.portion.price * item.quantity : 0;
+    let portionPrice = item?.portion ? item.portion.price * item.quantity : 1;
 
     // Extras price
     let extrasPrice = item.extras.reduce(
-      (sum, extra) => sum + extra.price * extra.quantity,
+      (sum, extra) => sum + extra.price * extra.quantity || 1,
       0,
     );
 
     // Calculate total for the item
-    let itemTotal = dishPrice + portionPrice + extrasPrice;
+    let itemTotal = (item?.portion ? portionPrice : dishPrice) + extrasPrice;
 
     // Add to total bill
     totalBill += itemTotal;
