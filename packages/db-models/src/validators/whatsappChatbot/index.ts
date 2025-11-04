@@ -89,6 +89,7 @@ export const WhatsappChatbotSchema = z.object({
   variables: z.array(z.string()).default([]),
   nodes: z.array(NodeSchema).default([]),
   active: z.boolean().default(true),
+  status: z.enum(["active", "inactive"]).default("active"),
 });
 
 export type WhatsappChatbotType = z.infer<typeof WhatsappChatbotSchema>;

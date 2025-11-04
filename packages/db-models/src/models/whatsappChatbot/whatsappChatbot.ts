@@ -8,6 +8,7 @@ import type {
   TriggerType,
   WhatsappChatbotType,
 } from "../../validators";
+
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const ButtonSchema = new Schema<ButtonType>({
@@ -122,10 +123,57 @@ const WhatsappChatbotSchema = new Schema<WhatsappChatbotType>(
     variables: { type: [String], default: [] },
     nodes: { type: [NodeSchema], default: [] },
     active: { type: Boolean, default: true },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
+    stats: {
+      totalSessions: { type: Number, default: 0 },
+      completedSessions: { type: Number, default: 0 },
+      dropOffSessions: { type: Number, default: 0 },
+      avgCompletionRate: { type: Number, default: 0 },
+    },
   },
   { timestamps: true },
 );
 
-const WhatsappChatbotModel: Model<WhatsappChatbotType> =
+export interface ChatbotSessionType {
+  _id?: string;
+  chatbotId: mongoose.Types.ObjectId;
+  userId: string;
+  variables?: Record<string, any>;
+  startTime?: Date;
+  endTime?: Date;
+  completed?: boolean;
+  lastNodeId?: string;
+  totalMessages?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const ChatbotSessionSchema = new Schema<ChatbotSessionType>(
+  {
+    chatbotId: {
+      type: Schema.Types.ObjectId,
+      ref: "whatsappChatbot",
+      required: true,
+    },
+    userId: { type: String, required: true },
+    variables: { type: Object, default: {} },
+    startTime: { type: Date, default: Date.now },
+    endTime: { type: Date },
+    completed: { type: Boolean, default: false },
+    lastNodeId: { type: String },
+    totalMessages: { type: Number, default: 0 },
+  },
+  { timestamps: true },
+);
+
+export const WhatsappChatbotModel: Model<WhatsappChatbotType> =
+  mongoose.models.whatsappChatbot ||
   model<WhatsappChatbotType>("whatsappChatbot", WhatsappChatbotSchema);
-export { WhatsappChatbotModel };
+
+export const ChatbotSessionModel: Model<ChatbotSessionType> =
+  mongoose.models.chatbotSession ||
+  model<ChatbotSessionType>("chatbotSession", ChatbotSessionSchema);

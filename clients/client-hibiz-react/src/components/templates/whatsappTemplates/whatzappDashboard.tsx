@@ -10,6 +10,7 @@ import { lazy, memo, useCallback, useState } from 'react';
 import { HiOutlineTemplate } from 'react-icons/hi';
 import { MdCampaign } from 'react-icons/md';
 import { TbSettingsAutomation } from 'react-icons/tb';
+import { ChatbotDashboard } from './chatbotDashboard';
 import WhatsAppFlowBuilderWithReactFlow from './flows';
 
 const LinkTemplatePopup = lazy(() => import('./linkTemplatePopup'));
@@ -180,7 +181,7 @@ const MemoWhatzappDashboard = () => {
             </article>
           </section>
         )}
-        {activeTab === Tabs.FLOWS && <WhatsAppFlowBuilderWithReactFlow />}
+        {activeTab === Tabs.FLOWS && <ChatbotDashboard />}
         {activeTab === Tabs.CHATS && <WhatsappChats />}
         {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}
         {activeTab === Tabs.CAMPAIGNS && openAnalytics && <CampaignAdvancedAnalytics />}

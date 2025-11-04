@@ -9,12 +9,15 @@ import {
   whatsAppUserAndTextMessage,
 } from "../../../utils/whatsappWebhookHandlers/helper";
 import { respond } from "../../../utils/response";
+import { ChatbotSessionModel } from "@hi/db-models";
 
 const FLOW: {
+  _id: string;
   version: number;
   triggers: { keywords: string[]; start: string | null }[];
   nodes: any[];
 } = {
+  _id: "flow_1",
   version: 2,
   triggers: [
     {
@@ -164,6 +167,14 @@ function evalRow(
 }
 function evalCondition(node: any, vars: Record<string, any>) {
   return node.logic.every((r: any) => evalRow(r, vars));
+}
+function isEndNode(node: any): boolean {
+  return (
+    !node.next &&
+    !node.trueNext &&
+    !node.falseNext &&
+    !(node.routes && Object.keys(node.routes).length > 0)
+  );
 }
 
 function matchTriggerStart(userId: string, text?: string) {
@@ -318,6 +329,7 @@ async function advance(
 ) {
   let s = getSession(userId);
   let hops = 0;
+
   while (s.currentNodeId) {
     if (++hops > 25) {
       console.warn("[flow] hop limit exceeded");
@@ -334,6 +346,14 @@ async function advance(
       break;
     }
 
+    // 🟢 increment message count
+    await ChatbotSessionModel.findOneAndUpdate(
+      { userId, chatbotId: FLOW._id },
+      { $inc: { totalMessages: 1 }, $set: { lastNodeId: node.id } },
+      { sort: { startTime: -1 } },
+    );
+
+    // --- SEND MESSAGE NODE ---
     if (node.type === "send_message") {
       if (node.contentType === "text") {
         await sendText(
@@ -361,11 +381,34 @@ async function advance(
           whatsAppBusinessConfigData,
         );
       }
+
+      // 🟣 Check if this is end node
+      if (isEndNode(node)) {
+        await ChatbotSession.findOneAndUpdate(
+          { userId, chatbotId: FLOW._id },
+          { completed: true, endTime: new Date(), lastNodeId: node.id },
+          { sort: { startTime: -1 } },
+        );
+
+        // Optional: live stats bump
+        await WhatsappChatbot.updateOne(
+          { _id: FLOW._id },
+          {
+            $inc: { "stats.totalSessions": 1, "stats.completedSessions": 1 },
+            $set: { "stats.lastActivity": new Date() },
+          },
+        );
+
+        setSession(userId, { currentNodeId: null });
+        break;
+      }
+
       setSession(userId, { currentNodeId: node.next || null });
       s = getSession(userId);
       continue;
     }
 
+    // --- ASK QUESTION NODE ---
     if (node.type === "ask_question") {
       await sendText(
         waTo,
@@ -376,17 +419,17 @@ async function advance(
       return; // wait for user input
     }
 
+    // --- CONDITION NODE ---
     if (node.type === "set_condition") {
-      const ok = evalCondition(node, s.variables); // ✅ evaluates true or false
-
+      const ok = evalCondition(node, s.variables);
       setSession(userId, {
-        currentNodeId: (ok ? node.trueNext : node.falseNext) || null, // ✅ if true → go to trueNext, else → falseNext
+        currentNodeId: (ok ? node.trueNext : node.falseNext) || null,
       });
-
       s = getSession(userId);
-      continue; // ✅ continue advancing the flow to the next node
+      continue;
     }
 
+    // --- INTERACTIVE NODE ---
     if (node.type === "interactive_message") {
       const layout = node.layout || "button";
       const body = interpolate(node.bodyText || "", s.variables);
@@ -398,7 +441,6 @@ async function advance(
           }
         : undefined;
 
-      // CASE 1️⃣: Interactive List layout
       if (layout === "list" && node.list) {
         await sendInteractiveList(
           waTo,
@@ -414,13 +456,11 @@ async function advance(
         return;
       }
 
-      // CASE 2️⃣: CTA URL layout
       if (layout === "cta_url") {
         const ctaUrl = (node.cta?.url || "").trim();
         const ctaLabel = (node.cta?.label || "Open Link").trim();
 
         if (ctaUrl) {
-          // ✅ Proper CTA URL message
           await waSend(whatsAppBusinessConfigData, {
             to: waTo,
             type: "interactive",
@@ -431,34 +471,7 @@ async function advance(
               ...(footer ? { footer: { text: footer } } : {}),
               action: {
                 name: "cta_url",
-                parameters: {
-                  display_text: ctaLabel,
-                  url: ctaUrl,
-                },
-              },
-            },
-          });
-        } else {
-          // ⚠️ Missing URL → fallback to button with image + continue
-          console.warn("[Flow] Missing CTA URL, fallback to image+body+button");
-          await waSend(whatsAppBusinessConfigData, {
-            to: waTo,
-            type: "interactive",
-            interactive: {
-              type: "button",
-              ...(header ? { header } : {}),
-              body: { text: body },
-              ...(footer ? { footer: { text: footer } } : {}),
-              action: {
-                buttons: [
-                  {
-                    type: "reply",
-                    reply: {
-                      id: "fallback_continue",
-                      title: "Continue",
-                    },
-                  },
-                ],
+                parameters: { display_text: ctaLabel, url: ctaUrl },
               },
             },
           });
@@ -474,7 +487,6 @@ async function advance(
         return;
       }
 
-      // CASE 3️⃣: Button layout with image header (your example)
       if (layout === "button" && node.buttons?.length > 0) {
         await waSend(whatsAppBusinessConfigData, {
           to: waTo,
@@ -484,23 +496,14 @@ async function advance(
             body: { text: body },
             ...(footer ? { footer: { text: footer } } : {}),
             action: {
-              buttons: node.buttons.map((b) => {
-                if (b.type === "url" && b.url) {
-                  return {
-                    type: "url",
-                    url: b.url,
-                    text: b.title,
-                  };
-                }
-                return {
-                  type: "reply",
-                  reply: { id: b.id, title: b.title },
-                };
-              }),
+              buttons: node.buttons.map((b) =>
+                b.type === "url" && b.url
+                  ? { type: "url", url: b.url, text: b.title }
+                  : { type: "reply", reply: { id: b.id, title: b.title } },
+              ),
             },
           },
         });
-
         setSession(userId, {
           waitingFor: "interactive",
           interactiveCtx: { routes: node.routes || {} },
@@ -508,52 +511,27 @@ async function advance(
         return;
       }
 
-      // CASE 4️⃣: No buttons, no CTA, but has image → just send image message
       if ((!node.buttons || node.buttons.length === 0) && header?.image?.link) {
         await waSend(whatsAppBusinessConfigData, {
           to: waTo,
           type: "image",
-          image: {
-            link: header.image.link,
-            caption: body || footer || "",
-          },
+          image: { link: header.image.link, caption: body || footer || "" },
         });
         setSession(userId, { currentNodeId: node.next || null });
         return;
       }
 
-      // CASE 5️⃣: Fallback plain text if nothing matches
       await sendText(waTo, body, whatsAppBusinessConfigData);
       setSession(userId, { currentNodeId: node.next || null });
       return;
     }
 
-    if (node.layout === "list" && node.list) {
-      await waSend(whatsAppBusinessConfigData, {
-        to: waTo,
-        type: "interactive",
-        interactive: {
-          type: "list",
-          body: { text: interpolate(node.bodyText, s.variables) },
-          footer: node.footerText
-            ? { text: interpolate(node.footerText, s.variables) }
-            : undefined,
-          action: {
-            button: node.list.buttonText,
-            sections: node.list.sections.map((s) => ({
-              title: s.title,
-              rows: s.rows.map((r) => ({
-                id: r.id,
-                title: r.title,
-                ...(r.description ? { description: r.description } : {}),
-              })),
-            })),
-          },
-        },
-      });
-    }
-
-    // unknown type
+    // 🟥 Unknown type or no continuation
+    await ChatbotSession.findOneAndUpdate(
+      { userId, chatbotId: FLOW._id },
+      { completed: true, endTime: new Date(), lastNodeId: node.id },
+      { sort: { startTime: -1 } },
+    );
     setSession(userId, {
       currentNodeId: null,
       waitingFor: null,
@@ -663,13 +641,20 @@ export const waWebhookHandler = async (c: Context) => {
         }
       }
       if (matchTriggerStart(from, textBody)) {
+        // 🟢 Start a new session
+        await ChatbotSessionModel.create({
+          chatbotId: FLOW._id || "000000000000000000000000",
+          userId: from,
+          startTime: new Date(),
+          completed: false,
+        });
+
         await advance(from, from, whatsAppBusinessConfigData);
         return respond(c, "flow consumed (trigger)", false, 200, {});
       }
     }
   }
 
-  // Fallback to your existing logic if flow didn't consume
   if (
     messages &&
     messages?.text?.body?.length > 1 &&
