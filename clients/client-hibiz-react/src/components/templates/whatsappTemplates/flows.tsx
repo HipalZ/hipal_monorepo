@@ -23,35 +23,25 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {
-  AlertCircle,
-  CheckCircle,
   ChevronDown,
   ChevronLeft,
-  ChevronRight,
-  Code,
   Diamond,
-  Download,
   FileInputIcon,
   FileText,
   FileUp,
   GripVertical,
-  Hash,
   ImageIcon,
-  Info,
   MessageCircle,
   PanelLeftOpen,
-  PanelRightOpen,
-  Play,
   Plus,
   Trash2,
   Upload,
-  Variable,
   X,
   Zap,
 } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useMediaUpload } from '../../../hooks/useTemplates';
-import { VariableSelect } from './variableSelect';
+import DeleteButton from './deleteButton';
 
 const NodeTypes = {
   SEND: 'send_message',
@@ -61,14 +51,6 @@ const NodeTypes = {
   INTERACTIVE: 'interactive',
   FORM: 'form',
 };
-
-const INPUT_TYPES = [
-  { id: 'text', label: 'Text' },
-  { id: 'phone', label: 'Phone' },
-  { id: 'email', label: 'Email' },
-  { id: 'number', label: 'Number' },
-];
-
 const nid = () => Math.random().toString(36).slice(2, 10);
 
 function ButtonEdge({ id, sourceX, sourceY, targetX, targetY, markerEnd }) {
@@ -82,7 +64,7 @@ const edgeTypes = {
 
 // Send Message Node
 function SendNode({ data, selected }) {
-  const m = data.meta.contentType
+  const m = data.meta?.contentType
     ? data.meta
     : {
         contentType: 'text',
@@ -91,15 +73,19 @@ function SendNode({ data, selected }) {
         fileName: '',
         caption: '',
         useUpload: false,
+        storeVariable: '',
       };
   const textRef = useRef(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { uploadMediaPassFile } = useMediaUpload();
+
   const insertVariable = (variable) => {
     if (!variable) return;
     const el = textRef.current;
-    const placeholder = `{{${variable}}}`;
+    // Adjust insertion based on type: @vars as-is, custom as {{var}}
+    const placeholder = variable.startsWith('@') ? variable : `{{${variable}}}`;
     if (!el) return;
 
     const start = el.selectionStart || 0;
@@ -109,17 +95,29 @@ function SendNode({ data, selected }) {
 
     data.onPatch({ meta: { ...m, text: newText } });
 
-    setTimeout(() => {
-      el.focus();
-      el.setSelectionRange(start + placeholder.length, start + placeholder.length);
-    }, 0);
+    // Use requestAnimationFrame for smoother focus
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(start + placeholder.length, start + placeholder.length);
+    });
   };
 
   const handleUpload = async (file, type) => {
     if (!file) return;
     try {
       setUploading(true);
+      setUploadProgress(0);
+      const interval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 10;
+        });
+      }, 200);
+
       const { url } = await uploadMediaPassFile(file);
+      clearInterval(interval);
+      setUploadProgress(100);
+
       data.onPatch({
         meta: {
           ...m,
@@ -128,6 +126,8 @@ function SendNode({ data, selected }) {
           contentType: type,
         },
       });
+
+      setTimeout(() => setUploadProgress(0), 1000);
     } catch (err) {
       console.error(`${type} upload failed`, err);
     } finally {
@@ -138,226 +138,300 @@ function SendNode({ data, selected }) {
   const contentTypes = [
     { value: 'text', label: 'Text', icon: <FileText className="h-3 w-3" /> },
     { value: 'image', label: 'Image', icon: <ImageIcon className="h-3 w-3" /> },
-    { value: 'document', label: 'Document', icon: <FileUp className="h-3 w-3" /> },
+    { value: 'document', label: 'Doc', icon: <FileUp className="h-3 w-3" /> },
   ];
+
+  const handleContentTypeChange = (value) => {
+    data.onPatch({
+      meta: {
+        ...m,
+        contentType: value,
+        mediaUrl: '',
+        caption: '',
+        fileName: '',
+        useUpload: false,
+      },
+    });
+  };
+
+  const toggleUploadMode = () => {
+    data.onPatch({
+      meta: {
+        ...m,
+        useUpload: !m.useUpload,
+        mediaUrl: '',
+      },
+    });
+  };
+
+  const updateMetaField = (field, value) => {
+    data.onPatch({
+      meta: { ...m, [field]: value },
+    });
+  };
 
   return (
     <div className="relative">
-      {/* Incoming Handle */}
-      <Handle type="target" position={Position.Left} className="z-50 !h-[0.75rem] !w-[0.75rem]" />
+      <Handle type="target" position={Position.Left} className="z-50 !h-[0.75rem] !w-[0.75rem] bg-gray-400" />
 
       <Card
         className={cn(
-          'relative w-80 overflow-hidden border-2 shadow-lg transition-all',
-          selected ? 'border-emerald-500 ring-2 ring-emerald-500 ring-opacity-20' : 'border-gray-300',
+          'relative w-80 overflow-hidden border-2 shadow-xl transition-all duration-200',
+          selected ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-gray-200 hover:border-gray-300',
         )}
       >
-        {/* 🗑️ Delete Button */}
-        <button
-          onClick={() => data?.remove?.(data.id)}
-          type="button"
-          className="absolute right-4 top-4 z-20 rounded-full bg-white/80 p-1 text-red-600 shadow hover:bg-red-50"
-          title="Delete node"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <DeleteButton data={data} />
 
-        {/* Header */}
-        <div className="relative bg-gradient-to-r from-emerald-500 to-teal-600 p-4 text-white">
+        <div className="relative bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 p-4 text-white shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
-              <h3 className="text-lg font-bold">Send Message</h3>
+              <div className="rounded-lg bg-white/20 p-1.5">
+                <MessageCircle className="h-4 w-4" />
+              </div>
+              <h3 className="text-base font-semibold tracking-tight">Send Message</h3>
             </div>
           </div>
         </div>
 
-        <CardContent className="space-y-4 bg-gray-100 p-4">
-          {/* Message type selector */}
-          <div className="flex gap-1 rounded-lg bg-white p-1 shadow-sm">
+        <CardContent className="space-y-4 bg-gradient-to-b from-gray-50 to-white p-4">
+          {/* Segmented Control for Content Types - More polished */}
+          <div className="flex gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
             {contentTypes.map((type) => (
               <Button
                 key={type.value}
                 variant={m.contentType === type.value ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() =>
-                  data.onPatch({
-                    meta: { ...m, contentType: type.value, mediaUrl: '' },
-                  })
-                }
+                onClick={() => handleContentTypeChange(type.value)}
                 className={cn(
-                  'flex-1 gap-1 text-xs font-medium',
+                  'flex-1 gap-1.5 px-3 py-1.5 text-xs font-medium transition-all duration-150',
                   m.contentType === type.value
-                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                    : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700',
+                    ? 'bg-emerald-600 text-white shadow-md hover:bg-emerald-700'
+                    : 'border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-700',
                 )}
+                aria-label={`Switch to ${type.label} mode`}
               >
-                {type.icon}
-                {type.label}
+                <span className="flex items-center gap-1.5">
+                  {type.icon}
+                  <span>{type.label}</span>
+                </span>
               </Button>
             ))}
           </div>
 
-          {/* TEXT MODE */}
           {m.contentType === 'text' && (
             <div className="space-y-3">
-              {data.variables?.length ? (
-                <VariableSelect
-                  value={m.selectedVars || []}
-                  options={data.variables || []}
-                  onChange={(vals) => data.onPatch({ meta: { ...m, selectedVars: vals } })}
-                  onInsert={insertVariable}
+              {data.variables?.length > 0 ? (
+                <VariableDropdown
+                  value={null}
+                  onChange={insertVariable}
+                  variables={data.variables || []} // Non-prefixed (e.g., userName)
+                  flowParams={data.variables.map((v) => `@${v}`)} // Prefixed (e.g., @userName)
+                  placeholder="Insert variable..."
                 />
               ) : (
-                <p className="text-xs italic text-gray-500">No variables yet</p>
+                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-center">
+                  <p className="flex items-center justify-center gap-1 text-xs text-gray-500">
+                    <FileText className="h-3 w-3" />
+                    No variables available yet. Add some in the flow to use dynamic content.
+                  </p>
+                </div>
               )}
-              <div>
-                <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">
-                  <FileText className="h-3 w-3" />
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                  <FileText className="h-3 w-3 text-emerald-600" />
                   Message Text
                 </label>
                 <Textarea
                   ref={textRef}
                   value={m.text || ''}
-                  onChange={(e) =>
-                    data.onPatch({
-                      meta: { ...m, text: e.target.value },
-                    })
-                  }
-                  placeholder="Type your message... use {{variable}} for dynamic content"
-                  className="min-h-24 resize-none border-gray-300 text-sm placeholder:text-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  onChange={(e) => updateMetaField('text', e.target.value)}
+                  placeholder="Type your msg @var_name or {{variable_name}} here "
+                  className="min-h-[80px] resize-none border-gray-300 text-sm transition-colors placeholder:text-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+                  rows={3}
+                  aria-describedby="text-help"
                 />
               </div>
             </div>
           )}
-          <div>
-            <label className="mb-1 text-xs font-medium text-gray-700">Store response in variable (optional)</label>
-            <Input
-              value={m.storeVariable || ''}
-              onChange={(e) =>
-                data.onPatch({
-                  meta: { ...m, storeVariable: e.target.value.startsWith('@') ? e.target.value : `@${e.target.value}` },
-                })
-              }
-              placeholder="e.g. @user_feedback"
-              className="border-gray-300 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-            />
-            <p className="mt-1 text-[11px] text-gray-500">Prefix automatically with @ to store user reply.</p>
-          </div>
 
-          {/* IMAGE MODE */}
+          {/* IMAGE MODE - Enhanced preview and upload UX */}
           {m.contentType === 'image' && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-gray-700">Image Upload or URL</label>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-medium text-gray-700">Image Source</label>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-xs"
-                  onClick={() =>
-                    data.onPatch({
-                      meta: { ...m, useUpload: !m.useUpload, mediaUrl: '' },
-                    })
-                  }
+                  onClick={toggleUploadMode}
+                  className="h-[3rem] border-gray-300 text-sm text-gray-600 hover:border-emerald-400"
                 >
-                  {m.useUpload ? 'Use URL' : 'Upload File'}
+                  {m.useUpload ? <FileText className="mr-2 h-4 w-4" /> : <Upload className="mr-2 h-4 w-4" />}
+                  {m.useUpload ? 'Switch to URL' : 'Upload Image'}
                 </Button>
               </div>
 
               {m.useUpload ? (
                 <div className="space-y-2">
-                  <label className="flex h-12 cursor-pointer items-center justify-center gap-2 bg-gray-200 text-xs text-gray-700 hover:text-emerald-600">
-                    <Upload className="h-4 w-4" />
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload(e.target.files?.[0], 'image')} />
-                    {uploading ? 'Uploading...' : 'Click to upload image'}
+                  <label
+                    className="group flex h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gradient-to-r from-gray-100 to-gray-200 text-xs text-gray-700 transition-all hover:from-emerald-50 hover:to-emerald-100 hover:text-emerald-600"
+                    aria-label="Upload image file"
+                  >
+                    <Upload className="h-4 w-4 transition-transform group-hover:rotate-12" />
+                    <span>{uploading ? `Uploading... ${uploadProgress}%` : 'Click to select image'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleUpload(e.target.files?.[0], 'image')}
+                      disabled={uploading}
+                    />
                   </label>
-                  {m.mediaUrl && <img src={m.mediaUrl} alt="Preview" className="h-24 w-full rounded-md border object-cover" />}
+                  {uploading && (
+                    <div className="h-1.5 w-full rounded-full bg-gray-200">
+                      <div className="h-1.5 rounded-full bg-emerald-600 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                    </div>
+                  )}
+                  {m.mediaUrl && !uploading && (
+                    <div className="relative">
+                      <img src={m.mediaUrl} alt="Uploaded" className="h-24 w-full rounded-lg border object-cover shadow-sm" />
+                      <button
+                        onClick={() => updateMetaField('mediaUrl', '')}
+                        className="absolute right-1 top-1 rounded-full bg-white/80 p-1 hover:bg-red-50"
+                        type="button"
+                        aria-label="Remove image"
+                      >
+                        <Trash2 className="h-3 w-3 text-red-500" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <Input
-                  value={m.mediaUrl || ''}
-                  onChange={(e) =>
-                    data.onPatch({
-                      meta: { ...m, mediaUrl: e.target.value },
-                    })
-                  }
-                  placeholder="https://example.com/image.png"
-                  className="border-gray-300 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                />
+                <div className="space-y-2">
+                  <Input
+                    value={m.mediaUrl || ''}
+                    onChange={(e) => updateMetaField('mediaUrl', e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+                  />
+                  {m.mediaUrl && (
+                    <img
+                      src={m.mediaUrl}
+                      alt="preview"
+                      className="h-24 w-full rounded-lg border object-cover shadow-sm"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextSibling.style.display = 'block';
+                      }}
+                    />
+                  )}
+                  <p className="hidden text-xs text-gray-500">Invalid URL? Preview not available.</p>
+                </div>
               )}
 
-              <Input
-                value={m.caption || ''}
-                onChange={(e) =>
-                  data.onPatch({
-                    meta: { ...m, caption: e.target.value },
-                  })
-                }
-                placeholder="Add a caption for your image..."
-                className="border-gray-300 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              />
+              <div className="space-y-1">
+                <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                  <FileText className="h-3 w-3 text-emerald-600" />
+                  Caption (Optional)
+                </label>
+                <Input
+                  value={m.caption || ''}
+                  onChange={(e) => updateMetaField('caption', e.target.value)}
+                  placeholder="Describe the image for better context..."
+                  className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+                />
+              </div>
             </div>
           )}
 
-          {/* DOCUMENT MODE */}
+          {/* DOCUMENT MODE - Consistent with image, improved feedback */}
           {m.contentType === 'document' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-gray-700">Document Upload or URL</label>
+                <label className="text-xs font-medium text-gray-700">Document Source</label>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-xs"
-                  onClick={() =>
-                    data.onPatch({
-                      meta: { ...m, useUpload: !m.useUpload, mediaUrl: '' },
-                    })
-                  }
+                  onClick={toggleUploadMode}
+                  className="border-gray-300 text-xs text-gray-600 hover:border-emerald-400"
                 >
-                  {m.useUpload ? 'Use URL' : 'Upload File'}
+                  {m.useUpload ? 'Switch to URL' : 'Upload Instead'}
                 </Button>
               </div>
 
               {m.useUpload ? (
                 <div className="space-y-2">
-                  <label className="flex h-12 cursor-pointer items-center justify-center gap-2 bg-gray-200 text-xs text-gray-700 hover:text-emerald-600">
-                    <Upload className="h-4 w-4" />
-                    <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => handleUpload(e.target.files?.[0], 'document')} />
-                    {uploading ? 'Uploading...' : 'Click to upload document'}
+                  <label
+                    className="group flex h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gradient-to-r from-gray-100 to-gray-200 text-xs text-gray-700 transition-all hover:from-emerald-50 hover:to-emerald-100 hover:text-emerald-600"
+                    aria-label="Upload document file"
+                  >
+                    <Upload className="h-4 w-4 transition-transform group-hover:rotate-12" />
+                    <span>{uploading ? `Uploading... ${uploadProgress}%` : 'Click to select PDF/Doc'}</span>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      className="hidden"
+                      onChange={(e) => handleUpload(e.target.files?.[0], 'document')}
+                      disabled={uploading}
+                    />
                   </label>
-
-                  {m.mediaUrl && <p className="truncate text-xs text-emerald-700">Uploaded: {m.fileName}</p>}
+                  {uploading && (
+                    <div className="h-1.5 w-full rounded-full bg-gray-200">
+                      <div className="h-1.5 rounded-full bg-emerald-600 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                    </div>
+                  )}
+                  {m.mediaUrl && !uploading && (
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                      <p className="truncate text-xs font-medium text-emerald-700">✅ Uploaded: {m.fileName}</p>
+                      <button
+                        onClick={() => updateMetaField('mediaUrl', '')}
+                        className="ml-2 text-xs text-emerald-600 hover:text-red-600"
+                        type="button"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <Input
                   value={m.mediaUrl || ''}
-                  onChange={(e) =>
-                    data.onPatch({
-                      meta: { ...m, mediaUrl: e.target.value },
-                    })
-                  }
-                  placeholder="https://example.com/document.pdf"
-                  className="border-gray-300 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  onChange={(e) => updateMetaField('mediaUrl', e.target.value)}
+                  placeholder="Paste document URL (e.g., https://example.com/doc.pdf)"
+                  className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
                 />
               )}
 
-              <Input
-                value={m.fileName || ''}
-                onChange={(e) =>
-                  data.onPatch({
-                    meta: { ...m, fileName: e.target.value },
-                  })
-                }
-                placeholder="document.pdf"
-                className="border-gray-300 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              />
+              <div className="space-y-1">
+                <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                  <FileUp className="h-3 w-3 text-emerald-600" />
+                  File Name
+                </label>
+                <Input
+                  value={m.fileName || ''}
+                  onChange={(e) => updateMetaField('fileName', e.target.value)}
+                  placeholder="document.pdf"
+                  className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+                />
+              </div>
             </div>
           )}
+          {/* Response Variable */}
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+              <FileText className="h-3 w-3 text-emerald-600" />
+              Response Variable (Optional)
+            </label>
+            <Input
+              value={m.variable || ''}
+              onChange={(e) => data.onPatch({ meta: { ...m, variable: e.target.value.trim().replace(/^@/, '') } })}
+              placeholder="user_feedback"
+              className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+            />
+          </div>
         </CardContent>
       </Card>
 
-      {/* Outgoing Handle */}
-      <Handle type="source" position={Position.Right} className="z-50 !h-[0.75rem] !w-[0.75rem]" />
+      <Handle type="source" position={Position.Right} className="z-50 !h-[0.75rem] !w-[0.75rem] bg-gray-400" />
     </div>
   );
 }
@@ -365,6 +439,15 @@ function SendNode({ data, selected }) {
 // Ask Question Node
 function AskNode({ data, selected }) {
   const m = data.meta || {};
+  const handleVariableChange = (e) => {
+    const inputValue = e.target.value.trim().replace(/^@/, '');
+    data.onPatch({ meta: { ...m, variable: inputValue } });
+
+    if (inputValue && !data.variables.includes(inputValue)) {
+      data.onVariableAdd([inputValue]);
+    }
+  };
+
   return (
     <div className="relative">
       <Handle type="target" position={Position.Left} className="z-50 !h-[0.75rem] !w-[0.75rem]" />
@@ -379,18 +462,25 @@ function AskNode({ data, selected }) {
             <FileInputIcon className="h-5 w-5" />
             <h3 className="text-lg font-bold">Ask User</h3>
           </div>
-          {/* 🗑️ Delete Button */}
-          <button
-            onClick={() => data?.remove?.(data.id)}
-            type="button"
-            className="absolute right-4 top-4 z-20 rounded-full bg-white/80 p-1 text-red-600 shadow hover:bg-red-50"
-            title="Delete node"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          <DeleteButton data={data} />
         </div>
 
         <CardContent className="space-y-4 bg-gray-100 p-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-gray-700">Input Type</label>
+            <Select value={m.inputType || 'text'} onValueChange={(v) => data.onPatch({ meta: { ...m, inputType: v } })}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="text">Text</SelectItem>
+                <SelectItem value="number">Number</SelectItem>
+                <SelectItem value="phone">Phone</SelectItem>
+                <SelectItem value="email">Email</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
             <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">
               <FileText className="h-3 w-3" />
@@ -404,47 +494,6 @@ function AskNode({ data, selected }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">
-                <Variable className="h-3 w-3" />
-                Store in Variable
-              </label>
-              <Select value={m.variable || ''} onValueChange={(v) => data.onPatch({ meta: { ...m, variable: v } })}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Select variable" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {data.variables.map((v) => (
-                    <SelectItem key={v} value={v}>
-                      {v}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">
-                <FileInputIcon className="h-3 w-3" />
-                Input Type
-              </label>
-              <Select value={m.inputType || 'text'} onValueChange={(t) => data.onPatch({ meta: { ...m, inputType: t } })}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {INPUT_TYPES.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           <div className="flex items-center space-x-2">
             <Checkbox
               id="required"
@@ -456,7 +505,19 @@ function AskNode({ data, selected }) {
               Required Field
             </label>
           </div>
-
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+              <FileText className="h-3 w-3 text-emerald-600" />
+              Store Response In (Optional)
+            </label>
+            <Input
+              value={m.variable?.replace(/^@/, '') || ''}
+              onChange={handleVariableChange}
+              placeholder="userName"
+              className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+              aria-describedby="store-help"
+            />
+          </div>
           {m.prompt && (
             <Badge variant="outline" className="text-xs">
               Preview: {m.prompt.substring(0, 30)}...
@@ -469,10 +530,49 @@ function AskNode({ data, selected }) {
   );
 }
 
-// Condition Node
+function VariableDropdown({ value, onChange, variables = [], flowParams = [], placeholder = 'Select variable' }) {
+  const formatDisplay = (item) => {
+    if (flowParams.includes(item)) return item; // e.g., @userName
+    if (variables.includes(item)) return `{{${item}}}`; // e.g., {{userName}}
+    return item;
+  };
+
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="h-8 text-xs">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent className="w-[180px]">
+        {flowParams.length > 0 && (
+          <div className="px-2 py-1">
+            <div className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-gray-500">Stored variables</div>
+            {flowParams.map((param) => (
+              <SelectItem key={param} value={param} className="text-xs">
+                {formatDisplay(param)} {/* Shows @userName */}
+              </SelectItem>
+            ))}
+          </div>
+        )}
+        {variables.length > 0 && (
+          <div className="px-2 py-1">
+            <div className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-gray-500">Custom variables</div>
+            {variables.map((varName) => (
+              <SelectItem key={varName} value={varName} className="text-xs">
+                {formatDisplay(varName)} {/* Shows {{userName}} */}
+              </SelectItem>
+            ))}
+          </div>
+        )}
+      </SelectContent>
+    </Select>
+  );
+}
+
+// Updated Condition Node (with preview fix for display)
 function CondNode({ data, selected }) {
   const logic = data.meta?.logic || [];
-  const variables = data.variables || []; // available variables passed from parent
+  const variables = data.variables || []; // Global custom variables
+  const flowParams = variables.map((v) => `@${v}`); // ✅ Dynamic stored vars from global
   const hasLogic = logic.length > 0;
   const [expanded, setExpanded] = useState(false);
 
@@ -482,11 +582,12 @@ function CondNode({ data, selected }) {
   };
 
   const addCondition = () => {
-    if (variables.length === 0) return;
+    if (variables.length === 0 && flowParams.length === 0) return;
+    const defaultVar = variables[0] || flowParams[0];
     data.onPatch({
       meta: {
         ...data.meta,
-        logic: [...logic, { var: variables[0], op: 'eq', value: '' }],
+        logic: [...logic, { var: defaultVar, op: 'eq', value: '' }],
       },
     });
   };
@@ -496,27 +597,40 @@ function CondNode({ data, selected }) {
     data.onPatch({ meta: { ...data.meta, logic: updated } });
   };
 
+  // Fixed preview to display flow params as-is and custom vars as {{var}}
+  const formatVarForPreview = (varName) => {
+    if (flowParams.includes(varName)) return varName;
+    if (variables.includes(varName)) return `{{${varName}}}`;
+    return varName;
+  };
+
   const conditionPreview = hasLogic
-    ? logic.map((l, i) => `${i === 0 ? 'IF' : 'AND'} ${l.var} ${l.op} "${l.value || '...'}"`).join('\n')
+    ? logic.map((l, i) => `${i === 0 ? 'IF' : 'AND'} ${formatVarForPreview(l.var)} ${l.op} "${l.value || '...'}"`).join('\n')
     : 'No conditions set';
 
   return (
     <div className="relative">
-      {/* Incoming connection handle */}
       <Handle
         type="target"
         position={Position.Left}
         className="z-50 !h-[0.9rem] !w-[0.9rem] rounded-full border-2 border-amber-400 bg-amber-500 transition-transform hover:scale-110"
       />
-
       <Card
         className={cn(
           'group relative w-96 overflow-hidden rounded-xl border bg-white shadow-md transition-all',
           selected ? 'border-2 border-amber-500 shadow-2xl ring-2 ring-amber-500/30' : 'border-amber-300 hover:border-amber-400 hover:shadow-lg',
         )}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-amber-100 to-amber-200 opacity-80" />
-
+        <div className="relative bg-amber-500 p-4 text-white shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-white/20 p-1.5">
+                <MessageCircle className="h-4 w-4" />
+              </div>
+              <h3 className="text-base font-semibold tracking-tight">Condition</h3>
+            </div>
+          </div>
+        </div>
         <div className="relative z-10 p-4 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 transform items-center justify-center rounded-full bg-gradient-to-r from-amber-400 to-amber-600 shadow-lg transition-transform group-hover:rotate-12">
             <Diamond className="h-6 w-6 text-white" />
@@ -526,7 +640,6 @@ function CondNode({ data, selected }) {
         </div>
 
         <CardContent className="relative z-10 space-y-3 px-4 pb-4">
-          {/* If there are conditions, show editable UI */}
           {hasLogic ? (
             <div className="space-y-3">
               <Button variant="ghost" size="sm" className="w-full justify-between text-amber-700" onClick={() => setExpanded(!expanded)}>
@@ -539,13 +652,11 @@ function CondNode({ data, selected }) {
                   <code className="block whitespace-pre-wrap font-mono text-xs text-amber-800">{conditionPreview}</code>
                 </div>
               )}
-
-              {/* Inline condition editor */}
               <div className="space-y-2">
                 {logic.map((l, i) => (
                   <div key={i} className="rounded-lg border border-amber-200 bg-white/70 p-2 shadow-sm">
                     <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="text-[10px] text-amber-800">
+                      <Badge variant="secondary" className="bg-blue-500 text-[10px] text-white">
                         {i === 0 ? 'IF' : 'AND'}
                       </Badge>
                       <Button variant="ghost" size="sm" onClick={() => removeCondition(i)} className="h-6 w-6 p-0 text-red-500 hover:bg-red-50">
@@ -554,17 +665,13 @@ function CondNode({ data, selected }) {
                     </div>
 
                     <div className="mt-2 grid grid-cols-3 gap-2">
-                      <select
+                      <VariableDropdown
                         value={l.var}
-                        onChange={(e) => updateLogic(i, { var: e.target.value })}
-                        className="rounded border border-gray-300 px-2 py-1 text-xs"
-                      >
-                        {variables.map((v) => (
-                          <option key={v} value={v}>
-                            {v}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => updateLogic(i, { var: val })}
+                        variables={variables} // Non-prefixed for custom
+                        flowParams={flowParams} // @ prefixed for stored
+                        placeholder="Select var"
+                      />
 
                       <select
                         value={l.op}
@@ -592,7 +699,7 @@ function CondNode({ data, selected }) {
               </div>
 
               {/* Add condition button */}
-              <Button variant="outline" onClick={addCondition} className="w-full border-amber-300 text-amber-700 hover:bg-amber-100">
+              <Button variant="outline" onClick={addCondition} className="w-full border-amber-300 bg-blue-500 text-white">
                 <Plus className="mr-1 h-3 w-3" /> Add Condition
               </Button>
 
@@ -619,7 +726,7 @@ function CondNode({ data, selected }) {
           )}
         </CardContent>
       </Card>
-
+      <DeleteButton data={data} />
       {/* True Path Handle (Right - Top) */}
       <Handle
         id="true"
@@ -635,7 +742,7 @@ function CondNode({ data, selected }) {
         type="source"
         position={Position.Right}
         className="!h-[0.9rem] !w-[0.9rem] rounded-full border-2 border-red-500 !bg-red-400"
-        style={{ bottom: '30%' }}
+        style={{ top: '70%' }}
       />
     </div>
   );
@@ -644,6 +751,16 @@ function CondNode({ data, selected }) {
 // Trigger Node
 function TriggerNode({ data, selected }) {
   const m = data.meta || {};
+  const [kw, setKw] = useState('');
+
+  const handleAddKeyword = () => {
+    const v = kw.trim();
+    if (!v) return;
+    const arr = [...(m.keywords || [])];
+    if (!arr.includes(v)) arr.push(v);
+    data.onPatch({ meta: { ...m, keywords: arr } });
+    setKw('');
+  };
 
   return (
     <div className="relative">
@@ -659,43 +776,28 @@ function TriggerNode({ data, selected }) {
             <Zap className="h-5 w-5" />
             <h3 className="text-lg font-bold">Trigger</h3>
           </div>
-          {/* 🗑️ Delete Button */}
-          <button
-            onClick={() => data?.remove?.(data.id)}
-            type="button"
-            className="absolute right-4 top-4 z-20 rounded-full bg-white/80 p-1 text-red-600 shadow hover:bg-red-50"
-            title="Delete node"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          <DeleteButton data={data} />
         </div>
 
         <CardContent className="space-y-4 bg-gray-100 p-4">
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
-              <Hash className="h-3 w-3" />
-              Trigger Keywords
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {(m.keywords || []).map((k, i) => (
-                <Badge key={i} variant="secondary" className="bg-orange-100 text-xs text-orange-800">
-                  {k}
-                </Badge>
-              ))}
-              {(m.keywords || []).length === 0 && <p className="text-xs italic text-gray-500">No keywords set</p>}
+            <label className="flex items-center gap-2 text-xs font-medium text-gray-700">Trigger Keywords</label>
+            <div className="flex gap-2">
+              <input
+                value={kw}
+                onChange={(e) => setKw(e.target.value)}
+                placeholder="Add trigger word 'Hai'"
+                className="flex-1 rounded border border-gray-300 px-3 py-2 text-xs"
+                onKeyPress={(e) => e.key === 'Enter' && handleAddKeyword()}
+              />
+              <Button size="sm" variant="outline" className="bg-blue-500 px-3 py-2 text-xs text-white" onClick={handleAddKeyword}>
+                Add
+              </Button>
             </div>
           </div>
-
-          <div className="rounded-lg bg-gray-50 p-3">
-            <p className="flex items-center gap-1 text-xs text-gray-600">
-              <CheckCircle className="h-3 w-3 text-green-500" />
-              Connect handle to first node to start the flow.
-            </p>
-          </div>
-
           {(m.keywords || []).length > 0 && (
-            <Badge variant="outline" className="text-xs">
-              Triggers on: {m.keywords.join(', ')}
+            <Badge variant="outline" className="bg-orange-100 text-xs text-orange-800">
+              {m.keywords.join(', ')}
             </Badge>
           )}
         </CardContent>
@@ -704,16 +806,17 @@ function TriggerNode({ data, selected }) {
   );
 }
 
+// Interactive Node
 function InteractiveNode({ data, selected }) {
   const m = data.meta ?? {
     layout: 'button',
     header: { type: 'none', mediaUrl: '', useUpload: false },
-    bodyText: '',
+    bodyText: 'Write message here...',
     footerText: '',
-    buttons: [],
+    buttons: [{ id: 'btn_1', type: 'reply', title: 'Option 1' }],
     list: { sections: [] },
+    routes: {},
   };
-
   const { uploadMediaPassFile } = useMediaUpload();
   const [uploading, setUploading] = useState(false);
 
@@ -805,30 +908,23 @@ function InteractiveNode({ data, selected }) {
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 text-white">
-          <div className="flex items-center gap-16">
+          <div className="flex items-center gap-12">
             <div className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5" />
               <h3 className="text-lg font-bold">Interactive</h3>
             </div>
             {/* Layout Switcher */}
-            <Select value={m.layout || 'button'} onValueChange={(layout) => data.onPatch({ meta: { ...m, layout } })}>
-              <SelectTrigger className="h-8 w-28 bg-white/10 text-xs text-white">
+            <Select value={m.layout || 'none'} onValueChange={(layout) => data.onPatch({ meta: { ...m, layout } })}>
+              <SelectTrigger className="h-8 w-36 bg-white/10 text-xs text-white">
                 <SelectValue placeholder="Layout" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">Select an option</SelectItem>
                 <SelectItem value="button">Buttons</SelectItem>
                 <SelectItem value="list">List</SelectItem>
               </SelectContent>
             </Select>
-            {/* 🗑️ Delete Button */}
-            <button
-              onClick={() => data?.remove?.(data.id)}
-              type="button"
-              className="absolute right-4 top-4 z-20 rounded-full bg-white/80 p-1 text-red-600 shadow hover:bg-red-50"
-              title="Delete node"
-            >
-              <Trash2 className="h-6 w-6" />
-            </button>
+            <DeleteButton data={data} />
           </div>
         </div>
 
@@ -954,7 +1050,7 @@ function InteractiveNode({ data, selected }) {
               value={m.footerText || ''}
               onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
               placeholder="Footer note..."
-              className="border-gray-300 focus:border-blue-500"
+              className="border-gray-300 bg-white focus:border-blue-500"
             />
           </div>
 
@@ -1008,6 +1104,13 @@ function InteractiveNode({ data, selected }) {
                         className="mt-1 border-gray-300"
                       />
                     )}
+                    <Handle
+                      id={btn.id}
+                      type="source"
+                      position={Position.Right}
+                      className="!h-[0.6rem] !w-[0.6rem] rounded-full bg-blue-500 hover:scale-110"
+                      title={`Connect ${btn.title || 'Button ' + (i + 1)}`}
+                    />
                   </div>
                 ))}
               </CardContent>
@@ -1064,6 +1167,13 @@ function InteractiveNode({ data, selected }) {
                           placeholder="Row description (optional)"
                           className="border-gray-300"
                         />
+                        <Handle
+                          id={row.id}
+                          type="source"
+                          position={Position.Right}
+                          className="!h-[0.6rem] !w-[0.6rem] rounded-full bg-blue-500 hover:scale-110"
+                          title={`Connect ${row.title || `Button ${ri + 1}`}`}
+                        />
                       </div>
                     ))}
 
@@ -1099,350 +1209,18 @@ function PaletteItem({ label, type, icon }) {
 
   return (
     <Card
-      className="cursor-grab border-gray-200 bg-white shadow-sm transition-all hover:scale-[1.02] hover:shadow-md active:cursor-grabbing active:opacity-80"
+      className="cursor-grab border-gray-200 bg-white shadow-sm transition-all hover:shadow-md active:cursor-grabbing active:opacity-80"
       draggable
       onDragStart={(e) => onDragStart(e, type)}
     >
       <CardContent className="flex items-center gap-3 p-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 text-xl">{icon}</div>
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-800">{label}</p>
-          <p className="text-xs text-gray-500">Drag to canvas</p>
+          <p className="inter text-sm font-medium text-gray-800">{label}</p>
         </div>
         <GripVertical className="h-4 w-4 text-gray-400" />
       </CardContent>
     </Card>
-  );
-}
-
-// Variable Editor Component
-// function VariableEditor({ variables, setVariables, onNext }) {
-//   const [step, setStep] = useState('list');
-//   const [v, setV] = useState('');
-//   const [error, setError] = useState('');
-
-//   const handleAdd = () => {
-//     const name = v.trim();
-//     if (!name) {
-//       setError('Variable name cannot be empty');
-//       return;
-//     }
-//     if (variables.includes(name)) {
-//       setError('Variable already exists');
-//       return;
-//     }
-//     setVariables((prev) => [...prev, name]);
-//     setV('');
-//     setError('');
-//     setStep('list');
-//   };
-
-//   const handleDelete = (varToDelete) => {
-//     setVariables((prev) => prev.filter((x) => x !== varToDelete));
-//   };
-
-//   return (
-//     <Card className="overflow-hidden border-0 bg-white shadow-lg transition-all hover:shadow-xl">
-//       <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-3">
-//         <div className="flex items-center gap-2">
-//           <CardTitle className="text-sm font-semibold text-gray-800">Global Variables</CardTitle>
-//         </div>
-//       </CardHeader>
-//       <CardContent className="space-y-4 p-4">
-//         {step === 'list' && (
-//           <>
-//             <div className="space-y-3">
-//               <div className="flex items-center justify-between">
-//                 <h3 className="text-xs font-medium uppercase tracking-wide text-gray-600">Your Variables</h3>
-//                 <Button
-//                   variant="outline"
-//                   size="sm"
-//                   onClick={() => setStep('add')}
-//                   className="h-8 border-gray-300 px-3 text-blue-600 hover:bg-blue-50"
-//                 >
-//                   <Plus className="mr-1 h-3 w-3" />
-//                   Add
-//                 </Button>
-//               </div>
-
-//               {variables.length === 0 ? (
-//                 <div className="rounded-lg bg-gray-50 py-8 text-center">
-//                   <Variable className="mx-auto mb-2 h-8 w-8 text-gray-400" />
-//                   <p className="text-sm text-gray-500">No variables added yet.</p>
-//                   <p className="mt-1 text-xs text-gray-400">Add your first variable to get started!</p>
-//                 </div>
-//               ) : (
-//                 <div className="flex flex-wrap gap-2">
-//                   {variables.map((vv) => (
-//                     <Badge
-//                       key={vv}
-//                       variant="secondary"
-//                       className="group relative flex items-center gap-1 border-blue-200 bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800 transition-all hover:bg-blue-200"
-//                     >
-//                       {vv}
-//                       <Button
-//                         variant="ghost"
-//                         size="sm"
-//                         className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-red-500 p-0 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
-//                         onClick={() => handleDelete(vv)}
-//                       >
-//                         <X className="h-2 w-2" />
-//                       </Button>
-//                     </Badge>
-//                   ))}
-//                 </div>
-//               )}
-//             </div>
-
-//             {variables.length > 0 && (
-//               <Button
-//                 className="flex h-10 w-full transform items-center gap-2 bg-blue-500 font-semibold text-white shadow-md transition-all hover:scale-[1.02] hover:bg-blue-600"
-//                 onClick={onNext}
-//               >
-//                 <CheckCircle className="h-4 w-4" />
-//                 Next →
-//               </Button>
-//             )}
-//           </>
-//         )}
-
-//         {step === 'add' && (
-//           <div className="space-y-4">
-//             <div className="flex items-center gap-2">
-//               <Variable className="h-4 w-4 text-gray-600" />
-//               <h3 className="text-sm font-semibold text-gray-800">Add New Variable</h3>
-//             </div>
-
-//             <Input
-//               value={v}
-//               onChange={(e) => {
-//                 setV(e.target.value);
-//                 setError('');
-//               }}
-//               placeholder="e.g. user_name, phone_number"
-//               className={cn(
-//                 'h-10 w-full border-gray-300 text-sm transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
-//                 error && 'border-red-300 focus:border-red-500 focus:ring-red-500',
-//               )}
-//             />
-
-//             {error && (
-//               <div className="flex items-center gap-2 rounded-md bg-red-50 p-2 text-xs text-red-600">
-//                 <AlertCircle className="h-3 w-3" />
-//                 {error}
-//               </div>
-//             )}
-
-//             <div className="flex gap-2">
-//               <Button className="h-10 flex-1 bg-blue-500 font-semibold text-white shadow-md transition-all hover:bg-blue-600" onClick={handleAdd}>
-//                 Add Variable
-//               </Button>
-//               <Button
-//                 variant="outline"
-//                 className="h-10 border-gray-300 bg-transparent px-4 text-gray-700 hover:bg-gray-50"
-//                 onClick={() => {
-//                   setStep('list');
-//                   setV('');
-//                   setError('');
-//                 }}
-//               >
-//                 Cancel
-//               </Button>
-//             </div>
-//           </div>
-//         )}
-//       </CardContent>
-//     </Card>
-//   );
-// }
-
-// Node Inspector Component
-function NodeInspector({ node, onPatch, remove, vars }) {
-  const data = node.data || {};
-
-  return (
-    <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      {node.type === NodeTypes.ASK && <AskQuick meta={data.meta} onPatch={(m) => onPatch({ meta: m })} variables={vars} />}
-      {node.type === NodeTypes.COND && <CondQuick meta={data.meta} onPatch={(m) => onPatch({ meta: m })} variables={vars} />}
-      {node.type === NodeTypes.TRIGGER && <TriggerQuick meta={data.meta} onPatch={(m) => onPatch({ meta: m })} />}
-    </div>
-  );
-}
-
-function AskQuick({ meta = { prompt: '', inputType: 'text' }, onPatch, variables }) {
-  return (
-    <div className="space-y-2">
-      <input
-        value={meta.prompt || ''}
-        onChange={(e) => onPatch({ ...meta, prompt: e.target.value })}
-        placeholder="Prompt"
-        className="w-full rounded border border-gray-300 px-3 py-2"
-      />
-      <div className="grid grid-cols-2 gap-2">
-        <select
-          value={meta.variable || ''}
-          onChange={(e) => onPatch({ ...meta, variable: e.target.value })}
-          className="rounded border border-gray-300 px-3 py-2"
-        >
-          <option value="">store in variable</option>
-          {variables.map((v) => (
-            <option key={v} value={v}>
-              {v}
-            </option>
-          ))}
-        </select>
-        <select
-          value={meta.inputType || 'text'}
-          onChange={(e) => onPatch({ ...meta, inputType: e.target.value })}
-          className="rounded border border-gray-300 px-3 py-2"
-        >
-          {INPUT_TYPES.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={meta.required ?? true} onChange={(e) => onPatch({ ...meta, required: !!e.target.checked })} /> Required
-      </label>
-    </div>
-  );
-}
-
-function CondQuick({ meta = { logic: [] }, onPatch, variables }) {
-  const logic = meta.logic || [];
-
-  const update = (i, patch) => {
-    const updatedLogic = logic.map((x, idx) => (idx === i ? { ...x, ...patch } : x));
-    onPatch({ ...meta, logic: updatedLogic });
-  };
-
-  const addCondition = () => {
-    if (variables.length === 0) return;
-    onPatch({
-      ...meta,
-      logic: [...logic, { var: variables[0], op: 'eq', value: '' }],
-    });
-  };
-
-  const removeCondition = (i) => {
-    const updated = logic.filter((_, j) => j !== i);
-    onPatch({ ...meta, logic: updated });
-  };
-
-  return (
-    <Card className="border-0 bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 shadow-md">
-      <div className="mb-4 flex items-center justify-between">
-        <Badge variant="outline" className="border-emerald-300 text-emerald-700">
-          <Info className="mr-1 h-3 w-3" />
-          Conditional Logic
-        </Badge>
-      </div>
-
-      <div className="space-y-4">
-        {logic.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-emerald-300 bg-white p-8 text-center">
-            <Plus className="mb-3 h-12 w-12 text-emerald-400" />
-            <p className="mb-1 text-sm font-medium text-emerald-700">No conditions yet</p>
-            <p className="text-xs text-emerald-600">Add your first condition to get started</p>
-            {variables.length === 0 && (
-              <p className="mt-2 flex items-center text-xs text-red-500">
-                <AlertCircle className="mr-1 h-3 w-3" />
-                No variables available. Create some first.
-              </p>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {logic.map((l, i) => (
-              <Card key={i} className="border-emerald-200 bg-white p-4 shadow-sm">
-                <div className="mb-2 flex items-center justify-between">
-                  <Badge variant="secondary" className="text-xs">
-                    {i === 0 ? 'IF' : 'AND'}
-                  </Badge>
-                  <Button variant="ghost" size="sm" onClick={() => removeCondition(i)} className="h-6 w-6 p-0 text-red-500 hover:bg-red-50">
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  <select
-                    value={l.var}
-                    onChange={(e) => update(i, { var: e.target.value })}
-                    className="rounded border border-gray-300 px-2 py-1 text-sm"
-                  >
-                    {variables.map((v) => (
-                      <option key={v} value={v}>
-                        {v}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={l.op}
-                    onChange={(e) => update(i, { op: e.target.value })}
-                    className="rounded border border-gray-300 px-2 py-1 text-sm"
-                  >
-                    <option value="exists">exists</option>
-                    <option value="eq">equals</option>
-                    <option value="ne">not equals</option>
-                    <option value="gt">greater than</option>
-                    <option value="lt">less than</option>
-                    <option value="contains">contains</option>
-                  </select>
-
-                  <input
-                    type="text"
-                    value={l.value}
-                    onChange={(e) => update(i, { value: e.target.value })}
-                    placeholder="value"
-                    className="rounded border border-gray-300 px-2 py-1 text-sm"
-                  />
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        <Button onClick={addCondition} disabled={variables.length === 0} className="w-full bg-emerald-600 text-white hover:bg-emerald-700">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Condition
-        </Button>
-      </div>
-    </Card>
-  );
-}
-
-function TriggerQuick({ meta = { keywords: [] }, onPatch }) {
-  const [kw, setKw] = useState('');
-  return (
-    <div className="space-y-2">
-      <div className="flex gap-2">
-        <input value={kw} onChange={(e) => setKw(e.target.value)} placeholder="keyword" className="flex-1 rounded border border-gray-300 px-3 py-2" />
-        <Button
-          className="rounded border border-gray-300 px-3 py-2"
-          onClick={() => {
-            const v = kw.trim();
-            if (!v) return;
-            const arr = [...(meta.keywords || [])];
-            if (!arr.includes(v)) arr.push(v);
-            onPatch({ ...meta, keywords: arr });
-            setKw('');
-          }}
-        >
-          Add
-        </Button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {(meta.keywords || []).map((k) => (
-          <span key={k} className="rounded-full border border-gray-300 px-2 py-1 text-xs">
-            {k}
-          </span>
-        ))}
-      </div>
-      <div className="text-xs text-gray-500">Connect bottom handle to first node.</div>
-    </div>
   );
 }
 
@@ -1463,61 +1241,25 @@ function makeNode({ id, type, position, patch, updateGlobalVariables, remove, va
   };
 }
 
-function labelFor(t) {
-  return {
-    [NodeTypes.SEND]: 'Send Message',
-    [NodeTypes.ASK]: 'Ask a Question',
-    [NodeTypes.COND]: 'Set a Condition',
-    [NodeTypes.TRIGGER]: 'Trigger Keyword',
-    [NodeTypes.INTERACTIVE]: 'Interactive Message',
-  }[t];
-}
-
-function iconFor(t) {
-  return {
-    [NodeTypes.SEND]: '💬',
-    [NodeTypes.ASK]: '❓',
-    [NodeTypes.COND]: '🔀',
-    [NodeTypes.TRIGGER]: '🏁',
-    [NodeTypes.INTERACTIVE]: '🧩',
-  }[t];
-}
-
-function defaultMeta(t) {
-  if (t === NodeTypes.SEND)
-    return {
-      contentType: 'text',
-      text: '',
-      mediaUrl: '',
-      fileName: '',
-      caption: '',
-    };
-
-  if (t === NodeTypes.INTERACTIVE)
-    return {
-      layout: 'button',
-      bodyText: '',
-      footerText: '',
-      buttons: [],
-    };
-
-  if (t === NodeTypes.ASK) return { prompt: '', variable: '', inputType: 'text', required: true };
-
-  if (t === NodeTypes.COND) return { logic: [] };
-
-  if (t === NodeTypes.TRIGGER) return { keywords: [] };
-
-  return {};
-}
-
 function buildFinalFromGraph(nodes, edges) {
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
   const metaById = Object.fromEntries(nodes.map((n) => [n.id, JSON.parse(JSON.stringify(n.data.meta || {}))]));
 
+  // ✅ NEW: Collect unique global input variables from all Ask/Interactive nodes' storeVariable/variable
+  const globalVars = new Set();
+  nodes.forEach((n) => {
+    const m = metaById[n.id] || {};
+    if (n.type === NodeTypes.ASK || n.type === NodeTypes.INTERACTIVE) {
+      const varName = (m.variable || '').trim();
+      if (varName) globalVars.add(varName);
+    }
+  });
+  const variables = Array.from(globalVars);
+
   const runtimeNodes = [];
   const triggers = [];
 
-  // 🔗 Map connections
+  // 🔗 Map connections (unchanged)
   for (const e of edges) {
     const { source, target, data } = e;
     const sNode = byId[source];
@@ -1529,23 +1271,23 @@ function buildFinalFromGraph(nodes, edges) {
       else if (data?.kind === 'cond:false') m.falseNext = target;
     } else if (sNode.type === NodeTypes.TRIGGER && data?.kind === 'trigger:start') {
       m.startNext = target;
+    } else if (sNode.type === NodeTypes.INTERACTIVE) {
+      m.routes = m.routes || {};
+      m.routes[e.sourceHandle] = target;
     } else {
       m.next = target;
     }
-    metaById[source] = m;
   }
 
-  // 🧩 Build node objects
+  // 🧩 Build node objects (unchanged, but now vars are global)
   for (const n of nodes) {
     const m = metaById[n.id] || {};
 
-    // 🎯 TRIGGER NODE
     if (n.type === NodeTypes.TRIGGER) {
       triggers.push({ keywords: m.keywords || [], start: m.startNext || null });
       continue;
     }
 
-    // 💬 SEND MESSAGE NODE
     if (n.type === NodeTypes.SEND) {
       runtimeNodes.push({
         id: n.id,
@@ -1556,28 +1298,25 @@ function buildFinalFromGraph(nodes, edges) {
         mediaUrl: m.mediaUrl || '',
         fileName: m.fileName || '',
         caption: m.caption || '',
-        selectedVars: m.selectedVars || [], // ✅ include selected vars used in text
-        storeVariable: m.storeVariable || null, // ✅ store user reply or state variable
+        selectedVars: m.selectedVars || [],
+        variable: (m.variable || '').trim() || null,
       });
       continue;
     }
 
-    // ❓ ASK QUESTION NODE
     if (n.type === NodeTypes.ASK) {
       runtimeNodes.push({
         id: n.id,
         type: 'ask_question',
         next: m.next || null,
         prompt: m.prompt || '',
-        variable: m.variable || '',
         inputType: m.inputType || 'text',
         required: !!(m.required ?? true),
-        storeVariable: m.storeVariable || null, // ✅ NEW
+        variable: (m.variable || '').trim() || null,
       });
       continue;
     }
 
-    // 🧩 INTERACTIVE NODE
     if (n.type === NodeTypes.INTERACTIVE) {
       runtimeNodes.push({
         id: n.id,
@@ -1588,13 +1327,12 @@ function buildFinalFromGraph(nodes, edges) {
         footerText: m.footerText || '',
         buttons: m.buttons || [],
         list: m.list || null,
+        routes: m.routes || {},
         next: m.next || null,
-        storeVariable: m.storeVariable || null, // ✅ optional — to store selection
+        variable: null,
       });
-      continue;
     }
 
-    // 🔀 CONDITION NODE
     if (n.type === NodeTypes.COND) {
       runtimeNodes.push({
         id: n.id,
@@ -1606,100 +1344,21 @@ function buildFinalFromGraph(nodes, edges) {
     }
   }
 
-  return { version: 2, triggers, nodes: runtimeNodes };
-}
-
-function downloadJSON(obj) {
-  const s = JSON.stringify(obj, null, 2);
-  const blob = new Blob([s], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `whatsapp_flow_${Date.now()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function loadSample(setNodes, setEdges) {
-  const t1 = nid();
-  const askName = nid();
-  const askPhone = nid();
-  const cond = nid();
-  const send = nid();
-
-  const nodes = [
-    {
-      id: t1,
-      type: NodeTypes.TRIGGER,
-      position: { x: 60, y: 40 },
-      data: { name: 'Start', icon: '🏁', meta: { keywords: ['start', 'hello'] } },
-    },
-    {
-      id: askName,
-      type: NodeTypes.ASK,
-      position: { x: 360, y: 180 },
-      data: {
-        name: 'Ask Name',
-        icon: '❓',
-        variables: ['name', 'phone'],
-        meta: { prompt: 'Your full name?', variable: 'name', inputType: 'text', required: true },
-      },
-    },
-    {
-      id: askPhone,
-      type: NodeTypes.ASK,
-      position: { x: 640, y: 180 },
-      data: {
-        name: 'Ask Phone',
-        icon: '❓',
-        variables: ['name', 'phone'],
-        meta: { prompt: 'Your phone number?', variable: 'phone', inputType: 'phone', required: true },
-      },
-    },
-    {
-      id: cond,
-      type: NodeTypes.COND,
-      position: { x: 940, y: 180 },
-      data: {
-        name: 'Has Phone?',
-        icon: '🔀',
-        variables: ['name', 'phone'],
-        meta: { logic: [{ var: 'phone', op: 'exists', value: '' }] },
-      },
-    },
-    {
-      id: send,
-      type: NodeTypes.SEND,
-      position: { x: 1240, y: 160 },
-      data: {
-        name: 'Thanks Msg',
-        icon: '💬',
-        meta: { contentType: 'text', text: 'Thanks {{name}}. We will call you soon.' },
-      },
-    },
-  ];
-
-  const edges = [
-    { id: nid(), source: t1, sourceHandle: 'start', target: askName, data: { kind: 'trigger:start' } },
-    { id: nid(), source: askName, target: askPhone },
-    { id: nid(), source: askPhone, target: cond },
-    { id: nid(), source: cond, sourceHandle: 'true', target: send, data: { kind: 'cond:true' } },
-  ];
-
-  setNodes(nodes);
-  setEdges(edges);
+  return {
+    version: 2,
+    variables,
+    triggers,
+    nodes: runtimeNodes,
+  };
 }
 
 // Main Editor Shell
 function EditorShell() {
+  const [chatbotName, setChatbotName] = useState('My Chatbot');
   const [rfNodes, setRfNodes] = useState([]);
   const [rfEdges, setRfEdges] = useState([]);
-  const [selId, setSelId] = useState(null);
-  const [variables, setVariables] = useState(['name', 'phone']);
+  const [variables, setVariables] = useState([]); // ✅ Start empty—no static init
   const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
 
   const reactFlowWrapper = useRef(null);
   const { screenToFlowPosition } = useReactFlow();
@@ -1710,7 +1369,7 @@ function EditorShell() {
       return merged;
     });
 
-    // Also push updates into all existing nodes
+    // ✅ Force update ALL nodes' data.variables for immediate dropdown refresh
     setRfNodes((nds) =>
       nds.map((n) => ({
         ...n,
@@ -1735,8 +1394,6 @@ function EditorShell() {
     setRfEdges((eds) => addEdge(edge, eds));
   }, []);
 
-  const onNodeClick = useCallback((_, node) => setSelId(node.id), []);
-
   function addNode(type, position) {
     const id = nid();
     setRfNodes((nds) => [
@@ -1751,7 +1408,6 @@ function EditorShell() {
         remove: (nodeId) => removeNode(nodeId),
       }),
     ]);
-    setSelId(id);
   }
 
   const onDrop = useCallback(
@@ -1792,13 +1448,17 @@ function EditorShell() {
     );
   }, []);
 
-  const selected = useMemo(() => rfNodes.find((n) => n.id === selId) || null, [rfNodes, selId]);
-  const finalObject = useMemo(() => buildFinalFromGraph(rfNodes, rfEdges), [rfNodes, rfEdges]);
+  const finalObject = useMemo(() => {
+    const core = buildFinalFromGraph(rfNodes, rfEdges);
+    return {
+      chatbotName,
+      ...core,
+    };
+  }, [rfNodes, rfEdges, chatbotName]);
 
   function removeNode(id) {
     setRfNodes((nds) => nds.filter((n) => n.id !== id));
     setRfEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
-    setSelId((s) => (s === id ? null : s));
   }
 
   return (
@@ -1816,20 +1476,27 @@ function EditorShell() {
         </div>
 
         {leftOpen && (
-          <ScrollArea>
+          <ScrollArea className="w-84">
             <div>
               <Card className="border-0 bg-gradient-to-r from-gray-50 to-gray-100">
-                <CardHeader className="pb-3">
+                <CardHeader className="flex flex-col gap-2 pb-3">
                   <div className="flex items-center gap-2">
                     <Zap className="h-5 w-5 text-indigo-600" />
-                    <CardTitle className="text-lg font-semibold text-gray-800">Chat Bot Builder</CardTitle>
+                    <CardTitle className="text-lg text-gray-800">Chatbot Builder</CardTitle>
                   </div>
+                  <Input
+                    value={chatbotName}
+                    onChange={(e) => setChatbotName(e.target.value)}
+                    required
+                    placeholder="Enter chatbot name (e.g., Dental Assistant)"
+                    className="h-9 w-full border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  />
                 </CardHeader>
               </Card>
 
               <Card className="border-0 shadow-sm">
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <CardTitle className="inter flex items-center gap-2 text-sm font-medium text-gray-700">
                     <MessageCircle className="h-4 w-4" />
                     Node Palette
                   </CardTitle>
@@ -1842,64 +1509,14 @@ function EditorShell() {
                   <PaletteItem label="Interactive Message" type={NodeTypes.INTERACTIVE} icon="🧩" />
                 </CardContent>
               </Card>
-
-              {/* <Card className="border-0 shadow-sm">
-                <CardContent className="space-y-3">
-                  <VariableEditor
-                    variables={variables}
-                    setVariables={(newVars) => {
-                      setVariables(newVars);
-                      setRfNodes((nds) =>
-                        nds.map((n) => ({
-                          ...n,
-                          data: {
-                            ...n.data,
-                            variables: newVars, // ✅ sync into every node
-                          },
-                        })),
-                      );
-                    }}
-                    onNext={() => {
-                      // Close sidebar if needed
-                      setLeftOpen(false);
-
-                      // Also sync to all nodes before closing
-                      setRfNodes((nds) =>
-                        nds.map((n) => ({
-                          ...n,
-                          data: {
-                            ...n.data,
-                            variables,
-                          },
-                        })),
-                      );
-                    }}
-                  />
-                </CardContent>
-              </Card> */}
-
               <Card className="border-0 shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-700">Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button
-                    className="w-full bg-blue-500 text-white shadow-md transition-all hover:bg-blue-600"
-                    onClick={() => downloadJSON(finalObject)}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Export JSON
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full border-gray-300 bg-transparent hover:bg-gray-50"
-                    onClick={() => loadSample(setRfNodes, setRfEdges)}
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Load Sample
-                  </Button>
+                <CardContent className="max-h-[40vh] overflow-auto">
+                  <pre className="rounded-lg bg-gray-900 p-3 font-mono text-xs text-gray-100">{JSON.stringify(finalObject, null, 2)}</pre>
                 </CardContent>
               </Card>
+              <Button variant="outline" className="w-full bg-blue-500 text-white">
+                Save Flow
+              </Button>
             </div>
           </ScrollArea>
         )}
@@ -1914,7 +1531,6 @@ function EditorShell() {
           onConnect={onConnect}
           onDrop={onDrop}
           onDragOver={onDragOver}
-          onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
@@ -1924,57 +1540,6 @@ function EditorShell() {
           <Background variant="dots" gap={12} size={1} className="bg-gray-100" />
           <Controls className="rounded-lg border border-gray-200 bg-white shadow-md" />
         </ReactFlow>
-      </div>
-
-      <div className={cn('relative border-l border-gray-200 bg-white shadow-lg transition-all duration-300', rightOpen ? 'w-[400px]' : 'w-11')}>
-        <div className="absolute left-0 top-4 z-20">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setRightOpen((v) => !v)}
-            className="h-9 w-9 rounded-full border-gray-200 hover:bg-gray-100"
-          >
-            {rightOpen ? <ChevronRight className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
-          </Button>
-        </div>
-
-        {rightOpen && (
-          <ScrollArea className="h-full">
-            <div className="space-y-6 p-4">
-              <Card className="border-0 bg-gradient-to-r from-gray-50 to-gray-100">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Play className="h-5 w-5 text-indigo-600" />
-                    <CardTitle className="text-lg font-semibold text-gray-800">Inspector</CardTitle>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              {!selected ? (
-                <Card className="border-0 bg-gray-50 text-center">
-                  <CardContent className="p-8">
-                    <MessageCircle className="mx-auto mb-2 h-12 w-12 text-gray-300" />
-                    <p className="text-sm text-gray-500">Select a node to edit its properties.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <NodeInspector node={selected} onPatch={(p) => patchNode(selected.id, p)} remove={() => removeNode(selected.id)} vars={variables} />
-              )}
-
-              <Card className="border-0 shadow-sm">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2">
-                    <Code className="h-4 w-4 text-gray-600" />
-                    <CardTitle className="text-sm font-medium text-gray-700">Live JSON Preview</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="max-h-[40vh] overflow-auto">
-                  <pre className="rounded-lg bg-gray-900 p-3 font-mono text-xs text-gray-100">{JSON.stringify(finalObject, null, 2)}</pre>
-                </CardContent>
-              </Card>
-            </div>
-          </ScrollArea>
-        )}
       </div>
     </div>
   );
