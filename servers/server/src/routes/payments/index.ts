@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { startOfDay, endOfDay } from "date-fns";
 // books.ts
 import {
   BusinessPosConfig,
@@ -5225,6 +5226,138 @@ const paymentsRouter = new Hono()
         {
           data: existingUserAnalytics,
           message: "existing payment",
+          err: false,
+        },
+        200,
+      );
+    },
+  )
+  .get(
+    "/users/Analytics/today",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.query();
+
+      const todayStart = startOfDay(new Date()).getTime();
+      const todayEnd = endOfDay(new Date()).getTime();
+      const todaysAnalytics = await UserAnalytic.find({
+        businessId,
+        dateOfJoining: { $gte: todayStart, $lte: todayEnd },
+      }).populate("userId");
+      return c.json(
+        {
+          data: todaysAnalytics,
+          message: "Today's analytics fetched successfully",
+          err: false,
+        },
+        200,
+      );
+    },
+  )
+  .get(
+    "/users/Analytics/filter",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+        search: z.string().optional(),
+        spendMin: z.string().optional(),
+        spendMax: z.string().optional(),
+        totalSpendMin: z.string().optional(),
+        totalSpendMax: z.string().optional(),
+        visitsMin: z.string().optional(),
+        visitsMax: z.string().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+        pageNumber: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const {
+        businessId,
+        search,
+        spendMin,
+        spendMax,
+        totalSpendMin,
+        totalSpendMax,
+        visitsMin,
+        visitsMax,
+        dateFrom,
+        dateTo,
+        pageNumber,
+      } = c.req.query();
+      // Base query
+      const query: Record<string, any> = { businessId };
+
+      // Date range (filter within today if not provided)
+      if (dateFrom || dateTo) {
+        const fromDate = dateFrom ? Number(dateFrom) : startOfToday.getTime();
+        const toDate = dateTo ? Number(dateTo) : endOfToday.getTime();
+        query.createdAt = { $gte: fromDate, $lte: toDate };
+      } else {
+        // default to today’s range
+        query.createdAt = {
+          $gte: startOfDay(new Date()),
+          $lte: endOfDay(new Date()),
+        };
+      }
+
+      // Numeric filters
+      if (spendMin || spendMax) {
+        query.avgSpend = {};
+        if (spendMin) query.avgSpend.$gte = Number(spendMin);
+        if (spendMax) query.avgSpend.$lte = Number(spendMax);
+      }
+
+      if (totalSpendMin || totalSpendMax) {
+        query.totalSpend = {};
+        if (totalSpendMin) query.totalSpend.$gte = Number(totalSpendMin);
+        if (totalSpendMax) query.totalSpend.$lte = Number(totalSpendMax);
+      }
+
+      if (visitsMin || visitsMax) {
+        query.visitCount = {};
+        if (visitsMin) query.visitCount.$gte = Number(visitsMin);
+        if (visitsMax) query.visitCount.$lte = Number(visitsMax);
+      }
+
+      if (search && search.trim() !== "") {
+        const trimmed = search.trim();
+        const isPhone = /^[0-9]{10}$/.test(trimmed);
+
+        if (isPhone) {
+          query["userId.phone"] = trimmed;
+          console.log("trimmed phone:", trimmed);
+        } else {
+          const regex = new RegExp(trimmed, "i");
+          query.$or = [{ "userId.name": regex }, { "userId.phone": regex }];
+        }
+      }
+
+      const page = Number.parseInt(pageNumber || "1");
+      const limit = 25;
+      const skip = (page - 1) * limit;
+
+      // Execute
+      const filteredResults = await UserAnalytic.find(query)
+        .populate("userId")
+        .skip(skip)
+        .limit(limit)
+        .sort({ updatedAt: -1 });
+
+      const totalCount = await UserAnalytic.countDocuments(query);
+
+      return c.json(
+        {
+          data: filteredResults,
+          totalCount,
+          page,
+          message: "Filtered analytics fetched successfully",
           err: false,
         },
         200,
