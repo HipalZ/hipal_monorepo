@@ -176,19 +176,19 @@ const dishesRouter = new Hono()
         if (!menu) {
           return respond(c, "Menu not found", true, 404, {});
         }
-        if (
-          menu.serviceType === "BASE" &&
-          (removeCategoryIds.length ||
-            removeAddOnIds.length ||
-            removeRecommendationIds.length ||
-            categoryIds.length ||
-            addOnIds.length ||
-            recommendationIds.length ||
-            kitchenId ||
-            removeKitchenId)
-        ) {
-          return respond(c, "linking dish to menu not allowed", true, 400, {});
-        }
+        // if (
+        //   menu.serviceType === "BASE" &&
+        //   (removeCategoryIds.length ||
+        //     removeAddOnIds.length ||
+        //     removeRecommendationIds.length ||
+        //     categoryIds.length ||
+        //     addOnIds.length ||
+        //     recommendationIds.length ||
+        //     kitchenId ||
+        //     removeKitchenId)
+        // ) {
+        //   return respond(c, "linking dish to menu not allowed", true, 400, {});
+        // }
 
         const updatedDish = await Dish.findByIdAndUpdate(
           id,

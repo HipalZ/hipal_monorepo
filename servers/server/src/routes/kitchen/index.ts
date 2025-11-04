@@ -49,12 +49,12 @@ const kitchenRouter = new Hono()
       if (!menu) {
         return respond(c, "Menu not found", true, 404, {});
       }
-      if (
-        (menu.serviceType === "BASE" && dishIds?.length) ||
-        staffIds?.length
-      ) {
-        return respond(c, "linking kitchen to menu not allowed", true, 400, {});
-      }
+      // if (
+      //   (menu.serviceType === "BASE" && dishIds?.length) ||
+      //   staffIds?.length
+      // ) {
+      //   return respond(c, "linking kitchen to menu not allowed", true, 400, {});
+      // }
 
       const allKitchens = await Kitchen.find({
         businessId,
@@ -282,7 +282,7 @@ const kitchenRouter = new Hono()
     zValidator(
       "param",
       z.object({
-        tableName: z.string().min(2).max(50),
+        tableName: z.string().min(1).max(50),
         businessId: z.string().min(2).max(50),
       }),
     ),
@@ -346,13 +346,13 @@ const kitchenRouter = new Hono()
       if (!menu) {
         return respond(c, "Menu not found", true, 404, {});
       }
-      if (
-        (menu.serviceType === "BASE" && removeDishIds?.length) ||
-        dishIds?.length ||
-        staffIds?.length
-      ) {
-        return respond(c, "linking kitchen to menu not allowed", true, 400, {});
-      }
+      // if (
+      //   (menu.serviceType === "BASE" && removeDishIds?.length) ||
+      //   dishIds?.length ||
+      //   staffIds?.length
+      // ) {
+      //   return respond(c, "linking kitchen to menu not allowed", true, 400, {});
+      // }
 
       const allKitchens = await Kitchen.find({
         businessId: kitchenData.businessId,

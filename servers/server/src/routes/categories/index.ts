@@ -81,20 +81,20 @@ const categoriesRouter = new Hono()
           return respond(c, "Menu not found", true, 404, {});
         }
 
-        if (
-          menu.serviceType === "BASE" &&
-          (parentCategoryIds?.length ||
-            dishIds?.length ||
-            subCategoryIds?.length)
-        ) {
-          return respond(
-            c,
-            "linking category to menu not allowed",
-            true,
-            400,
-            {},
-          );
-        }
+        // if (
+        //   menu.serviceType === "BASE" &&
+        //   (parentCategoryIds?.length ||
+        //     dishIds?.length ||
+        //     subCategoryIds?.length)
+        // ) {
+        //   return respond(
+        //     c,
+        //     "linking category to menu not allowed",
+        //     true,
+        //     400,
+        //     {},
+        //   );
+        // }
 
         const creatingCategory = await Category.create(
           [
@@ -202,23 +202,23 @@ const categoriesRouter = new Hono()
           return respond(c, "Menu not found", true, 404, {});
         }
 
-        if (
-          menu.serviceType === "BASE" &&
-          (parentCategoryIds?.length ||
-            dishIds?.length ||
-            subCategoryIds?.length ||
-            removeSubCategoryIds?.length ||
-            removeDishIds?.length ||
-            removeParentCategoryIds?.length)
-        ) {
-          return respond(
-            c,
-            "linking category to menu not allowed",
-            true,
-            400,
-            {},
-          );
-        }
+        // if (
+        //   menu.serviceType === "BASE" &&
+        //   (parentCategoryIds?.length ||
+        //     dishIds?.length ||
+        //     subCategoryIds?.length ||
+        //     removeSubCategoryIds?.length ||
+        //     removeDishIds?.length ||
+        //     removeParentCategoryIds?.length)
+        // ) {
+        //   return respond(
+        //     c,
+        //     "linking category to menu not allowed",
+        //     true,
+        //     400,
+        //     {},
+        //   );
+        // }
 
         const updatedCategory = await Category.findByIdAndUpdate(
           id,

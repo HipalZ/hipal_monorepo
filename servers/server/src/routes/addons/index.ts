@@ -115,12 +115,12 @@ const addonRouter = new Hono()
         if (!menu) {
           return respond(c, "Menu not found", true, 404, {});
         }
-        if (
-          menu.serviceType === "BASE" &&
-          (requestData.dishIds?.length || removeDishIds?.length)
-        ) {
-          return respond(c, "linking addon to menu not allowed", true, 400, {});
-        }
+        // if (
+        //   menu.serviceType === "BASE" &&
+        //   (requestData.dishIds?.length || removeDishIds?.length)
+        // ) {
+        //   return respond(c, "linking addon to menu not allowed", true, 400, {});
+        // }
 
         const updatedAddOn = await AddOn.findByIdAndUpdate(
           id,
