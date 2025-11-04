@@ -52,13 +52,11 @@ const MemoBillItemsList = ({ billData, isExpanded, setIsExpanded, allItems }: Bi
                     <div className="col-span-2 text-center">x{item.quantity}</div>
 
                     {/* Unit Price */}
-                    <div className="col-span-2 -ml-2.5 text-left">
-                      ₹{(item.dish.price === 0 ? item.portion?.price || 0 : item.dish.price).toFixed(2)}
-                    </div>
+                    <div className="col-span-2 -ml-2.5 text-left">₹{(item?.portion ? item.portion?.price || 0 : item.dish.price).toFixed(2)}</div>
 
                     {/* Total Price */}
                     <div className="col-span-2 text-right font-semibold">
-                      ₹{((item.dish.price === 0 ? item.portion?.price || 0 : item.dish.price) * item.quantity).toFixed(2)}
+                      ₹{((item?.portion ? item.portion?.price || 0 : item.dish.price) * item.quantity).toFixed(2)}
                     </div>
                   </div>
 
