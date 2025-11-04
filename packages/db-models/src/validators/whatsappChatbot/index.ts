@@ -2,20 +2,20 @@ import { z } from "zod";
 import { ObjectIdSchema } from "../common";
 
 export const ButtonSchema = z.object({
-  id: ObjectIdSchema,
+  id: z.string().min(1).max(50),
   type: z.enum(["reply", "url"]),
   title: z.string(),
   url: z.string().optional(),
 });
 
 export const ListRowSchema = z.object({
-  id: ObjectIdSchema,
+  id: z.string().min(1).max(50),
   title: z.string(),
   description: z.string().optional(),
 });
 
 export const ListSectionSchema = z.object({
-  id: ObjectIdSchema,
+  id: z.string().min(1).max(50).optional(),
   title: z.string(),
   rows: z.array(ListRowSchema).default([]),
 });
@@ -27,7 +27,7 @@ export const HeaderSchema = z.object({
 });
 
 export const NodeSchema = z.object({
-  id: ObjectIdSchema,
+  id: z.string().min(1).max(50),
   type: z.enum([
     "send_message",
     "ask_question",
@@ -90,3 +90,11 @@ export const WhatsappChatbotSchema = z.object({
   nodes: z.array(NodeSchema).default([]),
   active: z.boolean().default(true),
 });
+
+export type WhatsappChatbotType = z.infer<typeof WhatsappChatbotSchema>;
+export type ButtonType = z.infer<typeof ButtonSchema>;
+export type ListRowType = z.infer<typeof ListRowSchema>;
+export type ListSectionType = z.infer<typeof ListSectionSchema>;
+export type HeaderType = z.infer<typeof HeaderSchema>;
+export type NodeType = z.infer<typeof NodeSchema>;
+export type TriggerType = z.infer<typeof TriggerSchema>;

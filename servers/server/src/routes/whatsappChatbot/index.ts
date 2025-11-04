@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import whatsappChatbot from "@hi/db-models/src/models/whatsappChatbot/whatsappChatbot";
 import { WhatsappChatbotSchema } from "@hi/db-models/src/validators";
+import { WhatsappChatbotModel } from "@hi/db-models";
 
-export const whatsAppChatbotRouter = new Hono()
+const whatsAppChatbotRouter = new Hono()
   .post("/", zValidator("json", WhatsappChatbotSchema), async (c) => {
     const {
       chatbotName,
@@ -14,9 +14,7 @@ export const whatsAppChatbotRouter = new Hono()
       nodes,
       description,
     } = await c.req.json();
-
-    // ✅ Check for duplicates
-    const existingFlow = await whatsappChatbot.findOne({
+    const existingFlow = await WhatsappChatbotModel.findOne({
       chatbotName: chatbotName.trim().toLowerCase(),
       businessId,
     });
@@ -33,7 +31,7 @@ export const whatsAppChatbotRouter = new Hono()
     }
 
     // ✅ Create new chatbot flow
-    const createFlow = await whatsappChatbot.create({
+    const createFlow = await WhatsappChatbotModel.create({
       chatbotName: chatbotName.trim(),
       businessId,
       version,
@@ -79,9 +77,9 @@ export const whatsAppChatbotRouter = new Hono()
       );
     }
 
-    const flows = await whatsappChatbot
-      .find({ businessId })
-      .sort({ updatedAt: -1 });
+    const flows = await WhatsappChatbotModel.find({ businessId }).sort({
+      updatedAt: -1,
+    });
 
     return c.json(
       {
@@ -92,30 +90,5 @@ export const whatsAppChatbotRouter = new Hono()
       200,
     );
   })
-
-  // 🔵 Get one chatbot by ID
-  .get("/:id", async (c) => {
-    const { id } = c.req.param();
-    const flow = await whatsappChatbot.findById(id);
-
-    if (!flow) {
-      return c.json(
-        {
-          message: "Chatbot not found",
-          err: true,
-          data: {},
-        },
-        404,
-      );
-    }
-
-    return c.json(
-      {
-        message: "Chatbot fetched successfully",
-        err: false,
-        data: flow,
-      },
-      200,
-    );
-  });
-whatsAppChatbotRouter.get("/ping", (c) => c.text("Chatbot Flow API alive ✅"));
+  .get("/ping", (c) => c.text("Chatbot Flow API alive ✅"));
+export default whatsAppChatbotRouter;

@@ -1,33 +1,42 @@
-import mongoose, { Schema, model } from "mongoose";
+import mongoose, { type Model, Schema, model } from "mongoose";
+import type {
+  ButtonType,
+  HeaderType,
+  ListRowType,
+  ListSectionType,
+  NodeType,
+  TriggerType,
+  WhatsappChatbotType,
+} from "../../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
-const ButtonSchema = new Schema({
-  id: { type: String, required: true },
+const ButtonSchema = new Schema<ButtonType>({
+  id: { type: String, required: false },
   type: { type: String, enum: ["reply", "url"], required: true },
   title: { type: String, required: true },
   url: { type: String },
 });
 
-const ListRowSchema = new Schema({
-  id: { type: String, required: true },
+const ListRowSchema = new Schema<ListRowType>({
+  id: { type: String, required: false },
   title: { type: String, required: true },
   description: { type: String },
 });
 
-const ListSectionSchema = new Schema({
-  id: { type: String, required: true },
+const ListSectionSchema = new Schema<ListSectionType>({
+  id: { type: String, required: false },
   title: { type: String, required: true },
   rows: { type: [ListRowSchema], default: [] },
 });
 
-const HeaderSchema = new Schema({
+const HeaderSchema = new Schema<HeaderType>({
   type: { type: String, enum: ["none", "image"], default: "none" },
   mediaUrl: { type: String },
   useUpload: { type: Boolean, default: false },
 });
 
-const NodeSchema = new Schema({
-  id: { type: String, required: true },
+const NodeSchema = new Schema<NodeType>({
+  id: { type: String, required: false },
   type: {
     type: String,
     enum: [
@@ -95,12 +104,12 @@ const NodeSchema = new Schema({
   falseNext: { type: String },
 });
 
-const TriggerSchema = new Schema({
+const TriggerSchema = new Schema<TriggerType>({
   keywords: { type: [String], default: [] },
   start: { type: String, default: null },
 });
 
-const WhatsappChatbotSchema = new Schema(
+const WhatsappChatbotSchema = new Schema<WhatsappChatbotType>(
   {
     businessId: {
       type: ObjectId,
@@ -117,4 +126,6 @@ const WhatsappChatbotSchema = new Schema(
   { timestamps: true },
 );
 
-export default model("WhatsappChatbot", WhatsappChatbotSchema);
+const WhatsappChatbotModel: Model<WhatsappChatbotType> =
+  model<WhatsappChatbotType>("whatsappChatbot", WhatsappChatbotSchema);
+export { WhatsappChatbotModel };

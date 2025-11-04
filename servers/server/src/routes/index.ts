@@ -47,7 +47,7 @@ import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
 import whatsAppFlowRouter from "./whatsappflow";
 import zonesAndTablesRouter from "./zonesAndTables";
-import { whatsAppChatbotRouter } from "./whatsappChatbot";
+import whatsAppChatbotRouter from "./whatsappChatbot";
 
 ////
 const app = new Hono();
