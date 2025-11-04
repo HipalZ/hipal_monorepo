@@ -1108,6 +1108,9 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                 if (order.cashbackAvailable === false) {
                   cashBack = 0;
                 }
+              }
+
+              if (existingLoyalty?.loyaltyId) {
                 finalCashBack = await addCoins(
                   cashBack,
                   order.userId.toString(),
