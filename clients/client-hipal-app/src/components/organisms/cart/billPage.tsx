@@ -91,19 +91,9 @@ const MemoBillPage = ({ bizData }: { bizData: IBusinessData }) => {
 
   console.log(bizData);
   const calculateItemTotal = useCallback((item: FlatItem): number => {
-    const dishPrice = Number(item?.dish?.price ?? 0);
-    const portionPrice = Number(item?.portion?.price ?? 0);
-
-    const extrasTotal = Array.isArray(item?.extras)
-      ? item.extras.reduce((sum, extra) => {
-          const p = Number(extra?.price ?? 0);
-          const q = Number(extra?.quantity ?? 0);
-          return sum + p * q;
-        }, 0)
-      : 0;
-
+    const price = item.portion ? item.portion.price : item.dish.price;
     const quantity = Number(item?.quantity ?? 0);
-    const lineTotal = (dishPrice + portionPrice + extrasTotal) * quantity;
+    const lineTotal = (Number(price)) * quantity;
     const itemDiscount = Number(item?.discount ?? 0);
     return Math.max(lineTotal - itemDiscount, 0);
   }, []);
@@ -233,7 +223,6 @@ const MemoBillPage = ({ bizData }: { bizData: IBusinessData }) => {
           <hr style="margin:8px 0;border:0;border-top:1px solid #000"/>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
-          <div>Bill ID: ${(data as any)?.billId || "-"}</div>
           <div>Date: ${new Date().toLocaleString("en-IN")}</div>
         </div>
         <div style="display:flex;gap:16px;font-size:12px;margin-bottom:8px;">
@@ -475,14 +464,17 @@ const MemoBillPage = ({ bizData }: { bizData: IBusinessData }) => {
         >
           {/* Header */}
           <header className="p-4 rounded-t-lg">
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
                   Bill Details
                 </h1>
-                <p className="text-black text-sm">
-                  Bill ID: {(data as any)?.billId.slice(-6) || "Id"}
-                </p>
+              <div className="flex items-center gap-1 text-gray-700">
+                <User size={16} />
+                <span>
+                  {(data as any)?.customerPhone || "Phone not provided"}
+                </span>
+              </div>
               </div>
               <div className="text-right text-[#008800]">
                 <p className="text-lg font-semibold">
@@ -493,16 +485,7 @@ const MemoBillPage = ({ bizData }: { bizData: IBusinessData }) => {
                 </p>
               </div>
             </div>
-            <div className="flex gap-4 text-sm text-black">
-              <div className="flex items-center gap-1">
-                <User size={16} />
-                <span>
-                  {(data as any)?.customerPhone || "Phone not provided"}
-                </span>
-              </div>
-            </div>
           </header>
-
           {/* Loyalty Card */}
           {loyaltySetting?.loyaltyId && (
             <motion.div
