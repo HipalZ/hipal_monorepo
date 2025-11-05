@@ -19,17 +19,21 @@ import {
 import { FileUpload } from "./file-upload";
 import { useMenuStore } from "@/lib/menu/store";
 import { MenuPreview } from "./menu-preview";
-
-const API_KEY = "AIzaSyC8UMDIXpTc4-CNSUL0k_tdQP1b1EROWz4"; // ⚠️ Do not commit real keys
+import { GOOGLE_AI_API_KEY } from "../../../../configs";
 
 const MemoAIMenuExtractor = () => {
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+  console.log("GOOGLE_AI_API_KEY:", GOOGLE_AI_API_KEY);
+
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
   const [files, setFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { categories, setCategories, isEditing, setEditing } = useMenuStore();
+  const categories = useMenuStore((state) => state.categories);
+  const setCategories = useMenuStore((state) => state.setCategories);
+  const isEditing = useMenuStore((state) => state.isEditing);
+  const setEditing = useMenuStore((state) => state.setEditing);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -54,7 +58,7 @@ const MemoAIMenuExtractor = () => {
       setError("Please select at least one image file first.");
       return;
     }
-    if (!API_KEY) {
+    if (!GOOGLE_AI_API_KEY) {
       setError("API Key is not set. Add your key.");
       return;
     }

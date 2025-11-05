@@ -6,3 +6,4 @@ export const CONFIG_ID = import.meta.env.VITE_CONFIG_ID;
 export const PHONE_NUMBER_ID = import.meta.env.VITE_PHONE_NUMBER_ID as string;
 export const WHATSAPP_ID = import.meta.env.VITE_WHATSAPP_ID as string;
 export const WHATSAPP_TOKEN = import.meta.env.VITE_WHATSAPP_TOKEN as string;
+export const GOOGLE_AI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY as string;
