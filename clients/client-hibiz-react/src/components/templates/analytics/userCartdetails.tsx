@@ -82,7 +82,7 @@ const generateUserProfile = (cartData: UserCart[]): UserProfile => {
   // --- All calculations remain the same ---
   const sortedCarts = [...cartData].sort((a, b) => a.date - b.date);
   const totalRevenue = sortedCarts.reduce((sum, cart) => {
-    return sum + cart.cart.reduce((s, item) => s + ((item.portion?.price || item.dish.price) * item.quantity) / 100, 0);
+    return sum + cart.cart.reduce((s, item) => s + (item.portion?.price || item.dish.price) * item.quantity, 0);
   }, 0);
   const avgOrderValue = totalRevenue / totalOrders;
   const lastOrderDate = new Date(sortedCarts[sortedCarts.length - 1].date);
@@ -264,7 +264,7 @@ const MemoCartPopup: FC<{ cartData: UserCart[]; onClose: () => void }> = ({ cart
 
         <div className="grid grid-cols-3 gap-4 px-6 py-4">
           {cartData.map((cart, index) => {
-            const cartTotal = cart.cart.reduce((sum, item) => sum + (item.portion?.price || item.dish.price) * item.quantity, 0) / 100;
+            const cartTotal = cart.cart.reduce((sum, item) => sum + (item.portion?.price || item.dish.price) * item.quantity, 0);
             return (
               <motion.section
                 key={cart._id}
@@ -330,7 +330,7 @@ const MemoCartPopup: FC<{ cartData: UserCart[]; onClose: () => void }> = ({ cart
                           </div>
                         ) : (
                           cart.cart.map((item, itemIndex) => {
-                            const itemPrice = ((item.portion?.price || item.dish.price) / 100).toFixed(2);
+                            const itemPrice = (item.portion?.price || item.dish.price).toFixed(2);
                             const itemTotal = (Number.parseFloat(itemPrice) * item.quantity).toFixed(2);
                             return (
                               <motion.div
