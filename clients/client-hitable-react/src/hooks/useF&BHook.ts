@@ -16,7 +16,7 @@ import { useErrorHandling } from "@/components/utils/helpers";
 import { useFetchAlerts } from "@/utils/apiService";
 
 // ---- helpers ----
-const useBusinessIdFromPath = () => {
+export const useBusinessIdFromPath = () => {
   const path = useLocation().pathname;
   return useMemo(() => {
     const m = path.match(/^\/([^/]+)\/alerts/);
@@ -107,7 +107,7 @@ export const useOfflineAlerts = (): UseOfflineAlertsResult => {
     queryKey: ["offlineAlerts", businessId, selectedBiz],
     queryFn: handleOfflineAlerts,
     enabled: !isHotel && !!businessId && !!selectedBiz,
-    refetchInterval: isSlow ? 23_000 : 19_000,
+    // refetchInterval: isSlow ? 23_000 : 19_000,
     initialData: [],
   });
 
@@ -165,7 +165,7 @@ export const useCartsPoll = (): UseCartsPollResult => {
     queryKey: ["carts", businessId],
     queryFn: getAllCarts,
     enabled: !isHotel && !!businessId,
-    refetchInterval: isSlow ? 29_000 : 23_000,
+    // refetchInterval: isSlow ? 29_000 : 23_000,
     initialData: [],
   });
 
