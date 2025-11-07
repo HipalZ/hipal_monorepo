@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import { ChatbotSessionModel, WhatsappChatbotModel } from "@hi/db-models";
 import { whatsAppCampaignHandler } from "../../../utils/whatsappWebhookHandlers/campaign";
 import { whatsAppBlockUserHandler } from "../../../utils/whatsappWebhookHandlers/whatsappBlockUser";
 import { whatsAppChatHandler } from "../../../utils/whatsappWebhookHandlers/chatHandler";
@@ -9,111 +10,39 @@ import {
   whatsAppUserAndTextMessage,
 } from "../../../utils/whatsappWebhookHandlers/helper";
 import { respond } from "../../../utils/response";
-import { ChatbotSessionModel } from "@hi/db-models";
 
-const FLOW: {
-  _id: string;
-  version: number;
-  triggers: { keywords: string[]; start: string | null }[];
-  nodes: any[];
-} = {
-  _id: "flow_1",
-  version: 2,
-  triggers: [
-    {
-      keywords: ["dentist"],
-      start: "8co7ly0d", // image welcome node
-    },
-  ],
-  nodes: [
-    {
-      id: "8co7ly0d",
-      type: "send_message",
-      next: "9dutm1ni",
-      contentType: "image",
-      text: "",
-      mediaUrl:
-        "https://t-static.blr1.digitaloceanspaces.com/576b2f5f-5ba1-409a-96ce-96149f7d0457.jpeg",
-      fileName: "TBC-BlockParty-SQ.jpg",
-      caption: "Welcome to Hologram 🦷",
-      selectedVars: [],
-      variable: null, // ❌ no variable stored on send_message
-    },
+/* ----------------------------------------------------------------------------
+ * FLOW CACHE (per business)
+ * ------------------------------------------------------------------------- */
+async function getAllChatbotFlows(businessId: string) {
+  const flows = await WhatsappChatbotModel.find({
+    businessId,
+    active: true,
+    status: "active",
+  }).lean();
 
-    {
-      id: "9dutm1ni",
-      type: "interactive_message",
-      layout: "button",
-      header: null,
-      bodyText: "Welcome {{bestName||Guest}} to Universal Dental Clinic 🦷",
-      footerText: "Tap to begin your booking",
-      buttons: [
-        { id: "btn_i5vgsnfq7", type: "reply", title: "Start Booking" },
-        { id: "btn_info", type: "reply", title: "Clinic Info" },
-      ],
-      list: null,
-      variable: null,
-      next: null, // routes handle branching instead
-      routes: {
-        btn_i5vgsnfq7: "h1qzoc24", // ⬅ user presses “Start Booking” → ask email
-        btn_info: "x6531tq6", // ⬅ user presses “Clinic Info” → show details
-      },
-    },
+  if (!flows.length) return [];
 
-    {
-      id: "x6531tq6",
-      type: "send_message",
-      next: "h1qzoc24", // after info, still ask email
-      contentType: "text",
-      text: "We’re open Mon–Sat, 9am–7pm at MG Road. Consultations start at ₹500.",
-      mediaUrl: "",
-      fileName: "",
-      caption: "",
-      selectedVars: [],
-      variable: null,
-    },
+  return flows.map((flow) => ({
+    flow,
+    NODE_BY_ID: new Map(flow.nodes.map((n) => [n.id, n])),
+    lastLoaded: Date.now(),
+  }));
+}
 
-    {
-      id: "h1qzoc24",
-      type: "ask_question",
-      next: "e83jdoq8",
-      prompt: "Great! What’s your email?",
-      inputType: "text",
-      required: true,
-      variable: "userEmail", // ✅ user response will be saved under session.variables.userEmail
-    },
-
-    {
-      id: "e83jdoq8",
-      type: "send_message",
-      next: null,
-      contentType: "text",
-      text: "Thank you {{userEmail}}! Your appointment request has been received. We’ll get back soon.",
-      mediaUrl: "",
-      fileName: "",
-      caption: "",
-      selectedVars: [],
-      variable: null,
-    },
-  ],
-};
-
-// ---- Runtime state + helpers ----
-type FlowNode = (typeof FLOW.nodes)[number];
-const NODE_BY_ID: Map<string, FlowNode> = new Map(
-  FLOW.nodes.map((n) => [n.id, n]),
-);
-
-type Session = {
+/* ----------------------------------------------------------------------------
+ * RUNTIME SESSION
+ * ------------------------------------------------------------------------- */
+type SessionState = {
   userId: string;
   currentNodeId: string | null;
   waitingFor: null | "ask" | "interactive";
   variables: Record<string, any>;
   interactiveCtx?: { routes: Record<string, string | null> };
 };
-const sessions = new Map<string, Session>();
+const sessions = new Map<string, SessionState>();
 
-function getSession(userId: string): Session {
+function getSession(userId: string): SessionState {
   if (!sessions.has(userId)) {
     sessions.set(userId, {
       userId,
@@ -124,15 +53,17 @@ function getSession(userId: string): Session {
   }
   return sessions.get(userId)!;
 }
-function setSession(userId: string, patch: Partial<Session>) {
+function setSession(userId: string, patch: Partial<SessionState>) {
   const s = getSession(userId);
   sessions.set(userId, { ...s, ...patch });
 }
 
+/* ----------------------------------------------------------------------------
+ * FLOW UTILS
+ * ------------------------------------------------------------------------- */
 const isEmpty = (v: any) =>
   v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
-// supports {{var}} and {{var||fallback}}
 function interpolate(str: string | undefined, vars: Record<string, any>) {
   if (!str) return "";
   return str
@@ -150,11 +81,11 @@ function evalRow(
   const right = row.value;
   switch (row.op) {
     case "exists":
-      return left && left.trim() !== "";
+      return !!(left && String(left).trim() !== "");
     case "eq":
-      return String(left).trim() === String(right).trim();
+      return String(left ?? "").trim() === String(right ?? "").trim();
     case "ne":
-      return String(left).trim() !== String(right).trim();
+      return String(left ?? "").trim() !== String(right ?? "").trim();
     case "gt":
       return Number(left) > Number(right);
     case "lt":
@@ -166,21 +97,22 @@ function evalRow(
   }
 }
 function evalCondition(node: any, vars: Record<string, any>) {
-  return node.logic.every((r: any) => evalRow(r, vars));
+  const rules = node?.logic || [];
+  if (!Array.isArray(rules) || rules.length === 0) return false;
+  return rules.every((r: any) => evalRow(r, vars));
 }
 function isEndNode(node: any): boolean {
   return (
-    !node.next &&
-    !node.trueNext &&
-    !node.falseNext &&
-    !(node.routes && Object.keys(node.routes).length > 0)
+    !node?.next &&
+    !node?.trueNext &&
+    !node?.falseNext &&
+    !(node?.routes && Object.keys(node.routes).length > 0)
   );
 }
-
-function matchTriggerStart(userId: string, text?: string) {
+function matchTriggerStart(FLOW: any, userId: string, text?: string) {
   const msg = (text || "").trim().toLowerCase();
-  const trig = FLOW.triggers.find((t) =>
-    (t.keywords || []).some((k) => String(k).toLowerCase() === msg),
+  const trig = (FLOW.triggers || []).find((t: any) =>
+    (t.keywords || []).some((k: string) => String(k).toLowerCase() === msg),
   );
   if (trig?.start) {
     setSession(userId, {
@@ -193,19 +125,14 @@ function matchTriggerStart(userId: string, text?: string) {
   return false;
 }
 
-// ---- WhatsApp send adapter (uses whatsAppBusinessConfigData: { phoneId, token }) ----
-async function waSend(whatsAppBusinessConfigData: any, payload: any) {
-  const phoneNumberId = String(
-    whatsAppBusinessConfigData?.phoneId || "",
-  ).trim();
-  const token = String(whatsAppBusinessConfigData?.token || "").replace(
-    /\s+/g,
-    "",
-  );
-
-  if (!phoneNumberId)
-    throw new Error("Missing phoneId in whatsAppBusinessConfigData");
-  if (!token) throw new Error("Missing token in whatsAppBusinessConfigData");
+/* ----------------------------------------------------------------------------
+ * WA SEND HELPERS (text, image, doc, interactive)
+ * ------------------------------------------------------------------------- */
+async function waSend(cfg: any, payload: any) {
+  const phoneNumberId = String(cfg?.phoneId || "").trim();
+  const token = String(cfg?.token || "").replace(/\s+/g, "");
+  if (!phoneNumberId) throw new Error("Missing phoneId in cfg");
+  if (!token) throw new Error("Missing token in cfg");
 
   const url = `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`;
   const res = await fetch(url, {
@@ -219,11 +146,6 @@ async function waSend(whatsAppBusinessConfigData: any, payload: any) {
   const text = await res.text();
   if (!res.ok) {
     console.error("[WA send error]", res.status, text);
-    if (res.status === 401 || text.includes('"code":190')) {
-      throw new Error(
-        "Invalid or malformed access token. Check whatsAppBusinessConfigData.token and .phoneId",
-      );
-    }
     throw new Error(`WA send failed ${res.status}: ${text}`);
   }
   try {
@@ -233,73 +155,99 @@ async function waSend(whatsAppBusinessConfigData: any, payload: any) {
   }
 }
 
-async function sendText(
-  to: string,
-  text: string,
-  whatsAppBusinessConfigData: any,
-) {
-  await waSend(whatsAppBusinessConfigData, {
+async function sendText(to: string, text: string, cfg: any) {
+  await waSend(cfg, {
     to,
     type: "text",
     text: { body: text, preview_url: false },
   });
 }
+
 async function sendImage(
   to: string,
   link: string,
-  whatsAppBusinessConfigData: any,
+  caption: string | undefined,
+  cfg: any,
 ) {
-  await waSend(whatsAppBusinessConfigData, {
+  await waSend(cfg, {
     to,
     type: "image",
-    image: { link },
+    image: { link, ...(caption ? { caption } : {}) },
   });
 }
+
 async function sendDocument(
   to: string,
   link: string,
   filename: string | undefined,
-  whatsAppBusinessConfigData: any,
+  cfg: any,
 ) {
-  await waSend(whatsAppBusinessConfigData, {
-    to,
-    type: "document",
-    document: { link, filename },
-  });
-}
-async function sendInteractiveButton(to, bodyText, buttons, footerText, cfg) {
   await waSend(cfg, {
     to,
-    type: "interactive",
-    interactive: {
-      type: "button",
-      body: { text: bodyText },
-      ...(footerText ? { footer: { text: footerText } } : {}),
-      action: {
-        buttons: buttons.map((b) => ({
-          type: "reply",
-          reply: { id: b.id, title: b.title },
-        })),
-      },
-    },
+    type: "document",
+    document: { link, ...(filename ? { filename } : {}) },
   });
 }
 
-// NEW: interactive LIST
+async function sendInteractiveButton(
+  to: string,
+  bodyText: string,
+  footerText: string | undefined,
+  buttons: Array<{
+    id: string;
+    type: "reply" | "url";
+    title: string;
+    url?: string;
+  }>,
+  header: any | undefined,
+  cfg: any,
+) {
+  const actionButtons = buttons.map((b) => {
+    console.log("Button:", b.type, b);
+    if (b.type === "url" && b.url) {
+      return {
+        type: "url",
+        url: b.url, // ✅ Real clickable link
+        title: b.title,
+      };
+    }
+    return {
+      type: "reply",
+      reply: {
+        id: b.id,
+        title: b.title,
+      },
+    };
+  });
+
+  const interactive: any = {
+    type: "button",
+    body: { text: bodyText },
+    ...(footerText ? { footer: { text: footerText } } : {}),
+    action: { buttons: actionButtons },
+  };
+
+  if (header?.type === "image" && header?.image?.link) {
+    interactive.header = { type: "image", image: { link: header.image.link } };
+  }
+
+  await waSend(cfg, { to, type: "interactive", interactive });
+}
+
 async function sendInteractiveList(
   to: string,
   bodyText: string,
+  footerText: string | undefined,
   list: {
-    buttonText: string;
+    buttonText?: string;
     sections: {
       title: string;
       rows: { id: string; title: string; description?: string }[];
     }[];
   },
-  footerText: string | undefined,
-  whatsAppBusinessConfigData: any,
+  cfg: any,
 ) {
-  await waSend(whatsAppBusinessConfigData, {
+  const payload = {
     to,
     type: "interactive",
     interactive: {
@@ -308,9 +256,9 @@ async function sendInteractiveList(
       ...(footerText ? { footer: { text: footerText } } : {}),
       action: {
         button: list.buttonText || "Choose",
-        sections: list.sections.map((s) => ({
+        sections: (list.sections || []).map((s) => ({
           title: s.title,
-          rows: s.rows.map((r) => ({
+          rows: (s.rows || []).map((r) => ({
             id: r.id,
             title: r.title,
             ...(r.description ? { description: r.description } : {}),
@@ -318,25 +266,55 @@ async function sendInteractiveList(
         })),
       },
     },
-  });
+  };
+
+  await waSend(cfg, payload);
 }
 
-// ---- Advance the flow until input boundary ----
+async function sendInteractiveCTAUrl(
+  to: string,
+  bodyText: string,
+  footerText: string | undefined,
+  ctaUrl: string,
+  ctaLabel: string,
+  header: any | undefined,
+  cfg: any,
+) {
+  const interactive: any = {
+    type: "cta_url",
+    body: { text: bodyText },
+    ...(footerText ? { footer: { text: footerText } } : {}),
+    action: {
+      name: "cta_url",
+      parameters: { display_text: ctaLabel, url: ctaUrl },
+    },
+  };
+
+  if (header?.type === "image" && header?.image?.link) {
+    interactive.header = { type: "image", image: { link: header.image.link } };
+  }
+  await waSend(cfg, { to, type: "interactive", interactive });
+}
+
+/* ----------------------------------------------------------------------------
+ * ADVANCE FLOW
+ * ------------------------------------------------------------------------- */
 async function advance(
+  FLOW: any,
+  NODE_BY_ID: Map<string, any>,
   userId: string,
   waTo: string,
-  whatsAppBusinessConfigData: any,
+  cfg: any,
 ) {
   let s = getSession(userId);
   let hops = 0;
-
   while (s.currentNodeId) {
     if (++hops > 25) {
       console.warn("[flow] hop limit exceeded");
       break;
     }
-
     const node = NODE_BY_ID.get(s.currentNodeId);
+    console.log("node", node);
     if (!node) {
       setSession(userId, {
         currentNodeId: null,
@@ -346,59 +324,38 @@ async function advance(
       break;
     }
 
-    // 🟢 increment message count
+    // Update session progress
     await ChatbotSessionModel.findOneAndUpdate(
       { userId, chatbotId: FLOW._id },
       { $inc: { totalMessages: 1 }, $set: { lastNodeId: node.id } },
       { sort: { startTime: -1 } },
     );
-
-    // --- SEND MESSAGE NODE ---
+    // --- SEND MESSAGE ---
     if (node.type === "send_message") {
       if (node.contentType === "text") {
-        await sendText(
-          waTo,
-          interpolate(node.text, s.variables),
-          whatsAppBusinessConfigData,
-        );
+        await sendText(waTo, interpolate(node.text, s.variables), cfg);
       } else if (node.contentType === "image") {
-        await waSend(whatsAppBusinessConfigData, {
-          to: waTo,
-          type: "image",
-          image: {
-            link: node.mediaUrl,
-            caption: interpolate(
-              node.caption || node.bodyText || "",
-              s.variables,
-            ),
-          },
-        });
-      } else {
+        await sendImage(
+          waTo,
+          String(node.mediaUrl || ""),
+          interpolate(node.caption || node.bodyText || "", s.variables),
+          cfg,
+        );
+      } else if (node.contentType === "document") {
         await sendDocument(
           waTo,
-          interpolate(node.mediaUrl, s.variables),
+          String(interpolate(node.mediaUrl || "", s.variables)),
           node.fileName || undefined,
-          whatsAppBusinessConfigData,
+          cfg,
         );
       }
 
-      // 🟣 Check if this is end node
       if (isEndNode(node)) {
-        await ChatbotSession.findOneAndUpdate(
+        await ChatbotSessionModel.findOneAndUpdate(
           { userId, chatbotId: FLOW._id },
           { completed: true, endTime: new Date(), lastNodeId: node.id },
           { sort: { startTime: -1 } },
         );
-
-        // Optional: live stats bump
-        await WhatsappChatbot.updateOne(
-          { _id: FLOW._id },
-          {
-            $inc: { "stats.totalSessions": 1, "stats.completedSessions": 1 },
-            $set: { "stats.lastActivity": new Date() },
-          },
-        );
-
         setSession(userId, { currentNodeId: null });
         break;
       }
@@ -408,18 +365,14 @@ async function advance(
       continue;
     }
 
-    // --- ASK QUESTION NODE ---
+    // --- ASK QUESTION ---
     if (node.type === "ask_question") {
-      await sendText(
-        waTo,
-        interpolate(node.prompt, s.variables),
-        whatsAppBusinessConfigData,
-      );
+      await sendText(waTo, interpolate(node.prompt, s.variables), cfg);
       setSession(userId, { waitingFor: "ask" });
-      return; // wait for user input
+      return;
     }
 
-    // --- CONDITION NODE ---
+    // --- SET CONDITION ---
     if (node.type === "set_condition") {
       const ok = evalCondition(node, s.variables);
       setSession(userId, {
@@ -429,25 +382,25 @@ async function advance(
       continue;
     }
 
-    // --- INTERACTIVE NODE ---
+    // --- INTERACTIVE MESSAGE ---
     if (node.type === "interactive_message") {
       const layout = node.layout || "button";
       const body = interpolate(node.bodyText || "", s.variables);
       const footer = interpolate(node.footerText || "", s.variables);
       const header = node.header
-        ? {
-            type: node.header.type,
-            [node.header.type]: { link: node.header.mediaUrl },
-          }
+        ? node.header.type === "image" && node.header.mediaUrl
+          ? { type: "image", image: { link: node.header.mediaUrl } }
+          : undefined
         : undefined;
 
+      // LIST
       if (layout === "list" && node.list) {
         await sendInteractiveList(
           waTo,
           body,
-          node.list,
           footer || undefined,
-          whatsAppBusinessConfigData,
+          node.list,
+          cfg,
         );
         setSession(userId, {
           waitingFor: "interactive",
@@ -456,25 +409,31 @@ async function advance(
         return;
       }
 
+      // CTA URL
       if (layout === "cta_url") {
-        const ctaUrl = (node.cta?.url || "").trim();
-        const ctaLabel = (node.cta?.label || "Open Link").trim();
+        const ctaUrl = String(node?.cta?.url || "").trim();
+        const ctaLabel = String(node?.cta?.label || "Open Link").trim();
 
         if (ctaUrl) {
-          await waSend(whatsAppBusinessConfigData, {
-            to: waTo,
-            type: "interactive",
-            interactive: {
-              type: "cta_url",
-              header,
-              body: { text: body },
-              ...(footer ? { footer: { text: footer } } : {}),
-              action: {
-                name: "cta_url",
-                parameters: { display_text: ctaLabel, url: ctaUrl },
-              },
-            },
-          });
+          await sendInteractiveCTAUrl(
+            waTo,
+            body,
+            footer,
+            ctaUrl,
+            ctaLabel,
+            header,
+            cfg,
+          );
+        } else {
+          // graceful fallback to a "Continue" reply button
+          await sendInteractiveButton(
+            waTo,
+            body,
+            footer || undefined,
+            [{ id: "fallback_continue", type: "reply", title: "Continue" }],
+            header,
+            cfg,
+          );
         }
 
         setSession(userId, {
@@ -486,24 +445,20 @@ async function advance(
         });
         return;
       }
-
-      if (layout === "button" && node.buttons?.length > 0) {
-        await waSend(whatsAppBusinessConfigData, {
-          to: waTo,
-          type: "interactive",
-          interactive: {
-            type: "button",
-            body: { text: body },
-            ...(footer ? { footer: { text: footer } } : {}),
-            action: {
-              buttons: node.buttons.map((b) =>
-                b.type === "url" && b.url
-                  ? { type: "url", url: b.url, text: b.title }
-                  : { type: "reply", reply: { id: b.id, title: b.title } },
-              ),
-            },
-          },
-        });
+      // BUTTONS
+      if (
+        layout === "button" &&
+        Array.isArray(node.buttons) &&
+        node.buttons.length > 0
+      ) {
+        await sendInteractiveButton(
+          waTo,
+          body,
+          footer || undefined,
+          node.buttons,
+          header,
+          cfg,
+        );
         setSession(userId, {
           waitingFor: "interactive",
           interactiveCtx: { routes: node.routes || {} },
@@ -511,23 +466,94 @@ async function advance(
         return;
       }
 
+      // If only header image without actions, just send the image + caption
       if ((!node.buttons || node.buttons.length === 0) && header?.image?.link) {
-        await waSend(whatsAppBusinessConfigData, {
-          to: waTo,
-          type: "image",
-          image: { link: header.image.link, caption: body || footer || "" },
-        });
+        await sendImage(waTo, header.image.link, body || footer || "", cfg);
         setSession(userId, { currentNodeId: node.next || null });
         return;
       }
 
-      await sendText(waTo, body, whatsAppBusinessConfigData);
+      // Fallback to plain text
+      await sendText(waTo, body, cfg);
       setSession(userId, { currentNodeId: node.next || null });
       return;
     }
 
-    // 🟥 Unknown type or no continuation
-    await ChatbotSession.findOneAndUpdate(
+    if (node.type === "interactive_button_message") {
+      const buttons = node.buttons.map((b) => ({
+        type: "reply",
+        reply: { id: b.id, title: b.title },
+      }));
+
+      await waSend(cfg, {
+        to: waTo,
+        type: "interactive",
+        interactive: {
+          type: "button",
+          header: node.headerText
+            ? { type: "text", text: node.headerText }
+            : undefined,
+          body: { text: node.bodyText },
+          footer: node.footerText ? { text: node.footerText } : undefined,
+          action: { buttons },
+        },
+      });
+      setSession(userId, {
+        waitingFor: "interactive",
+        interactiveCtx: { routes: node.routes || {} },
+      });
+
+      return;
+    }
+
+    if (node.type === "interactive_list_message") {
+      const header = node.headerText
+        ? { type: "text", text: node.headerText }
+        : undefined;
+
+      // Build all sections with rows
+      const sections = (node.list?.sections || []).map((section: any) => ({
+        title: section.title || "",
+        rows: (section.rows || []).map((row: any) => ({
+          id: row.id,
+          title: row.title,
+          ...(row.description ? { description: row.description } : {}),
+        })),
+      }));
+
+      // Validate WhatsApp API limits
+      if (!sections.length || !sections[0].rows.length) {
+        console.warn("⚠️ No sections or rows in list node", node.id);
+        return;
+      }
+
+      // ✅ Send WhatsApp-compliant payload
+      await waSend(cfg, {
+        to: waTo,
+        type: "interactive",
+        interactive: {
+          type: "list",
+          ...(header ? { header } : {}),
+          body: { text: node.bodyText || "Choose an option:" },
+          ...(node.footerText ? { footer: { text: node.footerText } } : {}),
+          action: {
+            button: node.list?.buttonText || "Choose",
+            sections,
+          },
+        },
+      });
+
+      // ✅ Wait for user interaction
+      setSession(userId, {
+        waitingFor: "interactive",
+        interactiveCtx: { routes: node.routes || {} },
+      });
+
+      return;
+    }
+
+    // Unknown node type: finish session gracefully
+    await ChatbotSessionModel.findOneAndUpdate(
       { userId, chatbotId: FLOW._id },
       { completed: true, endTime: new Date(), lastNodeId: node.id },
       { sort: { startTime: -1 } },
@@ -541,24 +567,26 @@ async function advance(
   }
 }
 
-// ---- Webhook handler ----
+/* ----------------------------------------------------------------------------
+ * MAIN WEBHOOK
+ * ------------------------------------------------------------------------- */
 export const waWebhookHandler = async (c: Context) => {
   const body = await c.req.json();
 
-  if ((body as any).action === "ping") {
+  // health-check ping
+  if ((body as any).action === "ping")
     return c.json({ version: "3.0", data: { status: "active" } }, 200);
-  }
-  if (!body?.object) {
-    return c.json({ message: "ignored", err: false }, 200);
-  }
+
+  if (!body?.object) return c.json({ message: "ignored", err: false }, 200);
 
   const { messages, contacts, statuses, whatsAppBusinessConfigData } =
     await whatsAppEventData(body as any);
 
-  let from = messages?.from || contacts?.[0]?.wa_id || contacts?.[0]?.waId;
+  const from = messages?.from || contacts?.[0]?.wa_id || contacts?.[0]?.waId;
   let textBody: string | undefined;
   let interactiveTitleOrId: string | undefined;
 
+  // --- Parse message types
   if (messages) {
     if (messages.type === "interactive") {
       const inter = messages.interactive;
@@ -572,128 +600,196 @@ export const waWebhookHandler = async (c: Context) => {
     }
   }
 
-  // Flow runtime first
-  if (whatsAppBusinessConfigData && from) {
-    const s = getSession(from);
+  const businessId = whatsAppBusinessConfigData?.businessId;
+  if (!businessId)
+    return respond(c, "Missing businessId in config", true, 400, {});
 
-    // CTA selection
-    if (interactiveTitleOrId) {
-      if (s.waitingFor === "interactive" && s.interactiveCtx?.routes) {
-        const routes = s.interactiveCtx.routes;
-        let target = routes[interactiveTitleOrId];
-        if (!target) {
-          const key = Object.keys(routes).find(
-            (k) => k.toLowerCase() === interactiveTitleOrId!.toLowerCase(),
-          );
-          if (key) target = routes[key]!;
-        }
-        if (target) {
-          setSession(from, {
-            currentNodeId: target,
-            waitingFor: null,
-            interactiveCtx: undefined,
-          });
-          await advance(from, from, whatsAppBusinessConfigData);
-          return respond(c, "flow consumed (interactive)", false, 200, {});
-        }
-      }
-      if (matchTriggerStart(from, interactiveTitleOrId)) {
-        await advance(from, from, whatsAppBusinessConfigData);
-        return respond(
-          c,
-          "flow consumed (trigger from interactive)",
-          false,
-          200,
-          {},
-        );
-      }
+  // Load all active chatbots for the business
+  const chatbotList = await getAllChatbotFlows(businessId);
+  if (!chatbotList.length)
+    return respond(c, "No active chatbots found", true, 404, {});
+
+  // ---------------------------------------------------------------
+  // 1️⃣ Handle interactive button/list replies (continue existing flow)
+  // ---------------------------------------------------------------
+  const session = getSession(from);
+  if (interactiveTitleOrId && session.waitingFor === "interactive") {
+    const currentRoutes = session.interactiveCtx?.routes || {};
+    const targetNodeId =
+      currentRoutes[interactiveTitleOrId] ||
+      Object.entries(currentRoutes).find(
+        ([key]) => key.toLowerCase() === interactiveTitleOrId.toLowerCase(),
+      )?.[1];
+
+    if (targetNodeId) {
+      console.log("✅ Interactive reply matched route →", targetNodeId);
+      setSession(from, {
+        currentNodeId: targetNodeId,
+        waitingFor: null,
+        interactiveCtx: undefined,
+      });
+
+      // ✅ Find last chatbot this user interacted with
+      const lastSession = await ChatbotSessionModel.findOne({ userId: from })
+        .sort({ startTime: -1 })
+        .select("chatbotId")
+        .lean();
+
+      const activeBot =
+        chatbotList.find(
+          (b) => b.flow._id.toString() === lastSession?.chatbotId?.toString(),
+        ) || chatbotList[0];
+
+      await advance(
+        activeBot.flow,
+        activeBot.NODE_BY_ID,
+        from,
+        from,
+        whatsAppBusinessConfigData,
+      );
+      return respond(c, "flow continued (interactive reply)", false, 200, {});
     }
+  }
 
-    // Free text
-    if (textBody) {
-      if (s.waitingFor === "ask" && s.currentNodeId) {
-        const node = NODE_BY_ID.get(s.currentNodeId);
-        if (node && node.type === "ask_question") {
-          const value = textBody.trim();
-          if (
-            (node.inputType === "phone" || node.variable?.includes("phone")) &&
-            node.required
-          ) {
-            const ok = /^[+\d][\d\s\-()]{5,}$/.test(value);
-            if (!ok) {
-              await sendText(
-                from,
-                "Please enter a valid phone number.",
-                whatsAppBusinessConfigData,
-              );
-              return respond(c, "validation", false, 200, {});
-            }
-          }
-          setSession(from, {
-            variables: { ...s.variables, [node.variable]: value },
-          });
-          setSession(from, {
-            waitingFor: null,
-            currentNodeId: node.next || null,
-          });
-          await advance(from, from, whatsAppBusinessConfigData);
-          return respond(c, "flow consumed (ask)", false, 200, {});
-        }
-      }
-      if (matchTriggerStart(from, textBody)) {
-        // 🟢 Start a new session
-        await ChatbotSessionModel.create({
-          chatbotId: FLOW._id || "000000000000000000000000",
-          userId: from,
-          startTime: new Date(),
-          completed: false,
-        });
+  // ---------------------------------------------------------------
+  // 🟢 1.5 Handle text replies to "Ask Question" nodes
+  // ---------------------------------------------------------------
+  const sessionState = getSession(from);
 
-        await advance(from, from, whatsAppBusinessConfigData);
-        return respond(c, "flow consumed (trigger)", false, 200, {});
+  if (
+    textBody &&
+    sessionState.waitingFor === "ask" &&
+    sessionState.currentNodeId
+  ) {
+    const lastSession = await ChatbotSessionModel.findOne({ userId: from })
+      .sort({ startTime: -1 })
+      .select("chatbotId")
+      .lean();
+
+    const activeBot =
+      chatbotList.find(
+        (b) => b.flow._id.toString() === lastSession?.chatbotId?.toString(),
+      ) || chatbotList[0];
+
+    const { flow: FLOW, NODE_BY_ID } = activeBot;
+    const node = NODE_BY_ID.get(sessionState.currentNodeId);
+
+    if (node && node.type === "ask_question") {
+      const value = textBody.trim();
+
+      // ✅ Store answer in session
+      setSession(from, {
+        variables: { ...sessionState.variables, [node?.variable]: value },
+      });
+
+      // ✅ Move forward to next node
+      setSession(from, {
+        waitingFor: null,
+        currentNodeId: node.next || null,
+      });
+
+      console.log(
+        `✅ [Ask Reply] ${node.variable} = "${value}" → next: ${node.next}`,
+      );
+
+      await advance(FLOW, NODE_BY_ID, from, from, whatsAppBusinessConfigData);
+      return respond(c, "flow continued (ask reply)", false, 200, {});
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // 2️⃣ Handle trigger-based start (first message or keyword)
+  // ---------------------------------------------------------------
+  const messageInput = textBody || interactiveTitleOrId;
+  let matchedBot: { flow: any; NODE_BY_ID: Map<string, any> } | null = null;
+
+  if (messageInput) {
+    for (const bot of chatbotList) {
+      const { flow } = bot;
+      if (matchTriggerStart(flow, from, messageInput)) {
+        matchedBot = bot;
+        console.log("✅ Trigger matched chatbot:", flow.chatbotName);
+        break;
       }
     }
   }
 
-  if (
-    messages &&
-    messages?.text?.body?.length > 1 &&
-    whatsAppBusinessConfigData
-  ) {
+  if (matchedBot) {
+    const { flow: FLOW, NODE_BY_ID } = matchedBot;
+
+    await ChatbotSessionModel.create({
+      chatbotId: FLOW._id,
+      userId: from,
+      startTime: new Date(),
+      completed: false,
+    });
+
+    await advance(FLOW, NODE_BY_ID, from, from, whatsAppBusinessConfigData);
+    return respond(c, "flow started (trigger)", false, 200, {});
+  }
+
+  // ---------------------------------------------------------------
+  // 3️⃣ Fallback — other messages or campaign status
+  // ---------------------------------------------------------------
+  if (messages && whatsAppBusinessConfigData) {
+    // A safe fallback text: text body OR interactive id/title OR empty string
+    const safeText = (
+      messages?.text?.body ??
+      (messages?.interactive?.button_reply?.id ||
+        messages?.interactive?.button_reply?.title ||
+        messages?.interactive?.list_reply?.id ||
+        messages?.interactive?.list_reply?.title) ??
+      ""
+    ).toString();
+
+    // Your helper may return undefined userInput for interactive events; guard it.
     const { userData, userInput } = await whatsAppUserAndTextMessage(
       contacts,
       messages,
       whatsAppBusinessConfigData,
     );
 
-    const qrType = identifyQrTypeFromMessage(userInput);
-    if (qrType?.qrType && qrHandlers[qrType.qrType]) {
-      await qrHandlers[qrType.qrType](
-        qrType.value,
-        userData.phone,
-        userData._id.toString(),
-        userData.name || "Guest",
-        whatsAppBusinessConfigData,
-      );
+    // Pick the best available text to use in downstream handlers
+    const effectiveInput = (
+      typeof userInput === "string" && userInput.trim().length > 0
+        ? userInput
+        : safeText
+    ).trim();
+
+    // QR handlers only run if we actually have some input
+    if (effectiveInput) {
+      const qrType = identifyQrTypeFromMessage(effectiveInput);
+      if (qrType?.qrType && qrHandlers[qrType.qrType]) {
+        await qrHandlers[qrType.qrType](
+          qrType.value,
+          userData.phone,
+          userData._id.toString(),
+          userData.name || "Guest",
+          whatsAppBusinessConfigData,
+        );
+      }
     }
 
-    if (whatsAppBusinessConfigData.chat) {
+    // Chat handler: only if feature is on AND we have a non-empty message
+    if (whatsAppBusinessConfigData.chat && effectiveInput) {
       await whatsAppChatHandler(
-        messages?.text?.body,
+        effectiveInput,
         userData._id.toString(),
         whatsAppBusinessConfigData,
       );
     }
 
+    // Block handler: pass a string always; handler will guard internally too
     await whatsAppBlockUserHandler(
       whatsAppBusinessConfigData,
       userData?.phone,
       userData._id.toString(),
       messages?.id,
-      messages?.text?.body,
+      effectiveInput, // string (possibly empty)
     );
   }
 
+  // ✅ Keep this part as it is
   if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
     await whatsAppCampaignHandler(whatsAppBusinessConfigData, statuses);
   }

@@ -1,11 +1,12 @@
+import useBusinessData from '@/components/store/useBusinessData';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { cleanPayload, useChatBot } from '@/components/utils/chatbotHelper';
 import { cn } from '@/lib/utils';
 import {
   Background,
@@ -22,24 +23,34 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { motion } from 'framer-motion';
 import {
   ChevronDown,
   ChevronLeft,
   Diamond,
   FileInputIcon,
+  FileSpreadsheet,
   FileText,
   FileUp,
-  GripVertical,
+  GitBranch,
+  HelpCircle,
   ImageIcon,
+  Keyboard,
+  Link,
+  ListOrdered,
   MessageCircle,
+  MessageSquare,
   PanelLeftOpen,
   Plus,
+  Save,
+  Share2,
+  SquareCheck,
   Trash2,
   Upload,
   X,
   Zap,
 } from 'lucide-react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMediaUpload } from '../../../hooks/useTemplates';
 import DeleteButton from './deleteButton';
 
@@ -49,7 +60,9 @@ const NodeTypes = {
   COND: 'set_condition',
   TRIGGER: 'trigger',
   INTERACTIVE: 'interactive',
-  FORM: 'form',
+  INTERACTIVE_BUTTON: 'interactive_button_message',
+  INTERACTIVE_LIST: 'interactive_list_message',
+  SHEET: 'sheet',
 };
 const nid = () => Math.random().toString(36).slice(2, 10);
 
@@ -84,7 +97,6 @@ function SendNode({ data, selected }) {
   const insertVariable = (variable) => {
     if (!variable) return;
     const el = textRef.current;
-    // Adjust insertion based on type: @vars as-is, custom as {{var}}
     const placeholder = variable.startsWith('@') ? variable : `{{${variable}}}`;
     if (!el) return;
 
@@ -181,20 +193,15 @@ function SendNode({ data, selected }) {
         )}
       >
         <DeleteButton data={data} />
-
-        <div className="relative bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 p-4 text-white shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-white/20 p-1.5">
-                <MessageCircle className="h-4 w-4" />
-              </div>
-              <h3 className="text-base font-semibold tracking-tight">Send Message</h3>
-            </div>
-          </div>
-        </div>
-
+        <section className="relative flex items-center justify-between bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 p-4 text-white shadow-sm">
+          <h3 className="flex items-center gap-2 text-base font-semibold tracking-tight">
+            <span className="rounded-lg bg-white/20 p-1.5">
+              <MessageCircle className="h-4 w-4" />
+            </span>
+            Send Message
+          </h3>
+        </section>
         <CardContent className="space-y-4 bg-gradient-to-b from-gray-50 to-white p-4">
-          {/* Segmented Control for Content Types - More polished */}
           <div className="flex gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
             {contentTypes.map((type) => (
               <Button
@@ -439,11 +446,24 @@ function SendNode({ data, selected }) {
 // Ask Question Node
 function AskNode({ data, selected }) {
   const m = data.meta || {};
-  const handleVariableChange = (e) => {
-    const inputValue = e.target.value.trim().replace(/^@/, '');
+  const [localVar, setLocalVar] = useState(m.variable?.replace(/^@/, '') || '');
+
+  // 🔹 Only update text in local state while typing
+  const handleVariableTyping = (e) => {
+    setLocalVar(e.target.value);
+  };
+
+  // 🔹 Commit value only when button is clicked
+  const handleAddVariable = () => {
+    const inputValue = localVar.trim().replace(/^@/, '');
+    console.log('Adding variable:', inputValue);
+    if (!inputValue) return;
+
+    // Save into node meta
     data.onPatch({ meta: { ...m, variable: inputValue } });
 
-    if (inputValue && !data.variables.includes(inputValue)) {
+    // Add to global variable list safely
+    if (inputValue && Array.isArray(data.variables) && typeof data.onVariableAdd === 'function') {
       data.onVariableAdd([inputValue]);
     }
   };
@@ -505,19 +525,33 @@ function AskNode({ data, selected }) {
               Required Field
             </label>
           </div>
+
+          {/* 🟢 Store Response Section */}
           <div className="space-y-1.5">
             <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
               <FileText className="h-3 w-3 text-emerald-600" />
               Store Response In (Optional)
             </label>
-            <Input
-              value={m.variable?.replace(/^@/, '') || ''}
-              onChange={handleVariableChange}
-              placeholder="userName"
-              className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
-              aria-describedby="store-help"
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                value={localVar}
+                onChange={handleVariableTyping}
+                placeholder="userName"
+                className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddVariable}
+                className="border-emerald-400 bg-emerald-500 text-white hover:bg-emerald-600"
+              >
+                <Plus className="mr-1 h-3 w-3" />
+                Add
+              </Button>
+            </div>
           </div>
+
           {m.prompt && (
             <Badge variant="outline" className="text-xs">
               Preview: {m.prompt.substring(0, 30)}...
@@ -583,6 +617,7 @@ function CondNode({ data, selected }) {
 
   const addCondition = () => {
     if (variables.length === 0 && flowParams.length === 0) return;
+    console.log('Adding condition with vars:', variables, flowParams);
     const defaultVar = variables[0] || flowParams[0];
     data.onPatch({
       meta: {
@@ -806,37 +841,38 @@ function TriggerNode({ data, selected }) {
   );
 }
 
-// Interactive Node
 function InteractiveNode({ data, selected }) {
   const m = data.meta ?? {
     layout: 'button',
     header: { type: 'none', mediaUrl: '', useUpload: false },
-    bodyText: 'Write message here...',
+    bodyText: '',
     footerText: '',
     buttons: [{ id: 'btn_1', type: 'reply', title: 'Option 1' }],
     list: { sections: [] },
     routes: {},
   };
+
   const { uploadMediaPassFile } = useMediaUpload();
   const [uploading, setUploading] = useState(false);
+  const nid = () => `${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
-  const nid = () => Math.random().toString(36).substr(2, 9);
-
-  // --- Button Logic ---
+  // === BUTTON LOGIC ===
   const addButton = () => {
     const newBtn = { id: `btn_${nid()}`, type: 'reply', title: '', url: '' };
     data.onPatch({ meta: { ...m, buttons: [...(m.buttons || []), newBtn] } });
   };
+
   const updateButton = (i, patch) => {
     const buttons = (m.buttons || []).map((b, idx) => (idx === i ? { ...b, ...patch } : b));
     data.onPatch({ meta: { ...m, buttons } });
   };
+
   const removeButton = (i) => {
     const buttons = (m.buttons || []).filter((_, idx) => idx !== i);
     data.onPatch({ meta: { ...m, buttons } });
   };
 
-  // --- List Logic ---
+  // === LIST LOGIC (unchanged) ===
   const addListSection = () => {
     const newSection = { id: `sec_${nid()}`, title: '', rows: [] };
     data.onPatch({
@@ -898,40 +934,36 @@ function InteractiveNode({ data, selected }) {
   };
 
   return (
-    <div>
-      <Handle type="target" position={Position.Left} className="z-50 !h-[0.75rem] !w-[0.75rem]" />
-      <Card
-        className={cn(
-          'relative w-96 overflow-hidden border-2 shadow-lg transition-all',
-          selected ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-20' : 'border-gray-300',
-        )}
-      >
+    <div className="relative">
+      <Handle type="target" position={Position.Left} className="z-50 !h-5 !w-5 !border-4 !border-white !bg-gray-600 shadow-xl" />
+
+      <Card className={cn('w-96 border-2 shadow-2xl transition-all', selected ? 'border-blue-500 ring-4 ring-blue-300/30' : 'border-gray-300')}>
+        <DeleteButton data={data} />
+
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 text-white">
-          <div className="flex items-center gap-12">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
-              <h3 className="text-lg font-bold">Interactive</h3>
+        <div className="rounded-t-lg bg-gradient-to-r from-blue-600 to-purple-600 p-5 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <MessageCircle className="h-7 w-7" />
+              <h3 className="text-xl font-bold">Interactives</h3>
             </div>
-            {/* Layout Switcher */}
-            <Select value={m.layout || 'none'} onValueChange={(layout) => data.onPatch({ meta: { ...m, layout } })}>
-              <SelectTrigger className="h-8 w-36 bg-white/10 text-xs text-white">
-                <SelectValue placeholder="Layout" />
+            <Select value={m.layout || 'none'} onValueChange={(v) => data.onPatch({ meta: { ...m, layout: v } })}>
+              <SelectTrigger className="h-10 w-36 border-white/30 bg-white/20 text-sm">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Select an option</SelectItem>
+                <SelectItem value="none">Choose Layout</SelectItem>
                 <SelectItem value="button">Buttons</SelectItem>
-                <SelectItem value="list">List</SelectItem>
+                <SelectItem value="list">List Menu</SelectItem>
               </SelectContent>
             </Select>
-            <DeleteButton data={data} />
           </div>
         </div>
 
         {/* BODY */}
-        <CardContent className="space-y-4 bg-gray-100 p-4">
+        <CardContent className="space-y-4 p-4">
           {/* Header Upload Section */}
-          <Card className="border-0 bg-white shadow-sm">
+          <Card className="border bg-white shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-700">Header (Optional)</CardTitle>
             </CardHeader>
@@ -1044,150 +1076,473 @@ function InteractiveNode({ data, selected }) {
             />
           </div>
 
-          <div>
-            <label className="text-xs font-medium text-gray-700">Footer (Optional)</label>
-            <Input
-              value={m.footerText || ''}
-              onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
-              placeholder="Footer note..."
-              className="border-gray-300 bg-white focus:border-blue-500"
-            />
-          </div>
+          {/* Footer */}
+          <Input
+            placeholder="Footer text (optional)"
+            value={m.footerText}
+            onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
+          />
 
-          {/* Conditional Rendering for Layout */}
+          {/* BUTTONS LAYOUT - FULLY RESTORED */}
           {m.layout === 'button' && (
-            <Card className="border-0 bg-white shadow-sm">
-              <CardHeader className="!p-4 pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-blue-500" />
-                    <CardTitle className="text-sm font-medium text-gray-700">Interactive Buttons</CardTitle>
-                  </div>
-                  <Button
-                    onClick={addButton}
-                    disabled={(m.buttons || []).length >= 3}
-                    className="bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600"
-                  >
-                    <Plus className="mr-1 h-3 w-3" />
-                    Add
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {(m.buttons || []).map((btn, i) => (
-                  <div key={i} className="rounded-lg border border-gray-200 p-3 hover:border-blue-300">
-                    <div className="flex items-center justify-between">
-                      <Select value={btn.type} onValueChange={(type) => updateButton(i, { type, ...(type !== 'reply' ? { url: '' } : {}) })}>
-                        <SelectTrigger className="h-8 w-24 text-xs">
+            <div className="space-y-4 rounded-xl border-2 border-gray-200 bg-white p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h4 className="flex items-center gap-2 font-bold text-gray-800">
+                  <div className="h-3 w-3 rounded-full bg-blue-600" />
+                  Quick Reply Buttons
+                </h4>
+                <Button size="sm" onClick={addButton} disabled={(m.buttons || []).length >= 3} className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="mr-1 h-4 w-4" /> Add Button
+                </Button>
+              </div>
+
+              {(m.buttons || []).map((btn, i) => (
+                <div
+                  key={btn.id}
+                  className="relative rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 pr-16 transition-all hover:border-blue-400"
+                >
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={btn.id}
+                    style={{ top: '50%', transform: 'translateY(-50%)' }}
+                    className="z-50 !h-6 !w-6 rounded-full !border-4 !border-white !bg-blue-600 shadow-xl transition-all hover:scale-110 hover:!bg-blue-700"
+                  />
+
+                  <div className="space-y-3">
+                    {/* Button Type Selector */}
+                    <div className="flex items-center gap-3">
+                      <Select
+                        value={btn.type}
+                        onValueChange={(type) =>
+                          updateButton(i, {
+                            type,
+                            ...(type === 'reply' ? { url: '' } : {}),
+                          })
+                        }
+                      >
+                        <SelectTrigger className="h-9 w-32">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="reply">Reply</SelectItem>
-                          <SelectItem value="url">URL</SelectItem>
+                          <SelectItem value="reply">Reply Button</SelectItem>
+                          <SelectItem value="url">URL Button</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button variant="destructive" size="icon" onClick={() => removeButton(i)} className="h-6 w-6 bg-red-500">
-                        <X className="h-3 w-3" />
+
+                      <Button size="icon" variant="ghost" onClick={() => removeButton(i)} className="text-red-600 hover:bg-red-100">
+                        <X className="h-5 w-5" />
                       </Button>
                     </div>
+
+                    {/* Title */}
                     <Input
+                      placeholder="Button text (e.g. Yes, I'm interested)"
                       value={btn.title}
                       onChange={(e) => updateButton(i, { title: e.target.value })}
-                      placeholder="Button title"
-                      className="mt-2 border-gray-300"
+                      className="font-medium"
                     />
+
+                    {/* URL Field - Only for URL buttons */}
                     {btn.type === 'url' && (
                       <Input
+                        placeholder="https://yoursite.com/offer"
                         value={btn.url || ''}
                         onChange={(e) => updateButton(i, { url: e.target.value })}
-                        placeholder="https://example.com"
-                        className="mt-1 border-gray-300"
+                        className="font-mono text-sm text-blue-600"
                       />
                     )}
-                    <Handle
-                      id={btn.id}
-                      type="source"
-                      position={Position.Right}
-                      className="!h-[0.6rem] !w-[0.6rem] rounded-full bg-blue-500 hover:scale-110"
-                      title={`Connect ${btn.title || 'Button ' + (i + 1)}`}
-                    />
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                </div>
+              ))}
+            </div>
           )}
 
+          {/* LIST LAYOUT - Also with perfect handles */}
           {m.layout === 'list' && (
-            <Card className="border-0 bg-white shadow-sm">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-gray-700">List Sections</CardTitle>
-                  <Button onClick={addListSection} className="bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600">
-                    <Plus className="mr-1 h-3 w-3" />
-                    Add Section
-                  </Button>
-                </div>
-              </CardHeader>
+            <div className="space-y-5 rounded-xl border-2 border-gray-200 bg-white p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h4 className="font-bold text-gray-800">List Menu Options</h4>
+                <Button size="sm" onClick={addListSection}>
+                  <Plus className="mr-1 h-4 w-4" /> Add Section
+                </Button>
+              </div>
 
-              <CardContent className="space-y-3">
-                {(m.list?.sections || []).map((section, si) => (
-                  <div key={section.id} className="rounded-lg border border-gray-200 p-3">
-                    <div className="mb-2 flex items-center justify-between">
-                      <Input
-                        value={section.title}
-                        onChange={(e) => {
-                          const sections = [...(m.list?.sections || [])];
-                          sections[si].title = e.target.value;
-                          data.onPatch({
-                            meta: {
-                              ...m,
-                              list: { ...(m.list || {}), sections },
-                            },
-                          });
-                        }}
-                        placeholder="Section Title"
-                        className="border-gray-300"
-                      />
-                      <Button size="icon" variant="destructive" onClick={() => removeListSection(si)} className="h-6 w-6 bg-red-500">
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
+              {(m.list?.sections || []).map((section, si) => (
+                <div key={section.id} className="rounded-xl border-2 border-gray-300 bg-gray-50 p-4">
+                  <div className="mb-3 flex justify-between">
+                    <Input
+                      placeholder="Section title"
+                      value={section.title || ''}
+                      onChange={(e) => {
+                        const sections = [...m.list.sections];
+                        sections[si].title = e.target.value;
+                        data.onPatch({ meta: { ...m, list: { ...m.list, sections } } });
+                      }}
+                      className="text-lg font-semibold"
+                    />
+                    <Button size="icon" variant="ghost" onClick={() => removeListSection(si)}>
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </div>
 
+                  <div className="ml-4 space-y-3">
                     {(section.rows || []).map((row, ri) => (
-                      <div key={row.id} className="mb-2 rounded border p-2">
-                        <Input
-                          value={row.title}
-                          onChange={(e) => updateListRow(si, ri, { title: e.target.value })}
-                          placeholder="Row title"
-                          className="mb-1 border-gray-300"
-                        />
-                        <Input
-                          value={row.description}
-                          onChange={(e) => updateListRow(si, ri, { description: e.target.value })}
-                          placeholder="Row description (optional)"
-                          className="border-gray-300"
-                        />
+                      <div
+                        key={row.id}
+                        className="relative rounded-lg border border-gray-300 bg-white p-4 pr-14 transition-all hover:border-green-500"
+                      >
                         <Handle
-                          id={row.id}
                           type="source"
                           position={Position.Right}
-                          className="!h-[0.6rem] !w-[0.6rem] rounded-full bg-blue-500 hover:scale-110"
-                          title={`Connect ${row.title || `Button ${ri + 1}`}`}
+                          id={row.id}
+                          style={{ top: '50%', transform: 'translateY(-50%)' }}
+                          className="z-50 !h-6 !w-6 rounded-full !border-4 !border-white !bg-green-600 shadow-xl hover:!bg-green-700"
+                        />
+
+                        <Input
+                          placeholder="Option title"
+                          value={row.title}
+                          onChange={(e) => updateListRow(si, ri, { title: e.target.value })}
+                          className="font-medium"
+                        />
+                        <Input
+                          placeholder="Description (optional)"
+                          value={row.description || ''}
+                          onChange={(e) => updateListRow(si, ri, { description: e.target.value })}
+                          className="mt-2 text-sm text-gray-600"
                         />
                       </div>
                     ))}
 
-                    <Button onClick={() => addListRow(si)} className="mt-2 w-full bg-blue-500 text-xs text-white hover:bg-blue-600">
-                      + Add Row
+                    <Button size="sm" variant="outline" onClick={() => addListRow(si)} className="w-full">
+                      + Add Option
                     </Button>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
-      <Handle type="source" position={Position.Right} className="z-50 !h-[0.75rem] !w-[0.75rem]" />
+    </div>
+  );
+}
+
+function InteractiveButtonNode({ data, selected }) {
+  const m = data.meta ?? {
+    layout: 'button',
+    header: { type: 'none', mediaUrl: '', useUpload: false },
+    bodyText: '',
+    footerText: '',
+    buttons: [{ id: 'btn_1', type: 'reply', title: '' }],
+    list: { sections: [] },
+    routes: {},
+  };
+
+  const nid = () => `btn_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+  const addButton = () => {
+    const newBtn = { id: nid(), type: 'reply', title: '', url: '' };
+    data.onPatch({ meta: { ...m, buttons: [...(m.buttons || []), newBtn] } });
+  };
+
+  const updateButton = (i, patch) => {
+    const buttons = (m.buttons || []).map((b, idx) => (idx === i ? { ...b, ...patch } : b));
+    data.onPatch({ meta: { ...m, buttons } });
+  };
+
+  const removeButton = (i) => {
+    const buttons = (m.buttons || []).filter((_, idx) => idx !== i);
+    data.onPatch({ meta: { ...m, buttons } });
+  };
+
+  return (
+    <div className="relative">
+      <Handle type="target" position={Position.Left} className="z-50 !h-5 !w-5 !border-4 !border-white !bg-gray-600 shadow-xl" />
+      <DeleteButton data={data} />
+      <Card
+        className={cn(
+          'w-96 overflow-hidden rounded-2xl border-2 shadow-xl transition-all',
+          selected ? 'border-indigo-500 ring-4 ring-indigo-200/30' : 'border-gray-300',
+        )}
+      >
+        {/* Header */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 text-white">
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-6 w-6" />
+            <h3 className="text-lg font-bold">Buttons</h3>
+          </div>
+        </div>
+
+        <CardContent className="space-y-5 bg-gray-50 p-5">
+          <Textarea
+            placeholder="Enter your message..."
+            value={m.bodyText}
+            onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
+            className="min-h-24 resize-none border-gray-300 focus:border-indigo-500"
+          />
+          <div className="space-y-3">
+            {(m.buttons || []).map((btn, i) => (
+              <div
+                key={btn.id}
+                className="group relative gap-3 space-y-2 rounded-xl border border-gray-200 bg-white p-3 transition-all hover:border-indigo-400"
+              >
+                <Handle
+                  type="source"
+                  id={btn.id}
+                  position={Position.Right}
+                  className="z-50 -mr-2 !h-5 !w-5 !border-4 !border-white !bg-gray-600 shadow-xl"
+                />
+                <div className="flex items-center">
+                  <span className="rounded-md bg-indigo-600/10 px-2 py-1 text-xs font-medium text-indigo-700">Reply Button</span>
+                </div>
+
+                {/* Title Input */}
+                <Input
+                  placeholder="Button Text"
+                  value={btn.title}
+                  onChange={(e) => updateButton(i, { title: e.target.value })}
+                  className="h-10 flex-1 text-sm font-medium focus:ring-0"
+                />
+                {/* Remove Button */}
+                <button
+                  type="button"
+                  onClick={() => removeButton(i)}
+                  className="absolute -right-2 -top-2 rounded-full border border-red-100 bg-white p-1.5 text-red-500"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            <Button
+              onClick={addButton}
+              disabled={(m.buttons || []).length >= 3}
+              size="sm"
+              className="h-11 w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 font-medium text-white shadow-md hover:from-indigo-700 hover:to-purple-700"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Button
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function InteractiveListNode({ data, selected }) {
+  let m = data.meta ?? {};
+
+  // ✅ Ensure correct structure in data.meta immediately
+  useEffect(() => {
+    const hasList = !!m.list;
+    if (!hasList || m.layout !== 'list' || m.type !== 'interactive_list_message') {
+      data.onPatch({
+        meta: {
+          ...m,
+          type: 'interactive_list_message',
+          layout: 'list',
+          list: m.list ?? { buttonText: 'Choose', sections: [] },
+        },
+      });
+    }
+  }, []);
+
+  // ✅ Local normalization (safe render)
+  m = {
+    type: 'interactive_list_message',
+    layout: 'list',
+    headerText: m.headerText || '',
+    bodyText: m.bodyText || '',
+    footerText: m.footerText || '',
+    list: {
+      buttonText: m.list?.buttonText || 'Choose',
+      sections: m.list?.sections || [],
+    },
+    routes: m.routes || {},
+  };
+
+  console.log('meta normalized:', m);
+
+  const nid = () => `${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+  // === SECTION LOGIC ===
+  const addListSection = () => {
+    const newSection = { id: `sec_${nid()}`, title: '', rows: [] };
+    const updatedList = {
+      ...m.list,
+      sections: [...(m.list.sections || []), newSection],
+    };
+    console.log('Adding section, updated list:', updatedList);
+    data.onPatch({ meta: { ...m, list: updatedList } });
+  };
+
+  // === ROW LOGIC ===
+  const addListRow = (sectionIndex) => {
+    const newRowId = `row_${nid()}`;
+    const updatedSections = m.list.sections.map((s, i) =>
+      i === sectionIndex
+        ? {
+            ...s,
+            rows: [...(s.rows || []), { id: newRowId, title: '', description: '' }],
+          }
+        : s,
+    );
+    data.onPatch({
+      meta: {
+        ...m,
+        list: { ...m.list, sections: updatedSections },
+        routes: { ...(m.routes || {}), [newRowId]: null },
+      },
+    });
+
+    console.log('Adding row, updated sections:', updatedSections);
+  };
+
+  const updateListRow = (si, ri, patch) => {
+    const sections = m.list.sections.map((s, i) => {
+      if (i !== si) return s;
+      const rows = (s.rows || []).map((r, j) => (j === ri ? { ...r, ...patch } : r));
+      return { ...s, rows };
+    });
+    data.onPatch({ meta: { ...m, list: { ...m.list, sections } } });
+
+    console.log('Updating row, updated sections:', sections);
+  };
+
+  const removeListSection = (si) => {
+    const sections = m.list.sections.filter((_, i) => i !== si);
+    data.onPatch({ meta: { ...m, list: { ...m.list, sections } } });
+
+    console.log('Removing section, updated sections:', sections);
+  };
+
+  return (
+    <div className="relative">
+      <Handle type="target" position={Position.Left} className="z-50 !h-5 !w-5 !border-4 !border-white !bg-gray-600 shadow-xl" />
+      <DeleteButton data={data} />
+
+      <Card className={cn('w-96 border-2 shadow-2xl transition-all', selected ? 'border-blue-500 ring-4 ring-blue-300/30' : 'border-gray-300')}>
+        {/* Header */}
+        <div className="rounded-t-lg bg-gradient-to-r from-blue-600 to-purple-600 p-5 text-white">
+          <div className="flex items-center gap-3">
+            <MessageCircle className="h-6 w-6" />
+            <h3 className="text-lg font-bold">List Message</h3>
+          </div>
+        </div>
+
+        <CardContent className="space-y-5 p-4">
+          {/* Header Text */}
+          <div>
+            <label className="text-xs font-medium text-gray-700">Header Text (Optional)</label>
+            <Input
+              placeholder="Menu Header"
+              value={m.headerText || ''}
+              onChange={(e) => data.onPatch({ meta: { ...m, headerText: e.target.value } })}
+              className="mt-1"
+            />
+          </div>
+
+          {/* Body Text */}
+          <div>
+            <label className="text-xs font-medium text-gray-700">Body Text</label>
+            <Textarea
+              placeholder="Main message (required)"
+              value={m.bodyText || ''}
+              onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
+              className="min-h-24"
+            />
+          </div>
+
+          {/* Footer Text */}
+          <div>
+            <label className="text-xs font-medium text-gray-700">Footer Text (Optional)</label>
+            <Input
+              placeholder="Footer text..."
+              value={m.footerText || ''}
+              onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
+            />
+          </div>
+
+          {/* Button Label */}
+          <div>
+            <label className="text-xs font-medium text-gray-700">List Button Text</label>
+            <Input
+              placeholder="e.g., View Menu"
+              value={m.list?.buttonText || ''}
+              onChange={(e) =>
+                data.onPatch({
+                  meta: { ...m, list: { ...m.list, buttonText: e.target.value } },
+                })
+              }
+            />
+          </div>
+
+          {/* Sections */}
+          <div className="space-y-5 rounded-xl border-2 border-gray-200 bg-white p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h4 className="font-bold text-gray-800">List Sections</h4>
+              <Button size="sm" onClick={addListSection}>
+                <Plus className="mr-1 h-4 w-4" /> Add Section
+              </Button>
+            </div>
+
+            {(m.list.sections || []).map((section, si) => (
+              <div key={section.id} className="rounded-xl border-2 border-gray-300 bg-gray-50 p-4">
+                <div className="mb-3 flex justify-between">
+                  <Input
+                    placeholder="Section title"
+                    value={section.title || ''}
+                    onChange={(e) => {
+                      const sections = [...m.list.sections];
+                      sections[si].title = e.target.value;
+                      data.onPatch({
+                        meta: { ...m, list: { ...m.list, sections } },
+                      });
+                    }}
+                    className="text-lg font-semibold"
+                  />
+                  <Button size="icon" variant="ghost" onClick={() => removeListSection(si)}>
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+
+                <div className="ml-4 space-y-3">
+                  {(section.rows || []).map((row, ri) => (
+                    <div key={row.id} className="relative rounded-lg border border-gray-300 bg-white p-4 pr-14 transition-all hover:border-green-500">
+                      <Handle
+                        type="source"
+                        position={Position.Right}
+                        id={row.id}
+                        style={{ top: '50%', transform: 'translateY(-50%)' }}
+                        className="z-50 !h-6 !w-6 rounded-full !border-4 !border-white !bg-green-600 shadow-xl hover:!bg-green-700"
+                      />
+
+                      <Input
+                        placeholder="Option title"
+                        value={row.title}
+                        onChange={(e) => updateListRow(si, ri, { title: e.target.value })}
+                        className="font-medium"
+                      />
+                      <Input
+                        placeholder="Description (optional)"
+                        value={row.description || ''}
+                        onChange={(e) => updateListRow(si, ri, { description: e.target.value })}
+                        className="mt-2 text-sm text-gray-600"
+                      />
+                    </div>
+                  ))}
+
+                  <Button size="sm" variant="outline" onClick={() => addListRow(si)} className="w-full">
+                    + Add Option
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -1198,34 +1553,39 @@ const nodeTypes = {
   [NodeTypes.COND]: CondNode,
   [NodeTypes.TRIGGER]: TriggerNode,
   [NodeTypes.INTERACTIVE]: InteractiveNode,
+  [NodeTypes.INTERACTIVE_BUTTON]: InteractiveButtonNode,
+  [NodeTypes.INTERACTIVE_LIST]: InteractiveListNode,
 };
 
-// Palette Item Component
-function PaletteItem({ label, type, icon }) {
-  const onDragStart = (event, nodeType) => {
-    event.dataTransfer.setData('application/reactflow', nodeType);
-    event.dataTransfer.effectAllowed = 'move';
-  };
-
-  return (
-    <Card
-      className="cursor-grab border-gray-200 bg-white shadow-sm transition-all hover:shadow-md active:cursor-grabbing active:opacity-80"
-      draggable
-      onDragStart={(e) => onDragStart(e, type)}
-    >
-      <CardContent className="flex items-center gap-3 p-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 text-xl">{icon}</div>
-        <div className="flex-1">
-          <p className="inter text-sm font-medium text-gray-800">{label}</p>
-        </div>
-        <GripVertical className="h-4 w-4 text-gray-400" />
-      </CardContent>
-    </Card>
-  );
-}
-
-// Helper Functions
 function makeNode({ id, type, position, patch, updateGlobalVariables, remove, variables }) {
+  // ✅ Provide sane defaults for each node type
+  let defaultMeta = {};
+  switch (type) {
+    case NodeTypes.INTERACTIVE:
+      defaultMeta = {
+        layout: 'button',
+        header: { type: 'none', mediaUrl: '', useUpload: false },
+        bodyText: 'Write message here...',
+        footerText: '',
+        buttons: [{ id: `btn_${Math.random().toString(36).slice(2, 9)}`, type: 'reply', title: 'Option 1' }],
+        list: { sections: [] },
+        routes: {}, // ✅ ensure defined
+      };
+      break;
+    case NodeTypes.SEND:
+      defaultMeta = { contentType: 'text', text: '', variable: '', mediaUrl: '', caption: '' };
+      break;
+    case NodeTypes.ASK:
+      defaultMeta = { prompt: '', inputType: 'text', required: true, variable: '' };
+      break;
+    case NodeTypes.COND:
+      defaultMeta = { logic: [] };
+      break;
+    case NodeTypes.TRIGGER:
+      defaultMeta = { keywords: [] };
+      break;
+  }
+
   return {
     id,
     type,
@@ -1236,7 +1596,7 @@ function makeNode({ id, type, position, patch, updateGlobalVariables, remove, va
       variables,
       updateGlobalVariables,
       remove,
-      meta: {},
+      meta: defaultMeta, // ✅ initialized
     },
   };
 }
@@ -1332,6 +1692,38 @@ function buildFinalFromGraph(nodes, edges) {
         variable: null,
       });
     }
+    if (n.type === NodeTypes.INTERACTIVE_BUTTON) {
+      const m = n.data?.meta || {};
+      const buttons = Array.isArray(m.buttons) ? m.buttons : [];
+      runtimeNodes.push({
+        id: n.id,
+        type: 'interactive_button_message',
+        headerText: m.headerText || '',
+        bodyText: m.bodyText || '',
+        footerText: m.footerText || '',
+        buttons: buttons,
+        routes: m.routes || {},
+      });
+    }
+
+    if (n.type === NodeTypes.INTERACTIVE_LIST) {
+      const m = n.data?.meta || {};
+      const list = m.list || { buttonText: 'Choose', sections: [] };
+
+      runtimeNodes.push({
+        id: n.id,
+        type: 'interactive_list_message',
+        headerText: m.headerText || '',
+        bodyText: m.bodyText || '',
+        footerText: m.footerText || '',
+        layout: 'list',
+        list: {
+          buttonText: list.buttonText || 'Choose',
+          sections: Array.isArray(list.sections) ? list.sections : [],
+        },
+        routes: m.routes || {},
+      });
+    }
 
     if (n.type === NodeTypes.COND) {
       runtimeNodes.push({
@@ -1352,14 +1744,37 @@ function buildFinalFromGraph(nodes, edges) {
   };
 }
 
-// Main Editor Shell
+export const PaletteItem = ({ label, type, icon, cardColor }) => {
+  const onDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.setData('application/reactflow', type);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  return (
+    <div
+      draggable
+      onDragStart={onDragStart}
+      className={cn(
+        'group relative flex cursor-grab items-center gap-3 overflow-hidden rounded-xl border p-3 text-sm font-medium shadow-sm transition-all',
+        'hover:scale-[1.02] hover:shadow-lg active:cursor-grabbing',
+        cardColor,
+        'text-white',
+      )}
+    >
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 p-1.5">{icon}</div>
+      <span className="select-none">{label}</span>
+      <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+    </div>
+  );
+};
 function EditorShell() {
   const [chatbotName, setChatbotName] = useState('My Chatbot');
   const [rfNodes, setRfNodes] = useState([]);
   const [rfEdges, setRfEdges] = useState([]);
-  const [variables, setVariables] = useState([]); // ✅ Start empty—no static init
+  const [variables, setVariables] = useState([]);
   const [leftOpen, setLeftOpen] = useState(true);
-
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const { createChatbot } = useChatBot();
   const reactFlowWrapper = useRef(null);
   const { screenToFlowPosition } = useReactFlow();
 
@@ -1369,7 +1784,7 @@ function EditorShell() {
       return merged;
     });
 
-    // ✅ Force update ALL nodes' data.variables for immediate dropdown refresh
+    // Force update ALL nodes' data.variables for immediate dropdown refresh
     setRfNodes((nds) =>
       nds.map((n) => ({
         ...n,
@@ -1384,14 +1799,45 @@ function EditorShell() {
   const onNodesChange = useCallback((changes) => setRfNodes((nds) => applyNodeChanges(changes, nds)), []);
   const onEdgesChange = useCallback((changes) => setRfEdges((eds) => applyEdgeChanges(changes, eds)), []);
 
+  // const onConnect = useCallback((params) => {
+  //   const edge = { ...params, id: `e-${nid()}`, data: {} };
+
+  //   if (params.sourceHandle === 'true') edge.data.kind = 'cond:true';
+  //   else if (params.sourceHandle === 'false') edge.data.kind = 'cond:false';
+  //   else if (params.sourceHandle === 'start') edge.data.kind = 'trigger:start';
+
+  //   setRfEdges((eds) => addEdge(edge, eds));
+  // }, []);
   const onConnect = useCallback((params) => {
     const edge = { ...params, id: `e-${nid()}`, data: {} };
 
+    // Detect condition kinds (existing)
     if (params.sourceHandle === 'true') edge.data.kind = 'cond:true';
     else if (params.sourceHandle === 'false') edge.data.kind = 'cond:false';
     else if (params.sourceHandle === 'start') edge.data.kind = 'trigger:start';
 
     setRfEdges((eds) => addEdge(edge, eds));
+
+    // 🧠 NEW: Update routes for InteractiveButton nodes
+    setRfNodes((nds) =>
+      nds.map((n) => {
+        if (n.id === params.source) {
+          const m = n.data.meta || {};
+          const routes = { ...(m.routes || {}) };
+          if (params.sourceHandle) {
+            routes[params.sourceHandle] = params.target; // map button handle to target node
+          }
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              meta: { ...m, routes },
+            },
+          };
+        }
+        return n;
+      }),
+    );
   }, []);
 
   function addNode(type, position) {
@@ -1430,99 +1876,161 @@ function EditorShell() {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-  const patchNode = useCallback((id, patch) => {
-    setRfNodes((nds) =>
-      nds.map((n) =>
-        n.id === id
-          ? {
-              ...n,
-              data: {
-                ...n.data,
-                ...patch,
-                meta: { ...n.data.meta, ...(patch.meta || {}) },
-                remove: (nodeId) => removeNode(nodeId),
-              },
-            }
-          : n,
-      ),
-    );
-  }, []);
+  const patchNode = useCallback(
+    (id, patch) => {
+      setRfNodes((nds) =>
+        nds.map((n) =>
+          n.id === id
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  ...patch,
+                  meta: { ...n.data.meta, ...(patch.meta || {}) },
+                  remove: (nodeId) => removeNode(nodeId),
+                  onVariableAdd: updateGlobalVariables,
+                },
+              }
+            : n,
+        ),
+      );
+    },
+    [updateGlobalVariables],
+  );
 
   const finalObject = useMemo(() => {
     const core = buildFinalFromGraph(rfNodes, rfEdges);
     return {
       chatbotName,
+      businessId,
       ...core,
     };
-  }, [rfNodes, rfEdges, chatbotName]);
+  }, [rfNodes, rfEdges, chatbotName, businessId]);
 
   function removeNode(id) {
     setRfNodes((nds) => nds.filter((n) => n.id !== id));
     setRfEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
   }
 
+  const handleSaveFlow = () => {
+    const filteredPayload = cleanPayload(finalObject);
+    createChatbot(filteredPayload);
+  };
+  const nodePaletteItems = [
+    {
+      label: 'Send Message',
+      type: NodeTypes.SEND,
+      icon: <MessageSquare className="h-4 w-4" />,
+      cardColor: 'bg-gradient-to-br from-emerald-500 to-teal-600',
+    },
+    {
+      label: 'Ask a Question',
+      type: NodeTypes.ASK,
+      icon: <HelpCircle className="h-4 w-4" />,
+      cardColor: 'bg-gradient-to-br from-sky-500 to-blue-600',
+    },
+    {
+      label: 'Set a Condition',
+      type: NodeTypes.COND,
+      icon: <GitBranch className="h-4 w-4" />,
+      cardColor: 'bg-gradient-to-br from-amber-500 to-orange-600',
+    },
+    {
+      label: 'Trigger Keyword',
+      type: NodeTypes.TRIGGER,
+      icon: <Keyboard className="h-4 w-4" />,
+      cardColor: 'bg-gradient-to-br from-rose-500 to-pink-600',
+    },
+    {
+      label: 'Interactive Reply',
+      type: NodeTypes.INTERACTIVE,
+      icon: <Share2 className="h-4 w-4" />,
+      cardColor: 'bg-gradient-to-br from-indigo-500 to-purple-600',
+    },
+    {
+      label: 'Spreadsheet Action',
+      type: NodeTypes.SHEET,
+      icon: <FileSpreadsheet className="h-4 w-4" />,
+      cardColor: 'bg-gradient-to-br from-lime-500 to-green-600',
+    },
+    {
+      label: 'Buttons',
+      type: NodeTypes.INTERACTIVE_BUTTON,
+      icon: <SquareCheck className="h-4 w-4" />,
+      cardColor: 'bg-gradient-to-br from-fuchsia-500 to-violet-600',
+    },
+    {
+      label: 'Lists',
+      type: NodeTypes.INTERACTIVE_LIST,
+      icon: <ListOrdered className="h-4 w-4" />,
+      cardColor: 'bg-gradient-to-br from-cyan-500 to-teal-600',
+    },
+  ];
   return (
-    <div className="flex h-full w-full overflow-hidden bg-gray-100">
-      <div className={cn('relative border-r border-gray-200 bg-white shadow-lg transition-all duration-300', leftOpen ? 'w-[320px]' : 'w-11')}>
-        <div className="absolute right-0 top-4 z-20">
+    <div className="inter flex h-full w-full overflow-hidden bg-gray-50">
+      <div
+        className={cn('relative flex-shrink-0 border-r border-gray-200 bg-white transition-all duration-300', leftOpen ? 'w-80 shadow-xl' : 'w-12')}
+      >
+        {/* Toggle Button */}
+        <div onClick={() => setLeftOpen((v) => !v)} className="absolute right-[-18px] top-6 z-10">
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
-            onClick={() => setLeftOpen((v) => !v)}
-            className="h-9 w-9 rounded-full border-gray-200 hover:bg-gray-100"
+            className="h-9 w-9 rounded-full bg-white text-gray-500 shadow-lg hover:bg-gray-50 hover:text-blue-600"
           >
-            {leftOpen ? <ChevronLeft className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+            {leftOpen ? <ChevronLeft className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
           </Button>
         </div>
 
         {leftOpen && (
-          <ScrollArea className="w-84">
-            <div>
-              <Card className="border-0 bg-gradient-to-r from-gray-50 to-gray-100">
-                <CardHeader className="flex flex-col gap-2 pb-3">
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-indigo-600" />
-                    <CardTitle className="text-lg text-gray-800">Chatbot Builder</CardTitle>
-                  </div>
-                  <Input
-                    value={chatbotName}
-                    onChange={(e) => setChatbotName(e.target.value)}
-                    required
-                    placeholder="Enter chatbot name (e.g., Dental Assistant)"
-                    className="h-9 w-full border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </CardHeader>
-              </Card>
-
-              <Card className="border-0 shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="inter flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <MessageCircle className="h-4 w-4" />
+          <div className="flex flex-col">
+            <Card className="rounded-none border-b border-l-0 border-r-0 border-t-0 border-gray-100 bg-slate-50 shadow-none">
+              <CardHeader className="flex flex-col gap-2 p-4 pb-3">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-2xl font-semibold text-slate-800">Chat Bot Flow Editor</CardTitle>
+                </div>
+                <Input
+                  value={chatbotName}
+                  onChange={(e) => setChatbotName(e.target.value)}
+                  required
+                  placeholder="Enter flow name (e.g., Lead Qualifier)"
+                  className="h-9 w-full border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </CardHeader>
+            </Card>
+            <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto p-4">
+              <Card className="border-gray-200 shadow-none">
+                <CardHeader className="pb-2 pt-3">
+                  <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-700">
+                    <Zap className="h-4 w-4 text-orange-500" />
                     Node Palette
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <PaletteItem label="Send Message" type={NodeTypes.SEND} icon="💬" />
-                  <PaletteItem label="Ask a Question" type={NodeTypes.ASK} icon="❓" />
-                  <PaletteItem label="Set a Condition" type={NodeTypes.COND} icon="🔀" />
-                  <PaletteItem label="Trigger Keyword" type={NodeTypes.TRIGGER} icon="🏁" />
-                  <PaletteItem label="Interactive Message" type={NodeTypes.INTERACTIVE} icon="🧩" />
+                <CardContent className="space-y-3 p-3 pt-2">
+                  <div className="space-y-2">
+                    {nodePaletteItems.map((item, idx) => (
+                      <motion.div key={item.type} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}>
+                        <PaletteItem label={item.label} type={item.type} icon={item.icon} cardColor={item.cardColor} />
+                      </motion.div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
-              <Card className="border-0 shadow-sm">
-                <CardContent className="max-h-[40vh] overflow-auto">
-                  <pre className="rounded-lg bg-gray-900 p-3 font-mono text-xs text-gray-100">{JSON.stringify(finalObject, null, 2)}</pre>
-                </CardContent>
-              </Card>
-              <Button variant="outline" className="w-full bg-blue-500 text-white">
-                Save Flow
+            </div>
+
+            {/* Save Button (Sticky Footer) */}
+            <div className="border-t border-gray-200 bg-white p-4 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+              <Button onClick={handleSaveFlow} className="w-full bg-blue-600 text-white shadow-md transition-colors duration-200 hover:bg-blue-700">
+                <Save className="mr-2 h-4 w-4" />
+                Publish Flow
               </Button>
             </div>
-          </ScrollArea>
+          </div>
         )}
       </div>
 
-      <div className="relative h-[86dvh] flex-1" ref={reactFlowWrapper}>
+      {/* MAIN FLOW CANVAS */}
+      <div className="relative h-[85dvh] flex-1" ref={reactFlowWrapper}>
         <ReactFlow
           nodes={rfNodes}
           edges={rfEdges}
@@ -1534,13 +2042,23 @@ function EditorShell() {
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
-          className="bg-gray-50"
+          className="bg-gray-100"
           proOptions={{ hideAttribution: true }}
         >
-          <Background variant="dots" gap={12} size={1} className="bg-gray-100" />
-          <Controls className="rounded-lg border border-gray-200 bg-white shadow-md" />
+          <Background variant="dots" gap={12} size={1} className="bg-gray-50" />
+          <Controls className="rounded-lg border border-gray-200 bg-white text-gray-700 shadow-lg" />
         </ReactFlow>
       </div>
+      <Card className="h-full max-w-xs flex-shrink-0 overflow-y-auto rounded-none border-0 shadow-lg">
+        <CardHeader className="border-b p-3">
+          <CardTitle className="text-sm font-semibold text-slate-700">Output JSON</CardTitle>
+        </CardHeader>
+        <CardContent className="p-3">
+          <pre className="max-h-[85vh] overflow-auto rounded-lg bg-slate-900 p-3 font-mono text-xs text-slate-200">
+            {JSON.stringify(finalObject, null, 2)}
+          </pre>
+        </CardContent>
+      </Card>
     </div>
   );
 }

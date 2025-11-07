@@ -5,13 +5,13 @@ import useWhatsapp, { Step, TemplateSteps, TemplateType } from '@/components/sto
 import { Tabs, useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
 import { useFetchTemplates } from '@/hooks/useTemplates';
 import { useQuery } from '@tanstack/react-query';
-import { MessageCircle, Workflow } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageCircle, Workflow } from 'lucide-react';
 import { lazy, memo, useCallback, useState } from 'react';
 import { HiOutlineTemplate } from 'react-icons/hi';
 import { MdCampaign } from 'react-icons/md';
 import { TbSettingsAutomation } from 'react-icons/tb';
 import { ChatbotDashboard } from './chatbotDashboard';
-import WhatsAppFlowBuilderWithReactFlow from './flows';
+import WhatsAppFlowBuilder from './flows';
 
 const LinkTemplatePopup = lazy(() => import('./linkTemplatePopup'));
 const WhatsappFlowSection = lazy(() => import('./whatsappFlows'));
@@ -111,10 +111,10 @@ const MemoWhatzappDashboard = () => {
           <button
             type="button"
             onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
-            className="mt-4 flex items-center justify-center rounded-lg border border-gray-300 bg-black p-2 text-white"
+            className="mt-4 flex items-center justify-center rounded-lg border border-gray-300 bg-blue-700 p-2 text-white"
             aria-label={isSidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           >
-            {isSidebarExpanded ? '<' : '>'}
+            {isSidebarExpanded ? <ChevronLeft /> : <ChevronRight />}
           </button>
         </nav>
       )}
@@ -158,7 +158,7 @@ const MemoWhatzappDashboard = () => {
               </ul>
             </section>
             <p className="mb-6 mt-1 text-sm text-gray-500">Use these templates for sending to your customers instantly</p>
-            <div className="relative grid gap-4 transition-transform duration-300 ease-in-out md:h-full md:transform-none md:grid-cols-4 lg:grid-cols-5">
+            <div className="relative grid gap-4 transition-transform duration-300 ease-in-out md:h-full md:transform-none md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-7">
               {isPending ? <LoadingSpinner /> : <TemplatesCarousel />}
             </div>
             <article className="md:hidden">
@@ -181,7 +181,8 @@ const MemoWhatzappDashboard = () => {
             </article>
           </section>
         )}
-        {activeTab === Tabs.FLOWS && <ChatbotDashboard />}
+        {/* {activeTab === Tabs.FLOWS && <ChatbotDashboard />} */}
+        {activeTab === Tabs.FLOWS && <WhatsAppFlowBuilder />}
         {activeTab === Tabs.CHATS && <WhatsappChats />}
         {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}
         {activeTab === Tabs.CAMPAIGNS && openAnalytics && <CampaignAdvancedAnalytics />}

@@ -46,6 +46,8 @@ const NodeSchema = new Schema<NodeType>({
       "interactive_message",
       "set_condition",
       "trigger",
+      "interactive_button_message",
+      "interactive_list_message",
     ],
     required: true,
   },

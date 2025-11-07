@@ -34,6 +34,8 @@ export const NodeSchema = z.object({
     "interactive_message",
     "set_condition",
     "trigger",
+    "interactive_button_message",
+    "interactive_list_message",
   ]),
 
   next: z.string().nullable().optional(),
