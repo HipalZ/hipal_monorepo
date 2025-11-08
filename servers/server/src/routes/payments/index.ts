@@ -4624,8 +4624,8 @@ const paymentsRouter = new Hono()
         businessId,
         isDeleted: false,
         date: {
-          $gte: isToday ? dateRange.from : fromDate,
-          $lte: isToday ? dateRange.to : toDate,
+          $gte: fromDate,
+          $lte: toDate,
         },
       });
 
@@ -4722,8 +4722,8 @@ const paymentsRouter = new Hono()
         { businessId },
         {
           date: {
-            $gte: isToday ? dateRange.from : fromDate,
-            $lte: isToday ? dateRange.to : toDate,
+            $gte: fromDate,
+            $lte: toDate,
           },
         },
       ];
@@ -5815,8 +5815,8 @@ const paymentsRouter = new Hono()
         businessId,
         isDeleted: false,
         date: {
-          $gte: isToday ? dateRange.from : fromDate,
-          $lte: isToday ? dateRange.to : toDate,
+          $gte: fromDate,
+          $lte: toDate,
         },
       });
 
@@ -5918,8 +5918,8 @@ const paymentsRouter = new Hono()
         businessId,
         isDeleted: false,
         date: {
-          $gte: isToday ? dateRange.from : fromDate,
-          $lte: isToday ? dateRange.to : toDate,
+          $gte: fromDate,
+          $lte: toDate,
         },
       });
 
