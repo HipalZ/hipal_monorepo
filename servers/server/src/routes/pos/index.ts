@@ -556,7 +556,7 @@ const posRouter = new Hono()
           await c.req.json();
 
         const posData = await Pos.findById(posId);
-        if (!posData) return respond(c, "POS not found", true, 404);
+        if (!posData) return respond(c, "POS not founds", true, 404);
 
         const result = await executePosHandler(posData.name, "setup", {
           businessId,
