@@ -1,59 +1,43 @@
-import PopUp from "@/components/atom/popUp";
-import useTimings from "@/components/store/useTimings";
-import { memo, useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
-import PaymentModal from "./paymentModal";
-import { CiFilter } from "react-icons/ci";
-import { RxCrossCircled } from "react-icons/rx";
-import type { IExistingPayments } from "@/components/types/businessData";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import Pagination from "@/components/atom/pagination";
-import usePaginationStore from "@/components/store/usePaginationStore";
-import NoData from "@/assets/nodata.jpg";
-import { Button } from "@/components/ui/button";
-import { TableView } from "./TableView";
-import { Download, LayoutGrid, Table } from "lucide-react";
-import { useSalesStore } from "@/components/store/useSalesStore";
-import SalesFilters from "./SalesFiltes";
-import { useGetallSalesByGet } from "@/hooks/useSales";
-import SalesCards from "./SalesCards";
-import ConvertIntoCsv from "./ConvertIntoCsv";
-import useBusinessData from "@/components/store/useBusinessData.ts";
+import NoData from '@/assets/nodata.jpg';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import Pagination from '@/components/atom/pagination';
+import PopUp from '@/components/atom/popUp';
+import useBusinessData from '@/components/store/useBusinessData.ts';
+import usePaginationStore from '@/components/store/usePaginationStore';
+import { useSalesStore } from '@/components/store/useSalesStore';
+import useTimings from '@/components/store/useTimings';
+import type { IExistingPayments } from '@/components/types/businessData';
+import { Button } from '@/components/ui/button';
+import { useGetallSalesByGet } from '@/hooks/useSales';
+import { Download, LayoutGrid, Table } from 'lucide-react';
+import { memo, useCallback, useState } from 'react';
+import { CiFilter } from 'react-icons/ci';
+import { RxCrossCircled } from 'react-icons/rx';
+import ConvertIntoCsv from './ConvertIntoCsv';
+import PaymentModal from './paymentModal';
+import SalesCards from './SalesCards';
+import SalesFilters from './SalesFiltes';
+import { TableView } from './TableView';
 
 const MemoPaymentSales = () => {
-  const params = useParams();
-  const { timeStampStart, timeStampEnd, selectedRange } = useTimings();
-  const {
-    open,
-    setOpen,
-    totalSales,
-    historyData,
-    viewMode,
-    setViewMode,
-    salesData,
-    setSalesData,
-    openFilterModal,
-    setOpenFilterModal,
-    selectedFilters,
-    setSelectedFilters,
-    downloadCsv,
-    setDownloadCsv,
-  } = useSalesStore((s) => ({
-    open: s.open,
-    setOpen: s.setOpen,
-    totalSales: s.totalSales,
-    historyData: s.historyData,
-    viewMode: s.viewMode,
-    setViewMode: s.setViewMode,
-    salesData: s.salesData,
-    setSalesData: s.setSalesData,
-    openFilterModal: s.openFilterModal,
-    setOpenFilterModal: s.setOpenFilterModal,
-    selectedFilters: s.selectedFilters,
-    setSelectedFilters: s.setSelectedFilters,
-    downloadCsv: s.downloadCsv,
-    setDownloadCsv: s.setDownloadCsv,
-  }));
+  const timeStampStart = useTimings((s) => s.timeStampStart);
+  const timeStampEnd = useTimings((s) => s.timeStampEnd);
+  const selectedRange = useTimings((s) => s.selectedRange);
+
+  const open = useSalesStore((s) => s.open);
+  const setOpen = useSalesStore((s) => s.setOpen);
+  const totalSales = useSalesStore((s) => s.totalSales);
+  const historyData = useSalesStore((s) => s.historyData);
+  const viewMode = useSalesStore((s) => s.viewMode);
+  const setViewMode = useSalesStore((s) => s.setViewMode);
+  const salesData = useSalesStore((s) => s.salesData);
+  const setSalesData = useSalesStore((s) => s.setSalesData);
+  const openFilterModal = useSalesStore((s) => s.openFilterModal);
+  const setOpenFilterModal = useSalesStore((s) => s.setOpenFilterModal);
+  const selectedFilters = useSalesStore((s) => s.selectedFilters);
+  const setSelectedFilters = useSalesStore((s) => s.setSelectedFilters);
+  const downloadCsv = useSalesStore((s) => s.downloadCsv);
+  const setDownloadCsv = useSalesStore((s) => s.setDownloadCsv);
   const [currentSalesIndex, setCurrentSalesIndex] = useState(0);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
 
@@ -62,7 +46,7 @@ const MemoPaymentSales = () => {
   }));
 
   const { isLoading } = useGetallSalesByGet({
-    businessId: businessId || "",
+    businessId: businessId || '',
     pageNumber: pageNumber.toString(),
     from: timeStampStart.toString(),
     to: timeStampEnd.toString(),
@@ -111,7 +95,7 @@ const MemoPaymentSales = () => {
   );
 
   return (
-    <main className="relative h-[100dvh]">
+    <main className="relative h-[100dvh] overflow-auto">
       {isLoading ? (
         <LoadingSpinner />
       ) : (
@@ -120,42 +104,20 @@ const MemoPaymentSales = () => {
             <div className="sales_payment_background_effect1" />
             <div className="sales_payment_background_effect2" />
             <div className="sales_payment_background_effect3" />
-            <div className="absolute capitalize opacity-50 left-6 top-6">
-              {selectedRange} Sales
-            </div>
-            <h1 className="absolute text-3xl left-6 top-12">
-              ₹ {totalSales?.toLocaleString("en-IN")}
-            </h1>
+            <div className="absolute left-6 top-6 capitalize opacity-50">{selectedRange} Sales</div>
+            <h1 className="absolute left-6 top-12 text-3xl">₹ {totalSales?.toLocaleString('en-IN')}</h1>
             <p className="absolute bottom-6 left-6">
-              <span className="opacity-50">
-                Last {historyData?.length} transactions
-              </span>{" "}
-              recently
+              <span className="opacity-50">Last {historyData?.length} transactions</span> recently
             </p>
           </article>
-          <section className="flex gap-2 w-full max-w-[30rem] px-4 md:max-w-full overflow-x-auto">
-            <Button
-              variant={viewMode === "grid" ? "secondary" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("grid")}
-              className="shrink-0"
-            >
-              <LayoutGrid className="w-4 h-4" />
+          <section className="flex w-full max-w-[30rem] gap-2 overflow-x-auto px-4 md:max-w-full">
+            <Button variant={viewMode === 'grid' ? 'secondary' : 'outline'} size="icon" onClick={() => setViewMode('grid')} className="shrink-0">
+              <LayoutGrid className="h-4 w-4" />
             </Button>
-            <Button
-              variant={viewMode === "table" ? "secondary" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("table")}
-              className="shrink-0"
-            >
-              <Table className="w-4 h-4 " />
+            <Button variant={viewMode === 'table' ? 'secondary' : 'outline'} size="icon" onClick={() => setViewMode('table')} className="shrink-0">
+              <Table className="h-4 w-4" />
             </Button>
-            <Button
-              variant="default"
-              size="icon"
-              onClick={() => setDownloadCsv(true)}
-              className="px-4 shrink-2 w-[5rem] bg-blue-500"
-            >
+            <Button variant="default" size="icon" onClick={() => setDownloadCsv(true)} className="shrink-2 w-[5rem] bg-blue-500 px-4">
               <Download />
               Sales
             </Button>
@@ -165,16 +127,9 @@ const MemoPaymentSales = () => {
             {selectedFilters && selectedFilters.length > 0 && (
               <>
                 {selectedFilters.map((filter) => (
-                  <div
-                    key={filter.key}
-                    className="flex items-center space-x-2 flex-nowrap"
-                  >
+                  <div key={filter.key} className="flex flex-nowrap items-center space-x-2">
                     {filter?.value?.map((value) => (
-                      <Button
-                        onClick={() => removeSingleFilter(filter.key, value)}
-                        key={value}
-                        className="capitalize whitespace-nowrap"
-                      >
+                      <Button onClick={() => removeSingleFilter(filter.key, value)} key={value} className="whitespace-nowrap capitalize">
                         {value}
                         <RxCrossCircled className="ml-2" />
                       </Button>
@@ -184,31 +139,21 @@ const MemoPaymentSales = () => {
               </>
             )}
           </section>
-          <section className="pb-[5rem] mx-4 mt-4">
+          <section className="mx-4 mt-4 pb-[5rem]">
             {historyData.length > 0 ? (
-              viewMode === "grid" ? (
+              viewMode === 'grid' ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {historyData.map((data) => (
-                    <SalesCards
-                      key={data?._id}
-                      data={data}
-                      openModel={openModel}
-                    />
+                    <SalesCards key={data?._id} data={data} openModel={openModel} />
                   ))}
                 </div>
               ) : (
                 <TableView data={historyData} onRowClick={openModel} />
               )
             ) : (
-              <div className="flex flex-col items-center justify-center h-[50vh] mt-8">
-                <img
-                  src={NoData || "/placeholder.svg"}
-                  alt="No Data Found"
-                  className="w-1/2 h-auto max-w-xs"
-                />
-                <p className="mt-4 text-lg font-medium text-muted-foreground">
-                  No Data Found
-                </p>
+              <div className="mt-8 flex h-[50vh] flex-col items-center justify-center">
+                <img src={NoData || '/placeholder.svg'} alt="No Data Found" className="h-auto w-1/2 max-w-xs" />
+                <p className="text-muted-foreground mt-4 text-lg font-medium">No Data Found</p>
               </div>
             )}
           </section>
@@ -216,13 +161,7 @@ const MemoPaymentSales = () => {
       )}
       <Pagination dataLength={historyData?.length || 1} />
       {open && (
-        <PopUp
-          height="h-[100dvh] lg:h-[80dvh]"
-          hide
-          width="w-[30rem]"
-          onClose={closeModel}
-          show={open}
-        >
+        <PopUp height="h-[100dvh] lg:h-[80dvh]" hide width="w-[30rem]" onClose={closeModel} show={open}>
           <PaymentModal
             salesData={salesData}
             onClose={closeModel}
@@ -233,14 +172,7 @@ const MemoPaymentSales = () => {
         </PopUp>
       )}
       {openFilterModal && (
-        <PopUp
-          height="h-[100dvh] md:h-[75dvh]"
-          width="w-[42rem]"
-          onClose={() => setOpenFilterModal(false)}
-          show={openFilterModal}
-          rightTopBack
-          hide
-        >
+        <PopUp height="h-[100dvh] md:h-[75dvh]" width="w-[42rem]" onClose={() => setOpenFilterModal(false)} show={openFilterModal} rightTopBack hide>
           <SalesFilters />
         </PopUp>
       )}

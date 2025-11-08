@@ -1,67 +1,52 @@
-import { memo } from "react";
-import { FiExternalLink, FiChevronLeft } from "react-icons/fi";
-import { BsCameraVideo, BsTelephone } from "react-icons/bs";
-import pastaDummy from "@/assets/pastaDummy.png";
-import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
-import whatzAppDoodle from "@/assets/whatzapp/whatsappdoodle.jpg";
-import Hi from "@/assets/svg/hi.svg";
-import { FaBatteryFull, FaSignal, FaWifi } from "react-icons/fa";
-import { MdOutlineReply } from "react-icons/md";
+import pastaDummy from '@/assets/pastaDummy.png';
+import Hi from '@/assets/svg/hi.svg';
+import whatzAppDoodle from '@/assets/whatzapp/whatsappdoodle.jpg';
+import useWhatsapp, { HeaderInterface } from '@/components/store/useWhatsapp';
+import { memo } from 'react';
+import { BsCameraVideo, BsTelephone } from 'react-icons/bs';
+import { FaBatteryFull, FaSignal, FaWifi } from 'react-icons/fa';
+import { FiChevronLeft, FiExternalLink } from 'react-icons/fi';
+import { MdOutlineReply } from 'react-icons/md';
 
 const MemoTemplatePreview = () => {
-  const {
-    headerType,
-    headerText,
-    imagePreview,
-    bodyText,
-    footerText,
-    displayBodyVariableSequence,
-    buttonText,
-    secondButtonText,
-    firstButtonEnable,
-    secondButtonEnable,
-  } = useWhatsapp((s) => ({
-    headerType: s.headerType,
-    headerText: s.headerText,
-    imagePreview: s.imagePreview,
-    bodyText: s.bodyText,
-    footerText: s.footerText,
-    displayBodyVariableSequence: s.displayBodyVariableSequence,
-    buttonText: s.buttonText,
-    secondButtonText: s.secondButtonText,
-    firstButtonEnable: s.firstButtonEnable,
-    secondButtonEnable: s.secondButtonEnable,
-  }));
+  const headerType = useWhatsapp((s) => s.headerType);
+  const headerText = useWhatsapp((s) => s.headerText);
+  const imagePreview = useWhatsapp((s) => s.imagePreview);
+  const bodyText = useWhatsapp((s) => s.bodyText);
+  const footerText = useWhatsapp((s) => s.footerText);
+  const displayBodyVariableSequence = useWhatsapp((s) => s.displayBodyVariableSequence);
+  const buttonText = useWhatsapp((s) => s.buttonText);
+  const secondButtonText = useWhatsapp((s) => s.secondButtonText);
+  const firstButtonEnable = useWhatsapp((s) => s.firstButtonEnable);
+  const secondButtonEnable = useWhatsapp((s) => s.secondButtonEnable);
 
   const renderBodyText = () => {
-    if (typeof bodyText !== "string") {
+    if (typeof bodyText !== 'string') {
       return <p className="text-red-500">{bodyText}</p>;
     }
 
-    return bodyText
-      .split(/(\{\{\d+\}\})/)
-      .map((part: string, index: number) => {
-        const match = part.match(/\{\{(\d+)\}\}/);
-        if (match) {
-          const varIndex = Number.parseInt(match[1]) - 1;
-          return (
-            <span key={index.toString()} className="text-blue-600 break-words">
-              {displayBodyVariableSequence[varIndex] || part}
-            </span>
-          );
-        }
-        return part;
-      });
+    return bodyText.split(/(\{\{\d+\}\})/).map((part: string, index: number) => {
+      const match = part.match(/\{\{(\d+)\}\}/);
+      if (match) {
+        const varIndex = Number.parseInt(match[1]) - 1;
+        return (
+          <span key={index.toString()} className="break-words text-blue-600">
+            {displayBodyVariableSequence[varIndex] || part}
+          </span>
+        );
+      }
+      return part;
+    });
   };
 
   return (
-    <div className="md:max-h-[600px] w-full max-w-[300px] mx-auto inter relative border-[10px] border-black rounded-[2rem] shadow-xl">
+    <div className="inter relative mx-auto w-full max-w-[300px] rounded-[2rem] border-[10px] border-black shadow-xl md:max-h-[600px]">
       {/* iPhone Notch */}
       <div className="absolute inset-x-0 top-0 h-6 rounded-b-3xl">
-        <div className="absolute w-20 h-4 -translate-x-1/2 bg-black rounded-full top-1 left-1/2" />
+        <div className="absolute left-1/2 top-1 h-4 w-20 -translate-x-1/2 rounded-full bg-black" />
       </div>
       {/* Status Bar */}
-      <div className="flex items-center justify-between px-4 py-1 text-xs bg-white rounded-t-3xl">
+      <div className="flex items-center justify-between rounded-t-3xl bg-white px-4 py-1 text-xs">
         <span>9:41</span>
         <div className="flex items-center gap-1">
           <FaSignal />
@@ -74,16 +59,12 @@ const MemoTemplatePreview = () => {
         style={{
           backgroundImage: `url(${whatzAppDoodle})`,
         }}
-        className="relative w-full h-[550px] overflow-y-auto rounded-3xl"
+        className="relative h-[550px] w-full overflow-y-auto rounded-3xl"
       >
         {/* WhatsApp Header */}
-        <section className="relative flex items-end gap-3 p-2 text-black bg-white">
+        <section className="relative flex items-end gap-3 bg-white p-2 text-black">
           <FiChevronLeft className="text-2xl text-[#34B7F1]" />
-          <img
-            src={Hi}
-            alt="Hi"
-            className="flex-shrink-0 w-6 h-6 rounded-full"
-          />
+          <img src={Hi} alt="Hi" className="h-6 w-6 flex-shrink-0 rounded-full" />
           <div className="flex-1">
             <p className="font-medium">Hipalz</p>
           </div>
@@ -94,48 +75,39 @@ const MemoTemplatePreview = () => {
         </section>
 
         {/* Message Content */}
-        <div className="m-4 overflow-hidden bg-white shadow-md rounded-xl">
+        <div className="m-4 overflow-hidden rounded-xl bg-white shadow-md">
           {headerType === HeaderInterface.Image && (
             <img
               src={imagePreview || pastaDummy}
               alt="preview"
-              className="object-cover w-full p-3 rounded-2xl"
+              className="w-full rounded-2xl object-cover p-3"
               style={{
-                height: "175px",
-                objectFit: "cover",
-                objectPosition: "0 -8px",
+                height: '175px',
+                objectFit: 'cover',
+                objectPosition: '0 -8px',
               }}
             />
           )}
-          <div className="p-3 space-y-2">
-            {headerType === HeaderInterface.Text && (
-              <h3 className="text-lg font-semibold">{headerText}</h3>
-            )}
+          <div className="min-h-24 space-y-2 p-3">
+            {headerType === HeaderInterface.Text && <h3 className="text-lg font-semibold">{headerText}</h3>}
             {bodyText && (
-              <p className="max-w-[248px] break-words text-[0.9375rem]">
+              <p className="max-w-[248px] whitespace-pre-wrap break-words text-[0.9375rem]" style={{ lineHeight: '1.5' }}>
                 {renderBodyText()}
               </p>
             )}
-            {footerText && (
-              <p className="text-xs text-gray-500">{footerText}</p>
-            )}
+
+            {footerText && <p className="text-xs text-gray-500">{footerText}</p>}
           </div>
           {firstButtonEnable && (
             <div className="border-t border-gray-100">
-              <button
-                type="button"
-                className="flex items-center justify-center w-full py-3 text-[#34B7F1] text-sm font-medium"
-              >
+              <button type="button" className="flex w-full items-center justify-center py-3 text-sm font-medium text-[#34B7F1]">
                 <FiExternalLink className="mr-2" /> {buttonText}
               </button>
             </div>
           )}
           {secondButtonEnable && (
             <div className="border-t border-gray-100">
-              <button
-                type="button"
-                className="flex items-center justify-center w-full py-3 text-[#34B7F1] text-sm font-medium"
-              >
+              <button type="button" className="flex w-full items-center justify-center py-3 text-sm font-medium text-[#34B7F1]">
                 <MdOutlineReply className="mr-2" /> {secondButtonText}
               </button>
             </div>
@@ -144,7 +116,7 @@ const MemoTemplatePreview = () => {
       </div>
 
       {/* iPhone Home Indicator */}
-      <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-20 h-1 bg-black rounded-full" />
+      <div className="absolute bottom-0.5 left-1/2 h-1 w-20 -translate-x-1/2 rounded-full bg-black" />
     </div>
   );
 };
