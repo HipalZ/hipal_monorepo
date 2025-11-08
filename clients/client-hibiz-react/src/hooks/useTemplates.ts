@@ -32,73 +32,74 @@ export const useCreateTemplate = () => {
   const setTemplateId = useWhatsapp((s) => s.setTemplateId);
   const setTemplateSteps = useWhatsapp((s) => s.setTemplateSteps);
 
-const { mutateAsync: createTemplate } = useMutation({
-  mutationFn: async (payload: WhatsAppTemplatePayload) => {
-    if (!businessId) throw new Error("Business ID is missing.");
+  const { mutateAsync: createTemplate } = useMutation({
+    mutationFn: async (payload: WhatsAppTemplatePayload) => {
+      if (!businessId) throw new Error("Business ID is missing.");
 
-    const url =
-      outLetType === "HOTEL"
-        ? "hotel/whats_app/templates"
-        : "whatsapp/template";
+      const url =
+        outLetType === "HOTEL"
+          ? "hotel/whats_app/templates"
+          : "whatsapp/template";
 
-    let res: Response | null = null;
+      let res: Response | null = null;
 
-    try {
-      res = await apiRpc[url].$post({
-        json: {
-          ...payload,
-          businessId: businessId,
-        },
-      });
+      try {
+        res = await apiRpc[url].$post({
+          json: {
+            ...payload,
+            businessId: businessId,
+          },
+        });
 
-      if (!res) throw new Error("No response received from server.");
+        if (!res) throw new Error("No response received from server.");
 
-      const data = await res.json();
-      if (!data) throw new Error("Failed to create template");
+        const data = await res.json();
+        if (!data) throw new Error("Failed to create template");
 
-      return { res, data };
-    } catch (error: any) {
-      throw new Error(error?.message || "Template creation failed");
-    }
-  },
+        return { res, data };
+      } catch (error: any) {
+        throw new Error(error?.message || "Template creation failed");
+      }
+    },
 
-  onMutate: () => {
-    setIsLoading(true);
-  },
+    onMutate: () => {
+      setIsLoading(true);
+    },
 
-  onSuccess: ({ data, res }) => {
-    setIsLoading(false);
-    if (data?.err || res?.status === 400) {
+    onSuccess: ({ data, res }) => {
+      setIsLoading(false);
+      if (data?.err || res?.status === 400) {
+        setStep(Step.SETUP);
+        setTemplateSteps(TemplateSteps.NONE);
+        setShowSuccessPopup(false);
+        toast.error(
+          data?.data?.error?.error_user_msg || "Failed to create template",
+        );
+        return;
+      }
+      setTemplateId(data?.data?.id);
+      setShowSuccessPopup(true);
+      setTemplateStatus(data?.data?.status);
+      setTemplateData(data?.data);
+      setStep(Step.SETUP);
+      setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+    },
+
+    onError: (error: any) => {
+      setIsLoading(false);
       setStep(Step.SETUP);
       setTemplateSteps(TemplateSteps.NONE);
       setShowSuccessPopup(false);
+
       toast.error(
-        data?.data?.error?.error_user_msg || "Failed to create template",
+        error?.message ||
+          "An unexpected error occurred while creating the template.",
       );
-      return;
-    }
-    setTemplateId(data?.data?.id);
-    setShowSuccessPopup(true);
-    setTemplateStatus(data?.data?.status);
-    setTemplateData(data?.data);
-    setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
-    queryClient.invalidateQueries({ queryKey: ["templates"] });
-  },
+    },
+  });
 
-  onError: (error: any) => {
-    setIsLoading(false);
-    setStep(Step.SETUP);
-    setTemplateSteps(TemplateSteps.NONE);
-    setShowSuccessPopup(false);
-
-    toast.error(
-      error?.message || "An unexpected error occurred while creating the template.",
-    );
-  },
-});
-
-return { createTemplate };
-
+  return { createTemplate };
 };
 
 export const useEditTemplate = () => {
@@ -144,7 +145,7 @@ export const useEditTemplate = () => {
       setIsLoading(false);
       if (data?.err || !data?.data) {
         setStep(Step.SETUP);
-        setTemplateSteps(TemplateSteps.NONE);
+        setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
         setShowSuccessPopup(false);
         toast.error(
           data?.data?.error?.error_user_msg || "Failed to update template",
@@ -155,7 +156,7 @@ export const useEditTemplate = () => {
       setShowSuccessPopup(true);
       setTemplateStatus(data?.data?.status);
       setStep(Step.SETUP);
-      setTemplateSteps(TemplateSteps.NONE);
+      setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
       queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
     onError: (error) => {
