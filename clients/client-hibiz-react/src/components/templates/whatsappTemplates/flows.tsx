@@ -36,7 +36,6 @@ import {
   HelpCircle,
   ImageIcon,
   Keyboard,
-  Link,
   ListOrdered,
   MessageCircle,
   MessageSquare,
@@ -53,6 +52,7 @@ import {
 import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMediaUpload } from '../../../hooks/useTemplates';
 import DeleteButton from './deleteButton';
+import GoogleSheetPopup from './googleSheetPopup';
 
 const NodeTypes = {
   SEND: 'send_message',
@@ -429,8 +429,12 @@ function SendNode({ data, selected }) {
               Response Variable (Optional)
             </label>
             <Input
-              value={m.variable || ''}
-              onChange={(e) => data.onPatch({ meta: { ...m, variable: e.target.value.trim().replace(/^@/, '') } })}
+              value={m.variable || '@newVariable'}
+              onChange={(e) => {
+                const val = e.target.value.startsWith('@') ? e.target.value : `@${e.target.value}`;
+                data.onPatch({ meta: { ...m, variable: val } });
+              }}
+              prefix="@"
               placeholder="user_feedback"
               className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
             />
@@ -1547,6 +1551,10 @@ function InteractiveListNode({ data, selected }) {
   );
 }
 
+function GoogleSheetNode({ data, selected }) {
+  const m = data.meta ?? { sheetUrl: '', operation: 'append', mapping: [] };
+}
+
 const nodeTypes = {
   [NodeTypes.SEND]: SendNode,
   [NodeTypes.ASK]: AskNode,
@@ -1555,6 +1563,7 @@ const nodeTypes = {
   [NodeTypes.INTERACTIVE]: InteractiveNode,
   [NodeTypes.INTERACTIVE_BUTTON]: InteractiveButtonNode,
   [NodeTypes.INTERACTIVE_LIST]: InteractiveListNode,
+  [NodeTypes.SHEET]: GoogleSheetNode,
 };
 
 function makeNode({ id, type, position, patch, updateGlobalVariables, remove, variables }) {
@@ -1744,16 +1753,41 @@ function buildFinalFromGraph(nodes, edges) {
   };
 }
 
-export const PaletteItem = ({ label, type, icon, cardColor }) => {
-  const onDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+// export const PaletteItem = ({ label, type, icon, cardColor }) => {
+//   const onDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+//     e.dataTransfer.setData('application/reactflow', type);
+//     e.dataTransfer.effectAllowed = 'move';
+//   };
+
+//   return (
+//     <div
+//       draggable
+//       onDragStart={onDragStart}
+//       className={cn(
+//         'group relative flex cursor-grab items-center gap-3 overflow-hidden rounded-xl border p-3 text-sm font-medium shadow-sm transition-all',
+//         'hover:scale-[1.02] hover:shadow-lg active:cursor-grabbing',
+//         cardColor,
+//         'text-white',
+//       )}
+//     >
+//       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 p-1.5">{icon}</div>
+//       <span className="select-none">{label}</span>
+//       <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+//     </div>
+//   );
+// };
+export const PaletteItem = ({ label, type, icon, cardColor, onDragStart: handleDrag }) => {
+  const defaultDrag = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData('application/reactflow', type);
     e.dataTransfer.effectAllowed = 'move';
   };
 
+  const dragHandler = handleDrag || defaultDrag;
+
   return (
     <div
       draggable
-      onDragStart={onDragStart}
+      onDragStart={dragHandler}
       className={cn(
         'group relative flex cursor-grab items-center gap-3 overflow-hidden rounded-xl border p-3 text-sm font-medium shadow-sm transition-all',
         'hover:scale-[1.02] hover:shadow-lg active:cursor-grabbing',
@@ -1767,6 +1801,7 @@ export const PaletteItem = ({ label, type, icon, cardColor }) => {
     </div>
   );
 };
+
 function EditorShell() {
   const [chatbotName, setChatbotName] = useState('My Chatbot');
   const [rfNodes, setRfNodes] = useState([]);
@@ -1777,6 +1812,17 @@ function EditorShell() {
   const { createChatbot } = useChatBot();
   const reactFlowWrapper = useRef(null);
   const { screenToFlowPosition } = useReactFlow();
+  const [showSheetPopup, setShowSheetPopup] = useState(false);
+
+  // 🧩 Custom drag handler for Google Sheet
+  const handleGoogleSheetDrag = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Open popup instead of allowing default drag
+    setShowSheetPopup(true);
+    console.log('🧾 Google Sheet drag intercepted — opening popup instead');
+  };
 
   const updateGlobalVariables = useCallback((newVars) => {
     setVariables((prev) => {
@@ -1799,15 +1845,6 @@ function EditorShell() {
   const onNodesChange = useCallback((changes) => setRfNodes((nds) => applyNodeChanges(changes, nds)), []);
   const onEdgesChange = useCallback((changes) => setRfEdges((eds) => applyEdgeChanges(changes, eds)), []);
 
-  // const onConnect = useCallback((params) => {
-  //   const edge = { ...params, id: `e-${nid()}`, data: {} };
-
-  //   if (params.sourceHandle === 'true') edge.data.kind = 'cond:true';
-  //   else if (params.sourceHandle === 'false') edge.data.kind = 'cond:false';
-  //   else if (params.sourceHandle === 'start') edge.data.kind = 'trigger:start';
-
-  //   setRfEdges((eds) => addEdge(edge, eds));
-  // }, []);
   const onConnect = useCallback((params) => {
     const edge = { ...params, id: `e-${nid()}`, data: {} };
 
@@ -2010,7 +2047,13 @@ function EditorShell() {
                   <div className="space-y-2">
                     {nodePaletteItems.map((item, idx) => (
                       <motion.div key={item.type} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}>
-                        <PaletteItem label={item.label} type={item.type} icon={item.icon} cardColor={item.cardColor} />
+                        <PaletteItem
+                          label={item.label}
+                          type={item.type}
+                          icon={item.icon}
+                          cardColor={item.cardColor}
+                          onDragStart={item.type === NodeTypes.SHEET ? handleGoogleSheetDrag : undefined}
+                        />
                       </motion.div>
                     ))}
                   </div>
@@ -2049,6 +2092,31 @@ function EditorShell() {
           <Controls className="rounded-lg border border-gray-200 bg-white text-gray-700 shadow-lg" />
         </ReactFlow>
       </div>
+      {showSheetPopup && (
+        <GoogleSheetPopup
+          open={showSheetPopup}
+          onClose={() => setShowSheetPopup(false)}
+          data={{
+            onPatch: (patch) => {
+              const position = { x: 250, y: 150 };
+              const id = nid();
+              setRfNodes((nds) => [
+                ...nds,
+                makeNode({
+                  id,
+                  type: NodeTypes.SHEET,
+                  position,
+                  variables,
+                  patch: (p) => patchNode(id, p),
+                  onVariableAdd: updateGlobalVariables,
+                  remove: (nodeId) => removeNode(nodeId),
+                }),
+              ]);
+              setRfNodes((nds) => nds.map((n) => (n.type === NodeTypes.SHEET ? { ...n, data: { ...n.data, ...patch } } : n)));
+            },
+          }}
+        />
+      )}
       <Card className="h-full max-w-xs flex-shrink-0 overflow-y-auto rounded-none border-0 shadow-lg">
         <CardHeader className="border-b p-3">
           <CardTitle className="text-sm font-semibold text-slate-700">Output JSON</CardTitle>

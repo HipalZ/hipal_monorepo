@@ -10,6 +10,7 @@ import {
   whatsAppUserAndTextMessage,
 } from "../../../utils/whatsappWebhookHandlers/helper";
 import { respond } from "../../../utils/response";
+const { google } = require("googleapis");
 
 /* ----------------------------------------------------------------------------
  * FLOW CACHE (per business)
@@ -39,6 +40,7 @@ type SessionState = {
   waitingFor: null | "ask" | "interactive";
   variables: Record<string, any>;
   interactiveCtx?: { routes: Record<string, string | null> };
+  userName?: string;
 };
 const sessions = new Map<string, SessionState>();
 
@@ -61,16 +63,40 @@ function setSession(userId: string, patch: Partial<SessionState>) {
 /* ----------------------------------------------------------------------------
  * FLOW UTILS
  * ------------------------------------------------------------------------- */
-const isEmpty = (v: any) =>
-  v === undefined || v === null || (typeof v === "string" && v.trim() === "");
-
-function interpolate(str: string | undefined, vars: Record<string, any>) {
+function interpolate(
+  str: string | undefined,
+  vars: Record<string, any>,
+  cfg?: any,
+  userName?: string,
+) {
   if (!str) return "";
-  return str
-    .replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? "")
-    .replace(/\{\{(\w+)\|\|([^}]+)\}\}/g, (_, k, fb) =>
-      isEmpty(vars[k]) ? fb : String(vars[k]),
-    );
+
+  // Step 1: build merged context (user vars + system vars)
+  console.log("userName in interpolate:", userName);
+  const context = {
+    ...(vars || {}),
+    name: userName || "",
+    phone: cfg?.waProfile?.phone || cfg?.phone || "",
+  };
+
+  // Step 2: replace all patterns
+  return (
+    str
+      // {{name}} , {{phone}} , {{custom||fallback}}
+      .replace(/\{\{(\w+)(?:\|\|([^}]+))?\}\}/g, (_, key, fb) => {
+        const val = context[key];
+        return val !== undefined && val !== null && val !== ""
+          ? String(val)
+          : fb ?? "";
+      })
+      // @variable (user responses)
+      .replace(/@(\w+)/g, (_, key) => {
+        const atKey = `@${key}`;
+        return context[atKey] !== undefined && context[atKey] !== null
+          ? String(context[atKey])
+          : "";
+      })
+  );
 }
 
 function evalRow(
@@ -305,6 +331,7 @@ async function advance(
   userId: string,
   waTo: string,
   cfg: any,
+  userName?: string,
 ) {
   let s = getSession(userId);
   let hops = 0;
@@ -333,18 +360,27 @@ async function advance(
     // --- SEND MESSAGE ---
     if (node.type === "send_message") {
       if (node.contentType === "text") {
-        await sendText(waTo, interpolate(node.text, s.variables), cfg);
+        await sendText(
+          waTo,
+          interpolate(node.text, s.variables, cfg, userName),
+          cfg,
+        );
       } else if (node.contentType === "image") {
         await sendImage(
           waTo,
           String(node.mediaUrl || ""),
-          interpolate(node.caption || node.bodyText || "", s.variables),
+          interpolate(
+            node.caption || node.bodyText || "",
+            s.variables,
+            cfg,
+            userName,
+          ),
           cfg,
         );
       } else if (node.contentType === "document") {
         await sendDocument(
           waTo,
-          String(interpolate(node.mediaUrl || "", s.variables)),
+          String(interpolate(node.mediaUrl || "", s.variables, cfg, userName)),
           node.fileName || undefined,
           cfg,
         );
@@ -367,7 +403,11 @@ async function advance(
 
     // --- ASK QUESTION ---
     if (node.type === "ask_question") {
-      await sendText(waTo, interpolate(node.prompt, s.variables), cfg);
+      await sendText(
+        waTo,
+        interpolate(node.prompt, s.variables, cfg, userName),
+        cfg,
+      );
       setSession(userId, { waitingFor: "ask" });
       return;
     }
@@ -385,8 +425,13 @@ async function advance(
     // --- INTERACTIVE MESSAGE ---
     if (node.type === "interactive_message") {
       const layout = node.layout || "button";
-      const body = interpolate(node.bodyText || "", s.variables);
-      const footer = interpolate(node.footerText || "", s.variables);
+      const body = interpolate(node.bodyText || "", s.variables, cfg, userName);
+      const footer = interpolate(
+        node.footerText || "",
+        s.variables,
+        cfg,
+        userName,
+      );
       const header = node.header
         ? node.header.type === "image" && node.header.mediaUrl
           ? { type: "image", image: { link: node.header.mediaUrl } }
@@ -552,6 +597,30 @@ async function advance(
       return;
     }
 
+    if (node.type === "google_sheet") {
+      const { spreadsheetId, sheetName, cells } = node;
+      const auth = new google.auth.GoogleAuth({
+        keyFile: "service_account.json",
+        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+      });
+      const client = await auth.getClient();
+      const googleSheets = google.sheets({ version: "v4", auth: client });
+
+      const values = cells.map((c) => [
+        interpolate(c.value, s.variables, cfg, getSession(userId).userName),
+      ]);
+
+      await googleSheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: `${sheetName}!A1`,
+        valueInputOption: "USER_ENTERED",
+        resource: { values },
+      });
+
+      setSession(userId, { currentNodeId: node.next || null });
+      continue;
+    }
+
     // Unknown node type: finish session gracefully
     await ChatbotSessionModel.findOneAndUpdate(
       { userId, chatbotId: FLOW._id },
@@ -578,11 +647,13 @@ export const waWebhookHandler = async (c: Context) => {
     return c.json({ version: "3.0", data: { status: "active" } }, 200);
 
   if (!body?.object) return c.json({ message: "ignored", err: false }, 200);
-
   const { messages, contacts, statuses, whatsAppBusinessConfigData } =
     await whatsAppEventData(body as any);
 
   const from = messages?.from || contacts?.[0]?.wa_id || contacts?.[0]?.waId;
+  let session = getSession(from);
+  const contactName = contacts?.profile?.name || session.userName || "Guest";
+  setSession(from, { userName: contactName });
   let textBody: string | undefined;
   let interactiveTitleOrId: string | undefined;
 
@@ -612,17 +683,24 @@ export const waWebhookHandler = async (c: Context) => {
   // ---------------------------------------------------------------
   // 1️⃣ Handle interactive button/list replies (continue existing flow)
   // ---------------------------------------------------------------
-  const session = getSession(from);
+  session = getSession(from);
+
   if (interactiveTitleOrId && session.waitingFor === "interactive") {
     const currentRoutes = session.interactiveCtx?.routes || {};
-    const targetNodeId =
-      currentRoutes[interactiveTitleOrId] ||
-      Object.entries(currentRoutes).find(
-        ([key]) => key.toLowerCase() === interactiveTitleOrId.toLowerCase(),
-      )?.[1];
+    let targetNodeId: string | undefined;
+
+    for (const [routeKey, routeVal] of Object.entries(currentRoutes)) {
+      // Match either by exact ID or by button title
+      if (
+        routeKey === interactiveTitleOrId ||
+        routeKey.toLowerCase() === interactiveTitleOrId?.toLowerCase()
+      ) {
+        targetNodeId = routeVal || undefined;
+        break;
+      }
+    }
 
     if (targetNodeId) {
-      console.log("✅ Interactive reply matched route →", targetNodeId);
       setSession(from, {
         currentNodeId: targetNodeId,
         waitingFor: null,
@@ -646,6 +724,7 @@ export const waWebhookHandler = async (c: Context) => {
         from,
         from,
         whatsAppBusinessConfigData,
+        contactName,
       );
       return respond(c, "flow continued (interactive reply)", false, 200, {});
     }
@@ -677,9 +756,15 @@ export const waWebhookHandler = async (c: Context) => {
     if (node && node.type === "ask_question") {
       const value = textBody.trim();
 
-      // ✅ Store answer in session
+      const varKey = node.variable?.startsWith("@")
+        ? node.variable
+        : `@${node.variable}`;
+
       setSession(from, {
-        variables: { ...sessionState.variables, [node?.variable]: value },
+        variables: {
+          ...sessionState.variables,
+          [varKey]: value,
+        },
       });
 
       // ✅ Move forward to next node
@@ -692,7 +777,14 @@ export const waWebhookHandler = async (c: Context) => {
         `✅ [Ask Reply] ${node.variable} = "${value}" → next: ${node.next}`,
       );
 
-      await advance(FLOW, NODE_BY_ID, from, from, whatsAppBusinessConfigData);
+      await advance(
+        FLOW,
+        NODE_BY_ID,
+        from,
+        from,
+        whatsAppBusinessConfigData,
+        contactName,
+      );
       return respond(c, "flow continued (ask reply)", false, 200, {});
     }
   }
@@ -724,7 +816,14 @@ export const waWebhookHandler = async (c: Context) => {
       completed: false,
     });
 
-    await advance(FLOW, NODE_BY_ID, from, from, whatsAppBusinessConfigData);
+    await advance(
+      FLOW,
+      NODE_BY_ID,
+      from,
+      from,
+      whatsAppBusinessConfigData,
+      contactName,
+    );
     return respond(c, "flow started (trigger)", false, 200, {});
   }
 
