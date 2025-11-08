@@ -25,74 +25,80 @@ export const useCreateTemplate = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
   const setIsLoading = useWhatsappTempStore((s) => s.setIsLoading);
   const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
-  const {
-    setStep,
-    setShowSuccessPopup,
-    setTemplateStatus,
-    setTemplateData,
-    setTemplateId,
-    setTemplateSteps,
-  } = useWhatsapp((s) => ({
-    setStep: s.setStep,
-    setShowSuccessPopup: s.setShowSuccessPopup,
-    setTemplateStatus: s.setTemplateStatus,
-    setTemplateData: s.setTemplateData,
-    setTemplateId: s.setTemplateId,
-    setTemplateSteps: s.setTemplateSteps,
-  }));
+  const setStep = useWhatsapp((s) => s.setStep);
+  const setShowSuccessPopup = useWhatsapp((s) => s.setShowSuccessPopup);
+  const setTemplateStatus = useWhatsapp((s) => s.setTemplateStatus);
+  const setTemplateData = useWhatsapp((s) => s.setTemplateData);
+  const setTemplateId = useWhatsapp((s) => s.setTemplateId);
+  const setTemplateSteps = useWhatsapp((s) => s.setTemplateSteps);
 
-  const { mutateAsync: createTemplate, isPending: createTemplateLoading } =
-    useMutation({
-      mutationFn: async (payload: WhatsAppTemplatePayload) => {
-        if (!businessId) return null;
-        const url =
-          outLetType === "HOTEL"
-            ? "hotel/whats_app/templates"
-            : "whatsapp/template";
+const { mutateAsync: createTemplate } = useMutation({
+  mutationFn: async (payload: WhatsAppTemplatePayload) => {
+    if (!businessId) throw new Error("Business ID is missing.");
 
-        const res = await apiRpc[url].$post({
-          json: {
-            ...payload,
-            businessId: businessId,
-          },
-        });
+    const url =
+      outLetType === "HOTEL"
+        ? "hotel/whats_app/templates"
+        : "whatsapp/template";
 
-        const data = await res.json();
-        if (!data) throw new Error("Failed to create template");
-        return data;
-      },
-      onMutate: () => {
-        setIsLoading(true); // Set loading before mutation
-      },
-      onSuccess: (data) => {
-        setIsLoading(false);
-        if (data?.err || !data?.data) {
-          setStep(Step.SETUP);
-          setTemplateSteps(TemplateSteps.NONE);
-          setShowSuccessPopup(false);
-          toast.error(
-            data?.data?.error?.error_user_msg || "Failed to create template",
-          );
-          return;
-        }
+    let res: Response | null = null;
 
-        setTemplateId(data?.data?.id);
-        setShowSuccessPopup(true);
-        setTemplateStatus(data?.data?.status);
-        setTemplateData(data?.data);
-        setStep(Step.SETUP);
-        setTemplateSteps(TemplateSteps.NONE);
-        queryClient.invalidateQueries({ queryKey: ["templates"] });
-      },
-      onError: (error) => {
-        setIsLoading(false);
-        toast.error(
-          error.message || "An error occurred while creating the template.",
-        );
-      },
-    });
+    try {
+      res = await apiRpc[url].$post({
+        json: {
+          ...payload,
+          businessId: businessId,
+        },
+      });
 
-  return { createTemplate };
+      if (!res) throw new Error("No response received from server.");
+
+      const data = await res.json();
+      if (!data) throw new Error("Failed to create template");
+
+      return { res, data };
+    } catch (error: any) {
+      throw new Error(error?.message || "Template creation failed");
+    }
+  },
+
+  onMutate: () => {
+    setIsLoading(true);
+  },
+
+  onSuccess: ({ data, res }) => {
+    setIsLoading(false);
+    if (data?.err || res?.status === 400) {
+      setStep(Step.SETUP);
+      setTemplateSteps(TemplateSteps.NONE);
+      setShowSuccessPopup(false);
+      toast.error(
+        data?.data?.error?.error_user_msg || "Failed to create template",
+      );
+      return;
+    }
+    setTemplateId(data?.data?.id);
+    setShowSuccessPopup(true);
+    setTemplateStatus(data?.data?.status);
+    setTemplateData(data?.data);
+    setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+    queryClient.invalidateQueries({ queryKey: ["templates"] });
+  },
+
+  onError: (error: any) => {
+    setIsLoading(false);
+    setStep(Step.SETUP);
+    setTemplateSteps(TemplateSteps.NONE);
+    setShowSuccessPopup(false);
+
+    toast.error(
+      error?.message || "An unexpected error occurred while creating the template.",
+    );
+  },
+});
+
+return { createTemplate };
+
 };
 
 export const useEditTemplate = () => {
