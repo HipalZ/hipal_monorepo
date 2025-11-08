@@ -1,56 +1,58 @@
-import { useState, useCallback, memo } from "react"
-import { IphoneCategory, IphoneExplore } from "@/components/atom/svgtheme"
-import useBusinessCtrl from "@/components/store/useBusinessCtrl"
-import { colors } from "./businessCtrlStore"
-import { ArrowLeftRight } from "lucide-react"
-import PopUp from "@/components/atom/popUp"
-import ColorWheel from "@/components/atom/colorWheel"
-import useBusinessData from "@/components/store/useBusinessData"
-import { useLayoutThemes } from "@/hooks/useLayoutThemes"
-import { motion } from "framer-motion"
-import MotionButton from "@/components/atom/motionButton"
+import ColorWheel from '@/components/atom/colorWheel';
+import MotionButton from '@/components/atom/motionButton';
+import PopUp from '@/components/atom/popUp';
+import { IphoneCategory, IphoneExplore } from '@/components/atom/svgtheme';
+import useBusinessCtrl from '@/components/store/useBusinessCtrl';
+import useBusinessData from '@/components/store/useBusinessData';
+import { useLayoutThemes } from '@/hooks/useLayoutThemes';
+import { motion } from 'framer-motion';
+import { ArrowLeftRight } from 'lucide-react';
+import { memo, useCallback, useState } from 'react';
+import { colors } from './businessCtrlStore';
 
 const MemoSetting = () => {
-  const { primaryColor, secondaryColor, exploreLayout, menuLayout, setPrimaryColor, setSecondaryColor } =
-    useBusinessCtrl((s) => ({
-      primaryColor: s.primaryColor,
-      secondaryColor: s.secondaryColor,
-      setPrimaryColor: s.setPrimaryColor,
-      setSecondaryColor: s.setSecondaryColor,
-      exploreLayout: s.exploreLayout,
-      menuLayout: s.menuLayout,
-    }))
+  const primaryColor = useBusinessCtrl((s) => s.primaryColor);
+  const secondaryColor = useBusinessCtrl((s) => s.secondaryColor);
+  const exploreLayout = useBusinessCtrl((s) => s.exploreLayout);
+  const menuLayout = useBusinessCtrl((s) => s.menuLayout);
+  const setPrimaryColor = useBusinessCtrl((s) => s.setPrimaryColor);
+  const setSecondaryColor = useBusinessCtrl((s) => s.setSecondaryColor);
 
-  const { mutate } = useLayoutThemes()
-  const { businessData, updateThemeData } = useBusinessData((s) => ({
-    businessData: s.businessData,
-    updateThemeData: s.updateThemeData,
-  }))
+  const { mutate } = useLayoutThemes();
 
-  const [open, setOpen] = useState(false)
-  const [colorType, setColorType] = useState<"primary" | "secondary">("primary")
+  const businessData = useBusinessData((s) => s.businessData);
+  const updateThemeData = useBusinessData((s) => s.updateThemeData);
 
-  const handleOpen = useCallback((type: "primary" | "secondary") => {
-    setColorType(type)
-    setOpen(true)
-  }, [])
+  const [open, setOpen] = useState(false);
+  const [colorType, setColorType] = useState<'primary' | 'secondary'>('primary');
+
+  const handleOpen = useCallback((type: 'primary' | 'secondary') => {
+    setColorType(type);
+    setOpen(true);
+  }, []);
 
   const handleClose = useCallback(() => {
-    setOpen(false)
-  }, [])
+    setOpen(false);
+  }, []);
 
-  const handlePrimaryColorChange = useCallback((color: string) => {
-    setPrimaryColor(color)
-  }, [setPrimaryColor])
+  const handlePrimaryColorChange = useCallback(
+    (color: string) => {
+      setPrimaryColor(color);
+    },
+    [setPrimaryColor],
+  );
 
-  const handleSecondaryColorChange = useCallback((color: string) => {
-    setSecondaryColor(color)
-  }, [setSecondaryColor])
+  const handleSecondaryColorChange = useCallback(
+    (color: string) => {
+      setSecondaryColor(color);
+    },
+    [setSecondaryColor],
+  );
 
   const swapColors = useCallback(() => {
-    setPrimaryColor(secondaryColor)
-    setSecondaryColor(primaryColor)
-  }, [primaryColor, secondaryColor, setPrimaryColor, setSecondaryColor])
+    setPrimaryColor(secondaryColor);
+    setSecondaryColor(primaryColor);
+  }, [primaryColor, secondaryColor, setPrimaryColor, setSecondaryColor]);
 
   const apiCall = async () => {
     const payload = {
@@ -58,37 +60,30 @@ const MemoSetting = () => {
       menuLayout: menuLayout,
       primaryColor: primaryColor,
       secondaryColor: secondaryColor,
-      businessType: businessData?.businessType || "FOOD",
-    }
-    mutate(payload)
+      businessType: businessData?.businessType || 'FOOD',
+    };
+    mutate(payload);
     updateThemeData({
       exploreLayout: exploreLayout,
       menuLayout: menuLayout,
       primaryColor: primaryColor,
       secondaryColor: secondaryColor,
-    })
-  }
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 rounded-t-3xl to-white">
-
-      <main className="max-w-7xl mx-auto px-4 py-8 pb-[7rem]">
+    <div className="min-h-screen rounded-t-3xl bg-gradient-to-b from-purple-50 to-white">
+      <main className="mx-auto max-w-7xl px-4 py-8 pb-[7rem]">
         {/* Phone Previews */}
-        <section className="md:grid md:grid-cols-2 md:gap-0 justify-items-center pb-12 flex overflow-x-auto space-x-4 px-4 scrollbar-hide">
+        <section className="scrollbar-hide flex justify-items-center space-x-4 overflow-x-auto px-4 pb-12 md:grid md:grid-cols-2 md:gap-0">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="relative min-w-[280px]" // Ensures items remain the correct size while scrolling
           >
-            <IphoneExplore
-              key={`${primaryColor}${secondaryColor}1`}
-              width={280}
-              height={560}
-              primary={primaryColor}
-              secondary={secondaryColor}
-            />
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow-md text-sm font-medium">
+            <IphoneExplore key={`${primaryColor}${secondaryColor}1`} width={280} height={560} primary={primaryColor} secondary={secondaryColor} />
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-sm font-medium shadow-md">
               Explore View
             </div>
           </motion.div>
@@ -99,25 +94,19 @@ const MemoSetting = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="relative min-w-[280px]" // Ensures items remain the correct size while scrolling
           >
-            <IphoneCategory
-              key={`${primaryColor}${secondaryColor}2`}
-              width={280}
-              height={560}
-              primary={primaryColor}
-              secondary={secondaryColor}
-            />
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow-md text-sm font-medium">
+            <IphoneCategory key={`${primaryColor}${secondaryColor}2`} width={280} height={560} primary={primaryColor} secondary={secondaryColor} />
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-sm font-medium shadow-md">
               Category View
             </div>
           </motion.div>
         </section>
 
         {/* Color Selection */}
-        <section className="space-y-8 max-w-2xl md:max-w-full mx-auto">
-          <article className="md:flex md:justify-center md:items-center space-y-8 md:space-y-0 md:space-x-8">
+        <section className="mx-auto max-w-2xl space-y-8 md:max-w-full">
+          <article className="space-y-8 md:flex md:items-center md:justify-center md:space-x-8 md:space-y-0">
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Primary / Button Color</h3>
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-4">
+              <h3 className="mb-4 text-lg font-medium text-gray-900">Primary / Button Color</h3>
+              <div className="grid grid-cols-4 gap-4 sm:grid-cols-6">
                 {colors.map((color, index) => (
                   <motion.button
                     whileHover={{ scale: 1.1 }}
@@ -127,8 +116,9 @@ const MemoSetting = () => {
                     style={{
                       backgroundColor: color.primaryColor,
                     }}
-                    className={`w-12 h-12 rounded-full shadow-lg transition-shadow hover:shadow-xl ${primaryColor === color.primaryColor ? "ring-4 ring-offset-2 ring-blue-500" : ""
-                      }`}
+                    className={`h-12 w-12 rounded-full shadow-lg transition-shadow hover:shadow-xl ${
+                      primaryColor === color.primaryColor ? 'ring-4 ring-blue-500 ring-offset-2' : ''
+                    }`}
                     onClick={() => handlePrimaryColorChange(color.primaryColor)}
                   />
                 ))}
@@ -136,22 +126,20 @@ const MemoSetting = () => {
             </div>
             {primaryColor && (
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Best Paired Backgrounds</h3>
+                <h3 className="mb-4 text-lg font-medium text-gray-900">Best Paired Backgrounds</h3>
                 {colors
                   .filter((color) => color.primaryColor === primaryColor)
                   .map((color, index) => (
-                    <div
-                      className="grid grid-cols-3 sm:grid-cols-4 gap-4"
-                      key={`${color.primaryColor}${index}`}
-                    >
+                    <div className="grid grid-cols-3 gap-4 sm:grid-cols-4" key={`${color.primaryColor}${index}`}>
                       {color.subColors.map((subColor) => (
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
                           type="button"
                           key={subColor.id}
-                          className={`w-16 h-16 rounded-full shadow-lg transition-shadow hover:shadow-xl ${secondaryColor === subColor.secondaryColor ? "ring-4 ring-offset-2 ring-blue-500" : ""
-                            }`}
+                          className={`h-16 w-16 rounded-full shadow-lg transition-shadow hover:shadow-xl ${
+                            secondaryColor === subColor.secondaryColor ? 'ring-4 ring-blue-500 ring-offset-2' : ''
+                          }`}
                           style={{
                             background: `linear-gradient(45deg, ${primaryColor} 50%, ${subColor.secondaryColor} 50%)`,
                           }}
@@ -166,14 +154,14 @@ const MemoSetting = () => {
 
           {secondaryColor && (
             <div className="text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Final Pair</h3>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <h3 className="mb-4 text-lg font-medium text-gray-900">Final Pair</h3>
+              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   type="button"
-                  onClick={() => handleOpen("primary")}
-                  className="w-full sm:w-40 h-20 rounded-2xl shadow-lg flex items-center justify-center font-mono text-sm transition-shadow hover:shadow-xl"
+                  onClick={() => handleOpen('primary')}
+                  className="flex h-20 w-full items-center justify-center rounded-2xl font-mono text-sm shadow-lg transition-shadow hover:shadow-xl sm:w-40"
                   style={{
                     backgroundColor: primaryColor,
                     color: secondaryColor,
@@ -187,17 +175,17 @@ const MemoSetting = () => {
                   whileTap={{ scale: 0.95 }}
                   type="button"
                   onClick={swapColors}
-                  className="p-3 rounded-full bg-white shadow-lg hover:shadow-xl transition-all"
+                  className="rounded-full bg-white p-3 shadow-lg transition-all hover:shadow-xl"
                 >
-                  <ArrowLeftRight className="w-6 h-6" />
+                  <ArrowLeftRight className="h-6 w-6" />
                 </motion.button>
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   type="button"
-                  onClick={() => handleOpen("secondary")}
-                  className="w-full sm:w-40 h-20 rounded-2xl shadow-lg flex items-center justify-center font-mono text-sm transition-shadow hover:shadow-xl"
+                  onClick={() => handleOpen('secondary')}
+                  className="flex h-20 w-full items-center justify-center rounded-2xl font-mono text-sm shadow-lg transition-shadow hover:shadow-xl sm:w-40"
                   style={{
                     backgroundColor: secondaryColor,
                     color: primaryColor,
@@ -220,9 +208,8 @@ const MemoSetting = () => {
         </PopUp>
       )}
     </div>
-  )
-}
+  );
+};
 
-const Setting = memo(MemoSetting)
-export default Setting
-
+const Setting = memo(MemoSetting);
+export default Setting;
