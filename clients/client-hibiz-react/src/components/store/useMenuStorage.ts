@@ -201,6 +201,9 @@ interface MenuPageStore {
   dishImages: string[];
   setDishImages: (images: string[]) => void;
 
+  kitchenId: string;
+  setKitchenId: (id: string) => void;
+
   tags: string[];
   setTags: (tags: string[]) => void;
 
@@ -405,6 +408,9 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
 
   selectedFile: null,
   setSelectedFile: (file) => set({ selectedFile: file }),
+
+  kitchenId: "",
+  setKitchenId: (id) => set({ kitchenId: id }),
 
   resetStore: () =>
     set({
@@ -635,6 +641,7 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
       visibility: editDish?.visibility,
       timings: editDish?.timings ?? [],
       avgPrepTime: editDish?.avgPrepTime ?? 0,
+      kitchenId: editDish?.kitchenId || "",
     });
   },
 
