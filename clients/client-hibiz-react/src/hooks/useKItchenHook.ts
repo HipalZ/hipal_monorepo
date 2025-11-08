@@ -36,7 +36,11 @@ export const useGetAllKitchens = () => {
     }
   }, []);
 
-  const { isLoading: kitchenLoading, data: kitchenData } = useQuery({
+  const {
+    isLoading: kitchenLoading,
+    data: kitchenData,
+    refetch: refetchKitchens,
+  } = useQuery({
     queryKey: ["fetchKitchens", businessId],
     queryFn: fetchKitchens,
     enabled: !!businessId,
