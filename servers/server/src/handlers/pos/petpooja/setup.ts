@@ -50,7 +50,7 @@ async function petPoojaPosSetupHandler(payload: {
 
     const businessInfo = await Business.findById(businessId).session(session);
     if (!businessInfo) {
-      throw new Error("Business not found");
+      throw new Error("Business not founds");
     }
     const modelsToUpdate = [Dish, Category, AddOn, Zone, Table];
     const updateOps = modelsToUpdate.map((Model) =>
