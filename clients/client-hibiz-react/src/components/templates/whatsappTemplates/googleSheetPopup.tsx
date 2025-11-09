@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectItem } from '@/components/ui/select';
+import { apiRpc } from '@hi/common';
 import { Plus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -13,28 +14,80 @@ export default function GoogleSheetPopup({ open, onClose, data }) {
   const [sheetName, setSheetName] = useState('');
   const [cells, setCells] = useState([{ key: '', value: '' }]);
 
-  // STEP 1: Trigger Google login
+  // 🧩 Handle Google Login (popup-based)
   const handleLogin = async () => {
-    window.open('/api/google/login', '_blank', 'width=600,height=600');
-    // after redirect, your backend should store token in session or localStorage
-    setTimeout(() => setIsAuthed(true), 2000);
+    console.log('clicked on login');
+    try {
+      // Step 1: Get Google OAuth URL from backend
+      const res = await apiRpc.google_sheets.auth.url.$get({});
+      const response = await res.json();
+      console.log('Response from auth URL request:', response);
+      const authUrl = response.url;
+      console.log('Auth URL:', authUrl);
+      // Step 2: Open popup for login
+      const popup = window.open(authUrl, 'googleLogin', 'width=600,height=700');
+
+      // Step 3: Poll until closed or redirected
+      const pollTimer = window.setInterval(async () => {
+        try {
+          if (!popup || popup.closed) {
+            window.clearInterval(pollTimer);
+
+            // Extract `code` from redirected popup
+            const params = new URLSearchParams(popup?.location.search);
+            const code = params.get('code');
+            console.log('Authorization code:', code);
+            if (code) {
+              // Exchange code for tokens
+              const exchangeRes = await apiRpc.google_sheets.auth.exchange.$post({
+                json: { code },
+              });
+              const result = await exchangeRes.json();
+              console.log('Exchange result:', result);
+              if (result?.success) {
+                setIsAuthed(true);
+                await fetchSpreadsheets();
+              }
+            }
+          }
+        } catch {
+          // ignore CORS issues while popup redirecting
+        }
+      }, 500);
+    } catch (err) {
+      console.error('Login error:', err);
+    }
   };
 
-  // STEP 2: Fetch spreadsheet list
-  useEffect(() => {
-    setSpreadsheets([]);
-  }, []);
+  // 📄 Fetch spreadsheet list
+  const fetchSpreadsheets = async () => {
+    try {
+      const res = await apiRpc.google_sheets.list.$get({});
+      const response = await res.json();
+      setSpreadsheets(response.data || []);
+    } catch (err) {
+      console.error('Error fetching spreadsheets:', err);
+    }
+  };
 
-  // STEP 3: Fetch sheet tabs on spreadsheet selection
+  // 📄 Fetch tabs (sheet names) for a spreadsheet
   const fetchSheets = async (id) => {
-    setSpreadsheetId(id);
-    const res = await api.get(`/api/google/sheets/${id}/tabs`);
-    setSheets(res.data);
+    try {
+      setSpreadsheetId(id);
+      const res = await apiRpc.google_sheets.tabs[':spreadsheetId'].$get({
+        param: { spreadsheetId: id },
+      });
+      const response = await res.json();
+      setSheets(response.data || []);
+    } catch (err) {
+      console.error('Error fetching sheet tabs:', err);
+    }
   };
 
   const handleAddCell = () => setCells([...cells, { key: '', value: '' }]);
   const handleRemoveCell = (index) => setCells(cells.filter((_, i) => i !== index));
 
+  // 💾 Save node data to flow builder
   const handleSave = () => {
     data.onPatch({
       meta: {
@@ -46,6 +99,10 @@ export default function GoogleSheetPopup({ open, onClose, data }) {
     });
     onClose();
   };
+
+  useEffect(() => {
+    if (isAuthed) fetchSpreadsheets();
+  }, [isAuthed]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

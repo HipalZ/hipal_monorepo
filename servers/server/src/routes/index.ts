@@ -48,6 +48,7 @@ import whatsappRouter from "./whatsapp";
 import whatsAppFlowRouter from "./whatsappflow";
 import zonesAndTablesRouter from "./zonesAndTables";
 import whatsAppChatbotRouter from "./whatsappChatbot";
+import googleSheetsRouter from "./googleSheets";
 
 ////
 const app = new Hono();
@@ -103,6 +104,7 @@ export const routes = app
   .route("/attendence", staffAttendenceRouter)
   .route("/sync_pos_menu_config", syncPosMenuConfigRouter)
   .route("/kds", kdsRouter)
-  .route("/wa_chatbot", whatsAppChatbotRouter);
+  .route("/wa_chatbot", whatsAppChatbotRouter)
+  .route("/google_sheets", googleSheetsRouter);
 
 export type AppType = typeof routes;
