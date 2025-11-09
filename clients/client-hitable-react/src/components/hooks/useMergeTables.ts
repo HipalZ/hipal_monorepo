@@ -48,7 +48,6 @@ export const useMergeTables = () => {
           setModalType("addItem");
           setIsPlacingNewOrder(true);
         }
-        console.log(variables, businessId);
         queryClient.invalidateQueries({
           queryKey: ["fetchIndividualTable", variables.toTableId],
         });

@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { EyeOff, Info, Search, Trash2, X } from 'lucide-react';
 import { memo, useMemo, useState } from 'react';
 import SpinnerMemo from '../loadingSpinner';
+import FloatingTableActions from './FloatingButton';
 import EnhancedOrderCard from './orderCard';
 
 const MemoPlaceOrders = () => {
@@ -98,19 +99,6 @@ const MemoPlaceOrders = () => {
           )}
           {!isSearchActive && (
             <div className="flex items-center justify-between">
-              {hasAnyDeletedItemsGlobally && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={`h-12 w-12 rounded-full shadow-lg ${
-                    showOnlyDeletedOrders ? 'bg-red-500 text-red-500 hover:bg-red-600' : 'bg-white text-red-500 hover:bg-gray-100'
-                  }`}
-                  onClick={() => setShowOnlyDeletedOrders((prev) => !prev)}
-                  aria-label={showOnlyDeletedOrders ? 'Show all orders' : 'Show only orders with deleted items'}
-                >
-                  {showOnlyDeletedOrders ? <EyeOff className="h-6 w-6" /> : <Trash2 className="h-6 w-6" />}
-                </Button>
-              )}
               {/* Search Button */}
               <Button
                 variant="outline"
@@ -129,6 +117,7 @@ const MemoPlaceOrders = () => {
           )}
         </div>
       </div>
+      {!isSearchActive && <FloatingTableActions />}
     </>
   );
 };

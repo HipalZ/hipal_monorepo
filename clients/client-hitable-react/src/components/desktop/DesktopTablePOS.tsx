@@ -166,7 +166,6 @@ export default memo(DesktopTablePOS);
 
 function HorizontalScroll({ children }: { children: React.ReactNode }) {
   const ref = useHorizontalScroll<HTMLDivElement>();
-  console.log(ref);
 
   return (
     <div

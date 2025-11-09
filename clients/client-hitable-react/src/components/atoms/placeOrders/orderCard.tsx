@@ -174,6 +174,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
               filteredCartItems.map((item: any) => {
                 const id = (item._id ?? item.id) as string;
                 const isItemDeleted = item.isDeleted;
+                const itemDeletedBy = item.deletedBy;
                 const status: 'IN_PROGRESS' | 'COOKED' | 'DELIVERED' | 'CANCELLED' | undefined = item?.itemStatus;
 
                 const eligible = !isItemDeleted && status !== 'DELIVERED' && status !== 'CANCELLED';
@@ -215,7 +216,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                       <div className="col-span-7 -ml-4 min-w-0">
                         <div className="flex items-start gap-1">
                           <MdRestaurantMenu className="mt-1 h-4 w-4 text-gray-500" />
-                          <h6 className={cn('line-clamp-2 h-[3rem]', itemTextClasses)} title={item?.dish?.name}>
+                          <h6 className={cn('line-clamp-2 max-h-[3rem]', itemTextClasses)} title={item?.dish?.name}>
                             {item?.dish?.name}
                           </h6>
                           {isItemDeleted && <Badge variant="destructive">Deleted</Badge>}
@@ -225,6 +226,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                       <div className="col-span-2 text-center text-sm">x{item?.quantity}</div>
                       <div className="col-span-2 -ml-2 text-right font-medium">₹{lineTotal.toFixed(1)}</div>
                     </div>
+                    {isItemDeleted && itemDeletedBy && <div className="ml-9 mt-1 text-xs font-semibold text-red-600">Deleted by {itemDeletedBy}</div>}
 
                     {/* Row 2 */}
                     <div className="mt-1 grid grid-cols-12 items-center gap-2">

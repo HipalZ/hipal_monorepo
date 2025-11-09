@@ -29,7 +29,6 @@ const MemoHotel = () => {
   const roomData = useHotelStore((state) => state.roomData);
   const openCartModal = useHotelStore((state) => state.openCartModal);
   const setOpenCartModal = useHotelStore((state) => state.setOpenCartModal);
-  console.log("Rendering Hotel Component", roomData);
 
   const handleBack = () => {
     setOpenCartModal(false);

@@ -108,7 +108,6 @@ const MemoBookedRoomHotel = () => {
       toast.success("Alert created successfully");
       closeServices();
     }
-    console.log("Creating alert for service IDs:", serviceIds);
   };
 
   return (
