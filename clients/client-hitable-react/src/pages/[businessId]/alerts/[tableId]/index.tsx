@@ -8,6 +8,7 @@ import { type orderModal, useOrderStore } from '@/components/store/useOrderData'
 import type { TableData } from '@/components/store/useZonesAndTable';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { apiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -15,7 +16,6 @@ import { HomeIcon } from 'lucide-react';
 import { Suspense, lazy, memo, useCallback, useState } from 'react';
 import { MdReceipt, MdRestaurantMenu } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useIsMobile } from '../../../../hooks/use-mobile';
 
 // Lazy loaded components
 const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));

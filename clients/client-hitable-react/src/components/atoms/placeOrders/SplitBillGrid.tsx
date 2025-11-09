@@ -96,7 +96,6 @@ const SplitBillGrid = memo(
                     ),
                   0,
                 );
-                console.log("Bill Items:", bill);
 
                 return (
                   <Card

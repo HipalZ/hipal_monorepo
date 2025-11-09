@@ -47,7 +47,6 @@ export default function AllCategoriesServicesModal({
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const roomData = useHotelStore((state) => state.roomData);
-  console.log("roomData in CategorySearchModal:", roomData);
 
   // Build normalized model for search
   const modeled = useMemo(() => {

@@ -79,10 +79,6 @@ export const useTimings = create<State>((set, get) => ({
   status: "",
   rating: "",
 
-  /**
-   * setRange preserves the exact datetime passed in (do NOT clamp),
-   * and guards against no-op updates to avoid loops.
-   */
   applied: false,
   setIsApplied: (applied: boolean) => set({ applied }),
 

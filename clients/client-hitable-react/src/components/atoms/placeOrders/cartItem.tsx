@@ -30,13 +30,15 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
   const { setIsCartEdit, isCartEdit } = useCart();
   const captainData = useHiClientZ((s) => s.captainData);
   const { businessId } = useParams();
-  const { setModalType, orderError, showOrderError, setShowOrderError } = useOrderStore();
+  const setModalType = useOrderStore((s) => s.setModalType);
+  const orderError = useOrderStore((s) => s.orderError);
+  const showOrderError = useOrderStore((s) => s.showOrderError);
+  const setShowOrderError = useOrderStore((s) => s.setShowOrderError);
   const { createOrder, isPending } = useCreateOrder();
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const [selectedCartItem, setSelectedCartItem] = useState<ICartItem | null>(null);
   const outletInfo = useBusinessData((s) => s.outletInfo);
 
-  // Filter the cart items based on dishId (if provided)
   const filteredCart = useMemo(() => {
     return dishId ? cart.filter((cartItem) => cartItem.dish?._id === dishId) : cart;
   }, [cart, dishId]);
@@ -239,7 +241,6 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
           maxWidth="30rem"
           position="mid"
           fixed={true}
-          shadow
           buttons={[
             {
               text: 'Back',
