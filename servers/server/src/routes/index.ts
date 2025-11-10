@@ -42,6 +42,7 @@ import surlRouter from "./surl";
 import tableRouter from "./table";
 import tagRouter from "./tags";
 import taxRouter from "./tax";
+import tokenRouter from "./token";
 import upiModeRouter from "./upimode";
 import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
@@ -101,6 +102,7 @@ export const routes = app
   .route("/jewellery", jewelleryRouter)
   .route("/attendence", staffAttendenceRouter)
   .route("/sync_pos_menu_config", syncPosMenuConfigRouter)
-  .route("/kds", kdsRouter);
+  .route("/kds", kdsRouter)
+  .route("/token", tokenRouter);
 
 export type AppType = typeof routes;
