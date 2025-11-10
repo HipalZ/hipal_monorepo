@@ -23,6 +23,7 @@ import { setCookie } from "hono/cookie";
 import jwt from "jsonwebtoken";
 import mongoose, { type ClientSession } from "mongoose";
 import { z } from "zod";
+import { pushToken } from "../../services/token";
 import { respond } from "../../utils/response";
 
 function arraysEqual<T>(a: T[], b: T[]) {
@@ -359,6 +360,8 @@ const menuRouter = new Hono()
           name: tableName,
           businessId,
         }).lean();
+
+        pushToken(c);
 
         if (!tableData) {
           const findDefaultZone = await Zone.findOne({

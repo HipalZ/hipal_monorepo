@@ -22,9 +22,27 @@ export const tokenVerification = async (c: Context, next: Next) => {
     "/users/:id/signUp",
     "/users/verifyOtp",
     "/users/:id/signIn",
+    "/token/push",
+    "/event/getevents",
+    "/categories",
+    "/menu/fetch_table_menu",
+    "/menu-banner/explore/:businessId",
+    "/businesses/n/:customLink",
+    "/businesses/get/Single/:businessId",
+    "/businesses/themes/:businessId",
+    "/bucket/images/fetch_bucket_by_business",
+    "/kot/table_kot/:tableId",
+    "/businesses/get/allbusiness",
+    "/businesses/outletInfo/:businessId",
+    "/dishes/uniquelyDishes/:businessId",
+    "/businesses/:businessId/loyalty",
+    "/settings/banners/:businessId",
+    "/hotel/room_type/fetch_room_types",
+    "/settings",
   ];
 
   const path = c.req.path;
+  console.log("path", path);
   const isIgnorePath = ignorePaths.some((ignorePath) =>
     path.includes(ignorePath),
   );

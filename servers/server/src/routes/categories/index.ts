@@ -24,6 +24,7 @@ import {
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { addInTempMenuChanges } from "../../services/tempMenuChanges";
+import { pushToken } from "../../services/token";
 import indianHoursInMinutes from "../../utils/indianHoursInMinutes";
 import { respond } from "../../utils/response";
 
@@ -427,6 +428,8 @@ const categoriesRouter = new Hono()
         isDeleted: false,
         active: true,
       });
+
+      pushToken(c);
       if (menu) {
         const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
         const query = {

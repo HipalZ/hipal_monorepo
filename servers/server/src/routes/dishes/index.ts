@@ -25,6 +25,7 @@ import {
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { addInTempMenuChanges } from "../../services/tempMenuChanges";
+import { pushToken } from "../../services/token";
 import { respond } from "../../utils/response";
 //
 const dishesRouter = new Hono()
@@ -514,6 +515,8 @@ const dishesRouter = new Hono()
 
     async (c) => {
       const { businessId } = c.req.param();
+
+      pushToken(c);
 
       const dishes = await UniquelyYours.find({ businessId, isDeleted: false });
 

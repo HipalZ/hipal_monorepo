@@ -19,6 +19,7 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
+import { pushToken } from "../../services/token";
 import { calculateCartBill } from "../../utils/helper";
 import {
   convertToHipalzCart,
@@ -40,6 +41,8 @@ const kotRouter = new Hono()
     ),
     async (c) => {
       const { tableId } = c.req.param();
+
+      pushToken(c);
 
       const tableName = await Table.findOne({
         _id: tableId,

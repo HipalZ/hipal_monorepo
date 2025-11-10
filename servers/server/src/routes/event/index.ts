@@ -1,8 +1,9 @@
+import { Event } from "@hi/db-models";
 import { eventSchema, updatedEventSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { Event } from "@hi/db-models";
 import { z } from "zod";
+import { pushToken } from "../../services/token";
 
 const eventRouter = new Hono()
   .post(
@@ -127,6 +128,8 @@ const eventRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.query();
       const events = await Event.find({ businessId });
+      pushToken(c);
+
       return c.json(
         {
           message: "Events fetched successfully",
