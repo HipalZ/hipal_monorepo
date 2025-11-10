@@ -34,7 +34,7 @@
     "splidejs"
   ],
   "[json]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "remote.autoForwardPortsSource": "hybrid",
   "[jsonc]": {

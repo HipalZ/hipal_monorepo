@@ -1,81 +1,57 @@
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select, SelectItem } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { useSubmitGoogleSheet } from '@/hooks/useChatbot';
+import { cn } from '@/lib/utils';
 import { apiRpc } from '@hi/common';
-import { Plus, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Handle, Position } from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import { MessageCircle, Plus, X } from 'lucide-react';
+import { useState } from 'react';
+import DeleteButton from './deleteButton';
 
-export default function GoogleSheetPopup({ open, onClose, data }) {
+export default function GoogleSheetPopup({ data, selected }: { data: any; selected: boolean }) {
   const [isAuthed, setIsAuthed] = useState(false);
-  const [spreadsheets, setSpreadsheets] = useState([]);
-  const [sheets, setSheets] = useState([]);
   const [spreadsheetId, setSpreadsheetId] = useState('');
+  const [selectedSpreadsheetName, setSelectedSpreadsheetName] = useState('');
+  const [sheets, setSheets] = useState([]);
   const [sheetName, setSheetName] = useState('');
   const [cells, setCells] = useState([{ key: '', value: '' }]);
-
-  // 🧩 Handle Google Login (popup-based)
+  const { submitToSheet } = useSubmitGoogleSheet();
+  // 🧩 Handle Google Login
   const handleLogin = async () => {
-    console.log('clicked on login');
     try {
-      // Step 1: Get Google OAuth URL from backend
       const res = await apiRpc.google_sheets.auth.url.$get({});
-      const response = await res.json();
-      console.log('Response from auth URL request:', response);
-      const authUrl = response.url;
-      console.log('Auth URL:', authUrl);
-      // Step 2: Open popup for login
-      const popup = window.open(authUrl, 'googleLogin', 'width=600,height=700');
+      const { url } = await res.json();
 
-      // Step 3: Poll until closed or redirected
-      const pollTimer = window.setInterval(async () => {
-        try {
-          if (!popup || popup.closed) {
-            window.clearInterval(pollTimer);
+      const popup = window.open(url, 'googleLogin', 'width=600,height=700');
 
-            // Extract `code` from redirected popup
-            const params = new URLSearchParams(popup?.location.search);
-            const code = params.get('code');
-            console.log('Authorization code:', code);
-            if (code) {
-              // Exchange code for tokens
-              const exchangeRes = await apiRpc.google_sheets.auth.exchange.$post({
-                json: { code },
-              });
-              const result = await exchangeRes.json();
-              console.log('Exchange result:', result);
-              if (result?.success) {
-                setIsAuthed(true);
-                await fetchSpreadsheets();
-              }
-            }
-          }
-        } catch {
-          // ignore CORS issues while popup redirecting
+      const poll = setInterval(async () => {
+        const statusRes = await apiRpc.google_sheets.status.$get({});
+        const { loggedIn } = await statusRes.json();
+        if (loggedIn) {
+          console.log('✅ Google login verified on backend');
+          clearInterval(poll);
+          popup?.close();
+          setIsAuthed(true);
+          refetch();
         }
-      }, 500);
+      }, 1000);
     } catch (err) {
       console.error('Login error:', err);
     }
   };
 
-  // 📄 Fetch spreadsheet list
-  const fetchSpreadsheets = async () => {
-    try {
-      const res = await apiRpc.google_sheets.list.$get({});
-      const response = await res.json();
-      setSpreadsheets(response.data || []);
-    } catch (err) {
-      console.error('Error fetching spreadsheets:', err);
-    }
-  };
-
-  // 📄 Fetch tabs (sheet names) for a spreadsheet
-  const fetchSheets = async (id) => {
+  // 📑 Fetch tabs of the selected spreadsheet
+  const fetchSheets = async (id: string) => {
     try {
       setSpreadsheetId(id);
-      const res = await apiRpc.google_sheets.tabs[':spreadsheetId'].$get({
-        param: { spreadsheetId: id },
+      const selected = spreadsheets.find((s) => s.id === id);
+      setSelectedSpreadsheetName(selected?.name || '');
+      const res = await apiRpc.google_sheets.sheets[':id'].tabs.$get({
+        param: { id },
       });
       const response = await res.json();
       setSheets(response.data || []);
@@ -85,107 +61,145 @@ export default function GoogleSheetPopup({ open, onClose, data }) {
   };
 
   const handleAddCell = () => setCells([...cells, { key: '', value: '' }]);
-  const handleRemoveCell = (index) => setCells(cells.filter((_, i) => i !== index));
+  const handleRemoveCell = (index: number) => setCells(cells.filter((_, i) => i !== index));
 
-  // 💾 Save node data to flow builder
   const handleSave = () => {
+    console.log('Saving Google Sheet config:', { spreadsheetId, sheetName, cells });
     data.onPatch({
       meta: {
         type: 'google_sheet',
-        spreadsheetId,
-        sheetName,
-        cells,
+        sheet: {
+          spreadsheetId,
+          sheetName,
+          cells,
+        },
       },
     });
-    onClose();
   };
 
-  useEffect(() => {
-    if (isAuthed) fetchSpreadsheets();
-  }, [isAuthed]);
+  const { data: spreadsheets = [], refetch } = useQuery({
+    queryKey: ['googleSheetsList'],
+    queryFn: async () => {
+      const res = await apiRpc.google_sheets.sheets.$get({});
+      const response = await res.json();
+      return response.data || [];
+    },
+    enabled: isAuthed,
+    refetchOnWindowFocus: false,
+  });
+  if (spreadsheets.length === 0 && isAuthed) {
+    return (
+      <div className="text-center">
+        <p>No Google Sheets found in your account.</p>
+        <p>Please create a Google Sheet and refresh.</p>
+      </div>
+    );
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Google Sheets Integration</DialogTitle>
-        </DialogHeader>
+    <>
+      <div className="relative">
+        <Handle type="target" position={Position.Left} className="z-50 !h-5 !w-5 !border-4 !border-white !bg-gray-600 shadow-xl" />
+        <DeleteButton data={data} />
 
-        {!isAuthed ? (
-          <div className="space-y-4 text-center">
-            <p>Connect your Google account to continue.</p>
-            <Button onClick={handleLogin} className="bg-green-600 hover:bg-green-700">
-              Login with Google
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs font-medium text-gray-700">Spreadsheet</label>
-              <Select onValueChange={fetchSheets}>
-                {spreadsheets.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </Select>
+        <Card className={cn('w-96 border-2 shadow-2xl transition-all', selected ? 'border-blue-500 ring-4 ring-blue-300/30' : 'border-gray-300')}>
+          {/* Header */}
+          <div className="rounded-t-lg bg-gradient-to-r from-green-600 to-emerald-600 p-5 text-white">
+            <div className="flex items-center gap-3">
+              <MessageCircle className="h-6 w-6" />
+              <h3 className="text-lg font-bold">Google SpreadSheet</h3>
             </div>
+          </div>
 
-            {sheets.length > 0 && (
-              <div>
-                <label className="text-xs font-medium text-gray-700">Sheet Name</label>
-                <Select onValueChange={setSheetName}>
-                  {sheets.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </Select>
-              </div>
-            )}
-
-            {sheetName && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-gray-700">Add Cell Mapping</label>
-                {cells.map((cell, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <Input
-                      placeholder="A1"
-                      value={cell.key}
-                      onChange={(e) => {
-                        const c = [...cells];
-                        c[i].key = e.target.value;
-                        setCells(c);
-                      }}
-                    />
-                    <Input
-                      placeholder="@variable or static value"
-                      value={cell.value}
-                      onChange={(e) => {
-                        const c = [...cells];
-                        c[i].value = e.target.value;
-                        setCells(c);
-                      }}
-                    />
-                    <Button size="icon" variant="ghost" onClick={() => handleRemoveCell(i)}>
-                      <X />
-                    </Button>
-                  </div>
-                ))}
-                <Button onClick={handleAddCell} variant="outline">
-                  <Plus className="mr-1" /> Add Cell
+          <CardContent className="space-y-5 p-4">
+            {!isAuthed ? (
+              <div className="space-y-4 text-center">
+                <p>Connect your Google account to continue.</p>
+                <Button onClick={handleLogin} className="bg-green-600 hover:bg-green-700">
+                  Login with Google
                 </Button>
               </div>
-            )}
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Spreadsheet</label>
+                  <Select value={spreadsheetId} onValueChange={fetchSheets}>
+                    <SelectTrigger className="w-full">
+                      <span>{selectedSpreadsheetName || 'Select Spreadsheet'}</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {spreadsheets?.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="flex justify-end pt-4">
-              <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">
-                Save
-              </Button>
-            </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+                {/* Sheet Name Dropdown */}
+                {sheets.length > 0 && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-700">Sheet Name</label>
+                    <Select value={sheetName} onValueChange={setSheetName}>
+                      <SelectTrigger className="w-full">
+                        <span>{sheetName || 'Select Sheet'}</span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sheets.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-700">Add Cell Mapping</label>
+                  {cells.map((cell, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        placeholder="A1"
+                        value={cell.key}
+                        onChange={(e) => {
+                          const c = [...cells];
+                          c[i].key = e.target.value;
+                          setCells(c);
+                        }}
+                      />
+                      <Input
+                        placeholder="@variable or static value"
+                        value={cell.value}
+                        onChange={(e) => {
+                          const c = [...cells];
+                          c[i].value = e.target.value;
+                          setCells(c);
+                        }}
+                      />
+                      <Button size="icon" variant="ghost" onClick={() => handleRemoveCell(i)}>
+                        <X />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button onClick={handleAddCell} variant="outline">
+                    <Plus className="mr-1" /> Add Cell
+                  </Button>
+                </div>
+
+                {/* Save Button */}
+                <div className="flex justify-end pt-4">
+                  <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">
+                    Save
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        <Handle type="source" position={Position.Right} className="z-50 !h-[0.75rem] !w-[0.75rem] bg-gray-400" />
+      </div>
+    </>
   );
 }

@@ -10,7 +10,10 @@ import {
   whatsAppUserAndTextMessage,
 } from "../../../utils/whatsappWebhookHandlers/helper";
 import { respond } from "../../../utils/response";
+import path = require("path");
+const credentials = require("../../../utils/credentials_oauth.json").web;
 const { google } = require("googleapis");
+
 
 /* ----------------------------------------------------------------------------
  * FLOW CACHE (per business)
@@ -598,30 +601,56 @@ async function advance(
     }
 
     if (node.type === "google_sheet") {
-      const { spreadsheetId, sheetName, cells } = node;
-      const auth = new google.auth.GoogleAuth({
-        keyFile: "service_account.json",
-        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-      });
-      const client = await auth.getClient();
-      const googleSheets = google.sheets({ version: "v4", auth: client });
+      console.log("➡️ Processing Google Sheet node:", node);
+      try {
+        const sheet = node.sheet || {};
+        const { spreadsheetId, sheetName, cells } = sheet;
 
-      const values = cells.map((c) => [
-        interpolate(c.value, s.variables, cfg, getSession(userId).userName),
-      ]);
+        console.log("Google Sheet node:", { spreadsheetId, sheetName, cells });
 
-      await googleSheets.spreadsheets.values.append({
-        spreadsheetId,
-        range: `${sheetName}!A1`,
-        valueInputOption: "USER_ENTERED",
-        resource: { values },
-      });
+        if (!spreadsheetId || !sheetName || !Array.isArray(cells)) {
+          console.warn("⚠️ Google Sheet node missing details:", node);
+          setSession(userId, { currentNodeId: node.next || null });
+          s = getSession(userId); // ✅ refresh after setting
+          continue;
+        }
+        console.log("credentials in google sheet node:", path.join(__dirname, "../../../utils/credentials_oauth.json"));
+        // 1️⃣ Auth
+        const auth = new google.auth.GoogleAuth({
+          keyFile: path.join(__dirname, "../../../utils/testing.json"),
+          scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+        });
+        console.log('auth',auth)
+        const client = await auth.getClient();
+        const googleSheets = google.sheets({ version: "v4", auth: client });
 
-      setSession(userId, { currentNodeId: node.next || null });
-      continue;
+        // 2️⃣ Map @variables dynamically
+        const resolvedRow = cells.map((c: any) =>
+          interpolate(c.value, s.variables, cfg, s.userName),
+        );
+        console.log("📤 Appending row:", resolvedRow);
+
+        // 3️⃣ Append
+        await googleSheets.spreadsheets.values.append({
+          spreadsheetId,
+          range: sheetName,
+          valueInputOption: "USER_ENTERED",
+          resource: { values: [resolvedRow] },
+        });
+
+        console.log("✅ Row added to Google Sheet:", spreadsheetId, sheetName);
+
+        setSession(userId, { currentNodeId: node.next || null });
+        s = getSession(userId); // ✅ refresh
+        continue;
+      } catch (err: any) {
+        console.error("❌ Google Sheet append failed:", err);
+        setSession(userId, { currentNodeId: node.next || null });
+        s = getSession(userId); // ✅ refresh
+        continue;
+      }
     }
 
-    // Unknown node type: finish session gracefully
     await ChatbotSessionModel.findOneAndUpdate(
       { userId, chatbotId: FLOW._id },
       { completed: true, endTime: new Date(), lastNodeId: node.id },

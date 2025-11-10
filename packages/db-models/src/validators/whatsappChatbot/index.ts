@@ -26,6 +26,21 @@ export const HeaderSchema = z.object({
   useUpload: z.boolean().default(false),
 });
 
+export const GoogleSheetMetaSchema = z.object({
+  spreadsheetId: z.string().optional(),
+  sheetName: z.string().optional(),
+  cells: z
+    .array(
+      z.object({
+        key: z.string(),
+        value: z.string(),
+      }),
+    )
+    .default([]),
+  mode: z.enum(["append", "update"]).default("append"),
+  columns: z.array(z.string()).default([]),
+});
+
 export const NodeSchema = z.object({
   id: z.string().min(1).max(50),
   type: z.enum([
@@ -36,11 +51,13 @@ export const NodeSchema = z.object({
     "trigger",
     "interactive_button_message",
     "interactive_list_message",
+    "google_sheet", // ✅ added
   ]),
 
   next: z.string().nullable().optional(),
   variable: z.string().nullable().optional(),
 
+  // --- Send Message fields
   contentType: z.enum(["text", "image", "document"]).optional(),
   text: z.string().optional(),
   mediaUrl: z.string().optional(),
@@ -48,10 +65,12 @@ export const NodeSchema = z.object({
   caption: z.string().optional(),
   selectedVars: z.array(z.string()).optional(),
 
+  // --- Ask Question fields
   prompt: z.string().optional(),
   inputType: z.enum(["text", "number", "phone", "email"]).optional(),
   required: z.boolean().optional(),
 
+  // --- Interactive fields
   layout: z.enum(["button", "list", "cta_url", "none"]).optional(),
   header: HeaderSchema.optional(),
   bodyText: z.string().optional(),
@@ -65,6 +84,7 @@ export const NodeSchema = z.object({
     .optional(),
   routes: z.record(z.string()).optional(),
 
+  // --- Condition fields
   logic: z
     .array(
       z.object({
@@ -76,6 +96,8 @@ export const NodeSchema = z.object({
     .optional(),
   trueNext: z.string().optional(),
   falseNext: z.string().optional(),
+
+  sheet: GoogleSheetMetaSchema.optional(),
 });
 
 export const TriggerSchema = z.object({

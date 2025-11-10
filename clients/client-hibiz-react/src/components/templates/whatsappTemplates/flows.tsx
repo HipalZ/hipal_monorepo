@@ -62,7 +62,7 @@ const NodeTypes = {
   INTERACTIVE: 'interactive',
   INTERACTIVE_BUTTON: 'interactive_button_message',
   INTERACTIVE_LIST: 'interactive_list_message',
-  SHEET: 'sheet',
+  SHEET: 'google_sheet',
 };
 const nid = () => Math.random().toString(36).slice(2, 10);
 
@@ -606,7 +606,6 @@ function VariableDropdown({ value, onChange, variables = [], flowParams = [], pl
   );
 }
 
-// Updated Condition Node (with preview fix for display)
 function CondNode({ data, selected }) {
   const logic = data.meta?.logic || [];
   const variables = data.variables || []; // Global custom variables
@@ -787,7 +786,6 @@ function CondNode({ data, selected }) {
   );
 }
 
-// Trigger Node
 function TriggerNode({ data, selected }) {
   const m = data.meta || {};
   const [kw, setKw] = useState('');
@@ -1338,7 +1336,6 @@ function InteractiveButtonNode({ data, selected }) {
 function InteractiveListNode({ data, selected }) {
   let m = data.meta ?? {};
 
-  // ✅ Ensure correct structure in data.meta immediately
   useEffect(() => {
     const hasList = !!m.list;
     if (!hasList || m.layout !== 'list' || m.type !== 'interactive_list_message') {
@@ -1353,7 +1350,6 @@ function InteractiveListNode({ data, selected }) {
     }
   }, []);
 
-  // ✅ Local normalization (safe render)
   m = {
     type: 'interactive_list_message',
     layout: 'list',
@@ -1552,7 +1548,7 @@ function InteractiveListNode({ data, selected }) {
 }
 
 function GoogleSheetNode({ data, selected }) {
-  const m = data.meta ?? { sheetUrl: '', operation: 'append', mapping: [] };
+  return <GoogleSheetPopup data={data} selected={selected} />;
 }
 
 const nodeTypes = {
@@ -1567,7 +1563,6 @@ const nodeTypes = {
 };
 
 function makeNode({ id, type, position, patch, updateGlobalVariables, remove, variables }) {
-  // ✅ Provide sane defaults for each node type
   let defaultMeta = {};
   switch (type) {
     case NodeTypes.INTERACTIVE:
@@ -1578,7 +1573,7 @@ function makeNode({ id, type, position, patch, updateGlobalVariables, remove, va
         footerText: '',
         buttons: [{ id: `btn_${Math.random().toString(36).slice(2, 9)}`, type: 'reply', title: 'Option 1' }],
         list: { sections: [] },
-        routes: {}, // ✅ ensure defined
+        routes: {},
       };
       break;
     case NodeTypes.SEND:
@@ -1593,6 +1588,13 @@ function makeNode({ id, type, position, patch, updateGlobalVariables, remove, va
     case NodeTypes.TRIGGER:
       defaultMeta = { keywords: [] };
       break;
+    case NodeTypes.SHEET:
+      defaultMeta = {
+        spreadsheetId: '',
+        sheetName: 'Sheet1',
+        cells: [{ key: 'name', value: '@userName' }], // default mapping
+      };
+      break;
   }
 
   return {
@@ -1605,7 +1607,7 @@ function makeNode({ id, type, position, patch, updateGlobalVariables, remove, va
       variables,
       updateGlobalVariables,
       remove,
-      meta: defaultMeta, // ✅ initialized
+      meta: defaultMeta,
     },
   };
 }
@@ -1614,7 +1616,6 @@ function buildFinalFromGraph(nodes, edges) {
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
   const metaById = Object.fromEntries(nodes.map((n) => [n.id, JSON.parse(JSON.stringify(n.data.meta || {}))]));
 
-  // ✅ NEW: Collect unique global input variables from all Ask/Interactive nodes' storeVariable/variable
   const globalVars = new Set();
   nodes.forEach((n) => {
     const m = metaById[n.id] || {};
@@ -1628,7 +1629,6 @@ function buildFinalFromGraph(nodes, edges) {
   const runtimeNodes = [];
   const triggers = [];
 
-  // 🔗 Map connections (unchanged)
   for (const e of edges) {
     const { source, target, data } = e;
     const sNode = byId[source];
@@ -1648,7 +1648,6 @@ function buildFinalFromGraph(nodes, edges) {
     }
   }
 
-  // 🧩 Build node objects (unchanged, but now vars are global)
   for (const n of nodes) {
     const m = metaById[n.id] || {};
 
@@ -1660,7 +1659,7 @@ function buildFinalFromGraph(nodes, edges) {
     if (n.type === NodeTypes.SEND) {
       runtimeNodes.push({
         id: n.id,
-        type: 'send_message',
+        type: NodeTypes.SEND,
         next: m.next || null,
         contentType: m.contentType || 'text',
         text: m.text || '',
@@ -1676,7 +1675,7 @@ function buildFinalFromGraph(nodes, edges) {
     if (n.type === NodeTypes.ASK) {
       runtimeNodes.push({
         id: n.id,
-        type: 'ask_question',
+        type: NodeTypes.ASK,
         next: m.next || null,
         prompt: m.prompt || '',
         inputType: m.inputType || 'text',
@@ -1689,7 +1688,7 @@ function buildFinalFromGraph(nodes, edges) {
     if (n.type === NodeTypes.INTERACTIVE) {
       runtimeNodes.push({
         id: n.id,
-        type: 'interactive_message',
+        type: NodeTypes.INTERACTIVE,
         layout: m.layout || 'button',
         header: m.header || null,
         bodyText: m.bodyText || '',
@@ -1706,7 +1705,7 @@ function buildFinalFromGraph(nodes, edges) {
       const buttons = Array.isArray(m.buttons) ? m.buttons : [];
       runtimeNodes.push({
         id: n.id,
-        type: 'interactive_button_message',
+        type: NodeTypes.INTERACTIVE_BUTTON,
         headerText: m.headerText || '',
         bodyText: m.bodyText || '',
         footerText: m.footerText || '',
@@ -1721,7 +1720,7 @@ function buildFinalFromGraph(nodes, edges) {
 
       runtimeNodes.push({
         id: n.id,
-        type: 'interactive_list_message',
+        type: NodeTypes.INTERACTIVE_LIST,
         headerText: m.headerText || '',
         bodyText: m.bodyText || '',
         footerText: m.footerText || '',
@@ -1737,10 +1736,27 @@ function buildFinalFromGraph(nodes, edges) {
     if (n.type === NodeTypes.COND) {
       runtimeNodes.push({
         id: n.id,
-        type: 'set_condition',
+        type: NodeTypes.COND,
         logic: m.logic || [],
         trueNext: m.trueNext || null,
         falseNext: m.falseNext || null,
+      });
+    }
+
+    if (n.type === NodeTypes.SHEET) {
+      const m = n.data?.meta || {};
+      const sheet = m.sheet || {};
+
+      runtimeNodes.push({
+        id: n.id,
+        type: 'google_sheet',
+        next: m.next || null,
+        variable: null,
+        sheet: {
+          spreadsheetId: sheet.spreadsheetId || '',
+          sheetName: sheet.sheetName || 'Sheet1',
+          cells: sheet.cells || [],
+        },
       });
     }
   }
@@ -1753,41 +1769,16 @@ function buildFinalFromGraph(nodes, edges) {
   };
 }
 
-// export const PaletteItem = ({ label, type, icon, cardColor }) => {
-//   const onDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-//     e.dataTransfer.setData('application/reactflow', type);
-//     e.dataTransfer.effectAllowed = 'move';
-//   };
-
-//   return (
-//     <div
-//       draggable
-//       onDragStart={onDragStart}
-//       className={cn(
-//         'group relative flex cursor-grab items-center gap-3 overflow-hidden rounded-xl border p-3 text-sm font-medium shadow-sm transition-all',
-//         'hover:scale-[1.02] hover:shadow-lg active:cursor-grabbing',
-//         cardColor,
-//         'text-white',
-//       )}
-//     >
-//       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 p-1.5">{icon}</div>
-//       <span className="select-none">{label}</span>
-//       <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-//     </div>
-//   );
-// };
-export const PaletteItem = ({ label, type, icon, cardColor, onDragStart: handleDrag }) => {
-  const defaultDrag = (e: React.DragEvent<HTMLDivElement>) => {
+export const PaletteItem = ({ label, type, icon, cardColor }) => {
+  const defaultDrag = (e: DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData('application/reactflow', type);
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const dragHandler = handleDrag || defaultDrag;
-
   return (
     <div
       draggable
-      onDragStart={dragHandler}
+      onDragStart={defaultDrag}
       className={cn(
         'group relative flex cursor-grab items-center gap-3 overflow-hidden rounded-xl border p-3 text-sm font-medium shadow-sm transition-all',
         'hover:scale-[1.02] hover:shadow-lg active:cursor-grabbing',
@@ -1812,17 +1803,6 @@ function EditorShell() {
   const { createChatbot } = useChatBot();
   const reactFlowWrapper = useRef(null);
   const { screenToFlowPosition } = useReactFlow();
-  const [showSheetPopup, setShowSheetPopup] = useState(false);
-
-  // 🧩 Custom drag handler for Google Sheet
-  const handleGoogleSheetDrag = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    // Open popup instead of allowing default drag
-    setShowSheetPopup(true);
-    console.log('🧾 Google Sheet drag intercepted — opening popup instead');
-  };
 
   const updateGlobalVariables = useCallback((newVars) => {
     setVariables((prev) => {
@@ -1950,9 +1930,10 @@ function EditorShell() {
   }
 
   const handleSaveFlow = () => {
-    const filteredPayload = cleanPayload(finalObject);
-    createChatbot(filteredPayload);
+    console.log('Final chatbot object to save:', finalObject);
+    createChatbot(finalObject);
   };
+
   const nodePaletteItems = [
     {
       label: 'Send Message',
@@ -1985,12 +1966,6 @@ function EditorShell() {
       cardColor: 'bg-gradient-to-br from-indigo-500 to-purple-600',
     },
     {
-      label: 'Spreadsheet Action',
-      type: NodeTypes.SHEET,
-      icon: <FileSpreadsheet className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-lime-500 to-green-600',
-    },
-    {
       label: 'Buttons',
       type: NodeTypes.INTERACTIVE_BUTTON,
       icon: <SquareCheck className="h-4 w-4" />,
@@ -2002,14 +1977,29 @@ function EditorShell() {
       icon: <ListOrdered className="h-4 w-4" />,
       cardColor: 'bg-gradient-to-br from-cyan-500 to-teal-600',
     },
+    {
+      label: 'Spreadsheet Action',
+      type: NodeTypes.SHEET,
+      icon: <FileSpreadsheet className="h-4 w-4" />,
+      cardColor: 'bg-gradient-to-br from-lime-500 to-green-600',
+    },
   ];
+
   return (
     <div className="inter flex h-full w-full overflow-hidden bg-gray-50">
       <div
         className={cn('relative flex-shrink-0 border-r border-gray-200 bg-white transition-all duration-300', leftOpen ? 'w-80 shadow-xl' : 'w-12')}
       >
         {/* Toggle Button */}
-        <div onClick={() => setLeftOpen((v) => !v)} className="absolute right-[-18px] top-6 z-10">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setLeftOpen((v) => !v)}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') setLeftOpen((v) => !v);
+          }}
+          className="absolute right-[-18px] top-6 z-10"
+        >
           <Button
             variant="outline"
             size="icon"
@@ -2047,13 +2037,7 @@ function EditorShell() {
                   <div className="space-y-2">
                     {nodePaletteItems.map((item, idx) => (
                       <motion.div key={item.type} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}>
-                        <PaletteItem
-                          label={item.label}
-                          type={item.type}
-                          icon={item.icon}
-                          cardColor={item.cardColor}
-                          onDragStart={item.type === NodeTypes.SHEET ? handleGoogleSheetDrag : undefined}
-                        />
+                        <PaletteItem label={item.label} type={item.type} icon={item.icon} cardColor={item.cardColor} />
                       </motion.div>
                     ))}
                   </div>
@@ -2092,31 +2076,6 @@ function EditorShell() {
           <Controls className="rounded-lg border border-gray-200 bg-white text-gray-700 shadow-lg" />
         </ReactFlow>
       </div>
-      {showSheetPopup && (
-        <GoogleSheetPopup
-          open={showSheetPopup}
-          onClose={() => setShowSheetPopup(false)}
-          data={{
-            onPatch: (patch) => {
-              const position = { x: 250, y: 150 };
-              const id = nid();
-              setRfNodes((nds) => [
-                ...nds,
-                makeNode({
-                  id,
-                  type: NodeTypes.SHEET,
-                  position,
-                  variables,
-                  patch: (p) => patchNode(id, p),
-                  onVariableAdd: updateGlobalVariables,
-                  remove: (nodeId) => removeNode(nodeId),
-                }),
-              ]);
-              setRfNodes((nds) => nds.map((n) => (n.type === NodeTypes.SHEET ? { ...n, data: { ...n.data, ...patch } } : n)));
-            },
-          }}
-        />
-      )}
       <Card className="h-full max-w-xs flex-shrink-0 overflow-y-auto rounded-none border-0 shadow-lg">
         <CardHeader className="border-b p-3">
           <CardTitle className="text-sm font-semibold text-slate-700">Output JSON</CardTitle>

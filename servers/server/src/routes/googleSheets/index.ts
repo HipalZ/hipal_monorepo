@@ -14,8 +14,6 @@ const oauth2Client = new google.auth.OAuth2(
   client_secret,
   redirect_uris[0],
 );
-let tokensCache = null;
-
 /* ----------------------------------------------------------------------------
  * 1️⃣  Get Google Auth URL (for popup window)
  * -------------------------------------------------------------------------- */
@@ -35,46 +33,36 @@ googleSheetsRouter.get("/auth/url", async (c) => {
 });
 
 googleSheetsRouter.get("/auth/google/callback", async (c) => {
-  console.log("called /auth/google/callback", c);
-  const code = c.req.query("code");
-  console.log("OAuth callback received code:", code);
-
-  const { tokens } = await oauth2Client.getToken(code);
-  console.log("Obtained tokens:", tokens);
-  tokensCache = tokens;
-  oauth2Client.setCredentials(tokens);
-
-  // optional: close popup instead of redirect
-  return c.html(`
-    <script>
-      window.opener.postMessage({ success: true }, "*");
-      window.close();
-    </script>
-    <h3>✅ Google login successful!</h3>
-  `);
-});
-
-/* ----------------------------------------------------------------------------
- * 2️⃣  Handle OAuth code exchange (popup callback)
- * -------------------------------------------------------------------------- */
-googleSheetsRouter.post("/auth/exchange", async (c) => {
   try {
-    const { code } = await c.req.json();
-    if (!code)
-      return c.json({ message: "Missing code", err: true, data: {} }, 400);
+    const code = c.req.query("code");
+    if (!code) {
+      return c.html("<h3>❌ Missing code.</h3>");
+    }
 
     const { tokens } = await oauth2Client.getToken(code);
     oauthTokensCache = tokens;
     oauth2Client.setCredentials(tokens);
 
-    return c.json({
-      message: "Login successful",
-      err: false,
-      data: { authorized: true },
-    });
+    console.log("✅ Google login successful");
+
+    // ✅ Just show success message (popup will be closed manually)
+    return c.html(`
+      <h2>✅ Google login successful!</h2>
+      <script>
+        // Flag for frontend polling
+        fetch('/google_sheets/status', { method: 'POST', body: 'true' });
+      </script>
+    `);
   } catch (err: any) {
-    return c.json({ message: err.message, err: true, data: {} }, 500);
+    return c.html(`<h3>❌ Error: ${err.message}</h3>`);
   }
+});
+
+/* ----------------------------------------------------------------------------
+ * 3️⃣ Frontend will poll this to see if login is done
+ * -------------------------------------------------------------------------- */
+googleSheetsRouter.get("/status", async (c) => {
+  return c.json({ loggedIn: !!oauthTokensCache });
 });
 
 /* ----------------------------------------------------------------------------
@@ -117,4 +105,38 @@ googleSheetsRouter.get("/sheets/:id/tabs", async (c) => {
 });
 
 googleSheetsRouter.get("/ping", (c) => c.text("Google Sheets Router alive ✅"));
+
+googleSheetsRouter.post("/submit", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { spreadsheetId, range, values } = body;
+
+    if (!spreadsheetId || !values) {
+      return c.json(
+        { success: false, error: "Missing spreadsheetId or values" },
+        400,
+      );
+    }
+
+    if (!oauthTokensCache) {
+      return c.json({ success: false, error: "Not logged in" }, 401);
+    }
+
+    oauth2Client.setCredentials(oauthTokensCache);
+    const sheets = google.sheets({ version: "v4", auth: oauth2Client });
+
+    sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: range || "Sheet1!A1",
+      valueInputOption: "USER_ENTERED",
+      resource: { values },
+    });
+
+    return c.json({ success: true });
+  } catch (err: any) {
+    console.error("Submit error:", err);
+    return c.json({ success: false, error: err.message }, 500);
+  }
+});
+
 export default googleSheetsRouter;

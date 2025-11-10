@@ -36,6 +36,30 @@ const HeaderSchema = new Schema<HeaderType>({
   useUpload: { type: Boolean, default: false },
 });
 
+/* 🧩 FINAL Google Sheet Meta Schema — Mongoose */
+const GoogleSheetMetaSchema = new Schema(
+  {
+    spreadsheetId: { type: String },
+    sheetName: { type: String },
+    cells: {
+      type: [
+        {
+          key: { type: String },
+          value: { type: String },
+        },
+      ],
+      default: [],
+    },
+    mode: {
+      type: String,
+      enum: ["append", "update"],
+      default: "append",
+    },
+    columns: { type: [String], default: [] },
+  },
+  { _id: false },
+);
+
 const NodeSchema = new Schema<NodeType>({
   id: { type: String, required: false },
   type: {
@@ -48,6 +72,7 @@ const NodeSchema = new Schema<NodeType>({
       "trigger",
       "interactive_button_message",
       "interactive_list_message",
+      "google_sheet",
     ],
     required: true,
   },
@@ -105,6 +130,8 @@ const NodeSchema = new Schema<NodeType>({
   },
   trueNext: { type: String },
   falseNext: { type: String },
+
+  sheet: { type: GoogleSheetMetaSchema, default: null },
 });
 
 const TriggerSchema = new Schema<TriggerType>({
@@ -140,6 +167,10 @@ const WhatsappChatbotSchema = new Schema<WhatsappChatbotType>(
   { timestamps: true },
 );
 
+export const WhatsappChatbotModel: Model<WhatsappChatbotType> =
+  mongoose.models.whatsappChatbot ||
+  model<WhatsappChatbotType>("whatsappChatbot", WhatsappChatbotSchema);
+
 export interface ChatbotSessionType {
   _id?: string;
   chatbotId: mongoose.Types.ObjectId;
@@ -171,10 +202,6 @@ const ChatbotSessionSchema = new Schema<ChatbotSessionType>(
   },
   { timestamps: true },
 );
-
-export const WhatsappChatbotModel: Model<WhatsappChatbotType> =
-  mongoose.models.whatsappChatbot ||
-  model<WhatsappChatbotType>("whatsappChatbot", WhatsappChatbotSchema);
 
 export const ChatbotSessionModel: Model<ChatbotSessionType> =
   mongoose.models.chatbotSession ||

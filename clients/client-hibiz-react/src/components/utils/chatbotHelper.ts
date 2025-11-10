@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 
 export function cleanPayload(obj: any): any {
   if (Array.isArray(obj)) {
-    const arr = obj
+    return obj
       .map((v) => cleanPayload(v))
       .filter(
         (v) =>
@@ -19,10 +19,15 @@ export function cleanPayload(obj: any): any {
             Object.keys(v).length === 0
           ),
       );
-    return arr;
   } else if (typeof obj === "object" && obj !== null) {
+    // 🟢 Preserve "sheet" objects — don't deep-clean them away
+    if ("sheetName" in obj || "spreadsheetId" in obj || "cells" in obj) {
+      console.log("Preserving sheet object:", obj);
+      return obj;
+    }
+
     const cleaned: Record<string, any> = {};
-    Object.entries(obj).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(obj)) {
       const cleanedValue = cleanPayload(value);
       const shouldKeep =
         cleanedValue !== "" &&
@@ -34,9 +39,8 @@ export function cleanPayload(obj: any): any {
           !Array.isArray(cleanedValue) &&
           Object.keys(cleanedValue).length === 0
         );
-
       if (shouldKeep) cleaned[key] = cleanedValue;
-    });
+    }
     return cleaned;
   }
   return obj;
