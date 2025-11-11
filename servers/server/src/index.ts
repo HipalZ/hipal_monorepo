@@ -73,6 +73,7 @@ app.use(
       "x-refresh-token",
       "server_secret",
       "x_signature",
+      "electron_key",
     ],
   }),
 );

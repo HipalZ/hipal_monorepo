@@ -7,7 +7,11 @@ import { respond } from "../src/utils/response";
 export const tokenVerification = async (c: Context, next: Next) => {
   const api_token = getCookie(c, "api_token");
   const headerData = c.req.header();
-  const { server_secret, x_signature } = headerData;
+  const { server_secret, x_signature, electron_key } = headerData;
+
+  if (electron_key) {
+    return next();
+  }
 
   const ignorePaths = [
     "/assets",
