@@ -16,6 +16,7 @@ export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
     .flatMap((p) => p.billItems)
     .reduce<Record<string, AggregatedItem>>((acc, item: BillItem) => {
       const { dish, portion, extras = [], quantity, discount = 0 } = item;
+      if (!dish || !dish._id) return acc;
       const key = dish._id.toString();
 
       const unitPrice = portion ? portion.price : dish.price;
