@@ -5331,8 +5331,8 @@ const paymentsRouter = new Hono()
         const isPhone = /^[0-9]{10}$/.test(trimmed);
 
         if (isPhone) {
-          query["userId.phone"] = trimmed;
-          console.log("trimmed phone:", trimmed);
+          const user = await User.findOne({ phone: trimmed }).select("_id");
+          query.userId = user?._id || null;
         } else {
           const regex = new RegExp(trimmed, "i");
           query.$or = [{ "userId.name": regex }, { "userId.phone": regex }];
@@ -5349,7 +5349,6 @@ const paymentsRouter = new Hono()
         .skip(skip)
         .limit(limit)
         .sort({ updatedAt: -1 });
-
       const totalCount = await UserAnalytic.countDocuments(query);
 
       return c.json(
