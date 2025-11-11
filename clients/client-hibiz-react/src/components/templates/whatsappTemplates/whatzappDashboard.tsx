@@ -181,7 +181,7 @@ const MemoWhatzappDashboard = () => {
             </article>
           </section>
         )}
-        {/* {activeTab === Tabs.FLOWS && <ChatbotDashboard />} */}
+        {activeTab === Tabs.FLOWS && <ChatbotDashboard />}
         {activeTab === Tabs.FLOWS && <WhatsAppFlowBuilder />}
         {activeTab === Tabs.CHATS && <WhatsappChats />}
         {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}

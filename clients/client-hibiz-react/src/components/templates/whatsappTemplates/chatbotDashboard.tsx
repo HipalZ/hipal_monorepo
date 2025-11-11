@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { useAllChatbots, useChatbotSessions } from '@/hooks/useChatbotAnalytics';
+import { useAllChatbots, useChatbotSessions } from '@/hooks/useChatbot';
 import { Activity, AlertTriangle, BarChart3, Bot, Loader2, Plus, Search, TrendingDown, TrendingUp, UserCheck, Users } from 'lucide-react';
 import { useState } from 'react';
 
@@ -111,25 +111,25 @@ export function ChatbotDashboard() {
                 <div className="space-y-2 rounded-lg bg-slate-50 p-4">
                   <div className="flex justify-between text-sm">
                     <span>Total Sessions</span>
-                    <span className="font-semibold">{bot.stats.totalSessions}</span>
+                    <span className="font-semibold">{bot?.stats?.totalSessions}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Completed</span>
-                    <span className="font-semibold text-green-600">{bot.stats.completedSessions}</span>
+                    <span className="font-semibold text-green-600">{bot?.stats?.completedSessions}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Drop-offs</span>
-                    <span className="font-semibold text-red-600">{bot.stats.dropOffSessions}</span>
+                    <span className="font-semibold text-red-600">{bot?.stats?.dropOffSessions}</span>
                   </div>
                 </div>
 
                 <div>
                   <div className="mb-2 flex justify-between text-sm">
                     <span>Completion Rate</span>
-                    <span className="font-semibold text-blue-600">{bot.stats.avgCompletionRate.toFixed(1)}%</span>
+                    <span className="font-semibold text-blue-600">{bot?.stats?.avgCompletionRate}%</span>
                   </div>
                   <Progress
-                    value={bot.stats.avgCompletionRate}
+                    value={bot?.stats?.avgCompletionRate}
                     className="h-2 bg-slate-200 [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600"
                   />
                 </div>
