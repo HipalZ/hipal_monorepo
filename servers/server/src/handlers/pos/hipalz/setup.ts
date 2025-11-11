@@ -86,7 +86,7 @@ async function hipalzPosSetupHandler(payload: {
 
     return true;
   } catch (error) {
-    throw new Error((error as Error).message || "Internal error in POS setup");
+    throw new Error((error as Error).message || "Internal error in POS setups");
   }
 }
 
