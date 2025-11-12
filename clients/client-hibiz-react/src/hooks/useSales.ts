@@ -1,7 +1,8 @@
-import { type Filters, useSalesStore } from "@/components/store/useSalesStore";
-import type { HistoryData } from "@/components/types/businessData";
-import { apiRpc } from "@hi/common";
-import { useQuery } from "@tanstack/react-query";
+import { type Filters, useSalesStore } from '@/components/store/useSalesStore';
+import type { HistoryData } from '@/components/types/businessData';
+import { apiRpc } from '@hi/common';
+import { useQuery } from '@tanstack/react-query';
+import { useApiErrorHandler } from './useApiErrorHandler';
 
 export interface salesPayload {
   businessId: string;
@@ -15,9 +16,9 @@ export interface salesPayload {
 export const useGetallSalesByGet = (payload: salesPayload) => {
   const { setHistoryData, setTotalSales, selectedFilters } = useSalesStore();
   if (!payload.businessId) return;
-
+  const { handleEnvelope } = useApiErrorHandler();
   const allSalesData = async (payload: salesPayload) => {
-    const response = await apiRpc.payments[":id"].bills.$get({
+    const response = await apiRpc.payments[':id'].bills.$get({
       query: {
         ...payload,
         appliedFilter: JSON.stringify(selectedFilters),
@@ -26,7 +27,8 @@ export const useGetallSalesByGet = (payload: salesPayload) => {
         id: payload.businessId,
       },
     });
-    const data = (await response.json()).data as HistoryData;
+    const data = await handleEnvelope<HistoryData>(response);
+    console.log('allSalesData data', data);
     if (response.status === 200) {
       setHistoryData(data.existingPayments);
       setTotalSales(data.totalSale);
@@ -36,7 +38,7 @@ export const useGetallSalesByGet = (payload: salesPayload) => {
 
   const { isLoading } = useQuery({
     queryKey: [
-      "allSalesDataByGet",
+      'allSalesDataByGet',
       payload.businessId,
       payload.from,
       payload.to,
@@ -45,11 +47,7 @@ export const useGetallSalesByGet = (payload: salesPayload) => {
       JSON.stringify(selectedFilters),
     ],
     queryFn: () => allSalesData(payload),
-    enabled:
-      !!payload.businessId &&
-      !!payload.from &&
-      !!payload.to &&
-      !!payload.pageNumber,
+    enabled: !!payload.businessId && !!payload.from && !!payload.to && !!payload.pageNumber,
   });
 
   return { isLoading };

@@ -1,36 +1,33 @@
-import nonalcohol from "@/assets/NonAlcohol.png";
-import alcohol from "@/assets/alcohol.png";
-import egg from "@/assets/dishTypes/egg.png";
-import nonVeg from "@/assets/dishTypes/non_veg.png";
-import veg from "@/assets/dishTypes/veg.png";
-import vegan from "@/assets/dishTypes/vegan.png";
-import axios from "@/axios";
-import { DishTypeEnum, type ReviewsType } from "@hi/db-models/src/validators";
-import { type ClassValue, clsx } from "clsx";
-import { differenceInMonths, differenceInYears, format } from "date-fns";
-import { AlertCircle, DownloadCloud, FileText } from "lucide-react";
-import toast from "react-hot-toast";
-import { twMerge } from "tailwind-merge";
-import { DishSteps } from "../store/useMenuStorage";
+import nonalcohol from '@/assets/NonAlcohol.png';
+import alcohol from '@/assets/alcohol.png';
+import egg from '@/assets/dishTypes/egg.png';
+import nonVeg from '@/assets/dishTypes/non_veg.png';
+import veg from '@/assets/dishTypes/veg.png';
+import vegan from '@/assets/dishTypes/vegan.png';
+import axios from '@/axios';
+import { DishTypeEnum, type ReviewsType } from '@hi/db-models/src/validators';
+import { type ClassValue, clsx } from 'clsx';
+import { differenceInMonths, differenceInYears, format } from 'date-fns';
+import { AlertCircle, DownloadCloud, FileText } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { twMerge } from 'tailwind-merge';
+import { CanonicalDishType } from '../../lib/menu/types';
+import { DishSteps } from '../store/useMenuStorage';
 
-export async function storeImageAfterSave(
-  image: File,
-  imagePreview: string | null,
-  setIsLoading?: (loading: boolean) => void,
-) {
+export async function storeImageAfterSave(image: File, imagePreview: string | null, setIsLoading?: (loading: boolean) => void) {
   if (!image || !imagePreview) return;
 
-  console.log("imagePreview", imagePreview, image);
+  console.log('imagePreview', imagePreview, image);
 
   const imageId = crypto.randomUUID();
   setIsLoading?.(true);
   try {
     // Validate Base64 string
-    const base64Index = imagePreview.indexOf(",");
+    const base64Index = imagePreview.indexOf(',');
 
     if (base64Index === -1) return;
 
-    const base64Data = imagePreview.split(",")[1];
+    const base64Data = imagePreview.split(',')[1];
     const blobBin = atob(base64Data);
     const array = new Uint8Array(blobBin.length);
 
@@ -40,23 +37,20 @@ export async function storeImageAfterSave(
 
     const file = new Blob([array], { type: image.type });
     const formData = new FormData();
-    formData.append("fileData", file);
-    formData.append("fileName", `${imageId}`);
-    formData.append("bucketName", "assets");
+    formData.append('fileData', file);
+    formData.append('fileName', `${imageId}`);
+    formData.append('bucketName', 'assets');
 
-    const response = await axios.post(
-      "https://storage.test.hipalz.com/upload",
-      formData,
-    );
+    const response = await axios.post('https://storage.test.hipalz.com/upload', formData);
 
     if (response.status === 201 || response.status === 200) {
       setIsLoading?.(false);
       return response.data.url;
     }
   } catch (error) {
-    console.error("Failed to store image:", error);
+    console.error('Failed to store image:', error);
     setIsLoading?.(false);
-    toast.error("Failed to upload image. Please check the image format.");
+    toast.error('Failed to upload image. Please check the image format.');
   }
 }
 //apply cn
@@ -69,20 +63,7 @@ export function timestampToDateTime(timestamp: number): string {
   const hours = date.getHours();
   const minutes = date.getMinutes();
   const day = date.getDate();
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const month = monthNames[date.getMonth()];
 
   // Determine the day suffix
@@ -91,38 +72,32 @@ export function timestampToDateTime(timestamp: number): string {
     case 1:
     case 21:
     case 31:
-      daySuffix = "st";
+      daySuffix = 'st';
       break;
     case 2:
     case 22:
-      daySuffix = "nd";
+      daySuffix = 'nd';
       break;
     case 3:
     case 23:
-      daySuffix = "rd";
+      daySuffix = 'rd';
       break;
     default:
-      daySuffix = "th";
+      daySuffix = 'th';
   }
 
   // Convert to 12-hour format
   const hourFormatted = hours % 12 || 12; // Converts 0 to 12 for midnight
   const minuteFormatted = minutes < 10 ? `0${minutes}` : minutes;
-  const amPm = hours < 12 ? "AM" : "PM";
+  const amPm = hours < 12 ? 'AM' : 'PM';
 
   return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
 }
 
-export function filterPayload(
-  payload: Record<string, any>,
-): Record<string, any> {
+export function filterPayload(payload: Record<string, any>): Record<string, any> {
   const filteredPayload = Object.fromEntries(
     Object.entries(payload).filter(
-      ([_, value]) =>
-        value !== null &&
-        value !== "" &&
-        value !== undefined &&
-        !(Array.isArray(value) && value.length === 0),
+      ([_, value]) => value !== null && value !== '' && value !== undefined && !(Array.isArray(value) && value.length === 0),
     ),
   );
   return filteredPayload;
@@ -137,24 +112,14 @@ export const foodTypes = [
   { name: DishTypeEnum[5], icon: nonalcohol },
 ];
 
-export const TagsEnum = [
-  "New",
-  "Best_seller",
-  "Spicy",
-  "Occasional",
-  "Popular",
-];
+export const TagsEnum = ['New', 'Best_seller', 'Spicy', 'Occasional', 'Popular'];
 
 const MAX_WIDTH = 500;
 const MAX_HEIGHT = 500;
-const MIME_TYPE = "image/webp";
+const MIME_TYPE = 'image/webp';
 const QUALITY = 0.95;
 
-const calculateSize = (
-  img: HTMLImageElement,
-  maxWidth: number,
-  maxHeight: number,
-): [number, number] => {
+const calculateSize = (img: HTMLImageElement, maxWidth: number, maxHeight: number): [number, number] => {
   let width = img.width;
   let height = img.height;
 
@@ -178,17 +143,17 @@ export const compressImage = (file, callback) => {
   img.src = blobURL;
   img.onerror = () => {
     URL.revokeObjectURL(img.src);
-    if (file.type === "image/heic" || file.type === "image/heif") {
-      toast.error("unsupported format. Try jp(e)g/png/webp.");
+    if (file.type === 'image/heic' || file.type === 'image/heif') {
+      toast.error('unsupported format. Try jp(e)g/png/webp.');
     }
   };
   img.onload = () => {
     URL.revokeObjectURL(img.src);
     const [newWidth, newHeight] = calculateSize(img, MAX_WIDTH, MAX_HEIGHT);
-    const canvas = document.createElement("canvas");
+    const canvas = document.createElement('canvas');
     canvas.width = newWidth;
     canvas.height = newHeight;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.drawImage(img, 0, 0, newWidth, newHeight);
       canvas.toBlob(
@@ -208,14 +173,7 @@ export const compressImage = (file, callback) => {
   };
 };
 
-export const handleCrop = async (
-  cropping,
-  cropperRef,
-  imageFiles,
-  setImageFiles,
-  setImagePreviews,
-  setDishStep,
-) => {
+export const handleCrop = async (cropping, cropperRef, imageFiles, setImageFiles, setImagePreviews, setDishStep) => {
   const { image, type } = cropping;
   const cropper = cropperRef.current;
   if (cropper && image && type) {
@@ -226,7 +184,7 @@ export const handleCrop = async (
         if (croppedData && croppedData.base64) {
           const blob = await (await fetch(croppedData.base64)).blob();
           const croppedFile = new File([blob], imageFiles[type]?.name, {
-            type: "image/png",
+            type: 'image/png',
           });
           // Save the cropped image
           setImageFiles((prev) => ({ ...prev, [type]: croppedFile }));
@@ -242,16 +200,16 @@ export const handleCrop = async (
           };
           reader.readAsDataURL(croppedFile);
         } else {
-          console.error("Cropped data is not available.");
+          console.error('Cropped data is not available.');
         }
       } catch (err) {
-        console.error("Error during cropping:", err);
+        console.error('Error during cropping:', err);
       }
     } else {
-      console.error("No cropped area pixels available.");
+      console.error('No cropped area pixels available.');
     }
   } else {
-    console.error("Cropper, image, or type is missing.");
+    console.error('Cropper, image, or type is missing.');
   }
 };
 
@@ -261,40 +219,33 @@ export const updateImage = async (
   currentImage: string | undefined,
   setIsLoading?: (loading: boolean) => void,
 ) => {
-  if (preview !== "" && file) {
+  if (preview !== '' && file) {
     return await storeImageAfterSave(file, preview as string, setIsLoading);
   }
   return currentImage;
 };
 
-export const preDefinedButtons = ["Explore", "Buy", "Book"];
+export const preDefinedButtons = ['Explore', 'Buy', 'Book'];
 
-export const validateDish = (
-  dishName: string,
-  dishPrice: number,
-  dishTypes: string[],
-) => {
+export const validateDish = (dishName: string, dishPrice: number, dishTypes: string[]) => {
   if (dishName.length === 0) {
-    toast.error("Please enter dish name");
+    toast.error('Please enter dish name');
     return false;
   }
   if (dishPrice === 0) {
-    toast.error("Please enter dish price");
+    toast.error('Please enter dish price');
     return false;
   }
   if (dishTypes.length === 0) {
-    toast.error("Please select dish type");
+    toast.error('Please select dish type');
     return false;
   }
   return true;
 };
 
-export const handleClick = (
-  e: React.MouseEvent<HTMLLabelElement, MouseEvent>,
-  inputRef: React.RefObject<HTMLInputElement>,
-) => {
+export const handleClick = (e: React.MouseEvent<HTMLLabelElement, MouseEvent>, inputRef: React.RefObject<HTMLInputElement>) => {
   if (inputRef.current) {
-    inputRef.current.value = "";
+    inputRef.current.value = '';
     inputRef.current.click();
   }
 };
@@ -324,15 +275,11 @@ export const hexToRgba = (hex: string) => {
   }
   return `rgba(${r},${g},${b},${alpha})`;
 };
-export const calculateFutureTimestamp = (
-  remainder: string,
-  duration: string,
-  time: string,
-): number => {
+export const calculateFutureTimestamp = (remainder: string, duration: string, time: string): number => {
   // Calculate the future date based on remainder and duration
   const futureDate = calculateFutureDate(remainder, duration);
   // Split the time into hours and minutes
-  const [hour, minute] = time.split(":").map(Number);
+  const [hour, minute] = time.split(':').map(Number);
 
   // Set the hours and minutes on the future date
   futureDate.setHours(hour);
@@ -348,31 +295,28 @@ export const parseRemainderDate = (remainderDate) => {
   const futureDate = new Date(remainderDate);
 
   let remainder = 0;
-  let duration = "";
+  let duration = '';
 
   // Calculate differences
-  const totalDayDifference = Math.abs(
-    Math.floor((futureDate - now) / (1000 * 60 * 60 * 24)),
-  );
+  const totalDayDifference = Math.abs(Math.floor((futureDate - now) / (1000 * 60 * 60 * 24)));
 
   const yearDifference = differenceInYears(futureDate, now);
   const monthDifference = differenceInMonths(futureDate, now);
-  const dayDifference =
-    totalDayDifference - (yearDifference * 365 + monthDifference * 30); // approximate months to 30 days
+  const dayDifference = totalDayDifference - (yearDifference * 365 + monthDifference * 30); // approximate months to 30 days
 
   if (yearDifference > 0) {
     remainder = yearDifference;
-    duration = "Years";
+    duration = 'Years';
   } else if (monthDifference > 0) {
     remainder = monthDifference;
-    duration = "Months";
+    duration = 'Months';
   } else if (dayDifference > 0) {
     remainder = dayDifference;
-    duration = "Days";
+    duration = 'Days';
   }
 
   // Extract time in HH:mm format
-  const time = format(futureDate, "HH:mm");
+  const time = format(futureDate, 'HH:mm');
 
   return { remainder, duration, time };
 };
@@ -383,17 +327,17 @@ export const convertToTime = (milliseconds: number) => {
   const hours24 = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
-  const period = hours24 >= 12 ? "PM" : "AM";
+  const period = hours24 >= 12 ? 'PM' : 'AM';
   const hours12 = hours24 % 12 || 12; // Convert 0 to 12 for 12 AM/PM
 
   const formattedHours = String(hours12);
-  const formattedMinutes = String(minutes).padStart(2, "0");
+  const formattedMinutes = String(minutes).padStart(2, '0');
 
   return `${formattedHours}:${formattedMinutes} ${period}`;
 };
 
 export const convertToMilliSeconds = (time: string) => {
-  const [hours, minutes] = time.split(":").map(Number);
+  const [hours, minutes] = time.split(':').map(Number);
 
   const hoursInMilliseconds = hours * 3600 * 1000;
   const minutesInMilliseconds = minutes * 60 * 1000;
@@ -403,19 +347,19 @@ export const convertToMilliSeconds = (time: string) => {
 };
 
 export const formatTime = (time) => {
-  const [hour, minute] = time.split(":");
-  const period = hour >= 12 ? "PM" : "AM";
+  const [hour, minute] = time.split(':');
+  const period = hour >= 12 ? 'PM' : 'AM';
   const formattedHour = hour % 12 || 12;
   return `${formattedHour}:${minute} ${period}`;
 };
 
 export const calculateFutureDate = (remainder, duration: string) => {
   const now = new Date();
-  if (duration === "Days") {
+  if (duration === 'Days') {
     now.setDate(now.getDate() + Number.parseInt(remainder, 10));
-  } else if (duration === "Months") {
+  } else if (duration === 'Months') {
     now.setMonth(now.getMonth() + Number.parseInt(remainder, 10));
-  } else if (duration === "Years") {
+  } else if (duration === 'Years') {
     now.setFullYear(now.getFullYear() + Number.parseInt(remainder, 10));
   }
   return now;
@@ -423,26 +367,26 @@ export const calculateFutureDate = (remainder, duration: string) => {
 
 export const formatDate = (timestamp: number) => {
   const date = new Date(timestamp);
-  return date.toLocaleDateString("en-IN", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return date.toLocaleDateString('en-IN', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   });
 };
 
 export const convertMillisecondsToTime = (milliseconds: number) => {
   const date = new Date(milliseconds);
-  const hours = date.getUTCHours().toString().padStart(2, "0");
-  const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+  const hours = date.getUTCHours().toString().padStart(2, '0');
+  const minutes = date.getUTCMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
 };
 
 export const handleAllChecks = (filteredPayload) => {
   if (filteredPayload?.name.length <= 3) {
-    return toast.error("Please enter tag name more than 3 characters");
+    return toast.error('Please enter tag name more than 3 characters');
   }
   if (filteredPayload?.note.length <= 2) {
-    return toast.error("Please enter tag notes more than 2 characters");
+    return toast.error('Please enter tag notes more than 2 characters');
   }
 };
 
@@ -465,7 +409,7 @@ export function hexToRGBA(hex: string, opacity: string) {
 
 export const formatNumber = (num: number): string => {
   if (num >= 10000000) {
-    return (num / 10000000).toFixed(1) + "Cr"; // Crores
+    return (num / 10000000).toFixed(1) + 'Cr'; // Crores
   }
   if (num >= 100000) {
     return `${(num / 100000).toFixed(1)}L`; // Lakhs
@@ -479,7 +423,7 @@ export const formatNumber = (num: number): string => {
 const createImage = (url: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
-    image.setAttribute("crossOrigin", "anonymous");
+    image.setAttribute('crossOrigin', 'anonymous');
     image.onload = () => resolve(image);
     image.onerror = (error) => reject(error);
     image.src = url;
@@ -487,29 +431,19 @@ const createImage = (url: string) =>
 
 export const getCroppedImg = async (imageSrc: string, pixelCrop) => {
   const image = await createImage(imageSrc);
-  const canvas = document.createElement("canvas");
+  const canvas = document.createElement('canvas');
   canvas.width = pixelCrop.width;
   canvas.height = pixelCrop.height;
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext('2d');
 
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height,
-  );
+  ctx.drawImage(image, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, pixelCrop.width, pixelCrop.height);
 
   return new Promise<{ base64: string; file: File }>((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
         if (blob) {
-          const file = new File([blob], "croppedImage.jpeg", {
-            type: "image/jpeg",
+          const file = new File([blob], 'croppedImage.jpeg', {
+            type: 'image/jpeg',
           });
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -518,10 +452,10 @@ export const getCroppedImg = async (imageSrc: string, pixelCrop) => {
           };
           reader.readAsDataURL(file);
         } else {
-          reject(new Error("Canvas is empty"));
+          reject(new Error('Canvas is empty'));
         }
       },
-      "image/jpeg",
+      'image/jpeg',
       1,
     );
   });
@@ -529,139 +463,198 @@ export const getCroppedImg = async (imageSrc: string, pixelCrop) => {
 
 export const truncateText = (text, maxLength) => {
   if (text?.length > maxLength) {
-    return text?.substring(0, maxLength) + "...";
+    return text?.substring(0, maxLength) + '...';
   }
   return text;
 };
 
 export const getReviewAttributes = (review: ReviewsType) => {
   const attributes = [];
-  if (review?.foodTaste === 1) attributes.push("Food");
-  if (review?.ambience === 1) attributes.push("Ambience");
-  if (review?.hygiene === 1) attributes.push("Hygiene");
-  if (review?.service === 1) attributes.push("Service");
+  if (review?.foodTaste === 1) attributes.push('Food');
+  if (review?.ambience === 1) attributes.push('Ambience');
+  if (review?.hygiene === 1) attributes.push('Hygiene');
+  if (review?.service === 1) attributes.push('Service');
   return attributes;
 };
 
 export const FILTER_OPTIONS = [
   {
-    id: "all",
-    label: "All Data",
-    status: "all",
+    id: 'all',
+    label: 'All Data',
+    status: 'all',
     count: 100,
-    description: "Export complete campaign data including all statuses",
+    description: 'Export complete campaign data including all statuses',
     icon: FileText,
-    color: "bg-blue-50 text-blue-700 border-blue-200",
+    color: 'bg-blue-50 text-blue-700 border-blue-200',
   },
   {
-    id: "sent",
-    label: "Sent Messages",
-    status: "sent",
-    description: "Messages successfully sent to customers",
+    id: 'sent',
+    label: 'Sent Messages',
+    status: 'sent',
+    description: 'Messages successfully sent to customers',
     icon: DownloadCloud,
-    color: "bg-green-50 text-green-700 border-green-200",
+    color: 'bg-green-50 text-green-700 border-green-200',
   },
   {
-    id: "delivered",
-    label: "Delivered",
-    status: "delivered",
-    description: "Messages delivered to customers",
+    id: 'delivered',
+    label: 'Delivered',
+    status: 'delivered',
+    description: 'Messages delivered to customers',
     icon: DownloadCloud,
-    color: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    color: 'bg-yellow-50 text-yellow-700 border-yellow-200',
   },
   {
-    id: "read",
-    label: "Read Messages",
-    status: "read",
-    description: "Messages that have been read by customers",
+    id: 'read',
+    label: 'Read Messages',
+    status: 'read',
+    description: 'Messages that have been read by customers',
     icon: DownloadCloud,
-    color: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   },
   {
-    id: "failed",
-    label: "Failed Deliveries",
-    status: "failed",
-    description: "Messages that failed to deliver",
+    id: 'failed',
+    label: 'Failed Deliveries',
+    status: 'failed',
+    description: 'Messages that failed to deliver',
     icon: AlertCircle,
-    color: "bg-red-50 text-red-700 border-red-200",
+    color: 'bg-red-50 text-red-700 border-red-200',
   },
   {
-    id: "blocked",
-    label: "Blocked Numbers",
-    status: "blocked",
-    description: "Numbers that blocked message delivery",
+    id: 'blocked',
+    label: 'Blocked Numbers',
+    status: 'blocked',
+    description: 'Numbers that blocked message delivery',
     icon: AlertCircle,
-    color: "bg-purple-50 text-purple-700 border-purple-200",
+    color: 'bg-purple-50 text-purple-700 border-purple-200',
   },
 ];
 
 export const getStatusStyle = (status: string) => {
   switch (status) {
-    case "sent":
-      return "bg-[#25D366] text-white border-[#25D366]";
-    case "delivered":
-      return "bg-[#FFD700] text-black border-[#FFD700]";
-    case "read":
-      return "bg-[#34B7F1] text-white border-[#34B7F1]";
-    case "clicked":
-      return "bg-[#000000] text-white border-[#000000]";
-    case "failed":
-      return "bg-[#4B0082] text-white border-[#4B0082]";
-    case "blocked":
-      return "bg-[#FF0000] text-white border-[#FF0000]";
+    case 'sent':
+      return 'bg-[#25D366] text-white border-[#25D366]';
+    case 'delivered':
+      return 'bg-[#FFD700] text-black border-[#FFD700]';
+    case 'read':
+      return 'bg-[#34B7F1] text-white border-[#34B7F1]';
+    case 'clicked':
+      return 'bg-[#000000] text-white border-[#000000]';
+    case 'failed':
+      return 'bg-[#4B0082] text-white border-[#4B0082]';
+    case 'blocked':
+      return 'bg-[#FF0000] text-white border-[#FF0000]';
     default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
+      return 'bg-gray-100 text-gray-800 border-gray-200';
   }
 };
 
 export const getSuccessRateClass = (successRate: number) => {
   if (successRate > 75) {
-    return "text-green-500";
+    return 'text-green-500';
   }
   if (successRate >= 50) {
-    return "text-blue-500";
+    return 'text-blue-500';
   }
-  return "text-red-500";
+  return 'text-red-500';
 };
 
 export const removeUnwanted = (heading: string) => {
-  const str = heading.replace(/_/g, " ");
+  const str = heading.replace(/_/g, ' ');
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
 export const STEPS = [
-  { id: 1, label: "Menu structure" },
-  { id: 2, label: "Category layout" },
-  { id: 3, label: "Dish layout" },
-  { id: 4, label: "Colors" },
-  { id: 5, label: "Zone" },
-  { id: 6, label: "Days" },
-  { id: 7, label: "Time" },
-  { id: 8, label: "Preview" },
+  { id: 1, label: 'Menu structure' },
+  { id: 2, label: 'Category layout' },
+  { id: 3, label: 'Dish layout' },
+  { id: 4, label: 'Colors' },
+  { id: 5, label: 'Zone' },
+  { id: 6, label: 'Days' },
+  { id: 7, label: 'Time' },
+  { id: 8, label: 'Preview' },
 ];
 
 // Format minutes to time string (e.g., 60 -> "1:00 AM")
 export const formatMinutesToTime = (minutes: number) => {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  const period = hours >= 12 ? "PM" : "AM";
+  const period = hours >= 12 ? 'PM' : 'AM';
   const displayHours = hours % 12 || 12;
-  return `${displayHours}:${mins.toString().padStart(2, "0")} ${period}`;
+  return `${displayHours}:${mins.toString().padStart(2, '0')} ${period}`;
 };
 
 // Get day names from array of day numbers
 export const getDayNames = (days: number[]) => {
   const dayMap: Record<number, string> = {
-    1: "Mon",
-    2: "Tue",
-    3: "Wed",
-    4: "Thu",
-    5: "Fri",
-    6: "Sat",
-    7: "Sun",
+    1: 'Mon',
+    2: 'Tue',
+    3: 'Wed',
+    4: 'Thu',
+    5: 'Fri',
+    6: 'Sat',
+    7: 'Sun',
   };
 
-  if (days.length === 7) return "All days";
+  if (days.length === 7) return 'All days';
 
-  return days.map((day) => dayMap[day]).join(", ");
+  return days.map((day) => dayMap[day]).join(', ');
 };
+
+type OutletFlags = { isHipalzPos?: boolean; isPosEnabled?: boolean } | null | undefined;
+
+export const normalizeOutletFlags = (outLet: OutletFlags) => {
+  const isHipalz = !!outLet?.isHipalzPos;
+  const isEnabled = !!outLet?.isPosEnabled;
+
+  const bothTrue = isHipalz && isEnabled;
+  const bothFalse = !isHipalz && !isEnabled;
+  const valid = bothTrue || bothFalse;
+
+  const hideAI = bothTrue;
+  const allowAI = bothFalse || !valid;
+
+  return { isHipalz, isEnabled, bothTrue, bothFalse, valid, hideAI, allowAI };
+};
+
+export const toCanonicalDishTypes = (raw: string): CanonicalDishType[] => {
+  const key = String(raw || '')
+    .trim()
+    .toLowerCase();
+  const map: Record<string, CanonicalDishType> = {
+    veg: 'VEG',
+    vegetarian: 'VEG',
+    paneer: 'VEG',
+    'non veg': 'NON_VEG',
+    'non-veg': 'NON_VEG',
+    nonveg: 'NON_VEG',
+    non_veg: 'NON_VEG',
+    chicken: 'NON_VEG',
+    mutton: 'NON_VEG',
+    fish: 'NON_VEG',
+    egg: 'EGG',
+    eggetarian: 'EGG',
+    vegan: 'VEGAN',
+    'plant-based': 'VEGAN',
+    alcohol: 'ALCOHOL',
+    alcoholic: 'ALCOHOL',
+    beer: 'ALCOHOL',
+    wine: 'ALCOHOL',
+    nonalcoholic: 'NON_ALCOHOL', // <-- added
+    non_alcoholic: 'NON_ALCOHOL',
+    'non alcohol': 'NON_ALCOHOL',
+    mocktail: 'NON_ALCOHOL',
+    juice: 'NON_ALCOHOL',
+    'gluten free': 'GLUTEN_FREE',
+    glutenfree: 'GLUTEN_FREE',
+  };
+  return map[key] ? [map[key]] : ['MIX'];
+};
+
+export const autoDescription = (dishName: string, catName?: string) => {
+  const base = `${dishName} crafted with balanced flavors${catName ? ` in ${catName}` : ''}.`;
+  if (base.length < 50) return base.padEnd(50, '.');
+  if (base.length > 100) return base.slice(0, 100);
+  return base;
+};
+
+export const buildChildCategoryName = (categoryName: string, subName?: string) => (subName && subName.trim()) || categoryName;

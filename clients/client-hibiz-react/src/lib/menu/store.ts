@@ -1,29 +1,16 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { Category } from "./types";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { Category } from './types';
 
 interface MenuState {
   categories: Category[];
   isEditing: boolean;
-  processingPhase:
-    | "idle"
-    | "extracting"
-    | "review"
-    | "creatingCategories"
-    | "creatingDishes"
-    | "done";
-  setProcessingPhase: (
-    phase:
-      | "idle"
-      | "extracting"
-      | "review"
-      | "creatingCategories"
-      | "creatingDishes"
-      | "done",
-  ) => void;
+  processingPhase: 'idle' | 'extracting' | 'review' | 'creatingCategories' | 'creatingDishes' | 'done';
+  setProcessingPhase: (phase: MenuState['processingPhase']) => void;
   setEditing: (val: boolean) => void;
   setCategories: (cats: Category[]) => void;
   updateCategoryName: (catId: string, newName: string) => void;
+  updateSubcategoryName: (catId: string, subId: string, newName: string) => void; // 👈 add
   updateDishDetails: (
     catId: string,
     subId: string,
@@ -32,20 +19,13 @@ interface MenuState {
       dishName: string;
       price: number;
       dishType: string;
+      description: string;
+      portions: { name: string; price: number; default: boolean }[]; // 👈 add this
     }>,
   ) => void;
-  moveDishToCategory: (
-    dishId: string,
-    fromCatId: string,
-    fromSubId: string,
-    toCatId: string,
-    toSubId: string,
-  ) => void;
-  moveDish: (
-    dishId: string,
-    from: { catId: string; subId: string; index: number },
-    to: { catId: string; subId: string; index: number },
-  ) => void;
+  moveDishToCategory: (dishId: string, fromCatId: string, fromSubId: string, toCatId: string, toSubId: string) => void;
+  moveDishToSubCategory: (dishId: string, fromCatId: string, fromSubId: string, toCatId: string, toSubId: string) => void;
+  moveDish: (dishId: string, from: { catId: string; subId: string; index: number }, to: { catId: string; subId: string; index: number }) => void;
   clear: () => void;
 }
 
@@ -53,8 +33,8 @@ export const useMenuStore = create<MenuState>()(
   persist(
     (set, get) => ({
       categories: [],
-      isEditing: false,
-      processingPhase: "idle",
+      isEditing: true,
+      processingPhase: 'idle',
 
       setProcessingPhase: (phase) => set({ processingPhase: phase }),
 
@@ -63,9 +43,19 @@ export const useMenuStore = create<MenuState>()(
 
       updateCategoryName: (catId, newName) => {
         const state = get();
-        const cats = state.categories.map((c) =>
-          c.id === catId ? { ...c, name: newName } : c,
-        );
+        const cats = state.categories.map((c) => (c.id === catId ? { ...c, name: newName } : c));
+        set({ categories: cats });
+      },
+
+      updateSubcategoryName: (catId, subId, newName) => {
+        const state = get();
+        const cats = state.categories.map((c) => {
+          if (c.id !== catId) return c;
+          return {
+            ...c,
+            subcategories: c.subcategories.map((s) => (s.id === subId ? { ...s, name: newName } : s)),
+          };
+        });
         set({ categories: cats });
       },
 
@@ -79,9 +69,7 @@ export const useMenuStore = create<MenuState>()(
               if (s.id !== subId) return s;
               return {
                 ...s,
-                dishes: s.dishes.map((d) =>
-                  d.id === dishId ? { ...d, ...updates } : d,
-                ),
+                dishes: s.dishes.map((d) => (d.id === dishId ? { ...d, ...updates } : d)),
               };
             }),
           };
@@ -116,9 +104,35 @@ export const useMenuStore = create<MenuState>()(
         set({ categories: cats });
       },
 
-      clear: () => set({ categories: [], processingPhase: "idle" }),
+      moveDishToSubCategory: (dishId, fromCatId, fromSubId, toCatId, toSubId) => {
+        const state = get();
+        const cats = state.categories.map((c) => ({
+          ...c,
+          subcategories: c.subcategories.map((s) => ({
+            ...s,
+            dishes: [...s.dishes],
+          })),
+        }));
 
-      // Existing code for moveDish
+        const fromCat = cats.find((c) => c.id === fromCatId);
+        const toCat = cats.find((c) => c.id === toCatId);
+        if (!fromCat || !toCat) return;
+
+        const fromSub = fromCat.subcategories.find((s) => s.id === fromSubId);
+        const toSub = toCat.subcategories.find((s) => s.id === toSubId);
+        if (!fromSub || !toSub) return;
+
+        const dishIndex = fromSub.dishes.findIndex((d) => d.id === dishId);
+        if (dishIndex === -1) return;
+
+        const [dish] = fromSub.dishes.splice(dishIndex, 1);
+        toSub.dishes.push(dish);
+
+        set({ categories: cats });
+      },
+
+      clear: () => set({ categories: [], processingPhase: 'idle' }),
+
       moveDish: (dishId, from, to) => {
         const state = get();
         const cats = state.categories.map((c) => ({
@@ -153,6 +167,6 @@ export const useMenuStore = create<MenuState>()(
         set({ categories: cats });
       },
     }),
-    { name: "ai-menu-categories" },
+    { name: 'ai-menu-categories' },
   ),
 );

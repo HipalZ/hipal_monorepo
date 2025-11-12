@@ -1,22 +1,22 @@
-import HipeopleLogo from "@/assets/hibizNewLogo.png";
-import hipalHandLogo from "@/assets/login/hand.png";
-import Header from "@/components/molecules/header";
-import useBusinessData from "@/components/store/useBusinessData";
-import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import type { IBusinessData, IOutletInfo } from "@/components/types/businessData";
-import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
-import { apiRpc } from "@hi/common";
-import { useQuery } from "@tanstack/react-query";
-import { memo } from "react";
-import { FaArrowLeft } from "react-icons/fa";
-import { IoWarning } from "react-icons/io5";
-import { useNavigate } from "react-router-dom";
-import logoPlaceholder from "@/assets/hisite/logoPlaceholder.png";
-import { TbHomePlus } from "react-icons/tb";
-import useBusinessCtrl from "@/components/store/useBusinessCtrl";
-import type { LoyaltyType } from "@hi/db-models/src/validators";
-import { useCategoryStore } from "@/components/store/useCategoryStore";
-import { useExploreStore } from "@/components/store/useExploreStore";
+import HipeopleLogo from '@/assets/hibizNewLogo.png';
+import logoPlaceholder from '@/assets/hisite/logoPlaceholder.png';
+import hipalHandLogo from '@/assets/login/hand.png';
+import Header from '@/components/molecules/header';
+import useBusinessCtrl from '@/components/store/useBusinessCtrl';
+import useBusinessData from '@/components/store/useBusinessData';
+import { useCategoryStore } from '@/components/store/useCategoryStore';
+import { useExploreStore } from '@/components/store/useExploreStore';
+import { useOwnerLogin } from '@/components/store/useOwnerLogin';
+import type { IBusinessData, IOutletInfo } from '@/components/types/businessData';
+import { PAGE_TYPES, routePathsWithId } from '@/components/utils/routes';
+import { apiRpc } from '@hi/common';
+import type { LoyaltyType } from '@hi/db-models/src/validators';
+import { useQuery } from '@tanstack/react-query';
+import { memo } from 'react';
+import { FaArrowLeft } from 'react-icons/fa';
+import { IoWarning } from 'react-icons/io5';
+import { TbHomePlus } from 'react-icons/tb';
+import { useNavigate } from 'react-router-dom';
 
 const Business = () => {
   const setBanners = useExploreStore((s) => s.setBanners);
@@ -27,7 +27,7 @@ const Business = () => {
   const navigate = useNavigate();
 
   const getLoyaltyData = async (business: IBusinessData) => {
-    const response = await apiRpc.businesses[":businessId"].loyalty.$get({
+    const response = await apiRpc.businesses[':businessId'].loyalty.$get({
       param: {
         businessId: business?._id,
       },
@@ -43,21 +43,21 @@ const Business = () => {
   };
 
   const getBusinessInfo = async (id: string) => {
-    const res = await apiRpc.businesses.outletInfo[":businessId"].$get({
+    const res = await apiRpc.businesses.outletInfo[':businessId'].$get({
       param: {
         businessId: id,
       },
     });
-    const response = (await res.json())
-    const outletInfo = response.data as IOutletInfo
+    const response = await res.json();
+    const outletInfo = response.data as IOutletInfo;
     if (res.status === 200 || res.status === 201) {
       useBusinessData.getState().setOutletInfo(outletInfo);
 
-      if (["MENU", "FOOD", "OTHER"].includes(outletInfo?.outLetType)) {
+      if (['MENU', 'FOOD', 'OTHER'].includes(outletInfo?.outLetType)) {
         return navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](id));
       }
 
-      if (outletInfo?.outLetType === "HOTEL") {
+      if (outletInfo?.outLetType === 'HOTEL') {
         return navigate(`/app/hotel/${id}`);
       }
     }
@@ -73,44 +73,28 @@ const Business = () => {
 
   function addBusiness() {
     reset();
-    navigate("/app/business/add");
+    navigate('/app/business/add');
   }
 
   const { data: sample } = useQuery({
-    queryKey: ["getBusinesses", user._id],
-    queryFn: () =>
-      apiRpc.businesses
-        .$get({ query: { id: user._id } })
-        .then((res) => res.json()),
+    queryKey: ['getBusinesses', user._id],
+    queryFn: () => apiRpc.businesses.$get({ query: { id: user._id } }).then((res) => res.json()),
     enabled: !!user._id,
   });
   return (
     <section className="h-screen min-h-screen overflow-auto">
       <div className="business_gradient">
         <section className="sticky top-0 z-10 w-full px-0 pb-4">
-          <Header
-            leftIcon={<FaArrowLeft />}
-            centerImage={HipeopleLogo}
-            rightImage={HipeopleLogo}
-          />
+          <Header leftIcon={<FaArrowLeft />} centerImage={HipeopleLogo} rightImage={HipeopleLogo} />
         </section>
         <section className="business_gradient_hero_section">
-          <div className="h-[4rem] w-[4rem] rounded-full bg-[#000000] pt-4 text-center text-xl capitalize">
-            {user?.name?.charAt(0)}
-          </div>
+          <div className="h-[4rem] w-[4rem] rounded-full bg-[#000000] pt-4 text-center text-xl capitalize">{user?.name?.charAt(0)}</div>
           <article className="pl-4">
             <div className="flex h-[1.25rem] w-full items-center text-2xl text-[#000000]">
-              <img
-                width={16}
-                height={16}
-                src={hipalHandLogo}
-                alt="hipalHandLogo"
-              />
+              <img width={16} height={16} src={hipalHandLogo} alt="hipalHandLogo" />
               <span className="ml-2 font-bold">Hi</span>
             </div>
-            <div className="text-base font-medium leading-8 text-[#000000]">
-              {user.name}
-            </div>
+            <div className="text-base font-medium leading-8 text-[#000000]">{user.name}</div>
           </article>
         </section>
       </div>
@@ -120,10 +104,7 @@ const Business = () => {
             type="button"
             onClick={() => handleRoute(ele)}
             key={ele._id}
-            className={`${ele?.status || ele.isActive
-              ? "pointer-events-auto"
-              : "pointer-events-none opacity-90"
-              } child_business_card`}
+            className={`${ele?.status || ele.isActive ? 'pointer-events-auto' : 'pointer-events-none opacity-90'} child_business_card`}
           >
             <div className="text-xl capitalize">
               {!ele?.status && (
@@ -140,23 +121,9 @@ const Business = () => {
             </div>
             <div className="aspect-square h-[4rem] w-[4rem] overflow-hidden rounded-full pb-6">
               {ele?.logo ? (
-                <img
-                  src={ele?.logo}
-                  width={66}
-                  height={66}
-                  alt="Business_logo"
-                  loading="lazy"
-                  className="aspect-square h-[4rem] w-[4rem]"
-                />
+                <img src={ele?.logo} width={66} height={66} alt="Business_logo" loading="lazy" className="aspect-square h-[4rem] w-[4rem]" />
               ) : (
-                <img
-                  src={logoPlaceholder}
-                  width={66}
-                  height={66}
-                  alt="Business_logo"
-                  loading="lazy"
-                  className="aspect-square h-[4rem] w-[4rem]"
-                />
+                <img src={logoPlaceholder} width={66} height={66} alt="Business_logo" loading="lazy" className="aspect-square h-[4rem] w-[4rem]" />
               )}
             </div>
           </button>
@@ -165,7 +132,7 @@ const Business = () => {
       <button
         type="button"
         onClick={addBusiness}
-        className="fixed z-10 px-4 py-3 text-white transform -translate-x-1/2 bg-black rounded-full bottom-4 left-1/2 w-[92%] max-w-[30rem]"
+        className="fixed bottom-4 left-1/2 z-10 w-[92%] max-w-[30rem] -translate-x-1/2 transform rounded-full bg-black px-4 py-3 text-white"
       >
         + Add Business
       </button>

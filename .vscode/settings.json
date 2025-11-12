@@ -1,53 +1,75 @@
 {
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.tsserver.useSeparateSyntaxServer": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.disableAutomaticTypeAcquisition": true,
+
+  "editor.formatOnSave": true,
+  "editor.fontSize": 13,
+  "editor.fontFamily": "Fira Code",
+  "editor.fontLigatures": true,
+  "editor.smoothScrolling": true,
   "editor.rulers": [
-    {
-      "column": 80,
-      "color": "#636e72"
-    },
-    {
-      "column": 100,
-      "color": "#b2bec3"
-    }
+    { "column": 80, "color": "#636e72" },
+    { "column": 100, "color": "#b2bec3" }
   ],
+  "workbench.colorTheme": "Default Dark Modern",
+  "workbench.editor.labelFormat": "short",
+  "breadcrumbs.enabled": true,
+  "breadcrumbs.filePath": "on",
+  "breadcrumbs.symbolPath": "on",
+
+  "diffEditor.ignoreTrimWhitespace": false,
+  "explorer.confirmDelete": false,
+  "remote.autoForwardPortsSource": "hybrid",
+
+  "editor.defaultFormatter": "biomejs.biome",
+  "[typescript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[javascript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[json]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[jsonc]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[css]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+
+  "biome.requireConfiguration": true,
+
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.importModuleSpecifierEnding": "auto",
+  "javascript.preferences.importModuleSpecifierEnding": "auto",
+
+  "path-intellisense.mappings": {
+    "@": "${workspaceFolder}/src"
+  },
+
   "eslint.runtime": "bun",
   "eslint.options": {
     "overrideConfigFile": ".eslintrc.js"
   },
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "javascript.updateImportsOnFileMove.enabled": "always",
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "diffEditor.ignoreTrimWhitespace": false,
+
+  "git.enableSmartCommit": false,
+  "gitlens.views.commitDetails.files.layout": "list",
+
+  "terminal.integrated.fontFamily": "monospace",
+
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "mdb.mcp.server": "prompt",
+  "gitlens.ai.model": "vscode",
+  "gitlens.ai.vscode.model": "copilot:gpt-4.1",
+
   "cSpell.userWords": [
     "Dataurl",
     "Defence",
     "Hipal",
+    "Sandwhich",
     "signup",
     "splide",
-    "splidejs"
-  ],
-  "[json]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "remote.autoForwardPortsSource": "hybrid",
-  "[jsonc]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[css]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "explorer.confirmDelete": false,
-  "editor.fontFamily": "Fira Code",
-  "editor.fontLigatures": true,
-  "workbench.colorTheme": "Default Dark Modern",
-  "editor.formatOnSave": true,
-  "cSpell.words": ["Sandwhich"],
-  "typescript.tsdk": "node_modules/typescript/lib"
+    "splidejs",
+    "Whatzapp"
+  ]
 }

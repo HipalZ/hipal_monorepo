@@ -1,77 +1,23 @@
-import { useChildCategories } from "../../../../hooks/useCategory";
-import { postDishData } from "../../../../hooks/useDish";
-import { useRefreshGuard } from "./RefreshGaurd";
-import { FileUpload } from "./file-upload";
-import { CategoryLoader, DishLoader, ExtractLoader } from "./Loaders";
-import { MenuPreview } from "./menu-preview";
-import { SuccessModal } from "./SuccessModal";
-import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Upload,
-  Sparkles,
-  AlertCircle,
-  FileText,
-  CheckCircle2,
-  ArrowRight,
-} from "lucide-react";
-import { useMenuStore } from "@/lib/menu/store";
-import {
-  normalizeToCategories,
-  mergeCategories,
-  fileToBase64,
-} from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import type { CanonicalDishType, PortionType } from "@/lib/menu/types";
-import { useSaveAiCategory } from "../../../../hooks/useCategory";
-import { useParams } from "react-router-dom";
+import AdvancedBottomButton from '@/components/atom/bottomButton/advancedBottomButton';
+import { ConfirmProceedModal } from '@/components/templates/menu/aiExtractor/ConfirmaionModal';
+import { FileUpload } from '@/components/templates/menu/aiExtractor/file-upload';
+import { CategoryLoader, DishLoader, ExtractLoader } from '@/components/templates/menu/aiExtractor/Loaders';
+import { MenuPreview } from '@/components/templates/menu/aiExtractor/menu-preview';
+import { useRefreshGuard } from '@/components/templates/menu/aiExtractor/RefreshGaurd';
+import SuccessModal from '@/components/templates/menu/aiExtractor/SuccessModal';
+import { Button } from '@/components/ui/button';
+import { buildChildCategoryName, toCanonicalDishTypes } from '@/components/utils/helper';
+import { useChildCategories, useSaveAiCategory } from '@/hooks/useCategory';
+import { postDishData } from '@/hooks/useDish';
+import { useMenuStore } from '@/lib/menu/store';
+import type { PortionType } from '@/lib/menu/types';
+import { fileToBase64, normalizeSubcatArrayToCategories, toNumber } from '@/lib/utils';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertCircle, CheckCircle2, FileText, Sparkles, Upload } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
-const API_KEY = "AIzaSyC8UMDIXpTc4-CNSUL0k_tdQP1b1EROWz4";
-
-const toCanonicalDishTypes = (raw: string): CanonicalDishType[] => {
-  const key = String(raw || "")
-    .trim()
-    .toLowerCase();
-  const map: Record<string, CanonicalDishType> = {
-    veg: "VEG",
-    vegetarian: "VEG",
-    paneer: "VEG",
-    "non veg": "NON_VEG",
-    "non-veg": "NON_VEG",
-    nonveg: "NON_VEG",
-    non_veg: "NON_VEG",
-    chicken: "NON_VEG",
-    mutton: "NON_VEG",
-    fish: "NON_VEG",
-    egg: "EGG",
-    eggetarian: "EGG",
-    vegan: "VEGAN",
-    "plant-based": "VEGAN",
-    alcohol: "ALCOHOL",
-    alcoholic: "ALCOHOL",
-    non_alcoholic: "NON_ALCOHOL",
-    beer: "ALCOHOL",
-    wine: "ALCOHOL",
-    "non alcohol": "NON_ALCOHOL",
-    mocktail: "NON_ALCOHOL",
-    juice: "NON_ALCOHOL",
-    "gluten free": "GLUTEN_FREE",
-    glutenfree: "GLUTEN_FREE",
-  };
-  return map[key] ? [map[key]] : ["MIX"];
-};
-
-const autoDescription = (dishName: string, catName?: string) => {
-  const base = `${dishName} crafted with balanced flavors${
-    catName ? ` in ${catName}` : ""
-  }.`;
-  if (base.length < 50) return base.padEnd(50, ".");
-  if (base.length > 100) return base.slice(0, 100);
-  return base;
-};
-
-const buildChildCategoryName = (categoryName: string, subName?: string) =>
-  (subName && subName.trim()) || categoryName;
+const API_KEY = 'AIzaSyC8UMDIXpTc4-CNSUL0k_tdQP1b1EROWz4';
 
 export default function AIMenuExtractorPage() {
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
@@ -79,125 +25,258 @@ export default function AIMenuExtractorPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { processingPhase: phase, setProcessingPhase: setPhase } =
-    useMenuStore();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { processingPhase: phase, setProcessingPhase: setPhase } = useMenuStore();
 
   const [successOpen, setSuccessOpen] = useState(false);
-  const [createdCounts, setCreatedCounts] = useState({
-    categories: 0,
-    dishes: 0,
-  });
-  const { mutate: createCategory } = useSaveAiCategory();
+  const [createdCounts, setCreatedCounts] = useState({ categories: 0, dishes: 0 });
+
+  // If this is react-query, expose mutateAsync for awaiting
+  const { mutateAsync: createCategory } = useSaveAiCategory() as any;
+
   const { categories: fetchedCats, refetch } = useChildCategories();
-  const { menuId, businessId } = useParams<{
-    menuId: string;
-    businessId: string;
-  }>();
+  const { menuId, businessId } = useParams<{ menuId: string; businessId: string }>();
 
   const categories = useMenuStore((state) => state.categories);
   const setCategories = useMenuStore((state) => state.setCategories);
   const isEditing = useMenuStore((state) => state.isEditing);
-  const setEditing = useMenuStore((state) => state.setEditing);
+  // const setEditing = useMenuStore((state) => state.setEditing);
 
   useRefreshGuard(
-    phase === "review" ||
-      phase === "creatingCategories" ||
-      phase === "creatingDishes" ||
-      phase === "done" ||
-      phase === "extracting" ||
-      phase === "idle",
+    phase === 'review' ||
+      phase === 'creatingCategories' ||
+      phase === 'creatingDishes' ||
+      phase === 'done' ||
+      phase === 'extracting' ||
+      phase === 'idle',
   );
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files;
-    const maxFiles = 3;
-    if (!selected) return;
+  const ACCEPTED_MIME = new Set([
+    'application/pdf',
+    'text/csv',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ]);
+  const isAllowedType = (f: File) =>
+    f.type.startsWith('image/') ||
+    ACCEPTED_MIME.has(f.type) ||
+    // fallback for some browsers that miss MIME:
+    /\.(pdf|csv|png|jpe?g|gif|webp|bmp|tiff?)$/i.test(f.name);
 
-    if (selected.length > maxFiles) {
-      setError(`Please select no more than ${maxFiles} files.`);
-      setFiles([]);
+  const MAX_FILES = 3;
+
+  const dedupe = (list: File[]) => {
+    const seen = new Set<string>();
+    const out: File[] = [];
+    for (const f of list) {
+      const key = `${f.name}_${f.size}_${f.lastModified}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        out.push(f);
+      }
+    }
+    return out;
+  };
+
+  const clampToMax = (list: File[]) => list.slice(0, MAX_FILES);
+
+  // ---- Replace your handler with this ----
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files || []);
+    if (!picked.length) return;
+
+    const valid = picked.filter(isAllowedType);
+    if (valid.length !== picked.length) {
+      setError('Some files were skipped because their type is not supported.');
     } else {
-      setFiles(Array.from(selected));
       setError(null);
     }
+
+    // merge with existing files, dedupe, clamp
+    setFiles((prev) => {
+      const merged = dedupe([...prev, ...valid]);
+      if (merged.length > MAX_FILES) {
+        setError(`You can upload up to ${MAX_FILES} files.`);
+      }
+      return clampToMax(merged);
+    });
+
+    // allow re-selecting the same files again later
+    e.currentTarget.value = '';
+  };
+
+  // ---- Optional: support drag & drop ----
+  const handleDropFiles = (dropped: File[]) => {
+    const valid = dropped.filter(isAllowedType);
+    if (valid.length !== dropped.length) {
+      setError('Some files were skipped because their type is not supported.');
+    } else {
+      setError(null);
+    }
+    setFiles((prev) => {
+      const merged = dedupe([...prev, ...valid]);
+      if (merged.length > MAX_FILES) {
+        setError(`You can upload up to ${MAX_FILES} files.`);
+      }
+      return clampToMax(merged);
+    });
+  };
+
+  // ---- Remove by index (for the ❌ button on each preview) ----
+  const handleRemoveFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setError(null);
   };
 
   const handleExtract = async () => {
     if (files.length === 0) {
-      setError("Please select at least one file first.");
+      setError('Please select at least one file first.');
       return;
     }
-    if (!GOOGLE_AI_API_KEY) {
-      setError("API Key is not set. Add your key.");
+    if (!API_KEY) {
+      setError('API Key is not set. Add your key.');
       return;
     }
 
     setIsLoading(true);
     setError(null);
-    setPhase("extracting");
+    setPhase('extracting');
 
     try {
       const results: any[] = [];
 
       for (const file of files) {
         const base64 = await fileToBase64(file);
-        const prompt =
-          "Extract the menu grouped by category and subcategory (if shown). Always return subcategories; if the image has none, create a single subcategory named 'General'. For each dish, include dishName, price (number), and dishType: one of 'veg','nonveg','vegan','egg','alcoholic','nonalcoholic'. Return ONLY JSON with this exact schema: [{category, subcategories:[{subcategory, dishes:[{dishName, price, dishType}]}]}].";
+
+        // --- PROMPT: no "General". If no subcategory headings, create ONE subcategory named SAME as the category. ---
+        const prompt = `
+Extract the restaurant menu from the image and return ONLY JSON with EXACTLY this structure:
+
+[
+  {
+    "subcategory": string,
+    "dishes": [
+      {
+        "dishName": string,
+        "description": string,
+        "dishType": "veg" | "nonveg" | "vegan" | "egg" | "alcoholic" | "nonalcoholic",
+        "price"?: number,
+        "portions"?: [
+          { "name": string, "price": number, "default": boolean }
+        ]
+      }
+    ]
+  }
+]
+
+RULES
+A) Subcategories
+ - Use visible section sub-headers (e.g., "Whisky", "Wine", "Starters").
+ - If no sub-headers are visible for a block, create exactly ONE subcategory named the same as the detected category title. If neither is visible, use "General".
+ - Do not include a "category" field anywhere. The top-level must be the array of subcategory objects.
+
+B) Dishes
+ - dishName: as printed (trim extra dots/emojis; normalize spacing ,remove special characters).
+ - description: keep it short (1–2 sentences, ~12–25 words). If nothing is given, set write a natural, menu-style description of the dish in **30–50 words**.
+    Focus on taste, key ingredients, preparation, and serving style; avoid marketing fluff, emojis, or repeated dishName. No emojis/markdown.
+ - dishType: infer strictly to one of: veg | nonveg | vegan | egg | alcoholic | nonalcoholic.
+   • Meat/fish terms → nonveg; egg/omelette → egg.
+   • Spirits/beer/wine/cocktails → alcoholic; juices/mocks/sodas → nonalcoholic.
+ - Deduplicate exact duplicates within a subcategory.
+
+C) Pricing
+ - Numbers only. Strip currency symbols and commas (₹199 → 199; 1,299 → 1299).
+ - For a single price like "Butter Chicken — 320": use "price": 320 and DO NOT include "portions".
+ - For variants/measurements like "Half 289 / Full 398" or "30ml 999 | Bottle 21879":
+   → use ONLY "portions": [{ "name", "price", "default" }]
+   → "default" = true for the CHEAPEST portion unless the menu explicitly marks a different default; others false.
+ - Never include BOTH "price" and "portions" on the same dish.
+
+D) Output
+ - Return valid JSON only (no markdown, comments, or trailing commas).
+ - No extra keys beyond those defined above.
+
+EXAMPLES (illustrative only; adjust to the image):
+
+[
+  {
+    "subcategory": "Biryani",
+    "dishes": [
+      { "dishName": "Chicken Biryani", "description": "", "dishType": "nonveg",
+        "portions": [
+          { "name": "Half", "price": 289, "default": true },
+          { "name": "Full", "price": 398, "default": false }
+        ]
+      },
+      { "dishName": "Veg Dum Biryani", "description": "Aromatic basmati rice layered with vegetables and gentle spices.", "dishType": "veg", "price": 249 }
+    ]
+  },
+  {
+    "subcategory": "Whisky",
+    "dishes": [
+      { "dishName": "Glenfiddich 15yr", "description": "Premium single malt; served as 30ml pour or by the bottle.", "dishType": "alcoholic",
+        "portions": [
+          { "name": "30ml", "price": 999, "default": true },
+          { "name": "Bottle", "price": 21879, "default": false }
+        ]
+      }
+    ]
+  }
+]
+`;
 
         const payload = {
-          contents: [
-            {
-              parts: [
-                { text: prompt },
-                { inlineData: { mimeType: file.type, data: base64 } },
-              ],
-            },
-          ],
+          contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: file.type, data: base64 } }] }],
           generationConfig: {
-            responseMimeType: "application/json",
+            responseMimeType: 'application/json',
             responseSchema: {
-              type: "ARRAY",
+              // TOP-LEVEL: an array of subcategory objects
+              type: 'ARRAY',
               items: {
-                type: "OBJECT",
+                type: 'OBJECT',
                 properties: {
-                  category: { type: "STRING" },
-                  subcategories: {
-                    type: "ARRAY",
+                  subcategory: { type: 'STRING' },
+                  dishes: {
+                    type: 'ARRAY',
                     items: {
-                      type: "OBJECT",
+                      type: 'OBJECT',
                       properties: {
-                        subcategory: { type: "STRING" },
-                        dishes: {
-                          type: "ARRAY",
+                        dishName: { type: 'STRING' },
+                        description: { type: 'STRING' },
+                        dishType: { type: 'STRING' },
+                        price: { type: 'NUMBER' }, // optional
+                        portions: {
+                          // optional
+                          type: 'ARRAY',
                           items: {
-                            type: "OBJECT",
+                            type: 'OBJECT',
                             properties: {
-                              dishName: { type: "STRING" },
-                              price: { type: "NUMBER" },
-                              dishType: { type: "STRING" },
+                              name: { type: 'STRING' },
+                              price: { type: 'NUMBER' },
+                              default: { type: 'BOOLEAN' },
                             },
-                            propertyOrdering: ["dishName", "price", "dishType"],
+                            propertyOrdering: ['name', 'price', 'default'],
                           },
                         },
                       },
-                      propertyOrdering: ["subcategory", "dishes"],
+                      propertyOrdering: ['dishName', 'description', 'dishType', 'price', 'portions'],
                     },
                   },
                 },
-                propertyOrdering: ["category", "subcategories"],
+                propertyOrdering: ['subcategory', 'dishes'],
               },
             },
           },
         } as const;
 
         const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
 
         if (!res.ok) {
-          let detailMessage = "";
+          let detailMessage = '';
           try {
             const detail = await res.json();
             detailMessage = detail?.error?.message || String(res.status);
@@ -209,20 +288,19 @@ export default function AIMenuExtractorPage() {
 
         const json = await res.json();
         const jsonText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!jsonText) throw new Error("No JSON returned.");
+        if (!jsonText) throw new Error('No JSON returned.');
 
-        const raw = JSON.parse(jsonText);
-        const normalized = normalizeToCategories(raw);
+        const raw = JSON.parse(jsonText); // [{ subcategory, dishes }, ...]
+        const normalized = normalizeSubcatArrayToCategories(raw);
         results.push(...normalized);
       }
 
-      const merged = mergeCategories(results);
-      setCategories(merged);
-      setPhase("review");
+      setCategories(results); // no category merges/ensure — cat-free logic preserved
+      setPhase('review');
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || "Extraction failed");
-      setPhase("idle");
+      setError(err?.message || 'Extraction failed');
+      setPhase('idle');
     } finally {
       setIsLoading(false);
     }
@@ -230,111 +308,102 @@ export default function AIMenuExtractorPage() {
 
   const handleProceed = useCallback(async () => {
     try {
-      // --- 0) Guard ---
       if (!Array.isArray(categories) || categories.length === 0) return;
 
-      // --- 1) Build desired child-category names from subcategories (preferred) ---
-      // If a category has no subcategories or an empty array, fall back to the parent category name once.
+      // Build wanted child-category names (subcategory names)
       const desiredNames = new Set<string>();
       for (const cat of categories) {
         const subs = Array.isArray(cat.subcategories) ? cat.subcategories : [];
         if (subs.length > 0) {
           for (const sub of subs) {
-            const childName = buildChildCategoryName(
-              cat.name,
-              sub?.name,
-            ).trim();
+            const childName = buildChildCategoryName(cat.name, sub?.name).trim(); // sub-name preferred
             if (childName) desiredNames.add(childName);
           }
         } else {
-          const fallback = (cat?.name || "").trim();
+          // fallback shouldn't happen because of ensureSubcategoriesForSameName
+          const fallback = (cat?.name || '').trim();
           if (fallback) desiredNames.add(fallback);
         }
       }
 
-      // --- 1a) Remove names that already exist on the server (avoid duplicate create) ---
+      // Avoid duplicates with server
       const norm = (s: string) => s.trim().toLowerCase();
-      const existingNames = new Set<string>(
-        (fetchedCats ?? []).map((c) => norm(c.name)),
-      );
-      const namesToCreate = Array.from(desiredNames).filter(
-        (n) => !existingNames.has(norm(n)),
-      );
+      const existingNames = new Set<string>((fetchedCats ?? []).map((c) => norm(c.name)));
+      const namesToCreate = Array.from(desiredNames).filter((n) => !existingNames.has(norm(n)));
 
-      // --- 2) Create missing CHILD categories (with menuId & businessId) ---
-      setPhase("creatingCategories");
+      // Create missing child categories
+      setPhase('creatingCategories');
       let createdCatCount = 0;
-
       for (const name of namesToCreate) {
-        const commonPayload = {
-          name,
-          hierarchy: "CHILD" as const,
-          menuId, // <- make sure these are defined in your component scope
-          businessId, // <-
-        };
-        await createCategory(commonPayload);
+        const payload = { name, hierarchy: 'CHILD' as const, menuId, businessId };
+        console.log('Creating category:', payload);
+        await createCategory(payload);
         createdCatCount++;
       }
 
-      // --- 3) Refetch categories and build a fresh name → _id map ---
-      const refetchResult = await refetch(); // react-query v5 returns { data, ... }
+      // Build fresh name -> id map
+      const refetchResult = await refetch();
       const latestCats = refetchResult?.data ?? fetchedCats ?? [];
       const byName: Record<string, string> = {};
-      for (const item of latestCats) {
-        byName[norm(item.name)] = item._id;
-      }
+      for (const item of latestCats) byName[norm(item.name)] = item._id;
+      const catNameToId = (nm?: string | null) => (nm ? byName[norm(nm)] : undefined);
 
-      const catNameToId = (nm: string | undefined | null) => {
-        if (!nm) return undefined;
-        return byName[norm(nm)];
-      };
-
-      // --- 4) Create dishes, linking to the resolved child category id ---
-      setPhase("creatingDishes");
+      setPhase('creatingDishes');
       let createdDishCount = 0;
-
       for (const cat of categories) {
         const subs = Array.isArray(cat.subcategories) ? cat.subcategories : [];
-
-        // If no subcategories at all, treat it like one implicit bucket with the parent name.
-        const subBuckets =
-          subs.length > 0 ? subs : [{ name: cat.name, dishes: [] }];
+        const subBuckets = subs.length > 0 ? subs : [{ name: cat.name, dishes: (cat as any).dishes ?? [] }];
 
         for (const sub of subBuckets) {
           const childName = buildChildCategoryName(cat.name, sub?.name);
           const childId = catNameToId(childName) || catNameToId(cat.name);
-          if (!childId) {
-            // If we still can't resolve a category, skip this sub's dishes.
-            // (Could also log or collect for a retry UI)
-            continue;
-          }
+          if (!childId) continue;
 
           const dishes = Array.isArray(sub?.dishes) ? sub!.dishes : [];
           for (const d of dishes) {
             const dishTypes = toCanonicalDishTypes(d.dishType);
-            const price =
-              typeof d.price === "number" ? d.price : Number(d.price ?? 0);
+            const price = typeof d.price === 'number' ? d.price : toNumber(d.price);
 
-            const portions: PortionType[] = [
-              {
-                name: "Regular",
-                price,
-                default: true,
+            // Build portions payload: use variants if present; else a single "Regular" portion.
+            let portions: PortionType[];
+            if (Array.isArray(d.portions) && d.portions.length > 0) {
+              portions = d.portions.map((p: any) => ({
+                name: String(p.name || 'Variant'),
+                price: toNumber(p.price),
+                default: !!p.default,
                 portionTypes: dishTypes,
-              },
-            ];
+              }));
+            } else {
+              portions = [
+                {
+                  name: 'Regular',
+                  price,
+                  default: true,
+                  portionTypes: dishTypes,
+                },
+              ];
+            }
+            let finalPrice = price;
+
+            // if portions exist → use default portion price OR fallback to min portion price
+            if (Array.isArray(d.portions) && d.portions.length > 0) {
+              const defaultPortion = d.portions.find((p: any) => p.default);
+              const minPortion = d.portions.reduce((min: number, p: any) => (p.price && p.price < min ? p.price : min), Number.MAX_SAFE_INTEGER);
+
+              finalPrice = defaultPortion?.price ?? (minPortion !== Number.MAX_SAFE_INTEGER ? minPortion : price);
+            }
 
             const payload = {
               name: d.dishName,
-              price,
+              price: finalPrice,
               visibility: true,
               availability: true,
               dishTypes,
-              description: autoDescription(d.dishName, childName),
+              description: (d as any).description?.length ? (d as any).description : autoDescription(d.dishName, childName), // 👈 prefer AI,
               categoryIds: [childId],
               portions,
-              menuId: menuId, // <- ensure these are defined in your component scope
-              businessId: businessId, // <-
+              menuId,
+              businessId,
             };
 
             await postDishData(payload);
@@ -343,185 +412,55 @@ export default function AIMenuExtractorPage() {
         }
       }
 
-      setCreatedCounts({
-        categories: createdCatCount,
-        dishes: createdDishCount,
-      });
-      setPhase("done");
+      setCreatedCounts({ categories: createdCatCount, dishes: createdDishCount });
+      setPhase('done');
       setSuccessOpen(true);
     } catch (e) {
-      console.error("Proceed failed:", e);
-      // You can surface a toast here if you have one in scope
-      setPhase("review"); // fall back to review so user can retry
+      console.error('Proceed failed:', e);
+      setPhase('review');
     }
-    // IMPORTANT: include all ids and funcs in deps so the latest values are used.
-  }, [
-    categories,
-    fetchedCats,
-    refetch,
-    createCategory,
-    postDishData,
-    menuId,
-    businessId,
-    setPhase,
-  ]);
+  }, [categories, fetchedCats, refetch, createCategory, menuId, businessId, setPhase]);
 
   const handleReset = () => {
     setFiles([]);
     setCategories([]);
-    setPhase("idle");
+    setPhase('idle');
     setError(null);
   };
 
-  const isBusy =
-    phase === "extracting" ||
-    phase === "creatingCategories" ||
-    phase === "creatingDishes";
+  const isBusy = phase === 'extracting' || phase === 'creatingCategories' || phase === 'creatingDishes';
 
   const steps = [
-    {
-      id: 1,
-      name: "Upload",
-      icon: Upload,
-      status: files.length > 0 ? "complete" : "current",
-    },
+    { id: 1, name: 'Upload', icon: Upload, status: files.length > 0 ? 'complete' : 'current' },
     {
       id: 2,
-      name: "Extract",
+      name: 'Extract',
       icon: Sparkles,
       status:
-        phase === "extracting"
-          ? "current"
-          : phase === "review" ||
-              phase === "creatingCategories" ||
-              phase === "creatingDishes" ||
-              phase === "done"
-            ? "complete"
-            : "upcoming",
+        phase === 'extracting'
+          ? 'current'
+          : phase === 'review' || phase === 'creatingCategories' || phase === 'creatingDishes' || phase === 'done'
+            ? 'complete'
+            : 'upcoming',
     },
     {
       id: 3,
-      name: "Review",
+      name: 'Review',
       icon: FileText,
       status:
-        phase === "review"
-          ? "current"
-          : phase === "creatingCategories" ||
-              phase === "creatingDishes" ||
-              phase === "done"
-            ? "complete"
-            : "upcoming",
+        phase === 'review' ? 'current' : phase === 'creatingCategories' || phase === 'creatingDishes' || phase === 'done' ? 'complete' : 'upcoming',
     },
     {
       id: 4,
-      name: "Create",
+      name: 'Create',
       icon: CheckCircle2,
-      status:
-        phase === "creatingCategories" || phase === "creatingDishes"
-          ? "current"
-          : phase === "done"
-            ? "complete"
-            : "upcoming",
+      status: phase === 'creatingCategories' || phase === 'creatingDishes' ? 'current' : phase === 'done' ? 'complete' : 'upcoming',
     },
-  ];
+  ] as const;
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
-      <div className="w-full border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <motion.div
-                className="relative"
-                animate={{ rotate: [0, 360] }}
-                transition={{
-                  duration: 20,
-                  repeat: Number.POSITIVE_INFINITY,
-                  ease: "linear",
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl blur-xl opacity-20" />
-                <div className="relative bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-2xl">
-                  <Sparkles className="w-7 h-7 text-white" />
-                </div>
-              </motion.div>
-              <div>
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-                  AI Menu Extractor
-                </h1>
-                <p className="text-sm text-slate-600 mt-0.5">
-                  Transform your menu images into structured data instantly
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {categories.length > 0 && (
-                <Button
-                  onClick={() => setEditing(!isEditing)}
-                  disabled={isBusy}
-                  variant={isEditing ? "default" : "outline"}
-                  size="sm"
-                >
-                  {isEditing ? "Done Editing" : "Edit Menu"}
-                </Button>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-6 flex items-center justify-center gap-2">
-            {steps.map((step, idx) => (
-              <div key={step.id} className="flex items-center">
-                <div className="flex items-center gap-2">
-                  <motion.div
-                    initial={false}
-                    animate={{
-                      scale: step.status === "current" ? 1.1 : 1,
-                    }}
-                    className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
-                      step.status === "complete"
-                        ? "bg-blue-500 border-blue-500"
-                        : step.status === "current"
-                          ? "bg-white border-blue-500"
-                          : "bg-white border-slate-300"
-                    }`}
-                  >
-                    <step.icon
-                      className={`w-5 h-5 ${
-                        step.status === "complete"
-                          ? "text-white"
-                          : step.status === "current"
-                            ? "text-blue-500"
-                            : "text-slate-400"
-                      }`}
-                    />
-                  </motion.div>
-                  <span
-                    className={`text-sm font-medium ${
-                      step.status === "complete" || step.status === "current"
-                        ? "text-slate-900"
-                        : "text-slate-400"
-                    }`}
-                  >
-                    {step.name}
-                  </span>
-                </div>
-                {idx < steps.length - 1 && (
-                  <ArrowRight
-                    className={`w-4 h-4 mx-3 ${
-                      step.status === "complete"
-                        ? "text-blue-500"
-                        : "text-slate-300"
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    <main className="w-full">
+      <div className="mx-auto h-[80dvh] max-w-7xl px-4 pb-8">
         {/* Error Display */}
         <AnimatePresence>
           {error && (
@@ -529,9 +468,9 @@ export default function AIMenuExtractorPage() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3"
+              className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700"
             >
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
               <span className="text-sm font-medium">{error}</span>
             </motion.div>
           )}
@@ -539,89 +478,119 @@ export default function AIMenuExtractorPage() {
 
         {/* Upload Section */}
         <AnimatePresence mode="wait">
-          {(phase === "idle" || phase === "extracting") && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mb-8"
-            >
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                    Upload Menu Files
+          {(phase === 'idle' || phase === 'extracting') && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="relative mb-8">
+              <motion.div
+                className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-indigo-50 to-blue-50 p-8 shadow-lg"
+                initial={{ scale: 0.98 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.4 }}
+              >
+                {/* ✨ Animated AI Aura */}
+                <motion.div
+                  className="absolute inset-0 -z-10 bg-gradient-to-r from-indigo-500/20 via-blue-500/10 to-transparent opacity-40 blur-3xl"
+                  animate={{ opacity: [0.3, 0.5, 0.3] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                />
+
+                {/* Title */}
+                <div className="mb-6 text-center">
+                  <h2 className="mb-2 bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-2xl font-extrabold text-transparent">
+                    Upload Your Menu Files
                   </h2>
                   <p className="text-sm text-slate-600">
-                    Upload up to 3 images (PNG, JPG, JPEG) of your menu
+                    Let <span className="font-semibold text-indigo-600">Hipalz AI</span> read, understand, and transform your menu into structured
+                    data.
                   </p>
                 </div>
-                <FileUpload files={files} onFileChange={handleFileChange} />
 
+                {/* Upload Section */}
+                <FileUpload
+                  files={files}
+                  onFileChange={handleFileChange}
+                  onDropFiles={handleDropFiles}
+                  onRemoveFile={handleRemoveFile}
+                  maxFiles={3}
+                />
+
+                {/* AI Progress Bar */}
+                {phase === 'extracting' && (
+                  <motion.div className="mt-6 h-2 w-full overflow-hidden rounded-full bg-slate-200" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500"
+                      animate={{ x: ['-100%', '100%'] }}
+                      transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
+                    />
+                  </motion.div>
+                )}
+
+                {/* Extract Button */}
                 {files.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 flex justify-end"
+                    transition={{ delay: 0.2 }}
+                    className="mt-8 flex justify-center"
                   >
                     <Button
                       onClick={handleExtract}
                       disabled={isLoading || isBusy}
                       size="lg"
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30"
+                      className="relative flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-3 text-white shadow-lg hover:from-indigo-700 hover:to-blue-700"
                     >
-                      <Sparkles className="w-5 h-5 mr-2" />
-                      {phase === "extracting"
-                        ? "Extracting..."
-                        : "Extract Menu with Hipalz AI"}
+                      <motion.span
+                        className="absolute -inset-1 rounded-full bg-gradient-to-r from-indigo-500 via-blue-400 to-indigo-600 opacity-0 blur-lg"
+                        animate={{
+                          opacity: [0.2, 0.6, 0.2],
+                        }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                      />
+                      <Sparkles className="relative z-10 h-5 w-5 text-white" />
+                      <span className="relative z-10 font-medium">
+                        {phase === 'extracting' ? 'Extracting with AI Magic…' : 'Extract Menu with Hipalz AI'}
+                      </span>
                     </Button>
                   </motion.div>
                 )}
-              </div>
+
+                {/* Footer note */}
+                <p className="mt-6 text-center text-xs text-slate-400">
+                  ⚡ Secure upload • Files auto-processed by <span className="font-semibold text-indigo-500">Hipalz Intelligence Engine</span>
+                </p>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Loaders - Full viewport */}
+        {/* Loaders */}
         <AnimatePresence mode="wait">
-          {phase === "extracting" && <ExtractLoader />}
-          {phase === "creatingCategories" && <CategoryLoader />}
-          {phase === "creatingDishes" && <DishLoader />}
+          {phase === 'extracting' && <ExtractLoader />}
+          {phase === 'creatingCategories' && <CategoryLoader />}
+          {phase === 'creatingDishes' && <DishLoader />}
         </AnimatePresence>
 
         {/* Menu Preview */}
-        {phase === "review" && categories.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8"
-          >
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                  Review Extracted Menu
-                </h2>
-                <p className="text-sm text-slate-600">
-                  Review and edit your menu before creating
-                </p>
-              </div>
-            </div>
-
+        {phase === 'review' && categories.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative shadow-sm">
             <MenuPreview categories={categories} isEditing={isEditing} />
-
-            <div className="mt-8 flex justify-between items-center pt-6 border-t border-slate-200">
-              <Button variant="outline" onClick={handleReset} disabled={isBusy}>
-                Start Over
-              </Button>
-              <Button
-                onClick={handleProceed}
-                disabled={isBusy || categories.length === 0}
-                size="lg"
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/30"
-              >
-                <CheckCircle2 className="w-5 h-5 mr-2" />
-                Proceed & Create Menu
-              </Button>
-            </div>
+            <AdvancedBottomButton
+              fixed={true}
+              maxWidth="30rem"
+              buttons={[
+                {
+                  text: 'Clear',
+                  onClick: handleReset,
+                  className: '!w-[7rem] !flex-none',
+                },
+                {
+                  text: 'Proceed & Create Menu',
+                  onClick: () => setConfirmOpen(true),
+                  disable: isBusy || categories.length === 0,
+                  className: 'bg-gradient-to-r from-emerald-600 to-teal-600 shadow-lg shadow-emerald-500/30 hover:from-emerald-700 hover:to-teal-700',
+                  icon: <CheckCircle2 className="mr-2 h-5 w-5" />,
+                },
+              ]}
+            />
           </motion.div>
         )}
       </div>
@@ -636,6 +605,16 @@ export default function AIMenuExtractorPage() {
         categoriesCount={createdCounts.categories}
         dishesCount={createdCounts.dishes}
       />
-    </div>
+      {confirmOpen && (
+        <ConfirmProceedModal
+          open={confirmOpen}
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={() => {
+            setConfirmOpen(false);
+            handleProceed(); // your original function
+          }}
+        />
+      )}
+    </main>
   );
 }

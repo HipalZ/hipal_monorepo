@@ -1,10 +1,16 @@
-export type DishType = "veg" | "nonveg" | "egg" | "vegan";
+export type DishType = 'veg' | 'nonveg' | 'egg' | 'vegan';
 
 export interface Dish {
   id: string;
   dishName: string;
   price: number;
   dishType: DishType;
+  description?: string;
+  portions?: {
+    name: string;
+    price: number;
+    default: boolean;
+  }[];
 }
 
 export interface Subcategory {
@@ -19,15 +25,7 @@ export interface Category {
   subcategories: Subcategory[];
 }
 
-export type CanonicalDishType =
-  | "VEG"
-  | "NON_VEG"
-  | "EGG"
-  | "VEGAN"
-  | "ALCOHOL"
-  | "NON_ALCOHOL"
-  | "GLUTEN_FREE"
-  | "MIX";
+export type CanonicalDishType = 'VEG' | 'NON_VEG' | 'EGG' | 'VEGAN' | 'ALCOHOL' | 'NON_ALCOHOL' | 'GLUTEN_FREE' | 'MIX';
 
 export interface PortionType {
   name: string;
@@ -54,7 +52,7 @@ export interface DishDraft {
 }
 
 export interface ExtractResponse {
-  status: "ok" | "empty" | "error";
+  status: 'ok' | 'empty' | 'error';
   ui: any;
   review: {
     notes: string[];
@@ -70,9 +68,9 @@ export interface ExtractResponse {
 }
 
 export interface FinalizeResponse {
-  status: "ok" | "error";
+  status: 'ok' | 'error';
   payloads: {
-    categories: { name: string; hierarchy: "CHILD" }[];
+    categories: { name: string; hierarchy: 'CHILD' }[];
     dishes: {
       name: string;
       price: number | null;
