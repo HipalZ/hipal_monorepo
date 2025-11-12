@@ -35,12 +35,12 @@ const MemoImageContent = () => {
         reader.readAsDataURL(file);
         reader.onloadend = () => {
           setCropping({ image: reader.result, type: file.type });
-          setShowCropper(true);
+          // setShowCropper(true);
           setImageFiles(file);
         };
       }
     },
-    [setImageFiles, setShowCropper, setCropping],
+    [setImageFiles, setCropping],
   );
 
   const handleRemoveImage = useCallback(() => {

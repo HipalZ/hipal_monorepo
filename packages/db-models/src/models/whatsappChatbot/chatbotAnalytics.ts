@@ -1,4 +1,4 @@
-import mongoose, { Schema, Model, model } from "mongoose";
+import mongoose, { Schema, type Model, model } from "mongoose";
 import type { Types } from "mongoose";
 
 /* -------------------------
@@ -19,8 +19,16 @@ export interface ChatbotNodeLogType {
 
 const ChatbotNodeLogSchema = new Schema<ChatbotNodeLogType>(
   {
-    sessionId: { type: Schema.Types.ObjectId, ref: "chatbotSession", required: true },
-    chatbotId: { type: Schema.Types.ObjectId, ref: "whatsappChatbot", required: true },
+    sessionId: {
+      type: Schema.Types.ObjectId,
+      ref: "chatbotSession",
+      required: false,
+    },
+    chatbotId: {
+      type: Schema.Types.ObjectId,
+      ref: "whatsappChatbot",
+      required: true,
+    },
     nodeId: { type: String, required: true },
     nodeType: { type: String, required: true },
     enteredAt: { type: Date, default: Date.now },
@@ -58,7 +66,11 @@ export interface ChatbotSessionType {
 
 const ChatbotSessionSchema = new Schema<ChatbotSessionType>(
   {
-    chatbotId: { type: Schema.Types.ObjectId, ref: "whatsappChatbot", required: true },
+    chatbotId: {
+      type: Schema.Types.ObjectId,
+      ref: "whatsappChatbot",
+      required: true,
+    },
     userId: { type: String, required: true },
     userName: { type: String },
     phone: { type: String },
@@ -99,7 +111,11 @@ export interface ChatbotAnalyticsType {
 
 const ChatbotAnalyticsSchema = new Schema<ChatbotAnalyticsType>(
   {
-    chatbotId: { type: Schema.Types.ObjectId, ref: "whatsappChatbot", required: true },
+    chatbotId: {
+      type: Schema.Types.ObjectId,
+      ref: "whatsappChatbot",
+      required: true,
+    },
     totalSessions: { type: Number, default: 0 },
     completedSessions: { type: Number, default: 0 },
     dropOffSessions: { type: Number, default: 0 },

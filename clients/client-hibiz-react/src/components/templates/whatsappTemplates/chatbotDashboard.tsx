@@ -207,7 +207,7 @@ function ChatbotSessionsModal({ bot, onClose }: any) {
             {sessions?.map((s: any) => (
               <div key={s._id} className="rounded-lg border border-gray-100 bg-slate-50 p-3 transition hover:bg-slate-100">
                 <div className="flex justify-between text-sm">
-                  <span className="font-semibold text-gray-800">{s.userName || 'Unknown User'}</span>
+                  <span className="font-semibold text-gray-800">{s.userId || 'Unknown User'}</span>
                   <span className="text-gray-500">{new Date(s.startTime).toLocaleString()}</span>
                 </div>
                 <div className="mt-1 flex justify-between text-xs text-gray-500">
