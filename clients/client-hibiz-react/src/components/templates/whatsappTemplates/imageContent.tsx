@@ -1,96 +1,71 @@
-import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
-import { cn } from "@/components/utils/helper";
-import { type ChangeEvent, memo, useCallback, useRef } from "react";
-import toast from "react-hot-toast";
-import { BiPlus, BiX } from "react-icons/bi";
+import useWhatsapp, { HeaderInterface } from '@/components/store/useWhatsapp';
+import { cn } from '@/components/utils/helper';
+import { type ChangeEvent, memo, useCallback, useRef } from 'react';
+import toast from 'react-hot-toast';
+import { BiPlus, BiX } from 'react-icons/bi';
 
 const MemoImageContent = () => {
-  const {
-    setHeaderType,
-    imagePreview,
-    setImageFiles,
-    setShowCropper,
-    setImagePreview,
-    setCropping,
-  } = useWhatsapp((s) => ({
-    setHeaderType: s.setHeaderType,
-    imagePreview: s.imagePreview,
-    setImageFiles: s.setImageFiles,
-    setShowCropper: s.setShowCropper,
-    setImagePreview: s.setImagePreview,
-    setCropping: s.setCropping,
-  }));
+  const setHeaderType = useWhatsapp((s) => s.setHeaderType);
+  const imagePreview = useWhatsapp((s) => s.imagePreview);
+  const setImageFiles = useWhatsapp((s) => s.setImageFiles);
+  const setImagePreview = useWhatsapp((s) => s.setImagePreview);
+  const setCropping = useWhatsapp((s) => s.setCropping);
   const templateImageRef = useRef<HTMLInputElement | null>(null);
   const handleImageChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       const file = event?.target?.files?.[0];
-      console.log("file", file);
       if (file) {
         const maxSizeInBytes = 2 * 1024 * 1024; // 2MB in bytes
         if (file.size > maxSizeInBytes) {
-          toast.error("File size exceeds 2MB. Please select a smaller file.");
+          toast.error('File size exceeds 2MB. Please select a smaller file.');
           return;
         }
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onloadend = () => {
           setCropping({ image: reader.result, type: file.type });
-          // setShowCropper(true);
+          setImagePreview(reader.result as string);
           setImageFiles(file);
         };
       }
     },
-    [setImageFiles, setCropping],
+    [setImageFiles, setImagePreview, setCropping],
   );
 
   const handleRemoveImage = useCallback(() => {
-    setImagePreview("");
+    setImagePreview('');
     setHeaderType(HeaderInterface.Image);
   }, [setHeaderType, setImagePreview]);
 
   return (
     <>
-      <label
-        htmlFor="headerImage"
-        className="block mb-1 text-base font-bold text-black"
-      >
+      <label htmlFor="headerImage" className="mb-1 block text-base font-bold text-black">
         Choose Image or Gif
       </label>
-      <div
-        className={cn(
-          "relative w-64 mb-4 bg-white rounded-lg h-56",
-          imagePreview ? "" : "border-2 border-gray-300 border-dashed",
-        )}
-      >
+      <div className={cn('relative mb-4 h-56 w-64 rounded-lg bg-white', imagePreview ? '' : 'border-2 border-dashed border-gray-300')}>
         <input
           ref={templateImageRef}
           type="file"
           id="headerImage"
-          className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer"
+          className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
           accept="image/jpeg, image/png, image/jpg"
           onChange={handleImageChange}
         />
         {imagePreview ? (
-          <div className="relative w-full h-full">
-            <img
-              src={imagePreview}
-              alt="Header preview"
-              className="object-cover w-full h-full rounded-lg"
-            />
+          <div className="relative h-full w-full">
+            <img src={imagePreview} alt="Header preview" className="h-full w-full rounded-lg object-cover" />
             <button
               type="button"
-              className="absolute p-1 m-2 text-white bg-gray-700 rounded-full -top-4 -right-4 hover:bg-gray-700"
+              className="absolute -right-4 -top-4 m-2 rounded-full bg-gray-700 p-1 text-white hover:bg-gray-700"
               onClick={handleRemoveImage}
             >
-              <BiX className="w-4 h-4" />
+              <BiX className="h-4 w-4" />
             </button>
           </div>
         ) : (
-          <div className="absolute inset-0 w-full mt-16 transform -translate-x-1/2 -translate-y-1/2 min-h-56 left-1/2 top-1/2">
-            <BiPlus className="w-12 h-12 mx-auto text-gray-400" />
-            <p className="mt-2 text-sm text-center text-gray-600">
-              Click to upload image
-            </p>
+          <div className="absolute inset-0 left-1/2 top-1/2 mt-16 min-h-56 w-full -translate-x-1/2 -translate-y-1/2 transform">
+            <BiPlus className="mx-auto h-12 w-12 text-gray-400" />
+            <p className="mt-2 text-center text-sm text-gray-600">Click to upload image</p>
           </div>
         )}
       </div>

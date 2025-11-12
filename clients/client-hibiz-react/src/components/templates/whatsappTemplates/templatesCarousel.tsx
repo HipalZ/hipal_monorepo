@@ -1,20 +1,15 @@
-import { lazy, memo, useCallback } from "react";
-import useWhatsapp from "@/components/store/useWhatsapp";
-import type { WhatsAppTemplatePayload } from "@/components/types/businessData";
-import { cn } from "@/components/utils/helper";
-import diwali from "@/assets/whatzapp/diwali.jpg";
-import ShimmerImage from "../shimmer";
-import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
+import diwali from '@/assets/whatzapp/diwali.jpg';
+import useWhatsapp from '@/components/store/useWhatsapp';
+import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
+import type { WhatsAppTemplatePayload } from '@/components/types/businessData';
+import { cn } from '@/components/utils/helper';
+import { lazy, memo, useCallback } from 'react';
+import ShimmerImage from '../shimmer';
 
-const OpenConfirmEdit = lazy(() => import("./openConfirmEdit"));
+const OpenConfirmEdit = lazy(() => import('./openConfirmEdit'));
 
 const MemoTemplatesCarousel = () => {
-  const {
-    setTemplateData,
-    setShowSuccessPopup,
-    isOpenEditModal,
-    setIsOpenEditModal,
-  } = useWhatsapp((s) => ({
+  const { setTemplateData, setShowSuccessPopup, isOpenEditModal, setIsOpenEditModal } = useWhatsapp((s) => ({
     setTemplateData: s.setTemplateData,
     setShowSuccessPopup: s.setShowSuccessPopup,
     isOpenEditModal: s.isOpenEditModal,
@@ -41,42 +36,44 @@ const MemoTemplatesCarousel = () => {
           <div className="px-2 md:w-full md:px-0" key={template.id}>
             <section
               className={cn(
-                template?.status === "REJECTED"
-                  ? "opacity-75 pointer-events-none"
-                  : "cursor-pointer",
-                "overflow-hidden transition-shadow duration-300 max-w-full max-h-[240px] md:max-w-[240px] lg:max-h-[170px] rounded-lg shadow-md hover:shadow-lg md:h-full",
+                template?.status === 'REJECTED' ? 'pointer-events-none opacity-75' : 'cursor-pointer',
+                'max-h-[240px] max-w-full overflow-hidden rounded-lg shadow-md transition-shadow duration-300 hover:shadow-lg md:h-full md:max-w-[240px] lg:max-h-[170px]',
               )}
               onClick={() => handleTemplateClick(template)}
-              onKeyDown={(e) =>
-                e.key === "Enter" && handleTemplateClick(template)
-              }
+              onKeyDown={(e) => e.key === 'Enter' && handleTemplateClick(template)}
               aria-label={`Select ${template.name} template`}
             >
               <article className="relative h-full">
-                <article className="absolute top-0 left-0 right-0 px-2 py-1 z-1">
+                <article className="z-1 absolute left-0 right-0 top-0 px-2 py-1">
                   <span
                     className={cn(
-                      "px-2 py-1 text-xs font-semibold text-white rounded-full",
-                      template?.status === "APPROVED"
-                        ? "bg-green-500"
-                        : "bg-red-500",
+                      'rounded-full px-2 py-1 text-xs font-semibold text-white',
+                      template?.status === 'APPROVED' ? 'bg-green-500' : 'bg-red-500',
                     )}
                   >
                     {template?.status}
                   </span>
                 </article>
-                <ShimmerImage
-                  src={
-                    template?.components?.[0]?.example?.header_handle?.[0] ||
-                    diwali
-                  }
-                  alt={template.name || "Template"}
-                  className="max-w-full max-h-[400px] md:max-w-[240px] lg:max-h-[400px] object-cover w-full h-full"
-                />
-                <article className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-                  <h3 className="text-lg font-semibold text-white truncate">
-                    {template.name}
-                  </h3>
+                {template?.components?.[0]?.format === 'VIDEO' ? (
+                  <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="h-full max-h-[400px] w-full max-w-full rounded-lg object-cover md:max-w-[240px] lg:max-h-[400px]"
+                  >
+                    <source src={template?.components?.[0]?.example?.header_handle?.[0] || diwali} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <ShimmerImage
+                    src={template?.components?.[0]?.example?.header_handle?.[0] || diwali}
+                    alt={template?.name || 'Template'}
+                    className="h-full max-h-[400px] w-full max-w-full object-cover md:max-w-[240px] lg:max-h-[400px]"
+                  />
+                )}
+                <article className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+                  <h3 className="truncate text-lg font-semibold text-white">{template.name}</h3>
                 </article>
               </article>
             </section>

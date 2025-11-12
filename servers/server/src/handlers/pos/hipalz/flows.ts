@@ -210,6 +210,19 @@ async function sendImage(
   });
 }
 
+async function sendVideo(
+  to: string,
+  link: string,
+  caption: string | undefined,
+  cfg: any,
+) {
+  await waSend(cfg, {
+    to,
+    type: "video",
+    video: { link, ...(caption ? { caption } : {}) },
+  });
+}
+
 async function sendDocument(
   to: string,
   link: string,
@@ -400,6 +413,18 @@ export async function advance(
         );
       } else if (node.contentType === "image") {
         await sendImage(
+          waTo,
+          String(node.mediaUrl || ""),
+          interpolate(
+            node.caption || node.bodyText || "",
+            s.variables,
+            cfg,
+            userName,
+          ),
+          cfg,
+        );
+      } else if (node.contentType === "video") {
+        await sendVideo(
           waTo,
           String(node.mediaUrl || ""),
           interpolate(
@@ -670,7 +695,6 @@ export const waWebhookHandler = async (c: Context) => {
   setSession(from, { userName: contactName });
   let textBody: string | undefined;
   let interactiveTitleOrId: string | undefined;
-
   // --- Parse message types
   if (messages) {
     if (messages.type === "interactive") {

@@ -25,72 +25,62 @@ export const useCreateTemplate = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
   const setIsLoading = useWhatsappTempStore((s) => s.setIsLoading);
   const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
-  const {
-    setStep,
-    setShowSuccessPopup,
-    setTemplateStatus,
-    setTemplateData,
-    setTemplateId,
-    setTemplateSteps,
-  } = useWhatsapp((s) => ({
-    setStep: s.setStep,
-    setShowSuccessPopup: s.setShowSuccessPopup,
-    setTemplateStatus: s.setTemplateStatus,
-    setTemplateData: s.setTemplateData,
-    setTemplateId: s.setTemplateId,
-    setTemplateSteps: s.setTemplateSteps,
-  }));
+  const setStep = useWhatsapp((s) => s.setStep);
+  const setShowSuccessPopup = useWhatsapp((s) => s.setShowSuccessPopup);
+  const setTemplateStatus = useWhatsapp((s) => s.setTemplateStatus);
+  const setTemplateData = useWhatsapp((s) => s.setTemplateData);
+  const setTemplateId = useWhatsapp((s) => s.setTemplateId);
+  const setTemplateSteps = useWhatsapp((s) => s.setTemplateSteps);
 
-  const { mutateAsync: createTemplate, isPending: createTemplateLoading } =
-    useMutation({
-      mutationFn: async (payload: WhatsAppTemplatePayload) => {
-        if (!businessId) return null;
-        const url =
-          outLetType === "HOTEL"
-            ? "hotel/whats_app/templates"
-            : "whatsapp/template";
+  const { mutateAsync: createTemplate } = useMutation({
+    mutationFn: async (payload: WhatsAppTemplatePayload) => {
+      if (!businessId) return null;
+      const url =
+        outLetType === "HOTEL"
+          ? "hotel/whats_app/templates"
+          : "whatsapp/template";
 
-        const res = await apiRpc[url].$post({
-          json: {
-            ...payload,
-            businessId: businessId,
-          },
-        });
+      const res = await apiRpc[url].$post({
+        json: {
+          ...payload,
+          businessId: businessId,
+        },
+      });
 
-        const data = await res.json();
-        if (!data) throw new Error("Failed to create template");
-        return data;
-      },
-      onMutate: () => {
-        setIsLoading(true); // Set loading before mutation
-      },
-      onSuccess: (data) => {
-        setIsLoading(false);
-        if (data?.err || !data?.data) {
-          setStep(Step.SETUP);
-          setTemplateSteps(TemplateSteps.NONE);
-          setShowSuccessPopup(false);
-          toast.error(
-            data?.data?.error?.error_user_msg || "Failed to create template",
-          );
-          return;
-        }
-
-        setTemplateId(data?.data?.id);
-        setShowSuccessPopup(true);
-        setTemplateStatus(data?.data?.status);
-        setTemplateData(data?.data);
+      const data = await res.json();
+      if (!data) throw new Error("Failed to create template");
+      return data;
+    },
+    onMutate: () => {
+      setIsLoading(true); // Set loading before mutation
+    },
+    onSuccess: (data) => {
+      setIsLoading(false);
+      if (data?.err || !data?.data) {
         setStep(Step.SETUP);
         setTemplateSteps(TemplateSteps.NONE);
-        queryClient.invalidateQueries({ queryKey: ["templates"] });
-      },
-      onError: (error) => {
-        setIsLoading(false);
+        setShowSuccessPopup(false);
         toast.error(
-          error.message || "An error occurred while creating the template.",
+          data?.data?.error?.error_user_msg || "Failed to create template",
         );
-      },
-    });
+        return;
+      }
+
+      setTemplateId(data?.data?.id);
+      setShowSuccessPopup(true);
+      setTemplateStatus(data?.data?.status);
+      setTemplateData(data?.data);
+      setStep(Step.SETUP);
+      setTemplateSteps(TemplateSteps.NONE);
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+    },
+    onError: (error) => {
+      setIsLoading(false);
+      toast.error(
+        error.message || "An error occurred while creating the template.",
+      );
+    },
+  });
 
   return { createTemplate };
 };
@@ -814,7 +804,13 @@ export const useTempAnalyticsById = () => {
         setLoadingTemplateId(null);
       }
     },
-    [businessId, setSingleTemplateAnalytics, setSelectedTemplate],
+    [
+      businessId,
+      setSingleTemplateAnalytics,
+      setLoadingTemplateId,
+      setSelectedTemplate,
+      setOpenAccordionId,
+    ],
   );
 
   return { getTemplateAnaylyticsById };

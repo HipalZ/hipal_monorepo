@@ -22,6 +22,7 @@ export enum HeaderInterface {
   Image = "IMAGE",
   Video = "VIDEO",
   Document = "DOCUMENT",
+  Audio = "AUDIO",
 }
 
 export enum TemplateType {
