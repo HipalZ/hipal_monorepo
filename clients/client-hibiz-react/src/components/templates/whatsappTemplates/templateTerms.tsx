@@ -75,20 +75,61 @@ const MemoTemplateTerms = () => {
     setIsLoading(true);
     let whatsappImageHandler = imagePreview || '';
     let storageImageUrl = '';
-    if (headerType === HeaderInterface.Image && imagePreview.length > 0 && imagePreview.includes('data:')) {
+
+    if (
+      (headerType === HeaderInterface.Image ||
+        headerType === HeaderInterface.Video ||
+        headerType === HeaderInterface.Document ||
+        headerType === HeaderInterface.Audio) &&
+      imagePreview.length > 0 &&
+      imagePreview.includes('data:')
+    ) {
+      // Upload file to storage (Spaces, S3, etc.)
       const { url, handle } = await uploadMedia();
+
+      // Meta media handle (used for WhatsApp template)
       whatsappImageHandler = handle;
+
+      // Public file URL (stored in our DB / analytics)
       storageImageUrl = url;
     }
+
     const components: any[] = [];
     // HEADER
     if (headerType === HeaderInterface.Text) {
       const header = clean(headerText, 60);
-      if (header) components.push({ type: 'HEADER', format: 'TEXT', text: header });
-    } else if (headerType === HeaderInterface.Image && whatsappImageHandler) {
+      if (header) {
+        components.push({
+          type: 'HEADER',
+          format: 'TEXT',
+          text: header,
+        });
+      }
+    }
+
+    // 🖼️ IMAGE or 🎞️ VIDEO
+    else if ((headerType === HeaderInterface.Image || headerType === HeaderInterface.Video) && whatsappImageHandler) {
       components.push({
         type: 'HEADER',
-        format: 'IMAGE',
+        format: headerType === HeaderInterface.Image ? 'IMAGE' : 'VIDEO',
+        example: { header_handle: [whatsappImageHandler] },
+      });
+    }
+
+    // 📄 DOCUMENT
+    else if (headerType === HeaderInterface.Document && whatsappImageHandler) {
+      components.push({
+        type: 'HEADER',
+        format: 'DOCUMENT',
+        example: { header_handle: [whatsappImageHandler] },
+      });
+    }
+
+    // 🎧 AUDIO (optional, if you plan to support later)
+    else if (headerType === HeaderInterface.Audio && whatsappImageHandler) {
+      components.push({
+        type: 'HEADER',
+        format: 'AUDIO',
         example: { header_handle: [whatsappImageHandler] },
       });
     }
@@ -154,14 +195,12 @@ const MemoTemplateTerms = () => {
     };
 
     console.log('payload', payload);
-    // Step 3: Call the appropriate API (create or edit)
     if (templateId?.length > 0) {
       await editTemplate(payload);
     } else {
       await createTemplate(payload);
     }
 
-    // Success: Update UI state
     setShowSuccessPopup(true);
     setIsLoading(false);
   }, [

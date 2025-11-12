@@ -67,6 +67,16 @@ export const headerSchemaForImage = z
   })
   .optional();
 
+export const headerSchemaForVideo = z
+  .object({
+    example: z
+      .object({
+        header_handle: z.array(z.string().min(3).max(1000)),
+      })
+      .optional(),
+  })
+  .optional();
+
 export const headerSchemaForDocument = z
   .object({
     example: z
@@ -80,12 +90,15 @@ export const headerSchemaForDocument = z
 export const headerSchema = z
   .object({
     type: z.string().min(3).max(100).default("HEADER"),
-    format: z.enum(["TEXT", "IMAGE", "DOCUMENT"]),
+    format: z
+      .enum(["TEXT", "IMAGE", "VIDEO", "DOCUMENT", "AUDIO"])
+      .default("TEXT"),
   })
   .and(
     z.union([
       headerSchemaForText,
       headerSchemaForImage,
+      headerSchemaForVideo,
       headerSchemaForDocument,
     ]),
   )
