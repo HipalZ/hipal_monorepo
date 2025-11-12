@@ -4620,20 +4620,37 @@ const paymentsRouter = new Hono()
         });
       }
 
-      const payments = await Payment.find({
-        businessId,
-        isDeleted: false,
-        date: {
-          $gte: fromDate,
-          $lte: toDate,
+      const payments = await Payment.find(
+        {
+          businessId,
+          isDeleted: false,
+          date: { $gte: fromDate, $lte: toDate },
         },
-      });
+        {
+          total: 1,
+          paymentMode: 1,
+          mode: 1,
+          splitModes: 1,
+          tax: 1,
+          serviceCharge: 1,
+          tips: 1,
+          discount: 1,
+          finalSubTotal: 1,
+          initialSubTotal: 1,
+        },
+      );
 
       const totalOrders = payments.length;
 
       let overAllAmount = 0;
       let totalOnlineSale = 0;
       const offlineSales: Record<string, number> = {};
+      // NEW aggregates for the report
+      let subTotalSum = 0; // -> “Sub Total (taxable)”
+      let taxSum = 0; // CGST+SGST combined
+      let serviceChargeSum = 0;
+      let tipSum = 0;
+      let discountSum = 0;
 
       const activeTable = await Table.find({
         businessId: businessId,
@@ -4667,6 +4684,31 @@ const paymentsRouter = new Hono()
         } else if (!["dues", "npc", "complementary"].includes(paymentMode)) {
           offlineSales[mode] = (offlineSales[mode] || 0) + total;
         }
+
+        // ---- SubTotal & components (NEW) ----
+        // prefer stored subTotal; else compute fallback
+        const storedSub =
+          typeof payment.finalSubTotal === "number" && payment.finalSubTotal > 0
+            ? payment.finalSubTotal
+            : typeof payment.initialSubTotal === "number" &&
+                payment.initialSubTotal > 0
+              ? payment.initialSubTotal
+              : null;
+
+        const fallbackSub =
+          total -
+          (payment.tax || 0) -
+          (payment.serviceCharge || 0) -
+          (payment.tips || 0) +
+          (payment.discount || 0);
+
+        const rowSubTotal = storedSub ?? fallbackSub;
+
+        subTotalSum += rowSubTotal;
+        taxSum += payment.tax || 0;
+        serviceChargeSum += payment.serviceCharge || 0;
+        tipSum += payment.tips || 0;
+        discountSum += payment.discount || 0;
       }
 
       delete offlineSales["complementary"];
@@ -4680,6 +4722,11 @@ const paymentsRouter = new Hono()
           offlineSale: offlineSales,
           totalOrders,
           totalActiveTableValue,
+          subTotal: subTotalSum, // “Sub Total (taxable)”
+          totalTax: taxSum, // CGST+SGST combined
+          totalServiceCharge: serviceChargeSum,
+          totalTip: tipSum,
+          totalDiscount: discountSum,
         },
       });
     },

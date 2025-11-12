@@ -1,16 +1,16 @@
-import { memo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import useTimings from "@/components/store/useTimings";
-import { apiRpc } from "@hi/common";
-import useBusinessData from "@/components/store/useBusinessData";
-import { InfoCard } from "./InfoCard";
-import { PieChart } from "./PieCharts";
-import { motion } from "framer-motion";
-import { CreditCard, Gift, AlertTriangle, IndianRupee } from "lucide-react";
-import { BarChart } from "./BarChart";
-import { useMemo } from "react";
+import useBusinessData from '@/components/store/useBusinessData';
+import useTimings from '@/components/store/useTimings';
+import ExecutiveReportButton from '@/components/templates/payment/ExecutiveReportButton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { apiRpc } from '@hi/common';
+import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { AlertTriangle, CreditCard, Gift, IndianRupee } from 'lucide-react';
+import { memo, useMemo } from 'react';
+import { BarChart } from './BarChart';
+import { InfoCard } from './InfoCard';
+import { PieChart } from './PieCharts';
 
 export interface SalesData {
   overAllAmount: number;
@@ -18,6 +18,7 @@ export interface SalesData {
   offlineSale: Record<string, number>;
   totalOrders: number;
   totalActiveTableValue: number;
+  subTotal: number;
 }
 
 interface OtherAndWarningData {
@@ -80,31 +81,26 @@ const Overview = () => {
     const date = new Date(timestamp);
     const today = new Date();
 
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
+    return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
   };
 
-  const shouldShowCard =
-    isToday(timeStampStart) && isToday(timeStampEnd);
+  const shouldShowCard = isToday(timeStampStart) && isToday(timeStampEnd);
 
   const handleHistoryData = async (): Promise<SalesData> => {
     try {
-      const response = await apiRpc.payments[":id"].salesDashboard.$get({
+      const response = await apiRpc.payments[':id'].salesDashboard.$get({
         query: {
           businessId: business?._id,
           from: timeStampStart.toString(),
           to: timeStampEnd.toString(),
         },
-        param: { id: business?._id || "" },
+        param: { id: business?._id || '' },
       });
       const data = (await response.json()).data as SalesData;
       if (response.status === 200) {
         return data;
       }
-      throw new Error("Failed to fetch sales data");
+      throw new Error('Failed to fetch sales data');
     } catch (err) {
       console.error(err);
       throw err;
@@ -140,13 +136,13 @@ const Overview = () => {
     isLoading,
     error,
   } = useQuery<SalesData, Error>({
-    queryKey: ["salesData", business?._id, timeStampStart, timeStampEnd],
+    queryKey: ['salesData', business?._id, timeStampStart, timeStampEnd],
     queryFn: handleHistoryData,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
   });
 
   const fetchTables = async (businessId: string): Promise<TableData[]> => {
-    const response = await apiRpc.table.all[":businessId"].$get({
+    const response = await apiRpc.table.all[':businessId'].$get({
       param: { businessId },
     });
     const json = await response.json();
@@ -154,20 +150,20 @@ const Overview = () => {
   };
 
   const { data: otherData } = useQuery<OtherAndWarningData, Error>({
-    queryKey: ["otherAndWarning", business?._id, timeStampStart, timeStampEnd],
+    queryKey: ['otherAndWarning', business?._id, timeStampStart, timeStampEnd],
     queryFn: otherAndWarning,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
   });
 
   const { data: salesExceptionData } = useQuery<SalesExceptionData, Error>({
-    queryKey: ["salesException", business?._id, timeStampStart, timeStampEnd],
+    queryKey: ['salesException', business?._id, timeStampStart, timeStampEnd],
     queryFn: salesException,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
   });
 
-  const {  data: tablesData } = useQuery({
-    queryKey: ["tables", business?._id],
-    queryFn: () => fetchTables(business?._id || ""),
+  const { data: tablesData } = useQuery({
+    queryKey: ['tables', business?._id],
+    queryFn: () => fetchTables(business?._id || ''),
     enabled: !!business?._id,
     refetchInterval: 1000 * 30,
   });
@@ -189,20 +185,15 @@ const Overview = () => {
 
   if (error || !salesData) {
     return (
-      <Card className="w-full h-[70vh] flex items-center justify-center">
+      <Card className="flex h-[70vh] w-full items-center justify-center">
         <CardContent>
-          <p className="text-center text-muted-foreground">
-            No sales data found
-          </p>
+          <p className="text-muted-foreground text-center">No sales data found</p>
         </CardContent>
       </Card>
     );
   }
 
-  const totalOfflineSale = Object.values(salesData.offlineSale).reduce(
-    (acc, curr) => acc + curr,
-    0,
-  );
+  const totalOfflineSale = Object.values(salesData.offlineSale).reduce((acc, curr) => acc + curr, 0);
 
   const totalExceptionAndReward = salesExceptionData
     ? salesExceptionData.exceptionSale.totalComplementary +
@@ -212,49 +203,41 @@ const Overview = () => {
       salesExceptionData.rewardSale.totalCouponDiscount
     : 0;
 
-  const totalOtherAndWarning = otherData
-    ? otherData.otherSale.totalTax +
-      otherData.otherSale.totalTip +
-      otherData.otherSale.totalServiceCharge
-    : 0;
+  const totalOtherAndWarning = otherData ? otherData.otherSale.totalTax + otherData.otherSale.totalTip + otherData.otherSale.totalServiceCharge : 0;
 
   // Create breakdown data
   const totalSalesBreakdown = [
-    { label: "Hipalz Razorpay Sales", value: salesData.onlineSale.online },
-    { label: "Pay To Captain Sales", value: totalOfflineSale },
+    { label: 'Hipalz Razorpay Sales', value: salesData.onlineSale.online },
+    { label: 'Pay To Captain Sales', value: totalOfflineSale },
   ];
 
-  const onlineSalesBreakdown = [
-    { label: "Online Payment", value: salesData.onlineSale.online },
-  ];
+  const onlineSalesBreakdown = [{ label: 'Online Payment', value: salesData.onlineSale.online }];
 
-  const offlineSalesBreakdown = Object.entries(salesData.offlineSale).map(
-    ([method, amount]) => ({
-      label: method.charAt(0).toUpperCase() + method.slice(1),
-      value: amount,
-    }),
-  );
+  const offlineSalesBreakdown = Object.entries(salesData.offlineSale).map(([method, amount]) => ({
+    label: method.charAt(0).toUpperCase() + method.slice(1),
+    value: amount,
+  }));
 
   const loyaltyRewardsBreakdown = salesExceptionData
     ? [
         {
-          label: "Total Complementary",
+          label: 'Total Complementary',
           value: salesExceptionData.exceptionSale.totalComplementary,
         },
         {
-          label: "Total Discount",
+          label: 'Total Discount',
           value: salesExceptionData.exceptionSale.totalDiscount,
         },
         {
-          label: "Total Coins Given",
+          label: 'Total Coins Given',
           value: salesExceptionData.rewardSale.totalCoinsGiven,
         },
         {
-          label: "Total Coins Used",
+          label: 'Total Coins Used',
           value: salesExceptionData.rewardSale.totalCoinsUsed,
         },
         {
-          label: "Total Coupon Discount",
+          label: 'Total Coupon Discount',
           value: salesExceptionData.rewardSale.totalCouponDiscount,
         },
       ]
@@ -262,10 +245,10 @@ const Overview = () => {
 
   const taxesServiceBreakdown = otherData
     ? [
-        { label: "Total Tax", value: otherData.otherSale.totalTax },
-        { label: "Total Tip", value: otherData.otherSale.totalTip },
+        { label: 'Total Tax', value: otherData.otherSale.totalTax },
+        { label: 'Total Tip', value: otherData.otherSale.totalTip },
         {
-          label: "Total Service Charge",
+          label: 'Total Service Charge',
           value: otherData.otherSale.totalServiceCharge,
         },
       ]
@@ -273,22 +256,33 @@ const Overview = () => {
 
   return (
     <div className="container mx-auto">
-      <section className="col-span-2 grid gap-4 px-4 mt-4">
+      <div className="mt-2 flex items-center justify-between px-4">
+        <h2 className="text-lg font-semibold">Executive Summary</h2>
+        <ExecutiveReportButton
+          businessName={business?.name || 'My Business'}
+          from={timeStampStart}
+          to={timeStampEnd}
+          salesData={salesData}
+          otherData={otherData}
+          salesExceptionData={salesExceptionData}
+        />
+      </div>
+      <section className="col-span-2 mt-4 grid gap-4 px-4">
         <InfoCard
-          title="Total Sales"
+          title={`Total Sales (${salesData.totalOrders} Orders)`}
           value={salesData.overAllAmount}
-          icon={<IndianRupee className="w-4 h-4" />}
+          icon={<IndianRupee className="h-4 w-4" />}
           gradient="from-blue-600 to-blue-200"
           breakdown={totalSalesBreakdown}
         />
       </section>
 
-      <div className="grid grid-cols-2 gap-4 px-4 mt-4 md:grid-cols-4 lg:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-4 px-4 md:grid-cols-4 lg:grid-cols-4">
         <section className="col-span-2">
           <InfoCard
             title="Hipalz Razorpay Sales"
             value={salesData.onlineSale.online}
-            icon={<IndianRupee className="w-4 h-4" />}
+            icon={<IndianRupee className="h-4 w-4" />}
             gradient="from-black to-gray-100"
             breakdown={onlineSalesBreakdown}
           />
@@ -297,7 +291,7 @@ const Overview = () => {
         <InfoCard
           title="Pay To Captain Sales"
           value={totalOfflineSale}
-          icon={<CreditCard className="w-4 h-4" />}
+          icon={<CreditCard className="h-4 w-4" />}
           gradient="from-green-600 to-green-100"
           breakdown={offlineSalesBreakdown}
         />
@@ -305,7 +299,7 @@ const Overview = () => {
         <InfoCard
           title="Loyalty & Rewards"
           value={totalExceptionAndReward}
-          icon={<Gift className="w-4 h-4" />}
+          icon={<Gift className="h-4 w-4" />}
           gradient="from-purple-600 to-purple-100"
           breakdown={loyaltyRewardsBreakdown}
         />
@@ -313,47 +307,35 @@ const Overview = () => {
         <InfoCard
           title="Taxes & Service Charges"
           value={totalOtherAndWarning}
-          icon={<AlertTriangle className="w-4 h-4" />}
+          icon={<AlertTriangle className="h-4 w-4" />}
           gradient="from-red-900 to-red-200"
           breakdown={taxesServiceBreakdown}
         />
 
-        {shouldShowCard && <InfoCard
-          title="Running Tables"
-          value={salesData.totalActiveTableValue}
-          icon={<CreditCard className="w-4 h-4" />}
-          gradient="from-blue-600 to-blue-200"
-          breakdown={runningTablesBreakdown}
-        />}
+        {shouldShowCard && (
+          <InfoCard
+            title="Running Tables"
+            value={salesData.totalActiveTableValue}
+            icon={<CreditCard className="h-4 w-4" />}
+            gradient="from-blue-600 to-blue-200"
+            breakdown={runningTablesBreakdown}
+          />
+        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 p-4 md:pb-4 md:grid-cols-1">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
+      <div className="grid grid-cols-1 gap-6 p-4 md:grid-cols-1 md:pb-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
           <Card>
             <CardHeader>
               <CardTitle>Total In-store sales</CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              <PieChart
-                data={[
-                  ...Object.entries(salesData.offlineSale).map(
-                    ([mode, amount]) => ({ name: mode, value: amount }),
-                  ),
-                ]}
-              />
+              <PieChart data={[...Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount }))]} />
             </CardContent>
           </Card>
         </motion.div>
         {salesExceptionData && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }}>
             <Card>
               <CardHeader>
                 <CardTitle>Loyalty & Rewards</CardTitle>
@@ -361,12 +343,8 @@ const Overview = () => {
               <CardContent>
                 <BarChart
                   data={[
-                    ...Object.entries(salesExceptionData.exceptionSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
-                    ...Object.entries(salesExceptionData.rewardSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
+                    ...Object.entries(salesExceptionData.exceptionSale).map(([key, value]) => ({ name: key, value })),
+                    ...Object.entries(salesExceptionData.rewardSale).map(([key, value]) => ({ name: key, value })),
                   ]}
                 />
               </CardContent>
@@ -375,11 +353,7 @@ const Overview = () => {
         )}
 
         {otherData && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.8 }}>
             <Card>
               <CardHeader>
                 <CardTitle>Taxes & Service Charges</CardTitle>
@@ -387,12 +361,8 @@ const Overview = () => {
               <CardContent>
                 <BarChart
                   data={[
-                    ...Object.entries(otherData.otherSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
-                    ...Object.entries(otherData.warningSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
+                    ...Object.entries(otherData.otherSale).map(([key, value]) => ({ name: key, value })),
+                    ...Object.entries(otherData.warningSale).map(([key, value]) => ({ name: key, value })),
                   ]}
                 />
               </CardContent>
@@ -405,9 +375,9 @@ const Overview = () => {
 };
 
 const OverviewSkeleton = () => (
-  <div className="container p-4 mx-auto space-y-6">
+  <div className="container mx-auto space-y-6 p-4">
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <Skeleton className="h-40 col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4" />
+      <Skeleton className="col-span-1 h-40 sm:col-span-2 lg:col-span-3 xl:col-span-4" />
       <Skeleton className="col-span-1 h-80 sm:col-span-2 lg:col-span-3" />
       <Skeleton className="col-span-1 h-80" />
       <Skeleton className="col-span-1 h-80 sm:col-span-2 lg:col-span-3" />
