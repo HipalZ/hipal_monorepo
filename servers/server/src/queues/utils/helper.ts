@@ -54,14 +54,14 @@ export const returnBodyComponents = async (
   businessName: string,
   address: string,
   bodyVariableSequence: string[],
-  imageUrl: string,
+  mediaUrl: string,
   customer: {
     name: string;
     phone: string;
   },
   businessId: string,
 ) => {
-  // return components for the body
+  // Resolve body parameters
   const parameters = await bodySequence(
     businessName,
     address,
@@ -72,23 +72,62 @@ export const returnBodyComponents = async (
 
   const components = [];
 
-  if (imageUrl) {
-    components.push({
-      type: "HEADER",
-      parameters: [
-        {
-          type: "image",
-          image: {
-            link: imageUrl,
-          },
-        },
-      ],
-    });
+  if (mediaUrl) {
+    const url = mediaUrl.toLowerCase();
+
+    let headerParam: any = null;
+
+    // 🎥 VIDEO (mp4)
+    if (url.includes("mp4")) {
+      headerParam = {
+        type: "video",
+        video: { link: mediaUrl },
+      };
+    }
+    // 🎧 AUDIO (mp3)
+    else if (url.includes("mp3")) {
+      headerParam = {
+        type: "audio",
+        audio: { link: mediaUrl },
+      };
+    }
+    // 📄 DOCUMENT (pdf/doc/xls)
+    else if (
+      url.includes("pdf") ||
+      url.includes("doc") ||
+      url.includes("docx") ||
+      url.includes("xls") ||
+      url.includes("xlsx")
+    ) {
+      headerParam = {
+        type: "document",
+        document: { link: mediaUrl },
+      };
+    } else if (
+      url.includes("jpg") ||
+      url.includes("jpeg") ||
+      url.includes("png") ||
+      url.includes("gif") ||
+      url.includes("webp")
+    ) {
+      headerParam = {
+        type: "image",
+        image: { link: mediaUrl },
+      };
+    }
+
+    if (headerParam) {
+      components.push({
+        type: "HEADER",
+        parameters: [headerParam],
+      });
+    }
   }
 
+  // BODY parameters
   components.push({
     type: "BODY",
-    parameters: parameters,
+    parameters,
   });
 
   return components;
