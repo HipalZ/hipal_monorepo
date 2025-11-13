@@ -75,27 +75,24 @@ const MemoTemplatePreview = () => {
         </section>
 
         {/* Message Content */}
-        <div className="m-4 overflow-hidden rounded-xl bg-white shadow-md">
+        <div className="m-4 overflow-hidden rounded-xl bg-white p-2 shadow-md">
           {headerType === HeaderInterface.Image && (
-            <img
-              src={imagePreview || pastaDummy}
-              alt="preview"
-              className="w-full rounded-2xl object-cover p-3"
-              style={{
-                height: '175px',
-                objectFit: 'cover',
-                objectPosition: '0 -8px',
-              }}
-            />
+            <img src={imagePreview || pastaDummy} alt="Header Preview" className="h-full w-full rounded-lg object-cover" />
           )}
-          <div className="min-h-24 space-y-2 p-3">
-            {headerType === HeaderInterface.Text && <h3 className="text-lg font-semibold">{headerText}</h3>}
-            {bodyText && (
-              <p className="max-w-[248px] whitespace-pre-wrap break-words text-[0.9375rem]" style={{ lineHeight: '1.5' }}>
-                {renderBodyText()}
-              </p>
-            )}
 
+          {headerType === HeaderInterface.Video && (
+            <video src={imagePreview || ''} controls loop autoPlay muted playsInline className="h-full w-full rounded-lg object-cover" />
+          )}
+
+          {headerType === HeaderInterface.Document && (
+            <iframe src={imagePreview || pastaDummy} title="Document Preview" className="h-full w-full rounded-lg" />
+          )}
+
+          {headerType === HeaderInterface.Audio && <audio src={imagePreview || ''} controls className="w-full rounded-lg" />}
+
+          <div className="space-y-2 p-3">
+            {headerType === HeaderInterface.Text && <h3 className="text-lg font-semibold">{headerText}</h3>}
+            {bodyText && <p className="max-w-[248px] break-words text-[0.9375rem]">{renderBodyText()}</p>}
             {footerText && <p className="text-xs text-gray-500">{footerText}</p>}
           </div>
           {firstButtonEnable && (
