@@ -1,3 +1,4 @@
+import useWhatsapp from '@/components/store/useWhatsapp';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,8 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { useAllChatbots, useChatbotSessions } from '@/hooks/useChatbot';
-import { Activity, AlertTriangle, BarChart3, Bot, Loader2, Plus, Search, TrendingDown, TrendingUp, UserCheck, Users } from 'lucide-react';
-import { useState } from 'react';
+import { Activity, AlertTriangle, BarChart3, Bot, Edit, Loader2, Plus, Search, TrendingDown, TrendingUp, UserCheck, Users } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString('en-US', {
@@ -20,6 +21,27 @@ export function ChatbotDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBot, setSelectedBot] = useState<any>(null);
 
+  const setOpenBot = useWhatsapp((s) => s.setOpenBot);
+
+  const handleOpenChatbot = useCallback(() => {
+    setOpenBot(true);
+  }, [setOpenBot]);
+
+  const filtered = (chatbots || []).filter((bot: any) => bot.chatbotName.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const totalSessions = filtered.reduce((a, b) => a + (b.stats?.totalSessions || 0), 0);
+  const totalCompleted = filtered.reduce((a, b) => a + (b.stats?.completedSessions || 0), 0);
+  const totalDropOff = filtered.reduce((a, b) => a + (b.stats?.dropOffSessions || 0), 0);
+  const totalActive = filtered.filter((b: any) => b.status === 'active').length;
+  const avgCompletionRate = totalSessions ? (totalCompleted / totalSessions) * 100 : 0;
+
+  const handleEditChatbot = useCallback(
+    (bot: any) => {
+      setOpenBot(true);
+    },
+    [setOpenBot],
+  );
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-gray-500">
@@ -27,15 +49,6 @@ export function ChatbotDashboard() {
       </div>
     );
   }
-
-  const filtered = (chatbots || []).filter((bot: any) => bot.chatbotName.toLowerCase().includes(searchTerm.toLowerCase()));
-
-  const totalSessions = filtered.reduce((a, b) => a + (b.stats?.totalSessions || 0), 0);
-  const totalCompleted = filtered.reduce((a, b) => a + (b.stats?.completedSessions || 0), 0);
-  const totalDropOff = filtered.reduce((a, b) => a + (b.stats?.dropOffSessions || 0), 0);
-  const totalActive = filtered.filter((b: any) => b.active).length;
-  const avgCompletionRate = totalSessions ? (totalCompleted / totalSessions) * 100 : 0;
-
   return (
     <div className="min-h-screen bg-gray-50 p-6 sm:p-8">
       {/* Header */}
@@ -46,7 +59,7 @@ export function ChatbotDashboard() {
           </h1>
           <p className="mt-1 text-gray-600">Monitor engagement and performance across all WhatsApp flows</p>
         </div>
-        <Button className="mt-4 flex items-center gap-2 bg-blue-600 text-white shadow-lg hover:bg-blue-700 sm:mt-0">
+        <Button onClick={handleOpenChatbot} className="mt-4 flex items-center gap-2 bg-blue-600 text-white shadow-lg hover:bg-blue-700 sm:mt-0">
           <Plus className="h-4 w-4" /> Create New Chatbot
         </Button>
       </div>
@@ -85,7 +98,7 @@ export function ChatbotDashboard() {
             <CardHeader className="border-b border-gray-100 bg-white p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-blue-100 p-3">
+                  <div className="rounded-lg bg-amber-100 p-3">
                     <Bot className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
@@ -94,11 +107,12 @@ export function ChatbotDashboard() {
                   </div>
                 </div>
                 <Badge
-                  variant={bot.active ? 'default' : 'secondary'}
-                  className={bot.active ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}
+                  variant={bot.status ? 'default' : 'secondary'}
+                  className={bot.status ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}
                 >
-                  {bot.active ? 'Active' : 'Inactive'}
+                  {bot.status ? 'Active' : 'Inactive'}
                 </Badge>
+                <Edit onClick={() => handleEditChatbot(bot)} className="cursor-pointer rounded-lg bg-purple-100 p-1 text-purple-800" />
               </div>
             </CardHeader>
             <CardContent className="p-6">
@@ -150,7 +164,7 @@ export function ChatbotDashboard() {
 
       {/* Empty State */}
       {filtered.length === 0 && (
-        <div className="rounded-xl border border-gray-100 bg-white py-16 text-center shadow-sm">
+        <div onClick={handleOpenChatbot} className="rounded-xl border border-gray-100 bg-white py-16 text-center shadow-sm">
           <Bot className="mx-auto mb-4 h-12 w-12 text-gray-400" />
           <h3 className="mb-2 text-lg font-semibold text-gray-900">No chatbots found</h3>
           <p className="mx-auto mb-6 max-w-xs text-gray-500">

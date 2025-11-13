@@ -1,4 +1,5 @@
 import useBusinessData from '@/components/store/useBusinessData';
+import useWhatsapp from '@/components/store/useWhatsapp';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { cleanPayload, useChatBot } from '@/components/utils/chatbotHelper';
+import { useChatBot } from '@/components/utils/chatbotHelper';
 import { cn } from '@/lib/utils';
 import {
   Background,
@@ -27,6 +28,7 @@ import { motion } from 'framer-motion';
 import {
   ChevronDown,
   ChevronLeft,
+  ChevronsLeft,
   Diamond,
   FileInputIcon,
   FileSpreadsheet,
@@ -787,21 +789,31 @@ function CondNode({ data, selected }) {
 }
 
 function TriggerNode({ data, selected }) {
-  const m = data.meta || {};
-  const [kw, setKw] = useState('');
+  const meta = data.meta || {};
+  const existingKeywords = meta.keywords || [];
+
+  const [keywordInput, setKeywordInput] = useState('');
 
   const handleAddKeyword = () => {
-    const v = kw.trim();
-    if (!v) return;
-    const arr = [...(m.keywords || [])];
-    if (!arr.includes(v)) arr.push(v);
-    data.onPatch({ meta: { ...m, keywords: arr } });
-    setKw('');
+    const keyword = keywordInput.trim();
+    if (!keyword) return;
+
+    const updatedKeywords = Array.from(new Set([...existingKeywords, keyword]));
+
+    data.onPatch({
+      meta: {
+        ...meta,
+        keywords: updatedKeywords,
+      },
+    });
+
+    setKeywordInput('');
   };
 
   return (
     <div className="relative">
       <Handle id="start" type="source" position={Position.Right} className="z-50 !h-[0.75rem] !w-[0.75rem]" />
+
       <Card
         className={cn(
           'relative w-80 overflow-hidden border-2 shadow-lg transition-all',
@@ -819,22 +831,25 @@ function TriggerNode({ data, selected }) {
         <CardContent className="space-y-4 bg-gray-100 p-4">
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-xs font-medium text-gray-700">Trigger Keywords</label>
+
             <div className="flex gap-2">
               <input
-                value={kw}
-                onChange={(e) => setKw(e.target.value)}
-                placeholder="Add trigger word 'Hai'"
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                placeholder="Add trigger word 'Hi'"
                 className="flex-1 rounded border border-gray-300 px-3 py-2 text-xs"
                 onKeyPress={(e) => e.key === 'Enter' && handleAddKeyword()}
               />
+
               <Button size="sm" variant="outline" className="bg-blue-500 px-3 py-2 text-xs text-white" onClick={handleAddKeyword}>
                 Add
               </Button>
             </div>
           </div>
-          {(m.keywords || []).length > 0 && (
+
+          {existingKeywords.length > 0 && (
             <Badge variant="outline" className="bg-orange-100 text-xs text-orange-800">
-              {m.keywords.join(', ')}
+              {existingKeywords.join(', ')}
             </Badge>
           )}
         </CardContent>
@@ -1803,6 +1818,10 @@ function EditorShell() {
   const { createChatbot } = useChatBot();
   const reactFlowWrapper = useRef(null);
   const { screenToFlowPosition } = useReactFlow();
+  const setOpenBot = useWhatsapp((s) => s.setOpenBot);
+  const handleOpenChatbot = useCallback(() => {
+    setOpenBot(false);
+  }, [setOpenBot]);
 
   const updateGlobalVariables = useCallback((newVars) => {
     setVariables((prev) => {
@@ -2014,6 +2033,7 @@ function EditorShell() {
             <Card className="rounded-none border-b border-l-0 border-r-0 border-t-0 border-gray-100 bg-slate-50 shadow-none">
               <CardHeader className="flex flex-col gap-2 p-4 pb-3">
                 <div className="flex items-center gap-2">
+                  <ChevronsLeft className="h-8 w-8 cursor-pointer text-black hover:text-blue-600" onClick={handleOpenChatbot} />
                   <CardTitle className="text-2xl font-semibold text-slate-800">Chat Bot Flow Editor</CardTitle>
                 </div>
                 <Input
@@ -2090,7 +2110,7 @@ function EditorShell() {
   );
 }
 
-export default function WhatsAppFlowBuilder() {
+export default function WhatsAppChatBot() {
   return (
     <ReactFlowProvider>
       <EditorShell />

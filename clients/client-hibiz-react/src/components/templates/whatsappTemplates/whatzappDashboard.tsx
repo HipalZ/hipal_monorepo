@@ -11,8 +11,8 @@ import { HiOutlineTemplate } from 'react-icons/hi';
 import { MdCampaign } from 'react-icons/md';
 import { TbSettingsAutomation } from 'react-icons/tb';
 import { ChatbotDashboard } from './chatbotDashboard';
-import WhatsAppFlowBuilder from './flows';
 
+const WhatsappChatBot = lazy(() => import('./flows'));
 const LinkTemplatePopup = lazy(() => import('./linkTemplatePopup'));
 const WhatsappFlowSection = lazy(() => import('./whatsappFlows'));
 const WhatsAppAutomationFlow = lazy(() => import('./whatsappAutomation'));
@@ -38,6 +38,8 @@ const MemoWhatzappDashboard = () => {
   const setFlowBuilderOpen = useWhatsappTempStore((s) => s.setFlowBuilderOpen);
   const [openLinkTemplatePopup, setOpenLinkTemplatePopup] = useState(false);
   const businessId = useBusinessData((s) => s.businessData?._id);
+  const openBot = useWhatsapp((s) => s.openBot);
+  const setOpenBot = useWhatsapp((s) => s.setOpenBot);
 
   const { getTemplates } = useFetchTemplates();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
@@ -74,6 +76,15 @@ const MemoWhatzappDashboard = () => {
     }
   }, []);
 
+  const handleTabs = useCallback(
+    (tab: Tabs) => {
+      setActiveTab(tab);
+      setOpenBot(false);
+      setFlowBuilderOpen(false);
+    },
+    [setActiveTab, setFlowBuilderOpen, setOpenBot],
+  );
+
   const { isPending } = useQuery({
     queryKey: ['templates', businessId, activeTab],
     queryFn: getTemplates,
@@ -98,7 +109,7 @@ const MemoWhatzappDashboard = () => {
                   className={`flex w-full items-center rounded-lg py-2 capitalize transition-colors duration-300 ${
                     isSidebarExpanded ? 'justify-start px-4' : 'justify-center'
                   } ${activeTab === tab ? 'bg-[#075E54] text-white shadow-lg' : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-100'}`}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => handleTabs(tab)}
                 >
                   {getTabIcon(tab)}
                   {isSidebarExpanded && <span className="ml-2">{tab}</span>}
@@ -181,8 +192,8 @@ const MemoWhatzappDashboard = () => {
             </article>
           </section>
         )}
-        {activeTab === Tabs.FLOWS && <ChatbotDashboard />}
-        {activeTab === Tabs.FLOWS && <WhatsAppFlowBuilder />}
+        {activeTab === Tabs.FLOWS && !openBot && <ChatbotDashboard />}
+        {activeTab === Tabs.FLOWS && openBot && <WhatsappChatBot />}
         {activeTab === Tabs.CHATS && <WhatsappChats />}
         {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}
         {activeTab === Tabs.CAMPAIGNS && openAnalytics && <CampaignAdvancedAnalytics />}

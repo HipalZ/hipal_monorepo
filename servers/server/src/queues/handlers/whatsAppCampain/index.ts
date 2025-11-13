@@ -125,7 +125,6 @@ async function pushCustomerIntoQueue(job: Job) {
       campaignId: campaignId,
       userId: customer._id,
     };
-    console.log("Enqueuing for ", customer?.phone?.toString());
     await enqueueWhatsAppJob("sendTemplate", payload);
   }
 }

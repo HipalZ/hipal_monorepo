@@ -136,50 +136,6 @@ const bodySequence = async (
   return ans;
 };
 
-const returnBodyComponents = async (
-  businessName: string,
-  address: string,
-  bodyVariableSequence: string[],
-  imageUrl: string,
-  customer: {
-    name: string;
-    phone: string;
-  },
-  businessId: string,
-) => {
-  // return components for the body
-  const parameters = await bodySequence(
-    businessName,
-    address,
-    bodyVariableSequence,
-    customer,
-    businessId,
-  );
-
-  const components = [];
-
-  if (imageUrl) {
-    components.push({
-      type: "HEADER",
-      parameters: [
-        {
-          type: "image",
-          image: {
-            link: imageUrl,
-          },
-        },
-      ],
-    });
-  }
-
-  components.push({
-    type: "BODY",
-    parameters: parameters,
-  });
-
-  return components;
-};
-
 const pushToQueue = async (
   customersArray: {
     name: string;
