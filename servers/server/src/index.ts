@@ -14,7 +14,6 @@ import { catchErrorHandler } from "../middleware/catchErrorHandler";
 import { routes } from "./routes";
 import { customTimeoutException } from "./utils";
 
-import { tokenVerification } from "../middleware/tokenVerification";
 import "./utils/env";
 ////////
 const app = new Hono({
@@ -79,7 +78,7 @@ app.use(
 );
 app.use(csrf());
 app.use(logger());
-app.use("*", tokenVerification);
+// app.use("*", tokenVerification);
 app.use("/assets/*", serveStatic({ path: "./assets" }));
 app.get("/ui", swaggerUI({ url: "/doc" }));
 app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404));

@@ -649,6 +649,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                       }
                     }
                   }
+
                   const createPayment = await Payment.create(
                     [
                       {
@@ -705,6 +706,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                           splitBillTableSessionData?.couponDiscount,
                         billItems: splitBillTableSessionData?.items || [],
                         isSplitBillVariant: true,
+                        billInvoice: splitBillTableSessionData?.billInvoice,
                       },
                     ],
                     { session },
@@ -865,6 +867,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                         }
                       }
                     }
+
                     const createPayment = await Payment.create(
                       [
                         {
@@ -925,6 +928,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                             splitBillTableSessionData?.couponDiscount,
                           billItems: splitBillTableSessionData?.items || [],
                           isSplitBillVariant: true,
+                          billInvoice: splitBillTableSessionData?.billInvoice,
                         },
                       ],
                       { session },
@@ -1199,6 +1203,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                   discount: tableSession?.discount || 0,
                   couponDiscount: tableSession?.couponDiscount || 0,
                   billItems: tableSession?.items || [],
+                  billInvoice: tableSession?.billInvoice || 0,
                 },
               ],
               { session },
@@ -1497,6 +1502,7 @@ async function hipalzPosNormalSettleHandler(payload: {
                 billId: splitTableSessionData?._id.toString(),
                 billItems: splitTableSessionData?.items || [],
                 isSplitBillVariant: true,
+                billInvoice: splitTableSessionData?.billInvoice,
               },
             ],
             { session },
@@ -1694,6 +1700,7 @@ async function hipalzPosNormalSettleHandler(payload: {
                 billId: splitTableSessionData?._id.toString(),
                 billItems: splitTableSessionData?.items || [],
                 isSplitBillVariant: true,
+                billInvoice: splitTableSessionData?.billInvoice,
               },
             ],
             { session },
@@ -1920,6 +1927,8 @@ async function hipalzPosNormalSettleHandler(payload: {
         { session },
       );
 
+      console.log("coun", tableSession.billInvoice);
+
       const createPayment = await Payment.create(
         [
           {
@@ -1960,6 +1969,7 @@ async function hipalzPosNormalSettleHandler(payload: {
             billId: tableSession?._id.toString(),
             billItems: tableSession?.items || [],
             pin: tableSession?.pin,
+            billInvoice: tableSession?.billInvoice || 0,
           },
         ],
         { session },

@@ -86,9 +86,11 @@ export * from "./whatsAppWalletHistory";
 export * from "./zone";
 
 export * from "./attendence";
+export * from "./billInvoiceNumber";
 export * from "./discount";
 export * from "./dues";
 export * from "./jewellery";
+export * from "./kotInvoiceNumber";
 export * from "./mergeTable";
 export * from "./passwordManager/passwordManager";
 export * from "./printerConfig";
@@ -97,4 +99,5 @@ export * from "./qrs";
 export * from "./queueLog";
 export * from "./splitBill";
 export * from "./syncPosMenu";
+export * from "./tableSessionCounter";
 export * from "./termsAndConditions";

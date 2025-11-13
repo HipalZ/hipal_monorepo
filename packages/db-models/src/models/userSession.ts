@@ -1,7 +1,6 @@
 import type { Model } from "mongoose";
 import mongoose from "mongoose";
 import type { UserSessionSchemaType } from "../validators";
-import { nanoid } from "nanoid";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
   businessId: {
@@ -294,6 +293,16 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
   },
   isOrderInitiated: {
     type: Boolean,
+    default: false,
+  },
+  billInvoice: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  isBillInvoiced: {
+    type: Boolean,
+    required: false,
     default: false,
   },
 });
