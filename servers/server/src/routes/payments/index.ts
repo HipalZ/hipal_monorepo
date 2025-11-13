@@ -2110,7 +2110,7 @@ const paymentsRouter = new Hono()
                     billItems: splitBillTableSessionData?.items || [],
                     isSplitBillVariant: true,
                     billInvoice: splitBillTableSessionData?.billInvoice,
-                    patchCount: tableSession?.patchCount || 0,
+                    patchCount: tableSession?.paxCount || 0,
                   },
                 ],
                 { session },
@@ -2332,7 +2332,7 @@ const paymentsRouter = new Hono()
                     billItems: splitBillTableSessionData?.items || [],
                     isSplitBillVariant: true,
                     billInvoice: splitBillTableSessionData?.billInvoice,
-                    patchCount: tableSession?.patchCount || 0,
+                    patchCount: tableSession?.paxCount || 0,
                   },
                 ],
                 { session },
@@ -2719,7 +2719,7 @@ const paymentsRouter = new Hono()
                 couponDiscount: tableSession?.couponDiscount,
                 billItems: tableSession?.items || [],
                 billInvoice: tableSession?.billInvoice || 0,
-                patchCount: tableSession?.patchCount || 0,
+                patchCount: tableSession?.paxCount || 0,
               },
             ],
             { session },
@@ -3559,7 +3559,7 @@ const paymentsRouter = new Hono()
                           billItems: splitBillTableSessionData?.items || [],
                           isSplitBillVariant: true,
                           billInvoice: splitBillTableSessionData?.billInvoice,
-                          patchCount: tableSession?.patchCount || 0,
+                          patchCount: tableSession?.paxCount || 0,
                         },
                       ],
                       { session },
@@ -3789,7 +3789,7 @@ const paymentsRouter = new Hono()
                             billItems: splitBillTableSessionData?.items || [],
                             isSplitBillVariant: true,
                             billInvoice: splitBillTableSessionData?.billInvoice,
-                            patchCount: tableSession?.patchCount || 0,
+                            patchCount: tableSession?.paxCount || 0,
                           },
                         ],
                         { session },
@@ -4183,7 +4183,7 @@ const paymentsRouter = new Hono()
                     couponDiscount: tableSession?.couponDiscount || 0,
                     billItems: tableSession?.items || [],
                     billInvoice: tableSession?.billInvoice || 0,
-                    patchCount: tableSession?.patchCount || 0,
+                    patchCount: tableSession?.paxCount || 0,
                   },
                 ],
                 { session },
@@ -4563,21 +4563,42 @@ const paymentsRouter = new Hono()
         });
       }
 
-      const payments = await Payment.find({
-        businessId,
-        isDeleted: false,
-        date: {
-          $gte: fromDate,
-          $lte: toDate,
+      const payments = await Payment.find(
+        {
+          businessId,
+          isDeleted: false,
+          date: { $gte: fromDate, $lte: toDate },
         },
-      });
+        {
+          total: 1,
+          paymentMode: 1,
+          mode: 1,
+          splitModes: 1,
+          tax: 1,
+          serviceCharge: 1,
+          tips: 1,
+          discount: 1,
+          finalSubTotal: 1,
+          initialSubTotal: 1,
+          paxCount: 1,
+          billValue: 1,
+          claimedCoins: 1,
+          couponDiscount: 1,
+        },
+      );
 
       const totalOrders = payments.length;
 
       let overAllAmount = 0;
       let totalOnlineSale = 0;
-      let totalPatchCount = 0;
+      let totalPaxCount = 0;
       const offlineSales: Record<string, number> = {};
+      // NEW aggregates for the report
+      let subTotalSum = 0; // -> “Sub Total (taxable)”
+      let taxSum = 0; // CGST+SGST combined
+      let serviceChargeSum = 0;
+      let tipSum = 0;
+      let discountSum = 0;
 
       const activeTable = await Table.find({
         businessId: businessId,
@@ -4593,9 +4614,10 @@ const paymentsRouter = new Hono()
           paymentMode,
           mode,
           splitModes,
-          patchCount,
+          paxCount,
+          billValue,
         } = payment;
-        totalPatchCount += patchCount;
+        totalPaxCount += paxCount;
 
         if (mode === "split" && Array.isArray(splitModes)) {
           let splitTotal = 0;
@@ -4618,6 +4640,14 @@ const paymentsRouter = new Hono()
         } else if (!["dues", "npc", "complementary"].includes(paymentMode)) {
           offlineSales[mode] = (offlineSales[mode] || 0) + total;
         }
+
+        const rowSubTotal = billValue;
+
+        subTotalSum += rowSubTotal;
+        taxSum += payment.tax || 0;
+        serviceChargeSum += payment.serviceCharge || 0;
+        tipSum += payment.tips || 0;
+        discountSum += payment.discount || 0;
       }
 
       delete offlineSales["complementary"];
@@ -4631,7 +4661,12 @@ const paymentsRouter = new Hono()
           offlineSale: offlineSales,
           totalOrders,
           totalActiveTableValue,
-          totalPatchCount,
+          subTotal: subTotalSum, // “Sub Total (taxable)”
+          totalTax: taxSum, // CGST+SGST combined
+          totalServiceCharge: serviceChargeSum,
+          totalTip: tipSum,
+          totalDiscount: discountSum,
+          totalPaxCount: totalPaxCount || 0,
         },
       });
     },
