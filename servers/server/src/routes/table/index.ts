@@ -288,6 +288,18 @@ const tableRouter = new Hono()
         },
       );
 
+      await UserSession.findOneAndUpdate(
+        {
+          tableName: table?.name,
+          businessId: table?.businessId,
+        },
+        {
+          $set: {
+            patchCount: guestCount,
+          },
+        },
+      );
+
       return c.json(
         {
           message: "Table updated successfully",
@@ -494,6 +506,7 @@ const tableRouter = new Hono()
                   billItems: splitTableSessionData?.items || [],
                   isSplitBillVariant: true,
                   billInvoice: splitTableSessionData?.billInvoice,
+                  patchCount: tableSession?.patchCount || 0,
                 },
               ],
               { session },
@@ -692,6 +705,7 @@ const tableRouter = new Hono()
                   billItems: splitTableSessionData?.items || [],
                   isSplitBillVariant: true,
                   billInvoice: splitTableSessionData?.billInvoice,
+                  patchCount: tableSession?.patchCount || 0,
                 },
               ],
               { session },
@@ -1065,6 +1079,7 @@ const tableRouter = new Hono()
               billItems: tableSession?.items || [],
               pin: tableSession?.pin,
               billInvoice: tableSession?.billInvoice || 0,
+              patchCount: tableSession?.patchCount || 0,
             },
           ],
           { session },

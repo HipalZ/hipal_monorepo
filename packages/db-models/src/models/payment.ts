@@ -262,6 +262,11 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: Number,
       required: false,
     },
+    patchCount: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
 
   { timestamps: true },

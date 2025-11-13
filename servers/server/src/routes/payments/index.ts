@@ -2110,6 +2110,7 @@ const paymentsRouter = new Hono()
                     billItems: splitBillTableSessionData?.items || [],
                     isSplitBillVariant: true,
                     billInvoice: splitBillTableSessionData?.billInvoice,
+                    patchCount: tableSession?.patchCount || 0,
                   },
                 ],
                 { session },
@@ -2331,6 +2332,7 @@ const paymentsRouter = new Hono()
                     billItems: splitBillTableSessionData?.items || [],
                     isSplitBillVariant: true,
                     billInvoice: splitBillTableSessionData?.billInvoice,
+                    patchCount: tableSession?.patchCount || 0,
                   },
                 ],
                 { session },
@@ -2717,6 +2719,7 @@ const paymentsRouter = new Hono()
                 couponDiscount: tableSession?.couponDiscount,
                 billItems: tableSession?.items || [],
                 billInvoice: tableSession?.billInvoice || 0,
+                patchCount: tableSession?.patchCount || 0,
               },
             ],
             { session },
@@ -3556,6 +3559,7 @@ const paymentsRouter = new Hono()
                           billItems: splitBillTableSessionData?.items || [],
                           isSplitBillVariant: true,
                           billInvoice: splitBillTableSessionData?.billInvoice,
+                          patchCount: tableSession?.patchCount || 0,
                         },
                       ],
                       { session },
@@ -3785,6 +3789,7 @@ const paymentsRouter = new Hono()
                             billItems: splitBillTableSessionData?.items || [],
                             isSplitBillVariant: true,
                             billInvoice: splitBillTableSessionData?.billInvoice,
+                            patchCount: tableSession?.patchCount || 0,
                           },
                         ],
                         { session },
@@ -4178,6 +4183,7 @@ const paymentsRouter = new Hono()
                     couponDiscount: tableSession?.couponDiscount || 0,
                     billItems: tableSession?.items || [],
                     billInvoice: tableSession?.billInvoice || 0,
+                    patchCount: tableSession?.patchCount || 0,
                   },
                 ],
                 { session },
@@ -4570,6 +4576,7 @@ const paymentsRouter = new Hono()
 
       let overAllAmount = 0;
       let totalOnlineSale = 0;
+      let totalPatchCount = 0;
       const offlineSales: Record<string, number> = {};
 
       const activeTable = await Table.find({
@@ -4581,7 +4588,14 @@ const paymentsRouter = new Hono()
       }, 0);
 
       for (const payment of payments) {
-        const { total = 0, paymentMode, mode, splitModes } = payment;
+        const {
+          total = 0,
+          paymentMode,
+          mode,
+          splitModes,
+          patchCount,
+        } = payment;
+        totalPatchCount += patchCount;
 
         if (mode === "split" && Array.isArray(splitModes)) {
           let splitTotal = 0;
@@ -4617,6 +4631,7 @@ const paymentsRouter = new Hono()
           offlineSale: offlineSales,
           totalOrders,
           totalActiveTableValue,
+          totalPatchCount,
         },
       });
     },

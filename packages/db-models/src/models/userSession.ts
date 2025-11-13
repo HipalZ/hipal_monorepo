@@ -305,6 +305,11 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: false,
   },
+  patchCount: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });
