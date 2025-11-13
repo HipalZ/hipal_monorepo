@@ -380,7 +380,7 @@ const tableRouter = new Hono()
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
 
-        console.log("norold");
+        console.log("norold", tableSession.billInvoice);
 
         const npcUser = await NpcUser.findById(npcUserId);
 
@@ -493,6 +493,7 @@ const tableRouter = new Hono()
                   billId: splitTableSessionData?._id.toString(),
                   billItems: splitTableSessionData?.items || [],
                   isSplitBillVariant: true,
+                  billInvoice: splitTableSessionData?.billInvoice,
                 },
               ],
               { session },
@@ -690,6 +691,7 @@ const tableRouter = new Hono()
                   billId: splitTableSessionData?._id.toString(),
                   billItems: splitTableSessionData?.items || [],
                   isSplitBillVariant: true,
+                  billInvoice: splitTableSessionData?.billInvoice,
                 },
               ],
               { session },
@@ -1062,6 +1064,7 @@ const tableRouter = new Hono()
               billId: tableSession?._id.toString(),
               billItems: tableSession?.items || [],
               pin: tableSession?.pin,
+              billInvoice: tableSession?.billInvoice || 0,
             },
           ],
           { session },

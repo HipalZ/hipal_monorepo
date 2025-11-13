@@ -1,5 +1,4 @@
 import { createHmac } from "node:crypto";
-import { startOfDay, endOfDay } from "date-fns";
 // books.ts
 import {
   BusinessPosConfig,
@@ -48,6 +47,7 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { ObjectId } from "bson";
+import { endOfDay, startOfDay } from "date-fns";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
@@ -2152,6 +2152,7 @@ const paymentsRouter = new Hono()
                     couponDiscount: splitBillTableSessionData?.couponDiscount,
                     billItems: splitBillTableSessionData?.items || [],
                     isSplitBillVariant: true,
+                    billInvoice: splitBillTableSessionData?.billInvoice,
                   },
                 ],
                 { session },
@@ -2372,6 +2373,7 @@ const paymentsRouter = new Hono()
                     couponDiscount: splitBillTableSessionData?.couponDiscount,
                     billItems: splitBillTableSessionData?.items || [],
                     isSplitBillVariant: true,
+                    billInvoice: splitBillTableSessionData?.billInvoice,
                   },
                 ],
                 { session },
@@ -2757,6 +2759,7 @@ const paymentsRouter = new Hono()
                 discount: tableSession?.discount,
                 couponDiscount: tableSession?.couponDiscount,
                 billItems: tableSession?.items || [],
+                billInvoice: tableSession?.billInvoice || 0,
               },
             ],
             { session },
@@ -3562,6 +3565,7 @@ const paymentsRouter = new Hono()
                         }
                       }
                     }
+
                     const createPayment = await Payment.create(
                       [
                         {
@@ -3622,6 +3626,7 @@ const paymentsRouter = new Hono()
                             splitBillTableSessionData?.couponDiscount,
                           billItems: splitBillTableSessionData?.items || [],
                           isSplitBillVariant: true,
+                          billInvoice: splitBillTableSessionData?.billInvoice,
                         },
                       ],
                       { session },
@@ -3789,6 +3794,7 @@ const paymentsRouter = new Hono()
                           }
                         }
                       }
+
                       const createPayment = await Payment.create(
                         [
                           {
@@ -3849,6 +3855,7 @@ const paymentsRouter = new Hono()
                               splitBillTableSessionData?.couponDiscount,
                             billItems: splitBillTableSessionData?.items || [],
                             isSplitBillVariant: true,
+                            billInvoice: splitBillTableSessionData?.billInvoice,
                           },
                         ],
                         { session },
@@ -4241,6 +4248,7 @@ const paymentsRouter = new Hono()
                     discount: tableSession?.discount || 0,
                     couponDiscount: tableSession?.couponDiscount || 0,
                     billItems: tableSession?.items || [],
+                    billInvoice: tableSession?.billInvoice || 0,
                   },
                 ],
                 { session },

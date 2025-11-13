@@ -1,8 +1,6 @@
 import type { Model } from "mongoose";
 import mongoose from "mongoose";
-import autoIncrement from "mongoose-auto-increment";
 import type { SplitBillTableSessionValidator } from "../../validators";
-autoIncrement.initialize(mongoose.connection);
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const splitBillTableSessionSchema =
   new mongoose.Schema<SplitBillTableSessionValidator>({
@@ -244,19 +242,17 @@ const splitBillTableSessionSchema =
       required: false,
       default: "PORTION",
     },
+    billInvoice: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   });
 
 splitBillTableSessionSchema.index(
   { originTableSessionId: 1, variantName: 1 },
   { unique: true },
 );
-
-splitBillTableSessionSchema.plugin(autoIncrement.plugin, {
-  model: "splitbilltablesession",
-  field: "variantInvoiceNumber",
-  startAt: 1,
-  incrementBy: 1,
-});
 
 const SplitBillTableSession: Model<SplitBillTableSessionValidator> =
   mongoose.model<SplitBillTableSessionValidator>(

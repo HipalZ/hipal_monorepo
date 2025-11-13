@@ -6,6 +6,7 @@ import {
   DeviceToken,
   Dish,
   Kitchen,
+  KotInvoiceNumber,
   KotOrder,
   MergeTable,
   OutLetInfo,
@@ -15,6 +16,7 @@ import {
   Pos,
   SplitBillTableSession,
   Table,
+  TableSessionCounter,
   Tax,
   UnsettleTable,
   User,
@@ -88,6 +90,20 @@ export const saveKotOrder = async (
   editedBy?: string,
   session?: ClientSession,
 ) => {
+  const kotInvoiceNumber = await KotInvoiceNumber.findOneAndUpdate(
+    {
+      businessId,
+    },
+    {
+      $inc: {
+        kotInvoiceNumber: 1,
+      },
+    },
+    {
+      session,
+      upsert: true,
+    },
+  );
   const saveKot = await KotOrder.create(
     [
       {
@@ -102,6 +118,7 @@ export const saveKotOrder = async (
         tableId: tableId,
         edited: edited,
         editedBy: editedBy,
+        kotInvoiceNumber: kotInvoiceNumber?.kotInvoiceNumber,
       },
     ],
     {
@@ -263,13 +280,27 @@ const posRouter = new Hono()
           businessId,
           tableName: isTableMerge?.parentTableId.name || tableName,
         }).populate({
-          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
+          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billInvoice",
           select: "name phone",
         });
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
+
+        await TableSessionCounter.findOneAndUpdate(
+          {
+            businessId,
+            tableSessionId: tableSession._id.toString(),
+          },
+          {},
+
+          { upsert: true },
+        );
+
+        const sessionCount = await TableSessionCounter.countDocuments({
+          businessId,
+        });
 
         if (tableSession.isSplit) {
           if (tableSession.splitType === "ITEM") {
@@ -367,6 +398,9 @@ const posRouter = new Hono()
             items: cartItems,
             billPrintCount: tableSession.billPrintCount + 1,
             totalGst: Number(totalGst?.toFixed(2)),
+            ...(tableSession.billInvoice === 0 && {
+              billInvoice: sessionCount,
+            }),
           },
         );
 
@@ -1902,7 +1936,7 @@ const posRouter = new Hono()
             gst: outLetInfo?.gst || "",
             address: outLetInfo?.address || "",
             fssai: outLetInfo?.fssai || "",
-            billInvoiceNumber: variant?.variantInvoiceNumber || 0,
+            billInvoiceNumber: variant?.billInvoice || 0,
           });
           return respond(c, "sucess", true, 200, {});
         }
@@ -1949,7 +1983,7 @@ const posRouter = new Hono()
           gst: outLetInfo?.gst || "",
           address: outLetInfo?.address || "",
           fssai: outLetInfo?.fssai || "",
-          billInvoiceNumber: tableSession?.billInvoiceNumber || 0,
+          billInvoiceNumber: tableSession?.billInvoice || 0,
         });
 
         return respond(c, "sucess", true, 200, {});

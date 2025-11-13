@@ -1,8 +1,7 @@
 import mongoose, { type Model } from "mongoose";
-import autoIncrement from "mongoose-auto-increment";
 import type { PaymentType } from "../validators";
+import { BillInvoiceNumber } from "./billInvoiceNumber";
 const ObjectId = mongoose.Schema.Types.ObjectId;
-autoIncrement.initialize(mongoose.connection);
 const paymentSchema = new mongoose.Schema<PaymentType>(
   {
     businessId: {
@@ -258,16 +257,41 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       ref: "User",
       default: null,
     },
+
+    billNo: {
+      type: Number,
+      required: false,
+    },
   },
 
   { timestamps: true },
 );
 
-paymentSchema.plugin(autoIncrement.plugin, {
-  model: "Payment",
-  field: "billInvoice", // <-- Will be added automatically
-  startAt: 1,
-  incrementBy: 1,
+paymentSchema.pre("save", async function (next) {
+  if (!this.isNew) return next();
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Increment or create bill counter for this business
+    const counter = await BillInvoiceNumber.findOneAndUpdate(
+      { businessId: this.businessId },
+      { $inc: { billInvoiceNumber: 1 } },
+      { upsert: true, new: true, session },
+    );
+
+    // Assign incremented value to billInvoice
+    this.billNo = counter.billInvoiceNumber;
+
+    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
+    console.error("Error generating billInvoice:", err);
+  } finally {
+    session.endSession();
+    next();
+  }
 });
 
 const Payment: Model<PaymentType> = mongoose.model<PaymentType>(

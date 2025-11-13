@@ -4,6 +4,7 @@ import {
   Order,
   Payment,
   PendingDues,
+  TableSessionCounter,
   UpiMode,
   User,
 } from "@hi/db-models";
@@ -260,6 +261,17 @@ const duesRouter = new Hono()
         { session },
       );
 
+      const saveTableSessionCounter = new TableSessionCounter({
+        businessId: businessId,
+        tableSessionId: saveOrder[0]._id,
+      });
+
+      await saveTableSessionCounter.save({ session });
+
+      const sessionCount = await TableSessionCounter.countDocuments({
+        businessId: businessId,
+      });
+
       const savePayment = await Payment.create(
         [
           {
@@ -283,6 +295,7 @@ const duesRouter = new Hono()
 
             splitModes: settleModes,
             date: Date.now(),
+            billInvoice: sessionCount,
           },
         ],
         { session },
