@@ -2069,7 +2069,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_discount",
-    // ubacMiddleware("add_discount"),
+    ubacMiddleware("add_discount"),
     zValidator(
       "json",
       z
