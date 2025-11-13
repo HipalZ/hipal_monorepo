@@ -124,6 +124,7 @@ const kotRouter = new Hono()
 
   .post(
     "/open_item",
+    ubacMiddleware("temp_item"),
     zValidator(
       "json",
       z.object({

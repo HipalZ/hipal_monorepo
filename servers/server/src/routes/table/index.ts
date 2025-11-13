@@ -268,6 +268,7 @@ const tableRouter = new Hono()
   )
   .put(
     "/update_guest",
+    ubacMiddleware("add_pax"),
     zValidator(
       "json",
       z.object({
@@ -1405,6 +1406,7 @@ const tableRouter = new Hono()
   )
   .post(
     "/merge",
+    ubacMiddleware("merge_table"),
     zValidator(
       "json",
       z.object({
