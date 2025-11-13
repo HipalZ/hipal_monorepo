@@ -25,6 +25,7 @@ import menuBannerRouter from "./menu-banner";
 import menuRouter from "./menu/menu";
 import npcRouter from "./npc";
 import passwordManagerRouter from "./passwordManager";
+import pathFinderRouter from "./pathFinder";
 import paymentsRouter from "./payments";
 import permissionRouter from "./permission";
 import posRouter from "./pos";
@@ -103,6 +104,7 @@ export const routes = app
   .route("/attendence", staffAttendenceRouter)
   .route("/sync_pos_menu_config", syncPosMenuConfigRouter)
   .route("/kds", kdsRouter)
-  .route("/token", tokenRouter);
+  .route("/token", tokenRouter)
+  .route("/path_finder", pathFinderRouter);
 
 export type AppType = typeof routes;

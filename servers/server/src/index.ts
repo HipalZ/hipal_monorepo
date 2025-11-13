@@ -15,7 +15,6 @@ import { routes } from "./routes";
 import { customTimeoutException } from "./utils";
 
 import "./utils/env";
-import { tokenVerification } from "../middleware/tokenVerification";
 ////////
 const app = new Hono({
   strict: true,
@@ -79,7 +78,7 @@ app.use(
 );
 app.use(csrf());
 app.use(logger());
-app.use("*", tokenVerification);
+// app.use("*", tokenVerification);
 app.use("/assets/*", serveStatic({ path: "./assets" }));
 app.get("/ui", swaggerUI({ url: "/doc" }));
 app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404));
