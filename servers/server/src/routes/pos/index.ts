@@ -1857,6 +1857,7 @@ const posRouter = new Hono()
   )
   .post(
     "/re_print_bill",
+    ubacMiddleware("print_bill"),
     zValidator(
       "json",
       z.object({
@@ -1994,6 +1995,7 @@ const posRouter = new Hono()
 
   .post(
     "/settle_bill_print",
+    ubacMiddleware("settle_bill_print"),
     zValidator(
       "json",
       z.object({
@@ -2067,6 +2069,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_discount",
+    // ubacMiddleware("add_discount"),
     zValidator(
       "json",
       z
@@ -2325,6 +2328,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_coins",
+    // ubacMiddleware("add_coins"),
     zValidator(
       "json",
       z.object({
@@ -2463,6 +2467,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_coupon",
+    // ubacMiddleware("add_coupon"),
     zValidator(
       "json",
       z.object({
@@ -3046,6 +3051,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_service_charge",
+    ubacMiddleware("add_or_remove_service_charge"),
     zValidator(
       "json",
       z.object({

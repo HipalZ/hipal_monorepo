@@ -361,6 +361,7 @@ const kotRouter = new Hono()
 
   .post(
     "/reprint_kot",
+    ubacMiddleware("re_print_kot"),
     zValidator(
       "json",
       z.object({
@@ -417,6 +418,8 @@ const kotRouter = new Hono()
 
   .post(
     "/delete_kot",
+
+    ubacMiddleware("delete_kot"),
     zValidator(
       "json",
       z.object({

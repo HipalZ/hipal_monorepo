@@ -34,14 +34,14 @@ export const ubacMiddleware = (key: string) => {
           ) ||
             !decodedToken.permissions[key])
         ) {
-          return c.json({ message: "Not Authorized" }, 401);
+          return c.json({ message: "Not Authorized" }, 403);
         }
       }
 
       await next();
     } catch (error) {
       console.error("Middleware error:", error);
-      return c.json({ message: "Not Authorized" }, 401);
+      return c.json({ message: "Not Authorized" }, 403);
     }
   };
 };

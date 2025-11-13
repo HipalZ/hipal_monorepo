@@ -76,6 +76,7 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
+import { ubacMiddleware } from "../../../middleware/checkPermissions";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -3301,12 +3302,8 @@ const paymentsRouter = new Hono()
   )
   .put(
     "/:pid/order/:alertId",
-    authTokenValidator,
-    requireAuthorization([
-      ClientRoles.OWNER,
-      ClientRoles.HIPAL_CUSTOMER,
-      ClientRoles.CAPTAIN,
-    ]),
+
+    ubacMiddleware("offline_settle"),
 
     zValidator("param", z.object({ alertId: z.string() })),
 
