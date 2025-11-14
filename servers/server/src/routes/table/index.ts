@@ -1291,6 +1291,7 @@ const tableRouter = new Hono()
   )
   .post(
     "/hi_settle",
+    ubacMiddleware("hi_settle"),
     zValidator(
       "json",
       z.object({
