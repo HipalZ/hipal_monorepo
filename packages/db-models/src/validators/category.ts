@@ -78,6 +78,8 @@ export const categorySchema = z.object({
   availability: z.boolean().default(true).optional(),
   sequence: z.number().optional(),
   menuId: ObjectIdSchema,
+  baseMenuCategoryId: ObjectIdSchema.optional(),
+  baseMenuId: ObjectIdSchema.optional(),
   posCategoryId: z.string().min(3).max(100).optional(),
   rank: z.number().min(1).max(100).optional(),
   categoryTimings: z.string().min(3).max(200).optional(),

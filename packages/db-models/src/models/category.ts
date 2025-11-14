@@ -122,6 +122,18 @@ const categorySchema = new mongoose.Schema<CategoryType>(
         },
       ],
     },
+    baseMenuCategoryId: {
+      type: ObjectId,
+      required: false,
+      ref: "category",
+      default: null,
+    },
+    baseMenuId: {
+      type: ObjectId,
+      required: false,
+      ref: "menu",
+      default: null,
+    },
   },
   {
     timestamps: true,

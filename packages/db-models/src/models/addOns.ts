@@ -85,6 +85,18 @@ const extraSchema = new mongoose.Schema<AddOnType>(
       required: false,
       default: true,
     },
+    baseMenuAddOnId: {
+      type: ObjectId,
+      required: false,
+      ref: "addon",
+      default: null,
+    },
+    baseMenuId: {
+      type: ObjectId,
+      required: false,
+      ref: "menu",
+      default: null,
+    },
   },
   {
     timestamps: true,

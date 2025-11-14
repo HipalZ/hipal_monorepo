@@ -4,9 +4,12 @@ import useBusinessData from "@/components/store/useBusinessData";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import { apiRpc } from "@hi/common";
 import { useMutation } from "@tanstack/react-query";
+import { useApiErrorHandler } from "./useApiErrorHandler";
 
 export const useLayoutThemes = () => {
   const navigate = useNavigate();
+  const { handleEnvelope } = useApiErrorHandler();
+
   const updateThemeApplied = useBusinessData((s) => s.updateAppliedTheme);
   const { setStep } = useBusinessCtrl();
   const outletInfo = useBusinessData((s) => s.outletInfo);
@@ -20,6 +23,7 @@ export const useLayoutThemes = () => {
           businessId: businessData?._id,
         },
       });
+      await handleEnvelope(res);
       return res;
     },
     onSuccess: (res) => {
@@ -27,7 +31,8 @@ export const useLayoutThemes = () => {
         toast.success("Colors saved successfully");
         updateThemeApplied(true);
         setStep(0);
-        if(outletInfo?.outLetType ==="HOTEL") return navigate(`/app/hotel/${businessData?._id}`);
+        if (outletInfo?.outLetType === "HOTEL")
+          return navigate(`/app/hotel/${businessData?._id}`);
         navigate(`/app/business/${businessData?._id}`);
       }
     },

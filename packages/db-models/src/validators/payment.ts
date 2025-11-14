@@ -168,6 +168,7 @@ export const PaymentSchema = z.object({
   isSplit: z.boolean().optional().default(false),
   isSplitBillVariant: z.boolean().optional().default(false),
   coinAppliedBy: ObjectIdSchema.optional(),
+  paxCount: z.coerce.number().optional().default(0),
 });
 
 export const jewelleryPaymentSchema = z.object({

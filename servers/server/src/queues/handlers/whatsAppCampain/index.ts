@@ -1,7 +1,7 @@
 import { WhatsAppAnalyticsUser } from "@hi/db-models";
 import axios from "axios";
 import type { Job } from "bullmq";
-import { enqueueWhatsAppJob } from "../../enqueue";
+// import { enqueueWhatsAppJob } from "../../enqueue";
 import type {
   AxiosError,
   sendTemplateTypeValidator,
@@ -133,7 +133,7 @@ async function pushCustomerIntoQueue(job: Job) {
       category: category,
     };
     console.log("Enqueuing for ", customer?.phone?.toString());
-    await enqueueWhatsAppJob("sendTemplate", payload);
+    // await enqueueWhatsAppJob("sendTemplate", payload);
   }
 }
 

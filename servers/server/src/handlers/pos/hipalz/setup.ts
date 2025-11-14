@@ -22,7 +22,7 @@ async function hipalzPosSetupHandler(payload: {
   try {
     const { businessId, restId, orderVerificationType, posId, session } =
       payload;
-    // 1️⃣ Check if POS already configured
+
     const existingConfig = await BusinessPosConfig.findOne({
       businessId,
       isDeleted: false,

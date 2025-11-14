@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useStaffServices, type StaffAlertReportData } from '@/hooks/hotel/useStaffAlertReport.ts';
 import { motion } from 'framer-motion';
-import { ChevronDown, Clock, Download, History } from 'lucide-react';
+import { ChevronDown, Clock, Download, History, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import PopUp from '../../atom/popUp';
@@ -267,6 +267,10 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
                               {staff.overallPerformanceScore}
                             </Badge>
                           </div>
+
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">Total Active :</span> {staff?.totalActiveMinutes?.toLocaleString() || 0} mins
+                          </p>
                         </div>
                       </div>
 

@@ -1,22 +1,22 @@
 // src/hooks/useClientQueries.ts
-import { useMemo } from "react";
-import { useLocation } from "react-router-dom";
+import { apiRpc } from "@hi/common";
 import {
   type QueryObserverResult,
   useQuery,
   type UseQueryResult,
 } from "@tanstack/react-query";
-import { apiRpc } from "@hi/common";
+import { useMemo } from "react";
+import { useLocation } from "react-router-dom";
 
-import { useHiClientZ } from "@/components/store/useHiClientzData";
 import useBusinessData from "@/components/store/useBusinessData";
+import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import type { Alert, Cart } from "@/components/types/hiClientzData";
 import { useErrorHandling } from "@/components/utils/helpers";
 import { useFetchAlerts } from "@/utils/apiService";
 
 // ---- helpers ----
-const useBusinessIdFromPath = () => {
+export const useBusinessIdFromPath = () => {
   const path = useLocation().pathname;
   return useMemo(() => {
     const m = path.match(/^\/([^/]+)\/alerts/);

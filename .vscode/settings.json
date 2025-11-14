@@ -7,7 +7,6 @@
   "typescript.disableAutomaticTypeAcquisition": true,
 
   "editor.formatOnSave": true,
-  "editor.fontSize": 13,
   "editor.fontFamily": "Fira Code",
   "editor.fontLigatures": true,
   "editor.smoothScrolling": true,

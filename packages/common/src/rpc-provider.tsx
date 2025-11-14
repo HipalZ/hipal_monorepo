@@ -1,15 +1,10 @@
-import {
-  MutationCache,
-  QueryCache,
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import type { AppType } from "@hipal/server";
-import { hc } from "hono/client";
-import type { ReactNode } from "react";
-import { handleCatchErrors } from "./error-handler";
-import { useUserToken } from "./useUserToken";
+import type { AppType } from '@hipal/server';
+import { hc } from 'hono/client';
+import type { ReactNode } from 'react';
+import { handleCatchErrors } from './error-handler';
+import { useUserToken } from './useUserToken';
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -21,40 +16,28 @@ const queryClient = new QueryClient({
 });
 
 export const RpcProvider = ({ children }: { children: ReactNode }) => {
-  return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 };
 const getBaseUrl = () => {
-  if (
-    typeof import.meta !== "undefined" &&
-    import.meta.env &&
-    import.meta.env.VITE_API_URL
-  ) {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  if (
-    typeof process !== "undefined" &&
-    process.env &&
-    process.env.NEXT_PUBLIC_API_URL
-  ) {
+  if (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  throw new Error("API URL is not defined");
+  throw new Error('API URL is not defined');
 };
 
 const baseUrl = getBaseUrl();
-const accessToken = useUserToken.getState().accessToken;
-const refreshToken = useUserToken.getState().refreshToken;
 
-
-console.log("baseUrl", baseUrl);
+console.log('baseUrl', baseUrl);
 
 export const apiRpc = hc<AppType>(baseUrl, {
   headers: () => ({
     Authorization: `Bearer ${useUserToken.getState().accessToken}`,
-    "x-refresh-token": useUserToken.getState().refreshToken,
+    'x-refresh-token': useUserToken.getState().refreshToken,
+    server_secret: '014f6bc236f2ba1cc2c85cb4a7e723ac7fb46fcc5cbd41c382cdf5495eb72d34',
+    x_signature: '56642a628dfdd7fc29feed72fadc412ec7b6dd155e6e19016e778838d1c104ea',
   }),
-  fetch: (input, init) => fetch(input, { ...init, credentials: "include" }), // Force fetch to include cookies
+  fetch: (input, init) => fetch(input, { ...init, credentials: 'include' }), // Force fetch to include cookies
 });
-

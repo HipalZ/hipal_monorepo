@@ -5,6 +5,7 @@ import {
   Category,
   Dish,
   Kitchen,
+  Menu,
   PosDishConfig,
   UniquelyYours,
 } from "@hi/db-models";
@@ -23,6 +24,8 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { addInTempMenuChanges } from "../../services/tempMenuChanges";
+import { pushToken } from "../../services/token";
 import { respond } from "../../utils/response";
 //
 const dishesRouter = new Hono()
@@ -170,6 +173,24 @@ const dishesRouter = new Hono()
           }
         }
 
+        const menu = await Menu.findById(dish.menuId);
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404, {});
+        }
+        // if (
+        //   menu.serviceType === "BASE" &&
+        //   (removeCategoryIds.length ||
+        //     removeAddOnIds.length ||
+        //     removeRecommendationIds.length ||
+        //     categoryIds.length ||
+        //     addOnIds.length ||
+        //     recommendationIds.length ||
+        //     kitchenId ||
+        //     removeKitchenId)
+        // ) {
+        //   return respond(c, "linking dish to menu not allowed", true, 400, {});
+        // }
+
         const updatedDish = await Dish.findByIdAndUpdate(
           id,
           {
@@ -194,6 +215,14 @@ const dishesRouter = new Hono()
           },
         );
         if (!updatedDish) return respond(c, "Error in updating", true, 400, {});
+
+        if (menu.serviceType === "BASE") {
+          await addInTempMenuChanges(
+            "dish",
+            updatedDish._id.toString(),
+            menu.businessId,
+          );
+        }
 
         if (removeCategoryIds.length) {
           await Category.updateMany(
@@ -308,6 +337,11 @@ const dishesRouter = new Hono()
           return respond(c, "not found", true, 404, {});
         }
 
+        const menu = await Menu.findById(fetchDish.menuId);
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404, {});
+        }
+
         const businessPosConfig = await BusinessPosConfig.findOne({
           businessId: fetchDish.businessId,
           isDeleted: false,
@@ -324,6 +358,14 @@ const dishesRouter = new Hono()
             true,
             400,
             {},
+          );
+        }
+
+        if (menu.serviceType === "BASE") {
+          await addInTempMenuChanges(
+            "dish",
+            fetchDish._id.toString(),
+            menu.businessId,
           );
         }
 
@@ -376,10 +418,30 @@ const dishesRouter = new Hono()
           posName: "HIPAL_Z",
         });
 
+        const menu = await Menu.findById(dish.menuId);
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404, {});
+        }
+
+        // if (
+        //   menu.serviceType === "BASE" &&
+        //   (dish.categoryIds?.length || dish.addOnIds?.length || dish.kitchenId)
+        // ) {
+        //   return respond(c, "linking dish to menu not allowed", true, 400, {});
+        // }
+
         const createDish = await Dish.create([{ ...dish, pos: !!hipalZPos }], {
           session,
         });
         if (!createDish) return respond(c, "Error in creating", true, 400, {});
+
+        if (menu.serviceType === "BASE") {
+          await addInTempMenuChanges(
+            "dish",
+            createDish[0]._id,
+            menu.businessId,
+          );
+        }
 
         await Category.updateMany(
           { _id: { $in: dish.categoryIds ?? [] } },
@@ -453,6 +515,8 @@ const dishesRouter = new Hono()
 
     async (c) => {
       const { businessId } = c.req.param();
+
+      pushToken(c);
 
       const dishes = await UniquelyYours.find({ businessId, isDeleted: false });
 

@@ -57,6 +57,7 @@ import {
   ClientRoles,
   requireAuthorization,
 } from "../../../middleware/authorization";
+import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { calculateBillTotals, type KotOrderTypes } from "../../utils/bill";
@@ -2153,6 +2154,7 @@ const paymentsRouter = new Hono()
                     billItems: splitBillTableSessionData?.items || [],
                     isSplitBillVariant: true,
                     billInvoice: splitBillTableSessionData?.billInvoice,
+                    paxCount: tableSession?.paxCount || 0,
                   },
                 ],
                 { session },
@@ -2374,6 +2376,7 @@ const paymentsRouter = new Hono()
                     billItems: splitBillTableSessionData?.items || [],
                     isSplitBillVariant: true,
                     billInvoice: splitBillTableSessionData?.billInvoice,
+                    paxCount: tableSession?.paxCount || 0,
                   },
                 ],
                 { session },
@@ -2585,6 +2588,7 @@ const paymentsRouter = new Hono()
                       isMerge: false,
                       mergeTableIds: [],
                       mergedBy: null,
+                      isBillGenerated: false,
                     },
                   },
                   {
@@ -2760,6 +2764,7 @@ const paymentsRouter = new Hono()
                 couponDiscount: tableSession?.couponDiscount,
                 billItems: tableSession?.items || [],
                 billInvoice: tableSession?.billInvoice || 0,
+                paxCount: tableSession?.paxCount || 0,
               },
             ],
             { session },
@@ -2949,6 +2954,7 @@ const paymentsRouter = new Hono()
                   isMerge: false,
                   mergeTableIds: [],
                   mergedBy: null,
+                  isBillGenerated: false,
                 },
               },
               {
@@ -3369,12 +3375,8 @@ const paymentsRouter = new Hono()
   )
   .put(
     "/:pid/order/:alertId",
-    authTokenValidator,
-    requireAuthorization([
-      ClientRoles.OWNER,
-      ClientRoles.HIPAL_CUSTOMER,
-      ClientRoles.CAPTAIN,
-    ]),
+
+    ubacMiddleware("offline_settle"),
 
     zValidator("param", z.object({ alertId: z.string() })),
 
@@ -3627,6 +3629,7 @@ const paymentsRouter = new Hono()
                           billItems: splitBillTableSessionData?.items || [],
                           isSplitBillVariant: true,
                           billInvoice: splitBillTableSessionData?.billInvoice,
+                          paxCount: tableSession?.paxCount || 0,
                         },
                       ],
                       { session },
@@ -3856,6 +3859,7 @@ const paymentsRouter = new Hono()
                             billItems: splitBillTableSessionData?.items || [],
                             isSplitBillVariant: true,
                             billInvoice: splitBillTableSessionData?.billInvoice,
+                            paxCount: tableSession?.paxCount || 0,
                           },
                         ],
                         { session },
@@ -4099,6 +4103,7 @@ const paymentsRouter = new Hono()
                             isMerge: false,
                             mergeTableIds: [],
                             mergedBy: null,
+                            isBillGenerated: false,
                           },
                         },
                         {
@@ -4249,6 +4254,7 @@ const paymentsRouter = new Hono()
                     couponDiscount: tableSession?.couponDiscount || 0,
                     billItems: tableSession?.items || [],
                     billInvoice: tableSession?.billInvoice || 0,
+                    paxCount: tableSession?.paxCount || 0,
                   },
                 ],
                 { session },
@@ -4423,6 +4429,7 @@ const paymentsRouter = new Hono()
                       isMerge: false,
                       mergeTableIds: [],
                       mergedBy: null,
+                      isBillGenerated: false,
                     },
                   },
                   {
@@ -4616,10 +4623,8 @@ const paymentsRouter = new Hono()
       const fromDate = Number(from) || startOfToday.getTime();
       const toDate = Number(to) || endOfToday.getTime();
       const isToday = isTodayIST(fromDate);
-      console.log("isToday", isToday);
 
       const dateRange = getISTDateRange(Date.now());
-      console.log("dateRange", dateRange);
       if (fromDate > toDate) {
         return c.json({
           err: true,
@@ -4643,15 +4648,22 @@ const paymentsRouter = new Hono()
           serviceCharge: 1,
           tips: 1,
           discount: 1,
-          finalSubTotal: 1,
-          initialSubTotal: 1,
+          paxCount: 1,
+          billValue: 1,
+          claimedCoins: 1,
+          couponDiscount: 1,
+          billInvoice: 1,
         },
       );
+
+      const startInvoiceNumber = payments[0]?.billInvoice || 0;
+      const endInvoiceNumber = payments[payments.length - 1]?.billInvoice || 0;
 
       const totalOrders = payments.length;
 
       let overAllAmount = 0;
       let totalOnlineSale = 0;
+      let totalPaxCount = 0;
       const offlineSales: Record<string, number> = {};
       // NEW aggregates for the report
       let subTotalSum = 0; // -> “Sub Total (taxable)”
@@ -4669,7 +4681,15 @@ const paymentsRouter = new Hono()
       }, 0);
 
       for (const payment of payments) {
-        const { total = 0, paymentMode, mode, splitModes } = payment;
+        const {
+          total = 0,
+          paymentMode,
+          mode,
+          splitModes,
+          paxCount,
+          billValue,
+        } = payment;
+        totalPaxCount += paxCount;
 
         if (mode === "split" && Array.isArray(splitModes)) {
           let splitTotal = 0;
@@ -4693,24 +4713,7 @@ const paymentsRouter = new Hono()
           offlineSales[mode] = (offlineSales[mode] || 0) + total;
         }
 
-        // ---- SubTotal & components (NEW) ----
-        // prefer stored subTotal; else compute fallback
-        const storedSub =
-          typeof payment.finalSubTotal === "number" && payment.finalSubTotal > 0
-            ? payment.finalSubTotal
-            : typeof payment.initialSubTotal === "number" &&
-                payment.initialSubTotal > 0
-              ? payment.initialSubTotal
-              : null;
-
-        const fallbackSub =
-          total -
-          (payment.tax || 0) -
-          (payment.serviceCharge || 0) -
-          (payment.tips || 0) +
-          (payment.discount || 0);
-
-        const rowSubTotal = storedSub ?? fallbackSub;
+        const rowSubTotal = billValue;
 
         subTotalSum += rowSubTotal;
         taxSum += payment.tax || 0;
@@ -4735,6 +4738,9 @@ const paymentsRouter = new Hono()
           totalServiceCharge: serviceChargeSum,
           totalTip: tipSum,
           totalDiscount: discountSum,
+          totalPaxCount: totalPaxCount || 0,
+          startInvoiceNumber,
+          endInvoiceNumber,
         },
       });
     },
@@ -5317,18 +5323,36 @@ const paymentsRouter = new Hono()
       z.object({
         businessId: z.string(),
 
-        dateOfJoining: z.string().optional(),
         avgSpend: z.string().optional(),
         visitCount: z.string().optional(),
         pageNumber: z.string().optional(),
+        from: z.string().optional(),
+        to: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { businessId } = c.req.query();
+      const { businessId, from, to, avgSpend, visitCount } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      const PAGE_SIZE = 100;
+      const pageNumber = c.req.query("pageNumber") as string;
+      const skip: number = (Number(pageNumber || 1) - 1) * PAGE_SIZE;
 
       const existingUserAnalytics = await UserAnalytic.find({
         businessId,
-      }).populate("userId");
+      })
+        .populate("userId")
+        .skip(skip)
+        .limit(PAGE_SIZE);
 
       return c.json(
         {
@@ -5406,10 +5430,10 @@ const paymentsRouter = new Hono()
       if (dateFrom || dateTo) {
         const fromDate = dateFrom ? Number(dateFrom) : startOfToday.getTime();
         const toDate = dateTo ? Number(dateTo) : endOfToday.getTime();
-        query.createdAt = { $gte: fromDate, $lte: toDate };
+        query.dateOfJoining = { $gte: fromDate, $lte: toDate };
       } else {
         // default to today’s range
-        query.createdAt = {
+        query.dateOfJoining = {
           $gte: startOfDay(new Date()),
           $lte: endOfDay(new Date()),
         };
@@ -5439,24 +5463,23 @@ const paymentsRouter = new Hono()
         const isPhone = /^[0-9]{10}$/.test(trimmed);
 
         if (isPhone) {
-          query["userId.phone"] = trimmed;
-          console.log("trimmed phone:", trimmed);
+          const user = await User.findOne({ phone: trimmed }).select("_id");
+          query.userId = user?._id || null;
         } else {
           const regex = new RegExp(trimmed, "i");
           query.$or = [{ "userId.name": regex }, { "userId.phone": regex }];
         }
       }
 
-      const page = Number.parseInt(pageNumber || "1");
-      const limit = 25;
+      const page = Number(pageNumber) || 1;
+      const limit = 1000;
       const skip = (page - 1) * limit;
 
       // Execute
       const filteredResults = await UserAnalytic.find(query)
         .populate("userId")
         .skip(skip)
-        .limit(limit)
-        .sort({ updatedAt: -1 });
+        .limit(limit);
 
       const totalCount = await UserAnalytic.countDocuments(query);
 

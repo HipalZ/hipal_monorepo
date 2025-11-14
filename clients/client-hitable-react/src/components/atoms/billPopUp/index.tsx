@@ -1,12 +1,13 @@
 import { useReprintBill } from '@/components/hooks/usePrint.ts';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
+import { useStaffPermissionStore } from '@/components/store/usePermissions.ts';
 import { NavItemTypesEnum } from '@/components/types/hiClientzData';
 import { useErrorHandling } from '@/components/utils/helpers';
+import { cn } from '@/lib/utils.ts';
 import { apiRpc } from '@hi/common';
 import { lazy, memo, useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
-import { useOnlineAlerts } from '../../../hooks/useF&BHook.ts';
 import CommonBottomButton from '../bottomButton/index.tsx';
 import NormalSettle from '../placeOrders/normalsettle';
 import BillPopupData from './billPopupData.tsx';
@@ -20,6 +21,9 @@ const BillPopUpMemo = () => {
   const viewData = useLiteStore((s) => s.viewData);
   const removeOnlineAlert = useLiteStore((s) => s.removeOnlineAlert);
   const setOnlineCount = useLiteStore((s) => s.setOnlineCount);
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+
+  const canPrintBill = hasPermission('print_bill');
 
   const { reprintBill } = useReprintBill();
 
@@ -82,7 +86,7 @@ const BillPopUpMemo = () => {
                 {
                   text: 'Print Bill',
                   onClick: () => reprintBillHandler(viewData?.order_id?._id),
-                  className: 'rounded-md w-full !bg-purple-500',
+                  className: cn('rounded-md w-full', { canPrintBill: 'hidden' }),
                 },
                 {
                   text: 'Close Alert',

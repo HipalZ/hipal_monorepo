@@ -35,6 +35,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { pushToken } from "../../services/token";
 import { respond } from "../../utils/response";
 import { convertToHsl } from "../../utils/theme";
 
@@ -560,6 +561,8 @@ const businessesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      pushToken(c);
+
       const outLetInfo = await OutLetInfo.findOne({ businessId: businessId });
 
       if (!outLetInfo) return respond(c, "outletInfo not found", true, 404, {});
@@ -630,6 +633,8 @@ const businessesRouter = new Hono()
 
       const existingBusiness = await Business.findById(businessId);
 
+      pushToken(c);
+
       return c.json({
         data: existingBusiness,
         status: 200,
@@ -646,6 +651,8 @@ const businessesRouter = new Hono()
     const getBusiness = await Business.findOne({
       customLink: customLink,
     }).select("_id");
+
+    pushToken(c);
 
     const isKitchenNotLinkToDishes = await Dish.exists({
       kitchenId: { $exists: false },
@@ -699,6 +706,8 @@ const businessesRouter = new Hono()
           },
           404,
         );
+
+      pushToken(c);
       return c.json(
         {
           data: exitingSettings,
@@ -759,6 +768,8 @@ const businessesRouter = new Hono()
       const existingTheme = await Theme.findOne({ businessId: businessId });
       if (!existingTheme) return respond(c, "theme not found", true, 404, {});
 
+      pushToken(c);
+
       return respond(c, "theme found", false, 200, existingTheme);
     },
   )
@@ -782,6 +793,8 @@ const businessesRouter = new Hono()
   )
   .get("/get/allbusiness", async (c) => {
     const existingBusinesses = await Business.find({});
+
+    pushToken(c);
 
     return c.json({
       data: existingBusinesses,

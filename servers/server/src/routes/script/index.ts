@@ -38,7 +38,6 @@ import { schedule } from "node-cron";
 import { z } from "zod";
 import { enqueueBillJob } from "../../queues/enqueue";
 import { cache } from "../../utils/cacheHelper";
-import { transformBillData } from "../../utils/pathfinder";
 import { petpoojaPosConfig } from "../../utils/posConfig/petPooja";
 import { razorpayWrapper } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
@@ -2723,45 +2722,6 @@ const scriptRouter = new Hono()
       }
 
       return respond(c, "All hotel staff levels added", false, 200, {});
-    },
-  )
-
-  .get(
-    "/path_finder_test",
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string().min(3).max(36),
-        from: z.string().min(3).max(36).optional(),
-        to: z.string().min(3).max(36).optional(),
-      }),
-    ),
-
-    async (c) => {
-      const { businessId, from, to } = c.req.query();
-
-      const fromDate = Number(from) || startOfToday.getTime();
-      const toDate = Number(to) || endOfToday.getTime();
-
-      const payments = await Payment.find({
-        businessId,
-        date: { $gte: Number(fromDate), $lte: Number(toDate) },
-        billItems: { $ne: [] },
-      }).populate({
-        path: "userId",
-        select: "name phone",
-      });
-
-      const transformedData = transformBillData(payments);
-
-      return c.json(
-        {
-          message: "fetching all templates",
-          err: false,
-          data: transformedData,
-        },
-        200,
-      );
     },
   );
 

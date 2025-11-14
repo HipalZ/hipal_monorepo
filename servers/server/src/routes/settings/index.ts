@@ -18,6 +18,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { pushToken } from "../../services/token";
 import { cache } from "../../utils/cacheHelper";
 import { respond } from "../../utils/response";
 import { razorpayWrapper } from "./../../utils/razorpay-wrapper";
@@ -193,6 +194,7 @@ const settingsRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
       const existingSetting = await BusinessSettings.findOne({ businessId });
+      pushToken(c);
       if (!existingSetting)
         return respond(c, "Setting not found", true, 404, {});
       return respond(
@@ -264,6 +266,8 @@ const settingsRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
       const { isPublished } = c.req.query();
+
+      pushToken(c);
       if (isPublished) {
         const existingBanners = await Banner.find({
           businessId,

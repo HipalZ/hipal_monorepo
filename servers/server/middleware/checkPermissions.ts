@@ -1,8 +1,10 @@
+import { User } from "@hi/db-models";
 import type { Context, Next } from "hono";
 import { getCookie } from "hono/cookie";
 import type { JwtPayload } from "jsonwebtoken";
 //@ts-ignore
 import jwt from "jsonwebtoken";
+import { respond } from "../src/utils/response";
 
 interface DecodedToken extends JwtPayload {
   id: string;
@@ -34,14 +36,36 @@ export const ubacMiddleware = (key: string) => {
           ) ||
             !decodedToken.permissions[key])
         ) {
-          return c.json({ message: "Not Authorized" }, 401);
+          return c.json({ message: "access denied", data: {}, err: true }, 403);
+        }
+
+        const staffData = await User.findOne(
+          {
+            _id: decodedToken.id,
+            "customRole.businessId": decodedToken.businessId,
+            "customRole.isDeleted": false,
+          },
+          {
+            name: 1,
+            phone: 1,
+            customRole: {
+              $elemMatch: {
+                businessId: decodedToken.businessId,
+                isDeleted: false,
+              },
+            },
+          },
+        ).lean();
+
+        if (!staffData) {
+          return respond(c, "access denied", true, 403, {});
         }
       }
 
       await next();
     } catch (error) {
       console.error("Middleware error:", error);
-      return c.json({ message: "Not Authorized" }, 401);
+      return c.json({ message: "access denied", data: {}, err: true }, 403);
     }
   };
 };

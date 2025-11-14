@@ -1,3 +1,4 @@
+import { useStaffPermissionStore } from '@/components/store/usePermissions.ts';
 import { Button } from '@/components/ui/button';
 import { CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -29,9 +30,13 @@ const BillSummary = memo(
       ['couponDiscount', currentBill.couponDiscount],
     ].filter(([_, value]) => typeof value === 'number' && value > 0);
 
+    const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+    const canUseLoyalty = hasPermission('add_coins');
+    const canUseCoupon = hasPermission('add_coupon');
+
     return (
       <>
-        {existingLoyalty?.loyaltyId && (
+        {existingLoyalty?.loyaltyId && (canUseLoyalty || canUseCoupon) && (
           <>
             <CardTitle className="flex items-center justify-between">
               <span>Use customer Loyalty</span>

@@ -1,13 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { MoreVertical } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { motion } from 'framer-motion';
+import { MoreVertical } from 'lucide-react';
 
 interface BreakdownItem {
   label: string;
@@ -21,43 +16,25 @@ interface InfoCardProps {
   breakdown?: BreakdownItem[];
 }
 
-export const InfoCard = ({
-  title,
-  value,
-  icon,
-  breakdown,
-}: InfoCardProps) => {
+export const InfoCard = ({ title, value, icon, breakdown }: InfoCardProps) => {
   return (
     <motion.div>
-      <Card className="bg-white !text-black relative">
-        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-          <CardTitle className="text-sm font-semibold tracking-wider ">
-            {title}
-          </CardTitle>
+      <Card className="relative bg-white !text-black">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-semibold tracking-wider">{title}</CardTitle>
           {breakdown && breakdown.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 text-primary hover:bg-white/20 absolute right-2 bottom-2 bg-white"
-                >
+                <Button variant="ghost" size="sm" className="text-primary absolute bottom-2 right-2 h-6 w-6 bg-white p-0 hover:bg-white/20">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                  {title} Breakdown
-                </div>
+                <div className="text-muted-foreground px-2 py-1.5 text-sm font-semibold">{title} Breakdown</div>
                 {breakdown.map((item, index) => (
-                  <DropdownMenuItem
-                    key={index}
-                    className="flex justify-between"
-                  >
+                  <DropdownMenuItem key={index} className="flex justify-between">
                     <span className="text-sm">{item.label}</span>
-                    <span className="text-sm font-medium">
-                      ₹{item.value.toLocaleString()}
-                    </span>
+                    <span className="text-sm font-medium">₹{item?.value?.toLocaleString()}</span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -65,13 +42,9 @@ export const InfoCard = ({
           )}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-black">
-            ₹{value.toLocaleString()}
-          </div>
+          <div className="text-2xl font-bold text-black">₹{value?.toLocaleString()}</div>
         </CardContent>
-        <article className="absolute top-0 right-0 p-2 text-black">
-          {icon}
-        </article>
+        <article className="absolute right-0 top-0 p-2 text-black">{icon}</article>
       </Card>
     </motion.div>
   );

@@ -21,12 +21,13 @@ const MemoCustomerInformation = () => {
     const response = await apiRpc.kot.table_user.$post({
       json: {
         userIds: onlyIds,
+        businessId: businessId || '',
       },
     });
 
     const res = await response.json();
     return (res?.data as ICustomerInformation[]) ?? [];
-  }, [selectedTable]);
+  }, [selectedTable, businessId]);
 
   const { isLoading, data, refetch } = useQuery({
     queryKey: ['getCustomerInformation', selectedTable?.userIds],

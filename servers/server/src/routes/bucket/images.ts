@@ -4,6 +4,7 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { pushToken } from "../../services/token";
 import { respond } from "../../utils/response";
 
 const imageBucketRouter = new Hono()
@@ -132,6 +133,8 @@ const imageBucketRouter = new Hono()
       const categoryBuckets = await CategoryBucket.find({
         businessId,
       }).lean();
+
+      pushToken(c);
 
       if (!categoryBuckets || categoryBuckets.length === 0) {
         return respond(

@@ -8,6 +8,8 @@ export const KitchenAttrs = z.object({
   staffIds: z.array(ObjectIdSchema).optional(),
   dishIds: z.array(ObjectIdSchema).optional(),
   menuId: ObjectIdSchema,
+  baseMenuKitchenId: ObjectIdSchema.optional(),
+  baseMenuId: ObjectIdSchema.optional(),
 });
 
 export const updateKitchenAttrs = z.object({

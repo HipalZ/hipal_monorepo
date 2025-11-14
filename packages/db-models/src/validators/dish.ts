@@ -186,7 +186,8 @@ export const dishSchema = z.object({
   availability: z.boolean().default(true).optional(),
   isDeleted: z.boolean().default(false).optional(),
   menuId: ObjectIdSchema,
-
+  baseMenuId: ObjectIdSchema.optional(),
+  baseMenuDishId: ObjectIdSchema.optional(),
   posDishId: z.string().min(3).max(100).optional(),
   rank: z.number().min(1).max(100).optional(),
   ignoreDiscount: z.string().min(3).max(100).optional(),

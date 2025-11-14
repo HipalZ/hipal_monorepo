@@ -149,6 +149,7 @@ const MemoZones = () => {
                               table.isMerge
                                 ? 'border-purple-200 bg-gradient-to-r from-white via-white to-purple-50 dark:from-purple-950 dark:via-slate-900 dark:to-purple-950'
                                 : 'border-gray-200 bg-white dark:bg-slate-900',
+                              table.isBillGenerated && 'border-yellow-300 bg-yellow-200',
                             )}
                           >
                             {' '}

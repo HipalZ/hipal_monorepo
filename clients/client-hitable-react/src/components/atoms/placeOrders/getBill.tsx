@@ -3,6 +3,7 @@ import { useGetBill } from '@/components/hooks/useBill';
 import { useHomeNavigation } from '@/components/hooks/useNavigateHome.ts';
 import useBusinessData from '@/components/store/useBusinessData';
 import { useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions.ts';
 import type { IBillData } from '@/components/types/hiClientzData.ts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -64,6 +65,9 @@ const MemoGetBill = () => {
   const setIsExpanded = useOrderStore((s) => s.setIsExpanded);
   const selectedBill = useOrderStore((s) => s.selectedBill);
   const setSelectedBill = useOrderStore((s) => s.setSelectedBill);
+
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canSettle = hasPermission('normal_settle');
 
   const closeOrderModalHandler = useCallback(() => {
     setOpenOrderModal(false);
@@ -318,7 +322,7 @@ const MemoGetBill = () => {
           {
             text: 'Settle',
             onClick: openNormalSettle,
-            className: 'rounded-md !bg-purple-600 ',
+            className: cn('rounded-md !bg-purple-600 ', canSettle && 'hidden'),
           },
           {
             text: 'Hi Settle',
@@ -331,7 +335,7 @@ const MemoGetBill = () => {
             disable: isPending,
             isLoading: isPending,
             highlight: true,
-            className: 'rounded-md',
+            className: cn('rounded-md', canSettle && 'hidden'),
           },
         ]}
       />

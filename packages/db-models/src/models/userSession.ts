@@ -219,7 +219,6 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
   billInvoiceNumber: {
     type: Number,
     required: false,
-    default: Math.floor(100000 + Math.random() * 900000),
   },
   isSplit: {
     type: Boolean,
@@ -304,6 +303,11 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: Boolean,
     required: false,
     default: false,
+  },
+  paxCount: {
+    type: Number,
+    required: false,
+    default: 0,
   },
 });
 

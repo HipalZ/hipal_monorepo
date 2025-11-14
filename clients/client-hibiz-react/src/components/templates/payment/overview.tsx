@@ -1,8 +1,12 @@
 import useBusinessData from '@/components/store/useBusinessData';
+import { useKotStore } from '@/components/store/useKotStore';
 import useTimings from '@/components/store/useTimings';
 import ExecutiveReportButton from '@/components/templates/payment/ExecutiveReportButton';
+import { TableKotPopUp } from '@/components/templates/payment/KotPopUp';
+import type { OtherAndWarningData, SalesData, SalesExceptionData, TableData } from '@/components/types/paymentTypes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { apiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -12,69 +16,10 @@ import { BarChart } from './BarChart';
 import { InfoCard } from './InfoCard';
 import { PieChart } from './PieCharts';
 
-export interface SalesData {
-  overAllAmount: number;
-  onlineSale: Record<string, number>;
-  offlineSale: Record<string, number>;
-  totalOrders: number;
-  totalActiveTableValue: number;
-  subTotal: number;
-}
-
-interface OtherAndWarningData {
-  otherSale: {
-    totalTax: number;
-    totalTip: number;
-    totalServiceCharge: number;
-  };
-  warningSale: {
-    totalForceSettle: number;
-    totalFreeSettle: number;
-  };
-}
-
-interface SalesExceptionData {
-  exceptionSale: {
-    totalDuesReceived: number;
-    totalDuesGiven: number;
-    totalNpc: number;
-    totalComplementary: number;
-    totalDiscount: number;
-  };
-  rewardSale: {
-    totalCoinsGiven: number;
-    totalCoinUsed: number;
-    totalCouponUsed: number;
-    totalCouponDiscount: number;
-    totalCoinsUsed: number;
-  };
-}
-
-export interface TableData {
-  active: string;
-  businessId: string;
-  createdAt: string;
-  currentTableAmount: number;
-  capacity?: number;
-  displayForCaptains: boolean;
-  isDeleted: boolean;
-  name: string;
-  rank: string;
-  staffIds: string[];
-  isTransfer?: boolean;
-  status: string;
-  tableId: string;
-  updatedAt: string;
-  tableItemCount: number;
-  userIds: string[];
-  zoneId: string;
-  hiCode?: string;
-  _id: string;
-}
-
 const Overview = () => {
   const business = useBusinessData((s) => s.businessData);
-
+  const open = useKotStore((s) => s.open);
+  const { handleEnvelope } = useApiErrorHandler();
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
   const isToday = (timestamp: string | number | Date) => {
@@ -87,48 +32,44 @@ const Overview = () => {
   const shouldShowCard = isToday(timeStampStart) && isToday(timeStampEnd);
 
   const handleHistoryData = async (): Promise<SalesData> => {
-    try {
-      const response = await apiRpc.payments[':id'].salesDashboard.$get({
-        query: {
-          businessId: business?._id,
-          from: timeStampStart.toString(),
-          to: timeStampEnd.toString(),
-        },
-        param: { id: business?._id || '' },
-      });
-      const data = (await response.json()).data as SalesData;
-      if (response.status === 200) {
-        return data;
-      }
-      throw new Error('Failed to fetch sales data');
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
-  };
-
-  const otherAndWarning = async (): Promise<OtherAndWarningData> => {
-    const response = await apiRpc.payments.sale.other_and_warnings.$get({
+    const res = await apiRpc.payments[':id'].salesDashboard.$get({
       query: {
         businessId: business?._id,
-        from: timeStampStart.toString(),
-        to: timeStampEnd.toString(),
+        from: String(timeStampStart),
+        to: String(timeStampEnd),
       },
+      param: { id: business?._id || '' },
     });
-    const data = (await response.json()).data as OtherAndWarningData;
-    return data;
+    return handleEnvelope<SalesData>(res);
   };
 
-  const salesException = async (): Promise<SalesExceptionData> => {
-    const response = await apiRpc.payments.sale.exception_and_rewards.$get({
+  const fetchOtherAndWarning = async (): Promise<OtherAndWarningData> => {
+    const res = await apiRpc.payments.sale.other_and_warnings.$get({
       query: {
         businessId: business?._id,
-        from: timeStampStart.toString(),
-        to: timeStampEnd.toString(),
+        from: String(timeStampStart),
+        to: String(timeStampEnd),
       },
     });
-    const data = (await response.json()).data as SalesExceptionData;
-    return data;
+    return handleEnvelope<OtherAndWarningData>(res);
+  };
+
+  const fetchSalesException = async (): Promise<SalesExceptionData> => {
+    const res = await apiRpc.payments.sale.exception_and_rewards.$get({
+      query: {
+        businessId: business?._id,
+        from: String(timeStampStart),
+        to: String(timeStampEnd),
+      },
+    });
+    return handleEnvelope<SalesExceptionData>(res);
+  };
+
+  const fetchTables = async (businessId: string): Promise<TableData[]> => {
+    const res = await apiRpc.table.all[':businessId'].$get({
+      param: { businessId },
+    });
+    return handleEnvelope<TableData[]>(res);
   };
 
   const {
@@ -139,26 +80,24 @@ const Overview = () => {
     queryKey: ['salesData', business?._id, timeStampStart, timeStampEnd],
     queryFn: handleHistoryData,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
   });
-
-  const fetchTables = async (businessId: string): Promise<TableData[]> => {
-    const response = await apiRpc.table.all[':businessId'].$get({
-      param: { businessId },
-    });
-    const json = await response.json();
-    return json.data || [];
-  };
 
   const { data: otherData } = useQuery<OtherAndWarningData, Error>({
     queryKey: ['otherAndWarning', business?._id, timeStampStart, timeStampEnd],
-    queryFn: otherAndWarning,
+    queryFn: fetchOtherAndWarning,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
   });
 
   const { data: salesExceptionData } = useQuery<SalesExceptionData, Error>({
     queryKey: ['salesException', business?._id, timeStampStart, timeStampEnd],
-    queryFn: salesException,
+    queryFn: fetchSalesException,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
   });
 
   const { data: tablesData } = useQuery({
@@ -175,6 +114,7 @@ const Overview = () => {
           .map((table) => ({
             label: ` ${table.name}`,
             value: table.currentTableAmount,
+            tableId: table._id,
           }))
       : [];
   }, [tablesData]);
@@ -311,6 +251,13 @@ const Overview = () => {
           gradient="from-red-900 to-red-200"
           breakdown={taxesServiceBreakdown}
         />
+        <InfoCard
+          title="Total Guest"
+          value={salesData.totalPaxCount}
+          icon={<IndianRupee className="h-4 w-4" />}
+          gradient="from-blue-600 to-blue-200"
+          breakdown={totalSalesBreakdown}
+        />
 
         {shouldShowCard && (
           <InfoCard
@@ -322,6 +269,7 @@ const Overview = () => {
           />
         )}
       </div>
+      {open && <TableKotPopUp />}
 
       <div className="grid grid-cols-1 gap-6 p-4 md:grid-cols-1 md:pb-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>

@@ -1,5 +1,4 @@
 import { type ExecutiveReportInput, buildExecutiveSalesReportPdf } from '@/components/utils/buildExecutiveSalesReportPdf';
-import { IndianRupee } from 'lucide-react';
 
 type Props = ExecutiveReportInput;
 
@@ -10,7 +9,6 @@ export default function ExecutiveReportButton(props: Props) {
     const to = new Date(props.to).toISOString().slice(0, 10);
     doc.save(`${props.businessName || 'Sales'}_${from}_to_${to}.pdf`);
   };
-  console.log('props in exec report button', props);
   return (
     <button
       type="button"

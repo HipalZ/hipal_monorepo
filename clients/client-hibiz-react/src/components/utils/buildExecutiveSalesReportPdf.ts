@@ -1,5 +1,252 @@
+// // src/utils/buildExecutiveSalesReportPdf.ts
+// import jsPDF from "jspdf";
+// import autoTable, { type RowInput } from "jspdf-autotable";
+
+// export type ExecutiveReportInput = {
+//   businessName: string;
+//   from: number | string | Date;
+//   to: number | string | Date;
+
+//   salesData: {
+//     overAllAmount: number;
+//     onlineSale: { online: number };
+//     offlineSale: Record<string, number>;
+//     orderTypeCounts?: { delivery?: number; dineIn?: number; takeAway?: number };
+//     invoiceRange?: string;
+//     orderCount?: number;
+//     subTotal?: number;
+//     discount?: number;
+//     roundOff?: number;
+//     waivedOff?: number;
+//   };
+
+//   otherData?: {
+//     otherSale: {
+//       totalTax: number;
+//       totalTip: number;
+//       totalServiceCharge: number;
+//     };
+//     warningSale?: Record<string, number>;
+//   };
+
+//   salesExceptionData?: {
+//     exceptionSale: { totalComplementary: number; totalDiscount: number };
+//     rewardSale: {
+//       totalCoinsGiven: number;
+//       totalCoinsUsed: number;
+//       totalCouponDiscount: number;
+//     };
+//   };
+// };
+
+// const INR = (n?: number) =>
+//   (n ?? 0).toLocaleString("en-IN", {
+//     style: "currency",
+//     currency: "INR",
+//     maximumFractionDigits: 2,
+//   });
+
+// const asDate = (v: number | string | Date) =>
+//   new Date(v).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" });
+
+// const asDateTime = (v: number | string | Date) =>
+//   new Date(v).toLocaleString("en-IN", {
+//     timeZone: "Asia/Kolkata",
+//     day: "2-digit",
+//     month: "2-digit",
+//     year: "numeric",
+//     hour: "2-digit",
+//     minute: "2-digit",
+//   });
+
+// const labelize = (s: string) =>
+//   s.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+
+// export function buildExecutiveSalesReportPdf(input: ExecutiveReportInput) {
+//   const { businessName, from, to, salesData, otherData, salesExceptionData } =
+//     input;
+
+//   const doc = new jsPDF({ unit: "mm", format: [80, 297] }); // 80mm thermal width
+//   let y = 8;
+//   const left = 6;
+//   const lineGap = 4;
+
+//   // ===== Header =====
+//   doc.setFont("helvetica", "bold");
+//   doc.setFontSize(12);
+//   doc.text(businessName || "Executive Sales Report", 40, y, {
+//     align: "center",
+//   });
+//   y += lineGap + 1;
+
+//   doc.setFont("helvetica", "normal");
+//   doc.setFontSize(9);
+//   doc.text("Executive Sales Report", 40, y, { align: "center" });
+//   y += lineGap;
+
+//   doc.setFontSize(8);
+//   doc.text(`${asDate(from)} to ${asDate(to)}`, 40, y, { align: "center" });
+//   y += lineGap + 2;
+
+//   // ===== Billing (Success) =====
+//   doc.setFont("helvetica", "bold");
+//   doc.setFontSize(9);
+//   doc.text("Billing (Success)", left, y);
+//   y += lineGap;
+
+//   const taxTotal = otherData?.otherSale.totalTax ?? 0;
+//   const cgst = taxTotal / 2;
+//   const sgst = taxTotal / 2;
+
+//   const billingRows: RowInput[] = [
+//     // ["Order Count", String(salesData.orderCount ?? "")],
+//     // ["Invoice Nos.", salesData.invoiceRange ?? ""],
+//     // ["Sub Total", INR(salesData.subTotal ?? 0)],
+//     ["Discount", INR(salesData.discount ?? 0)],
+//     ["Delivery Charge", INR(0)],
+//     ["Container Charge", INR(0)],
+//     ["Service Charge (Opt)", INR(otherData?.otherSale.totalServiceCharge ?? 0)],
+//     ["Additional Charge", INR(0)],
+//     ["CGST", INR(cgst)],
+//     ["SGST", INR(sgst)],
+//     ["Round Off", INR(salesData.roundOff ?? 0)],
+//     ["Waived off", INR(salesData.waivedOff ?? 0)],
+//     ["Grand Total", INR(salesData.overAllAmount ?? 0)],
+//     [
+//       "Net Sales",
+//       INR(
+//         (salesData.overAllAmount ?? 0) -
+//           (otherData?.otherSale.totalServiceCharge ?? 0),
+//       ),
+//     ],
+//   ];
+
+//   autoTable(doc, {
+//     startY: y,
+//     margin: { left, right: 6 },
+//     styles: { fontSize: 8, cellPadding: 1.2, halign: "right" },
+//     headStyles: { fillColor: [240, 240, 240] },
+//     columnStyles: { 0: { halign: "left" }, 1: { halign: "right" } },
+//     body: billingRows,
+//     theme: "plain",
+//   });
+
+//   y = (doc as any).lastAutoTable.finalY + 2;
+
+//   // ===== Billing (Cancel) =====
+//   // doc.setFont("helvetica", "bold");
+//   // doc.setFontSize(9);
+//   // doc.text("Billing (Cancel)", left, y);
+//   // y += lineGap;
+//   // autoTable(doc, {
+//   //   startY: y,
+//   //   margin: { left, right: 6 },
+//   //   styles: { fontSize: 8, cellPadding: 1.2 },
+//   //   theme: "plain",
+//   //   body: [
+//   //     ["Order Count", "0"],
+//   //     ["Amount", INR(0)],
+//   //   ],
+//   //   columnStyles: { 0: { halign: "left" }, 1: { halign: "right" } },
+//   // });
+//   // y = (doc as any).lastAutoTable.finalY + 2;
+
+//   // ===== Order Type (simple split; adjust if you have real counts) =====
+//   // doc.setFont("helvetica", "bold");
+//   // doc.setFontSize(9);
+//   // doc.text("Order Type", left, y);
+//   // y += lineGap;
+//   // autoTable(doc, {
+//   //   startY: y,
+//   //   margin: { left, right: 6 },
+//   //   styles: { fontSize: 8, cellPadding: 1.2 },
+//   //   theme: "plain",
+//   //   body: [
+//   //     ["Delivery", INR(0)],
+//   //     ["Dine In", INR(salesData.overAllAmount ?? 0)],
+//   //     ["Take Away", INR(0)],
+//   //   ],
+//   //   columnStyles: { 0: { halign: "left" }, 1: { halign: "right" } },
+//   // });
+//   // y = (doc as any).lastAutoTable.finalY + 2;
+
+//   // ===== Payment Mode =====
+//   doc.setFont("helvetica", "bold");
+//   doc.setFontSize(9);
+//   doc.text("Payment Mode", left, y);
+//   y += lineGap;
+
+//   const paymentRows: RowInput[] = [
+//     ["Online (Razorpay)", INR(salesData.onlineSale?.online ?? 0)],
+//     ...Object.entries(salesData.offlineSale || {}).map(([mode, amount]) => [
+//       labelize(mode),
+//       INR(amount),
+//     ]),
+//   ];
+
+//   autoTable(doc, {
+//     startY: y,
+//     margin: { left, right: 6 },
+//     styles: { fontSize: 8, cellPadding: 1.2 },
+//     theme: "plain",
+//     body: paymentRows,
+//     columnStyles: { 0: { halign: "left" }, 1: { halign: "right" } },
+//   });
+//   y = (doc as any).lastAutoTable.finalY + 2;
+
+//   // ===== Complimentary Orders =====
+//   // doc.setFont("helvetica", "bold");
+//   // doc.setFontSize(9);
+//   // doc.text("Complimentary Orders", left, y);
+//   // y += lineGap;
+//   // autoTable(doc, {
+//   //   startY: y,
+//   //   margin: { left, right: 6 },
+//   //   styles: { fontSize: 8, cellPadding: 1.2 },
+//   //   theme: "plain",
+//   //   body: [
+//   //     ["Order Count", "0"],
+//   //     [
+//   //       "Amount",
+//   //       INR(salesExceptionData?.exceptionSale.totalComplementary ?? 0),
+//   //     ],
+//   //   ],
+//   //   columnStyles: { 0: { halign: "left" }, 1: { halign: "right" } },
+//   // });
+//   // y = (doc as any).lastAutoTable.finalY + 2;
+
+//   // ===== Sales Return Orders (placeholder) =====
+//   // doc.setFont("helvetica", "bold");
+//   // doc.setFontSize(9);
+//   // doc.text("Sales Return Orders", left, y);
+//   // y += lineGap;
+//   // autoTable(doc, {
+//   //   startY: y,
+//   //   margin: { left, right: 6 },
+//   //   styles: { fontSize: 8, cellPadding: 1.2 },
+//   //   theme: "plain",
+//   //   body: [
+//   //     ["Order Count", "0"],
+//   //     ["Amount", INR(0)],
+//   //   ],
+//   //   columnStyles: { 0: { halign: "left" }, 1: { halign: "right" } },
+//   // });
+
+//   // ===== Footer =====
+//   const footerY = (doc as any).lastAutoTable.finalY + 4;
+//   doc.setFont("helvetica", "normal");
+//   doc.setFontSize(7);
+//   doc.text(`Generated: ${asDateTime(new Date())} (IST)`, 40, footerY, {
+//     align: "center",
+//   });
+
+//   return doc;
+// }
+
+// src/utils/buildExecutiveSalesReportPdf.ts
+// src/utils/buildExecutiveSalesReportPdf.ts
 import jsPDF from "jspdf";
-import autoTable, { type RowInput, type CellHookData } from "jspdf-autotable";
+import autoTable, { type CellHookData, type RowInput } from "jspdf-autotable";
 
 export type ExecutiveReportInput = {
   businessName: string;
@@ -10,13 +257,15 @@ export type ExecutiveReportInput = {
     onlineSale: { online: number };
     offlineSale: Record<string, number>;
     orderTypeCounts?: { delivery?: number; dineIn?: number; takeAway?: number };
-    invoiceRange?: string;
     orderCount?: number;
     subTotal?: number;
     discount?: number;
     roundOff?: number;
     waivedOff?: number;
     totalOrders?: number;
+    totalPaxCount?: number;
+    startInvoiceNumber?: number;
+    endInvoiceNumber?: number;
   };
   otherData?: {
     otherSale: {
@@ -27,7 +276,12 @@ export type ExecutiveReportInput = {
     warningSale?: Record<string, number>;
   };
   salesExceptionData?: {
-    exceptionSale: { totalComplementary: number; totalDiscount: number };
+    exceptionSale: {
+      totalComplementary: number;
+      totalDiscount: number;
+      totalDuesGiven: number;
+      totalNpc: number;
+    };
     rewardSale: {
       totalCoinsGiven: number;
       totalCoinsUsed: number;
@@ -328,11 +582,16 @@ export function buildExecutiveSalesReportPdf(input: ExecutiveReportInput) {
   const billingRows: RowInput[] = [
     ["Sub Total (taxable):", fmtAmt(salesData.subTotal)],
     ["Order Count:", String(salesData.totalOrders)],
+    [
+      "Invoice Nos.:",
+      `${salesData.startInvoiceNumber} - ${salesData.endInvoiceNumber}`,
+    ],
+    ["Guest Count:", String(salesData.totalPaxCount)],
     ["Discount:", fmtAmt(discountTotal)],
-    ["Service Charge (Opt):", fmtAmt(serviceCharge)],
     ["TotalCoins Used:", fmtAmt(coinsUsed)], // shown for info only
     ["Coupon Discount:", fmtAmt(couponDiscount)], // shown for info only
     ["Complementary:", fmtAmt(complementary)], // shown for info only
+    ["Service Charge (Opt):", fmtAmt(serviceCharge)],
     ["CGST:", fmtAmt(cgst)],
     ["SGST:", fmtAmt(sgst)],
     ["Tip:", fmtAmt(tipTotal)],
@@ -361,6 +620,49 @@ export function buildExecutiveSalesReportPdf(input: ExecutiveReportInput) {
       }
     },
     body: billingRows,
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 6;
+
+  // ===== Dues & NPC =====
+  useFont("bold");
+  doc.setFontSize(PT_SECTION);
+  doc.text("Dues & NPC", left, y);
+
+  useFont("normal");
+  doc.setFontSize(PT_BODY);
+
+  // ✔️ Now manually move y down because we printed 3 manual lines
+  y += LINE_GAP + 2;
+
+  // Now create table (safe start)
+  const duesRows: RowInput[] = [
+    [
+      "Total Dues Given:",
+      fmtAmt(input.salesExceptionData?.exceptionSale.totalDuesGiven),
+    ],
+    [" Total NPC:", fmtAmt(input.salesExceptionData?.exceptionSale.totalNpc)],
+  ];
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left, right },
+    theme: "plain",
+    styles: {
+      fontSize: PT_BODY,
+      cellPadding: ROW_PAD,
+      minCellHeight: 0,
+    },
+    columnStyles: {
+      0: { halign: "left", cellWidth: 45 },
+      1: { halign: "right", cellWidth: 27 },
+    },
+    didParseCell: (d: CellHookData) => {
+      if (d.section === "body" && d.column.index === 1) {
+        d.cell.styles.fontStyle = "normal";
+      }
+    },
+    body: duesRows,
   });
 
   y = (doc as any).lastAutoTable.finalY + 10;
@@ -399,6 +701,9 @@ export function buildExecutiveSalesReportPdf(input: ExecutiveReportInput) {
     },
     body: paymentRows,
   });
+
+  // ✔️ NOW it's safe to read lastAutoTable
+  y = (doc as any).lastAutoTable.finalY + 5;
 
   const footerY = (doc as any).lastAutoTable.finalY + 3.5;
   useFont("normal");

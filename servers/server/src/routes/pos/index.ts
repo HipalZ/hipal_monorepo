@@ -1856,6 +1856,7 @@ const posRouter = new Hono()
   )
   .post(
     "/re_print_bill",
+    ubacMiddleware("print_bill"),
     zValidator(
       "json",
       z.object({
@@ -1892,6 +1893,18 @@ const posRouter = new Hono()
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
+
+        await Table.findOneAndUpdate(
+          {
+            businessId,
+            name: tableName,
+          },
+          {
+            $set: {
+              isBillGenerated: true,
+            },
+          },
+        );
 
         const billAlreadySplit = checkOriginBillIsSplit(tableSession);
 
@@ -1993,6 +2006,7 @@ const posRouter = new Hono()
 
   .post(
     "/settle_bill_print",
+    ubacMiddleware("settle_bill_print"),
     zValidator(
       "json",
       z.object({
@@ -2042,7 +2056,7 @@ const posRouter = new Hono()
           items: billItems,
           posRestName: businessPosConfig.restName,
           generatedBy: payment.userId.name || payment?.waiterName,
-          date: Date.now(),
+          date: payment.date || Date.now(),
           serviceCharge: payment.serviceCharge || 0,
           discount: payment.discount || 0,
           tax: payment.tax || 0,
@@ -2066,6 +2080,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_discount",
+    ubacMiddleware("add_discount"),
     zValidator(
       "json",
       z
@@ -2321,6 +2336,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_coins",
+    // ubacMiddleware("add_coins"),
     zValidator(
       "json",
       z.object({
@@ -2459,6 +2475,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_coupon",
+    // ubacMiddleware("add_coupon"),
     zValidator(
       "json",
       z.object({
@@ -3042,6 +3059,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_service_charge",
+    ubacMiddleware("add_or_remove_service_charge"),
     zValidator(
       "json",
       z.object({
@@ -3132,6 +3150,7 @@ const posRouter = new Hono()
 
   .post(
     "/remove_service_charge",
+    ubacMiddleware("add_or_remove_service_charge"),
     zValidator(
       "json",
       z.object({

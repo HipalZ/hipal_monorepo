@@ -1,80 +1,129 @@
-export function transformBillData(bills) {
-  return bills.map((bill) => ({
-    businessId: {
-      $oid: bill.businessId,
-    },
-    date: bill.date,
-    total: bill.total,
-    userId: {
-      $oid: bill?.userId?._id || "123",
-      name: bill?.userId?.name || "guest",
-      phone: bill?.userId?.phone || "9999999999",
-    },
-    mode: bill.mode,
-    subTotal: bill.billValue,
+const pad = (n) => n.toString().padStart(2, "0");
 
-    tableName: bill.tableName,
-    order_id: {
-      $oid: bill.order_id,
-    },
-    tips: bill.tips || 0,
-    razorpayPaymentId: bill.razorpayPaymentId,
-    razorpayOrderId: bill.razorpayOrderId,
-    claimedCoins: bill.claimedCoins || 0,
-    razorpayEventId: bill.razorpayEventId,
-    waiterName: bill.waiterName,
-    posBillId: bill.posBillId,
-    earnCoins: bill.earnCoins || 0,
-    tax: bill.tax || 0,
-    serviceCharge: bill.serviceCharge || 0,
-    discount: bill.discount || 0,
-    couponDiscount: bill.couponDiscount || 0,
-    billItems: bill.billItems.map((item) => ({
-      id: item.id,
-      dish: {
-        _id: item.dish._id,
-        posDishId: item.dish.posDishId,
-        businessId: item.dish.businessId,
-        __v: item.dish.__v || 0,
-        availability: item.dish.availability,
-        categoryIds: "main",
-        createdAt: item.dish.createdAt,
-        description: item.dish.description || "",
-        dishTypes: item.dish.dishTypes,
-        ignoreDiscount: item.dish.ignoreDiscount || "0",
-        ignoreTax: item.dish.ignoreTax || "0",
-        images: item.dish.images || [],
-        isDeleted: item.dish.isDeleted || false,
-        menuId: item.dish.menuId,
-        name: item.dish.name,
-        portions: item.dish.portions || [],
-        pos: item.dish.pos || true,
-        posTax: item.dish.posTax,
-        price: item.dish.price || 0,
-        rank: item.dish.rank || 1,
-        tags: item.dish.tags || [],
-        updatedAt: item.dish.updatedAt,
-        visibility: item.dish.visibility,
-        active: item.dish.active,
-        kitchenId: item.dish.kitchenId,
-        gst: item.dish.gst || 0,
-      },
-      portion: item.portion,
-      extras: item.extras || [],
-      quantity: item.quantity,
-      isDeleted: item.isDeleted || false,
-      discount: item.discount || 0,
-      _id: {
-        $oid: item._id,
-      },
-    })),
-    pin: bill.pin,
-    isSplit: bill.isSplit || false,
-    isSplitBillVariant: bill.isSplitBillVariant || false,
-    createdAt: {
-      $date: bill.createdAt,
-    },
-    billInvoice: bill.billInvoice,
-    __v: bill.__v || 0,
-  }));
+const formatDate = (d) => {
+  const date = new Date(d);
+  const yyyy = date.getFullYear();
+  const mm = pad(date.getMonth() + 1);
+  const dd = pad(date.getDate());
+  const dateFormat = `${dd}-${mm}-${yyyy}`;
+  return dateFormat;
+};
+
+export function dateToTimestamp(dateStr: string) {
+  // dateStr expected format: "DD-MM-YYYY"
+  const [day, month, year] = dateStr.split("-").map(Number);
+
+  // JS Date months are 0-indexed → so we subtract 1 from month
+  const date = new Date(year, month - 1, day);
+
+  return date.getTime(); // timestamp in milliseconds
 }
+
+const formatTime = (d) => {
+  const date = new Date(d);
+  const hh = pad(date.getHours());
+  const mm = pad(date.getMinutes());
+  const ss = pad(date.getSeconds());
+  return `${hh}-${mm}-${ss}`; // HHMMSS
+};
+
+const toMoney = (v, decimals = 2) =>
+  (Number.isFinite(+v) ? +v : 0).toFixed(decimals);
+
+// Transformer --------------------------------------------------------
+const transformToIntegraFormat = (payments) => {
+  const LOCATION_CODE = "331670";
+  const TERMINAL_ID = "01";
+  const SHIFT_NO = "01";
+  const OP_CUR = "INR";
+  const EXCHANGE = 1;
+
+  const Transactions = payments.map((payment) => {
+    const receiptNum = payment.billInvoice?.toString();
+    const when = payment.createdAt?.$date || payment.createdAt || payment.date;
+    const RCPT_DT = formatDate(when);
+    const RCPT_TM = formatTime(when);
+
+    const TRAN_STATUS = "SALES";
+    const PAYMENT_STATUS = "SALES";
+    const INV_AMT = +payment.total || 0;
+    const TAX_AMT = +payment.tax || 0;
+    const SERVICE_CHARGE_AMT = payment.serviceCharge || 0;
+    const RET_AMT = 0;
+    const DISCOUNT =
+      payment.discount + payment.claimedCoins + payment.couponDiscount;
+
+    const ItemDetail = (payment.billItems || []).map((item) => {
+      const itemTax = 0;
+      const itemNet = 0;
+      const itemCat =
+        (Array.isArray(item?.dish.categoryIds) &&
+          item.dish.categoryIds.join(",")) ||
+        item.category ||
+        "General";
+
+      return {
+        REC_TYPE: "G111",
+        RCPT_NUM: receiptNum,
+        RCPT_DT,
+        ITEM_CODE: String(item.dish._id ?? ""),
+        ITEM_NAME: String(item.dish.name),
+        ITEM_QTY: toMoney(item.quantity ?? 0, 3),
+        ITEM_PRICE: item.portion
+          ? toMoney(item.portion.price, 2)
+          : toMoney(item.dish.price, 2),
+
+        ITEM_CAT: itemCat,
+        ITEM_TAX: toMoney(itemTax, 6),
+        ITEM_TAX_TYPE: "I",
+        ITEM_NET_AMT: toMoney(itemNet, 2),
+        OP_CUR,
+        BC_EXCH: toMoney(EXCHANGE, 3),
+        ITEM_STATUS: TRAN_STATUS,
+        ITEM_DISCOUNT: toMoney(item.discount ?? 0, 2),
+      };
+    });
+
+    const PaymentDetail = [
+      {
+        RCPT_NUM: receiptNum,
+        RCPT_DT,
+        PAYMENT_NAME: String(payment.mode?.toUpperCase() || "CASH"),
+        CURRENCY_CODE: OP_CUR,
+        EXCHANGE_RATE: toMoney(EXCHANGE, 3),
+        TENDER_AMOUNT: toMoney(INV_AMT, 2),
+        OP_CUR,
+        BC_EXCH: toMoney(EXCHANGE, 3),
+        PAYMENT_STATUS,
+      },
+    ];
+
+    return {
+      LOCATION_CODE,
+      TERMINAL_ID,
+      SHIFT_NO,
+      RCPT_NUM: receiptNum,
+      RCPT_DT,
+      BUSINESS_DT: RCPT_DT,
+      RCPT_TM,
+      INV_AMT: toMoney(INV_AMT, 2),
+      TAX_AMT: toMoney(TAX_AMT, 2),
+      RET_AMT: toMoney(RET_AMT, 2),
+      SERVICE_CHARGE_AMT: toMoney(SERVICE_CHARGE_AMT, 2),
+      PACKAGING_AMT: "0.00",
+      DELIVERY_AMT: "0.00",
+      SALE_TYPE: "DINE-IN",
+
+      TRAN_STATUS,
+      OP_CUR,
+      BC_EXCH: toMoney(EXCHANGE, 3),
+      DISCOUNT: toMoney(DISCOUNT, 2),
+      ItemDetail,
+      PaymentDetail,
+    };
+  });
+
+  return { Transactions };
+};
+
+export { transformToIntegraFormat };

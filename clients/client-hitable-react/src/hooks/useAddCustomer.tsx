@@ -1,3 +1,4 @@
+import useBusinessData from '@/components/store/useBusinessData';
 import { useError } from '@/components/store/useError';
 import type { ICustomerInformation } from '@/components/types/hiClientzData';
 import { apiRpc } from '@hi/common';
@@ -81,10 +82,13 @@ export const useVerifyOtp = () => {
 
 export const useCustomerInformation = (userIds?: any[]) => {
   const onlyIds = (userIds || []).map((u) => (typeof u === 'string' ? u : u._id));
+  const businessId = useBusinessData((s) => s?.outletInfo?.businessId);
+
   const fetchCustomerInfo = async (): Promise<ICustomerInformation[]> => {
     const response = await apiRpc.kot.table_user.$post({
       json: {
         userIds: onlyIds,
+        businessId: businessId || '',
       },
     });
 

@@ -1,7 +1,7 @@
 import CommonBottomButton from '@/components/atoms/bottomButton';
 import useTimings, { type PresetRange } from '@/components/store/useTimings';
 import { format as dfFormat, endOfDay, endOfMonth, isSameDay, setHours, setMinutes, startOfDay, startOfMonth, subDays } from 'date-fns';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import PopUp from '../popUp';
