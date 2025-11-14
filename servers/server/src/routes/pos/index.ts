@@ -2057,7 +2057,7 @@ const posRouter = new Hono()
           items: billItems,
           posRestName: businessPosConfig.restName,
           generatedBy: payment.userId.name || payment?.waiterName,
-          date: Date.now(),
+          date: payment.date || Date.now(),
           serviceCharge: payment.serviceCharge || 0,
           discount: payment.discount || 0,
           tax: payment.tax || 0,
