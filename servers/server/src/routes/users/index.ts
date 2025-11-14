@@ -552,54 +552,48 @@ const usersRouter = new Hono()
   )
 
   .post("/:id/stafflogin", zValidator("json", staffValidator), async (c) => {
-    const requestData = await c.req.json();
-    const { phone, password } = requestData;
-    const staff = await User.findOne({ phone: phone }).populate({
-      path: "customRole.businessId",
-      select: "name address logo",
-    });
+    const { phone, password } = await c.req.json();
+
+    // Step 1: Fetch staff
+    const staff = await User.findOne({ phone }).lean();
 
     if (!staff) {
+      return c.json({ message: "Staff not found", data: {}, err: true }, 404);
+    }
+
+    // Step 2: Filter only active customRoles
+    const activeRoles = (staff.customRole || []).filter(
+      (r) => r.isDeleted === false,
+    );
+
+    if (activeRoles.length === 0) {
       return c.json(
-        {
-          message: "Staff not found",
-          data: {},
-          err: true,
-        },
-        404,
+        { message: "No active staff role found", data: {}, err: true },
+        403,
       );
     }
 
-    const isPasswordValid = await verifyPassword(
-      password,
-      staff?.password || "",
-    );
-
+    // Step 3: Validate password
+    const isPasswordValid = await verifyPassword(password, staff.password);
     if (!isPasswordValid) {
-      return c.json(
-        {
-          message: "Invalid Password",
-          data: {},
-          err: true,
-        },
-        400,
-      );
+      return c.json({ message: "Invalid Password", data: {}, err: true }, 400);
     }
-    // Generate JWT
-    const accessToken = createAccessToken(
-      staff?._id.toString() || "",
-      "CAPTAIN",
+
+    // Step 4: Populate businessId for active roles
+    const populatedRoles = await User.populate(
+      { customRole: activeRoles },
+      {
+        path: "customRole.businessId",
+        select: "name address logo",
+      },
     );
-    const refreshToken = createRefreshToken(
-      staff?._id.toString() || "",
-      "CAPTAIN",
-    );
+
+    // Step 5: Generate tokens
+    const accessToken = createAccessToken(staff._id.toString(), "CAPTAIN");
+    const refreshToken = createRefreshToken(staff._id.toString(), "CAPTAIN");
 
     const token = jwt.sign(
-      {
-        id: staff._id,
-        role: "CAPTAIN",
-      },
+      { id: staff._id, role: "CAPTAIN" },
       Bun.env.JWT_SECRET as string,
     );
 
@@ -609,9 +603,7 @@ const usersRouter = new Hono()
     });
 
     const api_token = jwt.sign(
-      {
-        hipalz_id: 1,
-      },
+      { hipalz_id: 1 },
       "014f6bc236f2ba1cc2c85cb4a7e723ac7fb46fcc5cbd41c382cdf5495eb72d34",
     );
 
@@ -621,12 +613,23 @@ const usersRouter = new Hono()
       sameSite: "strict",
     });
 
+    // Remove sensitive fields
+    delete staff.password;
+
     return c.json({
       message: "Staff Logged in Successfully",
-      data: { user: staff, accessToken, refreshToken },
+      data: {
+        user: {
+          ...staff,
+          customRole: populatedRoles.customRole, // ALL active roles
+        },
+        accessToken,
+        refreshToken,
+      },
       err: false,
     });
   })
+
   .post(
     "/addStaff",
 
@@ -966,10 +969,27 @@ const usersRouter = new Hono()
         businessId: z.string(),
       }),
     ),
+
     async (c) => {
       const { staffId, businessId } = c.req.param();
 
-      const deleteStaff = await User.findOneAndUpdate(
+      // 1. Ensure matching customRole exists
+      const exists = await User.findOne({
+        _id: staffId,
+        customRole: {
+          $elemMatch: {
+            businessId,
+            isDeleted: false,
+          },
+        },
+      });
+
+      if (!exists) {
+        return respond(c, "Staff role not found", true, 404, {});
+      }
+
+      // 2. Update the specific customRole entry
+      const updatedUser = await User.findOneAndUpdate(
         {
           _id: staffId,
           "customRole.businessId": businessId,
@@ -979,15 +999,14 @@ const usersRouter = new Hono()
             "customRole.$.isDeleted": true,
           },
         },
-        { new: true },
+        { new: true }, // return updated doc
       );
-      return respond(
-        c,
-        deleteStaff ? "Staff deleted successfully" : "Staff not found",
-        !deleteStaff,
-        deleteStaff ? 200 : 404,
-        deleteStaff || {},
-      );
+
+      if (!updatedUser) {
+        return respond(c, "Staff not found", true, 404, {});
+      }
+
+      return respond(c, "Staff deleted successfully", false, 200, updatedUser);
     },
   )
 
@@ -1085,12 +1104,8 @@ const usersRouter = new Hono()
       const { businessId } = c.req.param();
 
       const existingUser = await User.find({
-        customRole: {
-          $elemMatch: {
-            businessId: businessId,
-            isDeleted: false,
-          },
-        },
+        "customRole.businessId": businessId,
+        "customRole.isDeleted": false,
       }).select({
         name: 1,
         phone: 1,
@@ -1643,6 +1658,7 @@ const usersRouter = new Hono()
         {
           _id: userId,
           "customRole.businessId": businessId,
+          "customRole.isDeleted": false,
         },
         {
           name: 1,
@@ -1675,6 +1691,7 @@ const usersRouter = new Hono()
       const permissionToken = jwt.sign(
         {
           id: existingUser._id,
+          businessId: businessId,
           permissions: Array.isArray(existingUser?.customRole?.[0]?.permissions)
             ? {}
             : existingUser?.customRole?.[0]?.permissions || {},
