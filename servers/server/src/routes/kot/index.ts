@@ -94,13 +94,15 @@ const kotRouter = new Hono()
       "json",
       z.object({
         userIds: z.array(z.string()).min(1).max(100),
+        businessId: z.string().min(1).max(100),
       }),
     ),
     async (c) => {
-      const { userIds = [] } = await c.req.json();
+      const { userIds = [], businessId } = await c.req.json();
 
       const kot = await UserAnalytic.find({
         userId: { $in: userIds },
+        businessId,
       })
         .populate({
           path: "userId",
