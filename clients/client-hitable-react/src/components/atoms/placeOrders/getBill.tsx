@@ -302,45 +302,43 @@ const MemoGetBill = () => {
         </LazyWrapper>
       )}
 
-      {canSettle && (
-        <CommonBottomButton
-          maxWidth="30rem"
-          backgroundColor={screenSize === 'xs' ? 'white' : 'white'}
-          fixed={true}
-          buttons={[
-            {
-              text: ' ',
-              onClick: goHome,
-              icon: <HomeIcon />,
-              className: 'rounded-md lg:hidden !w-[8rem] pl-2 ',
+      <CommonBottomButton
+        maxWidth="30rem"
+        backgroundColor={screenSize === 'xs' ? 'white' : 'white'}
+        fixed={true}
+        buttons={[
+          {
+            text: ' ',
+            onClick: goHome,
+            icon: <HomeIcon />,
+            className: 'rounded-md lg:hidden !w-[8rem] pl-2 ',
+          },
+          {
+            text: '',
+            isBackButton: true,
+            onClick: isSplitBill && selectedBill ? handleBackToGrid : closeOrderModalHandler,
+            className: 'lg:hidden rounded-md pl-3 md:pl-4 !w-[8rem] ml-4',
+          },
+          {
+            text: 'Settle',
+            onClick: openNormalSettle,
+            className: cn('rounded-md !bg-purple-600 ', canSettle && 'hidden'),
+          },
+          {
+            text: 'Hi Settle',
+            onClick: () => {
+              if (currentBill.isPaid) {
+                return toast.error('This bill is already settled.');
+              }
+              mutate();
             },
-            {
-              text: '',
-              isBackButton: true,
-              onClick: isSplitBill && selectedBill ? handleBackToGrid : closeOrderModalHandler,
-              className: 'lg:hidden rounded-md pl-3 md:pl-4 !w-[8rem] ml-4',
-            },
-            {
-              text: 'Settle',
-              onClick: openNormalSettle,
-              className: 'rounded-md !bg-purple-600 ',
-            },
-            {
-              text: 'Hi Settle',
-              onClick: () => {
-                if (currentBill.isPaid) {
-                  return toast.error('This bill is already settled.');
-                }
-                mutate();
-              },
-              disable: isPending,
-              isLoading: isPending,
-              highlight: true,
-              className: 'rounded-md',
-            },
-          ]}
-        />
-      )}
+            disable: isPending,
+            isLoading: isPending,
+            highlight: true,
+            className: cn('rounded-md', canSettle && 'hidden'),
+          },
+        ]}
+      />
     </>
   );
 };
