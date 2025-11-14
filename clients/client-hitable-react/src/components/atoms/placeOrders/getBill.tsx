@@ -322,7 +322,7 @@ const MemoGetBill = () => {
           {
             text: 'Settle',
             onClick: openNormalSettle,
-            className: cn('rounded-md !bg-purple-600 ', canSettle && 'hidden'),
+            className: cn('rounded-md !bg-purple-600 ', !canSettle && 'hidden'),
           },
           {
             text: 'Hi Settle',
@@ -335,7 +335,7 @@ const MemoGetBill = () => {
             disable: isPending,
             isLoading: isPending,
             highlight: true,
-            className: cn('rounded-md', canSettle && 'hidden'),
+            className: cn('rounded-md', !canSettle && 'hidden'),
           },
         ]}
       />
