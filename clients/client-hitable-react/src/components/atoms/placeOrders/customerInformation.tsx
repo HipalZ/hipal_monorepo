@@ -1,3 +1,4 @@
+import useBusinessData from '@/components/store/useBusinessData';
 import { useOrderStore } from '@/components/store/useOrderData';
 import type { ICustomerInformation, ITag } from '@/components/types/hiClientzData';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,7 @@ import AddCustomerModal from './AddCustomerModal';
 const MemoCustomerInformation = () => {
   const { selectedTable } = useOrderStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const businessId = useBusinessData((s) => s?.outletInfo?.businessId);
   const getCustomerInformation = useCallback(async () => {
     const onlyIds = selectedTable?.userIds?.map((u: any) => (typeof u === 'string' ? u : u._id)) || [];
 
@@ -69,6 +70,7 @@ const MemoCustomerInformation = () => {
         ) : (
           data?.map((customerInfo: ICustomerInformation, index: number) => {
             const tagMap = getTagCounts(customerInfo?.tagIds ?? []);
+            if (customerInfo?.businessId !== businessId) return;
             return (
               <Card key={customerInfo?._id || index} className="w-[22rem] overflow-hidden">
                 <CardHeader className="bg-black">
