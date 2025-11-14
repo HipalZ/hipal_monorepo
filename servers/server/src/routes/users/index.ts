@@ -1756,6 +1756,12 @@ const usersRouter = new Hono()
     async (c) => {
       const { staffId, businessId } = c.req.param();
 
+      // Fetch all master permissions
+      const allStaffPermissions = await StaffPermission.find({})
+        .select("name")
+        .lean();
+
+      // Fetch staff user with role permissions
       const staffData = await User.findOne(
         {
           _id: staffId,
@@ -1778,10 +1784,22 @@ const usersRouter = new Hono()
         return respond(c, "Staff not found", true, 404, {});
       }
 
+      // Staff's existing permissions
+      const staffPermObj = staffData.customRole?.[0]?.permissions ?? {};
+
+      // Build final permissions object
+      const finalPermissions: Record<string, boolean> = {};
+
+      for (const perm of allStaffPermissions) {
+        const permName = perm.name;
+
+        finalPermissions[permName] = staffPermObj[permName] === true;
+      }
+
       const result = {
         name: staffData.name,
         phone: staffData.phone,
-        permissions: staffData.customRole?.[0]?.permissions ?? {},
+        permissions: finalPermissions,
       };
 
       return respond(c, "User fetched successfully", false, 200, result);
