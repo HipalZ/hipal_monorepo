@@ -15,19 +15,22 @@ const MemoCustomerInformation = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getCustomerInformation = useCallback(async () => {
+    const onlyIds = selectedTable?.userIds?.map((u: any) => (typeof u === 'string' ? u : u._id)) || [];
+
     const response = await apiRpc.kot.table_user.$post({
       json: {
-        userIds: selectedTable?.userIds || [],
+        userIds: onlyIds,
       },
     });
+
     const res = await response.json();
     return (res?.data as ICustomerInformation[]) ?? [];
   }, [selectedTable]);
 
   const { isLoading, data, refetch } = useQuery({
     queryKey: ['getCustomerInformation', selectedTable?.userIds],
-    queryFn: getCustomerInformation,
-    enabled: !!selectedTable?.userIds?.length,
+    queryFn: () => getCustomerInformation(selectedTable?.userIds),
+    enabled: selectedTable?.userIds?.length > 0,
   });
 
   const handleAddCustomerSuccess = () => {

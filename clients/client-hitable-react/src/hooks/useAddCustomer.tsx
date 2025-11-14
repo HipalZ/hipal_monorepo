@@ -1,8 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRpc } from "@hi/common";
-import toast from "react-hot-toast";
-import { useError } from "@/components/store/useError";
-import type { ICustomerInformation } from "@/components/types/hiClientzData";
+import { useError } from '@/components/store/useError';
+import type { ICustomerInformation } from '@/components/types/hiClientzData';
+import { apiRpc } from '@hi/common';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 
 export const useSendOtp = () => {
   const { setError, setOpenErrorModal } = useError();
@@ -17,17 +17,17 @@ export const useSendOtp = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to send OTP");
+        throw new Error(errorData.message || 'Failed to send OTP');
       }
 
       return response.json();
     },
     onSuccess: () => {
-      toast.success("OTP sent successfully");
+      toast.success('OTP sent successfully');
     },
     onError: (error: Error) => {
       setOpenErrorModal(true);
-      setError(error.message || "Failed to send OTP");
+      setError(error.message || 'Failed to send OTP');
     },
   });
 
@@ -58,23 +58,18 @@ export const useVerifyOtp = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to verify OTP");
+        throw new Error(errorData.message || 'Failed to verify OTP');
       }
 
       return response.json();
     },
     onSuccess: () => {
-      toast.success("OTP verified successfully");
-      queryClient.invalidateQueries({ queryKey: ["fetchIndividualTable"] });
+      toast.success('OTP verified successfully');
+      queryClient.invalidateQueries({ queryKey: ['fetchIndividualTable'] });
     },
   });
 
-  const verifyOtp = async (
-    phone: string,
-    name: string,
-    otp: string,
-    tableId: string,
-  ) => {
+  const verifyOtp = async (phone: string, name: string, otp: string, tableId: string) => {
     return await mutateAsync({ phone, name, otp, tableId });
   };
 
@@ -84,20 +79,22 @@ export const useVerifyOtp = () => {
   };
 };
 
-export const useCustomerInformation = (userIds?: string[]) => {
+export const useCustomerInformation = (userIds?: any[]) => {
+  const onlyIds = (userIds || []).map((u) => (typeof u === 'string' ? u : u._id));
   const fetchCustomerInfo = async (): Promise<ICustomerInformation[]> => {
     const response = await apiRpc.kot.table_user.$post({
       json: {
-        userIds: userIds || [],
+        userIds: onlyIds,
       },
     });
+
     const res = await response.json();
     return (res?.data as ICustomerInformation[]) ?? [];
   };
 
   return useQuery({
-    queryKey: ["getCustomerInformation", userIds],
+    queryKey: ['getCustomerInformation', userIds],
     queryFn: fetchCustomerInfo,
-    enabled: !!userIds?.length,
+    enabled: !!onlyIds,
   });
 };
