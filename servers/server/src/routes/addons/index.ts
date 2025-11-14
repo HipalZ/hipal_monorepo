@@ -10,7 +10,6 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
-import { addInTempMenuChanges } from "../../services/tempMenuChanges";
 import { respond } from "../../utils/response";
 const addonRouter = new Hono()
   .post(
@@ -62,14 +61,6 @@ const addonRouter = new Hono()
         const addon = await AddOn.create({ ...requestData, pos: !!hipalZPos });
 
         if (!addon) return respond(c, "failed", true, 400, addon);
-
-        if (menu.serviceType === "BASE") {
-          await addInTempMenuChanges(
-            "addOn",
-            addon._id.toString(),
-            menu.businessId,
-          );
-        }
 
         if (requestData.dishIds && requestData.dishIds.length > 0) {
           await Dish.updateMany(
@@ -139,14 +130,6 @@ const addonRouter = new Hono()
         );
 
         if (!updatedAddOn) return respond(c, "failed", true, 400, {});
-
-        if (menu.serviceType === "BASE") {
-          await addInTempMenuChanges(
-            "addOn",
-            updatedAddOn._id.toString(),
-            menu.businessId,
-          );
-        }
 
         if (removeDishIds.length > 0) {
           await AddOn.findByIdAndUpdate(
@@ -226,14 +209,6 @@ const addonRouter = new Hono()
         const addon = await AddOn.findByIdAndUpdate(id, { isDeleted: true });
 
         if (!addon) return respond(c, "not found", true, 404, {});
-
-        if (menu.serviceType === "BASE") {
-          await addInTempMenuChanges(
-            "addOn",
-            addon._id.toString(),
-            menu.businessId,
-          );
-        }
 
         await Dish.updateMany(
           { addOnIds: id },

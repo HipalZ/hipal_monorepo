@@ -23,8 +23,6 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { addInTempMenuChanges } from "../../services/tempMenuChanges";
-import { pushToken } from "../../services/token";
 import indianHoursInMinutes from "../../utils/indianHoursInMinutes";
 import { respond } from "../../utils/response";
 
@@ -122,14 +120,6 @@ const categoriesRouter = new Hono()
 
         if (!creatingCategory)
           return respond(c, "Creation failed", true, 400, {});
-
-        if (menu.serviceType === "BASE") {
-          await addInTempMenuChanges(
-            "category",
-            creatingCategory[0]._id.toString(),
-            menu.businessId,
-          );
-        }
 
         if (subCategoryIds.length > 0) {
           await Category.updateMany(
@@ -233,14 +223,6 @@ const categoriesRouter = new Hono()
           { session },
         );
         if (!updatedCategory) return respond(c, "Not found", true, 404, {});
-
-        if (menu.serviceType === "BASE") {
-          await addInTempMenuChanges(
-            "category",
-            updatedCategory._id.toString(),
-            menu.businessId,
-          );
-        }
 
         if (removeSubCategoryIds.length > 0) {
           //extra check for subCategoryIds
@@ -361,14 +343,6 @@ const categoriesRouter = new Hono()
           );
         }
 
-        if (menu.serviceType === "BASE") {
-          await addInTempMenuChanges(
-            "category",
-            fetchCategory._id.toString(),
-            menu.businessId,
-          );
-        }
-
         const deletedCategory = await Category.findByIdAndUpdate(id, {
           isDeleted: true,
         });
@@ -429,7 +403,6 @@ const categoriesRouter = new Hono()
         active: true,
       });
 
-      pushToken(c);
       if (menu) {
         const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
         const query = {

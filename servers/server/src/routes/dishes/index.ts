@@ -24,7 +24,6 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { addInTempMenuChanges } from "../../services/tempMenuChanges";
 import { pushToken } from "../../services/token";
 import { respond } from "../../utils/response";
 //
@@ -216,14 +215,6 @@ const dishesRouter = new Hono()
         );
         if (!updatedDish) return respond(c, "Error in updating", true, 400, {});
 
-        if (menu.serviceType === "BASE") {
-          await addInTempMenuChanges(
-            "dish",
-            updatedDish._id.toString(),
-            menu.businessId,
-          );
-        }
-
         if (removeCategoryIds.length) {
           await Category.updateMany(
             { _id: { $in: removeCategoryIds } },
@@ -361,14 +352,6 @@ const dishesRouter = new Hono()
           );
         }
 
-        if (menu.serviceType === "BASE") {
-          await addInTempMenuChanges(
-            "dish",
-            fetchDish._id.toString(),
-            menu.businessId,
-          );
-        }
-
         const existingDish = await Dish.findByIdAndUpdate(id, {
           isDeleted: true,
         });
@@ -434,14 +417,6 @@ const dishesRouter = new Hono()
           session,
         });
         if (!createDish) return respond(c, "Error in creating", true, 400, {});
-
-        if (menu.serviceType === "BASE") {
-          await addInTempMenuChanges(
-            "dish",
-            createDish[0]._id,
-            menu.businessId,
-          );
-        }
 
         await Category.updateMany(
           { _id: { $in: dish.categoryIds ?? [] } },
