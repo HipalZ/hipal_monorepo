@@ -257,13 +257,15 @@ export type ExecutiveReportInput = {
     onlineSale: { online: number };
     offlineSale: Record<string, number>;
     orderTypeCounts?: { delivery?: number; dineIn?: number; takeAway?: number };
-    invoiceRange?: string;
     orderCount?: number;
     subTotal?: number;
     discount?: number;
     roundOff?: number;
     waivedOff?: number;
     totalOrders?: number;
+    totalPaxCount?: number;
+    startInvoiceNumber?: number;
+    endInvoiceNumber?: number;
   };
   otherData?: {
     otherSale: {
@@ -274,7 +276,12 @@ export type ExecutiveReportInput = {
     warningSale?: Record<string, number>;
   };
   salesExceptionData?: {
-    exceptionSale: { totalComplementary: number; totalDiscount: number };
+    exceptionSale: {
+      totalComplementary: number;
+      totalDiscount: number;
+      totalDuesGiven: number;
+      totalNpc: number;
+    };
     rewardSale: {
       totalCoinsGiven: number;
       totalCoinsUsed: number;
@@ -575,11 +582,16 @@ export function buildExecutiveSalesReportPdf(input: ExecutiveReportInput) {
   const billingRows: RowInput[] = [
     ["Sub Total (taxable):", fmtAmt(salesData.subTotal)],
     ["Order Count:", String(salesData.totalOrders)],
+    [
+      "Invoice Nos.:",
+      `${salesData.startInvoiceNumber} - ${salesData.endInvoiceNumber}`,
+    ],
+    ["Guest Count:", String(salesData.totalPaxCount)],
     ["Discount:", fmtAmt(discountTotal)],
-    ["Service Charge (Opt):", fmtAmt(serviceCharge)],
     ["TotalCoins Used:", fmtAmt(coinsUsed)], // shown for info only
     ["Coupon Discount:", fmtAmt(couponDiscount)], // shown for info only
     ["Complementary:", fmtAmt(complementary)], // shown for info only
+    ["Service Charge (Opt):", fmtAmt(serviceCharge)],
     ["CGST:", fmtAmt(cgst)],
     ["SGST:", fmtAmt(sgst)],
     ["Tip:", fmtAmt(tipTotal)],
@@ -608,6 +620,49 @@ export function buildExecutiveSalesReportPdf(input: ExecutiveReportInput) {
       }
     },
     body: billingRows,
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 6;
+
+  // ===== Dues & NPC =====
+  useFont("bold");
+  doc.setFontSize(PT_SECTION);
+  doc.text("Dues & NPC", left, y);
+
+  useFont("normal");
+  doc.setFontSize(PT_BODY);
+
+  // ✔️ Now manually move y down because we printed 3 manual lines
+  y += LINE_GAP + 2;
+
+  // Now create table (safe start)
+  const duesRows: RowInput[] = [
+    [
+      "Total Dues Given:",
+      fmtAmt(input.salesExceptionData?.exceptionSale.totalDuesGiven),
+    ],
+    [" Total NPC:", fmtAmt(input.salesExceptionData?.exceptionSale.totalNpc)],
+  ];
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left, right },
+    theme: "plain",
+    styles: {
+      fontSize: PT_BODY,
+      cellPadding: ROW_PAD,
+      minCellHeight: 0,
+    },
+    columnStyles: {
+      0: { halign: "left", cellWidth: 45 },
+      1: { halign: "right", cellWidth: 27 },
+    },
+    didParseCell: (d: CellHookData) => {
+      if (d.section === "body" && d.column.index === 1) {
+        d.cell.styles.fontStyle = "normal";
+      }
+    },
+    body: duesRows,
   });
 
   y = (doc as any).lastAutoTable.finalY + 10;
@@ -646,6 +701,9 @@ export function buildExecutiveSalesReportPdf(input: ExecutiveReportInput) {
     },
     body: paymentRows,
   });
+
+  // ✔️ NOW it's safe to read lastAutoTable
+  y = (doc as any).lastAutoTable.finalY + 5;
 
   const footerY = (doc as any).lastAutoTable.finalY + 3.5;
   useFont("normal");

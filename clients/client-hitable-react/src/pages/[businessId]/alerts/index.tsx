@@ -6,7 +6,7 @@ import { useLiteStore } from '@/components/store/useLiteStore';
 import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { useZonesAndTablesStore } from '@/components/store/useZonesAndTable';
 import { NavItemTypesEnum } from '@/components/types/hiClientzData';
-import { type StaffPermissionsMap, useStaffPermissions } from '@/hooks/useCheckPermission';
+import { useStaffPermissions } from '@/hooks/useCheckPermission';
 import { useScreenSize } from '@/hooks/useScreenSize';
 import { Suspense, lazy, memo, useCallback, useState } from 'react';
 

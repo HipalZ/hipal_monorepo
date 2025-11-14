@@ -251,6 +251,13 @@ const Overview = () => {
           gradient="from-red-900 to-red-200"
           breakdown={taxesServiceBreakdown}
         />
+        <InfoCard
+          title="Total Guest"
+          value={salesData.totalPaxCount}
+          icon={<IndianRupee className="h-4 w-4" />}
+          gradient="from-blue-600 to-blue-200"
+          breakdown={totalSalesBreakdown}
+        />
 
         {shouldShowCard && (
           <InfoCard

@@ -5,6 +5,9 @@ export interface SalesData {
   totalOrders: number;
   totalActiveTableValue: number;
   subTotal: number;
+  startInvoiceNumber: number;
+  endInvoiceNumber: number;
+  totalPaxCount: number;
 }
 
 export interface OtherAndWarningData {
