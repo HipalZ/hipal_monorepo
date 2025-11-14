@@ -17,18 +17,14 @@ export const useSubmitGoogleSheet = () => {
   const { isPending: submitLoading, mutateAsync: submitToSheet } = useMutation({
     mutationFn: async (payload: GoogleSheetSubmitPayload) => {
       const { spreadsheetId, range, cells, storeVariables } = payload;
-      const resolvedValues = cells.map((cell) => {
-        const variable = cell.value.startsWith("@")
-          ? storeVariables[cell.value.substring(1)] ?? ""
-          : cell.value;
-        return variable;
-      });
 
+      // create header row (keys)
+      const headerRow = cells.map((cell) => cell.key || "");
       const response = await apiRpc.google_sheets.submit.$post({
         json: {
           spreadsheetId,
           range: range || "Sheet1!A1",
-          values: [resolvedValues],
+          values: [headerRow],
         },
       });
 
@@ -36,9 +32,7 @@ export const useSubmitGoogleSheet = () => {
 
       if (!response.ok || result?.success === false || result?.err === true) {
         throw new Error(
-          result?.error ||
-            result?.message ||
-            "Failed to append to Google Sheet",
+          result.error || result.message || "Failed to append to Google Sheet",
         );
       }
 

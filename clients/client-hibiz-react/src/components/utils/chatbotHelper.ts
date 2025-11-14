@@ -62,11 +62,11 @@ export const useChatBot = () => {
       }
       if (data.status === 409) {
         setOpenErrorModal(true);
-        setError("Category already exists");
-        return toast.error("Category already exists");
+        setError("Chatbot already exists");
+        return toast.error("Chatbot already exists");
       }
       if (data.status === 200 || data.status === 201) {
-        toast.success("Category Created");
+        toast.success("Chatbot Successfully Created");
         queryClient.invalidateQueries({
           queryKey: ["getServiceCategories"],
         });

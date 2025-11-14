@@ -15,7 +15,6 @@ import {
 } from "../../../utils/whatsappWebhookHandlers/helper";
 import { whatsAppBlockUserHandler } from "../../../utils/whatsappWebhookHandlers/whatsappBlockUser";
 import path = require("path");
-const credentials = require("../../../utils/credentials_oauth.json").web;
 const { google } = require("googleapis");
 
 /* ----------------------------------------------------------------------------
@@ -41,6 +40,7 @@ async function getAllChatbotFlows(businessId: string) {
  * RUNTIME SESSION
  * ------------------------------------------------------------------------- */
 type SessionState = {
+  startTime: string | number | Date;
   _id?: string; // ✅ add this
   userId: string;
   currentNodeId: string | null;
@@ -107,12 +107,19 @@ function interpolate(
   );
 }
 
-function evalRow(
-  row: { var: string; op: string; value?: string },
-  vars: Record<string, any>,
-) {
-  const left = vars[row.var];
+function evalRow(row, vars) {
+  let key = row.var;
+
+  let left = vars[key];
+
+  if (left === undefined) {
+    // fallback: remove @ prefix if not found
+    const altKey = key.startsWith("@") ? key.slice(1) : `@${key}`;
+    left = vars[altKey];
+  }
+
   const right = row.value;
+
   switch (row.op) {
     case "exists":
       return !!(left && String(left).trim() !== "");
@@ -130,6 +137,7 @@ function evalRow(
       return false;
   }
 }
+
 function evalCondition(node: any, vars: Record<string, any>) {
   const rules = node?.logic || [];
   if (!Array.isArray(rules) || rules.length === 0) return false;
@@ -242,7 +250,7 @@ async function sendInteractiveButton(
   footerText: string | undefined,
   buttons: Array<{
     id: string;
-    type: "reply" | "url";
+    type: "reply";
     title: string;
     url?: string;
   }>,
@@ -251,13 +259,6 @@ async function sendInteractiveButton(
 ) {
   const actionButtons = buttons.map((b) => {
     console.log("Button:", b.type, b);
-    if (b.type === "url" && b.url) {
-      return {
-        type: "url",
-        url: b.url,
-        title: b.title,
-      };
-    }
     return {
       type: "reply",
       reply: {
@@ -343,6 +344,20 @@ async function sendInteractiveCTAUrl(
   await waSend(cfg, { to, type: "interactive", interactive });
 }
 
+async function exitNodeLog(nodeLog, nextNodeId, nodeStartTime) {
+  if (!nodeLog) return;
+
+  try {
+    await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, {
+      exitedAt: new Date(),
+      durationMs: Date.now() - nodeStartTime,
+      nextNodeId: nextNodeId,
+    });
+  } catch (e) {
+    console.error("NodeLog update failed:", e);
+  }
+}
+
 /* ----------------------------------------------------------------------------
  * ADVANCE FLOW
  * ------------------------------------------------------------------------- */
@@ -355,7 +370,6 @@ export async function advance(
   userName?: string,
 ) {
   let s = getSession(userId);
-  console.log("s", s);
   let hops = 0;
 
   while (s.currentNodeId) {
@@ -376,8 +390,11 @@ export async function advance(
     }
 
     let nodeLog = null;
+    const nodeStartTime = Date.now();
+    setSession(userId, { nodeStartTime: Date.now() });
+
     try {
-      if (s?._id) {
+      if (s._id) {
         nodeLog = await ChatbotNodeLogModel.create({
           sessionId: s._id,
           chatbotId: FLOW._id,
@@ -385,14 +402,9 @@ export async function advance(
           nodeType: node.type,
           enteredAt: new Date(),
         });
-      } else {
-        console.warn(
-          "[advance] No session._id — skipping node log for",
-          node.id,
-        );
       }
     } catch (err) {
-      console.error("[advance] Failed to create node log:", err.message);
+      console.error("NodeLog create failed:", err);
     }
 
     await ChatbotSessionModel.findOneAndUpdate(
@@ -445,23 +457,22 @@ export async function advance(
       }
 
       // ✅ Log node exit
-      // await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, {
-      //   exitedAt: new Date(),
-      //   durationMs: Date.now() - nodeStartTime,
-      // });
+      await exitNodeLog(nodeLog, node.next, nodeStartTime);
 
       // ✅ End of flow
       if (isEndNode(node)) {
         await ChatbotSessionModel.findOneAndUpdate(
-          { userId, chatbotId: FLOW._id },
+          { _id: s._id },
           {
             completed: true,
             endTime: new Date(),
             sessionDurationMs: Date.now() - new Date(s.startTime).getTime(),
             lastNodeId: node.id,
           },
-          { sort: { startTime: -1 } },
         );
+
+        await exitNodeLog(nodeLog, null, nodeStartTime);
+
         setSession(userId, { currentNodeId: null });
         break;
       }
@@ -482,10 +493,7 @@ export async function advance(
         cfg,
       );
 
-      // await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, {
-      //   exitedAt: new Date(),
-      //   durationMs: Date.now() - nodeStartTime,
-      // });
+      await exitNodeLog(nodeLog, node.next, nodeStartTime);
 
       setSession(userId, { waitingFor: "ask" });
       return;
@@ -497,11 +505,11 @@ export async function advance(
     if (node.type === "set_condition") {
       const ok = evalCondition(node, s.variables);
 
-      // await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, {
-      //   exitedAt: new Date(),
-      //   durationMs: Date.now() - nodeStartTime,
-      //   nextNodeId: ok ? node.trueNext : node.falseNext,
-      // });
+      await exitNodeLog(
+        nodeLog,
+        ok ? node.trueNext : node.falseNext,
+        nodeStartTime,
+      );
 
       setSession(userId, {
         currentNodeId: (ok ? node.trueNext : node.falseNext) || null,
@@ -513,7 +521,10 @@ export async function advance(
     /* ===============================
      * 🟣 INTERACTIVE MESSAGES
      * =============================== */
-    if (node.type === "interactive_message") {
+    if (
+      node.type === "interactive" ||
+      node.type === "interactive_list_message"
+    ) {
       const layout = node.layout || "button";
       const body = interpolate(node.bodyText || "", s.variables, cfg, userName);
       const footer = interpolate(
@@ -535,7 +546,8 @@ export async function advance(
           node.list,
           cfg,
         );
-        // await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, { exitedAt: new Date(), durationMs: Date.now() - nodeStartTime });
+        await exitNodeLog(nodeLog, null, nodeStartTime);
+
         setSession(userId, {
           waitingFor: "interactive",
           interactiveCtx: { routes: node.routes || {} },
@@ -566,7 +578,8 @@ export async function advance(
             cfg,
           );
         }
-        // await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, { exitedAt: new Date(), durationMs: Date.now() - nodeStartTime });
+        await exitNodeLog(nodeLog, null, nodeStartTime);
+
         setSession(userId, {
           currentNodeId: node.next || null,
           waitingFor: "interactive",
@@ -586,7 +599,8 @@ export async function advance(
           header,
           cfg,
         );
-        // await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, { exitedAt: new Date(), durationMs: Date.now() - nodeStartTime });
+        await exitNodeLog(nodeLog, null, nodeStartTime);
+
         setSession(userId, {
           waitingFor: "interactive",
           interactiveCtx: { routes: node.routes || {} },
@@ -595,7 +609,8 @@ export async function advance(
       }
 
       await sendText(waTo, body, cfg);
-      // await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, { exitedAt: new Date(), durationMs: Date.now() - nodeStartTime });
+      await exitNodeLog(nodeLog, null, nodeStartTime);
+
       setSession(userId, { currentNodeId: node.next || null });
       continue;
     }
@@ -632,11 +647,7 @@ export async function advance(
           resource: { values: [resolvedRow] },
         });
 
-        // await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, {
-        //   exitedAt: new Date(),
-        //   durationMs: Date.now() - nodeStartTime,
-        //   nextNodeId: node.next || null,
-        // });
+        await exitNodeLog(nodeLog, node.next, nodeStartTime);
 
         setSession(userId, { currentNodeId: node.next || null });
         s = getSession(userId);
@@ -649,22 +660,16 @@ export async function advance(
       }
     }
 
-    // ✅ Default: end session if no next node
-    // await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, {
-    //   exitedAt: new Date(),
-    //   durationMs: Date.now() - nodeStartTime,
-    //   wasEnd: true,
-    // });
+    await exitNodeLog(nodeLog, null, nodeStartTime);
 
     await ChatbotSessionModel.findOneAndUpdate(
-      { userId, chatbotId: FLOW._id },
+      { _id: s._id },
       {
         completed: false,
         droppedAtNode: node.id,
         endTime: new Date(),
         sessionDurationMs: Date.now() - new Date(s.startTime).getTime(),
       },
-      { sort: { startTime: -1 } },
     );
 
     setSession(userId, {
@@ -723,21 +728,43 @@ export const waWebhookHandler = async (c: Context) => {
   // ---------------------------------------------------------------
   session = getSession(from);
 
+  // ---------------------------------------------------------------
+  // 1️⃣ Handle interactive button/list replies (continue existing flow)
+  // ---------------------------------------------------------------
   if (interactiveTitleOrId && session.waitingFor === "interactive") {
     const currentRoutes = session.interactiveCtx?.routes || {};
-    let targetNodeId: string | undefined;
 
+    let targetNodeId: string | null = null;
+
+    // Find matching route
     for (const [routeKey, routeVal] of Object.entries(currentRoutes)) {
-      // Match either by exact ID or by button title
       if (
         routeKey === interactiveTitleOrId ||
         routeKey.toLowerCase() === interactiveTitleOrId?.toLowerCase()
       ) {
-        targetNodeId = routeVal || undefined;
+        // 🔥 Fix: treat "" or undefined as null (fallback to next node)
+        targetNodeId = routeVal && routeVal.trim() !== "" ? routeVal : null;
         break;
       }
     }
 
+    // Fetch last session & active bot
+    const lastSession = await ChatbotSessionModel.findOne({ userId: from })
+      .sort({ startTime: -1 })
+      .select("_id chatbotId")
+      .lean();
+
+    let activeBot =
+      chatbotList.find(
+        (b) => b.flow._id.toString() === lastSession?.chatbotId?.toString(),
+      ) || chatbotList[0];
+
+    const { flow: FLOW, NODE_BY_ID } = activeBot;
+
+    // 🔍 Which node is user currently on?
+    const currentNode = NODE_BY_ID.get(session.currentNodeId);
+
+    // CASE 1: Route FOUND → Jump to that node
     if (targetNodeId) {
       setSession(from, {
         currentNodeId: targetNodeId,
@@ -745,31 +772,56 @@ export const waWebhookHandler = async (c: Context) => {
         interactiveCtx: undefined,
       });
 
-      // ✅ Find last chatbot this user interacted with
-      const lastSession = await ChatbotSessionModel.findOne({ userId: from })
-        .sort({ startTime: -1 })
-        .select("_id chatbotId")
-        .lean();
-
-      if (lastSession?._id) {
-        setSession(from, { _id: lastSession._id });
-      }
-
-      const activeBot =
-        chatbotList.find(
-          (b) => b.flow._id.toString() === lastSession?.chatbotId?.toString(),
-        ) || chatbotList[0];
+      if (lastSession?._id) setSession(from, { _id: lastSession._id });
 
       await advance(
-        activeBot.flow,
-        activeBot.NODE_BY_ID,
+        FLOW,
+        NODE_BY_ID,
         from,
         from,
         whatsAppBusinessConfigData,
         contactName,
       );
+
       return respond(c, "flow continued (interactive reply)", false, 200, {});
     }
+
+    // CASE 2: Route NOT FOUND → Use the node.next as fallback
+    if (!targetNodeId && currentNode?.next) {
+      setSession(from, {
+        currentNodeId: currentNode.next,
+        waitingFor: null,
+        interactiveCtx: undefined,
+      });
+
+      if (lastSession?._id) setSession(from, { _id: lastSession._id });
+
+      await advance(
+        FLOW,
+        NODE_BY_ID,
+        from,
+        from,
+        whatsAppBusinessConfigData,
+        contactName,
+      );
+
+      return respond(
+        c,
+        "flow continued (interactive reply - fallback next)",
+        false,
+        200,
+        {},
+      );
+    }
+
+    // CASE 3: No route & no next → end flow
+    setSession(from, {
+      currentNodeId: null,
+      waitingFor: null,
+      interactiveCtx: undefined,
+    });
+
+    return respond(c, "flow ended (no route)", false, 200, {});
   }
 
   // ---------------------------------------------------------------

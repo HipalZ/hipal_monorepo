@@ -13,7 +13,6 @@ import dishesRouter from './dishes';
 import downloadRouter from './download';
 import duesRouter from './dues';
 import eventRouter from './event';
-import googleSheetsRouter from './googleSheets';
 import groupRouter from './groups';
 import hipalzRouter from './hipalz';
 import hotelRouter from './hotel';
@@ -50,6 +49,7 @@ import whatsappRouter from './whatsapp';
 import whatsAppChatbotRouter from './whatsappChatbot';
 import whatsAppFlowRouter from './whatsappflow';
 import zonesAndTablesRouter from './zonesAndTables';
+import googleSheetsRouter from './googleSheets'
 
 ////
 const app = new Hono();

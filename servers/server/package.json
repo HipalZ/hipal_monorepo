@@ -22,7 +22,7 @@
     "bullmq": "^5.56.4",
     "crypto": "^1.0.1",
     "firebase-admin": "^12.6.0",
-    "googleapis": "^165.0.0",
+    "googleapis": "165.0.0",
     "hono": "^4.4.2",
     "hono-rate-limiter": "^0.3.0",
     "path": "^0.12.7",

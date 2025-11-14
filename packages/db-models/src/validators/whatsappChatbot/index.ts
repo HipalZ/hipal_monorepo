@@ -46,12 +46,12 @@ export const NodeSchema = z.object({
   type: z.enum([
     "send_message",
     "ask_question",
-    "interactive_message",
+    "interactive",
     "set_condition",
     "trigger",
     "interactive_button_message",
     "interactive_list_message",
-    "google_sheet", // ✅ added
+    "google_sheet",
   ]),
 
   next: z.string().nullable().optional(),

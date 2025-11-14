@@ -6,8 +6,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { useAllChatbots, useChatbotSessions } from '@/hooks/useChatbot';
+import type { WhatsappChatbotType } from '@hi/db-models/src/validators';
 import { Activity, AlertTriangle, BarChart3, Bot, Edit, Loader2, Plus, Search, TrendingDown, TrendingUp, UserCheck, Users } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString('en-US', {
@@ -20,9 +22,8 @@ export function ChatbotDashboard() {
   const { data: chatbots, isLoading } = useAllChatbots();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBot, setSelectedBot] = useState<any>(null);
-
   const setOpenBot = useWhatsapp((s) => s.setOpenBot);
-
+  const navigate = useNavigate();
   const handleOpenChatbot = useCallback(() => {
     setOpenBot(true);
   }, [setOpenBot]);
@@ -34,12 +35,12 @@ export function ChatbotDashboard() {
   const totalDropOff = filtered.reduce((a, b) => a + (b.stats?.dropOffSessions || 0), 0);
   const totalActive = filtered.filter((b: any) => b.status === 'active').length;
   const avgCompletionRate = totalSessions ? (totalCompleted / totalSessions) * 100 : 0;
-
   const handleEditChatbot = useCallback(
-    (bot: any) => {
+    (bot: WhatsappChatbotType) => {
       setOpenBot(true);
+      navigate(`/app/business/${bot.businessId}/whatzapp?chatbotId=${bot._id}`);
     },
-    [setOpenBot],
+    [setOpenBot, navigate],
   );
 
   if (isLoading) {

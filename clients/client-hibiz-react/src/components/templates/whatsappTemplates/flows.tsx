@@ -3,7 +3,6 @@ import useWhatsapp from '@/components/store/useWhatsapp';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -52,6 +51,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useLocation } from 'react-router-dom';
 import { useMediaUpload } from '../../../hooks/useTemplates';
 import DeleteButton from './deleteButton';
 import GoogleSheetPopup from './googleSheetPopup';
@@ -77,7 +78,6 @@ const edgeTypes = {
   button: ButtonEdge,
 };
 
-// Send Message Node
 function SendNode({ data, selected }) {
   const m = data.meta?.contentType
     ? data.meta
@@ -95,7 +95,24 @@ function SendNode({ data, selected }) {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const { uploadMediaPassFile } = useMediaUpload();
+  const [localVar, setLocalVar] = useState(m.variable?.replace(/^@/, '') || '');
 
+  // Local variable typing
+  const handleVariableTyping = (e) => setLocalVar(e.target.value);
+  const handleAddVariable = () => {
+    const inputValue = localVar.trim().replace(/^@/, '');
+    if (!inputValue) return;
+    const freshMeta = data.meta || {};
+
+    data.onPatch({
+      meta: { ...freshMeta, variable: inputValue },
+    });
+
+    if (Array.isArray(data.variables) && typeof data.onVariableAdd === 'function') {
+      data.onVariableAdd([inputValue]);
+    }
+    toast.success('variable added');
+  };
   const insertVariable = (variable) => {
     if (!variable) return;
     const el = textRef.current;
@@ -118,6 +135,7 @@ function SendNode({ data, selected }) {
 
   const handleUpload = async (file, type) => {
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) return toast.error('File size exceeds 5MB limit');
     try {
       setUploading(true);
       setUploadProgress(0);
@@ -425,22 +443,29 @@ function SendNode({ data, selected }) {
             </div>
           )}
           {/* Response Variable */}
-          <div className="space-y-1.5">
-            <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
-              <FileText className="h-3 w-3 text-emerald-600" />
-              Response Variable (Optional)
-            </label>
+          <div className="flex items-center gap-2">
             <Input
-              value={m.variable || '@newVariable'}
-              onChange={(e) => {
-                const val = e.target.value.startsWith('@') ? e.target.value : `@${e.target.value}`;
-                data.onPatch({ meta: { ...m, variable: val } });
-              }}
+              value={localVar}
+              onChange={handleVariableTyping}
+              placeholder="user name"
               prefix="@"
-              placeholder="user_feedback"
               className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
             />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddVariable}
+              disabled={!localVar.trim()}
+              className="bg-emerald-400 text-white"
+            >
+              <Plus className="mr-1 h-3 w-3" />
+              Add
+            </Button>
           </div>
+          <Badge variant="outline" className="bg-orange-100 text-xs text-orange-800">
+            {m.variable?.replace(/^@/, '')}
+          </Badge>
         </CardContent>
       </Card>
 
@@ -453,30 +478,27 @@ function SendNode({ data, selected }) {
 function AskNode({ data, selected }) {
   const m = data.meta || {};
   const [localVar, setLocalVar] = useState(m.variable?.replace(/^@/, '') || '');
-
-  // 🔹 Only update text in local state while typing
-  const handleVariableTyping = (e) => {
-    setLocalVar(e.target.value);
-  };
-
-  // 🔹 Commit value only when button is clicked
+  // Local variable typing
+  const handleVariableTyping = (e) => setLocalVar(e.target.value);
   const handleAddVariable = () => {
     const inputValue = localVar.trim().replace(/^@/, '');
-    console.log('Adding variable:', inputValue);
     if (!inputValue) return;
+    const freshMeta = data.meta || {};
 
-    // Save into node meta
-    data.onPatch({ meta: { ...m, variable: inputValue } });
+    data.onPatch({
+      meta: { ...freshMeta, variable: inputValue },
+    });
 
-    // Add to global variable list safely
-    if (inputValue && Array.isArray(data.variables) && typeof data.onVariableAdd === 'function') {
+    if (Array.isArray(data.variables) && typeof data.onVariableAdd === 'function') {
       data.onVariableAdd([inputValue]);
     }
+    toast.success('variable added');
   };
 
   return (
     <div className="relative">
       <Handle type="target" position={Position.Left} className="z-50 !h-[0.75rem] !w-[0.75rem]" />
+
       <Card
         className={cn(
           'relative w-80 overflow-hidden border-2 shadow-lg transition-all',
@@ -492,21 +514,7 @@ function AskNode({ data, selected }) {
         </div>
 
         <CardContent className="space-y-4 bg-gray-100 p-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-gray-700">Input Type</label>
-            <Select value={m.inputType || 'text'} onValueChange={(v) => data.onPatch({ meta: { ...m, inputType: v } })}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="text">Text</SelectItem>
-                <SelectItem value="number">Number</SelectItem>
-                <SelectItem value="phone">Phone</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
+          {/* PROMPT */}
           <div>
             <label className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">
               <FileText className="h-3 w-3" />
@@ -520,29 +528,19 @@ function AskNode({ data, selected }) {
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="required"
-              checked={m.required ?? true}
-              onCheckedChange={(checked) => data.onPatch({ meta: { ...m, required: !!checked } })}
-              className="border-gray-300 focus:border-indigo-500"
-            />
-            <label htmlFor="required" className="text-xs font-medium text-gray-700">
-              Required Field
-            </label>
-          </div>
-
-          {/* 🟢 Store Response Section */}
+          {/* STORE VARIABLE */}
           <div className="space-y-1.5">
             <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
               <FileText className="h-3 w-3 text-emerald-600" />
               Store Response In (Optional)
             </label>
+
             <div className="flex items-center gap-2">
               <Input
                 value={localVar}
                 onChange={handleVariableTyping}
-                placeholder="userName"
+                placeholder="user name"
+                prefix="@"
                 className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
               />
               <Button
@@ -550,55 +548,46 @@ function AskNode({ data, selected }) {
                 variant="outline"
                 size="sm"
                 onClick={handleAddVariable}
-                className="border-emerald-400 bg-emerald-500 text-white hover:bg-emerald-600"
+                disabled={!localVar.trim()}
+                className="bg-emerald-400 text-white"
               >
                 <Plus className="mr-1 h-3 w-3" />
                 Add
               </Button>
             </div>
-          </div>
-
-          {m.prompt && (
-            <Badge variant="outline" className="text-xs">
-              Preview: {m.prompt.substring(0, 30)}...
+            <Badge variant="outline" className="bg-orange-100 text-xs text-orange-800">
+              {m.variable?.replace(/^@/, '')}
             </Badge>
-          )}
+          </div>
         </CardContent>
       </Card>
+
       <Handle type="source" position={Position.Right} className="z-50 !h-[0.75rem] !w-[0.75rem]" />
     </div>
   );
 }
 
-function VariableDropdown({ value, onChange, variables = [], flowParams = [], placeholder = 'Select variable' }) {
+export function VariableDropdown({ value, onChange, variables = [], flowParams = [], placeholder = 'Select variable' }) {
   const formatDisplay = (item) => {
-    if (flowParams.includes(item)) return item; // e.g., @userName
-    if (variables.includes(item)) return `{{${item}}}`; // e.g., {{userName}}
+    if (flowParams.includes(item)) return item;
+    if (variables.includes(item)) return `{{${item}}}`;
     return item;
   };
 
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value || undefined} onValueChange={onChange}>
       <SelectTrigger className="h-8 text-xs">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
+
       <SelectContent className="w-[180px]">
         {flowParams.length > 0 && (
           <div className="px-2 py-1">
             <div className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-gray-500">Stored variables</div>
+
             {flowParams.map((param) => (
               <SelectItem key={param} value={param} className="text-xs">
-                {formatDisplay(param)} {/* Shows @userName */}
-              </SelectItem>
-            ))}
-          </div>
-        )}
-        {variables.length > 0 && (
-          <div className="px-2 py-1">
-            <div className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-gray-500">Custom variables</div>
-            {variables.map((varName) => (
-              <SelectItem key={varName} value={varName} className="text-xs">
-                {formatDisplay(varName)} {/* Shows {{userName}} */}
+                {formatDisplay(param)}
               </SelectItem>
             ))}
           </div>
@@ -650,11 +639,7 @@ function CondNode({ data, selected }) {
 
   return (
     <div className="relative">
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="z-50 !h-[0.9rem] !w-[0.9rem] rounded-full border-2 border-amber-400 bg-amber-500 transition-transform hover:scale-110"
-      />
+      <Handle type="target" position={Position.Left} className="z-50 !h-[0.9rem] !w-[0.9rem] rounded-full border-2 border-amber-400 bg-amber-500" />
       <Card
         className={cn(
           'group relative w-96 overflow-hidden rounded-xl border bg-white shadow-md transition-all',
@@ -686,12 +671,9 @@ function CondNode({ data, selected }) {
                 <span className="text-xs">Preview Logic</span>
                 <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
               </Button>
-
-              {expanded && (
-                <div className="max-h-24 overflow-y-auto rounded-lg border border-amber-200 bg-white/80 p-3">
-                  <code className="block whitespace-pre-wrap font-mono text-xs text-amber-800">{conditionPreview}</code>
-                </div>
-              )}
+              <div className="max-h-24 overflow-y-auto rounded-lg border border-amber-200 bg-white/80 p-3">
+                <code className="block whitespace-pre-wrap font-mono text-xs text-amber-800">{conditionPreview}</code>
+              </div>
               <div className="space-y-2">
                 {logic.map((l, i) => (
                   <div key={i} className="rounded-lg border border-amber-200 bg-white/70 p-2 shadow-sm">
@@ -796,6 +778,7 @@ function TriggerNode({ data, selected }) {
 
   const handleAddKeyword = () => {
     const keyword = keywordInput.trim();
+    console.log('Adding keyword:', keyword);
     if (!keyword) return;
 
     const updatedKeywords = Array.from(new Set([...existingKeywords, keyword]));
@@ -841,7 +824,13 @@ function TriggerNode({ data, selected }) {
                 onKeyPress={(e) => e.key === 'Enter' && handleAddKeyword()}
               />
 
-              <Button size="sm" variant="outline" className="bg-blue-500 px-3 py-2 text-xs text-white" onClick={handleAddKeyword}>
+              <Button
+                disabled={!keywordInput.trim()}
+                size="sm"
+                variant="outline"
+                className="bg-blue-500 px-3 py-2 text-xs text-white"
+                onClick={handleAddKeyword}
+              >
                 Add
               </Button>
             </div>
@@ -969,7 +958,6 @@ function InteractiveNode({ data, selected }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Choose Layout</SelectItem>
                 <SelectItem value="button">Buttons</SelectItem>
                 <SelectItem value="list">List Menu</SelectItem>
               </SelectContent>
@@ -1104,20 +1092,14 @@ function InteractiveNode({ data, selected }) {
           {m.layout === 'button' && (
             <div className="space-y-4 rounded-xl border-2 border-gray-200 bg-white p-5">
               <div className="mb-4 flex items-center justify-between">
-                <h4 className="flex items-center gap-2 font-bold text-gray-800">
-                  <div className="h-3 w-3 rounded-full bg-blue-600" />
-                  Quick Reply Buttons
-                </h4>
+                <h4 className="flex items-center gap-2 font-bold text-gray-800">Quick Reply Buttons</h4>
                 <Button size="sm" onClick={addButton} disabled={(m.buttons || []).length >= 3} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="mr-1 h-4 w-4" /> Add Button
                 </Button>
               </div>
 
               {(m.buttons || []).map((btn, i) => (
-                <div
-                  key={btn.id}
-                  className="relative rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 pr-16 transition-all hover:border-blue-400"
-                >
+                <div key={btn.id} className="relative rounded-xl pr-16 transition-all">
                   <Handle
                     type="source"
                     position={Position.Right}
@@ -1129,23 +1111,7 @@ function InteractiveNode({ data, selected }) {
                   <div className="space-y-3">
                     {/* Button Type Selector */}
                     <div className="flex items-center gap-3">
-                      <Select
-                        value={btn.type}
-                        onValueChange={(type) =>
-                          updateButton(i, {
-                            type,
-                            ...(type === 'reply' ? { url: '' } : {}),
-                          })
-                        }
-                      >
-                        <SelectTrigger className="h-9 w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="reply">Reply Button</SelectItem>
-                          <SelectItem value="url">URL Button</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <p className="rounded-md bg-indigo-600/10 px-2 py-1 text-xs font-medium text-indigo-700">Reply Button</p>
 
                       <Button size="icon" variant="ghost" onClick={() => removeButton(i)} className="text-red-600 hover:bg-red-100">
                         <X className="h-5 w-5" />
@@ -1159,16 +1125,6 @@ function InteractiveNode({ data, selected }) {
                       onChange={(e) => updateButton(i, { title: e.target.value })}
                       className="font-medium"
                     />
-
-                    {/* URL Field - Only for URL buttons */}
-                    {btn.type === 'url' && (
-                      <Input
-                        placeholder="https://yoursite.com/offer"
-                        value={btn.url || ''}
-                        onChange={(e) => updateButton(i, { url: e.target.value })}
-                        className="font-mono text-sm text-blue-600"
-                      />
-                    )}
                   </div>
                 </div>
               ))}
@@ -1408,7 +1364,7 @@ function InteractiveListNode({ data, selected }) {
       meta: {
         ...m,
         list: { ...m.list, sections: updatedSections },
-        routes: { ...(m.routes || {}), [newRowId]: null },
+        routes: { ...(m.routes || {}), [newRowId]: '' },
       },
     });
 
@@ -1584,7 +1540,7 @@ function makeNode({ id, type, position, patch, updateGlobalVariables, remove, va
       defaultMeta = {
         layout: 'button',
         header: { type: 'none', mediaUrl: '', useUpload: false },
-        bodyText: 'Write message here...',
+        bodyText: '',
         footerText: '',
         buttons: [{ id: `btn_${Math.random().toString(36).slice(2, 9)}`, type: 'reply', title: 'Option 1' }],
         list: { sections: [] },
@@ -1607,7 +1563,7 @@ function makeNode({ id, type, position, patch, updateGlobalVariables, remove, va
       defaultMeta = {
         spreadsheetId: '',
         sheetName: 'Sheet1',
-        cells: [{ key: 'name', value: '@userName' }], // default mapping
+        cells: [{ key: 'name', value: '@userName' }],
       };
       break;
   }
@@ -1634,10 +1590,8 @@ function buildFinalFromGraph(nodes, edges) {
   const globalVars = new Set();
   nodes.forEach((n) => {
     const m = metaById[n.id] || {};
-    if (n.type === NodeTypes.ASK || n.type === NodeTypes.INTERACTIVE) {
-      const varName = (m.variable || '').trim();
-      if (varName) globalVars.add(varName);
-    }
+    const varName = (m.variable || '').trim();
+    if (varName) globalVars.add(varName);
   });
   const variables = Array.from(globalVars);
 
@@ -1819,6 +1773,9 @@ function EditorShell() {
   const reactFlowWrapper = useRef(null);
   const { screenToFlowPosition } = useReactFlow();
   const setOpenBot = useWhatsapp((s) => s.setOpenBot);
+  const { search } = useLocation();
+  const searchParams = new URLSearchParams(search);
+  const chatbotId = searchParams.get('chatbotId');
   const handleOpenChatbot = useCallback(() => {
     setOpenBot(false);
   }, [setOpenBot]);
@@ -1829,13 +1786,12 @@ function EditorShell() {
       return merged;
     });
 
-    // Force update ALL nodes' data.variables for immediate dropdown refresh
     setRfNodes((nds) =>
       nds.map((n) => ({
         ...n,
         data: {
           ...n.data,
-          variables: Array.from(new Set([...(n.data.variables || []), ...newVars])),
+          variables: newVars,
         },
       })),
     );
@@ -1847,21 +1803,19 @@ function EditorShell() {
   const onConnect = useCallback((params) => {
     const edge = { ...params, id: `e-${nid()}`, data: {} };
 
-    // Detect condition kinds (existing)
     if (params.sourceHandle === 'true') edge.data.kind = 'cond:true';
     else if (params.sourceHandle === 'false') edge.data.kind = 'cond:false';
     else if (params.sourceHandle === 'start') edge.data.kind = 'trigger:start';
 
     setRfEdges((eds) => addEdge(edge, eds));
 
-    // 🧠 NEW: Update routes for InteractiveButton nodes
     setRfNodes((nds) =>
       nds.map((n) => {
         if (n.id === params.source) {
           const m = n.data.meta || {};
           const routes = { ...(m.routes || {}) };
           if (params.sourceHandle) {
-            routes[params.sourceHandle] = params.target; // map button handle to target node
+            routes[params.sourceHandle] = params.target;
           }
           return {
             ...n,
@@ -1904,7 +1858,7 @@ function EditorShell() {
       });
       addNode(type, position);
     },
-    [screenToFlowPosition, variables],
+    [screenToFlowPosition, addNode],
   );
 
   const onDragOver = useCallback((event) => {
@@ -1949,8 +1903,11 @@ function EditorShell() {
   }
 
   const handleSaveFlow = () => {
-    console.log('Final chatbot object to save:', finalObject);
-    createChatbot(finalObject);
+    if (chatbotId) {
+      // updateChatbot(chatbot._id, finalObject);
+    } else {
+      createChatbot(finalObject);
+    }
   };
 
   const nodePaletteItems = [
@@ -1958,49 +1915,49 @@ function EditorShell() {
       label: 'Send Message',
       type: NodeTypes.SEND,
       icon: <MessageSquare className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-emerald-500 to-teal-600',
+      cardColor: 'bg-gradient-to-br from-emerald-200 to-teal-300 !text-black', // softer
     },
     {
       label: 'Ask a Question',
       type: NodeTypes.ASK,
       icon: <HelpCircle className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-sky-500 to-blue-600',
+      cardColor: 'bg-gradient-to-br from-sky-200 to-blue-300 !text-black', // softer
     },
     {
       label: 'Set a Condition',
       type: NodeTypes.COND,
       icon: <GitBranch className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-amber-500 to-orange-600',
+      cardColor: 'bg-gradient-to-br from-amber-200 to-orange-300 !text-black', // softer
     },
     {
       label: 'Trigger Keyword',
       type: NodeTypes.TRIGGER,
       icon: <Keyboard className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-rose-500 to-pink-600',
+      cardColor: 'bg-gradient-to-br from-rose-200 to-pink-300 !text-black', // softer
     },
     {
       label: 'Interactive Reply',
       type: NodeTypes.INTERACTIVE,
       icon: <Share2 className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-indigo-500 to-purple-600',
+      cardColor: 'bg-gradient-to-br from-indigo-200 to-purple-300 !text-black', // softer
     },
     {
       label: 'Buttons',
       type: NodeTypes.INTERACTIVE_BUTTON,
       icon: <SquareCheck className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-fuchsia-500 to-violet-600',
+      cardColor: 'bg-gradient-to-br from-fuchsia-200 to-violet-300 !text-black', // softer
     },
     {
       label: 'Lists',
       type: NodeTypes.INTERACTIVE_LIST,
       icon: <ListOrdered className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-cyan-500 to-teal-600',
+      cardColor: 'bg-gradient-to-br from-cyan-200 to-teal-300 !text-black', // softer
     },
     {
       label: 'Spreadsheet Action',
       type: NodeTypes.SHEET,
       icon: <FileSpreadsheet className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-lime-500 to-green-600',
+      cardColor: 'bg-gradient-to-br from-lime-200 to-green-300 !text-black', // softer
     },
   ];
 

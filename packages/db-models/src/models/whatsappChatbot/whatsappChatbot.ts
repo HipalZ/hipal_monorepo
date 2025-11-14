@@ -67,7 +67,7 @@ const NodeSchema = new Schema<NodeType>({
     enum: [
       "send_message",
       "ask_question",
-      "interactive_message",
+      "interactive",
       "set_condition",
       "trigger",
       "interactive_button_message",
