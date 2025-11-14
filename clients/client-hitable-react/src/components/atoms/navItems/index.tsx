@@ -1,27 +1,17 @@
-import { useLiteStore } from "@/components/store/useLiteStore";
-import {
-  NavItemTypesEnum,
-  type NavItemTypes,
-} from "@/components/types/hiClientzData";
-import { createNavItems } from "@/components/utils/helpers";
-import { memo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import useBusinessData from "@/components/store/useBusinessData";
+import useBusinessData from '@/components/store/useBusinessData';
+import { useLiteStore } from '@/components/store/useLiteStore';
+import { NavItemTypesEnum, type NavItemTypes } from '@/components/types/hiClientzData';
+import { createNavItems } from '@/components/utils/helpers';
+import useNavItems from '@/hooks/useNavItems';
+import { AnimatePresence, motion } from 'framer-motion';
+import { memo, useCallback } from 'react';
 
 const MemoNavItems = () => {
-  const {
-    selectedNavItem,
-    setSelectedNavItem,
-    onlineCount,
-    offlineCount,
-    cartCount,
-  } = useLiteStore((s) => ({
-    selectedNavItem: s.selectedNavItem,
-    onlineCount: s.onlineCount,
-    offlineCount: s.offlineCount,
-    cartCount: s.cartCount,
-    setSelectedNavItem: s.setSelectedNavItem,
-  }));
+  const selectedNavItem = useLiteStore((s) => s.selectedNavItem);
+  const setSelectedNavItem = useLiteStore((s) => s.setSelectedNavItem);
+  const onlineCount = useLiteStore((s) => s.onlineCount);
+  const offlineCount = useLiteStore((s) => s.offlineCount);
+  const cartCount = useLiteStore((s) => s.cartCount);
 
   const outletInfo = useBusinessData((s) => s.outletInfo);
 
@@ -45,7 +35,7 @@ const MemoNavItems = () => {
     [offlineCount, onlineCount, cartCount],
   );
 
-  const navItems = createNavItems(outletInfo?.isPosEnabled);
+  const navItems = useNavItems(outletInfo?.isPosEnabled);
 
   return (
     <>
@@ -54,36 +44,25 @@ const MemoNavItems = () => {
           <motion.button
             key={type}
             onClick={() => handleNavItemClick(type)}
-            className={`
-              flex w-full max-w-[24rem] items-center justify-center px-4 py-2 rounded-full
-              ${
-                selectedNavItem === type
-                  ? "bg-purple-100 text-purple-600"
-                  : "text-gray-500 hover:bg-gray-200"
-              }
-              relative
-            `}
+            className={`flex w-full max-w-[24rem] items-center justify-center rounded-full px-4 py-2 ${
+              selectedNavItem === type ? 'bg-purple-100 text-purple-600' : 'text-gray-500 hover:bg-gray-200'
+            } relative`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
           >
             <Icon
               size={24}
-              className={`
-                ${
-                  selectedNavItem === type
-                    ? "text-purple-600"
-                    : "text-gray-500 group-hover:text-gray-700"
-                }
-                transition-colors duration-300
-              `}
+              className={` ${
+                selectedNavItem === type ? 'text-purple-600' : 'text-gray-500 group-hover:text-gray-700'
+              } transition-colors duration-300`}
             />
             <AnimatePresence>
               {selectedNavItem === type && (
                 <motion.span
-                  className="ml-2 overflow-hidden font-medium whitespace-nowrap"
+                  className="ml-2 overflow-hidden whitespace-nowrap font-medium"
                   initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: "auto" }}
+                  animate={{ opacity: 1, width: 'auto' }}
                   exit={{ opacity: 0, width: 0 }}
                   transition={{ duration: 0.3 }}
                 >
@@ -94,10 +73,10 @@ const MemoNavItems = () => {
 
             {handleCount(type) !== null && (
               <motion.span
-                className="absolute z-50 px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full -top-2 right-1"
+                className="absolute -top-2 right-1 z-50 rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
               >
                 {handleCount(type)}
               </motion.span>

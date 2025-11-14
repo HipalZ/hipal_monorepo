@@ -89,6 +89,58 @@ const kotRouter = new Hono()
     },
   )
   .post(
+    "/tables_kot",
+    zValidator(
+      "json",
+      z.object({
+        tableIds: z.array(z.string().min(1)).nonempty(),
+      }),
+    ),
+    async (c) => {
+      try {
+        const { tableIds } = await c.req.json();
+
+        // pushToken(c)
+        const tables = await Table.find({ _id: { $in: tableIds } });
+        if (!tables.length) {
+          return c.json(
+            {
+              message: "Tables not found",
+              err: true,
+              data: null,
+            },
+            404,
+          );
+        }
+
+        const tableNames = tables.map((t) => t.name);
+        const businessIds = [
+          ...new Set(tables.map((t) => t.businessId.toString())),
+        ];
+
+        const kots = await KotOrder.find({
+          tableName: { $in: tableNames },
+          businessId: { $in: businessIds },
+          settled: false,
+          accepted: true,
+        })
+          .populate({ path: "businessId", select: "name" })
+          .populate({ path: "transferedBy", select: "name phone" })
+          .populate({ path: "editedBy", select: "name phone" });
+        return c.json(
+          { message: "KOTs fetched successfully", err: false, data: kots },
+          200,
+        );
+      } catch (err) {
+        console.error("Error fetching KOTs:", err);
+        return c.json(
+          { message: "Internal server error", err: true, data: null },
+          500,
+        );
+      }
+    },
+  )
+  .post(
     "/table_user",
     zValidator(
       "json",

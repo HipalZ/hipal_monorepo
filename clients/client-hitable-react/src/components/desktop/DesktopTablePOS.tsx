@@ -4,6 +4,7 @@ import { useGetAllOrders } from '@/components/hooks/useOrder';
 import { useCartStore } from '@/components/store/useCartStore';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import { useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,6 +32,9 @@ const DesktopTablePOS = () => {
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const cart = useCartStore((s) => s.cart);
   const { data: orders, isLoading: ordersLoading, refetch: refetchOrders } = useGetAllOrders();
+
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canViewBill = hasPermission('bill');
 
   useEffect(() => {
     if (cart.length > 0) {
@@ -95,7 +99,7 @@ const DesktopTablePOS = () => {
                             <span className="bg-primary text-primary-foreground ml-1 rounded-full px-2 py-0.5 text-xs">{orders.length}</span>
                           )}
                         </TabsTrigger>
-                        {orders && orders.length > 0 && (
+                        {orders && orders.length > 0 && canViewBill && (
                           <TabsTrigger value="bill" className="w-full gap-2">
                             <Receipt className="h-4 w-4" />
                             Bill

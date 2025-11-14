@@ -24,11 +24,8 @@ const HeaderAlerts = ({ hide, hideBack }: { hide?: boolean; hideBack?: boolean }
   }));
   const navigate = useNavigate();
   const outletInfo = useBusinessData((s) => s.outletInfo);
-  const { setIsFilterOpen } = useZonesAndTablesStore();
-  const { selectedNavItem, loading } = useLiteStore((s) => ({
-    selectedNavItem: s.selectedNavItem,
-    loading: s.loading,
-  }));
+  const selectedNavItem = useLiteStore((s) => s.selectedNavItem);
+  const loading = useLiteStore((s) => s.loading);
 
   // hooks provide live fetching status + refetch fns
   const { isFetching: onlineFetching, isLoading: onlineLoading, refetchOnlineAlerts } = useOnlineAlerts();

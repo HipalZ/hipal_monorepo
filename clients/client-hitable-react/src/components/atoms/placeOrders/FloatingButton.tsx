@@ -1,7 +1,8 @@
 import { useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BookmarkX, CookingPot, Plus, UserCheck, Users, X } from 'lucide-react';
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { MdTableBar } from 'react-icons/md';
 
 interface Action {
@@ -33,6 +34,12 @@ const MemoFloatingTableActions = ({
   const setTransferTable = useOrderStore((s) => s.setTransferTable);
   const setTransferModal = useOrderStore((s) => s.setTransferModal);
 
+  // ---- Permissions ----
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canAddPax = hasPermission('add_pax');
+  const canTransfer = hasPermission('transfer_item_or_table');
+  const canDeleteKot = hasPermission('delete_kot');
+
   // helpers
   const toggleModalType = useCallback(
     (type: 'guest' | 'customer') => {
@@ -51,47 +58,72 @@ const MemoFloatingTableActions = ({
     [setTransferTable, setTransferModal],
   );
 
-  /** Primary built-in actions (HiPalz defaults) */
-  const primaryActions: Action[] = [
-    {
-      label: 'Packs',
-      icon: <Users className="h-5 w-5" />,
-      onClick: () => toggleModalType('guest'),
-      color: 'bg-purple-500 text-white',
-    },
-    {
+  /** Primary built-in actions – permission controlled */
+  const primaryActions: Action[] = useMemo(() => {
+    const actions: Action[] = [];
+
+    // 🟪 Packs — add_pax
+    if (canAddPax) {
+      actions.push({
+        label: 'Packs',
+        icon: <Users className="h-5 w-5" />,
+        onClick: () => toggleModalType('guest'),
+        color: 'bg-purple-500 text-white',
+      });
+    }
+
+    // 🟩 Customers — always visible
+    actions.push({
       label: 'Customers',
       icon: <UserCheck className="h-5 w-5" />,
       onClick: () => toggleModalType('customer'),
       color: 'bg-purple-500 text-white',
-    },
-    {
-      label: 'Delete KOT',
-      icon: <BookmarkX className="h-5 w-5" />,
-      onClick: () => handleTransferTable('DELETE'),
-      color: 'bg-purple-500 text-white',
-    },
-    {
-      label: 'Transfer Item',
-      icon: <CookingPot className="h-5 w-5" />,
-      onClick: () => handleTransferTable('ITEM'),
-      color: 'bg-purple-500 text-white',
-    },
-    {
-      label: 'Transfer Table',
-      icon: <MdTableBar className="h-5 w-5" />,
-      onClick: () => handleTransferTable('TABLE'),
-      color: 'bg-purple-500 text-white',
-    },
-  ];
+    });
 
-  /** Decide what to render */
-  const actionsToRender: Action[] = [...(showPrimary ? primaryActions : []), ...(showSecondary ? secondaryActions : [])];
+    // 🟥 Delete KOT — delete_kot permission
+    if (canDeleteKot) {
+      actions.push({
+        label: 'Delete KOT',
+        icon: <BookmarkX className="h-5 w-5" />,
+        onClick: () => handleTransferTable('DELETE'),
+        color: 'bg-purple-500 text-white',
+      });
+    }
+
+    // 🟧 Transfer Item / Table — transfer_item_or_table permission
+    if (canTransfer) {
+      actions.push(
+        {
+          label: 'Transfer Item',
+          icon: <CookingPot className="h-5 w-5" />,
+          onClick: () => handleTransferTable('ITEM'),
+          color: 'bg-purple-500 text-white',
+        },
+        {
+          label: 'Transfer Table',
+          icon: <MdTableBar className="h-5 w-5" />,
+          onClick: () => handleTransferTable('TABLE'),
+          color: 'bg-purple-500 text-white',
+        },
+      );
+    }
+
+    return actions;
+  }, [canAddPax, canDeleteKot, canTransfer, toggleModalType, handleTransferTable]);
+
+  /** Final Actions List */
+  const actionsToRender: Action[] = useMemo(
+    () => [...(showPrimary ? primaryActions : []), ...(showSecondary ? secondaryActions : [])],
+    [primaryActions, secondaryActions, showPrimary, showSecondary],
+  );
+
+  // ❌ If no actions after permission filters → hide plus icon also
+  if (actionsToRender.length === 0) return null;
 
   return (
     <div className={`fixed ${position} z-[999] flex flex-col items-end space-y-3 lg:hidden`}>
       <AnimatePresence>
-        {open && actionsToRender.length > 0 && (
+        {open && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -123,7 +155,7 @@ const MemoFloatingTableActions = ({
       {/* Floating toggle button */}
       <motion.button
         whileTap={{ scale: 0.9 }}
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((prev) => !prev)}
         className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-all duration-300 ${
           open ? 'bg-purple-500' : mainColor
         }`}

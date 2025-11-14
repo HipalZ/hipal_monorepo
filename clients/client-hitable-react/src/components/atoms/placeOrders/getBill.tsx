@@ -3,6 +3,7 @@ import { useGetBill } from '@/components/hooks/useBill';
 import { useHomeNavigation } from '@/components/hooks/useNavigateHome.ts';
 import useBusinessData from '@/components/store/useBusinessData';
 import { useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions.ts';
 import type { IBillData } from '@/components/types/hiClientzData.ts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -64,6 +65,9 @@ const MemoGetBill = () => {
   const setIsExpanded = useOrderStore((s) => s.setIsExpanded);
   const selectedBill = useOrderStore((s) => s.selectedBill);
   const setSelectedBill = useOrderStore((s) => s.setSelectedBill);
+
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canSettle = hasPermission('normal_settle');
 
   const closeOrderModalHandler = useCallback(() => {
     setOpenOrderModal(false);
@@ -298,43 +302,45 @@ const MemoGetBill = () => {
         </LazyWrapper>
       )}
 
-      <CommonBottomButton
-        maxWidth="30rem"
-        backgroundColor={screenSize === 'xs' ? 'white' : 'white'}
-        fixed={true}
-        buttons={[
-          {
-            text: ' ',
-            onClick: goHome,
-            icon: <HomeIcon />,
-            className: 'rounded-md lg:hidden !w-[8rem] pl-2 ',
-          },
-          {
-            text: '',
-            isBackButton: true,
-            onClick: isSplitBill && selectedBill ? handleBackToGrid : closeOrderModalHandler,
-            className: 'lg:hidden rounded-md pl-3 md:pl-4 !w-[8rem] ml-4',
-          },
-          {
-            text: 'Settle',
-            onClick: openNormalSettle,
-            className: 'rounded-md !bg-purple-600 ',
-          },
-          {
-            text: 'Hi Settle',
-            onClick: () => {
-              if (currentBill.isPaid) {
-                return toast.error('This bill is already settled.');
-              }
-              mutate();
+      {canSettle && (
+        <CommonBottomButton
+          maxWidth="30rem"
+          backgroundColor={screenSize === 'xs' ? 'white' : 'white'}
+          fixed={true}
+          buttons={[
+            {
+              text: ' ',
+              onClick: goHome,
+              icon: <HomeIcon />,
+              className: 'rounded-md lg:hidden !w-[8rem] pl-2 ',
             },
-            disable: isPending,
-            isLoading: isPending,
-            highlight: true,
-            className: 'rounded-md',
-          },
-        ]}
-      />
+            {
+              text: '',
+              isBackButton: true,
+              onClick: isSplitBill && selectedBill ? handleBackToGrid : closeOrderModalHandler,
+              className: 'lg:hidden rounded-md pl-3 md:pl-4 !w-[8rem] ml-4',
+            },
+            {
+              text: 'Settle',
+              onClick: openNormalSettle,
+              className: 'rounded-md !bg-purple-600 ',
+            },
+            {
+              text: 'Hi Settle',
+              onClick: () => {
+                if (currentBill.isPaid) {
+                  return toast.error('This bill is already settled.');
+                }
+                mutate();
+              },
+              disable: isPending,
+              isLoading: isPending,
+              highlight: true,
+              className: 'rounded-md',
+            },
+          ]}
+        />
+      )}
     </>
   );
 };

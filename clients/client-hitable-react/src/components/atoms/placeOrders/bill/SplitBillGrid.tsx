@@ -2,6 +2,7 @@ import { useReprintBill } from '@/components/hooks/api/useSettle.ts';
 import { useClubBill } from '@/components/hooks/useBill.ts';
 import { useHomeNavigation } from '@/components/hooks/useNavigateHome.ts';
 import { useOrderStore } from '@/components/store/useOrderData.ts';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +25,9 @@ const SplitBillGrid = memo<SplitBillGridProps>(({ billData, onSelectBill, onBack
 
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedVariants, setSelectedVariants] = useState<string[]>([]);
+
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canPrintBill = hasPermission('print_bill');
 
   const handleEnterSelect = () => {
     setSelectedVariants([]);
@@ -72,58 +76,59 @@ const SplitBillGrid = memo<SplitBillGridProps>(({ billData, onSelectBill, onBack
   // Hide Merge Bill if any variant is already paid
   const hasPaid = useMemo(() => billData.some((bill) => bill.isPaid), [billData]);
 
-  const bottomButtons = isSelecting
-    ? [
-        {
-          text: 'Back',
-          isBackButton: true,
-          onClick: handleExitSelect,
-          className: 'rounded-md !w-[4rem]',
-        },
-        {
-          text: 'Print Selected',
-          onClick: handlePrintSelected,
-          isLoading: isPrinting,
-          disable: isPrinting || selectedVariants.length === 0,
-          className: 'rounded-md ml-4',
-        },
-        {
-          text: 'Print All',
-          onClick: handlePrintAll,
-          isLoading: isPrinting,
-          disable: isPrinting,
-          className: 'rounded-md ml-4',
-        },
-      ]
-    : [
-        {
-          text: '',
-          onClick: goHome,
-          icon: <HomeIcon />,
-          className: 'rounded-md !w-[8rem] pl-2',
-        },
-        {
-          text: 'Back',
-          isBackButton: true,
-          onClick: onBack,
-          className: 'rounded-md !w-[8rem] pl-3 ml-4',
-        },
-        !hasPaid && {
-          text: 'Merge Bill',
-          onClick: handleClub,
-          isLoading: isClubbing,
-          disable: isClubbing,
-          className: 'rounded-md w-full ml-4 !bg-purple-600',
-        },
-        {
-          text: 'Print Bills',
-          onClick: handleEnterSelect,
-          isLoading: isPrinting,
-          disable: isPrinting,
-          className: 'rounded-md ml-4',
-        },
-        // Conditionally include Merge Bill
-      ].filter(Boolean as any);
+  const bottomButtons =
+    isSelecting && canPrintBill
+      ? [
+          {
+            text: '',
+            isBackButton: true,
+            onClick: handleExitSelect,
+            className: 'rounded-md !w-[4rem] px-3',
+          },
+          {
+            text: 'Print Selected',
+            onClick: handlePrintSelected,
+            isLoading: isPrinting,
+            disable: isPrinting || selectedVariants.length === 0,
+            className: 'rounded-md ml-4',
+          },
+          {
+            text: 'Print All',
+            onClick: handlePrintAll,
+            isLoading: isPrinting,
+            disable: isPrinting,
+            className: 'rounded-md ml-4',
+          },
+        ]
+      : [
+          {
+            text: '',
+            onClick: goHome,
+            icon: <HomeIcon />,
+            className: 'rounded-md !w-[8rem] pl-2',
+          },
+          {
+            text: 'Back',
+            isBackButton: true,
+            onClick: onBack,
+            className: 'rounded-md !w-[8rem] pl-3 ml-4',
+          },
+          !hasPaid && {
+            text: 'Merge Bill',
+            onClick: handleClub,
+            isLoading: isClubbing,
+            disable: isClubbing,
+            className: 'rounded-md w-full ml-4 !bg-purple-600',
+          },
+          canPrintBill && {
+            text: 'Print Bills',
+            onClick: handleEnterSelect,
+            isLoading: isPrinting,
+            disable: isPrinting,
+            className: 'rounded-md ml-4',
+          },
+          // Conditionally include Merge Bill
+        ].filter(Boolean as any);
 
   return (
     <>
@@ -272,12 +277,7 @@ const SplitBillGrid = memo<SplitBillGridProps>(({ billData, onSelectBill, onBack
       </Card>
 
       {/* Bottom action buttons */}
-      <CommonBottomButton
-        maxWidth={screenSize === 'xs' ? '30rem' : '48rem'}
-        backgroundColor={screenSize === 'xs' ? '' : 'white'}
-        fixed={true}
-        buttons={bottomButtons}
-      />
+      <CommonBottomButton maxWidth="30rem" backgroundColor={screenSize === 'xs' ? '' : 'white'} fixed={true} buttons={bottomButtons} />
     </>
   );
 });

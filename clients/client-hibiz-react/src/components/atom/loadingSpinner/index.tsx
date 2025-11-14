@@ -1,12 +1,12 @@
-import { memo } from "react";
+import { memo } from 'react';
 
 function MemoLoadingSpinner() {
   return (
     <output className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 opacity-50">
-      <div className="flex flex-col text-center bg-transparent">
+      <div className="flex flex-col bg-transparent text-center">
         <svg
           aria-hidden="true"
-          className="w-12 h-12 text-gray-300 animate-spin fill-blue-500 dark:text-gray-500"
+          className="h-12 w-12 animate-spin fill-blue-500 text-gray-300 dark:text-gray-500"
           viewBox="0 0 100 101"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"

@@ -1,8 +1,12 @@
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
+import useBusinessData from '@/components/store/useBusinessData';
 import { useFilters } from '@/components/store/useFilters';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { useZonesAndTablesStore } from '@/components/store/useZonesAndTable';
 import { NavItemTypesEnum } from '@/components/types/hiClientzData';
+import { type StaffPermissionsMap, useStaffPermissions } from '@/hooks/useCheckPermission';
 import { useScreenSize } from '@/hooks/useScreenSize';
 import { Suspense, lazy, memo, useCallback, useState } from 'react';
 
@@ -20,19 +24,20 @@ const HistoryMemo = lazy(() => import('@/components/liteAlerts/history'));
 const CommonBottomButton = lazy(() => import('@/components/atoms/bottomButton'));
 const EmptyTableList = lazy(() => import('@/components/tables'));
 const CallCaptanMainComp = lazy(() => import('@/components/liteAlerts/callWaiter'));
-
 const AlertsMemo = () => {
   const { selectedNavItem } = useLiteStore();
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
-  const { setIsFilterOpen, isFilterOpen } = useZonesAndTablesStore((s) => ({
-    setIsFilterOpen: s.setIsFilterOpen,
-    isFilterOpen: s.isFilterOpen,
-  }));
+  const setIsFilterOpen = useZonesAndTablesStore((s) => s.setIsFilterOpen);
+  const isFilterOpen = useZonesAndTablesStore((s) => s.isFilterOpen);
+
+  const captainData = useHiClientZ((s) => s.captainData);
+  const businessId = useBusinessData((s) => s?.outletInfo?.businessId);
+
+  const { isLoading: isStaffLoading } = useStaffPermissions(captainData?._id, businessId);
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
 
   const [openTable, setOpenTable] = useState<boolean>(false);
-  const { payFilter } = useFilters((s) => ({
-    payFilter: s.payFilter,
-  }));
+  const payFilter = useFilters((s) => s.payFilter);
   const screenSize = useScreenSize();
 
   const toggleEmptyTableModal = useCallback(() => {
@@ -75,7 +80,7 @@ const AlertsMemo = () => {
             <HistoryMemo />
           </Suspense>
         )}
-        {selectedNavItem === NavItemTypesEnum.SALES && (
+        {selectedNavItem === NavItemTypesEnum.SALES && hasPermission('sale_summary') && (
           <Suspense fallback={<SpinnerMemo />}>
             <SalesLiteMemo />
           </Suspense>
@@ -97,14 +102,14 @@ const AlertsMemo = () => {
         {openTable && (
           <Suspense fallback={<SpinnerMemo />}>
             <BottomPopUp
-              width="w-full lg:w-[90dvw]"
-              height="h-[90dvh] lg:h-[90dvh]"
+              width="w-full max-w-[64rem]"
+              height="h-[100dvh] lg:h-[90dvh]"
               onClose={toggleEmptyTableModal}
               show={openTable}
               rightTopBack
               hide
             >
-              <EmptyTableList />
+              <EmptyTableList onClose={toggleEmptyTableModal} />
             </BottomPopUp>
           </Suspense>
         )}

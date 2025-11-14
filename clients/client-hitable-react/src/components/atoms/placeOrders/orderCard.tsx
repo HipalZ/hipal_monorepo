@@ -1,21 +1,22 @@
 import { useReprintKot } from '@/components/hooks/usePrint.ts';
+import { useKotItemStatus, useKotPriority } from '@/components/hooks/usePriority';
+import type { ICartItem } from '@/components/store/useCartStore';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
+import { useKotSelectionStore } from '@/components/store/usePriorityStore';
 import type { OrderData } from '@/components/types/hiClientzData';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button.tsx';
 import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { GripVertical } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo } from 'react';
 import { BiSync } from 'react-icons/bi';
 import { MdPerson, MdRestaurantMenu } from 'react-icons/md';
 import { useParams } from 'react-router-dom';
-import { cn } from '../../../lib/utils';
-import { useKotItemStatus, useKotPriority } from '../../hooks/usePriority';
-import type { ICartItem } from '../../store/useCartStore';
-import { useKotSelectionStore } from '../../store/usePriorityStore';
 
 interface CompactOrderCardProps {
   order: OrderData;
@@ -41,6 +42,8 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
   const enableSelectionMode = useKotSelectionStore((s) => s.enableSelectionMode);
   const disableSelectionMode = useKotSelectionStore((s) => s.disableSelectionMode);
   const isSelected = useKotSelectionStore((s) => s.isSelected);
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canReprintKot = hasPermission('re_print_kot');
 
   const filteredCartItems = useMemo(() => order?.cart || [], [order?.cart]);
 
@@ -125,18 +128,21 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => mutateAsync(order._id.toString())}
-                  disabled={isPending}
-                  className="flex cursor-pointer items-center gap-2"
-                >
-                  {isPending ? (
-                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  ) : (
-                    <BiSync className="h-4 w-4" />
-                  )}
-                  {isPending ? 'Re-Printing...' : 'Re-Print KOT'}
-                </DropdownMenuItem>
+                {canReprintKot && (
+                  <DropdownMenuItem
+                    onClick={() => mutateAsync(order._id.toString())}
+                    disabled={isPending}
+                    className="flex cursor-pointer items-center gap-2"
+                  >
+                    {isPending ? (
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <BiSync className="h-4 w-4" />
+                    )}
+                    {isPending ? 'Re-Printing...' : 'Re-Print KOT'}
+                  </DropdownMenuItem>
+                )}
+
                 <DropdownMenuItem
                   onClick={() => setPriority({ kotId: order._id.toString() })}
                   disabled={isPrioritizing}

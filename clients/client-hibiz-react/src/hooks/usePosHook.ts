@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
-
+import { useApiErrorHandler } from "./useApiErrorHandler.ts";
 export interface PosConfigData {
   _id: string;
   businessId: string;
@@ -24,31 +24,31 @@ export interface PosConfigData {
 }
 
 export const useGetPosConfig = (businessId: string) => {
-  const fetchPosConfig = useCallback(async (businessId: string) => {
-    try {
-      const response = await apiRpc.pos.fetch_pos_config.$get({
-        query: { businessId },
-      });
+  const { handleEnvelope } = useApiErrorHandler();
 
-      if (!response.ok) {
-        if (response.status === 404) {
+  const fetchPosConfig = useCallback(
+    async (businessId: string) => {
+      try {
+        const response = await apiRpc.pos.fetch_pos_config.$get({
+          query: { businessId },
+        });
+
+        await handleEnvelope(response);
+
+        const res = await response.json();
+
+        if (!res.data || res.err) {
           return null;
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
-      const res = await response.json();
-
-      if (!res.data || res.err) {
+        return res.data as PosConfigData;
+      } catch (e) {
+        console.error(e);
         return null;
       }
-
-      return res.data as PosConfigData;
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
-  }, []);
+    },
+    [handleEnvelope],
+  );
 
   // Query to Fetch POS Config
   const {
@@ -80,21 +80,26 @@ export interface DishPermissionData {
 
 export const useDishPermission = (isBoolean: boolean) => {
   const businessId = useParams<{ businessId: string }>().businessId;
+  const { handleEnvelope } = useApiErrorHandler();
+  const dishPermission = useCallback(
+    async (businessId: string) => {
+      try {
+        const response =
+          await apiRpc.pos_configuration.dish.fetch_dish_pos_config.$get({
+            query: { businessId },
+          });
 
-  const dishPermission = useCallback(async (businessId: string) => {
-    try {
-      const response =
-        await apiRpc.pos_configuration.dish.fetch_dish_pos_config.$get({
-          query: { businessId },
-        });
+        await handleEnvelope(response);
 
-      const res = await response.json();
-      return res.data as DishPermissionData;
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
-  }, []);
+        const res = await response.json();
+        return res.data as DishPermissionData;
+      } catch (e) {
+        console.error(e);
+        return null;
+      }
+    },
+    [handleEnvelope],
+  );
 
   const { data: posPermission, isLoading: permissionLoading } = useQuery({
     queryKey: ["dishPermission", businessId],
@@ -111,6 +116,7 @@ export const useDishPermission = (isBoolean: boolean) => {
 export const usePosSync = () => {
   const businessId = useParams<{ businessId: string }>().businessId;
   const { setError, setOpenErrorModal } = useError();
+  const { handleEnvelope } = useApiErrorHandler();
   const { isPending, mutate } = useMutation({
     mutationFn: async (restId: string) => {
       const response = await apiRpc.pos.sync_menu.$post({
@@ -119,6 +125,7 @@ export const usePosSync = () => {
           restId: restId || "",
         },
       });
+      await handleEnvelope(response);
       return response;
     },
     onSuccess: async (data) => {
@@ -147,6 +154,7 @@ export const usePosSync = () => {
 export const usePosSyncWithMenu = () => {
   const businessId = useParams<{ businessId: string }>().businessId;
   const { setError, setOpenErrorModal } = useError();
+  const { handleEnvelope } = useApiErrorHandler();
   const { isPending, mutate } = useMutation({
     mutationFn: async (payload: { restId: string; tableName?: string }) => {
       const response = await apiRpc.sync_pos_menu_config.sync.$post({
@@ -156,6 +164,7 @@ export const usePosSyncWithMenu = () => {
           tableName: payload.tableName || "1",
         },
       });
+      await handleEnvelope(response);
       return response;
     },
     onSuccess: async (data) => {

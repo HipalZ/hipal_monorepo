@@ -4,6 +4,7 @@ import { useCart } from '@/components/store/useCart';
 import { type ICartItem, useCartStore } from '@/components/store/useCartStore';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/components/utils/helpers';
@@ -38,6 +39,8 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const [selectedCartItem, setSelectedCartItem] = useState<ICartItem | null>(null);
   const outletInfo = useBusinessData((s) => s.outletInfo);
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const isPlaceOrderAllowed = hasPermission('place_order');
 
   const filteredCart = useMemo(() => {
     return dishId ? cart.filter((cartItem) => cartItem.dish?._id === dishId) : cart;
@@ -243,7 +246,7 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
           fixed={true}
           buttons={[
             {
-              text: 'Back',
+              text: '',
               isBackButton: true,
               onClick: () => setModalType('addItem'),
               className: 'rounded-md pl-3 lg:hidden flex items-center',
@@ -253,7 +256,7 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
             {
               text: 'Place Order',
               onClick: placeOrder,
-              className: 'rounded-full py-6',
+              className: cn('rounded-md shadow-md w-full h-[3rem]', isPlaceOrderAllowed ? '' : 'hidden'),
               disable: filteredCart.length === 0 || isPending,
               isLoading: isPending,
               swipe: true,
