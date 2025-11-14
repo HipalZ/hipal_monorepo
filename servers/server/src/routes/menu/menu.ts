@@ -4,26 +4,16 @@ import {
   BusinessPosConfig,
   Category,
   Dish,
-  Kitchen,
   Menu,
-  MenuTempChnages,
   Table,
-  Tax,
   Zone,
 } from "@hi/db-models";
-import {
-  MenuSchema,
-  UpdateMenuSchema,
-  pushMenuSchema,
-} from "@hi/db-models/src/validators";
+import { MenuSchema, UpdateMenuSchema } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { setCookie } from "hono/cookie";
-import jwt from "jsonwebtoken";
 import mongoose, { type ClientSession } from "mongoose";
 import { z } from "zod";
-import { pushToken } from "../../services/token";
 import { respond } from "../../utils/response";
 
 function arraysEqual<T>(a: T[], b: T[]) {
@@ -211,92 +201,6 @@ async function processCompleteMenu(
   return true;
 }
 
-async function processCompleteMenuWithoutMapping(
-  sourceMenuId: string,
-  menuId: string,
-  session: ClientSession,
-) {
-  const sourceCategories = await Category.find({ menuId: sourceMenuId }).lean();
-  const sourceDishes = await Dish.find({ menuId: sourceMenuId }).lean();
-  const sourceAddOns = await AddOn.find({ menuId: sourceMenuId }).lean();
-  const sourceTaxes = await Tax.find({ menuId: sourceMenuId }).lean();
-  const sourceKitchens = await Kitchen.find({ menuId: sourceMenuId }).lean();
-
-  const newCategories: InstanceType<typeof Category>[] = [];
-  const newDishes: InstanceType<typeof Dish>[] = [];
-  const newAddOns: InstanceType<typeof AddOn>[] = [];
-  const newTaxes: InstanceType<typeof Tax>[] = [];
-  const newKitchens: InstanceType<typeof Kitchen>[] = [];
-
-  for (const category of sourceCategories) {
-    const newCategory = new Category({
-      ...category,
-      _id: new mongoose.Types.ObjectId(),
-      menuId,
-      dishIds: [],
-      subCategoryIds: [],
-      parentCategoryIds: [],
-      baseMenuId: sourceMenuId,
-      baseMenuCategoryId: category._id,
-    });
-    newCategories.push(newCategory);
-  }
-
-  for (const dish of sourceDishes) {
-    const newDish = new Dish({
-      ...dish,
-      _id: new mongoose.Types.ObjectId(),
-      menuId,
-      categoryIds: [],
-      addOnIds: [],
-      baseMenuId: sourceMenuId,
-      baseMenuDishId: dish._id,
-    });
-    newDishes.push(newDish);
-  }
-
-  for (const addOn of sourceAddOns) {
-    const newAddOn = new AddOn({
-      ...addOn,
-      _id: new mongoose.Types.ObjectId(),
-      menuId,
-      dishIds: [], // clear dish links
-      baseMenuId: sourceMenuId,
-      baseMenuAddOnId: addOn._id,
-    });
-    newAddOns.push(newAddOn);
-  }
-
-  for (const tax of sourceTaxes) {
-    const newTax = new Tax({
-      ...tax,
-      _id: new mongoose.Types.ObjectId(),
-      menuId,
-      baseMenuTaxId: tax._id,
-      baseMenuId: sourceMenuId,
-    });
-    newTaxes.push(newTax);
-  }
-  // ---- Step 3: Copy Kitchens ----
-  for (const kitchen of sourceKitchens) {
-    const newKitchen = new Kitchen({
-      ...kitchen,
-      _id: new mongoose.Types.ObjectId(),
-      menuId,
-      baseMenuKitchenId: kitchen._id,
-      baseMenuId: sourceMenuId,
-    });
-    newKitchens.push(newKitchen);
-  }
-
-  if (newCategories.length)
-    await Category.insertMany(newCategories, { session });
-  if (newDishes.length) await Dish.insertMany(newDishes, { session });
-  if (newAddOns.length) await AddOn.insertMany(newAddOns, { session });
-
-  return true;
-}
-
 const menuRouter = new Hono()
 
   .get(
@@ -332,10 +236,7 @@ const menuRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session) => {
         const businessId = c.req.query("businessId");
-        const menus = await Menu.find({ businessId }).populate({
-          path: "baseMenuId",
-          select: "name serviceType",
-        });
+        const menus = await Menu.find({ businessId }).lean();
 
         return respond(c, "Menus fetched successfully", false, 200, menus);
       });
@@ -355,15 +256,19 @@ const menuRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session) => {
         const { tableName, businessId } = c.req.query();
+
+        const isHavePos = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+        });
+
         // Find the table by name and businessId
         const tableData = await Table.findOne({
           name: tableName,
           businessId,
         }).lean();
 
-        pushToken(c);
-
-        if (!tableData) {
+        if (!tableData && !isHavePos) {
           const findDefaultZone = await Zone.findOne({
             businessId,
             name: "Default",
@@ -412,8 +317,7 @@ const menuRouter = new Hono()
         const currentTimeInMinutes =
           indianDate.getHours() * 60 + indianDate.getMinutes();
 
-        // Find the active menu for the zone and business
-        const menu = await Menu.findOne({
+        let menu = await Menu.findOne({
           zoneIds: zone?._id,
           businessId,
           isActive: true,
@@ -461,20 +365,28 @@ const menuRouter = new Hono()
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
-      const { name, businessId, zoneIds, days, baseMenuId } = requestData;
+      const {
+        name,
+        businessId,
+        zoneIds,
+        days,
+
+        sourceMenuId,
+      } = requestData;
 
       if (
-        await BusinessPosConfig.exists({
+        sourceMenuId &&
+        (await BusinessPosConfig.exists({
           businessId,
           isDeleted: false,
           posName: {
             $ne: "HIPAL_Z",
           },
-        })
+        }))
       ) {
         return respond(
           c,
-          "You cannot create a menu as this business has POS enabled",
+          "You cannot create a menu with sourceMenuId as this business has POS",
           true,
           400,
         );
@@ -500,62 +412,21 @@ const menuRouter = new Hono()
         );
       }
 
-      const isBaseMenuAlreadyExists = await Menu.exists({
-        businessId,
-        serviceType: "BASE",
-      });
-
-      if (isBaseMenuAlreadyExists) {
-        return respond(
-          c,
-          "A base menu with the same businessId already exists",
-          true,
-          409,
-        );
-      }
-
-      const isTakeAwayMenuAlreadyExists = await Menu.exists({
-        businessId,
-        serviceType: "TAKE_AWAY",
-      });
-
-      if (isTakeAwayMenuAlreadyExists) {
-        return respond(
-          c,
-          "A take away menu with the same businessId already exists",
-          true,
-          409,
-        );
-      }
-
       const menu = new Menu({ ...requestData, default: true });
 
-      if (baseMenuId) {
-        const sourceMenu = await Menu.findById(baseMenuId);
+      if (sourceMenuId) {
+        const sourceMenu = await Menu.findById(sourceMenuId);
         if (!sourceMenu) {
           return respond(c, "Source menu not found", true, 404);
         }
+        const createMenu = await processCompleteMenu(
+          sourceMenuId,
+          menu._id.toString(),
+          session,
+        );
 
-        if (sourceMenu.serviceType === "BASE") {
-          const createMenu = await processCompleteMenuWithoutMapping(
-            baseMenuId,
-            menu._id.toString(),
-            session,
-          );
-
-          if (!createMenu) {
-            return respond(c, "Failed to create menu", true, 400);
-          }
-        } else {
-          const createMenu = await processCompleteMenu(
-            baseMenuId,
-            menu._id.toString(),
-            session,
-          );
-
-          if (!createMenu) {
-            return respond(c, "Failed to create menu", true, 400);
-          }
+        if (!createMenu) {
+          return respond(c, "Failed to create menu", true, 400);
         }
       }
 
@@ -599,19 +470,6 @@ const menuRouter = new Hono()
           return respond(c, "No menus found", true, 404);
         }
 
-        const api_token = jwt.sign(
-          {
-            hipalz_id: 1,
-          },
-          "014f6bc236f2ba1cc2c85cb4a7e723ac7fb46fcc5cbd41c382cdf5495eb72d34",
-        );
-
-        setCookie(c, "api_token", api_token, {
-          httpOnly: true,
-          secure: true,
-          sameSite: "strict",
-        });
-
         return respond(c, "Menus fetched successfully", false, 200, menus);
       });
     },
@@ -636,8 +494,6 @@ const menuRouter = new Hono()
           $ne: "HIPAL_Z",
         },
       });
-
-      const isBaseMenu = menu.serviceType === "BASE";
 
       const activeMenus = await Menu.find({
         businessId: businessId || menu.businessId,
@@ -698,7 +554,6 @@ const menuRouter = new Hono()
         menuId,
         {
           ...requestData,
-          zoneIds: isBaseMenu ? [] : requestData.zoneIds,
         },
         { new: true, session },
       );
@@ -709,136 +564,6 @@ const menuRouter = new Hono()
 
       return respond(c, "Menu updated successfully", false, 200, {
         _id: updatedMenu._id,
-      });
-    });
-  })
-
-  .put("/push", zValidator("json", pushMenuSchema), async (c) => {
-    //@ts-ignore
-    return runInTransaction(async (session) => {
-      const requestData = await c.req.json();
-      const { baseMenuId, businessId, pushTo } = requestData;
-
-      const menu = await Menu.findById(baseMenuId);
-      if (!menu) return respond(c, "Menu not found", true, 404);
-
-      const tempChanges = await MenuTempChnages.findOne({ businessId });
-      if (!tempChanges) return respond(c, "changes not found", true, 404);
-
-      const pushMenus = await Menu.find({ businessId, serviceType: pushTo });
-      if (!pushMenus?.length)
-        return respond(c, "No target menus found", true, 404);
-
-      const pushMenuIds = pushMenus.map((m) => m._id);
-
-      const {
-        changedCategoryIds = [],
-        changedAddOnIds = [],
-        changedTaxIds = [],
-        changedKitchenIds = [],
-        changedDishIds = [],
-      } = tempChanges;
-
-      const [categories, addOns, taxes, kitchens, dishes] = await Promise.all([
-        Category.find({ _id: { $in: changedCategoryIds } }),
-        AddOn.find({ _id: { $in: changedAddOnIds } }),
-        Tax.find({ _id: { $in: changedTaxIds } }),
-        Kitchen.find({ _id: { $in: changedKitchenIds } }),
-        Dish.find({ _id: { $in: changedDishIds } }),
-      ]);
-
-      const buildBulkOps = (sourceArray, baseKey, updateFieldsFn) => {
-        const bulkOps = [];
-        for (const src of sourceArray) {
-          for (const menuId of pushMenuIds) {
-            bulkOps.push({
-              updateOne: {
-                filter: {
-                  [`${baseKey}`]: src._id,
-                  businessId,
-                  menuId,
-                  baseMenuId,
-                },
-                update: {
-                  $set: updateFieldsFn(src),
-                },
-                upsert: true,
-              },
-            });
-          }
-        }
-        return bulkOps;
-      };
-
-      const categoryOps = buildBulkOps(
-        categories,
-        "baseMenuCategoryId",
-        (c) => ({
-          name: c.name,
-          visibility: c.visibility,
-          availability: c.availability,
-          isDeleted: c.isDeleted,
-          coverImage: c.coverImage,
-          categoryTimings: c.categoryTimings,
-          sequence: c.sequence,
-          rank: c.rank,
-          active: c.active,
-        }),
-      );
-
-      const addOnOps = buildBulkOps(addOns, "baseMenuAddOnId", (a) => ({
-        name: a.name,
-        visibility: a.visibility,
-        availability: a.availability,
-        isDeleted: a.isDeleted,
-        active: a.active,
-        addOnMaxQuantity: a.addOnMaxQuantity,
-        choiceType: a.choiceType,
-        choices: a.choices,
-        compulsory: a.compulsory,
-      }));
-
-      const taxOps = buildBulkOps(taxes, "baseMenuTaxId", (t) => ({
-        name: t.name,
-        value: t.value,
-        isDeleted: t.isDeleted,
-        isActive: t.isActive,
-      }));
-
-      const kitchenOps = buildBulkOps(kitchens, "baseMenuKitchenId", (k) => ({
-        name: k.name,
-        description: k.description,
-      }));
-
-      const dishOps = buildBulkOps(dishes, "baseMenuDishId", (d) => ({
-        name: d.name,
-        price: d.price,
-        visibility: d.visibility,
-        availability: d.availability,
-        isDeleted: d.isDeleted,
-        active: d.active,
-        description: d.description,
-        images: d.images,
-        portions: d.portions,
-        calories: d.calories,
-        timings: d.timings,
-        dishTypes: d.dishTypes,
-        rank: d.rank,
-        avgPrepTime: d.avgPrepTime,
-      }));
-
-      await Promise.all([
-        categoryOps.length && Category.bulkWrite(categoryOps, { session }),
-        addOnOps.length && AddOn.bulkWrite(addOnOps, { session }),
-        taxOps.length && Tax.bulkWrite(taxOps, { session }),
-        kitchenOps.length && Kitchen.bulkWrite(kitchenOps, { session }),
-        dishOps.length && Dish.bulkWrite(dishOps, { session }),
-      ]);
-
-      await MenuTempChnages.deleteOne({ _id: tempChanges._id }, { session });
-
-      return respond(c, "Menu pushed successfully", false, 200, {
-        _id: menu._id,
       });
     });
   });
