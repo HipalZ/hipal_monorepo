@@ -2545,6 +2545,7 @@ const paymentsRouter = new Hono()
                       isMerge: false,
                       mergeTableIds: [],
                       mergedBy: null,
+                      isBillGenerated: false,
                     },
                   },
                   {
@@ -2910,6 +2911,7 @@ const paymentsRouter = new Hono()
                   isMerge: false,
                   mergeTableIds: [],
                   mergedBy: null,
+                  isBillGenerated: false,
                 },
               },
               {
@@ -4030,6 +4032,7 @@ const paymentsRouter = new Hono()
                             isMerge: false,
                             mergeTableIds: [],
                             mergedBy: null,
+                            isBillGenerated: false,
                           },
                         },
                         {
@@ -4355,6 +4358,7 @@ const paymentsRouter = new Hono()
                       isMerge: false,
                       mergeTableIds: [],
                       mergedBy: null,
+                      isBillGenerated: false,
                     },
                   },
                   {
@@ -5355,10 +5359,10 @@ const paymentsRouter = new Hono()
       if (dateFrom || dateTo) {
         const fromDate = dateFrom ? Number(dateFrom) : startOfToday.getTime();
         const toDate = dateTo ? Number(dateTo) : endOfToday.getTime();
-        query.createdAt = { $gte: fromDate, $lte: toDate };
+        query.dateOfJoining = { $gte: fromDate, $lte: toDate };
       } else {
         // default to today’s range
-        query.createdAt = {
+        query.dateOfJoining = {
           $gte: startOfDay(new Date()),
           $lte: endOfDay(new Date()),
         };
@@ -5396,16 +5400,16 @@ const paymentsRouter = new Hono()
         }
       }
 
-      const page = Number.parseInt(pageNumber || "1");
-      const limit = 25;
+      const page = Number(pageNumber) || 1;
+      const limit = 1000;
       const skip = (page - 1) * limit;
 
       // Execute
       const filteredResults = await UserAnalytic.find(query)
         .populate("userId")
         .skip(skip)
-        .limit(limit)
-        .sort({ updatedAt: -1 });
+        .limit(limit);
+
       const totalCount = await UserAnalytic.countDocuments(query);
 
       return c.json(

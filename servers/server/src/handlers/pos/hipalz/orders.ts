@@ -1059,6 +1059,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                           isMerge: false,
                           mergeTableIds: [],
                           mergedBy: null,
+                          isBillGenerated: false,
                         },
                       },
                       {
@@ -1285,6 +1286,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                     isMerge: false,
                     mergeTableIds: [],
                     mergedBy: null,
+                    isBillGenerated: false,
                   },
                 },
                 {
@@ -1846,6 +1848,7 @@ async function hipalzPosNormalSettleHandler(payload: {
               isMerge: false,
               mergeTableIds: [],
               mergedBy: null,
+              isBillGenerated: false,
             },
             { session },
           );
@@ -2032,6 +2035,7 @@ async function hipalzPosNormalSettleHandler(payload: {
           isMerge: false,
           mergeTableIds: [],
           mergedBy: null,
+          isBillGenerated: false,
         },
         { session },
       );

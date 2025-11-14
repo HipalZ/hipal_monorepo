@@ -623,6 +623,7 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                       isMerge: false,
                       mergeTableIds: [],
                       mergedBy: null,
+                      isBillGenerated: false,
                     },
                   },
                   {
@@ -894,6 +895,7 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                   isMerge: false,
                   mergeTableIds: [],
                   mergedBy: null,
+                  isBillGenerated: false,
                 },
               },
               {

@@ -1895,6 +1895,18 @@ const posRouter = new Hono()
           return respond(c, "Table session not found", true, 404, {});
         }
 
+        await Table.findOneAndUpdate(
+          {
+            businessId,
+            name: tableName,
+          },
+          {
+            $set: {
+              isBillGenerated: true,
+            },
+          },
+        );
+
         const billAlreadySplit = checkOriginBillIsSplit(tableSession);
 
         if (billAlreadySplit) {

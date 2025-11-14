@@ -856,6 +856,7 @@ const tableRouter = new Hono()
                 isMerge: false,
                 mergeTableIds: [],
                 mergedBy: null,
+                isBillGenerated: false,
               },
               { session },
             );
@@ -1137,6 +1138,7 @@ const tableRouter = new Hono()
             isMerge: false,
             mergeTableIds: [],
             mergedBy: null,
+            isBillGenerated: false,
           },
           { session },
         );
@@ -1538,6 +1540,7 @@ const tableRouter = new Hono()
               isMerge: false,
               mergedBy: null,
               mergeTableNames: [],
+              isBillGenerated: false,
             },
             { session },
           );
@@ -1987,6 +1990,7 @@ const tableRouter = new Hono()
               isMerge: false,
               mergeTableIds: [],
               mergedBy: null,
+              isBillGenerated: false,
             },
             { session },
           );
