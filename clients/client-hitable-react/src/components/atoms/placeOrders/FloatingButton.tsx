@@ -33,6 +33,7 @@ const MemoFloatingTableActions = ({
   const setModalType = useOrderStore((s) => s.setModalType);
   const setTransferTable = useOrderStore((s) => s.setTransferTable);
   const setTransferModal = useOrderStore((s) => s.setTransferModal);
+  const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
 
   // ---- Permissions ----
   const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
@@ -43,10 +44,11 @@ const MemoFloatingTableActions = ({
   // helpers
   const toggleModalType = useCallback(
     (type: 'guest' | 'customer') => {
+      setOpenOrderModal(true);
       setModalType(type);
       setOpen(false);
     },
-    [setModalType],
+    [setModalType, setOpenOrderModal],
   );
 
   const handleTransferTable = useCallback(
