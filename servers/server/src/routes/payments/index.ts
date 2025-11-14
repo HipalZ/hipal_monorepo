@@ -57,6 +57,7 @@ import {
   ClientRoles,
   requireAuthorization,
 } from "../../../middleware/authorization";
+import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { type KotOrderTypes, calculateBillTotals } from "../../utils/bill";
@@ -76,7 +77,6 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -4548,10 +4548,8 @@ const paymentsRouter = new Hono()
       const fromDate = Number(from) || startOfToday.getTime();
       const toDate = Number(to) || endOfToday.getTime();
       const isToday = isTodayIST(fromDate);
-      console.log("isToday", isToday);
 
       const dateRange = getISTDateRange(Date.now());
-      console.log("dateRange", dateRange);
       if (fromDate > toDate) {
         return c.json({
           err: true,
@@ -4575,14 +4573,16 @@ const paymentsRouter = new Hono()
           serviceCharge: 1,
           tips: 1,
           discount: 1,
-          finalSubTotal: 1,
-          initialSubTotal: 1,
           paxCount: 1,
           billValue: 1,
           claimedCoins: 1,
           couponDiscount: 1,
+          billInvoice: 1,
         },
       );
+
+      const startInvoiceNumber = payments[0]?.billInvoice || 0;
+      const endInvoiceNumber = payments[payments.length - 1]?.billInvoice || 0;
 
       const totalOrders = payments.length;
 
@@ -4590,7 +4590,7 @@ const paymentsRouter = new Hono()
       let totalOnlineSale = 0;
       let totalPaxCount = 0;
       const offlineSales: Record<string, number> = {};
-      // NEW aggregates for the report
+
       let subTotalSum = 0; // -> “Sub Total (taxable)”
       let taxSum = 0; // CGST+SGST combined
       let serviceChargeSum = 0;
@@ -4664,6 +4664,8 @@ const paymentsRouter = new Hono()
           totalTip: tipSum,
           totalDiscount: discountSum,
           totalPaxCount: totalPaxCount || 0,
+          startInvoiceNumber,
+          endInvoiceNumber,
         },
       });
     },

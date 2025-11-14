@@ -1723,6 +1723,52 @@ const usersRouter = new Hono()
 
       return respond(c, "User fetched successfully", false, 200, modifyUser);
     },
+  )
+
+  .get(
+    "/fetch_staff/:staffId/:businessId",
+
+    zValidator(
+      "param",
+      z.object({
+        staffId: z.string().min(24).max(24),
+        businessId: z.string().min(24).max(24),
+      }),
+    ),
+
+    async (c) => {
+      const { staffId, businessId } = c.req.param();
+
+      const staffData = await User.findOne(
+        {
+          _id: staffId,
+          "customRole.businessId": businessId,
+          "customRole.isDeleted": false,
+        },
+        {
+          name: 1,
+          phone: 1,
+          customRole: {
+            $elemMatch: {
+              businessId: businessId,
+              isDeleted: false,
+            },
+          },
+        },
+      ).lean();
+
+      if (!staffData) {
+        return respond(c, "Staff not found", true, 404, {});
+      }
+
+      const result = {
+        name: staffData.name,
+        phone: staffData.phone,
+        permissions: staffData.customRole?.[0]?.permissions ?? {},
+      };
+
+      return respond(c, "User fetched successfully", false, 200, result);
+    },
   );
 
 export default usersRouter;
