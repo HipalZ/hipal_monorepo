@@ -3154,6 +3154,7 @@ const posRouter = new Hono()
 
   .post(
     "/remove_service_charge",
+    ubacMiddleware("add_or_remove_service_charge"),
     zValidator(
       "json",
       z.object({
