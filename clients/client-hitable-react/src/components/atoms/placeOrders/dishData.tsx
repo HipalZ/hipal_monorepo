@@ -27,9 +27,6 @@ const MemoCompactDishGrid = ({ selectedCategory }: CompactDishGridProps) => {
         const isHidden = !dish.visibility;
         const hasKitchen = Boolean((dish as any)?.kitchenId);
 
-        // kitchenId must exist to allow add
-        const hasKitchen = Boolean((dish as any)?.kitchenId);
-
         const types = normalizeFoodTypes(dish.dishTypes);
 
         let overlayLabel: string | null = null;
