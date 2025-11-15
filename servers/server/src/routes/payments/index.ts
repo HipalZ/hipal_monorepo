@@ -13,6 +13,7 @@ import {
   MergeTable,
   NpcUser,
   Order,
+  OrderIdTracker,
   OutLetInfo,
   Payment,
   PaymentAlert,
@@ -2024,6 +2025,9 @@ const paymentsRouter = new Hono()
             });
 
             if (!paymentAlreadyExist && getOrder) {
+              await OrderIdTracker.create({
+                order_id: getOrder?.order_id.toString(),
+              });
               const claimCoins = Number(getOrder?.claimedCoins) || 0;
               let getCashBack = 0;
 
@@ -2241,6 +2245,9 @@ const paymentsRouter = new Hono()
             });
 
             if (!paymentAlreadyExist && getOrder) {
+              await OrderIdTracker.create({
+                order_id: getOrder?.order_id.toString(),
+              });
               const pos = await BusinessPosConfig.findOne({
                 businessId: getOrder?.businessId,
                 isDeleted: false,
@@ -2399,6 +2406,9 @@ const paymentsRouter = new Hono()
             });
 
             if (!paymentAlreadyExist && getOrder) {
+              await OrderIdTracker.create({
+                order_id: getOrder?.order_id.toString(),
+              });
               const pos = await BusinessPosConfig.findOne({
                 businessId: getOrder?.businessId,
                 isDeleted: false,
@@ -2627,6 +2637,9 @@ const paymentsRouter = new Hono()
         console.log("step_6", paymentAlreadyExist);
 
         if (!paymentAlreadyExist && getOrder) {
+          await OrderIdTracker.create({
+            order_id: getOrder?.order_id.toString(),
+          });
           console.log("step_7");
           const pos = await BusinessPosConfig.findOne({
             businessId: getOrder?.businessId,
