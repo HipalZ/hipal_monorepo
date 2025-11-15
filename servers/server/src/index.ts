@@ -78,7 +78,7 @@ app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
 (async () => {
   await connectDB();
 })();
-/////
+//////
 
 app.route('/', routes);
 
