@@ -17,7 +17,6 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { pushToken } from "../../services/token";
 import { calculateCartBill } from "../../utils/helper";
@@ -207,7 +206,7 @@ const kotRouter = new Hono()
 
   .post(
     "/open_item",
-    ubacMiddleware("temp_item"),
+    // ubacMiddleware("temp_item"),
     zValidator(
       "json",
       z.object({
@@ -445,7 +444,7 @@ const kotRouter = new Hono()
 
   .post(
     "/reprint_kot",
-    ubacMiddleware("re_print_kot"),
+    // ubacMiddleware("re_print_kot"),
     zValidator(
       "json",
       z.object({
@@ -503,7 +502,7 @@ const kotRouter = new Hono()
   .post(
     "/delete_kot",
 
-    ubacMiddleware("delete_kot"),
+    // ubacMiddleware("delete_kot"),
     zValidator(
       "json",
       z.object({
@@ -716,7 +715,7 @@ const kotRouter = new Hono()
 
   .put(
     "/",
-    ubacMiddleware("order_accept"),
+    // ubacMiddleware("order_accept"),
     zValidator("json", kotOrderAcceptSchema),
 
     async (c) => {

@@ -25,7 +25,7 @@ const splitBillRouter = new Hono()
 
   .post(
     "/portion_and_percentage",
-    ubacMiddleware("split_bill"),
+    // ubacMiddleware("split_bill"),
     zValidator("json", splitBillPortionAndPercentageSchema),
     async (c) => {
       //@ts-ignore
@@ -132,7 +132,7 @@ const splitBillRouter = new Hono()
 
   .post(
     "/item",
-    ubacMiddleware("split_bill"),
+    // ubacMiddleware("split_bill"),
     zValidator("json", splitBillItemSchema),
     async (c) => {
       //@ts-ignore

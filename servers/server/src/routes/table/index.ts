@@ -268,7 +268,7 @@ const tableRouter = new Hono()
   )
   .put(
     "/update_guest",
-    ubacMiddleware("add_pax"),
+    // ubacMiddleware("add_pax"),
     zValidator(
       "json",
       z.object({
@@ -314,7 +314,7 @@ const tableRouter = new Hono()
 
   .post(
     "/normal_settle",
-    ubacMiddleware("normal_settle"),
+    // ubacMiddleware("normal_settle"),
     zValidator("json", normalSettleSchema),
     async (c) => {
       //@ts-ignore
@@ -1408,7 +1408,7 @@ const tableRouter = new Hono()
   )
   .post(
     "/merge",
-    ubacMiddleware("merge_table"),
+    // ubacMiddleware("merge_table"),
     zValidator(
       "json",
       z.object({
@@ -1697,7 +1697,7 @@ const tableRouter = new Hono()
   )
   .post(
     "/e_bill",
-    ubacMiddleware("e_bill"),
+    // ubacMiddleware("e_bill"),
     zValidator(
       "json",
       z.object({
@@ -1868,7 +1868,7 @@ const tableRouter = new Hono()
 
   .post(
     "/transfer_table",
-    ubacMiddleware("transfer_item_or_table"),
+    // ubacMiddleware("transfer_item_or_table"),
 
     zValidator("json", switchTableschema),
     async (c) => {
