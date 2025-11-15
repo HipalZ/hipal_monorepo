@@ -152,6 +152,35 @@ const kotRouter = new Hono()
     async (c) => {
       const { userIds = [], businessId } = await c.req.json();
 
+      for (const id of userIds) {
+        const user = await User.findById(id);
+        const userAnalytic = await UserAnalytic.findOne({
+          userId: id,
+          businessId,
+        });
+
+        if (!userAnalytic) {
+          const newUserAnalytic = new UserAnalytic({
+            userId: id,
+            businessId,
+            avgSpend: 0,
+            totalSpend: 0,
+            totalOrders: 0,
+
+            totalItemCount: 0,
+            totalBillCount: 0,
+            visitCount: 0,
+            lastVisit: Date.now(),
+            coinzIssued: 0,
+            coinzUsed: 0,
+            couponCount: 0,
+            currentCoins: 0,
+            dateOfJoining: Date.now(),
+          });
+          await newUserAnalytic.save();
+        }
+      }
+
       const kot = await UserAnalytic.find({
         userId: { $in: userIds },
         businessId,

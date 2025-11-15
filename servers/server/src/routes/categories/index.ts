@@ -75,26 +75,6 @@ const categoriesRouter = new Hono()
           posName: "HIPAL_Z",
         });
 
-        const menu = await Menu.findById(requestData.menuId);
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, {});
-        }
-
-        // if (
-        //   menu.serviceType === "BASE" &&
-        //   (parentCategoryIds?.length ||
-        //     dishIds?.length ||
-        //     subCategoryIds?.length)
-        // ) {
-        //   return respond(
-        //     c,
-        //     "linking category to menu not allowed",
-        //     true,
-        //     400,
-        //     {},
-        //   );
-        // }
-
         const creatingCategory = await Category.create(
           [
             {
@@ -187,29 +167,6 @@ const categoriesRouter = new Hono()
             {},
           );
         }
-
-        const menu = await Menu.findById(requestData.menuId);
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, {});
-        }
-
-        // if (
-        //   menu.serviceType === "BASE" &&
-        //   (parentCategoryIds?.length ||
-        //     dishIds?.length ||
-        //     subCategoryIds?.length ||
-        //     removeSubCategoryIds?.length ||
-        //     removeDishIds?.length ||
-        //     removeParentCategoryIds?.length)
-        // ) {
-        //   return respond(
-        //     c,
-        //     "linking category to menu not allowed",
-        //     true,
-        //     400,
-        //     {},
-        //   );
-        // }
 
         const updatedCategory = await Category.findByIdAndUpdate(
           id,
@@ -317,11 +274,6 @@ const categoriesRouter = new Hono()
         const fetchCategory = await Category.findById(id);
         if (!fetchCategory) {
           return respond(c, "not found", true, 404, {});
-        }
-
-        const menu = await Menu.findById(fetchCategory.menuId);
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, {});
         }
 
         const businessPosConfig = await BusinessPosConfig.findOne({

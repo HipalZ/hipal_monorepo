@@ -1,4 +1,4 @@
-import { AddOn, BusinessPosConfig, Dish, Menu } from "@hi/db-models";
+import { AddOn, BusinessPosConfig, Dish } from "@hi/db-models";
 import {
   type AddOnType,
   AddOnsAttrs,
@@ -50,14 +50,6 @@ const addonRouter = new Hono()
           posName: "HIPAL_Z",
         });
 
-        const menu = await Menu.findById(requestData.menuId);
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, {});
-        }
-        // if (menu.serviceType === "BASE" && requestData.dishIds?.length) {
-        //   return respond(c, "linking addon to menu not allowed", true, 400, {});
-        // }
-
         const addon = await AddOn.create({ ...requestData, pos: !!hipalZPos });
 
         if (!addon) return respond(c, "failed", true, 400, addon);
@@ -101,17 +93,6 @@ const addonRouter = new Hono()
             {},
           );
         }
-
-        const menu = await Menu.findById(requestData.menuId);
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, {});
-        }
-        // if (
-        //   menu.serviceType === "BASE" &&
-        //   (requestData.dishIds?.length || removeDishIds?.length)
-        // ) {
-        //   return respond(c, "linking addon to menu not allowed", true, 400, {});
-        // }
 
         const updatedAddOn = await AddOn.findByIdAndUpdate(
           id,
@@ -180,11 +161,6 @@ const addonRouter = new Hono()
         const fetchAddOn = await AddOn.findById(id);
         if (!fetchAddOn) {
           return respond(c, "not found", true, 404, {});
-        }
-
-        const menu = await Menu.findById(fetchAddOn.menuId);
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, {});
         }
 
         const businessPosConfig = await BusinessPosConfig.findOne({

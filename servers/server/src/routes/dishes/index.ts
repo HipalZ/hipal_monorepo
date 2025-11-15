@@ -5,7 +5,6 @@ import {
   Category,
   Dish,
   Kitchen,
-  Menu,
   PosDishConfig,
   UniquelyYours,
 } from "@hi/db-models";
@@ -172,24 +171,6 @@ const dishesRouter = new Hono()
           }
         }
 
-        const menu = await Menu.findById(dish.menuId);
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, {});
-        }
-        // if (
-        //   menu.serviceType === "BASE" &&
-        //   (removeCategoryIds.length ||
-        //     removeAddOnIds.length ||
-        //     removeRecommendationIds.length ||
-        //     categoryIds.length ||
-        //     addOnIds.length ||
-        //     recommendationIds.length ||
-        //     kitchenId ||
-        //     removeKitchenId)
-        // ) {
-        //   return respond(c, "linking dish to menu not allowed", true, 400, {});
-        // }
-
         const updatedDish = await Dish.findByIdAndUpdate(
           id,
           {
@@ -328,11 +309,6 @@ const dishesRouter = new Hono()
           return respond(c, "not found", true, 404, {});
         }
 
-        const menu = await Menu.findById(fetchDish.menuId);
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, {});
-        }
-
         const businessPosConfig = await BusinessPosConfig.findOne({
           businessId: fetchDish.businessId,
           isDeleted: false,
@@ -400,18 +376,6 @@ const dishesRouter = new Hono()
           active: true,
           posName: "HIPAL_Z",
         });
-
-        const menu = await Menu.findById(dish.menuId);
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, {});
-        }
-
-        // if (
-        //   menu.serviceType === "BASE" &&
-        //   (dish.categoryIds?.length || dish.addOnIds?.length || dish.kitchenId)
-        // ) {
-        //   return respond(c, "linking dish to menu not allowed", true, 400, {});
-        // }
 
         const createDish = await Dish.create([{ ...dish, pos: !!hipalZPos }], {
           session,

@@ -1624,6 +1624,33 @@ const posRouter = new Hono()
           );
         }
 
+        const userAnalytics = await UserAnalytic.findOneAndUpdate({
+          userId: userData._id,
+          businessId: tableData.businessId,
+        });
+
+        if (!userAnalytics) {
+          const createAnalytics = new UserAnalytic({
+            avgSpend: 0,
+            totalSpend: 0,
+            totalOrders: 0,
+            userId: userData._id,
+            businessId: tableData.businessId,
+            totalItemCount: 0,
+            totalBillCount: 0,
+            visitCount: 0,
+            lastVisit: Date.now(),
+            coinzIssued: 0,
+            coinzUsed: 0,
+            couponCount: 0,
+            currentCoins: 0,
+            dateOfJoining: Date.now(),
+            tableName: tableData.name,
+          });
+
+          await createAnalytics.save({ session });
+        }
+
         const userSession = await UserSession.findOneAndUpdate(
           {
             tableName: tableData.name,
