@@ -36,6 +36,11 @@ export const useGetPosConfig = (businessId: string) => {
         await handleEnvelope(response);
 
         const res = await response.json();
+
+        if (!res.data || res.err) {
+          return null;
+        }
+
         return res.data as PosConfigData;
       } catch (e) {
         console.error(e);
