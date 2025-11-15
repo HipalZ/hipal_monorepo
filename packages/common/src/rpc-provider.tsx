@@ -36,8 +36,6 @@ export const apiRpc = hc<AppType>(baseUrl, {
   headers: () => ({
     Authorization: `Bearer ${useUserToken.getState().accessToken}`,
     'x-refresh-token': useUserToken.getState().refreshToken,
-    server_secret: '014f6bc236f2ba1cc2c85cb4a7e723ac7fb46fcc5cbd41c382cdf5495eb72d34',
-    x_signature: '56642a628dfdd7fc29feed72fadc412ec7b6dd155e6e19016e778838d1c104ea',
   }),
   fetch: (input, init) => fetch(input, { ...init, credentials: 'include' }), // Force fetch to include cookies
 });
