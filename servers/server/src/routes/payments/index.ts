@@ -55,7 +55,6 @@ import { nanoid } from 'nanoid';
 import Papa from 'papaparse';
 import { z } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
-import { ubacMiddleware } from '../../../middleware/checkPermissions';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { checkOriginBillIsSplit } from '../../services/splitBill';
 import { calculateBillTotals, type KotOrderTypes } from '../../utils/bill';
@@ -3072,7 +3071,7 @@ const paymentsRouter = new Hono()
   .put(
     '/:pid/order/:alertId',
 
-    ubacMiddleware('offline_settle'),
+    // ubacMiddleware("offline_settle"),
 
     zValidator('param', z.object({ alertId: z.string() })),
 
