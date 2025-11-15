@@ -1,12 +1,9 @@
-import { WhatsAppAnalyticsUser } from "@hi/db-models";
-import axios from "axios";
-import type { Job } from "bullmq";
-// import { enqueueWhatsAppJob } from "../../enqueue";
-import type {
-  AxiosError,
-  sendTemplateTypeValidator,
-} from "../../types/jobtypes";
-import { returnBodyComponents } from "../../utils/helper";
+import { WhatsAppAnalyticsUser } from '@hi/db-models';
+import axios from 'axios';
+import type { Job } from 'bullmq';
+import { enqueueWhatsAppJob } from '../../enqueue';
+import type { AxiosError, sendTemplateTypeValidator } from '../../types/jobtypes';
+import { returnBodyComponents } from '../../utils/helper';
 
 async function sendTemplate(job: Job) {
   const {
@@ -25,16 +22,15 @@ async function sendTemplate(job: Job) {
     category,
   } = job.data as sendTemplateTypeValidator;
 
-  const apiEndpoint =
-    category === "UTILITY" ? "messages" : "marketing_messages";
+  const apiEndpoint = category === 'UTILITY' ? 'messages' : 'marketing_messages';
 
   try {
     const res = await axios.post(
       `${whatsAppApiBaseUrl}${version}/${phoneId}/${apiEndpoint}`,
       {
-        messaging_product: "whatsapp",
+        messaging_product: 'whatsapp',
         to: to.toString(),
-        type: "template",
+        type: 'template',
         template: {
           name: templateName,
           language: { code: languageCode },
@@ -55,31 +51,30 @@ async function sendTemplate(job: Job) {
         templateId,
         campaignId: campaignId,
         date: Date.now(),
-        status: "pending",
+        status: 'pending',
         userId: userId,
         error: [],
       });
     } catch (error) {}
   } catch (error) {
     const err = error as AxiosError;
-    const errorMessage =
-      err?.response?.data?.error?.message || err?.message || "Unknown error";
+    const errorMessage = err?.response?.data?.error?.message || err?.message || 'Unknown error';
     const token =
-      "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
+      'EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD';
 
     try {
       await axios({
-        method: "POST",
+        method: 'POST',
         url: `${whatsAppApiBaseUrl}${version}/540847672441832/messages`,
         data: {
-          messaging_product: "whatsapp",
-          to: "9588413799",
+          messaging_product: 'whatsapp',
+          to: '9588413799',
           text: {
             body: errorMessage,
           },
         },
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       });
@@ -108,14 +103,7 @@ async function pushCustomerIntoQueue(job: Job) {
 
   for (const customer of customersArray) {
     // return components for the body
-    const components = await returnBodyComponents(
-      businessName,
-      address,
-      bodyVariableSequence,
-      imageUrl,
-      customer,
-      businessId,
-    );
+    const components: any = await returnBodyComponents(businessName, address, bodyVariableSequence, imageUrl, customer, businessId);
 
     const payload = {
       whatsAppApiBaseUrl: whatsAppApiBaseUrl,
@@ -132,8 +120,7 @@ async function pushCustomerIntoQueue(job: Job) {
       userId: customer._id,
       category: category,
     };
-    console.log("Enqueuing for ", customer?.phone?.toString());
-    // await enqueueWhatsAppJob("sendTemplate", payload);
+    await enqueueWhatsAppJob('sendTemplate', payload);
   }
 }
 
