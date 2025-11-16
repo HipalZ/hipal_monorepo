@@ -1,5 +1,6 @@
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
 import SearchComponent from '@/components/atoms/placeOrders/searchComponent';
+import SearchResultsGrid from '@/components/atoms/placeOrders/searchResultsGrid';
 import { useGetAllOrders } from '@/components/hooks/useOrder';
 import { useCartStore } from '@/components/store/useCartStore';
 import { useLiteStore } from '@/components/store/useLiteStore';
@@ -8,6 +9,7 @@ import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { CategoryType } from '@hi/db-models/src/validators';
 import { FileText, Receipt, ShoppingCart } from 'lucide-react';
 import { lazy, memo, Suspense, useEffect, useState } from 'react';
 import CartWithPos from '../atoms/cartItem/cartWithpos';
@@ -31,6 +33,7 @@ const DesktopTablePOS = () => {
   const cartData = useLiteStore((s) => s.cartData);
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const cart = useCartStore((s) => s.cart);
+  const searchActive = useOrderStore((s) => s.searchActive);
   const { data: orders, isLoading: ordersLoading, refetch: refetchOrders } = useGetAllOrders();
 
   const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
@@ -71,8 +74,9 @@ const DesktopTablePOS = () => {
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="hide-scrollbar h-[90dvh] overflow-auto p-4 pb-[10rem]">
+                    {searchActive && <SearchResultsGrid />}
                     <Suspense fallback={<SpinnerMemo />}>
-                      <CompactDishGrid selectedCategory={selectedCategory as any} />
+                      <CompactDishGrid selectedCategory={selectedCategory as CategoryType} />
                     </Suspense>
                   </div>
                 </ScrollArea>
