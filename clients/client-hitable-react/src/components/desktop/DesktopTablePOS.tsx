@@ -73,7 +73,7 @@ const DesktopTablePOS = () => {
                   </div>
                 </div>
                 <ScrollArea className="flex-1">
-                  <div className="hide-scrollbar h-[90dvh] overflow-auto p-4 pb-[10rem]">
+                  <div className="hide-scrollbar overflow-auto p-2">
                     {searchActive && <SearchResultsGrid />}
                     <Suspense fallback={<SpinnerMemo />}>
                       <CompactDishGrid selectedCategory={selectedCategory as CategoryType} />
