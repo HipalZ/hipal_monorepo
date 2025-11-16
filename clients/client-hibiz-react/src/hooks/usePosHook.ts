@@ -33,15 +33,8 @@ export const useGetPosConfig = (businessId: string) => {
           query: { businessId },
         });
 
-        await handleEnvelope(response);
-
-        const res = await response.json();
-
-        if (!res.data || res.err) {
-          return null;
-        }
-
-        return res.data as PosConfigData;
+        const data = await handleEnvelope(response);
+        return data as PosConfigData;
       } catch (e) {
         console.error(e);
         return null;

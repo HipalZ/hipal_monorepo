@@ -28,7 +28,6 @@ export interface BusinessCategoryReport {
 }
 
 export const useCategoryReports = () => {
-  const { setError, setOpenErrorModal } = useError();
   const setCategoryReports = useReports((s) => s.setCategoryReports);
   const { handleEnvelope } = useApiErrorHandler();
   const { isPending, mutateAsync } = useMutation({
@@ -36,22 +35,12 @@ export const useCategoryReports = () => {
       const response = await apiRpc.report.category.$post({
         json: payload,
       });
-      await handleEnvelope(response);
+      const categoryData = await handleEnvelope(response);
+      console.log("Category Report Data:", categoryData);
+      setCategoryReports((categoryData as BusinessCategoryReport[]) || []);
       return response;
     },
-    onSuccess: async (data) => {
-      if (data.status === 400 || data.status === 401) {
-        setOpenErrorModal(true);
-        setError("Report generation failed");
-        return toast.error("Report generation failed");
-      }
-      if (data.status === 200 || data.status === 201) {
-        const response = await data.json();
-        const categoryData = response.data as BusinessCategoryReport[];
-        setCategoryReports(categoryData || []);
-        return toast.success("Report generated successfully");
-      }
-    },
+
     onError: (data) => {
       console.log(data);
       toast.error("Failed to fetch reports");
@@ -66,14 +55,11 @@ export const useCategoryReports = () => {
 };
 
 export const useGetReportsCsv = () => {
-  const { handleEnvelope } = useApiErrorHandler();
   const { isPending, mutateAsync } = useMutation({
     mutationFn: async (payload: GetReportsPayload) => {
       const response = await apiRpc.report.category.download_csv.$post({
         json: payload,
       });
-      await handleEnvelope(response);
-
       return response.blob();
     },
     onSuccess: async (blob, variables) => {
@@ -130,44 +116,20 @@ export const useItemReports = () => {
       const response = await apiRpc.report.item.$post({
         json: payload,
       });
-      await handleEnvelope(response);
-
+      const itemsData = await handleEnvelope(response);
+      console.log("Item Report Data:", itemsData);
+      if (!itemsData || !Array.isArray(itemsData)) {
+        throw new Error("Invalid data format received");
+      }
+      setItemReports((itemsData as BusinessItemReport[]) || []);
+      const totalItems = itemsData.reduce(
+        (acc, business) => acc + business.items.length,
+        0,
+      );
+      toast.success(
+        `Report generated successfully! Found ${totalItems} items.`,
+      );
       return response;
-    },
-    onSuccess: async (data) => {
-      if (data.status === 400 || data.status === 401) {
-        setOpenErrorModal(true);
-        setError("Report generation failed");
-        return toast.error("Report generation failed");
-      }
-      if (data.status === 200 || data.status === 201) {
-        try {
-          const response = await data.json();
-          const itemData = response.data as BusinessItemReport[];
-
-          // Validate data structure
-          if (!itemData || !Array.isArray(itemData)) {
-            throw new Error("Invalid data format received");
-          }
-
-          setItemReports(itemData);
-
-          // Calculate total items for success message
-          const totalItems = itemData.reduce(
-            (acc, business) => acc + business.items.length,
-            0,
-          );
-
-          return toast.success(
-            `Report generated successfully! Found ${totalItems} items.`,
-          );
-        } catch (parseError) {
-          console.error("Error parsing response:", parseError);
-          setOpenErrorModal(true);
-          setError("Failed to process report data");
-          return toast.error("Failed to process report data");
-        }
-      }
     },
     onError: (error) => {
       console.error("Report generation error:", error);
@@ -186,7 +148,6 @@ export const useItemReports = () => {
 };
 
 export const useGetItemReportsCsv = () => {
-  const { handleEnvelope } = useApiErrorHandler();
   const { isPending, mutateAsync, reset } = useMutation({
     mutationFn: async (payload: GetReportsPayload) => {
       const response = await apiRpc.report.item.download_csv.$post({
@@ -196,7 +157,6 @@ export const useGetItemReportsCsv = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      await handleEnvelope(response);
 
       return response.blob();
     },
@@ -272,44 +232,22 @@ export const useDiscountReports = () => {
       const response = await apiRpc.report.discount.$post({
         json: payload,
       });
-      await handleEnvelope(response);
+      const discountData = await handleEnvelope(response);
+      console.log("Discount Report Data:", discountData);
+      if (!discountData || !Array.isArray(discountData)) {
+        throw new Error("Invalid data format received");
+      }
+      setDiscountReports((discountData as BusinessDiscountReport[]) || []);
+      const totalDiscounts = discountData.reduce(
+        (acc, business) => acc + business.discounts.length,
+        0,
+      );
+      toast.success(
+        `Report generated successfully! Found ${totalDiscounts} discount types.`,
+      );
       return response;
     },
-    onSuccess: async (data) => {
-      if (data.status === 400 || data.status === 401) {
-        setOpenErrorModal(true);
-        setError("Report generation failed");
-        return toast.error("Report generation failed");
-      }
-      if (data.status === 200 || data.status === 201) {
-        try {
-          const response = await data.json();
-          const discountData = response.data as BusinessDiscountReport[];
 
-          // Validate data structure
-          if (!discountData || !Array.isArray(discountData)) {
-            throw new Error("Invalid data format received");
-          }
-
-          setDiscountReports(discountData);
-
-          // Calculate total discounts for success message
-          const totalDiscounts = discountData.reduce(
-            (acc, business) => acc + business.discounts.length,
-            0,
-          );
-
-          return toast.success(
-            `Report generated successfully! Found ${totalDiscounts} discount types.`,
-          );
-        } catch (parseError) {
-          console.error("Error parsing response:", parseError);
-          setOpenErrorModal(true);
-          setError("Failed to process report data");
-          return toast.error("Failed to process report data");
-        }
-      }
-    },
     onError: (error) => {
       console.error("Report generation error:", error);
       setOpenErrorModal(true);
@@ -327,7 +265,6 @@ export const useDiscountReports = () => {
 };
 
 export const useGetDiscountReportsCsv = () => {
-  const { handleEnvelope } = useApiErrorHandler();
   const { isPending, mutateAsync, reset } = useMutation({
     mutationFn: async (payload: GetReportsPayload) => {
       const response = await apiRpc.report.discount.download_csv.$post({
@@ -337,7 +274,6 @@ export const useGetDiscountReportsCsv = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      await handleEnvelope(response);
       return response.blob();
     },
     onSuccess: async (blob, variables) => {
@@ -414,44 +350,22 @@ export const useAddonReports = () => {
       const response = await apiRpc.report.add_on.$post({
         json: payload,
       });
-      await handleEnvelope(response);
+      const addonData = await handleEnvelope(response);
+      console.log("Addon Report Data:", addonData);
+      if (!addonData || !Array.isArray(addonData)) {
+        throw new Error("Invalid data format received");
+      }
+      setAddonReports((addonData as BusinessAddonReport[]) || []);
+      const totalAddons = addonData.reduce(
+        (acc, business) => acc + business.addOns.length,
+        0,
+      );
+      toast.success(
+        `Report generated successfully! Found ${totalAddons} addon types.`,
+      );
       return response;
     },
-    onSuccess: async (data) => {
-      if (data.status === 400 || data.status === 401) {
-        setOpenErrorModal(true);
-        setError("Report generation failed");
-        return toast.error("Report generation failed");
-      }
-      if (data.status === 200 || data.status === 201) {
-        try {
-          const response = await data.json();
-          const addonData = response.data as BusinessAddonReport[];
 
-          // Validate data structure
-          if (!addonData || !Array.isArray(addonData)) {
-            throw new Error("Invalid data format received");
-          }
-
-          setAddonReports(addonData);
-
-          // Calculate total addons for success message
-          const totalAddons = addonData.reduce(
-            (acc, business) => acc + business.addOns.length,
-            0,
-          );
-
-          return toast.success(
-            `Report generated successfully! Found ${totalAddons} addon types.`,
-          );
-        } catch (parseError) {
-          console.error("Error parsing response:", parseError);
-          setOpenErrorModal(true);
-          setError("Failed to process report data");
-          return toast.error("Failed to process report data");
-        }
-      }
-    },
     onError: (error) => {
       console.error("Report generation error:", error);
       setOpenErrorModal(true);
@@ -469,7 +383,6 @@ export const useAddonReports = () => {
 };
 
 export const useGetAddonReportsCsv = () => {
-  const { handleEnvelope } = useApiErrorHandler();
   const { isPending, mutateAsync, reset } = useMutation({
     mutationFn: async (payload: GetReportsPayload) => {
       const response = await apiRpc.report.add_on.download_csv.$post({
@@ -479,8 +392,6 @@ export const useGetAddonReportsCsv = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      await handleEnvelope(response);
-
       return response.blob();
     },
     onSuccess: async (blob, variables) => {
@@ -549,47 +460,28 @@ export const useServiceChargeReports = () => {
       const response = await apiRpc.report.service_charge.$post({
         json: payload,
       });
-      await handleEnvelope(response);
+      const serviceChargeData = await handleEnvelope(response);
+
+      console.log("Service Charge Report Data:", serviceChargeData);
+      if (!serviceChargeData || !Array.isArray(serviceChargeData)) {
+        throw new Error("Invalid data format received");
+      }
+      setServiceChargeReports(
+        (serviceChargeData as ServiceChargeReport[]) || [],
+      );
+      const totalServiceCharges = serviceChargeData.reduce(
+        (acc, business) => acc + business.serviceCharge,
+        0,
+      );
+      toast.success(
+        `Report generated successfully! Total service charge: ${new Intl.NumberFormat(
+          "en-IN",
+          { style: "currency", currency: "INR" },
+        ).format(totalServiceCharges)}.`,
+      );
       return response;
     },
-    onSuccess: async (data) => {
-      if (data.status === 400 || data.status === 401) {
-        setOpenErrorModal(true);
-        setError("Report generation failed");
-        return toast.error("Report generation failed");
-      }
-      if (data.status === 200 || data.status === 201) {
-        try {
-          const response = await data.json();
-          const serviceChargeData = response.data as ServiceChargeReport[];
 
-          // Validate data structure
-          if (!serviceChargeData || !Array.isArray(serviceChargeData)) {
-            throw new Error("Invalid data format received");
-          }
-
-          setServiceChargeReports(serviceChargeData);
-
-          // Calculate total service charge for success message
-          const totalServiceCharge = serviceChargeData.reduce(
-            (acc, business) => acc + business.serviceCharge,
-            0,
-          );
-
-          return toast.success(
-            `Report generated successfully! Total service charge: ${new Intl.NumberFormat(
-              "en-IN",
-              { style: "currency", currency: "INR" },
-            ).format(totalServiceCharge)}.`,
-          );
-        } catch (parseError) {
-          console.error("Error parsing response:", parseError);
-          setOpenErrorModal(true);
-          setError("Failed to process report data");
-          return toast.error("Failed to process report data");
-        }
-      }
-    },
     onError: (error) => {
       console.error("Report generation error:", error);
       setOpenErrorModal(true);
@@ -607,14 +499,11 @@ export const useServiceChargeReports = () => {
 };
 
 export const useGetServiceChargeReportsCsv = () => {
-  const { handleEnvelope } = useApiErrorHandler();
   const { isPending, mutateAsync, reset } = useMutation({
     mutationFn: async (payload: GetReportsPayload) => {
       const response = await apiRpc.report.service_charge.download_csv.$post({
         json: payload,
       });
-
-      await handleEnvelope(response);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
