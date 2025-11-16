@@ -32,7 +32,7 @@ const MemoCategory = () => {
       <div className="w-3/4 overflow-auto border-l border-gray-200 p-2 pb-[5rem] md:p-4">
         <SearchComponent />
         {searchActive && <SearchResultsGrid />}
-        <h2>Category name</h2>
+        <h2 className="mb-6 pt-6 text-xl font-bold">{selectedCategory ? selectedCategory.name : 'Select a category'}</h2>
         <CompactDishGrid selectedCategory={selectedCategory as CategoryType} />
       </div>
       <LiveCart />

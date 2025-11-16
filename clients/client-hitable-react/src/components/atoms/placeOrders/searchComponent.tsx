@@ -27,7 +27,7 @@ const MemoSearchComponent = () => {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
   const allDishes = useMemo(() => {
-    return allCategories?.flatMap((cat) => cat.dishIds) ?? [];
+    return allCategories?.flatMap((cat) => cat.dishIds).sort((a, b) => a?.name?.localeCompare(b?.name));
   }, [allCategories]);
 
   const firstFiveDishNames = useMemo(
