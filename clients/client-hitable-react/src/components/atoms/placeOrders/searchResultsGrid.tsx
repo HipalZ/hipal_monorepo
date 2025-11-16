@@ -40,7 +40,7 @@ const SearchResultsGrid = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.3 }}
-      className="mt-4 max-h-[55dvh] overflow-y-auto rounded-md border border-gray-300 bg-white shadow-md"
+      className="mt-4 max-h-[40dvh] overflow-y-auto rounded-md border border-gray-300 bg-white shadow-md"
     >
       {filtered.length ? (
         filtered.map((dish) => {
