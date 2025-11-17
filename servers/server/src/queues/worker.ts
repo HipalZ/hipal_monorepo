@@ -57,3 +57,4 @@ console.log("🚀 Unified worker started");
 console.log("ready to handle jobs");
 createWorker(QUEUE_NAME.BILL_QUEUE, 2); // normal worker
 createWorker(QUEUE_NAME.WHATSAPP_CAMPAIGN_QUEUE, 5, true); // worker with rate limiting
+createWorker(QUEUE_NAME.RAZORPAY_WEBHOOK_QUEUE, 5); // worker with rate limiting

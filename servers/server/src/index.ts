@@ -66,14 +66,7 @@ app.use(
       "https://www.hiclient.hipalz.com",
     ], // Update this with your frontend URL
     credentials: true, // Allow sending cookies
-    allowHeaders: [
-      "Authorization",
-      "Content-Type",
-      "x-refresh-token",
-      "server_secret",
-      "x_signature",
-      "electron_key",
-    ],
+    allowHeaders: ["Authorization", "Content-Type", "x-refresh-token"],
   }),
 );
 app.use(csrf());
