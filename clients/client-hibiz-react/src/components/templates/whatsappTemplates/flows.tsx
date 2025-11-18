@@ -23,10 +23,11 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
   ChevronLeft,
+  ChevronRight,
   ChevronsLeft,
   Diamond,
   FileInputIcon,
@@ -34,6 +35,7 @@ import {
   FileText,
   FileUp,
   GitBranch,
+  GripVertical,
   HelpCircle,
   ImageIcon,
   Keyboard,
@@ -55,7 +57,7 @@ import toast from 'react-hot-toast';
 import { useLocation } from 'react-router-dom';
 import { useMediaUpload } from '../../../hooks/useTemplates';
 import DeleteButton from './deleteButton';
-import GoogleSheetPopup from './googleSheetPopup';
+import GoogleSheet from './googleSheet';
 
 const NodeTypes = {
   SEND: 'send_message',
@@ -247,7 +249,7 @@ function SendNode({ data, selected }) {
 
           {m.contentType === 'text' && (
             <div className="space-y-3">
-              {data.variables?.length > 0 ? (
+              {data.variables?.length > 0 && (
                 <VariableDropdown
                   value={null}
                   onChange={insertVariable}
@@ -255,13 +257,6 @@ function SendNode({ data, selected }) {
                   flowParams={data.variables.map((v) => `@${v}`)} // Prefixed (e.g., @userName)
                   placeholder="Insert variable..."
                 />
-              ) : (
-                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-center">
-                  <p className="flex items-center justify-center gap-1 text-xs text-gray-500">
-                    <FileText className="h-3 w-3" />
-                    No variables available yet. Add some in the flow to use dynamic content.
-                  </p>
-                </div>
               )}
               <div className="space-y-1.5">
                 <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
@@ -599,8 +594,8 @@ export function VariableDropdown({ value, onChange, variables = [], flowParams =
 
 function CondNode({ data, selected }) {
   const logic = data.meta?.logic || [];
-  const variables = data.variables || []; // Global custom variables
-  const flowParams = variables.map((v) => `@${v}`); // ✅ Dynamic stored vars from global
+  const variables = data.variables || [];
+  const flowParams = variables.map((v) => `@${v}`);
   const hasLogic = logic.length > 0;
   const [expanded, setExpanded] = useState(false);
 
@@ -610,8 +605,7 @@ function CondNode({ data, selected }) {
   };
 
   const addCondition = () => {
-    if (variables.length === 0 && flowParams.length === 0) return;
-    console.log('Adding condition with vars:', variables, flowParams);
+    if (variables.length === 0 && flowParams.length === 0) return toast.error('Please add variables in previous nodes to set conditions.');
     const defaultVar = variables[0] || flowParams[0];
     data.onPatch({
       meta: {
@@ -772,16 +766,20 @@ function CondNode({ data, selected }) {
 
 function TriggerNode({ data, selected }) {
   const meta = data.meta || {};
-  const existingKeywords = meta.keywords || [];
+  const existingKeywords: string[] = meta.keywords || [];
 
   const [keywordInput, setKeywordInput] = useState('');
 
   const handleAddKeyword = () => {
-    const keyword = keywordInput.trim();
-    console.log('Adding keyword:', keyword);
+    const keyword = keywordInput.trim().toLowerCase();
     if (!keyword) return;
 
-    const updatedKeywords = Array.from(new Set([...existingKeywords, keyword]));
+    if (existingKeywords.includes(keyword)) {
+      setKeywordInput('');
+      return;
+    }
+
+    const updatedKeywords = [...existingKeywords, keyword];
 
     data.onPatch({
       meta: {
@@ -793,53 +791,95 @@ function TriggerNode({ data, selected }) {
     setKeywordInput('');
   };
 
+  const handleRemoveKeyword = (keywordToRemove: string) => {
+    const updatedKeywords = existingKeywords.filter((k: string) => k !== keywordToRemove);
+
+    data.onPatch({
+      meta: {
+        ...meta,
+        keywords: updatedKeywords,
+      },
+    });
+  };
+
   return (
     <div className="relative">
-      <Handle id="start" type="source" position={Position.Right} className="z-50 !h-[0.75rem] !w-[0.75rem]" />
+      <Handle id="start" type="source" position={Position.Right} className="z-50 !h-3 !w-3 !border-2 !border-white !bg-orange-500" />
 
       <Card
         className={cn(
-          'relative w-80 overflow-hidden border-2 shadow-lg transition-all',
-          selected ? 'border-orange-500 ring-2 ring-orange-500 ring-opacity-20' : 'border-gray-300',
+          'relative w-96 overflow-hidden border-2 shadow-xl transition-all duration-200',
+          selected ? 'border-orange-500 ring-4 ring-orange-500/20' : 'border-gray-300',
         )}
       >
+        {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-red-600 p-4 text-white">
-          <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            <h3 className="text-lg font-bold">Trigger</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              <h3 className="text-lg font-bold">Trigger Keyword</h3>
+            </div>
+            <DeleteButton data={data} />
           </div>
-          <DeleteButton data={data} />
         </div>
 
-        <CardContent className="space-y-4 bg-gray-100 p-4">
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs font-medium text-gray-700">Trigger Keywords</label>
+        <CardContent className="space-y-4 bg-gray-50 p-5">
+          {/* Input Field */}
+          <div className="space-y-3">
+            <label className="text-xs font-semibold uppercase tracking-wider text-gray-700">Trigger Keywords</label>
 
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <input
+                type="text"
                 value={keywordInput}
                 onChange={(e) => setKeywordInput(e.target.value)}
-                placeholder="Add trigger word 'Hi'"
-                className="flex-1 rounded border border-gray-300 px-3 py-2 text-xs"
-                onKeyPress={(e) => e.key === 'Enter' && handleAddKeyword()}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddKeyword())}
+                placeholder="e.g. hi, hello, start"
+                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm placeholder-gray-400 transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200"
               />
-
               <Button
+                onClick={handleAddKeyword}
                 disabled={!keywordInput.trim()}
                 size="sm"
-                variant="outline"
-                className="bg-blue-500 px-3 py-2 text-xs text-white"
-                onClick={handleAddKeyword}
+                className="bg-orange-500 px-5 font-medium text-white hover:bg-orange-600"
               >
                 Add
               </Button>
             </div>
           </div>
 
+          {/* Keyword Chips */}
           {existingKeywords.length > 0 && (
-            <Badge variant="outline" className="bg-orange-100 text-xs text-orange-800">
-              {existingKeywords.join(', ')}
-            </Badge>
+            <div className="flex flex-wrap gap-2">
+              {existingKeywords.map((keyword) => (
+                <motion.div
+                  key={keyword}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <Badge
+                    variant="secondary"
+                    className="group flex items-center gap-1.5 border border-orange-300 bg-orange-100 py-1.5 pl-3 pr-2 text-sm font-medium text-orange-800 hover:bg-orange-200"
+                  >
+                    <span>{keyword}</span>
+                    <button
+                      onClick={() => handleRemoveKeyword(keyword)}
+                      className="ml-1 rounded-full p-0.5 transition-colors hover:bg-orange-300"
+                      title={`Remove "${keyword}"`}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </Badge>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {existingKeywords.length === 0 && (
+            <p className="py-4 text-center text-xs italic text-gray-500">No trigger keywords yet. Add one to activate this flow!</p>
           )}
         </CardContent>
       </Card>
@@ -847,7 +887,7 @@ function TriggerNode({ data, selected }) {
   );
 }
 
-function InteractiveNode({ data, selected }) {
+function InteractiveReply({ data, selected }) {
   const m = data.meta ?? {
     layout: 'button',
     header: { type: 'none', mediaUrl: '', useUpload: false },
@@ -860,6 +900,24 @@ function InteractiveNode({ data, selected }) {
 
   const { uploadMediaPassFile } = useMediaUpload();
   const [uploading, setUploading] = useState(false);
+  const [localVar, setLocalVar] = useState(m.variable?.replace(/^@/, '') || '');
+
+  // Local variable typing
+  const handleVariableTyping = (e) => setLocalVar(e.target.value);
+  const handleAddVariable = () => {
+    const inputValue = localVar.trim().replace(/^@/, '');
+    if (!inputValue) return;
+    const freshMeta = data.meta || {};
+
+    data.onPatch({
+      meta: { ...freshMeta, variable: inputValue },
+    });
+
+    if (Array.isArray(data.variables) && typeof data.onVariableAdd === 'function') {
+      data.onVariableAdd([inputValue]);
+    }
+    toast.success('variable added');
+  };
   const nid = () => `${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
   // === BUTTON LOGIC ===
@@ -1197,6 +1255,37 @@ function InteractiveNode({ data, selected }) {
             </div>
           )}
         </CardContent>
+        {/* STORE VARIABLE */}
+        <div className="space-y-1.5 p-4">
+          <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+            <FileText className="h-3 w-3 text-emerald-600" />
+            Store Response In (Optional)
+          </label>
+
+          <div className="flex items-center gap-2">
+            <Input
+              value={localVar}
+              onChange={handleVariableTyping}
+              placeholder="user name"
+              prefix="@"
+              className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddVariable}
+              disabled={!localVar.trim()}
+              className="bg-emerald-400 text-white"
+            >
+              <Plus className="mr-1 h-3 w-3" />
+              Add
+            </Button>
+          </div>
+          <Badge variant="outline" className="bg-orange-100 text-xs text-orange-800">
+            {m.variable?.replace(/^@/, '')}
+          </Badge>
+        </div>
       </Card>
     </div>
   );
@@ -1334,8 +1423,6 @@ function InteractiveListNode({ data, selected }) {
     routes: m.routes || {},
   };
 
-  console.log('meta normalized:', m);
-
   const nid = () => `${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
   // === SECTION LOGIC ===
@@ -1350,7 +1437,7 @@ function InteractiveListNode({ data, selected }) {
   };
 
   // === ROW LOGIC ===
-  const addListRow = (sectionIndex) => {
+  const addListRow = (sectionIndex: number) => {
     const newRowId = `row_${nid()}`;
     const updatedSections = m.list.sections.map((s, i) =>
       i === sectionIndex
@@ -1385,8 +1472,6 @@ function InteractiveListNode({ data, selected }) {
   const removeListSection = (si) => {
     const sections = m.list.sections.filter((_, i) => i !== si);
     data.onPatch({ meta: { ...m, list: { ...m.list, sections } } });
-
-    console.log('Removing section, updated sections:', sections);
   };
 
   return (
@@ -1519,7 +1604,7 @@ function InteractiveListNode({ data, selected }) {
 }
 
 function GoogleSheetNode({ data, selected }) {
-  return <GoogleSheetPopup data={data} selected={selected} />;
+  return <GoogleSheet data={data} selected={selected} />;
 }
 
 const nodeTypes = {
@@ -1527,7 +1612,7 @@ const nodeTypes = {
   [NodeTypes.ASK]: AskNode,
   [NodeTypes.COND]: CondNode,
   [NodeTypes.TRIGGER]: TriggerNode,
-  [NodeTypes.INTERACTIVE]: InteractiveNode,
+  [NodeTypes.INTERACTIVE]: InteractiveReply,
   [NodeTypes.INTERACTIVE_BUTTON]: InteractiveButtonNode,
   [NodeTypes.INTERACTIVE_LIST]: InteractiveListNode,
   [NodeTypes.SHEET]: GoogleSheetNode,
@@ -1738,8 +1823,8 @@ function buildFinalFromGraph(nodes, edges) {
   };
 }
 
-export const PaletteItem = ({ label, type, icon, cardColor }) => {
-  const defaultDrag = (e: DragEvent<HTMLDivElement>) => {
+export const PaletteItem = ({ label, type, icon, gradient }: { label: string; type: string; icon: React.ReactNode; gradient: string }) => {
+  const handleDragStart = (e: DragEvent) => {
     e.dataTransfer.setData('application/reactflow', type);
     e.dataTransfer.effectAllowed = 'move';
   };
@@ -1747,20 +1832,50 @@ export const PaletteItem = ({ label, type, icon, cardColor }) => {
   return (
     <div
       draggable
-      onDragStart={defaultDrag}
+      onDragStart={handleDragStart}
       className={cn(
-        'group relative flex cursor-grab items-center gap-3 overflow-hidden rounded-xl border p-3 text-sm font-medium shadow-sm transition-all',
-        'hover:scale-[1.02] hover:shadow-lg active:cursor-grabbing',
-        cardColor,
-        'text-white',
+        'group relative flex cursor-grab items-center gap-3 rounded-lg border bg-white px-4 py-3 shadow-sm transition-all',
+        'hover:scale-[1.02] hover:shadow-md active:scale-100 active:cursor-grabbing',
+        'border-gray-200',
       )}
     >
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 p-1.5">{icon}</div>
-      <span className="select-none">{label}</span>
-      <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+      <div className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${gradient} p-2 text-white shadow-md`}>{icon}</div>
+      <span className="select-none text-sm font-medium text-gray-800">{label}</span>
+      <GripVertical className="absolute right-3 h-4 w-4 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg">
+        <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+      </div>
     </div>
   );
 };
+
+const categories = [
+  {
+    id: 'messages',
+    title: 'Messages & Replies',
+    icon: <MessageSquare className="h-4 w-4" />,
+    color: 'from-emerald-400 to-teal-600',
+    bg: 'bg-emerald-50 border-emerald-200',
+    items: [
+      { label: 'Ask a Question', type: NodeTypes.ASK, icon: <HelpCircle className="h-5 w-5" /> },
+      { label: 'Send Message', type: NodeTypes.SEND, icon: <MessageSquare className="h-5 w-5" /> },
+      { label: 'Interactive Reply', type: NodeTypes.INTERACTIVE, icon: <Share2 className="h-5 w-5" /> },
+      { label: 'Buttons', type: NodeTypes.INTERACTIVE_BUTTON, icon: <SquareCheck className="h-5 w-5" /> },
+      { label: 'Lists', type: NodeTypes.INTERACTIVE_LIST, icon: <ListOrdered className="h-5 w-5" /> },
+    ],
+  },
+  {
+    id: 'logic',
+    title: 'Logic & Data',
+    icon: <GitBranch className="h-4 w-4" />,
+    color: 'from-violet-400 to-purple-600',
+    bg: 'bg-violet-50 border-violet-200',
+    items: [
+      { label: 'Set a Condition', type: NodeTypes.COND, icon: <GitBranch className="h-5 w-5" /> },
+      { label: 'Spreadsheet Action', type: NodeTypes.SHEET, icon: <FileSpreadsheet className="h-5 w-5" /> },
+    ],
+  },
+];
 
 function EditorShell() {
   const [chatbotName, setChatbotName] = useState('My Chatbot');
@@ -1768,6 +1883,8 @@ function EditorShell() {
   const [rfEdges, setRfEdges] = useState([]);
   const [variables, setVariables] = useState([]);
   const [leftOpen, setLeftOpen] = useState(true);
+  const [openCategories, setOpenCategories] = useState<string[]>(['triggers', 'messages', 'logic']);
+
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const { createChatbot } = useChatBot();
   const reactFlowWrapper = useRef(null);
@@ -1776,25 +1893,20 @@ function EditorShell() {
   const { search } = useLocation();
   const searchParams = new URLSearchParams(search);
   const chatbotId = searchParams.get('chatbotId');
-  const handleOpenChatbot = useCallback(() => {
-    setOpenBot(false);
-  }, [setOpenBot]);
+
+  // RIGHT-CLICK CONTEXT MENU STATE
+  const [contextMenu, setContextMenu] = useState<{
+    nodeId: string;
+    handleId: string | null;
+    clientX: number;
+    clientY: number;
+  } | null>(null);
+
+  const handleOpenChatbot = useCallback(() => setOpenBot(false), [setOpenBot]);
 
   const updateGlobalVariables = useCallback((newVars) => {
-    setVariables((prev) => {
-      const merged = Array.from(new Set([...prev, ...newVars]));
-      return merged;
-    });
-
-    setRfNodes((nds) =>
-      nds.map((n) => ({
-        ...n,
-        data: {
-          ...n.data,
-          variables: newVars,
-        },
-      })),
-    );
+    setVariables((prev) => Array.from(new Set([...prev, ...newVars])));
+    setRfNodes((nds) => nds.map((n) => ({ ...n, data: { ...n.data, variables: newVars } })));
   }, []);
 
   const onNodesChange = useCallback((changes) => setRfNodes((nds) => applyNodeChanges(changes, nds)), []);
@@ -1802,7 +1914,6 @@ function EditorShell() {
 
   const onConnect = useCallback((params) => {
     const edge = { ...params, id: `e-${nid()}`, data: {} };
-
     if (params.sourceHandle === 'true') edge.data.kind = 'cond:true';
     else if (params.sourceHandle === 'false') edge.data.kind = 'cond:false';
     else if (params.sourceHandle === 'start') edge.data.kind = 'trigger:start';
@@ -1814,48 +1925,39 @@ function EditorShell() {
         if (n.id === params.source) {
           const m = n.data.meta || {};
           const routes = { ...(m.routes || {}) };
-          if (params.sourceHandle) {
-            routes[params.sourceHandle] = params.target;
-          }
-          return {
-            ...n,
-            data: {
-              ...n.data,
-              meta: { ...m, routes },
-            },
-          };
+          if (params.sourceHandle) routes[params.sourceHandle] = params.target;
+          return { ...n, data: { ...n.data, meta: { ...m, routes } } };
         }
         return n;
       }),
     );
   }, []);
 
-  function addNode(type, position) {
-    const id = nid();
-    setRfNodes((nds) => [
-      ...nds,
-      makeNode({
-        id,
-        type,
-        position,
-        variables,
-        patch: (p) => patchNode(id, p),
-        onVariableAdd: updateGlobalVariables,
-        remove: (nodeId) => removeNode(nodeId),
-      }),
-    ]);
-  }
+  const addNode = useCallback(
+    (type, position) => {
+      const id = nid();
+      setRfNodes((nds) => [
+        ...nds,
+        makeNode({
+          id,
+          type,
+          position,
+          variables,
+          patch: (p) => patchNode(id, p),
+          onVariableAdd: updateGlobalVariables,
+          remove: removeNode,
+        }),
+      ]);
+    },
+    [variables, updateGlobalVariables],
+  );
 
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
       const type = event.dataTransfer.getData('application/reactflow');
       if (!type) return;
-
-      const position = screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
+      const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
       addNode(type, position);
     },
     [screenToFlowPosition, addNode],
@@ -1877,7 +1979,7 @@ function EditorShell() {
                   ...n.data,
                   ...patch,
                   meta: { ...n.data.meta, ...(patch.meta || {}) },
-                  remove: (nodeId) => removeNode(nodeId),
+                  remove: removeNode,
                   onVariableAdd: updateGlobalVariables,
                 },
               }
@@ -1888,152 +1990,117 @@ function EditorShell() {
     [updateGlobalVariables],
   );
 
-  const finalObject = useMemo(() => {
-    const core = buildFinalFromGraph(rfNodes, rfEdges);
-    return {
-      chatbotName,
-      businessId,
-      ...core,
-    };
-  }, [rfNodes, rfEdges, chatbotName, businessId]);
-
-  function removeNode(id) {
+  const removeNode = useCallback((id) => {
     setRfNodes((nds) => nds.filter((n) => n.id !== id));
     setRfEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
-  }
+  }, []);
+
+  const finalObject = useMemo(() => {
+    const core = buildFinalFromGraph(rfNodes, rfEdges);
+    return { chatbotName, businessId, ...core };
+  }, [rfNodes, rfEdges, chatbotName, businessId]);
 
   const handleSaveFlow = () => {
     if (chatbotId) {
-      // updateChatbot(chatbot._id, finalObject);
+      // update logic
     } else {
       createChatbot(finalObject);
     }
   };
 
-  const nodePaletteItems = [
-    {
-      label: 'Send Message',
-      type: NodeTypes.SEND,
-      icon: <MessageSquare className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-emerald-200 to-teal-300 !text-black', // softer
-    },
-    {
-      label: 'Ask a Question',
-      type: NodeTypes.ASK,
-      icon: <HelpCircle className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-sky-200 to-blue-300 !text-black', // softer
-    },
-    {
-      label: 'Set a Condition',
-      type: NodeTypes.COND,
-      icon: <GitBranch className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-amber-200 to-orange-300 !text-black', // softer
-    },
-    {
-      label: 'Trigger Keyword',
-      type: NodeTypes.TRIGGER,
-      icon: <Keyboard className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-rose-200 to-pink-300 !text-black', // softer
-    },
-    {
-      label: 'Interactive Reply',
-      type: NodeTypes.INTERACTIVE,
-      icon: <Share2 className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-indigo-200 to-purple-300 !text-black', // softer
-    },
-    {
-      label: 'Buttons',
-      type: NodeTypes.INTERACTIVE_BUTTON,
-      icon: <SquareCheck className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-fuchsia-200 to-violet-300 !text-black', // softer
-    },
-    {
-      label: 'Lists',
-      type: NodeTypes.INTERACTIVE_LIST,
-      icon: <ListOrdered className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-cyan-200 to-teal-300 !text-black', // softer
-    },
-    {
-      label: 'Spreadsheet Action',
-      type: NodeTypes.SHEET,
-      icon: <FileSpreadsheet className="h-4 w-4" />,
-      cardColor: 'bg-gradient-to-br from-lime-200 to-green-300 !text-black', // softer
-    },
-  ];
+  const toggleCategory = (id: string) => {
+    setOpenCategories((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
+  };
 
   return (
     <div className="inter flex h-full w-full overflow-hidden bg-gray-50">
+      {/* LEFT SIDEBAR */}
       <div
         className={cn('relative flex-shrink-0 border-r border-gray-200 bg-white transition-all duration-300', leftOpen ? 'w-80 shadow-xl' : 'w-12')}
       >
-        {/* Toggle Button */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => setLeftOpen((v) => !v)}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') setLeftOpen((v) => !v);
-          }}
-          className="absolute right-[-18px] top-6 z-10"
-        >
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 rounded-full bg-white text-gray-500 shadow-lg hover:bg-gray-50 hover:text-blue-600"
-          >
+        <div role="button" tabIndex={0} onClick={() => setLeftOpen((v) => !v)} className="absolute right-[-18px] top-6 z-10">
+          <Button variant="outline" size="icon" className="h-9 w-9 rounded-full bg-white shadow-lg hover:text-blue-600">
             {leftOpen ? <ChevronLeft className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
           </Button>
         </div>
 
         {leftOpen && (
-          <div className="flex flex-col">
-            <Card className="rounded-none border-b border-l-0 border-r-0 border-t-0 border-gray-100 bg-slate-50 shadow-none">
-              <CardHeader className="flex flex-col gap-2 p-4 pb-3">
-                <div className="flex items-center gap-2">
-                  <ChevronsLeft className="h-8 w-8 cursor-pointer text-black hover:text-blue-600" onClick={handleOpenChatbot} />
-                  <CardTitle className="text-2xl font-semibold text-slate-800">Chat Bot Flow Editor</CardTitle>
+          <div className="flex h-[90dvh] flex-col">
+            <Card className="rounded-none border-b border-gray-100 bg-slate-50 shadow-none">
+              <CardHeader className="p-4 pb-3">
+                <div className="mb-3 flex items-center gap-2">
+                  <ChevronsLeft className="h-8 w-8 cursor-pointer hover:text-blue-600" onClick={handleOpenChatbot} />
+                  <CardTitle className="text-2xl font-semibold">Chat Bot Flow Editor</CardTitle>
                 </div>
-                <Input
-                  value={chatbotName}
-                  onChange={(e) => setChatbotName(e.target.value)}
-                  required
-                  placeholder="Enter flow name (e.g., Lead Qualifier)"
-                  className="h-9 w-full border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
-                />
+                <Input value={chatbotName} onChange={(e) => setChatbotName(e.target.value)} placeholder="Flow name..." className="h-9 text-sm" />
               </CardHeader>
             </Card>
-            <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto p-4">
-              <Card className="border-gray-200 shadow-none">
-                <CardHeader className="pb-2 pt-3">
-                  <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-700">
-                    <Zap className="h-4 w-4 text-orange-500" />
-                    Node Palette
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 p-3 pt-2">
-                  <div className="space-y-2">
-                    {nodePaletteItems.map((item, idx) => (
-                      <motion.div key={item.type} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}>
-                        <PaletteItem label={item.label} type={item.type} icon={item.icon} cardColor={item.cardColor} />
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+
+            <div className="flex-1 space-y-5 overflow-y-auto p-5">
+              <div className="text-sm font-semibold text-slate-600">Node Palette</div>
+              <div className="space-y-4">
+                <PaletteItem
+                  label="Trigger Keyword"
+                  type={NodeTypes.TRIGGER}
+                  icon={<Keyboard className="h-5 w-5" />}
+                  gradient="from-orange-400 to-red-500"
+                />
+                {categories.map((category) => {
+                  const isOpen = openCategories.includes(category.id);
+                  return (
+                    <motion.div key={category.id} layout className={cn('overflow-hidden rounded-xl border bg-white shadow-sm', category.bg)}>
+                      <button
+                        onClick={() => toggleCategory(category.id)}
+                        className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-white/60"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${category.color} flex items-center justify-center text-white`}>
+                            {category.icon}
+                          </div>
+                          <span className="font-semibold text-gray-800">{category.title}</span>
+                          <span className="ml-2 text-xs text-gray-500">{category.items.length}</span>
+                        </div>
+                        {isOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                      </button>
+
+                      <AnimatePresence>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: 'auto' }}
+                            exit={{ height: 0 }}
+                            className="border-t border-gray-200/80"
+                          >
+                            <div className="space-y-2 p-4 pb-5">
+                              {category.items.map((item, idx) => (
+                                <motion.div
+                                  key={item.type}
+                                  initial={{ opacity: 0, y: -8 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: idx * 0.05 }}
+                                >
+                                  <PaletteItem label={item.label} type={item.type} icon={item.icon} gradient={category.color} />
+                                </motion.div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Save Button (Sticky Footer) */}
-            <div className="border-t border-gray-200 bg-white p-4 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-              <Button onClick={handleSaveFlow} className="w-full bg-blue-600 text-white shadow-md transition-colors duration-200 hover:bg-blue-700">
-                <Save className="mr-2 h-4 w-4" />
-                Publish Flow
+            <div className="shadow-up border-t bg-white p-4">
+              <Button onClick={handleSaveFlow} className="w-full bg-blue-600 hover:bg-blue-700">
+                <Save className="mr-2 h-4 w-4" /> Publish Flow
               </Button>
             </div>
           </div>
         )}
       </div>
 
-      {/* MAIN FLOW CANVAS */}
       <div className="relative h-[85dvh] flex-1" ref={reactFlowWrapper}>
         <ReactFlow
           nodes={rfNodes}
@@ -2048,11 +2115,158 @@ function EditorShell() {
           fitView
           className="bg-gray-100"
           proOptions={{ hideAttribution: true }}
+          onNodeContextMenu={useCallback((event, node) => {
+            event.preventDefault();
+            const target = event.target as HTMLElement;
+            const handle = target.closest('[data-handleid]') as HTMLElement;
+            const handleId = handle?.getAttribute('data-handleid') || null;
+            if (handle && handle.getAttribute('data-handlepos') !== 'right') return;
+            setContextMenu({
+              nodeId: node.id,
+              handleId, // ← This is now correct: 'true', 'false', 'start', or null
+              clientX: event.clientX,
+              clientY: event.clientY,
+            });
+          }, [])}
+          onPaneClick={() => setContextMenu(null)}
+          onNodeClick={() => setContextMenu(null)}
         >
           <Background variant="dots" gap={12} size={1} className="bg-gray-50" />
-          <Controls className="rounded-lg border border-gray-200 bg-white text-gray-700 shadow-lg" />
+          <Controls className="rounded-lg border border-gray-200 bg-white shadow-lg" />
+          {contextMenu && (
+            <div
+              className="pointer-events-none fixed inset-0 z-[9999]"
+              onContextMenu={(e) => e.preventDefault()}
+              onClick={() => setContextMenu(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                className="pointer-events-auto absolute max-h-[70vh] w-96 overflow-y-auto rounded-2xl border-4 border-white bg-white p-6 shadow-2xl"
+                style={{
+                  left: contextMenu.clientX + 10,
+                  top: contextMenu.clientY + 10,
+                }}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                onMouseUp={(e) => e.stopPropagation()}
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                <div className="mb-5 flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-gray-800">
+                    Add Node via {contextMenu.handleId ? `"${contextMenu.handleId}"` : 'Default'} Branch
+                  </h3>
+                  <button onClick={() => setContextMenu(null)} className="rounded-full p-2 hover:bg-gray-100">
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {categories.map((category) => (
+                    <div key={category.id} className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`h-10 w-10 rounded-lg bg-gradient-to-br ${category.color} flex items-center justify-center text-white shadow-md`}
+                        >
+                          {category.icon}
+                        </div>
+                        <h4 className="font-semibold text-gray-700">{category.title}</h4>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 pl-1">
+                        {category.items.map((item) => (
+                          <button
+                            key={item.type}
+                            onClick={() => {
+                              const position = screenToFlowPosition({
+                                x: contextMenu.clientX + 340,
+                                y: contextMenu.clientY + 80,
+                              });
+
+                              const newNodeId = nid();
+                              const newNode = makeNode({
+                                id: newNodeId,
+                                type: item.type,
+                                position,
+                                variables,
+                                patch: (p) => patchNode(newNodeId, p),
+                                onVariableAdd: updateGlobalVariables,
+                                remove: removeNode,
+                              });
+
+                              setRfNodes((nds) => [...nds, newNode]);
+
+                              // CORRESPONDING EDGE — Uses the exact handle you right-clicked!
+                              const newEdge = {
+                                id: `e-${contextMenu.nodeId}-${newNodeId}`,
+                                source: contextMenu.nodeId,
+                                target: newNodeId,
+                                sourceHandle: contextMenu.handleId, // ← THIS IS NOW CORRECT!
+                                animated: true,
+                                style: { stroke: '#6366f1', strokeWidth: 3 },
+                                data: {
+                                  kind:
+                                    contextMenu.handleId === 'true'
+                                      ? 'cond:true'
+                                      : contextMenu.handleId === 'false'
+                                        ? 'cond:false'
+                                        : contextMenu.handleId === 'start'
+                                          ? 'trigger:start'
+                                          : 'normal',
+                                },
+                              };
+
+                              setRfEdges((eds) => addEdge(newEdge, eds));
+
+                              // CORRECT ROUTE UPDATE
+                              setRfNodes((nds) =>
+                                nds.map((n) =>
+                                  n.id === contextMenu.nodeId
+                                    ? {
+                                        ...n,
+                                        data: {
+                                          ...n.data,
+                                          meta: {
+                                            ...(n.data.meta || {}),
+                                            routes: {
+                                              ...(n.data.meta?.routes || {}),
+                                              [contextMenu.handleId || 'next']: newNodeId,
+                                            },
+                                          },
+                                        },
+                                      }
+                                    : n,
+                                ),
+                              );
+
+                              // Auto-select
+                              setRfNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === newNodeId })));
+
+                              setContextMenu(null);
+                              toast.success(`${item.label} connected via "${contextMenu.handleId || 'default'}"`);
+                            }}
+                            className="group flex flex-col items-center gap-3 rounded-xl border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-white p-4 transition-all hover:scale-105 hover:border-gray-400 hover:shadow-xl active:scale-95"
+                          >
+                            <div
+                              className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${category.color} flex items-center justify-center text-white shadow-lg group-hover:shadow-2xl`}
+                            >
+                              {item.icon}
+                            </div>
+                            <span className="text-xs font-medium text-gray-800">{item.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          )}
         </ReactFlow>
       </div>
+
+      {/* OUTPUT JSON PANEL */}
       <Card className="h-full max-w-xs flex-shrink-0 overflow-y-auto rounded-none border-0 shadow-lg">
         <CardHeader className="border-b p-3">
           <CardTitle className="text-sm font-semibold text-slate-700">Output JSON</CardTitle>

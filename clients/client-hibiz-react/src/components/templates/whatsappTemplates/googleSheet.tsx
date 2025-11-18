@@ -202,7 +202,7 @@ export default function GoogleSheetPopup({ data, selected }: { data: any; select
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-700">Add Cell Mapping</label>
                 {cells.map((cell, i) => (
-                  <div key={i} className="flex items-center gap-2">
+                  <div key={i?.toString()} className="flex items-center gap-2">
                     <Input
                       placeholder="A1"
                       value={cell.key}

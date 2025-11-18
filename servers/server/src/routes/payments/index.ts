@@ -1,5 +1,4 @@
 import { createHmac } from "node:crypto";
-// books.ts
 import {
   BusinessPosConfig,
   BusinessSettings,
