@@ -1915,6 +1915,11 @@ const tableRouter = new Hono()
           businessId,
         });
 
+        const destTableSession = await UserSession.findOne({
+          tableName: destinationTable.name,
+          businessId,
+        });
+
         if (!tableSession || sourceTable.status === "EMPTY") {
           return respond(
             c,
@@ -1934,6 +1939,19 @@ const tableRouter = new Hono()
             400,
             {},
           );
+        }
+
+        if (destTableSession) {
+          const billAlreadySplit = checkOriginBillIsSplit(destTableSession);
+          if (billAlreadySplit) {
+            return respond(
+              c,
+              "Bill already split you cannot transfer the table and items",
+              true,
+              400,
+              {},
+            );
+          }
         }
 
         if (transferType === "TABLE") {
