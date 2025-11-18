@@ -24,12 +24,6 @@ const pathFinderRouter = new Hono().get(
     return runInTransaction(async (session) => {
       const { businessId, from, to } = c.req.query();
 
-      const { server_secret } = c.req.header();
-
-      if (!server_secret) {
-        return respond(c, "access denied", true, 403, {});
-      }
-
       const fromDate = dateToTimestamp(from);
       const toDate = dateToTimestamp(to);
 
