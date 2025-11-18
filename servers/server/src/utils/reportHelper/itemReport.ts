@@ -43,7 +43,7 @@ export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
       }
 
       const grp = acc[key];
-      grp.itemCount += 1;
+      grp.itemCount += quantity;
       // grp.quantity += quantity;
       grp.discount += discount;
       grp.tax += Number(lineTax?.toFixed(2));
