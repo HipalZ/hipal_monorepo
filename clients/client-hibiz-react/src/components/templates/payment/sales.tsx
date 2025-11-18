@@ -161,7 +161,7 @@ const MemoPaymentSales = () => {
       )}
       <Pagination dataLength={historyData?.length || 1} />
       {open && (
-        <PopUp height="h-[100dvh] lg:h-[80dvh]" hide width="w-[30rem]" onClose={closeModel} show={open}>
+        <PopUp height="h-[100dvh] lg:h-[80dvh]" hide width="w-full max-w-[48rem]" onClose={closeModel} show={open} rightTopBack>
           <PaymentModal
             salesData={salesData}
             onClose={closeModel}

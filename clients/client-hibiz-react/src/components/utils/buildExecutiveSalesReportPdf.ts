@@ -479,6 +479,8 @@ export type ExecutiveReportInput = {
 
 // ~20px = 16pt, ~16px = 12pt
 // Fonts: roughly like your sample receipt
+import { format as dfFormat } from "date-fns";
+
 const PT_TITLE = 14; // ~19px
 const PT_SECTION = 11; // ~15px
 const PT_BODY = 10; // ~13px
@@ -497,6 +499,12 @@ const fmtAmt = (n?: number) =>
 const asDate = (v: number | string | Date) =>
   new Date(v).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" });
 
+const formatForFile = (d: Date | string) => {
+  const dateObj = d instanceof Date ? d : new Date(d);
+  // Example: 2025-11-18_10-35
+  return dfFormat(dateObj, "yyyy-MM-dd_HH-mm");
+};
+
 const asDateTime = (v: number | string | Date) =>
   new Date(v).toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -514,7 +522,6 @@ const labelize = (s: string) =>
 export function buildExecutiveSalesReportPdf(input: ExecutiveReportInput) {
   const { businessName, from, to, salesData, otherData, salesExceptionData } =
     input;
-  console.log("input to buildExecutiveSalesReportPdf", input);
   const doc = new jsPDF({ unit: "mm", format: [80, 297] }); // 80mm width
 
   // Prefer Poppins if registered
@@ -544,7 +551,9 @@ export function buildExecutiveSalesReportPdf(input: ExecutiveReportInput) {
   y += LINE_GAP + 1.5;
 
   doc.setFontSize(PT_BODY);
-  doc.text(`${asDate(from)} to ${asDate(to)}`, 40, y + 2, { align: "center" });
+  doc.text(`${formatForFile(from)} to ${formatForFile(to)}`, 40, y + 2, {
+    align: "center",
+  });
   y += LINE_GAP + 1.5;
 
   // ===== Billing (Success) =====
