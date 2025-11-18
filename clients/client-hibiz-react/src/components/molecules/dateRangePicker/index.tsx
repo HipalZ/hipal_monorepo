@@ -205,7 +205,7 @@ const DateRangePicker = () => {
                         else setValidationError('');
                       }}
                       showTimeSelect
-                      timeIntervals={15}
+                      timeIntervals={1}
                       timeCaption="Time"
                       dateFormat="dd-MM-yyyy hh:mm aa"
                       maxDate={tempEnd || new Date()}
@@ -227,7 +227,7 @@ const DateRangePicker = () => {
                         else setValidationError('');
                       }}
                       showTimeSelect
-                      timeIntervals={15}
+                      timeIntervals={1}
                       timeCaption="Time"
                       dateFormat="dd-MM-yyyy hh:mm aa"
                       minDate={tempStart}

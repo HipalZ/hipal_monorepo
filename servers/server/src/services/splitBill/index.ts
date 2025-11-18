@@ -69,7 +69,7 @@ const checkOfflinePaymentRequest = async (
 };
 
 const checkOriginBillIsSplit = (original?: UserSessionSchemaType) => {
-  return original?.isSplit ?? false;
+  return original?.isSplit || false;
 };
 
 const checkVariantIsPaid = async (originalTableSessionId: string) => {

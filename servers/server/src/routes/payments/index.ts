@@ -3576,7 +3576,7 @@ const paymentsRouter = new Hono()
           couponDiscount: 1,
           billInvoice: 1,
         },
-      );
+      ).sort({ billInvoice: 1 });
 
       const startInvoiceNumber = payments[0]?.billInvoice || 0;
       const endInvoiceNumber = payments[payments.length - 1]?.billInvoice || 0;
@@ -3774,7 +3774,7 @@ const paymentsRouter = new Hono()
       const queryObject = { $and: filterConditions, isDeleted: false };
 
       const existingPayments = await Payment.find(queryObject)
-        .sort({ _id: -1 })
+        .sort({ billInvoice: 1 })
         .skip(skip)
         .limit(PAGE_SIZE)
         .populate({ path: "order_id" })
@@ -3901,7 +3901,7 @@ const paymentsRouter = new Hono()
       const queryObject = { $and: filterConditions, isDeleted: false };
 
       const existingPayments = await Payment.find(queryObject)
-        .sort({ _id: -1 })
+        .sort({ billInvoice: 1 })
         .populate({ path: "order_id" })
         .populate({ path: "userId", select: "name phone" });
 
