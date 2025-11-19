@@ -30,7 +30,6 @@ import { Hono } from "hono";
 import type { ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { executePosHandler } from "../../utils/executePoshandlers.ts";
 import { calculateCartBill } from "../../utils/helper";
@@ -296,7 +295,7 @@ const tableRouter = new Hono()
         },
         {
           $set: {
-            patchCount: guestCount,
+            paxCount: guestCount,
           },
         },
       );
