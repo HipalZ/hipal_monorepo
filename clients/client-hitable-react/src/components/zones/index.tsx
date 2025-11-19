@@ -1,5 +1,5 @@
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
-import { useGetBill } from '@/components/hooks/useBill';
+import { useGetBill, useGetBillWithTableName } from '@/components/hooks/useBill';
 import { useCart } from '@/components/store/useCart';
 import { useOrderStore } from '@/components/store/useOrderData';
 import { useStaffPermissionStore } from '@/components/store/usePermissions';
@@ -40,8 +40,7 @@ const MemoZones = () => {
   const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
   const canPrintBill = hasPermission('print_bill');
 
-  const { isLoading: billLoading, data: billData, getBillCall } = useGetBill();
-
+  const { isBillPending, mutateAsync } = useGetBillWithTableName();
   // 🔹 Local state for split-bill print popup
   const [isPrinting, setIsPrinting] = useState(false);
   const [splitPrintState, setSplitPrintState] = useState<{
@@ -157,12 +156,12 @@ const MemoZones = () => {
   const printBill = async (table: TableData) => {
     try {
       setIsPrinting(true);
-      setSelectedTable(table);
       setSelectedBill(null);
 
-      const data = await getBillCall();
-      const result = (data as any)?.data;
-      const bill = (result ?? billData) as IBillData | IBillData[] | null;
+      const data = await mutateAsync(table.name);
+      const result = data as IBillData | IBillData[];
+      console.log('Fetched bill data for printing from Zones:', result);
+      const bill = result as IBillData | IBillData[] | null;
 
       if (!bill) {
         toast.error('No bill found for this table.');
@@ -191,7 +190,7 @@ const MemoZones = () => {
     }
   };
 
-  if (zonesLoading || tablesLoading || billLoading || isPrinting) {
+  if (zonesLoading || tablesLoading) {
     return <SpinnerMemo />;
   }
 
@@ -278,8 +277,10 @@ const MemoZones = () => {
 
                               {table.currentTableAmount > 0 && canPrintBill && (
                                 <Button
+                                  disabled={isPrinting}
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    setSelectedTable(table);
                                     printBill(table);
                                   }}
                                   size="sm"
@@ -337,7 +338,7 @@ const MemoZones = () => {
 
             <Button
               className="mt-4 w-full rounded-md bg-blue-600 text-white"
-              disabled={selectedVariants.length === 0}
+              disabled={selectedVariants.length === 0 || isPrinting}
               onClick={async () => {
                 try {
                   if (selectedVariants.length === 0) return;
@@ -360,6 +361,7 @@ const MemoZones = () => {
             </Button>
 
             <Button
+              disabled={isPrinting}
               className="mt-2 w-full rounded-md bg-purple-600 text-white"
               onClick={async () => {
                 try {
