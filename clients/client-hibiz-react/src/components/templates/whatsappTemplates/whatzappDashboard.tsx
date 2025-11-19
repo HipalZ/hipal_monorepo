@@ -12,6 +12,7 @@ import { MdCampaign } from 'react-icons/md';
 import { TbSettingsAutomation } from 'react-icons/tb';
 import { ChatbotDashboard } from './chatbotDashboard';
 
+const WhatsappChatbotSettings = lazy(() => import('./whatsappchatbotsettings'));
 const WhatsappChatBot = lazy(() => import('./flows'));
 const LinkTemplatePopup = lazy(() => import('./linkTemplatePopup'));
 const WhatsappFlowSection = lazy(() => import('./whatsappFlows'));
@@ -71,6 +72,8 @@ const MemoWhatzappDashboard = () => {
       //   return <TbSettingsAutomation className="w-5 h-5 mr-2" />;
       case Tabs.CHATS:
         return <MessageCircle className="mr-2 h-5 w-5" />;
+      case Tabs.SETTINGS:
+        return <TbSettingsAutomation className="mr-2 h-5 w-5" />;
       default:
         return null;
     }
@@ -197,6 +200,7 @@ const MemoWhatzappDashboard = () => {
         {activeTab === Tabs.CHATS && <WhatsappChats />}
         {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}
         {activeTab === Tabs.CAMPAIGNS && openAnalytics && <CampaignAdvancedAnalytics />}
+        {activeTab === Tabs.SETTINGS && <WhatsappChatbotSettings />}
       </div>
 
       {/* Overlay popup */}

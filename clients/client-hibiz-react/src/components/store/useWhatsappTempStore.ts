@@ -12,6 +12,7 @@ export enum Tabs {
   FLOWS = "flows",
   // AUTOMATION = "automation",
   CHATS = "chats",
+  SETTINGS = "settings",
 }
 
 export interface Message {

@@ -76,45 +76,52 @@ function interpolate(
   vars: Record<string, any>,
   cfg?: any,
   userName?: string,
-) {
+): string {
   if (!str) return "";
-
-  // Step 1: build merged context (user vars + system vars)
-  console.log("userName in interpolate:", userName);
+  console.log("str to interpolate:", str);
   const context = {
     ...(vars || {}),
     name: userName || "",
     phone: cfg?.waProfile?.phone || cfg?.phone || "",
   };
+  console.log("interpolate context", context);
 
-  // Step 2: replace all patterns
-  return (
-    str
-      // {{name}} , {{phone}} , {{custom||fallback}}
-      .replace(/\{\{(\w+)(?:\|\|([^}]+))?\}\}/g, (_, key, fb) => {
-        const val = context[key];
-        return val !== undefined && val !== null && val !== ""
-          ? String(val)
-          : fb ?? "";
-      })
-      // @variable (user responses)
-      .replace(/@(\w+)/g, (_, key) => {
-        const atKey = `@${key}`;
-        return context[atKey] !== undefined && context[atKey] !== null
-          ? String(context[atKey])
-          : "";
-      })
+  let result = str;
+
+  // {{var}} – no change needed
+  result = result.replace(/\{\{(\w+)(?:\s*\|\|\s*([^}]+))?\}\}/g, (m, k, f) => {
+    return context[k] ?? f?.trim() ?? "";
+  });
+
+  // @variable – FIX: +? → + (greedy) + escape ] in lookahead
+  result = result.replace(
+    /@([\w\s\-_]+)(?=\s|$|[.,!?;:)}\\""]|$)/g,
+    (match, keyPart) => {
+      const key = keyPart.trim();
+      console.log("key", key);
+      const varKey = key.startsWith("@") ? key : `@${key}`;
+      console.log("varKey", varKey);
+      console.log("context[varKey]", context[varKey], varKey);
+      const val = context[varKey];
+      console.log("val", val);
+      if (val !== undefined && val !== null && val !== "") {
+        return String(val);
+      }
+      return match;
+    },
   );
+  console.log("interpolate", result);
+  return result;
 }
 
 function evalRow(row, vars) {
-  let key = row.var;
-
+  let key = String(row.var || "").trim();
+  console.log("key", key);
   let left = vars[key];
-
+  console.log("left", left);
   if (left === undefined) {
-    // fallback: remove @ prefix if not found
     const altKey = key.startsWith("@") ? key.slice(1) : `@${key}`;
+    console.log("left after altKey check", altKey);
     left = vars[altKey];
   }
 
@@ -258,7 +265,6 @@ async function sendInteractiveButton(
   cfg: any,
 ) {
   const actionButtons = buttons.map((b) => {
-    console.log("Button:", b.type, b);
     return {
       type: "reply",
       reply: {
@@ -374,13 +380,11 @@ export async function advance(
 
   while (s.currentNodeId) {
     if (++hops > 25) {
-      console.warn("[flow] hop limit exceeded");
       break;
     }
 
     const node = NODE_BY_ID.get(s.currentNodeId);
     if (!node) {
-      console.warn("⚠️ Missing node for ID:", s.currentNodeId);
       setSession(userId, {
         currentNodeId: null,
         waitingFor: null,
@@ -402,6 +406,7 @@ export async function advance(
           nodeType: node.type,
           enteredAt: new Date(),
         });
+        console.log("created nodeLog:", nodeLog);
       }
     } catch (err) {
       console.error("NodeLog create failed:", err);
@@ -494,6 +499,23 @@ export async function advance(
       );
 
       await exitNodeLog(nodeLog, node.next, nodeStartTime);
+      // ✅ End of flow
+      if (isEndNode(node)) {
+        await ChatbotSessionModel.findOneAndUpdate(
+          { _id: s._id },
+          {
+            completed: true,
+            endTime: new Date(),
+            sessionDurationMs: Date.now() - new Date(s.startTime).getTime(),
+            lastNodeId: node.id,
+          },
+        );
+
+        await exitNodeLog(nodeLog, null, nodeStartTime);
+
+        setSession(userId, { currentNodeId: null });
+        break;
+      }
 
       setSession(userId, { waitingFor: "ask" });
       return;
@@ -511,6 +533,23 @@ export async function advance(
         nodeStartTime,
       );
 
+      // ✅ End of flow
+      if (isEndNode(node)) {
+        await ChatbotSessionModel.findOneAndUpdate(
+          { _id: s._id },
+          {
+            completed: true,
+            endTime: new Date(),
+            sessionDurationMs: Date.now() - new Date(s.startTime).getTime(),
+            lastNodeId: node.id,
+          },
+        );
+
+        await exitNodeLog(nodeLog, null, nodeStartTime);
+
+        setSession(userId, { currentNodeId: null });
+        break;
+      }
       setSession(userId, {
         currentNodeId: (ok ? node.trueNext : node.falseNext) || null,
       });
@@ -521,9 +560,24 @@ export async function advance(
     /* ===============================
      * 🟣 INTERACTIVE MESSAGES
      * =============================== */
+    // Small helper so we don't repeat this block everywhere
+    const completeSessionAndExit = async () => {
+      await ChatbotSessionModel.findOneAndUpdate(
+        { _id: s._id },
+        {
+          completed: true,
+          endTime: new Date(),
+          sessionDurationMs: Date.now() - new Date(s.startTime).getTime(),
+          lastNodeId: node.id,
+        },
+      );
+      await exitNodeLog(nodeLog, null, nodeStartTime);
+      setSession(userId, { currentNodeId: null });
+    };
     if (
       node.type === "interactive" ||
-      node.type === "interactive_list_message"
+      node.type === "interactive_list_message" ||
+      node.type === "interactive_button_message"
     ) {
       const layout = node.layout || "button";
       const body = interpolate(node.bodyText || "", s.variables, cfg, userName);
@@ -538,6 +592,7 @@ export async function advance(
           ? { type: "image", image: { link: node.header.mediaUrl } }
           : undefined;
 
+      /* ───────────────────── LIST LAYOUT ───────────────────── */
       if (layout === "list" && node.list) {
         await sendInteractiveList(
           waTo,
@@ -546,6 +601,10 @@ export async function advance(
           node.list,
           cfg,
         );
+        console.log("sent list interactive");
+
+        // ❌ no isEndNode here
+
         await exitNodeLog(nodeLog, null, nodeStartTime);
 
         setSession(userId, {
@@ -555,9 +614,11 @@ export async function advance(
         return;
       }
 
+      /* ───────────────────── CTA URL LAYOUT ───────────────────── */
       if (layout === "cta_url") {
         const ctaUrl = String(node?.cta?.url || "").trim();
         const ctaLabel = String(node?.cta?.label || "Open Link").trim();
+
         if (ctaUrl) {
           await sendInteractiveCTAUrl(
             waTo,
@@ -578,6 +639,9 @@ export async function advance(
             cfg,
           );
         }
+
+        // ❌ no isEndNode here
+
         await exitNodeLog(nodeLog, null, nodeStartTime);
 
         setSession(userId, {
@@ -590,6 +654,7 @@ export async function advance(
         return;
       }
 
+      /* ───────────────────── BUTTON LAYOUT ───────────────────── */
       if (layout === "button" && node.buttons?.length > 0) {
         await sendInteractiveButton(
           waTo,
@@ -599,6 +664,9 @@ export async function advance(
           header,
           cfg,
         );
+
+        // ❌ no isEndNode here
+
         await exitNodeLog(nodeLog, null, nodeStartTime);
 
         setSession(userId, {
@@ -608,10 +676,14 @@ export async function advance(
         return;
       }
 
+      /* ───────────────────── FALLBACK: SIMPLE TEXT ───────────────────── */
       await sendText(waTo, body, cfg);
-      await exitNodeLog(nodeLog, null, nodeStartTime);
 
+      // ❌ no isEndNode here
+
+      await exitNodeLog(nodeLog, null, nodeStartTime);
       setSession(userId, { currentNodeId: node.next || null });
+      console.log("Interactive fallback to text, continuing to next");
       continue;
     }
 
@@ -623,7 +695,6 @@ export async function advance(
         const sheet = node.sheet || {};
         const { spreadsheetId, sheetName, cells } = sheet;
         if (!spreadsheetId || !sheetName || !Array.isArray(cells)) {
-          console.warn("⚠️ Missing Sheet details");
           setSession(userId, { currentNodeId: node.next || null });
           s = getSession(userId);
           continue;
@@ -639,7 +710,6 @@ export async function advance(
         const resolvedRow = cells.map((c: any) =>
           interpolate(c.value, s.variables, cfg, s.userName),
         );
-
         await googleSheets.spreadsheets.values.append({
           spreadsheetId,
           range: sheetName,
@@ -653,7 +723,6 @@ export async function advance(
         s = getSession(userId);
         continue;
       } catch (err: any) {
-        console.error("❌ Google Sheet append failed:", err);
         setSession(userId, { currentNodeId: node.next || null });
         s = getSession(userId);
         continue;
@@ -728,10 +797,8 @@ export const waWebhookHandler = async (c: Context) => {
   // ---------------------------------------------------------------
   session = getSession(from);
 
-  // ---------------------------------------------------------------
-  // 1️⃣ Handle interactive button/list replies (continue existing flow)
-  // ---------------------------------------------------------------
   if (interactiveTitleOrId && session.waitingFor === "interactive") {
+    console.log("Handle interactive button/list replies", interactiveTitleOrId);
     const currentRoutes = session.interactiveCtx?.routes || {};
 
     let targetNodeId: string | null = null;
@@ -744,6 +811,12 @@ export const waWebhookHandler = async (c: Context) => {
       ) {
         // 🔥 Fix: treat "" or undefined as null (fallback to next node)
         targetNodeId = routeVal && routeVal.trim() !== "" ? routeVal : null;
+        console.log(
+          "Matched routeKey:",
+          routeKey,
+          "with targetNodeId:",
+          targetNodeId,
+        );
         break;
       }
     }
@@ -763,7 +836,7 @@ export const waWebhookHandler = async (c: Context) => {
 
     // 🔍 Which node is user currently on?
     const currentNode = NODE_BY_ID.get(session.currentNodeId);
-
+    console.log("currentNode for interactive reply:", currentNode);
     // CASE 1: Route FOUND → Jump to that node
     if (targetNodeId) {
       setSession(from, {
@@ -815,6 +888,26 @@ export const waWebhookHandler = async (c: Context) => {
     }
 
     // CASE 3: No route & no next → end flow
+    if (lastSession?._id) {
+      // load full session to compute duration
+      const fullSession = await ChatbotSessionModel.findById(lastSession._id);
+
+      if (fullSession) {
+        const now = Date.now();
+        fullSession.completed = true; // or `false` + `droppedAtNode` if you want to treat as drop-off
+        fullSession.endTime = new Date(now);
+        if (fullSession.startTime) {
+          fullSession.sessionDurationMs =
+            now - new Date(fullSession.startTime).getTime();
+        }
+        // lastNodeId: the node user was on when they clicked (the interactive node)
+        if (session.currentNodeId) {
+          fullSession.lastNodeId = session.currentNodeId;
+        }
+        await fullSession.save();
+      }
+    }
+
     setSession(from, {
       currentNodeId: null,
       waitingFor: null,
@@ -849,11 +942,9 @@ export const waWebhookHandler = async (c: Context) => {
 
     if (node && node.type === "ask_question") {
       const value = textBody.trim();
-
       const varKey = node.variable?.startsWith("@")
         ? node.variable
         : `@${node.variable}`;
-
       setSession(from, {
         variables: {
           ...sessionState.variables,
@@ -861,15 +952,10 @@ export const waWebhookHandler = async (c: Context) => {
         },
       });
 
-      // ✅ Move forward to next node
       setSession(from, {
         waitingFor: null,
         currentNodeId: node.next || null,
       });
-
-      console.log(
-        `✅ [Ask Reply] ${node.variable} = "${value}" → next: ${node.next}`,
-      );
 
       await advance(
         FLOW,
@@ -894,8 +980,38 @@ export const waWebhookHandler = async (c: Context) => {
       const { flow } = bot;
       if (matchTriggerStart(flow, from, messageInput)) {
         matchedBot = bot;
-        console.log("✅ Trigger matched chatbot:", flow.chatbotName);
         break;
+      }
+    }
+  }
+
+  // 2️⃣ If nothing matched, pick a fallback/default bot
+  if (!matchedBot) {
+    // Prefer a bot with flow.isDefault === true
+    const fallbackBot =
+      chatbotList.find((b) => b.flow?.isDefault) || chatbotList[0];
+
+    if (fallbackBot) {
+      console.log(
+        "No keyword matched. Using fallback chatbot:",
+        fallbackBot.flow?.chatbotName || fallbackBot.flow?._id,
+      );
+      matchedBot = fallbackBot;
+
+      // Also set the session's currentNodeId based on a "fallback" trigger if you want
+      const FLOW = fallbackBot.flow;
+
+      // If you want per-flow fallback trigger, you can add something like t.isFallback
+      const fallbackTrigger =
+        (FLOW.triggers || []).find((t: any) => t.isFallback) ||
+        FLOW.triggers?.[0];
+
+      if (fallbackTrigger?.start) {
+        setSession(from, {
+          currentNodeId: fallbackTrigger.start,
+          waitingFor: null,
+          interactiveCtx: undefined,
+        });
       }
     }
   }
@@ -955,7 +1071,7 @@ export const waWebhookHandler = async (c: Context) => {
         ? userInput
         : safeText
     ).trim();
-
+    console.log("effectiveInput:", effectiveInput);
     // QR handlers only run if we actually have some input
     if (effectiveInput) {
       const qrType = identifyQrTypeFromMessage(effectiveInput);
@@ -972,6 +1088,7 @@ export const waWebhookHandler = async (c: Context) => {
 
     // Chat handler: only if feature is on AND we have a non-empty message
     if (whatsAppBusinessConfigData.chat && effectiveInput) {
+      console.log("triggered inside waWebhookHandler - chat handler");
       await whatsAppChatHandler(
         effectiveInput,
         userData._id.toString(),

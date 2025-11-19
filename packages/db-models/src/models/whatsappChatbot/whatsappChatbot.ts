@@ -163,6 +163,7 @@ const WhatsappChatbotSchema = new Schema<WhatsappChatbotType>(
       dropOffSessions: { type: Number, default: 0 },
       avgCompletionRate: { type: Number, default: 0 },
     },
+    isDefault: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

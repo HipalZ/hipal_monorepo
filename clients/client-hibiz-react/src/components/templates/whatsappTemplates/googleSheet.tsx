@@ -14,7 +14,7 @@ import toast from 'react-hot-toast';
 import DeleteButton from './deleteButton';
 import { VariableDropdown } from './flows';
 
-export default function GoogleSheetPopup({ data, selected }: { data: any; selected: boolean }) {
+export default function GoogleSheets({ data, selected }: { data: any; selected: boolean }) {
   const [isAuthed, setIsAuthed] = useState(false);
   const [spreadsheetId, setSpreadsheetId] = useState('');
   const [selectedSpreadsheetName, setSelectedSpreadsheetName] = useState('');

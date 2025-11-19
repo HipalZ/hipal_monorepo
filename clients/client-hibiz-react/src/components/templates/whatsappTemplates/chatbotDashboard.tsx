@@ -1,3 +1,4 @@
+import BottomButton from '@/components/atom/bottomButton';
 import useWhatsapp from '@/components/store/useWhatsapp';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -51,7 +52,7 @@ export function ChatbotDashboard() {
     );
   }
   return (
-    <div className="min-h-screen bg-gray-50 p-6 sm:p-8">
+    <div className="relative min-h-[85dvh] bg-gray-50 p-6 sm:p-8">
       {/* Header */}
       <div className="mb-8 flex flex-col items-start sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -162,7 +163,6 @@ export function ChatbotDashboard() {
           </Card>
         ))}
       </div>
-
       {/* Empty State */}
       {filtered.length === 0 && (
         <div onClick={handleOpenChatbot} className="rounded-xl border border-gray-100 bg-white py-16 text-center shadow-sm">

@@ -57,7 +57,7 @@ import toast from 'react-hot-toast';
 import { useLocation } from 'react-router-dom';
 import { useMediaUpload } from '../../../hooks/useTemplates';
 import DeleteButton from './deleteButton';
-import GoogleSheet from './googleSheet';
+import GoogleSheets from './googleSheet';
 
 const NodeTypes = {
   SEND: 'send_message',
@@ -469,7 +469,6 @@ function SendNode({ data, selected }) {
   );
 }
 
-// Ask Question Node
 function AskNode({ data, selected }) {
   const m = data.meta || {};
   const [localVar, setLocalVar] = useState(m.variable?.replace(/^@/, '') || '');
@@ -1604,7 +1603,7 @@ function InteractiveListNode({ data, selected }) {
 }
 
 function GoogleSheetNode({ data, selected }) {
-  return <GoogleSheet data={data} selected={selected} />;
+  return <GoogleSheets data={data} selected={selected} />;
 }
 
 const nodeTypes = {
@@ -2001,11 +2000,12 @@ function EditorShell() {
   }, [rfNodes, rfEdges, chatbotName, businessId]);
 
   const handleSaveFlow = () => {
-    if (chatbotId) {
-      // update logic
-    } else {
-      createChatbot(finalObject);
-    }
+    createChatbot(finalObject);
+    // if (chatbotId) {
+    //   // update logic
+    // } else {
+    //   createChatbot(finalObject);
+    // }
   };
 
   const toggleCategory = (id: string) => {
