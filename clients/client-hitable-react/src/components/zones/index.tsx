@@ -1,5 +1,5 @@
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
-import { useGetBill, useGetBillWithTableName } from '@/components/hooks/useBill';
+import { useGetBillWithTableName } from '@/components/hooks/useBill';
 import { useCart } from '@/components/store/useCart';
 import { useOrderStore } from '@/components/store/useOrderData';
 import { useStaffPermissionStore } from '@/components/store/usePermissions';
@@ -277,7 +277,7 @@ const MemoZones = () => {
 
                               {table.currentTableAmount > 0 && canPrintBill && (
                                 <Button
-                                  disabled={isPrinting}
+                                  disabled={isPrinting || isBillPending}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setSelectedTable(table);

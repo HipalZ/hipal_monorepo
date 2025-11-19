@@ -97,6 +97,30 @@ export const useGetBill = (): UseGetBillResult => {
   };
 };
 
+export const useGetBillWithTableName = () => {
+  const { businessId } = useParams();
+  const userData = useHiClientZ((s) => s.captainData);
+  const { isPending: isBillPending, mutateAsync } = useMutation({
+    mutationFn: async (tableName: string) => {
+      const response = await apiRpc.pos.get_bill.$get({
+        query: {
+          businessId,
+          tableName: tableName,
+          generatedBy: userData.name,
+        },
+      });
+      const res = await response.json();
+      const payment = res?.data as IBillData | IBillData[] | undefined;
+      return payment;
+    },
+  });
+
+  return {
+    isBillPending,
+    mutateAsync: mutateAsync,
+  };
+};
+
 export const useSplitBill = () => {
   const { setError, setOpenErrorModal } = useError();
   const queryClient = useQueryClient();
