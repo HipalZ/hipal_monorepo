@@ -305,7 +305,7 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: false,
   },
-  patchCount: {
+  paxCount: {
     type: Number,
     required: false,
     default: 0,

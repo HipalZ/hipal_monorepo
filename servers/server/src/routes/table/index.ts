@@ -30,7 +30,6 @@ import { Hono } from "hono";
 import type { ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { executePosHandler } from "../../utils/executePoshandlers.ts";
 import { calculateCartBill } from "../../utils/helper";
@@ -296,7 +295,7 @@ const tableRouter = new Hono()
         },
         {
           $set: {
-            patchCount: guestCount,
+            paxCount: guestCount,
           },
         },
       );
@@ -507,7 +506,7 @@ const tableRouter = new Hono()
                   billItems: splitTableSessionData?.items || [],
                   isSplitBillVariant: true,
                   billInvoice: splitTableSessionData?.billInvoice,
-                  patchCount: tableSession?.paxCount || 0,
+                  paxCount: tableSession?.paxCount || 0,
                 },
               ],
               { session },
@@ -706,7 +705,7 @@ const tableRouter = new Hono()
                   billItems: splitTableSessionData?.items || [],
                   isSplitBillVariant: true,
                   billInvoice: splitTableSessionData?.billInvoice,
-                  patchCount: tableSession?.paxCount || 0,
+                  paxCount: tableSession?.paxCount || 0,
                 },
               ],
               { session },
@@ -1081,7 +1080,7 @@ const tableRouter = new Hono()
               billItems: tableSession?.items || [],
               pin: tableSession?.pin,
               billInvoice: tableSession?.billInvoice || 0,
-              patchCount: tableSession?.paxCount || 0,
+              paxCount: tableSession?.paxCount || 0,
             },
           ],
           { session },

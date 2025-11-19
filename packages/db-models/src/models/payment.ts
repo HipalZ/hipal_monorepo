@@ -263,7 +263,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: Number,
       required: false,
     },
-    patchCount: {
+    paxCount: {
       type: Number,
       required: false,
       default: 0,
