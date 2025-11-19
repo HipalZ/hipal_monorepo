@@ -64,7 +64,7 @@ const DesktopTablePOS = () => {
           <SidebarCategories />
           <SidebarInset className="flex-1 overflow-hidden">
             <div className="grid h-full grid-cols-[60%_40%] overflow-hidden">
-              <main className="bg-muted/30 flex flex-col rounded-xl border-r-2 bg-gray-300">
+              <main className="bg-muted/30 flex flex-col overflow-y-auto rounded-xl border-r-2 bg-gray-300">
                 <div className="bg-background border-b-2">
                   <div className="px-4 pb-2 pt-4">
                     <TableQuickNav key={selectedCategory?._id} />
@@ -73,7 +73,7 @@ const DesktopTablePOS = () => {
                   </div>
                 </div>
                 <ScrollArea className="flex-1">
-                  <div className="hide-scrollbar overflow-auto p-2">
+                  <div className="overflow-y-auto p-2">
                     {searchActive && <SearchResultsGrid />}
                     <Suspense fallback={<SpinnerMemo />}>
                       <CompactDishGrid selectedCategory={selectedCategory as CategoryType} />
