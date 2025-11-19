@@ -186,7 +186,7 @@ const DateRangePicker = memo(() => {
                         else setValidationError('');
                       }}
                       showTimeSelect
-                      timeIntervals={15}
+                      timeIntervals={1}
                       timeCaption="Time"
                       dateFormat="dd-MM-yyyy hh:mm aa"
                       maxDate={tempEnd || new Date()}
@@ -208,13 +208,17 @@ const DateRangePicker = memo(() => {
                         else setValidationError('');
                       }}
                       showTimeSelect
-                      timeIntervals={15}
+                      timeIntervals={1}
                       timeCaption="Time"
                       dateFormat="dd-MM-yyyy hh:mm aa"
                       minDate={tempStart}
                       // pass BOTH or NONE
                       {...endPickerTimes}
-                      maxDate={new Date()}
+                      maxDate={(() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() + 1); // ✅ today + 1 day
+                        return d;
+                      })()}
                       inline
                     />
                   </div>

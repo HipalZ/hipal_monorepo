@@ -40,24 +40,24 @@ const SplitBillGrid = memo<SplitBillGridProps>(({ billData, onSelectBill, onBack
   }, []);
 
   const handlePrintSelected = useCallback(() => {
-    selectedVariants.forEach((variantId) =>
+    for (const variantId of selectedVariants) {
       reprintBill({
         businessId,
         tableName: selectedTable?.name || '',
         variantId,
-      }),
-    );
+      });
+    }
     setIsSelecting(false);
   }, [selectedVariants, reprintBill, businessId, selectedTable?.name]);
 
   const handlePrintAll = useCallback(() => {
-    billData.forEach((bill) =>
+    for (const bill of billData) {
       reprintBill({
         businessId,
         tableName: selectedTable?.name || '',
         variantId: bill.variantId || '',
-      }),
-    );
+      });
+    }
     setIsSelecting(false);
   }, [billData, reprintBill, businessId, selectedTable?.name]);
 
