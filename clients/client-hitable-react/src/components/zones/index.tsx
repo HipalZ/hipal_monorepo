@@ -1,24 +1,31 @@
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
+import { useGetBill } from '@/components/hooks/useBill';
+import { useCart } from '@/components/store/useCart';
+import { useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { type TableData, useZonesAndTablesStore } from '@/components/store/useZonesAndTable';
+import type { IBillData } from '@/components/types/hiClientzData';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import { apiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { IndianRupee } from 'lucide-react';
-import { memo, useMemo } from 'react';
+import { IndianRupee, Printer } from 'lucide-react';
+import { memo, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
+import { BiRupee } from 'react-icons/bi';
 import { MdPerson, MdTableBar } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { cn } from '../../lib/utils.ts';
-import { useCart } from '../store/useCart';
-import { useOrderStore } from '../store/useOrderData.ts';
 const MemoZones = () => {
   const params = useParams();
   const businessId = params.businessId as string;
   const setSelectedBill = useOrderStore((s) => s.setSelectedBill);
+  const setSelectedTable = useOrderStore((s) => s.setSelectedTable);
   const navigate = useNavigate();
 
   const setIsPlacingNewOrder = useCart((s) => s.setIsPlacingNewOrder);
@@ -29,6 +36,31 @@ const MemoZones = () => {
   const searchQuery = useZonesAndTablesStore((s) => s.searchQuery);
   const setZones = useZonesAndTablesStore((s) => s.setZones);
   const setTables = useZonesAndTablesStore((s) => s.setTables);
+
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canPrintBill = hasPermission('print_bill');
+
+  const { isLoading: billLoading, data: billData, getBillCall } = useGetBill();
+
+  // 🔹 Local state for split-bill print popup
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [splitPrintState, setSplitPrintState] = useState<{
+    open: boolean;
+    bills: IBillData[];
+    table: TableData | null;
+  }>({
+    open: false,
+    bills: [],
+    table: null,
+  });
+
+  // 🔹 Track which variants are selected (for "Print Selected Bills")
+  const [selectedVariants, setSelectedVariants] = useState<string[]>([]);
+
+  const toggleVariantSelection = (variantId: string | undefined) => {
+    if (!variantId) return;
+    setSelectedVariants((prev) => (prev.includes(variantId) ? prev.filter((id) => id !== variantId) : [...prev, variantId]));
+  };
 
   const fetchZones = async (businessId: string) => {
     const response = await apiRpc.zones_and_tables.zones[':businessId'].$get({
@@ -90,14 +122,6 @@ const MemoZones = () => {
     return map;
   }, [filteredTables]);
 
-  if (zonesLoading || tablesLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <SpinnerMemo />
-      </div>
-    );
-  }
-
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
       case 'BILL':
@@ -116,6 +140,60 @@ const MemoZones = () => {
     setSelectedBill(null);
     navigate(`/${businessId}/alerts/${table._id}`);
   };
+
+  const reprintFromZones = async (payload: { businessId: string; tableName: string; variantId?: string }) => {
+    const res = await apiRpc.pos.re_print_bill.$post({
+      json: payload,
+    });
+    const json = await res.json();
+
+    if (res.status === 200 || res.status === 201) {
+      toast.success('Bill reprinted successfully');
+    } else {
+      toast.error(json.message || 'Failed to reprint bill');
+    }
+  };
+
+  const printBill = async (table: TableData) => {
+    try {
+      setIsPrinting(true);
+      setSelectedTable(table);
+      setSelectedBill(null);
+
+      const data = await getBillCall();
+      const result = (data as any)?.data;
+      const bill = (result ?? billData) as IBillData | IBillData[] | null;
+
+      if (!bill) {
+        toast.error('No bill found for this table.');
+        return;
+      }
+
+      if (Array.isArray(bill)) {
+        setSelectedVariants([]);
+        setSplitPrintState({
+          open: true,
+          bills: bill,
+          table,
+        });
+        return;
+      }
+
+      await reprintFromZones({
+        businessId,
+        tableName: table.name,
+      });
+    } catch (err) {
+      console.error('Failed to fetch/print bill from Zones:', err);
+      toast.error('Unable to fetch bill for printing.');
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
+  if (zonesLoading || tablesLoading || billLoading || isPrinting) {
+    return <SpinnerMemo />;
+  }
 
   return (
     <ScrollArea className="h-screen bg-gray-100">
@@ -152,7 +230,6 @@ const MemoZones = () => {
                               table.isBillGenerated && 'border-yellow-300 bg-yellow-200',
                             )}
                           >
-                            {' '}
                             <CardContent className="p-3">
                               <Badge className={`${getStatusColor(table?.status)} absolute -right-1 -top-2 px-1.5 py-0.5 text-xs`}>
                                 {table?.status}
@@ -160,34 +237,30 @@ const MemoZones = () => {
                               <div className="flex items-center space-x-2">
                                 <MdTableBar className="text-lg text-blue-600" />
                                 <h4 className="text-base font-semibold text-gray-900">{table?.name}</h4>
-                                {/* show hiCode only if ACTIVE */}
                               </div>
+
                               {table?.status?.toUpperCase() === 'ACTIVE' && table?.hiCode && (
                                 <div className="mb-2 text-sm font-semibold text-purple-700 opacity-80">Code: {table.hiCode}</div>
                               )}
 
-                              {/* merged table names */}
                               {table.isMerge && table.mergeTableIds?.length > 0 && (
-                                <>
-                                  <div className="flex flex-wrap items-center gap-1">
-                                    <span className="text-primary text-xs font-semibold">Merged with:</span>
-                                    {table.mergeTableIds.map((m, i) => (
-                                      <div key={m._id} className="flex items-center">
-                                        <Badge
-                                          variant="secondary"
-                                          className="rounded-full bg-purple-50 text-xs text-purple-800 dark:bg-purple-900/40 dark:text-purple-300"
-                                        >
-                                          <MdTableBar className="pr-1 text-lg text-purple-600" />
-
-                                          {m.name}
-                                        </Badge>
-                                        {i !== table.mergeTableIds.length - 1 && (
-                                          <Separator orientation="vertical" className="mx-1 h-4 w-px bg-purple-300/50 dark:bg-purple-700/50" />
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </>
+                                <div className="flex flex-wrap items-center gap-1">
+                                  <span className="text-primary text-xs font-semibold">Merged with:</span>
+                                  {table.mergeTableIds.map((m, i) => (
+                                    <div key={m._id} className="flex items-center">
+                                      <Badge
+                                        variant="secondary"
+                                        className="rounded-full bg-purple-50 text-xs text-purple-800 dark:bg-purple-900/40 dark:text-purple-300"
+                                      >
+                                        <MdTableBar className="pr-1 text-lg text-purple-600" />
+                                        {m.name}
+                                      </Badge>
+                                      {i !== table.mergeTableIds.length - 1 && (
+                                        <Separator orientation="vertical" className="mx-1 h-4 w-px bg-purple-300/50 dark:bg-purple-700/50" />
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
                               )}
 
                               <Separator className="my-2" />
@@ -202,6 +275,20 @@ const MemoZones = () => {
                                   <span className="font-semibold text-gray-900">{table?.currentTableAmount?.toFixed(2)}</span>
                                 </div>
                               </div>
+
+                              {table.currentTableAmount > 0 && canPrintBill && (
+                                <Button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    printBill(table);
+                                  }}
+                                  size="sm"
+                                  variant="outline"
+                                  className="absolute right-2 top-6 hidden px-2 lg:block"
+                                >
+                                  <Printer className="!h-6 !w-6 text-2xl text-yellow-900" />
+                                </Button>
+                              )}
                             </CardContent>
                           </Card>
                         </motion.div>
@@ -216,6 +303,98 @@ const MemoZones = () => {
           ))}
         </div>
       </div>
+
+      {splitPrintState.open && splitPrintState.table && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-[22rem] rounded-lg bg-white p-4 shadow-xl">
+            <h2 className="mb-2 text-lg font-bold">Split Bill – {splitPrintState.table.name}</h2>
+            <p className="mb-3 text-sm text-gray-600">
+              This table has {splitPrintState.bills.length} split bills. You can tap to select, then print selected or all.
+            </p>
+
+            <div className="grid max-h-64 grid-cols-3 gap-2 overflow-y-auto">
+              {splitPrintState.bills.map((bill) => {
+                const id = bill.variantId || '';
+                const isSelected = selectedVariants.includes(id);
+
+                return (
+                  <Button
+                    key={id}
+                    variant={isSelected ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => toggleVariantSelection(id)}
+                    className={cn('h-[5rem] w-full flex-col rounded-2xl')}
+                  >
+                    <div>Bill {bill.variantName || id}</div>
+                    <div className="flex items-center font-semibold">
+                      <BiRupee />
+                      {bill.total?.toFixed(2)}
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
+
+            <Button
+              className="mt-4 w-full rounded-md bg-blue-600 text-white"
+              disabled={selectedVariants.length === 0}
+              onClick={async () => {
+                try {
+                  if (selectedVariants.length === 0) return;
+                  setIsPrinting(true);
+                  for (const variantId of selectedVariants) {
+                    await reprintFromZones({
+                      businessId,
+                      tableName: splitPrintState.table!.name,
+                      variantId,
+                    });
+                  }
+                } finally {
+                  setIsPrinting(false);
+                  setSplitPrintState({ open: false, bills: [], table: null });
+                  setSelectedVariants([]);
+                }
+              }}
+            >
+              Print Selected Bills ({selectedVariants.length})
+            </Button>
+
+            <Button
+              className="mt-2 w-full rounded-md bg-purple-600 text-white"
+              onClick={async () => {
+                try {
+                  setIsPrinting(true);
+                  for (const bill of splitPrintState.bills) {
+                    if (!bill.variantId) continue;
+                    await reprintFromZones({
+                      businessId,
+                      tableName: splitPrintState.table!.name,
+                      variantId: bill.variantId,
+                    });
+                  }
+                } finally {
+                  setIsPrinting(false);
+                  setSplitPrintState({ open: false, bills: [], table: null });
+                  setSelectedVariants([]);
+                }
+              }}
+            >
+              Print All Bills
+            </Button>
+
+            <Button
+              variant="outline"
+              className="mt-2 w-full rounded-md"
+              onClick={() => {
+                setSplitPrintState({ open: false, bills: [], table: null });
+                setSelectedVariants([]);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
     </ScrollArea>
   );
 };
