@@ -36,7 +36,6 @@ export const useCategoryReports = () => {
         json: payload,
       });
       const categoryData = await handleEnvelope(response);
-      console.log("Category Report Data:", categoryData);
       setCategoryReports((categoryData as BusinessCategoryReport[]) || []);
       return response;
     },
@@ -117,7 +116,6 @@ export const useItemReports = () => {
         json: payload,
       });
       const itemsData = await handleEnvelope(response);
-      console.log("Item Report Data:", itemsData);
       if (!itemsData || !Array.isArray(itemsData)) {
         throw new Error("Invalid data format received");
       }
@@ -233,7 +231,6 @@ export const useDiscountReports = () => {
         json: payload,
       });
       const discountData = await handleEnvelope(response);
-      console.log("Discount Report Data:", discountData);
       if (!discountData || !Array.isArray(discountData)) {
         throw new Error("Invalid data format received");
       }
@@ -351,7 +348,6 @@ export const useAddonReports = () => {
         json: payload,
       });
       const addonData = await handleEnvelope(response);
-      console.log("Addon Report Data:", addonData);
       if (!addonData || !Array.isArray(addonData)) {
         throw new Error("Invalid data format received");
       }
@@ -462,7 +458,6 @@ export const useServiceChargeReports = () => {
       });
       const serviceChargeData = await handleEnvelope(response);
 
-      console.log("Service Charge Report Data:", serviceChargeData);
       if (!serviceChargeData || !Array.isArray(serviceChargeData)) {
         throw new Error("Invalid data format received");
       }

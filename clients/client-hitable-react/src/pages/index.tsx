@@ -24,17 +24,10 @@ const LoginMemo = () => {
 
   const { setLoading } = useLiteStore();
 
-  // store
-  const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ((s) => ({
-    setCaptainData: s.setCaptainData,
-    phoneNumber: s.phoneNumber,
-    setPhoneNumber: s.setPhoneNumber,
-  }));
+  const setCaptainData = useHiClientZ((s) => s.setCaptainData);
+  const phoneNumber = useHiClientZ((s) => s.phoneNumber);
+  const setPhoneNumber = useHiClientZ((s) => s.setPhoneNumber);
 
-  //methods
-  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPhoneNumber(e.target.value);
-  };
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
   };

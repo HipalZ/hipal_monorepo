@@ -139,6 +139,30 @@ const kitchenRouter = new Hono()
     },
   )
   .get(
+    "/kitchenByBusiness",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(1).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId } = c.req.query();
+
+        // Scenario-1: “All” days
+
+        const kitchens = await Kitchen.find({ businessId })
+          .session(session)
+          .lean()
+          .select("name description staffIds dishIds");
+
+        return respond(c, "fetched successfully", false, 200, kitchens);
+      });
+    },
+  )
+  .get(
     "/:kitchenId",
     zValidator(
       "param",

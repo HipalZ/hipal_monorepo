@@ -103,11 +103,8 @@ export const useApiErrorHandler = () => {
     const status = response.status;
 
     // For 401/403 → trigger re-auth modal with phone/password fields
-    if (status === 401 || status === 403) {
-      const authMsg =
-        status === 401
-          ? "You are not authenticated. Please login again."
-          : "You are not authorized. Please login again.";
+    if (status === 401) {
+      const authMsg = "You are not authenticated. Please login again.";
       setErrorWithStatus(authMsg, status);
       const error = new ApiError(authMsg, status, body);
       throw error;
@@ -117,6 +114,7 @@ export const useApiErrorHandler = () => {
     const defaultMap: Record<number, string> = {
       400: "Bad request. Please check the input and try again.",
       408: "Request timeout. Please try again.",
+      403: "You do not have permission to perform this action.",
       429: "Too many requests. Please wait and try again.",
       500: "Server error. Please try again later.",
       502: "Bad gateway. Please try again.",

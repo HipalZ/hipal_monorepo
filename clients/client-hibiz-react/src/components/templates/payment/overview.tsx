@@ -19,7 +19,7 @@ import { PieChart } from './PieCharts';
 const Overview = () => {
   const business = useBusinessData((s) => s.businessData);
   const open = useKotStore((s) => s.open);
-  const { handleEnvelope } = useApiErrorHandler();
+  const handleEnvelope = useApiErrorHandler().handleEnvelope;
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
   const isToday = (timestamp: string | number | Date) => {
