@@ -820,6 +820,7 @@ const posRouter = new Hono()
               customerIds: [userData._id],
               performedBy: "user",
               date: Date.now(),
+              paxCount: 1,
             },
             {
               session,
@@ -988,6 +989,7 @@ const posRouter = new Hono()
               phoneNumbers: customerPhone,
               customerIds: userData?._id,
             },
+            paxCount: userTableSession.paxCount + 1,
           },
           {
             session,
