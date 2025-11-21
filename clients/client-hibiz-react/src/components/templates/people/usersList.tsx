@@ -122,12 +122,42 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const downloadSubscribers = () => {
+    const data = activeData;
+
+    if (!data || data.length === 0) {
+      console.error('No data available to download');
+      return;
+    }
+
+    const csvData = data.map((user) => ({
+      name: user?.userId?.name || 'N/A',
+      phone: user?.userId?.phone || 'N/A',
+    }));
+
+    const csvRows = [['Name', 'Phone'], ...csvData.map((row) => [row.name, row.phone])].map((row) => row.join(',')).join('\n');
+
+    const blob = new Blob([csvRows], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'subscribers.csv';
+    document.body.appendChild(a);
+    a.click();
+
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    console.log('CSV file generated and downloaded');
+  };
+
   const bottomButtons = useMemo(() => {
     const downloadBtn = {
       id: 'download',
       text: hasSelection ? '' : 'Download',
       icon: <CloudDownload />,
-      onClick: () => {},
+      onClick: downloadSubscribers,
       type: 'button' as const,
       disable: activeData.length === 0,
     };
