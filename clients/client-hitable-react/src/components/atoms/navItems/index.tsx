@@ -1,7 +1,6 @@
 import useBusinessData from '@/components/store/useBusinessData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import { NavItemTypesEnum, type NavItemTypes } from '@/components/types/hiClientzData';
-import { createNavItems } from '@/components/utils/helpers';
 import useNavItems from '@/hooks/useNavItems';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useCallback } from 'react';

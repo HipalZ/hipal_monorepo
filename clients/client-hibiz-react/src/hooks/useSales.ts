@@ -54,7 +54,6 @@ export const useGetallSalesByGet = (payload: salesPayload) => {
       !!payload.from &&
       !!payload.to &&
       !!payload.pageNumber,
-    staleTime: 30_000,
   });
 
   return { isLoading, refetch };

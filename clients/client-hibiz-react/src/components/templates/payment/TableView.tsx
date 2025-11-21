@@ -3,7 +3,6 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { hideMiddleNumbers } from '@/components/utils/helper';
 import { IndianRupee, Percent, Receipt, Table2, Wallet } from 'lucide-react';
-import { useMemo } from 'react';
 
 interface TableViewProps {
   data: IExistingPayments[];

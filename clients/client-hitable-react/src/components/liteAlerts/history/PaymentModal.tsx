@@ -1,0 +1,450 @@
+import CommonBottomButton from '@/components/atoms/bottomButton';
+import { useReprintBill } from '@/components/hooks/usePrint';
+import type { IExistingPayments } from '@/components/types/sales.types';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { timestampToDateTime } from '@/components/utils/helpers';
+import { apiRpc } from '@hi/common';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion, useAnimation } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Clock, CreditCard, Download, MessageSquare, Receipt, User } from 'lucide-react';
+import { memo, useState } from 'react';
+import toast from 'react-hot-toast';
+import { MdOutlineCall } from 'react-icons/md';
+
+export interface Extra {
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+export interface DishItem {
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+export interface BillItem {
+  dish: DishItem;
+  extras: Extra[];
+}
+
+interface PaymentModalProps {
+  salesData: IExistingPayments | undefined;
+  onClose?: () => void;
+  allSalesData: IExistingPayments[];
+  currentIndex: number;
+  onNavigate: (newIndex: number) => void;
+}
+
+const InfoRow = ({ label, value, highlight = false }: { label: string; value: string | number | undefined; highlight?: boolean }) => {
+  if (typeof value === 'string' && value === '0') {
+    return null;
+  }
+  if (value === 0) return null;
+
+  return (
+    <div className={`flex items-center justify-between py-2 ${highlight ? 'rounded-lg bg-blue-50 px-3' : ''}`}>
+      <span className="text-sm text-gray-600">{label}</span>
+      <span className={`font-medium ${highlight ? 'font-semibold text-blue-700' : ''}`}>{value}</span>
+    </div>
+  );
+};
+const hideMiddleNumbers = (phone: string) => {
+  if (phone?.length <= 4) return phone;
+  const firstPart = phone?.slice(0, 3);
+  const lastPart = phone?.slice(-3);
+  return `${firstPart}****${lastPart}`;
+};
+
+const MemoPaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNavigate }: PaymentModalProps) => {
+  const controls = useAnimation();
+  const [dragDirection, setDragDirection] = useState<number>(0);
+  const { reprintBill } = useReprintBill();
+
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (billId: string) => {
+      const response = await apiRpc.download.download_bill_pdf[':paymentId'].$get({
+        param: {
+          paymentId: billId,
+        },
+      });
+      return response;
+    },
+    onSuccess: async (data) => {
+      const result = await data.json();
+      const downloadUrl = result.data.url;
+      window.open(downloadUrl, '_blank');
+    },
+    onError: (error) => {
+      console.log(error);
+    },
+  });
+
+  const goToNext = () => {
+    if (currentIndex < allSalesData.length - 1) {
+      onNavigate(currentIndex + 1);
+      controls.start({
+        x: [-300, 0],
+        opacity: [0, 1],
+        transition: { duration: 0.3 },
+      });
+    } else {
+      toast.error('No more bills');
+    }
+  };
+
+  const goToPrevious = () => {
+    if (currentIndex > 0) {
+      onNavigate(currentIndex - 1);
+      controls.start({
+        x: [300, 0],
+        opacity: [0, 1],
+        transition: { duration: 0.3 },
+      });
+    } else {
+      toast.error('No previous bills');
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (dragDirection > 100) {
+      goToPrevious();
+    } else if (dragDirection < -100) {
+      goToNext();
+    }
+    setDragDirection(0);
+  };
+
+  const getPaymentModeColor = (mode: string) => {
+    switch (mode?.toLowerCase()) {
+      case 'cash':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'upi':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'card':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'npc':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'complementary':
+        return 'bg-pink-100 text-pink-800 border-pink-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getSettleTypeColor = (settleType: string) => {
+    switch (settleType?.toLowerCase()) {
+      case 'normal_settle':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'force_settle':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'hi_settle':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const printBill = async (orderId: string) => {
+    await reprintBill({
+      orderId: orderId,
+    });
+  };
+
+  const totalItemsCount = salesData?.billItems?.reduce((total, item) => total + item.dish.quantity, 0) || 0;
+
+  return (
+    <Card className="relative w-full overflow-hidden border-none shadow-none">
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        onDrag={(_, info) => setDragDirection(info.offset.x)}
+        onDragEnd={handleDragEnd}
+        animate={controls}
+        initial={{ opacity: 1 }}
+      >
+        {/* Header */}
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-semibold">Payment Details</CardTitle>
+              <p className="mt-1 text-sm text-gray-500">{timestampToDateTime(salesData?.date || 0)}</p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <Badge className={`border px-3 py-1 font-medium ${getPaymentModeColor(salesData?.mode || '')}`}>{salesData?.mode?.toUpperCase()}</Badge>
+              <span className="text-xs text-gray-500">
+                Bill {currentIndex + 1} of {allSalesData.length}
+              </span>
+            </div>
+          </div>
+
+          {/* Navigation indicators */}
+          <div className="mt-2 flex items-center justify-center gap-2">
+            <Button variant="outline" size="sm" onClick={goToPrevious} disabled={currentIndex === 0} className="h-8 w-8 bg-transparent p-0">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex gap-1">
+              {allSalesData.map((_, index) => (
+                <div key={index} className={`h-2 w-2 rounded-full transition-colors ${index === currentIndex ? 'bg-blue-600' : 'bg-gray-300'}`} />
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToNext}
+              disabled={currentIndex === allSalesData.length - 1}
+              className="h-8 w-8 bg-transparent p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="hide-scrollbar max-h-[75vh] space-y-6 overflow-y-auto pb-[8rem]">
+          {/* Payment Summary Card */}
+          <Card className="border-green-200 bg-gradient-to-r from-green-50 to-green-100">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-700">Total Paid</p>
+                  <p className="text-2xl font-bold text-green-800">₹{salesData?.order_id?.total}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-green-700">Invoice No</p>
+                  <p className="text-lg font-semibold text-green-800">{salesData?.billInvoice}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CreditCard className="h-4 w-4" />
+                Payment Information
+                <Button onClick={() => printBill(salesData?.order_id?._id)} variant="outline" className="px-6">
+                  Print
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <InfoRow label="Bill Value Entered" value={`₹${salesData?.order_id?.billValue}`} />
+              <InfoRow label="Including Tips" value={`₹${salesData?.tips}`} />
+              <InfoRow label="Discount" value={`${salesData?.order_id?.claimedCoins} Coins used`} />
+              <InfoRow label="couponDiscount" value={salesData?.order_id?.couponDiscount} />
+              <InfoRow label="Gst" value={salesData?.order_id?.gst} />
+              <InfoRow label="Service Charge" value={salesData?.serviceCharge} />
+
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-gray-600">Payment Mode</span>
+
+                <div className="flex items-center gap-2">
+                  <Badge className={`${getPaymentModeColor(salesData?.mode || '')} border`}>{salesData?.mode}</Badge>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-gray-600">Settle Type</span>
+                <Badge className={`${getSettleTypeColor(salesData?.settleType || '')} border`}>{salesData?.settleType?.replace('_', ' ')}</Badge>
+              </div>
+              {salesData?.paymentMode === 'split' && salesData?.splitModes && salesData?.splitModes.length > 0 && (
+                <div className="mt-2 rounded-lg border bg-slate-50 p-3 shadow-sm">
+                  <p className="mb-2 flex items-center gap-1 text-[13px] font-semibold text-slate-700">💳 Split Payments</p>
+
+                  <table className="w-full text-[12px]">
+                    <thead>
+                      <tr className="border-b text-left text-slate-500">
+                        <th className="pb-1">Mode</th>
+                        <th className="pb-1 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {salesData?.splitModes.map((pm: any) => (
+                        <tr key={pm._id} className="border-b last:border-none">
+                          <td className="py-1 capitalize">{pm.name}</td>
+                          <td className="py-1 text-right font-semibold">₹{pm.amount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Customer Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <User className="h-4 w-4" />
+                Customer Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <InfoRow label="Customer Name" value={salesData?.userId?.name} />
+              <InfoRow label="Table" value={salesData?.order_id?.tableName} />
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-gray-600">Phone Number</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{salesData?.userId?.phone ? hideMiddleNumbers(salesData?.userId?.phone) : 'N/A'}</span>
+                  {salesData?.userId?.phone && (
+                    <Button variant="outline" size="sm" className="h-7 bg-transparent px-2 text-xs" asChild>
+                      <a href={`tel:+91${salesData?.userId?.phone}`}>
+                        <MdOutlineCall className="mr-1 h-3 w-3" />
+                        Call
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Bill Items Accordion */}
+          {salesData?.billItems && salesData?.billItems?.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Receipt className="h-4 w-4" />
+                  Bill Items
+                  <Badge variant="secondary" className="ml-2">
+                    {totalItemsCount} items
+                  </Badge>
+                </CardTitle>
+                <p className="text-sm text-gray-600">Total Value: ₹{salesData.order_id.total}</p>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="bill-items" className="border-none">
+                    <AccordionTrigger className="py-2 hover:no-underline">
+                      <span className="text-sm font-medium">
+                        View {salesData?.billItems.length} item
+                        {salesData?.billItems.length > 1 ? 's' : ''} details
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2">
+                      <div className="">
+                        {salesData?.billItems.map((item, index) => (
+                          <Card key={index} className="border-none shadow-none">
+                            <CardContent className="border-b p-1 pb-2">
+                              <div className="space-y-3">
+                                {/* Main dish */}
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-gray-900">{item.dish.name}</h4>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                      Quantity: {item.quantity} × ₹{item.dish.price}
+                                    </p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="font-semibold text-gray-900">₹{item.dish.price * item.quantity}</p>
+                                  </div>
+                                </div>
+
+                                {/* Extras */}
+                                {item.extras.length > 0 && (
+                                  <div className="border-t pt-3">
+                                    <h5 className="mb-2 text-sm font-medium text-gray-700">Add-ons:</h5>
+                                    <div className="space-y-2">
+                                      {item.extras.map((extra, extraIndex) => (
+                                        <div key={extraIndex} className="flex items-center justify-between rounded bg-gray-50 p-2 text-sm">
+                                          <span className="text-gray-700">{extra.name}</span>
+                                          <span className="font-medium">
+                                            {extra.quantity} × ₹{extra.price.toFixed(2)} = ₹{(extra.quantity * extra.price).toFixed(2)}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="mt-2 flex items-center justify-between border-t border-gray-200 pt-2">
+                                      <span className="text-sm font-medium">Item Total:</span>
+                                      <span className="font-semibold">
+                                        ₹
+                                        {(
+                                          item.dish.price * item.quantity +
+                                          item.extras.reduce((sum, extra) => sum + extra.price * extra.quantity, 0)
+                                        ).toFixed(2)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Comments Section */}
+          {salesData?.comment && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <MessageSquare className="h-4 w-4" />
+                  Comments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">{salesData.comment}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Timestamp */}
+          <Card className="bg-gray-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Clock className="h-4 w-4" />
+                <span>Transaction completed on {timestampToDateTime(salesData?.date || 0)}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </motion.div>
+
+      <CommonBottomButton
+        fixed={true}
+        maxWidth="30rem"
+        buttons={[
+          {
+            text: '',
+            onClick: onClose,
+            className: 'rounded-md pl-3 !w-[8rem]',
+            isBackButton: true,
+          },
+          {
+            text: 'Prev',
+            onClick: goToPrevious,
+            className: 'rounded-md',
+            disable: currentIndex === 0,
+          },
+          {
+            text: 'Next',
+            onClick: goToNext,
+            className: 'rounded-md',
+            disable: currentIndex === allSalesData.length - 1,
+          },
+          {
+            text: 'Invoice',
+            onClick: () => mutateAsync(salesData?._id),
+            icon: <Download />,
+            className: 'rounded-md px-2',
+            disable: isPending,
+            isLoading: isPending,
+          },
+        ]}
+      />
+    </Card>
+  );
+};
+
+const PaymentModal = memo(MemoPaymentModal);
+export default PaymentModal;
