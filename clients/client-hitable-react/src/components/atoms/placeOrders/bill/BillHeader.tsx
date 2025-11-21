@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 import { useAddCustomer } from '@/components/hooks/useAddCustomer';
+import { useOrderStore } from '@/components/store/useOrderData';
 import { ArrowLeft, PersonStandingIcon, ReceiptText } from 'lucide-react';
 import { memo, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -26,6 +27,7 @@ const BillHeader = memo(({ isSplitBill, selectedBill, onBackToGrid, onReprintBil
   const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
   const canPrintBill = hasPermission('print_bill');
   const canEBill = hasPermission('e_bill');
+  const selectedTable = useOrderStore((s) => s.selectedTable);
 
   // Get businessId from HiClient store
   const selectedBiz = useHiClientZ((s) => s.selectedBiz);
@@ -40,11 +42,6 @@ const BillHeader = memo(({ isSplitBill, selectedBill, onBackToGrid, onReprintBil
   const { mutate: addCustomer, isPending } = useAddCustomer();
 
   const handleOpenAddCustomer = () => {
-    if (!selectedBill) {
-      toast.error('Select a bill before adding customer details.');
-      return;
-    }
-
     // Prefill from selected bill if available
     setCustomerName((selectedBill.customerName || '').trim());
     setCustomerPhone(selectedBill?.customerPhone || '');
@@ -72,34 +69,19 @@ const BillHeader = memo(({ isSplitBill, selectedBill, onBackToGrid, onReprintBil
       valid = false;
     }
 
-    if (!businessId) {
-      toast.error('Business ID missing. Please reload or reselect outlet.');
-      valid = false;
-    }
-
-    if (!selectedBill?.tableName) {
-      toast.error('Table name missing for this bill.');
-      valid = false;
-    }
-
     return valid;
   };
 
   const handleAddCustomer = () => {
-    if (!selectedBill) {
-      toast.error('No bill selected.');
-      return;
-    }
     if (!validateForm()) return;
 
     addCustomer(
       {
         businessId,
-        tableName: selectedBill.tableName,
+        tableName: selectedTable?.name || '',
         customerName: customerName.trim(),
         phone: customerPhone || undefined,
-        // only pass variantId if present
-        variantId: selectedBill.variantId ? String(selectedBill.variantId) : undefined,
+        ...(selectedBill?.variantId && { variantId: String(selectedBill?.variantId) }),
       },
       {
         onSuccess: () => {
@@ -142,7 +124,7 @@ const BillHeader = memo(({ isSplitBill, selectedBill, onBackToGrid, onReprintBil
               size="sm"
               variant="outline"
               onClick={handleOpenAddCustomer}
-              disabled={!selectedBill || !businessId}
+              disabled={isPending}
               title={!selectedBill ? 'Select a bill first' : ''}
             >
               <PersonStandingIcon className="mr-1 h-4 w-4" />
