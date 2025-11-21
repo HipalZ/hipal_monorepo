@@ -17,32 +17,28 @@ import {
   UpiMode,
   User,
   UserSession,
-} from "@hi/db-models";
-import {
-  type SwitchTableType,
-  normalSettleSchema,
-  switchTableschema,
-} from "@hi/db-models/src/validators";
-import { runInTransaction } from "@hi/utils";
-import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
-import { Hono } from "hono";
-import type { ClientSession } from "mongodb";
-import { nanoid } from "nanoid";
-import { z } from "zod";
-import { checkOriginBillIsSplit } from "../../services/splitBill";
-import { executePosHandler } from "../../utils/executePoshandlers.ts";
-import { calculateCartBill } from "../../utils/helper";
-import { posApiPaths } from "../../utils/posConfig/petPooja";
+} from '@hi/db-models';
+import { type SwitchTableType, normalSettleSchema, switchTableschema } from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { zValidator } from '@hono/zod-validator';
+import axios from 'axios';
+import { Hono } from 'hono';
+import type { ClientSession } from 'mongodb';
+import { nanoid } from 'nanoid';
+import { z } from 'zod';
+import { checkOriginBillIsSplit } from '../../services/splitBill';
+import { executePosHandler } from '../../utils/executePoshandlers.ts';
+import { calculateCartBill } from '../../utils/helper';
+import { posApiPaths } from '../../utils/posConfig/petPooja';
 // import { queueClient } from "../../utils/queue/queueClient";
-import { respond } from "../../utils/response";
-import { generateTenDigitCode } from "../pos";
+import { respond } from '../../utils/response';
+import { generateTenDigitCode } from '../pos';
 //
 const tableRouter = new Hono()
   .get(
-    "/all/:businessId",
+    '/all/:businessId',
     zValidator(
-      "param",
+      'param',
       z.object({
         businessId: z.string().min(1).max(500),
       }),
@@ -65,22 +61,22 @@ const tableRouter = new Hono()
       const tables = await Table.find({
         businessId,
         active: true,
-        status: "ACTIVE",
+        status: 'ACTIVE',
         pos: !!businessPosConfig,
         _id: { $nin: mergedTableIds },
       })
         .populate({
-          path: "userIds",
-          select: "name phone",
+          path: 'userIds',
+          select: 'name phone',
         })
         .populate({
-          path: "mergeTableIds",
-          select: "name _id",
+          path: 'mergeTableIds',
+          select: 'name _id',
         });
 
       return c.json(
         {
-          message: "Tables fetched successfully",
+          message: 'Tables fetched successfully',
           err: false,
           data: tables,
         },
@@ -90,9 +86,9 @@ const tableRouter = new Hono()
   )
 
   .get(
-    "/fetch_all",
+    '/fetch_all',
     zValidator(
-      "query",
+      'query',
       z.object({
         businessId: z.string().min(1).max(500),
       }),
@@ -109,13 +105,13 @@ const tableRouter = new Hono()
       const tables = await Table.find({
         businessId,
         active: true,
-        status: ["ACTIVE", "EMPTY"],
+        status: ['ACTIVE', 'EMPTY'],
         pos: !!businessPosConfig,
-      }).select("name _id status currentTableAmount");
+      }).select('name _id status currentTableAmount');
 
       return c.json(
         {
-          message: "Tables fetched successfully",
+          message: 'Tables fetched successfully',
           err: false,
           data: tables,
         },
@@ -124,9 +120,9 @@ const tableRouter = new Hono()
     },
   )
   .get(
-    "/:tableId",
+    '/:tableId',
     zValidator(
-      "param",
+      'param',
       z.object({
         tableId: z.string().min(1).max(500),
       }),
@@ -136,22 +132,22 @@ const tableRouter = new Hono()
 
       const table = await Table.findById(tableId)
         .populate({
-          path: "userIds",
-          select: "name phone",
+          path: 'userIds',
+          select: 'name phone',
         })
         .populate({
-          path: "mergeTableIds",
-          select: "name",
+          path: 'mergeTableIds',
+          select: 'name',
         })
 
         .populate({
-          path: "mergedBy",
-          select: "name",
+          path: 'mergedBy',
+          select: 'name',
         });
 
       return c.json(
         {
-          message: "Tables fetched successfully",
+          message: 'Tables fetched successfully',
           err: false,
           data: table,
         },
@@ -160,9 +156,9 @@ const tableRouter = new Hono()
     },
   )
   .get(
-    "/empty_table/:businessId",
+    '/empty_table/:businessId',
     zValidator(
-      "param",
+      'param',
       z.object({
         businessId: z.string().min(1).max(500),
       }),
@@ -184,7 +180,7 @@ const tableRouter = new Hono()
 
       const tables = await Table.find({
         businessId,
-        status: "EMPTY",
+        status: 'EMPTY',
         active: true,
         pos: !!businessPosConfig,
         $or: [
@@ -192,7 +188,7 @@ const tableRouter = new Hono()
             internalZoneId: { $exists: true },
           },
           {
-            zoneId: { $ne: "0" },
+            zoneId: { $ne: '0' },
           },
         ],
         _id: { $nin: mergedTableIds },
@@ -200,7 +196,7 @@ const tableRouter = new Hono()
 
       return c.json(
         {
-          message: "Tables fetched successfully",
+          message: 'Tables fetched successfully',
           err: false,
           data: tables,
         },
@@ -210,9 +206,9 @@ const tableRouter = new Hono()
   )
 
   .get(
-    "/orders/:businessId",
+    '/orders/:businessId',
     zValidator(
-      "param",
+      'param',
       z.object({
         businessId: z.string().min(1).max(500),
       }),
@@ -230,7 +226,7 @@ const tableRouter = new Hono()
 
       return c.json(
         {
-          message: "Orders fetched successfully",
+          message: 'Orders fetched successfully',
           err: false,
           data: order,
         },
@@ -240,9 +236,9 @@ const tableRouter = new Hono()
   )
 
   .get(
-    "/unsettle_table/:businessId",
+    '/unsettle_table/:businessId',
     zValidator(
-      "param",
+      'param',
       z.object({
         businessId: z.string().min(1).max(500),
       }),
@@ -257,7 +253,7 @@ const tableRouter = new Hono()
 
       return c.json(
         {
-          message: "tables fetched successfully",
+          message: 'tables fetched successfully',
           err: false,
           data: unsettleTables,
         },
@@ -266,10 +262,10 @@ const tableRouter = new Hono()
     },
   )
   .put(
-    "/update_guest",
+    '/update_guest',
     // ubacMiddleware("add_pax"),
     zValidator(
-      "json",
+      'json',
       z.object({
         tableId: z.string().min(1).max(500),
         guestCount: z.number().positive(),
@@ -302,7 +298,7 @@ const tableRouter = new Hono()
 
       return c.json(
         {
-          message: "Table updated successfully",
+          message: 'Table updated successfully',
           err: false,
           data: table,
         },
@@ -312,21 +308,13 @@ const tableRouter = new Hono()
   )
 
   .post(
-    "/normal_settle",
+    '/normal_settle',
     // ubacMiddleware("normal_settle"),
-    zValidator("json", normalSettleSchema),
+    zValidator('json', normalSettleSchema),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const {
-          tableId,
-          captainId,
-          billId,
-          settleModes = [],
-          duesUserId,
-          npcUserId,
-          variantId,
-        } = await c.req.json();
+        const { tableId, captainId, billId, settleModes = [], duesUserId, npcUserId, variantId } = await c.req.json();
 
         const table = await Table.findById(tableId);
 
@@ -339,16 +327,16 @@ const tableRouter = new Hono()
         });
 
         if (!pos) {
-          return respond(c, "Pos not found", true, 400, {});
+          return respond(c, 'Pos not found', true, 400, {});
         }
 
         if (!table || !captain) {
-          return respond(c, "Table or Captain not found", true, 404, {});
+          return respond(c, 'Table or Captain not found', true, 404, {});
         }
 
-        if (pos.posName === "HIPAL_Z") {
-          console.log("jk");
-          const result = await executePosHandler(pos.posName, "normal_settle", {
+        if (pos.posName === 'HIPAL_Z') {
+          console.log('jk');
+          const result = await executePosHandler(pos.posName, 'normal_settle', {
             tableId: table._id,
             captainId: captain._id,
             billId: variantId ? variantId : billId,
@@ -359,18 +347,18 @@ const tableRouter = new Hono()
           });
 
           if (!result) {
-            throw new Error("Failed to process POS offline order");
+            throw new Error('Failed to process POS offline order');
           }
 
           if (result) {
-            return respond(c, "success", false, 200, result);
+            return respond(c, 'success', false, 200, result);
           }
         }
 
         const paymentMode = await UpiMode.findById(settleModes[0]?._id);
 
         if (!paymentMode) {
-          return respond(c, "Payment mode not found", true, 404, {});
+          return respond(c, 'Payment mode not found', true, 404, {});
         }
 
         const billAlreadySettled = await Payment.findOne({
@@ -378,7 +366,7 @@ const tableRouter = new Hono()
         });
 
         if (billAlreadySettled) {
-          return respond(c, "Bill already settled", true, 409, {});
+          return respond(c, 'Bill already settled', true, 409, {});
         }
 
         const tableSession = await UserSession.findOne({
@@ -387,47 +375,36 @@ const tableRouter = new Hono()
         });
 
         if (!tableSession) {
-          return respond(c, "Table session not found", true, 404, {});
+          return respond(c, 'Table session not found', true, 404, {});
         }
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
 
-        console.log("norold", tableSession.billInvoice);
+        console.log('norold', tableSession.billInvoice);
 
         const npcUser = await NpcUser.findById(npcUserId);
 
         if (originBillIsSplit) {
           if (!variantId) {
-            return respond(
-              c,
-              "variantId is required for split bill",
-              true,
-              400,
-              {},
-            );
+            return respond(c, 'variantId is required for split bill', true, 400, {});
           }
 
-          const splitTableSessionData =
-            await SplitBillTableSession.findById(variantId);
+          const splitTableSessionData = await SplitBillTableSession.findById(variantId);
           if (!splitTableSessionData) {
-            return respond(c, "Split table session not found", true, 404, {});
+            return respond(c, 'Split table session not found', true, 404, {});
           }
 
           if (tableSession.variantsCounts > 1) {
             const uniqueOrderId = nanoid(15);
             let modifyTotal = 0;
-            if (
-              paymentMode?.name === "npc" ||
-              paymentMode?.name === "dues" ||
-              paymentMode?.name === "complementary"
-            ) {
+            if (paymentMode?.name === 'npc' || paymentMode?.name === 'dues' || paymentMode?.name === 'complementary') {
               modifyTotal = 0;
             } else {
               modifyTotal = splitTableSessionData?.total || 0;
 
               if (settleModes.length > 1) {
                 for (const settle of settleModes) {
-                  if (settle.name === "complementary") {
+                  if (settle.name === 'complementary') {
                     modifyTotal -= settle.amount ?? 0;
                   }
                 }
@@ -437,17 +414,13 @@ const tableRouter = new Hono()
             const saveOrder = await Order.create(
               [
                 {
-                  total:
-                    paymentMode?.name === "npc" ||
-                    paymentMode?.name === "complementary"
-                      ? 0
-                      : splitTableSessionData?.total || 0,
-                  currency: "INR",
+                  total: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : splitTableSessionData?.total || 0,
+                  currency: 'INR',
                   receipt: uniqueOrderId,
                   userId:
-                    paymentMode?.name === "npc"
+                    paymentMode?.name === 'npc'
                       ? npcUser?.userId
-                      : splitTableSessionData?.customerIds?.[0] || captainId,
+                      : splitTableSessionData.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                   claimedCoins: splitTableSessionData?.claimedCoins || 0,
                   tableName: table?.name,
                   tips: splitTableSessionData?.tips || 0,
@@ -470,10 +443,9 @@ const tableRouter = new Hono()
                   businessId: table?.businessId,
                   order_id: saveOrder[0]._id,
                   total: saveOrder[0].total,
-                  mode: settleModes.length > 1 ? "split" : paymentMode?.name,
-                  status: "SUCCESS",
-                  paymentMode:
-                    settleModes.length > 1 ? "split" : paymentMode?.name,
+                  mode: settleModes.length > 1 ? 'split' : paymentMode?.name,
+                  status: 'SUCCESS',
+                  paymentMode: settleModes.length > 1 ? 'split' : paymentMode?.name,
                   userId: saveOrder[0].userId,
                   claimedCoins: saveOrder[0].claimedCoins,
                   billValue: saveOrder[0].billValue,
@@ -483,19 +455,11 @@ const tableRouter = new Hono()
                   razorpayEventId: nanoid(15),
                   razorpayOrderId: nanoid(15),
                   razorpayPaymentId: nanoid(15),
-                  settleType: "NORMAL_SETTLE",
-                  comment: "NORMAL SETTLE",
+                  settleType: 'NORMAL_SETTLE',
+                  comment: 'NORMAL SETTLE',
                   posBillId: splitTableSessionData?._id,
-                  tax:
-                    paymentMode?.name === "npc" ||
-                    paymentMode?.name === "complementary"
-                      ? 0
-                      : splitTableSessionData?.gst,
-                  serviceCharge:
-                    paymentMode?.name === "npc" ||
-                    paymentMode?.name === "complementary"
-                      ? 0
-                      : splitTableSessionData?.serviceCharge,
+                  tax: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : splitTableSessionData?.gst,
+                  serviceCharge: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : splitTableSessionData?.serviceCharge,
 
                   waiterName: captain?.name,
                   splitModes: settleModes,
@@ -507,12 +471,14 @@ const tableRouter = new Hono()
                   isSplitBillVariant: true,
                   billInvoice: splitTableSessionData?.billInvoice,
                   paxCount: tableSession?.paxCount || 0,
+
+                  serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
                 },
               ],
               { session },
             );
 
-            if (duesUserId && paymentMode?.name === "dues") {
+            if (duesUserId && paymentMode?.name === 'dues') {
               await PendingDues.create(
                 [
                   {
@@ -538,7 +504,7 @@ const tableRouter = new Hono()
                 { session },
               );
             }
-            if (npcUserId && paymentMode?.name === "npc") {
+            if (npcUserId && paymentMode?.name === 'npc') {
               await NpcUser.findByIdAndUpdate(
                 npcUserId,
                 {
@@ -554,7 +520,7 @@ const tableRouter = new Hono()
               {
                 tableName: table?.name,
                 isAccepted: false,
-                alertType: "OFFLINE",
+                alertType: 'OFFLINE',
                 businessId: table?.businessId,
               },
               { isAccepted: true, isRejected: true },
@@ -564,13 +530,10 @@ const tableRouter = new Hono()
               [
                 {
                   businessId: saveOrder[0]?.businessId,
-                  alertType: "NORMAL_SETTLE",
+                  alertType: 'NORMAL_SETTLE',
                   payment_id: createPayment[0]._id,
-                  coinsApplied: !!(
-                    splitTableSessionData?.claimedCoins &&
-                    splitTableSessionData?.claimedCoins > 0
-                  ),
-                  status: "SUCCESS",
+                  coinsApplied: !!(splitTableSessionData?.claimedCoins && splitTableSessionData?.claimedCoins > 0),
+                  status: 'SUCCESS',
                   order_id: saveOrder[0]?._id,
                   message: `Paid ${saveOrder[0]?.total}`,
                   tableName: saveOrder[0]?.tableName,
@@ -584,11 +547,7 @@ const tableRouter = new Hono()
               { session },
             );
 
-            await SplitBillTableSession.updateOne(
-              { _id: variantId },
-              { $set: { isPaid: true } },
-              { session },
-            );
+            await SplitBillTableSession.updateOne({ _id: variantId }, { $set: { isPaid: true } }, { session });
             await UserSession.findOneAndUpdate(
               {
                 businessId: table?.businessId,
@@ -606,27 +565,22 @@ const tableRouter = new Hono()
           if (tableSession?.variantsCounts === 1) {
             //only cariant
 
-            const splitTableSessionData =
-              await SplitBillTableSession.findById(variantId);
+            const splitTableSessionData = await SplitBillTableSession.findById(variantId);
             if (!splitTableSessionData) {
-              return respond(c, "Split table session not found", true, 404, {});
+              return respond(c, 'Split table session not found', true, 404, {});
             }
             const npcUser = await NpcUser.findById(npcUserId);
 
             const uniqueOrderId = nanoid(15);
             let modifyTotal = 0;
-            if (
-              paymentMode?.name === "npc" ||
-              paymentMode?.name === "dues" ||
-              paymentMode?.name === "complementary"
-            ) {
+            if (paymentMode?.name === 'npc' || paymentMode?.name === 'dues' || paymentMode?.name === 'complementary') {
               modifyTotal = 0;
             } else {
               modifyTotal = splitTableSessionData?.total || 0;
 
               if (settleModes.length > 1) {
                 for (const settle of settleModes) {
-                  if (settle.name === "complementary") {
+                  if (settle.name === 'complementary') {
                     modifyTotal -= settle.amount ?? 0;
                   }
                 }
@@ -636,17 +590,13 @@ const tableRouter = new Hono()
             const saveOrder = await Order.create(
               [
                 {
-                  total:
-                    paymentMode?.name === "npc" ||
-                    paymentMode?.name === "complementary"
-                      ? 0
-                      : splitTableSessionData?.total || 0,
-                  currency: "INR",
+                  total: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : splitTableSessionData?.total || 0,
+                  currency: 'INR',
                   receipt: uniqueOrderId,
                   userId:
-                    paymentMode?.name === "npc"
+                    paymentMode?.name === 'npc'
                       ? npcUser?.userId
-                      : splitTableSessionData?.customerIds?.[0] || captainId,
+                      : splitTableSessionData.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                   claimedCoins: splitTableSessionData?.claimedCoins || 0,
                   tableName: table?.name,
                   tips: splitTableSessionData?.tips || 0,
@@ -669,10 +619,9 @@ const tableRouter = new Hono()
                   businessId: table?.businessId,
                   order_id: saveOrder[0]._id,
                   total: saveOrder[0].total,
-                  mode: settleModes.length > 1 ? "split" : paymentMode?.name,
-                  status: "SUCCESS",
-                  paymentMode:
-                    settleModes.length > 1 ? "split" : paymentMode?.name,
+                  mode: settleModes.length > 1 ? 'split' : paymentMode?.name,
+                  status: 'SUCCESS',
+                  paymentMode: settleModes.length > 1 ? 'split' : paymentMode?.name,
                   userId: saveOrder[0].userId,
                   claimedCoins: saveOrder[0].claimedCoins,
                   billValue: saveOrder[0].billValue,
@@ -682,19 +631,11 @@ const tableRouter = new Hono()
                   razorpayEventId: nanoid(15),
                   razorpayOrderId: nanoid(15),
                   razorpayPaymentId: nanoid(15),
-                  settleType: "NORMAL_SETTLE",
-                  comment: "NORMAL SETTLE",
+                  settleType: 'NORMAL_SETTLE',
+                  comment: 'NORMAL SETTLE',
                   posBillId: splitTableSessionData?._id,
-                  tax:
-                    paymentMode?.name === "npc" ||
-                    paymentMode?.name === "complementary"
-                      ? 0
-                      : splitTableSessionData?.gst,
-                  serviceCharge:
-                    paymentMode?.name === "npc" ||
-                    paymentMode?.name === "complementary"
-                      ? 0
-                      : splitTableSessionData?.serviceCharge,
+                  tax: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : splitTableSessionData?.gst,
+                  serviceCharge: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : splitTableSessionData?.serviceCharge,
 
                   waiterName: captain?.name,
                   splitModes: settleModes,
@@ -706,12 +647,14 @@ const tableRouter = new Hono()
                   isSplitBillVariant: true,
                   billInvoice: splitTableSessionData?.billInvoice,
                   paxCount: tableSession?.paxCount || 0,
+
+                  serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
                 },
               ],
               { session },
             );
 
-            if (duesUserId && paymentMode?.name === "dues") {
+            if (duesUserId && paymentMode?.name === 'dues') {
               await PendingDues.create(
                 [
                   {
@@ -737,7 +680,7 @@ const tableRouter = new Hono()
                 { session },
               );
             }
-            if (npcUserId && paymentMode?.name === "npc") {
+            if (npcUserId && paymentMode?.name === 'npc') {
               await NpcUser.findByIdAndUpdate(
                 npcUserId,
                 {
@@ -753,7 +696,7 @@ const tableRouter = new Hono()
               {
                 tableName: table?.name,
                 isAccepted: false,
-                alertType: "OFFLINE",
+                alertType: 'OFFLINE',
                 businessId: table?.businessId,
               },
               { isAccepted: true, isRejected: true },
@@ -763,13 +706,10 @@ const tableRouter = new Hono()
               [
                 {
                   businessId: saveOrder[0]?.businessId,
-                  alertType: "NORMAL_SETTLE",
+                  alertType: 'NORMAL_SETTLE',
                   payment_id: createPayment[0]._id,
-                  coinsApplied: !!(
-                    splitTableSessionData?.claimedCoins &&
-                    splitTableSessionData?.claimedCoins > 0
-                  ),
-                  status: "SUCCESS",
+                  coinsApplied: !!(splitTableSessionData?.claimedCoins && splitTableSessionData?.claimedCoins > 0),
+                  status: 'SUCCESS',
                   order_id: saveOrder[0]?._id,
                   message: `Paid ${saveOrder[0]?.total}`,
                   tableName: saveOrder[0]?.tableName,
@@ -783,11 +723,7 @@ const tableRouter = new Hono()
               { session },
             );
 
-            await SplitBillTableSession.updateOne(
-              { _id: variantId },
-              { $set: { isPaid: true } },
-              { session },
-            );
+            await SplitBillTableSession.updateOne({ _id: variantId }, { $set: { isPaid: true } }, { session });
 
             await UserSession.findOneAndUpdate(
               {
@@ -814,18 +750,14 @@ const tableRouter = new Hono()
             );
 
             let modifyTotal = 0;
-            if (
-              paymentMode?.name === "npc" ||
-              paymentMode?.name === "dues" ||
-              paymentMode?.name === "complementary"
-            ) {
+            if (paymentMode?.name === 'npc' || paymentMode?.name === 'dues' || paymentMode?.name === 'complementary') {
               modifyTotal = 0;
             } else {
               modifyTotal = tableSession?.total || 0;
 
               if (settleModes.length > 1) {
                 for (const settle of settleModes) {
-                  if (settle.name === "complementary") {
+                  if (settle.name === 'complementary') {
                     modifyTotal -= settle.amount ?? 0;
                   }
                 }
@@ -844,9 +776,9 @@ const tableRouter = new Hono()
             const tableInfo = await Table.findByIdAndUpdate(
               tableId,
               {
-                status: "EMPTY",
+                status: 'EMPTY',
                 capacity: 0,
-                hiCode: "",
+                hiCode: '',
                 currentTableAmount: 0,
                 totalItemCount: 0,
                 userIds: [],
@@ -867,10 +799,10 @@ const tableRouter = new Hono()
                   const {
                     data: { bill_request_id },
                   } = await axios.post(posApiPaths.requestBill, payload, {
-                    headers: { "Content-Type": "application/json" },
+                    headers: { 'Content-Type': 'application/json' },
                   });
                 } catch (err) {
-                  console.error("Failed to request/settle bill:", err);
+                  console.error('Failed to request/settle bill:', err);
                 }
               })();
             }, 10000);
@@ -882,25 +814,22 @@ const tableRouter = new Hono()
                   const {
                     data: { bill_request_id },
                   } = await axios.post(posApiPaths.requestBill, payload, {
-                    headers: { "Content-Type": "application/json" },
+                    headers: { 'Content-Type': 'application/json' },
                   });
 
                   // 2. Settle the table
-                  const { data: settleData } = await axios.post(
-                    posApiPaths.settleTable,
-                    {
-                      app_key: pos.accessKey,
-                      app_secret: pos.secretKey,
-                      access_token: pos.authToken,
-                      restID: pos.restId,
-                      bill_request_id,
-                      amount_paid: tableSession?.total || 0,
-                      pin: tableSession?.pin,
-                    },
-                  );
+                  const { data: settleData } = await axios.post(posApiPaths.settleTable, {
+                    app_key: pos.accessKey,
+                    app_secret: pos.secretKey,
+                    access_token: pos.authToken,
+                    restID: pos.restId,
+                    bill_request_id,
+                    amount_paid: tableSession?.total || 0,
+                    pin: tableSession?.pin,
+                  });
 
                   // 3. If settlement failed (success === "0"), upsert into UnsettleTable
-                  if (settleData.success === "0") {
+                  if (settleData.success === '0') {
                     await UnsettleTable.findOneAndUpdate(
                       {
                         businessId: tableSession?.businessId,
@@ -938,12 +867,12 @@ const tableRouter = new Hono()
 
                     await axios.post(posApiPaths.requestBill, payload, {
                       headers: {
-                        "Content-Type": "application/json",
+                        'Content-Type': 'application/json',
                       },
                     });
                   }
                 } catch (err) {
-                  console.error("Failed to request/settle bill:", err);
+                  console.error('Failed to request/settle bill:', err);
                 }
               })();
             }, 35000);
@@ -966,7 +895,7 @@ const tableRouter = new Hono()
             );
           }
 
-          return respond(c, "Table settled successfully", false, 200, {});
+          return respond(c, 'Table settled successfully', false, 200, {});
         }
 
         await KotOrder.updateMany(
@@ -982,18 +911,14 @@ const tableRouter = new Hono()
         const uniqueOrderId = nanoid(15);
 
         let modifyTotal = 0;
-        if (
-          paymentMode?.name === "npc" ||
-          paymentMode?.name === "dues" ||
-          paymentMode?.name === "complementary"
-        ) {
+        if (paymentMode?.name === 'npc' || paymentMode?.name === 'dues' || paymentMode?.name === 'complementary') {
           modifyTotal = 0;
         } else {
           modifyTotal = tableSession?.total || 0;
 
           if (settleModes.length > 1) {
             for (const settle of settleModes) {
-              if (settle.name === "complementary") {
+              if (settle.name === 'complementary') {
                 modifyTotal -= settle.amount ?? 0;
               }
             }
@@ -1003,17 +928,10 @@ const tableRouter = new Hono()
         const saveOrder = await Order.create(
           [
             {
-              total:
-                paymentMode?.name === "npc" ||
-                paymentMode?.name === "complementary"
-                  ? 0
-                  : tableSession?.total || 0,
-              currency: "INR",
+              total: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : tableSession?.total || 0,
+              currency: 'INR',
               receipt: uniqueOrderId,
-              userId:
-                paymentMode?.name === "npc"
-                  ? npcUser?.userId
-                  : tableSession?.customerIds?.[0] || captainId,
+              userId: paymentMode?.name === 'npc' ? npcUser?.userId : tableSession.billingUserId || tableSession?.customerIds?.[0] || captainId,
               claimedCoins: tableSession?.claimedCoins || 0,
               tableName: table?.name,
               tips: tableSession?.tips || 0,
@@ -1045,9 +963,9 @@ const tableRouter = new Hono()
               businessId: table?.businessId,
               order_id: saveOrder[0]._id,
               total: saveOrder[0].total,
-              mode: settleModes.length > 1 ? "split" : paymentMode?.name,
-              status: "SUCCESS",
-              paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
+              mode: settleModes.length > 1 ? 'split' : paymentMode?.name,
+              status: 'SUCCESS',
+              paymentMode: settleModes.length > 1 ? 'split' : paymentMode?.name,
               userId: saveOrder[0].userId,
               claimedCoins: saveOrder[0].claimedCoins,
               billValue: saveOrder[0].billValue,
@@ -1057,19 +975,11 @@ const tableRouter = new Hono()
               razorpayEventId: nanoid(15),
               razorpayOrderId: nanoid(15),
               razorpayPaymentId: nanoid(15),
-              settleType: "NORMAL_SETTLE",
-              comment: "NORMAL SETTLE",
+              settleType: 'NORMAL_SETTLE',
+              comment: 'NORMAL SETTLE',
               posBillId: tableSession?._id,
-              tax:
-                paymentMode?.name === "npc" ||
-                paymentMode?.name === "complementary"
-                  ? 0
-                  : tableSession?.gst,
-              serviceCharge:
-                paymentMode?.name === "npc" ||
-                paymentMode?.name === "complementary"
-                  ? 0
-                  : tableSession?.serviceCharge,
+              tax: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : tableSession?.gst,
+              serviceCharge: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : tableSession?.serviceCharge,
 
               waiterName: captain?.name,
               splitModes: settleModes,
@@ -1086,7 +996,7 @@ const tableRouter = new Hono()
           { session },
         );
 
-        if (duesUserId && paymentMode?.name === "dues") {
+        if (duesUserId && paymentMode?.name === 'dues') {
           await PendingDues.create(
             [
               {
@@ -1112,7 +1022,7 @@ const tableRouter = new Hono()
             { session },
           );
         }
-        if (npcUserId && paymentMode?.name === "npc") {
+        if (npcUserId && paymentMode?.name === 'npc') {
           await NpcUser.findByIdAndUpdate(
             npcUserId,
             {
@@ -1126,9 +1036,9 @@ const tableRouter = new Hono()
         const tableInfo = await Table.findByIdAndUpdate(
           tableId,
           {
-            status: "EMPTY",
+            status: 'EMPTY',
             capacity: 0,
-            hiCode: "",
+            hiCode: '',
             currentTableAmount: 0,
             totalItemCount: 0,
             userIds: [],
@@ -1149,10 +1059,10 @@ const tableRouter = new Hono()
               const {
                 data: { bill_request_id },
               } = await axios.post(posApiPaths.requestBill, payload, {
-                headers: { "Content-Type": "application/json" },
+                headers: { 'Content-Type': 'application/json' },
               });
             } catch (err) {
-              console.error("Failed to request/settle bill:", err);
+              console.error('Failed to request/settle bill:', err);
             }
           })();
         }, 10000);
@@ -1164,25 +1074,22 @@ const tableRouter = new Hono()
               const {
                 data: { bill_request_id },
               } = await axios.post(posApiPaths.requestBill, payload, {
-                headers: { "Content-Type": "application/json" },
+                headers: { 'Content-Type': 'application/json' },
               });
 
               // 2. Settle the table
-              const { data: settleData } = await axios.post(
-                posApiPaths.settleTable,
-                {
-                  app_key: pos.accessKey,
-                  app_secret: pos.secretKey,
-                  access_token: pos.authToken,
-                  restID: pos.restId,
-                  bill_request_id,
-                  amount_paid: saveOrder[0].total,
-                  pin: tableSession?.pin,
-                },
-              );
+              const { data: settleData } = await axios.post(posApiPaths.settleTable, {
+                app_key: pos.accessKey,
+                app_secret: pos.secretKey,
+                access_token: pos.authToken,
+                restID: pos.restId,
+                bill_request_id,
+                amount_paid: saveOrder[0].total,
+                pin: tableSession?.pin,
+              });
 
               // 3. If settlement failed (success === "0"), upsert into UnsettleTable
-              if (settleData.success === "0") {
+              if (settleData.success === '0') {
                 await UnsettleTable.findOneAndUpdate(
                   {
                     businessId: saveOrder[0].businessId,
@@ -1220,12 +1127,12 @@ const tableRouter = new Hono()
 
                 await axios.post(posApiPaths.requestBill, payload, {
                   headers: {
-                    "Content-Type": "application/json",
+                    'Content-Type': 'application/json',
                   },
                 });
               }
             } catch (err) {
-              console.error("Failed to request/settle bill:", err);
+              console.error('Failed to request/settle bill:', err);
             }
           })();
         }, 35000);
@@ -1249,7 +1156,7 @@ const tableRouter = new Hono()
           {
             tableName: table?.name,
             isAccepted: false,
-            alertType: "OFFLINE",
+            alertType: 'OFFLINE',
             businessId: table?.businessId,
           },
           { isAccepted: true, isRejected: true },
@@ -1259,12 +1166,10 @@ const tableRouter = new Hono()
           [
             {
               businessId: saveOrder[0]?.businessId,
-              alertType: "NORMAL_SETTLE",
+              alertType: 'NORMAL_SETTLE',
               payment_id: createPayment[0]._id,
-              coinsApplied: !!(
-                tableSession?.claimedCoins && tableSession?.claimedCoins > 0
-              ),
-              status: "SUCCESS",
+              coinsApplied: !!(tableSession?.claimedCoins && tableSession?.claimedCoins > 0),
+              status: 'SUCCESS',
               order_id: saveOrder[0]?._id,
               message: `Paid ${saveOrder[0]?.total}`,
               tableName: saveOrder[0]?.tableName,
@@ -1280,7 +1185,7 @@ const tableRouter = new Hono()
 
         return c.json(
           {
-            message: "Table settled successfully",
+            message: 'Table settled successfully',
             err: false,
           },
           200,
@@ -1289,9 +1194,9 @@ const tableRouter = new Hono()
     },
   )
   .post(
-    "/hi_settle",
+    '/hi_settle',
     zValidator(
-      "json",
+      'json',
       z.object({
         tableId: z.string().min(1).max(500),
         captainId: z.string().min(1).max(500),
@@ -1312,13 +1217,7 @@ const tableRouter = new Hono()
         });
 
         if (!tableSession || !table) {
-          return respond(
-            c,
-            `No active session found for table ${table?.name}`,
-            true,
-            400,
-            {},
-          );
+          return respond(c, `No active session found for table ${table?.name}`, true, 400, {});
         }
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
@@ -1326,7 +1225,7 @@ const tableRouter = new Hono()
           active: true,
         });
         if (!pos) {
-          return respond(c, "Pos not found", true, 400, {});
+          return respond(c, 'Pos not found', true, 400, {});
         }
 
         const alreadySetlle = await Payment.findOne({
@@ -1334,19 +1233,13 @@ const tableRouter = new Hono()
         });
 
         if (alreadySetlle) {
-          return respond(c, "Bill already settled", true, 409, {});
+          return respond(c, 'Bill already settled', true, 409, {});
         }
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
         if (originBillIsSplit) {
           if (!variantId) {
-            return respond(
-              c,
-              "variantId is required for split bill",
-              true,
-              400,
-              {},
-            );
+            return respond(c, 'variantId is required for split bill', true, 400, {});
           }
 
           await SplitBillTableSession.findOneAndUpdate(
@@ -1355,7 +1248,7 @@ const tableRouter = new Hono()
             },
             {
               $set: {
-                settleType: "HI_SETTLE",
+                settleType: 'HI_SETTLE',
               },
             },
             { session },
@@ -1369,7 +1262,7 @@ const tableRouter = new Hono()
           },
           {
             $set: {
-              settleType: "HI_SETTLE",
+              settleType: 'HI_SETTLE',
             },
           },
           { session },
@@ -1391,13 +1284,11 @@ const tableRouter = new Hono()
 
         return c.json(
           {
-            message: "fetched qr bill",
+            message: 'fetched qr bill',
             err: false,
             data: {
               qrBillId: billId,
-              path: `https://hipalz.com/${
-                customLink?.customLink
-              }/posPayment?orderId=${variantId ? variantId : billId}`,
+              path: `https://hipalz.com/${customLink?.customLink}/posPayment?orderId=${variantId ? variantId : billId}`,
             },
           },
           200,
@@ -1406,10 +1297,10 @@ const tableRouter = new Hono()
     },
   )
   .post(
-    "/merge",
+    '/merge',
     // ubacMiddleware("merge_table"),
     zValidator(
-      "json",
+      'json',
       z.object({
         fromTableIds: z.array(z.string().min(24).max(24)),
         toTableId: z.string().min(24).max(24),
@@ -1422,47 +1313,32 @@ const tableRouter = new Hono()
         const { fromTableIds, toTableId, staffId } = await c.req.json();
 
         const staff = await User.findById(staffId).session(session);
-        if (!staff) return respond(c, "Staff not found", true, 404, {});
+        if (!staff) return respond(c, 'Staff not found', true, 404, {});
 
         const destTable = await Table.findById(toTableId).session(session);
-        if (!destTable || destTable.isMerge)
-          return respond(
-            c,
-            "Destination table not found or already merged",
-            true,
-            404,
-            {},
-          );
+        if (!destTable || destTable.isMerge) return respond(c, 'Destination table not found or already merged', true, 404, {});
 
         const alreadyMerged = await MergeTable.exists({
           businessId: destTable.businessId,
           childTableIds: { $in: fromTableIds },
         }).session(session);
-        if (alreadyMerged)
-          return respond(
-            c,
-            "One or more source tables already merged",
-            true,
-            400,
-            {},
-          );
+        if (alreadyMerged) return respond(c, 'One or more source tables already merged', true, 400, {});
 
         const sourceTables = await Table.find({
           businessId: destTable.businessId,
           _id: { $in: fromTableIds },
         }).session(session);
 
-        if (!sourceTables.length)
-          return respond(c, "No valid source tables found", true, 404, {});
+        if (!sourceTables.length) return respond(c, 'No valid source tables found', true, 404, {});
 
         const posConfig = await BusinessPosConfig.findOne({
           businessId: destTable.businessId,
           isDeleted: false,
           active: true,
-          posName: "HIPAL_Z",
+          posName: 'HIPAL_Z',
         }).session(session);
 
-        if (!posConfig) return respond(c, "POS not found", true, 404, {});
+        if (!posConfig) return respond(c, 'POS not found', true, 404, {});
 
         const phoneNumbers: string[] = [];
         const customerNames: string[] = [];
@@ -1481,25 +1357,20 @@ const tableRouter = new Hono()
             tableName: srcTable.name,
           }).session(session);
 
-          if (srcSession && checkOriginBillIsSplit(srcSession))
-            throw new Error(`Bill already split for table ${srcTable.name}`);
+          if (srcSession && checkOriginBillIsSplit(srcSession)) throw new Error(`Bill already split for table ${srcTable.name}`);
 
           const pendingAlert = await PaymentAlert.findOne({
             businessId: srcTable.businessId,
             tableName: srcTable.name,
-            alertType: "OFFLINE",
+            alertType: 'OFFLINE',
             isAccepted: false,
           }).session(session);
 
-          if (pendingAlert)
-            throw new Error(
-              `Pending payment alert on ${srcTable.name}, merge not allowed.`,
-            );
+          if (pendingAlert) throw new Error(`Pending payment alert on ${srcTable.name}, merge not allowed.`);
 
           if (srcSession) {
             phoneNumbers.push(...(srcSession.phoneNumbers || []));
-            if (srcSession.customerName)
-              customerNames.push(srcSession.customerName);
+            if (srcSession.customerName) customerNames.push(srcSession.customerName);
           }
           userIds.push(...(srcTable.userIds || []));
 
@@ -1528,9 +1399,9 @@ const tableRouter = new Hono()
           await Table.findByIdAndUpdate(
             srcTable._id,
             {
-              status: "EMPTY",
+              status: 'EMPTY',
               capacity: 0,
-              hiCode: "",
+              hiCode: '',
               currentTableAmount: 0,
               totalItemCount: 0,
               userIds: [],
@@ -1544,26 +1415,19 @@ const tableRouter = new Hono()
             { session },
           );
 
-          await UserSession.deleteOne(
-            { businessId: srcTable.businessId, tableName: srcTable.name },
-            { session },
-          );
+          await UserSession.deleteOne({ businessId: srcTable.businessId, tableName: srcTable.name }, { session });
         }
 
         const destAlert = await PaymentAlert.findOne({
           businessId: destTable.businessId,
           tableName: destTable.name,
-          alertType: "OFFLINE",
+          alertType: 'OFFLINE',
           isAccepted: false,
         }).session(session);
 
-        if (destAlert)
-          throw new Error(
-            "Pending payment alert on destination table. Merge not allowed.",
-          );
+        if (destAlert) throw new Error('Pending payment alert on destination table. Merge not allowed.');
 
-        if (destSession && checkOriginBillIsSplit(destSession))
-          throw new Error("Destination bill already split. Cannot merge.");
+        if (destSession && checkOriginBillIsSplit(destSession)) throw new Error('Destination bill already split. Cannot merge.');
 
         if (!destSession) {
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
@@ -1575,10 +1439,9 @@ const tableRouter = new Hono()
               hiCode,
               pin: tenDigitCode,
               tableName: destTable.name,
-              customerName: customerNames[0] || "Guest",
-              phoneNumbers:
-                phoneNumbers.length > 0 ? phoneNumbers : [staff.phone],
-              performedBy: "captain",
+              customerName: customerNames[0] || 'Guest',
+              phoneNumbers: phoneNumbers.length > 0 ? phoneNumbers : [staff.phone],
+              performedBy: 'captain',
               date: Date.now(),
               isMerged: true,
               mergedBy: staff._id,
@@ -1592,7 +1455,7 @@ const tableRouter = new Hono()
             destTable._id,
             {
               isMerge: true,
-              status: "ACTIVE",
+              status: 'ACTIVE',
               mergedBy: staff._id,
               mergeTableIds: fromTableIds,
               hiCode: hiCode,
@@ -1630,8 +1493,7 @@ const tableRouter = new Hono()
               mergedBy: staff._id,
               mergeTableIds: fromTableIds,
               userIds: userIds,
-              currentTableAmount:
-                totalBillCount + (destTable.currentTableAmount || 0),
+              currentTableAmount: totalBillCount + (destTable.currentTableAmount || 0),
               totalItemCount: totalItemCount + (destTable.totalItemCount || 0),
             },
             { session },
@@ -1644,15 +1506,15 @@ const tableRouter = new Hono()
           childTableIds: fromTableIds,
         }).save({ session });
 
-        return respond(c, "Tables merged successfully", false, 200, {});
+        return respond(c, 'Tables merged successfully', false, 200, {});
       });
     },
   )
 
   .get(
-    "/qr_webhook/:billId/:variantId",
+    '/qr_webhook/:billId/:variantId',
     zValidator(
-      "param",
+      'param',
       z.object({
         billId: z.string().min(1).max(500),
         variantId: z.string().min(1).max(500).optional(),
@@ -1668,7 +1530,7 @@ const tableRouter = new Hono()
 
         return c.json(
           {
-            message: "listing qr bill",
+            message: 'listing qr bill',
             err: false,
             data: {
               status: paymentStatus?.status,
@@ -1684,7 +1546,7 @@ const tableRouter = new Hono()
 
       return c.json(
         {
-          message: "listing qr bill",
+          message: 'listing qr bill',
           err: false,
           data: {
             status: paymentStatus?.status,
@@ -1695,10 +1557,10 @@ const tableRouter = new Hono()
     },
   )
   .post(
-    "/e_bill",
+    '/e_bill',
     // ubacMiddleware("e_bill"),
     zValidator(
-      "json",
+      'json',
       z.object({
         phoneNumbers: z.array(z.string().min(1).max(500)).optional(),
         businessId: z.string().min(1).max(500),
@@ -1708,12 +1570,7 @@ const tableRouter = new Hono()
       }),
     ),
     async (c) => {
-      const {
-        phoneNumbers = [],
-        businessId,
-        variantId,
-        tableId,
-      } = await c.req.json();
+      const { phoneNumbers = [], businessId, variantId, tableId } = await c.req.json();
       const business = await Business.findById(businessId);
       const tableData = await Table.findById(tableId);
       const tableSession = await UserSession.findOne({
@@ -1721,19 +1578,13 @@ const tableRouter = new Hono()
         tableName: tableData?.name,
       });
       if (!tableSession) {
-        return respond(c, "Table session not found", true, 404, {});
+        return respond(c, 'Table session not found', true, 404, {});
       }
 
       const billAlreadySplit = checkOriginBillIsSplit(tableSession);
       if (billAlreadySplit) {
         if (!variantId) {
-          return respond(
-            c,
-            "variantId is required for split bill",
-            true,
-            400,
-            {},
-          );
+          return respond(c, 'variantId is required for split bill', true, 400, {});
         }
       }
       const phone = phoneNumbers[0];
@@ -1743,7 +1594,7 @@ const tableRouter = new Hono()
         if (!user) {
           user = await User.create({
             phone: phone,
-            name: "Guest",
+            name: 'Guest',
           });
         }
 
@@ -1786,17 +1637,17 @@ const tableRouter = new Hono()
 
       for (let i = 0; i < phoneNumbers?.length; i++) {
         const options = {
-          method: "POST",
-          url: "https://control.msg91.com/api/v5/flow/",
+          method: 'POST',
+          url: 'https://control.msg91.com/api/v5/flow/',
           headers: {
-            accept: "application/json",
-            "content-type": "application/json",
-            authkey: "387796AmyGlDBq63b2d75aP1",
+            accept: 'application/json',
+            'content-type': 'application/json',
+            authkey: '387796AmyGlDBq63b2d75aP1',
           },
           data: {
-            template_id: "6787e7e6d6fc0533d778a013",
-            sender: "HiPalc",
-            short_url: "0",
+            template_id: '6787e7e6d6fc0533d778a013',
+            sender: 'HiPalc',
+            short_url: '0',
             mobiles: `91${phoneNumbers[i]}`,
             businessname: business?.name,
             bill: findLongUrl.shortUrl,
@@ -1807,7 +1658,7 @@ const tableRouter = new Hono()
 
       return c.json(
         {
-          message: "Ebill sent successfully",
+          message: 'Ebill sent successfully',
           err: false,
         },
         200,
@@ -1816,9 +1667,9 @@ const tableRouter = new Hono()
   )
 
   .get(
-    "/table_offline_alert/:billId",
+    '/table_offline_alert/:billId',
     zValidator(
-      "param",
+      'param',
       z.object({
         billId: z.string().min(1).max(500),
       }),
@@ -1826,14 +1677,14 @@ const tableRouter = new Hono()
     async (c) => {
       const { billId } = c.req.param();
       const findOfflineAlert = await PaymentAlert.findOne({
-        alertType: "OFFLINE",
+        alertType: 'OFFLINE',
         billId: billId,
         isAccepted: false,
         isRejected: false,
-      }).populate("userId order_id");
+      }).populate('userId order_id');
       return c.json(
         {
-          message: "Offline alert fetched successfully",
+          message: 'Offline alert fetched successfully',
           err: false,
           data: findOfflineAlert || {},
         },
@@ -1842,9 +1693,9 @@ const tableRouter = new Hono()
     },
   )
   .post(
-    "/kot_users",
+    '/kot_users',
     zValidator(
-      "json",
+      'json',
       z.object({
         userIds: z.array(z.string().min(1).max(500)),
       }),
@@ -1853,10 +1704,10 @@ const tableRouter = new Hono()
       const { userIds = [] } = await c.req.json();
       const users = await User.find({
         _id: { $in: userIds },
-      }).select("name phone");
+      }).select('name phone');
       return c.json(
         {
-          message: "Users fetched successfully",
+          message: 'Users fetched successfully',
           err: false,
           data: users,
         },
@@ -1866,33 +1717,20 @@ const tableRouter = new Hono()
   )
 
   .post(
-    "/transfer_table",
+    '/transfer_table',
     // ubacMiddleware("transfer_item_or_table"),
 
-    zValidator("json", switchTableschema),
+    zValidator('json', switchTableschema),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const {
-          businessId,
-          transferBy,
-          transferType,
-          fromTableId,
-          toTableId,
-          itemIds = [],
-        } = (await c.req.json()) as SwitchTableType;
+        const { businessId, transferBy, transferType, fromTableId, toTableId, itemIds = [] } = (await c.req.json()) as SwitchTableType;
 
         const sourceTable = await Table.findById(fromTableId);
         const destinationTable = await Table.findById(toTableId);
 
         if (fromTableId === toTableId) {
-          return respond(
-            c,
-            "Cannot switch tables to the same table",
-            true,
-            400,
-            {},
-          );
+          return respond(c, 'Cannot switch tables to the same table', true, 400, {});
         }
 
         const posConfigData = await BusinessPosConfig.findOne({
@@ -1902,11 +1740,11 @@ const tableRouter = new Hono()
         });
 
         if (!posConfigData) {
-          return respond(c, "Pos not found", true, 400, {});
+          return respond(c, 'Pos not found', true, 400, {});
         }
 
         if (!sourceTable || !destinationTable) {
-          return respond(c, "Table not found", true, 404, {});
+          return respond(c, 'Table not found', true, 404, {});
         }
 
         const tableSession = await UserSession.findOne({
@@ -1919,41 +1757,23 @@ const tableRouter = new Hono()
           businessId,
         });
 
-        if (!tableSession || sourceTable.status === "EMPTY") {
-          return respond(
-            c,
-            `No active session found for table ${sourceTable.name}`,
-            true,
-            400,
-            {},
-          );
+        if (!tableSession || sourceTable.status === 'EMPTY') {
+          return respond(c, `No active session found for table ${sourceTable.name}`, true, 400, {});
         }
 
         const billAlreadySplit = checkOriginBillIsSplit(tableSession);
         if (billAlreadySplit) {
-          return respond(
-            c,
-            "Bill already split you cannot transfer the table and items",
-            true,
-            400,
-            {},
-          );
+          return respond(c, 'Bill already split you cannot transfer the table and items', true, 400, {});
         }
 
         if (destTableSession) {
           const billAlreadySplit = checkOriginBillIsSplit(destTableSession);
           if (billAlreadySplit) {
-            return respond(
-              c,
-              "Bill already split you cannot transfer the table and items",
-              true,
-              400,
-              {},
-            );
+            return respond(c, 'Bill already split you cannot transfer the table and items', true, 400, {});
           }
         }
 
-        if (transferType === "TABLE") {
+        if (transferType === 'TABLE') {
           await KotOrder.updateMany(
             {
               tableName: sourceTable.name,
@@ -1986,7 +1806,7 @@ const tableRouter = new Hono()
                 transferTableTo: destinationTable._id,
                 isTransfer: true,
                 transferBy,
-                transferType: "TABLE",
+                transferType: 'TABLE',
               },
             },
             { session, upsert: true },
@@ -1995,11 +1815,11 @@ const tableRouter = new Hono()
           await Table.findByIdAndUpdate(
             fromTableId,
             {
-              status: "EMPTY",
+              status: 'EMPTY',
               capacity: 0,
-              hiCode: "",
-              transferTableFrom: "",
-              transferTableTo: "",
+              hiCode: '',
+              transferTableFrom: '',
+              transferTableTo: '',
               currentTableAmount: 0,
               totalItemCount: 0,
               userIds: [],
@@ -2034,13 +1854,10 @@ const tableRouter = new Hono()
             },
           );
 
-          return c.json(
-            { message: "Table transfer successfully", err: false, data: {} },
-            200,
-          );
+          return c.json({ message: 'Table transfer successfully', err: false, data: {} }, 200);
         }
 
-        if (transferType === "ITEM") {
+        if (transferType === 'ITEM') {
           const kotOrders = await KotOrder.find({
             cart: { $elemMatch: { _id: { $in: itemIds } } },
             settled: false,
@@ -2049,7 +1866,7 @@ const tableRouter = new Hono()
           });
 
           if (kotOrders.length === 0) {
-            return respond(c, "No items found in the KotOrder", true, 400, {});
+            return respond(c, 'No items found in the KotOrder', true, 400, {});
           }
 
           const destinationTableSession = await UserSession.findOne({
@@ -2058,13 +1875,9 @@ const tableRouter = new Hono()
           });
 
           for (const kotOrder of kotOrders) {
-            const removedItems = kotOrder.cart.filter((item) =>
-              itemIds.includes(item._id.toString()),
-            );
+            const removedItems = kotOrder.cart.filter((item) => itemIds.includes(item._id.toString()));
 
-            kotOrder.cart = kotOrder.cart.filter(
-              (item) => !itemIds.includes(item._id.toString()),
-            );
+            kotOrder.cart = kotOrder.cart.filter((item) => !itemIds.includes(item._id.toString()));
 
             if (kotOrder.cart.length === 0) {
               await KotOrder.deleteOne({ _id: kotOrder._id }, { session });
@@ -2074,9 +1887,7 @@ const tableRouter = new Hono()
 
             const { _id, ...newKotOrderData } = kotOrder.toObject();
 
-            const calculateBillDishIds = removedItems.filter(
-              (item) => !item.dish.isDeleted,
-            );
+            const calculateBillDishIds = removedItems.filter((item) => !item.dish.isDeleted);
             const totalBill = calculateCartBill(calculateBillDishIds);
 
             await KotOrder.create(
@@ -2097,11 +1908,8 @@ const tableRouter = new Hono()
               { session },
             );
 
-            let hiCode = "";
-            if (
-              !destinationTableSession ||
-              destinationTable.status === "EMPTY"
-            ) {
+            let hiCode = '';
+            if (!destinationTableSession || destinationTable.status === 'EMPTY') {
               hiCode = Math.floor(1000 + Math.random() * 9000).toString();
               const tenDigitCode = generateTenDigitCode();
 
@@ -2109,7 +1917,7 @@ const tableRouter = new Hono()
                 { businessId, tableName: destinationTable.name },
                 {
                   $setOnInsert: {
-                    customerName: tableSession?.customerName || "Guest",
+                    customerName: tableSession?.customerName || 'Guest',
                     hiCode,
                     pin: tenDigitCode,
                     date: Date.now(),
@@ -2119,7 +1927,7 @@ const tableRouter = new Hono()
                     transferTableTo: destinationTable._id,
                     isTransfer: true,
                     transferBy,
-                    transferType: "ITEM",
+                    transferType: 'ITEM',
                   },
                 },
                 {
@@ -2149,9 +1957,9 @@ const tableRouter = new Hono()
                   totalItemCount: removedItems.length,
                 },
                 hiCode: destinationTableSession?.hiCode || hiCode,
-                status: "ACTIVE",
+                status: 'ACTIVE',
                 isTransfer: true,
-                transferType: "ITEM",
+                transferType: 'ITEM',
               },
               { session },
             );
@@ -2159,7 +1967,7 @@ const tableRouter = new Hono()
 
           return c.json(
             {
-              message: "Items transferred successfully",
+              message: 'Items transferred successfully',
               err: false,
               data: {},
             },
@@ -2171,13 +1979,12 @@ const tableRouter = new Hono()
   )
 
   .post(
-    "/save_unsettle_table",
+    '/save_unsettle_table',
 
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, restId, pin, tableName, requestId, total } =
-          await c.req.json();
+        const { businessId, restId, pin, tableName, requestId, total } = await c.req.json();
 
         const data = await UnsettleTable.findOneAndUpdate(
           {
@@ -2196,13 +2003,13 @@ const tableRouter = new Hono()
           { new: true, upsert: true, session },
         );
 
-        return respond(c, "updated successfully", false, 200, {});
+        return respond(c, 'updated successfully', false, 200, {});
       });
     },
   )
 
   .post(
-    "/settle_unsettle_table",
+    '/settle_unsettle_table',
 
     async (c) => {
       //@ts-ignore
@@ -2226,18 +2033,18 @@ const tableRouter = new Hono()
 
           const s = await axios.post(posApiPaths.requestBill, payload, {
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
           });
         }
 
-        return respond(c, "updated successfully", false, 200, {});
+        return respond(c, 'updated successfully', false, 200, {});
       });
     },
   )
 
   .post(
-    "/sync_unsettle_table",
+    '/sync_unsettle_table',
 
     async (c) => {
       //@ts-ignore
@@ -2257,7 +2064,7 @@ const tableRouter = new Hono()
           },
         );
 
-        return respond(c, "updated successfully", false, 200, {});
+        return respond(c, 'updated successfully', false, 200, {});
       });
     },
   );

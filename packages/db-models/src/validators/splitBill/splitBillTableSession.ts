@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { ObjectIdSchema } from "../common";
+import { z } from 'zod';
+import { ObjectIdSchema } from '../common';
 
 export const splitBillTableSessionSchema = z.object({
   businessId: ObjectIdSchema,
@@ -22,7 +22,7 @@ export const splitBillTableSessionSchema = z.object({
   discountAppliedBy: ObjectIdSchema.optional(),
   discountRemovedBy: ObjectIdSchema.optional(),
   reasonOfServiceCharge: z.string().max(100).optional(),
-  discountAppliedOn: z.enum(["ON_BILL", "ON_DISH"]).optional(),
+  discountAppliedOn: z.enum(['ON_BILL', 'ON_DISH']).optional(),
   gstPercentage: z.coerce.number().optional().default(5),
   serviceChargePercentage: z.coerce.number().optional().default(0),
   newDishGst: z.coerce.number().optional().default(0),
@@ -42,13 +42,13 @@ export const splitBillTableSessionSchema = z.object({
   coinPercentage: z.coerce.number().optional().default(0),
   couponPercentage: z.coerce.number().optional().default(0),
   discountPercentage: z.coerce.number().optional().default(0),
-  splitType: z.enum(["PORTION", "ITEM"]).optional().default("PORTION"),
+  splitType: z.enum(['PORTION', 'ITEM']).optional().default('PORTION'),
   itemIds: z.array(z.string()).default([]),
   itemGst: z.coerce.number().optional().default(0),
   itemGstAfterDiscount: z.coerce.number().optional().default(0),
   billInvoice: z.coerce.number().optional().default(0),
+
+  billingUserId: ObjectIdSchema.optional(),
 });
 
-export type SplitBillTableSessionValidator = z.infer<
-  typeof splitBillTableSessionSchema
->;
+export type SplitBillTableSessionValidator = z.infer<typeof splitBillTableSessionSchema>;
