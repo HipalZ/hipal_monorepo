@@ -7,7 +7,6 @@ type GoogleSheetSubmitPayload = {
   spreadsheetId: string;
   range: string;
   cells: { key: string; value: string }[];
-  storeVariables?: Record<string, any>;
 };
 
 export const useSubmitGoogleSheet = () => {
@@ -16,9 +15,8 @@ export const useSubmitGoogleSheet = () => {
 
   const { isPending: submitLoading, mutateAsync: submitToSheet } = useMutation({
     mutationFn: async (payload: GoogleSheetSubmitPayload) => {
-      const { spreadsheetId, range, cells, storeVariables } = payload;
+      const { spreadsheetId, range, cells } = payload;
 
-      // create header row (keys)
       const headerRow = cells.map((cell) => cell.key || "");
       const response = await apiRpc.google_sheets.submit.$post({
         json: {

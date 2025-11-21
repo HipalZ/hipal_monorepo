@@ -1,3 +1,4 @@
+import useBusinessData from '@/components/store/useBusinessData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ import '@xyflow/react/dist/style.css';
 import { MessageCircle, Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { v4 as uuid } from 'uuid';
 import DeleteButton from './deleteButton';
 import { VariableDropdown } from './flows';
 
@@ -22,19 +24,23 @@ export default function GoogleSheets({ data, selected }: { data: any; selected: 
   const [sheetName, setSheetName] = useState('');
   const [cells, setCells] = useState([{ key: '', value: '' }]);
   const { submitToSheet } = useSubmitGoogleSheet();
-
+  const businessId = useBusinessData((state) => state?.outletInfo?.businessId);
+  const [sessionKey, setSessionKey] = useState(uuid());
   /* -------------------------------------------------------------------------- */
   /* 🟢 GOOGLE LOGIN */
   /* -------------------------------------------------------------------------- */
   const handleLogin = async () => {
     try {
-      const res = await apiRpc.google_sheets.auth.url.$get({});
+      const res = await apiRpc.google_sheets.auth.url.$get({
+        query: { businessId, sessionKey: sessionKey },
+      });
       const { url } = await res.json();
-
       const popup = window.open(url, 'googleLogin', 'width=600,height=700');
 
       const poll = setInterval(async () => {
-        const statusRes = await apiRpc.google_sheets.status.$get({});
+        const statusRes = await apiRpc.google_sheets.status.$get({
+          query: { businessId, sessionKey: sessionKey },
+        });
         const { loggedIn } = await statusRes.json();
 
         if (loggedIn) {
@@ -43,7 +49,7 @@ export default function GoogleSheets({ data, selected }: { data: any; selected: 
           setIsAuthed(true);
           refetch();
         }
-      }, 1000);
+      }, 10000);
     } catch (err) {
       console.error('Login error:', err);
     }
@@ -60,6 +66,7 @@ export default function GoogleSheets({ data, selected }: { data: any; selected: 
 
       const res = await apiRpc.google_sheets.sheets[':id'].tabs.$get({
         param: { id },
+        query: { businessId, sessionKey },
       });
 
       const json = await res.json();
@@ -103,6 +110,8 @@ export default function GoogleSheets({ data, selected }: { data: any; selected: 
         range: `${sheetName}!A1`,
         cells,
         storeVariables: data.variablesMap || {},
+        sessionKey,
+        businessId,
       };
 
       await submitToSheet(payload);
@@ -119,7 +128,9 @@ export default function GoogleSheets({ data, selected }: { data: any; selected: 
   const { data: spreadsheets = [], refetch } = useQuery({
     queryKey: ['googleSheetsList'],
     queryFn: async () => {
-      const res = await apiRpc.google_sheets.sheets.$get({});
+      const res = await apiRpc.google_sheets.sheets.$get({
+        query: { businessId, sessionKey },
+      });
       const response = await res.json();
       return response.data || [];
     },

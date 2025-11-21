@@ -1,122 +1,162 @@
 import { Hono } from "hono";
 import { google } from "googleapis";
-
-// You’ll store tokens in memory for MVP (replace with DB later)
-let oauthTokensCache: any = null;
+import { GoogleAuthTokens } from "@hi/db-models/src/models/googleAuthToken";
 
 const credentials = require("../../utils/credentials_oauth.json").web;
 const { client_id, client_secret, redirect_uris } = credentials;
 
-// 🔐 OAuth client
 const oauth2Client = new google.auth.OAuth2(
   client_id,
   client_secret,
   redirect_uris[0],
 );
 
-/* ----------------------------------------------------------------------------
- * 1️⃣  Get Google Auth URL (Popup Window)
- * -------------------------------------------------------------------------- */
+// --------------------- UTIL ---------------------
+async function getTokenRecord(businessId: string, sessionKey: string) {
+  console.log("Fetching token record for:", { businessId, sessionKey });
+  const data = await GoogleAuthTokens.findOne({ businessId, sessionKey });
+  console.log("Fetched token record:", data);
+  return data;
+}
+
+// --------------------- ROUTER ---------------------
 const googleSheetsRouter = new Hono()
+
+  /* 1️⃣ GET AUTH URL */
   .get("/auth/url", async (c) => {
-    const scopes = [
-      "https://www.googleapis.com/auth/spreadsheets",
-      "https://www.googleapis.com/auth/drive.metadata.readonly",
-    ];
+    const businessId = c.req.query("businessId");
+    const sessionKey = c.req.query("sessionKey");
+
+    if (!businessId || !sessionKey) {
+      return c.json(
+        { err: true, message: "Missing businessId/sessionKey" },
+        400,
+      );
+    }
+
+    const state = JSON.stringify({ businessId, sessionKey });
 
     const url = oauth2Client.generateAuthUrl({
       access_type: "offline",
-      scope: scopes,
+      scope: [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive.metadata.readonly",
+      ],
       prompt: "consent",
+      state,
     });
 
     return c.json({ url });
   })
 
-  /* ----------------------------------------------------------------------------
-   * 2️⃣ OAuth Redirect → Get Code → Exchange Token
-   * -------------------------------------------------------------------------- */
+  /* 2️⃣ OAUTH CALLBACK */
   .get("/auth/google/callback", async (c) => {
     try {
       const code = c.req.query("code");
-      if (!code) return c.html("<h3>❌ Missing code.</h3>");
+      const stateRaw = c.req.query("state");
+      console.log("OAuth Callback received code:", code);
+      console.log("OAuth Callback received state:", stateRaw);
+      console.log("redirect_uri", redirect_uris[0]);
+      if (!code || !stateRaw) {
+        return c.html("<h3>❌ Missing code or state.</h3>");
+      }
 
-      const { tokens } = await oauth2Client.getToken(code);
-      console.log("tokens", tokens);
-      oauthTokensCache = tokens;
-      oauth2Client.setCredentials(tokens);
+      const { businessId, sessionKey } = JSON.parse(stateRaw);
 
-      console.log("✅ Google login successful");
+      // 1️⃣ Exchange code for tokens
+      const { tokens } = await oauth2Client.getToken({
+        code,
+        redirect_uri: redirect_uris[0],
+        client_id,
+        client_secret,
+      });
+      console.log("tokens received:", tokens);
+      // 2️⃣ Set credentials EXACTLY AS GOOGLE EXPECTS
+      oauth2Client.setCredentials({
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        expiry_date: tokens.expiry_date,
+        token_type: tokens.token_type,
+        scope: tokens.scope,
+      });
 
+      // 3️⃣ Check if a record already exists
+      let existing = await GoogleAuthTokens.findOne({
+        businessId,
+        sessionKey,
+      });
+
+      if (!existing) {
+        // 4️⃣ CREATE new entry
+        existing = await GoogleAuthTokens.create({
+          businessId,
+          sessionKey,
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          expiry_date: tokens.expiry_date,
+          scope: tokens.scope,
+          token_type: tokens.token_type,
+        });
+      } else {
+        existing.access_token = tokens.access_token;
+        existing.refresh_token = tokens.refresh_token ?? existing.refresh_token;
+        existing.expiry_date = tokens.expiry_date ?? existing.expiry_date;
+        existing.scope = tokens.scope ?? existing.scope;
+        existing.token_type = tokens.token_type ?? existing.token_type;
+        await existing.save();
+      }
+
+      // 6️⃣ popup message
       return c.html(`
-        <h2>✅ Google login successful!</h2>
-        <button 
-          id="continueBtn" 
-          style="padding: 10px 20px; font-size: 15px; cursor: pointer;
-                background: #4CAF50; color: white; border: none; border-radius: 6px;"
-        >
-          Continue
-        </button>
-
-        <script>
-          document.getElementById('continueBtn').onclick = function() {
-            fetch('/google_sheets/status', {
-              method: 'POST',
-              body: JSON.stringify({ ok: true }),
-              headers: { 'Content-Type': 'application/json' }
-            }).then(() => {
-              window.close();
-            });
-          };
-        </script>
-      `);
+      <h2>✅ Google connected successfully!</h2>
+      <button id="continueBtn">Continue</button>
+      <script>
+        document.getElementById('continueBtn').onclick = () => window.close();
+      </script>
+    `);
     } catch (err: any) {
-      return c.html(`
-        <h3>❌ Error: ${err.message}</h3>
-        <button 
-          id="errorBtn" 
-          style="padding: 10px 20px; font-size: 15px; cursor: pointer;
-                background: red; color: white; border: none; border-radius: 6px;"
-        >
-          Close
-        </button>
-
-        <script>
-          document.getElementById('errorBtn').onclick = function() {
-            fetch('/google_sheets/status', {
-              method: 'POST',
-              body: JSON.stringify({ failed: true }),
-              headers: { 'Content-Type': 'application/json' }
-            }).then(() => {
-              window.close();
-            });
-          };
-        </script>
-      `);
+      console.error("OAuth Error:", err);
+      return c.html(`<h3>Error: ${err.message}</h3>`);
     }
   })
 
-  /* ----------------------------------------------------------------------------
-   * 3️⃣ Frontend Polling → Check Login
-   * -------------------------------------------------------------------------- */
-  .post("/status", async (c) => {
-    const _ = await c.req.json();
-    return c.json({ loggedIn: !!oauthTokensCache });
-  })
-
+  /* 3️⃣ CHECK LOGIN STATUS */
   .get("/status", async (c) => {
-    return c.json({ loggedIn: !!oauthTokensCache });
+    const businessId = c.req.query("businessId");
+    const sessionKey = c.req.query("sessionKey");
+
+    if (!businessId || !sessionKey) {
+      return c.json({ loggedIn: false });
+    }
+
+    const doc = await getTokenRecord(businessId, sessionKey);
+    console.log("Status check, found doc:", doc);
+    return c.json({ loggedIn: !!doc });
   })
 
-  /* ----------------------------------------------------------------------------
-   * 4️⃣ List User Spreadsheets
-   * -------------------------------------------------------------------------- */
+  /* 4️⃣ LIST SPREADSHEETS */
   .get("/sheets", async (c) => {
     try {
-      if (!oauthTokensCache)
-        return c.json({ err: true, message: "Not authorized" }, 401);
+      const businessId = c.req.query("businessId");
+      const sessionKey = c.req.query("sessionKey");
 
-      oauth2Client.setCredentials(oauthTokensCache);
+      const tokenDoc: any = await getTokenRecord(businessId, sessionKey);
+
+      console.log("tokenDoc", tokenDoc);
+
+      if (!tokenDoc?.access_token && !tokenDoc?.refresh_token) {
+        return c.json({ err: true, message: "No saved Google tokens" }, 401);
+      }
+
+      // 🟢 Pass ONLY valid token fields
+      oauth2Client.setCredentials({
+        access_token: tokenDoc.access_token,
+        refresh_token: tokenDoc.refresh_token,
+        expiry_date: tokenDoc.expiry_date,
+        token_type: tokenDoc.token_type,
+        scope: tokenDoc.scope,
+      });
+
       const drive = google.drive({ version: "v3", auth: oauth2Client });
 
       const result = await drive.files.list({
@@ -126,57 +166,60 @@ const googleSheetsRouter = new Hono()
 
       return c.json({ err: false, data: result.data.files });
     } catch (err: any) {
-      console.error("Google Sheets List Error:", err);
-      return c.json({ err: true, message: err.message, data: [] }, 500);
+      console.error("Sheets error:", err);
+      return c.json({ err: true, message: err.message }, 500);
     }
   })
 
-  /* ----------------------------------------------------------------------------
-   * 5️⃣ List Tabs Inside Spreadsheet
-   * -------------------------------------------------------------------------- */
+  /* 5️⃣ LIST TABS */
   .get("/sheets/:id/tabs", async (c) => {
     try {
-      if (!oauthTokensCache)
+      const businessId = c.req.query("businessId");
+      const sessionKey = c.req.query("sessionKey");
+
+      const tokenDoc = await getTokenRecord(businessId, sessionKey);
+      console.log("tokenDoc", tokenDoc);
+      if (!tokenDoc)
         return c.json({ err: true, message: "Not authorized" }, 401);
 
-      const { id } = c.req.param();
-      oauth2Client.setCredentials(oauthTokensCache);
+      oauth2Client.setCredentials({
+        access_token: tokenDoc.access_token,
+        refresh_token: tokenDoc.refresh_token,
+        expiry_date: tokenDoc.expiry_date,
+        token_type: tokenDoc.token_type,
+        scope: tokenDoc.scope,
+      });
 
+      const { id } = c.req.param();
       const sheets = google.sheets({ version: "v4", auth: oauth2Client });
       const meta = await sheets.spreadsheets.get({ spreadsheetId: id });
 
-      const sheetNames =
-        meta.data.sheets?.map((s) => s.properties?.title) || [];
-
-      return c.json({ err: false, data: sheetNames });
+      const tabNames = meta.data.sheets?.map((s) => s.properties?.title) || [];
+      return c.json({ err: false, data: tabNames });
     } catch (err: any) {
-      return c.json({ err: true, message: err.message, data: [] }, 500);
+      return c.json({ err: true, message: err.message }, 500);
     }
   })
 
-  /* ----------------------------------------------------------------------------
-   * 6️⃣ Append Row to Google Sheet
-   * -------------------------------------------------------------------------- */
+  /* 6️⃣ APPEND ROW */
   .post("/submit", async (c) => {
     try {
-      const { spreadsheetId, range, values } = await c.req.json();
+      const { businessId, sessionKey, spreadsheetId, range, values } =
+        await c.req.json();
 
-      if (!spreadsheetId || !values) {
-        return c.json(
-          { success: false, error: "Missing spreadsheetId or values" },
-          400,
-        );
-      }
+      const tokenDoc = await getTokenRecord(businessId, sessionKey);
+      if (!tokenDoc) return c.json({ success: false, error: "Not logged in" });
 
-      if (!oauthTokensCache) {
-        return c.json({ success: false, error: "Not logged in" }, 401);
-      }
-
-      oauth2Client.setCredentials(oauthTokensCache);
+      oauth2Client.setCredentials({
+        access_token: tokenDoc.access_token,
+        refresh_token: tokenDoc.refresh_token,
+        expiry_date: tokenDoc.expiry_date,
+        token_type: tokenDoc.token_type,
+        scope: tokenDoc.scope,
+      });
 
       const sheets = google.sheets({ version: "v4", auth: oauth2Client });
 
-      // IMPORTANT FIX — you forgot `await`
       await sheets.spreadsheets.values.append({
         spreadsheetId,
         range: range || "Sheet1!A1",
@@ -186,11 +229,10 @@ const googleSheetsRouter = new Hono()
 
       return c.json({ success: true });
     } catch (err: any) {
-      console.error("Submit error:", err);
-      return c.json({ success: false, error: err.message }, 500);
+      return c.json({ success: false, error: err.message });
     }
   })
 
-  .get("/ping", (c) => c.text("Google Sheets Router alive ✅"));
+  .get("/ping", (c) => c.text("Google Sheets Router alive 🚀"));
 
 export default googleSheetsRouter;

@@ -1,9 +1,5 @@
 import mongoose, { Schema, type Model, model } from "mongoose";
 import type { Types } from "mongoose";
-
-/* -------------------------
- * ChatbotNodeLogModel
- * ------------------------- */
 export interface ChatbotNodeLogType {
   sessionId: Types.ObjectId;
   chatbotId: Types.ObjectId;
