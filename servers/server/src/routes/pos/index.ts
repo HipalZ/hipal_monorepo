@@ -1559,6 +1559,7 @@ const posRouter = new Hono()
             coinzUsed: 0,
             couponCount: 0,
             currentCoins: 0,
+            avgSpend: 0,
           });
 
           await userAnalytics.save({ session });
