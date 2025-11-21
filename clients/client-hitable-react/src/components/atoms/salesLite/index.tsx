@@ -1,15 +1,15 @@
 import DateRangePicker from '@/components/atoms/dateRangePicker';
-
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import useTimings from '@/components/store/useTimings';
 import type { TableData } from '@/components/store/useZonesAndTable.ts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { apiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CreditCard, Gift, IndianRupee } from 'lucide-react';
-import { memo, useEffect, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { BarChart } from './BarChart';
 import { InfoCard } from './InfoCard';
 import { LineChart } from './LineChart';
@@ -53,12 +53,9 @@ interface SalesExceptionData {
 const SalesLite = () => {
   const selectedBiz = useHiClientZ((s) => s.selectedBiz);
   const businessId = selectedBiz?.businessId?._id;
-
+  const handleEnvelope = useApiErrorHandler().handleEnvelope;
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
-  const applied = useTimings((s) => s.applied);
-  const setIsApplied = useTimings((s) => s.setIsApplied);
-  const setIsCustomDate = useTimings((s) => s.setIsCustomDate);
 
   const isToday = (timestamp: string | number | Date) => {
     const date = new Date(timestamp);
@@ -79,11 +76,7 @@ const SalesLite = () => {
         },
         param: { id: businessId || '' },
       });
-      const data = (await response.json()).data as SalesData;
-      if (response.status === 200) {
-        return data;
-      }
-      throw new Error('Failed to fetch sales data');
+      return handleEnvelope<SalesData>(response);
     } catch (err) {
       console.error(err);
       throw err;
@@ -98,8 +91,7 @@ const SalesLite = () => {
         to: timeStampEnd.toString(),
       },
     });
-    const data = (await response.json()).data as OtherAndWarningData;
-    return data;
+    return handleEnvelope<OtherAndWarningData>(response);
   };
 
   const salesException = async (): Promise<SalesExceptionData> => {
@@ -110,16 +102,14 @@ const SalesLite = () => {
         to: timeStampEnd.toString(),
       },
     });
-    const data = (await response.json()).data as SalesExceptionData;
-    return data;
+    return handleEnvelope<SalesExceptionData>(response);
   };
 
   const fetchTables = async (businessId: string): Promise<TableData[]> => {
     const response = await apiRpc.table.all[':businessId'].$get({
       param: { businessId },
     });
-    const json = await response.json();
-    return json.data || [];
+    return handleEnvelope<TableData[]>(response);
   };
 
   const {
@@ -127,21 +117,24 @@ const SalesLite = () => {
     isLoading: isLoadingSales,
     error,
   } = useQuery<SalesData, Error>({
-    queryKey: ['salesData', businessId, timeStampStart, timeStampEnd, applied],
+    queryKey: ['salesData', businessId, timeStampStart, timeStampEnd],
     queryFn: handleHistoryData,
-    enabled: !!businessId && !!applied,
+    enabled: !!businessId,
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: otherData, isLoading: isLoadingOther } = useQuery<OtherAndWarningData, Error>({
-    queryKey: ['otherAndWarning', businessId, timeStampStart, timeStampEnd, applied],
+    queryKey: ['otherAndWarning', businessId, timeStampStart, timeStampEnd],
     queryFn: otherAndWarning,
-    enabled: !!businessId && !!applied,
+    enabled: !!businessId,
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: salesExceptionData, isLoading: isLoadingExc } = useQuery<SalesExceptionData, Error>({
-    queryKey: ['salesException', businessId, timeStampStart, timeStampEnd, applied],
+    queryKey: ['salesException', businessId, timeStampStart, timeStampEnd],
     queryFn: salesException,
-    enabled: !!businessId && !!applied,
+    enabled: !!businessId,
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: tablesData } = useQuery({

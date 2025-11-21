@@ -35,7 +35,6 @@ import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import {
   applyCoinToVariantBill,
   applyCouponToVariantBill,
@@ -280,7 +279,7 @@ const posRouter = new Hono()
           businessId,
           tableName: isTableMerge?.parentTableId.name || tableName,
         }).populate({
-          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billInvoice",
+          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billInvoice serviceChargePercentage",
           select: "name phone",
         });
 
@@ -356,7 +355,8 @@ const posRouter = new Hono()
           name: "servicecharge",
         });
 
-        const serviceChargePercentage = serviceCharge?.value || 0;
+        const serviceChargePercentage =
+          tableSession.serviceChargePercentage || serviceCharge?.value || 0;
 
         let serviceChargeAmount = Math.round(
           (serviceChargePercentage / 100) * totalDishTotal,
@@ -401,6 +401,8 @@ const posRouter = new Hono()
             ...(tableSession.billInvoice === 0 && {
               billInvoice: sessionCount,
             }),
+            serviceChargePercentage:
+              tableSession.serviceChargePercentage || serviceCharge?.value || 0,
           },
         );
 
@@ -435,6 +437,10 @@ const posRouter = new Hono()
               tips: tableSession.tips,
               total: tableSession.total,
               billId: tableSession._id.toString(),
+              serviceChargePercentage:
+                tableSession.serviceChargePercentage ||
+                serviceCharge?.value ||
+                0,
             },
           },
           200,
@@ -3099,14 +3105,20 @@ const posRouter = new Hono()
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
         serviceChargeAppliedBy: z.string().min(1).max(50),
-        variantId: z.string().min(24).max(24).optional(),
+        variantId: z.string().length(24).optional(),
+        value: z.number().positive().min(1).max(100).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, serviceChargeAppliedBy, variantId } =
-          await c.req.json();
+        const {
+          businessId,
+          tableName,
+          serviceChargeAppliedBy,
+          variantId,
+          value,
+        } = await c.req.json();
 
         const tInfo = await Table.findOne({ businessId, name: tableName });
 
@@ -3158,6 +3170,7 @@ const posRouter = new Hono()
               serviceChargeAppliedBy,
               isServiceChargeRemoved: false,
               serviceChargeRemovedBy: null,
+              ...(value ? { serviceChargePercentage: value } : {}),
             },
             session,
           );
@@ -3173,6 +3186,7 @@ const posRouter = new Hono()
             serviceChargeAppliedBy,
             isServiceChargeRemoved: false,
             serviceChargeRemovedBy: null,
+            ...(value ? { serviceChargePercentage: value } : {}),
           },
         );
 
@@ -3280,6 +3294,7 @@ const posRouter = new Hono()
                   reasonOfServiceCharge,
                   isServiceChargeRemoved: true,
                   serviceChargeAppliedBy: null,
+                  serviceChargePercentage: 0,
                 },
               },
               {
@@ -3311,6 +3326,7 @@ const posRouter = new Hono()
               reasonOfServiceCharge,
               isServiceChargeRemoved: true,
               serviceChargeAppliedBy: null,
+              serviceChargePercentage: 0,
             },
           },
           { session, new: true },

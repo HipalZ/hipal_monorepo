@@ -9,6 +9,7 @@ export interface AggregatedItem {
   tax: number;
   // quantity: number;
   totalSales: number;
+  kitchenId?: string;
 }
 
 export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
@@ -20,6 +21,7 @@ export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
       const key = dish._id.toString();
 
       const unitPrice = portion ? portion.price : dish.price;
+      const kitchenId = dish.kitchenId;
 
       const extrasTotal = extras.reduce(
         (sum, e) => sum + (e.price || 0) * (e.quantity || 1),
@@ -51,6 +53,7 @@ export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
       grp.totalSales += Number(
         (lineAmountExclTax - discount + lineTax)?.toFixed(2),
       );
+      grp.kitchenId = kitchenId;
 
       return acc;
     }, {});

@@ -268,6 +268,11 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       default: 0,
     },
+    serviceChargePercentage: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
 
   { timestamps: true },

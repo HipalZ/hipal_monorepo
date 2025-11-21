@@ -965,6 +965,8 @@ export const handleNormalBillSettlement = async ({
         billItems: splitBillTableSession?.items || [],
         isSplitBillVariant: true,
         billInvoice: splitBillTableSession?.billInvoice,
+        serviceChargePercentage:
+          splitBillTableSession?.serviceChargePercentage || 0,
       },
     ],
     { session },
@@ -1145,6 +1147,8 @@ const processOfflineOrderPayment = async ({
         couponDiscount: splitBillTableSession?.couponDiscount,
         billItems: splitBillTableSession?.items || [],
         billInvoice: splitBillTableSession?.billInvoice,
+        serviceChargePercentage:
+          splitBillTableSession?.serviceChargePercentage || 0,
       },
     ],
     { session },

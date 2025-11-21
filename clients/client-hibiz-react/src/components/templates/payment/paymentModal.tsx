@@ -239,8 +239,8 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
                   <p className="text-2xl font-bold text-green-800">₹{salesData?.order_id?.total}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-green-700">Order ID</p>
-                  <p className="text-lg font-semibold text-green-800">{salesData?._id.slice(-8)}</p>
+                  <p className="text-sm text-green-700">Invoice No</p>
+                  <p className="text-lg font-semibold text-green-800">{salesData?.billInvoice}</p>
                 </div>
               </div>
             </CardContent>
@@ -311,9 +311,27 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
                 <span className="text-sm text-gray-600">Settle Type</span>
                 <Badge className={`${getSettleTypeColor(salesData?.settleType || '')} border`}>{salesData?.settleType?.replace('_', ' ')}</Badge>
               </div>
+              {salesData?.paymentMode === 'split' && salesData?.splitModes && salesData?.splitModes.length > 0 && (
+                <div className="mt-2 rounded-lg border bg-slate-50 p-3 shadow-sm">
+                  <p className="mb-2 flex items-center gap-1 text-[13px] font-semibold text-slate-700">💳 Split Payments</p>
 
-              {salesData?.settleType === 'FORCE_SETTLE' && (
-                <InfoRow label="Force Settle Reason" value={salesData?.comment || 'No reason provided'} highlight={true} />
+                  <table className="w-full text-[12px]">
+                    <thead>
+                      <tr className="border-b text-left text-slate-500">
+                        <th className="pb-1">Mode</th>
+                        <th className="pb-1 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {salesData?.splitModes.map((pm: any) => (
+                        <tr key={pm._id} className="border-b last:border-none">
+                          <td className="py-1 capitalize">{pm.name}</td>
+                          <td className="py-1 text-right font-semibold">₹{pm.amount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </CardContent>
           </Card>
