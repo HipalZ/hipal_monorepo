@@ -185,7 +185,9 @@ const returnSplitBillVariants = async (
 
     billVariants.push({
       customerName: billingUserName || variant.customerName,
-      customerPhone: billingUserPhone || variant.phoneNumbers?.[0] || "",
+      customerPhone: billingUserPhone
+        ? "**********"
+        : variant.phoneNumbers?.[0] || "",
       tableName: variant.tableName,
       couponId: variant.couponId,
       discountAppliedOn: variant.discountAppliedOn,
@@ -307,7 +309,9 @@ const returnSplitBillVariantsForItemWise = async (
     }
     billVariants.push({
       customerName: billingUserName || variant.customerName,
-      customerPhone: billingUserPhone || variant.phoneNumbers?.[0] || "",
+      customerPhone: billingUserPhone
+        ? "**********"
+        : variant.phoneNumbers?.[0] || "",
       tableName: variant.tableName,
       couponId: variant.couponId,
       discountAppliedOn: variant.discountAppliedOn,
