@@ -4443,8 +4443,8 @@ const paymentsRouter = new Hono()
 
       const existingPayments = await Payment.find(queryObject)
         .sort({ billInvoice: 1 })
-        .populate({ path: "order_id" })
-        .populate({ path: "userId", select: "name phone" });
+        .populate({ path: 'order_id' })
+        .populate({ path: 'userId', select: 'name phone' });
 
       // initialize all totals
       let totalBillValue = 0;
@@ -5420,9 +5420,9 @@ const paymentsRouter = new Hono()
         err: false,
         data: {
           otherSale: {
-            totalTax: Math.round(totalTax),
+            totalTax: Number(totalTax?.toFixed(2)),
             totalTip,
-            totalServiceCharge: Math.round(totalServiceCharge),
+            totalServiceCharge: Number(totalServiceCharge?.toFixed(2)),
           },
           warningSale: {},
         },
