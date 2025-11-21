@@ -279,7 +279,7 @@ const posRouter = new Hono()
           businessId,
           tableName: isTableMerge?.parentTableId.name || tableName,
         }).populate({
-          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billInvoice",
+          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billInvoice serviceChargePercentage",
           select: "name phone",
         });
 
@@ -355,7 +355,8 @@ const posRouter = new Hono()
           name: "servicecharge",
         });
 
-        const serviceChargePercentage = serviceCharge?.value || 0;
+        const serviceChargePercentage =
+          tableSession.serviceChargePercentage || serviceCharge?.value || 0;
 
         let serviceChargeAmount = Math.round(
           (serviceChargePercentage / 100) * totalDishTotal,
@@ -400,6 +401,8 @@ const posRouter = new Hono()
             ...(tableSession.billInvoice === 0 && {
               billInvoice: sessionCount,
             }),
+            serviceChargePercentage:
+              tableSession.serviceChargePercentage || serviceCharge?.value || 0,
           },
         );
 
@@ -434,6 +437,10 @@ const posRouter = new Hono()
               tips: tableSession.tips,
               total: tableSession.total,
               billId: tableSession._id.toString(),
+              serviceChargePercentage:
+                tableSession.serviceChargePercentage ||
+                serviceCharge?.value ||
+                0,
             },
           },
           200,
@@ -3119,21 +3126,6 @@ const posRouter = new Hono()
           return respond(c, "Table not found", true, 404, {});
         }
 
-        if (value) {
-          await Tax.findOneAndUpdate(
-            {
-              businessId,
-              isActive: true,
-              name: "servicecharge",
-            },
-            {
-              $set: {
-                value: value || 0,
-              },
-            },
-          );
-        }
-
         const isTableMerge = await MergeTable.findOne({
           businessId: businessId,
           childTableIds: tInfo._id.toString(),
@@ -3178,6 +3170,7 @@ const posRouter = new Hono()
               serviceChargeAppliedBy,
               isServiceChargeRemoved: false,
               serviceChargeRemovedBy: null,
+              ...(value ? { serviceChargePercentage: value } : {}),
             },
             session,
           );
@@ -3193,6 +3186,7 @@ const posRouter = new Hono()
             serviceChargeAppliedBy,
             isServiceChargeRemoved: false,
             serviceChargeRemovedBy: null,
+            ...(value ? { serviceChargePercentage: value } : {}),
           },
         );
 
@@ -3300,6 +3294,7 @@ const posRouter = new Hono()
                   reasonOfServiceCharge,
                   isServiceChargeRemoved: true,
                   serviceChargeAppliedBy: null,
+                  serviceChargePercentage: 0,
                 },
               },
               {
@@ -3331,6 +3326,7 @@ const posRouter = new Hono()
               reasonOfServiceCharge,
               isServiceChargeRemoved: true,
               serviceChargeAppliedBy: null,
+              serviceChargePercentage: 0,
             },
           },
           { session, new: true },
