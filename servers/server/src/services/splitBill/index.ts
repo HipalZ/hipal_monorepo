@@ -101,7 +101,7 @@ const returnSplitBillVariants = async (
     tableName,
     originTableSessionId: originalTableSessionId,
   }).populate({
-    path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
+    path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billingUserId",
     select: "name phone",
   });
 
@@ -115,6 +115,9 @@ const returnSplitBillVariants = async (
     const totalGst = variant.totalGst || 0;
 
     const billItems = groupSplitItemsByGST(cartItems);
+
+    const billingUserName = variant.billingUserId?.name;
+    const billingUserPhone = variant.billingUserId?.phone;
 
     const discountAppliedBy = variant.discountAppliedBy?.name || "";
     const discountRemovedBy = variant.discountRemovedBy?.name || "";
@@ -181,8 +184,8 @@ const returnSplitBillVariants = async (
     }
 
     billVariants.push({
-      customerName: variant.customerName,
-      customerPhone: variant.phoneNumbers?.[0] || "",
+      customerName: billingUserName || variant.customerName,
+      customerPhone: billingUserPhone || variant.phoneNumbers?.[0] || "",
       tableName: variant.tableName,
       couponId: variant.couponId,
       discountAppliedOn: variant.discountAppliedOn,
@@ -223,7 +226,7 @@ const returnSplitBillVariantsForItemWise = async (
     tableName,
     originTableSessionId: originalTableSessionId,
   }).populate({
-    path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
+    path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billingUserId",
     select: "name phone",
   });
 
@@ -237,6 +240,9 @@ const returnSplitBillVariantsForItemWise = async (
       calculateSplitTotalsFromItems(cartItems);
 
     const billItems = itemsGroupedByGst(cartItems);
+
+    const billingUserName = variant.billingUserId?.name;
+    const billingUserPhone = variant.billingUserId?.phone;
 
     const discountAppliedBy = variant.discountAppliedBy?.name || "";
     const discountRemovedBy = variant.discountRemovedBy?.name || "";
@@ -300,8 +306,8 @@ const returnSplitBillVariantsForItemWise = async (
       throw new Error("Failed to update split table session");
     }
     billVariants.push({
-      customerName: variant.customerName,
-      customerPhone: variant.phoneNumbers?.[0] || "",
+      customerName: billingUserName || variant.customerName,
+      customerPhone: billingUserPhone || variant.phoneNumbers?.[0] || "",
       tableName: variant.tableName,
       couponId: variant.couponId,
       discountAppliedOn: variant.discountAppliedOn,

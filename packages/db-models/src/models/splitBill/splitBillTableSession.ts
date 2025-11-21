@@ -247,6 +247,12 @@ const splitBillTableSessionSchema =
       required: false,
       default: 0,
     },
+    billingUserId: {
+      type: String,
+      required: false,
+      default: null,
+      ref: "User",
+    },
   });
 
 splitBillTableSessionSchema.index(
