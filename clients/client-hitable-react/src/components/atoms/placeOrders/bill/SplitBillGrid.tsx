@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { calculateBillItems, calculateTotalAmount, calculateTotalItems, cn, formatCurrency } from '@/lib/utils.ts';
-import { ArrowLeft, CreditCard, HomeIcon, Phone, ReceiptText } from 'lucide-react';
+import { ArrowLeft, CreditCard, HomeIcon, PersonStandingIcon, Phone, ReceiptText } from 'lucide-react';
 import { memo, useCallback, useMemo, useState } from 'react';
 import { MdTableBar } from 'react-icons/md';
 import { useParams } from 'react-router-dom';
@@ -149,10 +149,8 @@ const SplitBillGrid = memo<SplitBillGridProps>(({ billData, onSelectBill, onBack
           {/* Customer & Table Info */}
           <div className="mb-4 space-y-2">
             <div className="flex items-center gap-2">
-              <Phone className="h-5 w-5 text-gray-600" />
-              <p className="text-sm text-gray-700">
-                {billData[0]?.customerName} ({billData[0]?.customerPhone})
-              </p>
+              <PersonStandingIcon className="h-5 w-5 text-gray-600" />
+              <p className="text-sm text-gray-700">{billData[0]?.customerName}</p>
             </div>
             <div className="flex items-center gap-2">
               <MdTableBar className="h-5 w-5 text-gray-600" />

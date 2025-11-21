@@ -8,7 +8,7 @@ import type { PhoneActionsProps } from './bill.types.ts';
 
 const PhoneActions: FC<PhoneActionsProps> = memo(({ customerPhone, customerName, isPhoneVerified, copyTick, onProtectedAction }) => {
   return (
-    <div className="mb-4 space-y-2">
+    <div className="mb-2 space-y-2">
       <div className="flex w-[70%] items-start gap-2">
         <Phone className="h-5 w-5 text-gray-600" />
         <div className="flex flex-1 items-center gap-2">
