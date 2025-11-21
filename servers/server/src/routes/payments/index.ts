@@ -4161,10 +4161,14 @@ const paymentsRouter = new Hono()
         },
       ).sort({ billInvoice: 1 });
 
+      const countOrders = await Payment.find({
+        businessId,
+        isDeleted: false,
+        date: { $gte: fromDate, $lte: toDate },
+      }).countDocuments();
+
       const startInvoiceNumber = payments[0]?.billInvoice || 0;
       const endInvoiceNumber = payments[payments.length - 1]?.billInvoice || 0;
-
-      const totalOrders = payments.length;
 
       let overAllAmount = 0;
       let totalOnlineSale = 0;
@@ -4225,7 +4229,7 @@ const paymentsRouter = new Hono()
           overAllAmount, // Excludes complementary but includes cash in split modes
           onlineSale: { online: totalOnlineSale },
           offlineSale: offlineSales,
-          totalOrders,
+          totalOrders: countOrders,
           totalActiveTableValue,
           subTotal: subTotalSum, // “Sub Total (taxable)”
           totalTax: taxSum, // CGST+SGST combined
