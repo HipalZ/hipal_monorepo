@@ -4,58 +4,10 @@ import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
 import type { WhatsAppTemplatePayload } from '@/components/types/businessData';
 import { cn } from '@/components/utils/helper';
 import { lazy, memo, useCallback } from 'react';
+import { BiFile, BiText } from 'react-icons/bi';
 import ShimmerImage from '../shimmer';
 
 const OpenConfirmEdit = lazy(() => import('./openConfirmEdit'));
-
-const renderMediaPreview = (template: WhatsAppTemplatePayload) => {
-  const header = template?.components?.[0];
-  const format = header?.format;
-  const url = header?.example?.header_handle?.[0] || diwali;
-
-  switch (format) {
-    case 'IMAGE':
-      return (
-        <ShimmerImage
-          src={url}
-          alt={template?.name || 'Template'}
-          className="h-full max-h-[400px] w-full max-w-full object-cover md:max-w-[240px] lg:max-h-[400px]"
-        />
-      );
-
-    case 'VIDEO':
-      return (
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="h-full max-h-[400px] w-full max-w-full rounded-lg object-cover md:max-w-[240px] lg:max-h-[400px]"
-        >
-          <source src={url} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      );
-
-    case 'DOCUMENT':
-      return (
-        <div className="relative h-full max-h-[400px] w-full max-w-full overflow-hidden rounded-lg md:max-w-[240px] lg:max-h-[400px]">
-          <iframe src={url} title="Document Preview" className="pointer-events-none h-full w-full rounded-lg border-0" />
-          <div className="pointer-events-none absolute inset-0 bg-transparent" />
-        </div>
-      );
-
-    case 'AUDIO':
-      return (
-        <div className="flex h-full items-center justify-center bg-gray-200">
-          <audio controls src={url} className="w-full px-4" />
-        </div>
-      );
-
-    default:
-      return <ShimmerImage src={diwali} alt="Fallback Template" className="h-full max-h-[400px] w-full max-w-full object-cover" />;
-  }
-};
 
 const MemoTemplatesCarousel = () => {
   const { setTemplateData, setShowSuccessPopup, isOpenEditModal, setIsOpenEditModal } = useWhatsapp((s) => ({
@@ -78,6 +30,63 @@ const MemoTemplatesCarousel = () => {
     [setTemplateData, setShowSuccessPopup, setIsOpenEditModal],
   );
 
+  const renderMediaPreview = (template: WhatsAppTemplatePayload) => {
+    const format = template?.components?.[0]?.format;
+    const handleUrl = template?.components?.[0]?.example?.header_handle?.[0] || '';
+    const fallback = diwali;
+
+    switch (format) {
+      case 'TEXT':
+        return (
+          <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 p-3 text-slate-800 drop-shadow-sm">
+            <span className="text-center text-sm font-medium">{template?.components?.[0]?.text || 'Text Header'}</span>
+          </div>
+        );
+
+      case 'IMAGE':
+        return (
+          <ShimmerImage
+            src={handleUrl || fallback}
+            alt={template?.name || 'Template'}
+            className="h-full max-h-[400px] w-full object-cover md:max-w-[240px] lg:max-h-[400px]"
+          />
+        );
+
+      case 'VIDEO':
+        return (
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            controls
+            className="h-full max-h-[400px] w-full max-w-full rounded-lg object-cover md:max-w-[240px] lg:max-h-[400px]"
+          >
+            <source src={handleUrl || fallback} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        );
+
+      case 'DOCUMENT':
+        return handleUrl.endsWith('.pdf') ? (
+          <iframe src={handleUrl} title="Document Preview" className="h-full w-full rounded-lg bg-gray-50 object-contain" />
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center bg-gray-100 text-gray-500">
+            <BiFile className="mb-2 h-8 w-8" />
+            <span className="text-sm font-medium">Document Attached</span>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 p-3 text-slate-700 drop-shadow-sm">
+            <BiText className="mb-2 h-7 w-7 text-slate-700" />
+            <span className="text-sm font-semibold">No Preview Available</span>
+          </div>
+        );
+    }
+  };
+
   return (
     <>
       {Array.isArray(allTemplates) && allTemplates.length > 0 ? (
@@ -86,15 +95,15 @@ const MemoTemplatesCarousel = () => {
             <section
               className={cn(
                 template?.status === 'REJECTED' ? 'pointer-events-none opacity-75' : 'cursor-pointer',
-                'max-h-[240px] max-w-full overflow-hidden rounded-lg shadow-md transition-shadow duration-300 hover:shadow-lg md:h-full md:max-w-[240px] lg:max-h-[170px]',
+                'max-h-[240px] min-h-[170px] max-w-full overflow-hidden rounded-lg shadow-md transition-shadow duration-300 hover:shadow-lg md:h-full md:max-w-[240px] lg:max-h-[170px]',
               )}
               onClick={() => handleTemplateClick(template)}
               onKeyDown={(e) => e.key === 'Enter' && handleTemplateClick(template)}
               aria-label={`Select ${template.name} template`}
             >
-              <article className="relative h-full">
-                {/* Status Badge */}
-                <article className="absolute left-0 right-0 top-0 z-10 px-2 py-1">
+              <article className="relative h-[170px] w-full">
+                {/* Status badge */}
+                <div className="absolute left-0 right-0 top-0 z-10 px-2 py-1">
                   <span
                     className={cn(
                       'rounded-full px-2 py-1 text-xs font-semibold text-white',
@@ -103,21 +112,21 @@ const MemoTemplatesCarousel = () => {
                   >
                     {template?.status}
                   </span>
-                </article>
+                </div>
 
-                {/* Dynamic Media Preview */}
+                {/* Media Preview */}
                 {renderMediaPreview(template)}
 
-                {/* Title */}
-                <article className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
-                  <h3 className="truncate text-lg font-semibold text-white">{template.name}</h3>
-                </article>
+                {/* Footer overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                  <h3 className="truncate text-sm font-semibold text-white">{template.name}</h3>
+                </div>
               </article>
             </section>
           </div>
         ))
       ) : (
-        <center>No templates available</center>
+        <center className="mt-4 text-gray-500">No templates available</center>
       )}
 
       {isOpenEditModal && <OpenConfirmEdit />}

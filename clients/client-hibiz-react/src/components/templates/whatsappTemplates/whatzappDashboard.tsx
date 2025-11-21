@@ -10,15 +10,11 @@ import { lazy, memo, useCallback, useState } from 'react';
 import { HiOutlineTemplate } from 'react-icons/hi';
 import { MdCampaign } from 'react-icons/md';
 import { TbSettingsAutomation } from 'react-icons/tb';
-import { ChatbotDashboard } from './chatbotDashboard';
 
+const ChatbotDashboard = lazy(() => import('./chatbotDashboard'));
 const WhatsappChatbotSettings = lazy(() => import('./whatsappchatbotsettings'));
 const WhatsappChatBot = lazy(() => import('./flows'));
 const LinkTemplatePopup = lazy(() => import('./linkTemplatePopup'));
-const WhatsappFlowSection = lazy(() => import('./whatsappFlows'));
-const WhatsAppAutomationFlow = lazy(() => import('./whatsappAutomation'));
-const FlowBuilderPage = lazy(() => import('./whatsappFlowBuilder'));
-const WhatzappFlowsList = lazy(() => import('./WhatzappFlowsList'));
 const WhatsappChats = lazy(() => import('./whatsappChats'));
 const CampaignAdvancedAnalytics = lazy(() => import('./campaignAdvancedAnalytics'));
 const TemplatesCarousel = lazy(() => import('./templatesCarousel'));
@@ -46,7 +42,6 @@ const MemoWhatzappDashboard = () => {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const handleCreateTemplate = useCallback(
     (type: string) => {
-      // reset old data and navigate inside
       resetTemplateData();
       setShowSuccessPopup(false);
       setStep(Step.CREATE_EDIT);
@@ -68,8 +63,6 @@ const MemoWhatzappDashboard = () => {
         return <HiOutlineTemplate className="mr-2 h-5 w-5" />;
       case Tabs.FLOWS:
         return <Workflow className="mr-2 h-5 w-5" />;
-      // case Tabs.AUTOMATION:
-      //   return <TbSettingsAutomation className="w-5 h-5 mr-2" />;
       case Tabs.CHATS:
         return <MessageCircle className="mr-2 h-5 w-5" />;
       case Tabs.SETTINGS:

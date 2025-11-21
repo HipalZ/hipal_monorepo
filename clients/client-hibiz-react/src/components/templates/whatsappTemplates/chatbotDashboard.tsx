@@ -19,7 +19,7 @@ const formatDate = (date: string) =>
     day: 'numeric',
   });
 
-export function ChatbotDashboard() {
+function ChatbotDashboard() {
   const { data: chatbots, isLoading } = useAllChatbots();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBot, setSelectedBot] = useState<any>(null);
@@ -243,3 +243,5 @@ function ChatbotSessionsModal({ bot, onClose }: any) {
     </Dialog>
   );
 }
+
+export default ChatbotDashboard;
