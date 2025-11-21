@@ -375,7 +375,7 @@ const posRouter = new Hono()
             err: false,
             data: {
               customerName: billingUserName || tableSession.customerName,
-              customerPhone: billingUserPhone ? "************" : kotOrders[0].phone,
+              customerPhone: billingUserPhone || kotOrders[0].phone,
               tableName: tableSession.tableName,
               couponId: tableSession.couponId,
               discountAppliedOn: tableSession.discountAppliedOn,
@@ -1450,11 +1450,15 @@ const posRouter = new Hono()
         businessId: string;
         session: ClientSession;
       }) => {
-        const phoneToUse = phone ?? generateTenDigitCode();
+        const phoneToUse = phone ?? "**********";
 
-        let user = await User.findOneAndUpdate({ phone: phoneToUse },{
-          name: customerName,
-        }, { session });
+        let user = await User.findOneAndUpdate(
+          { phone: phoneToUse },
+          {
+            name: customerName,
+          },
+          { session },
+        );
         if (!user) {
           user = new User({
             phone: phoneToUse,
