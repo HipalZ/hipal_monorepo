@@ -447,7 +447,7 @@ const tableRouter = new Hono()
                   userId:
                     paymentMode?.name === "npc"
                       ? npcUser?.userId
-                      : splitTableSessionData?.customerIds?.[0] || captainId,
+                      : splitTableSessionData.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                   claimedCoins: splitTableSessionData?.claimedCoins || 0,
                   tableName: table?.name,
                   tips: splitTableSessionData?.tips || 0,
@@ -507,7 +507,8 @@ const tableRouter = new Hono()
                   isSplitBillVariant: true,
                   billInvoice: splitTableSessionData?.billInvoice,
                   paxCount: tableSession?.paxCount || 0,
-                     serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+                  serviceChargePercentage:
+                    tableSession?.serviceChargePercentage || 0,
                 },
               ],
               { session },
@@ -647,7 +648,7 @@ const tableRouter = new Hono()
                   userId:
                     paymentMode?.name === "npc"
                       ? npcUser?.userId
-                      : splitTableSessionData?.customerIds?.[0] || captainId,
+                      : splitTableSessionData.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                   claimedCoins: splitTableSessionData?.claimedCoins || 0,
                   tableName: table?.name,
                   tips: splitTableSessionData?.tips || 0,
@@ -707,7 +708,8 @@ const tableRouter = new Hono()
                   isSplitBillVariant: true,
                   billInvoice: splitTableSessionData?.billInvoice,
                   paxCount: tableSession?.paxCount || 0,
-                     serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+                  serviceChargePercentage:
+                    tableSession?.serviceChargePercentage || 0,
                 },
               ],
               { session },
@@ -1015,7 +1017,7 @@ const tableRouter = new Hono()
               userId:
                 paymentMode?.name === "npc"
                   ? npcUser?.userId
-                  : tableSession?.customerIds?.[0] || captainId,
+                  : tableSession.billingUserId ||  tableSession?.customerIds?.[0] || captainId,
               claimedCoins: tableSession?.claimedCoins || 0,
               tableName: table?.name,
               tips: tableSession?.tips || 0,
@@ -1083,7 +1085,8 @@ const tableRouter = new Hono()
               pin: tableSession?.pin,
               billInvoice: tableSession?.billInvoice || 0,
               paxCount: tableSession?.paxCount || 0,
-                 serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+              serviceChargePercentage:
+                tableSession?.serviceChargePercentage || 0,
             },
           ],
           { session },

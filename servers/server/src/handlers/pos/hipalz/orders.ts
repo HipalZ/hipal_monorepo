@@ -1454,7 +1454,7 @@ async function hipalzPosNormalSettleHandler(payload: {
                 userId:
                   paymentMode?.name === "npc"
                     ? npcUser?.userId
-                    : splitTableSessionData?.customerIds?.[0] || captainId,
+                    : splitTableSessionData?.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                 claimedCoins: splitTableSessionData?.claimedCoins || 0,
                 tableName: table?.name,
                 tips: splitTableSessionData?.tips || 0,
@@ -1654,7 +1654,7 @@ async function hipalzPosNormalSettleHandler(payload: {
                 userId:
                   paymentMode?.name === "npc"
                     ? npcUser?.userId
-                    : splitTableSessionData?.customerIds?.[0] || captainId,
+                    : splitTableSessionData?.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                 claimedCoins: splitTableSessionData?.claimedCoins || 0,
                 tableName: table?.name,
                 tips: splitTableSessionData?.tips || 0,
@@ -1925,7 +1925,7 @@ async function hipalzPosNormalSettleHandler(payload: {
             userId:
               paymentMode?.name === "npc"
                 ? npcUser?.userId
-                : tableSession?.customerIds?.[0] || captainId,
+                : tableSession?.billingUserId || tableSession?.customerIds?.[0] || captainId,
             claimedCoins: tableSession?.claimedCoins || 0,
             tableName: table?.name,
             tips: tableSession?.tips || 0,

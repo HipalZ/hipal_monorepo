@@ -310,6 +310,12 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
+  billingUserId: {
+    type: ObjectId,
+    required: false,
+    ref: "User",
+    default: null,
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });
