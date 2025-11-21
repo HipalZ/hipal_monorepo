@@ -2093,7 +2093,11 @@ function EditorShell() {
             </div>
 
             <div className="shadow-up border-t bg-white p-4">
-              <Button onClick={handleSaveFlow} className="w-full bg-blue-600 hover:bg-blue-700">
+              <Button
+                disabled={rfNodes.length === 0 || rfEdges.length === 0}
+                onClick={handleSaveFlow}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
                 <Save className="mr-2 h-4 w-4" /> Publish Flow
               </Button>
             </div>
@@ -2120,12 +2124,13 @@ function EditorShell() {
             const target = event.target as HTMLElement;
             const handle = target.closest('[data-handleid]') as HTMLElement;
             const handleId = handle?.getAttribute('data-handleid') || null;
+            const rect = handle ? handle.getBoundingClientRect() : (target as HTMLElement).getBoundingClientRect();
             if (handle && handle.getAttribute('data-handlepos') !== 'right') return;
             setContextMenu({
               nodeId: node.id,
-              handleId, // ← This is now correct: 'true', 'false', 'start', or null
-              clientX: event.clientX,
-              clientY: event.clientY,
+              handleId,
+              clientX: rect.right,
+              clientY: rect.top / 2,
             });
           }, [])}
           onPaneClick={() => setContextMenu(null)}
@@ -2143,7 +2148,7 @@ function EditorShell() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                className="pointer-events-auto absolute max-h-[70vh] w-96 overflow-y-auto rounded-2xl border-4 border-white bg-white p-6 shadow-2xl"
+                className="pointer-events-auto absolute max-h-[50vh] w-96 overflow-y-auto rounded-2xl border-4 border-white bg-white p-6 shadow-2xl"
                 style={{
                   left: contextMenu.clientX + 10,
                   top: contextMenu.clientY + 10,
