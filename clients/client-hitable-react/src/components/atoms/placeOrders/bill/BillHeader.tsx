@@ -43,7 +43,7 @@ const BillHeader = memo(({ isSplitBill, selectedBill, onBackToGrid, onReprintBil
 
   const handleOpenAddCustomer = () => {
     // Prefill from selected bill if available
-    setCustomerName((selectedBill.customerName || '').trim());
+    setCustomerName((selectedBill?.customerName || '').trim());
     setCustomerPhone(selectedBill?.customerPhone || '');
     setNameError('');
     setPhoneError('');
