@@ -35,7 +35,6 @@ import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import {
   applyCoinToVariantBill,
   applyCouponToVariantBill,
@@ -3099,19 +3098,40 @@ const posRouter = new Hono()
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
         serviceChargeAppliedBy: z.string().min(1).max(50),
-        variantId: z.string().min(24).max(24).optional(),
+        variantId: z.string().length(24).optional(),
+        value: z.number().positive().min(1).max(100).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, serviceChargeAppliedBy, variantId } =
-          await c.req.json();
+        const {
+          businessId,
+          tableName,
+          serviceChargeAppliedBy,
+          variantId,
+          value,
+        } = await c.req.json();
 
         const tInfo = await Table.findOne({ businessId, name: tableName });
 
         if (!tInfo) {
           return respond(c, "Table not found", true, 404, {});
+        }
+
+        if (value) {
+          await Tax.findOneAndUpdate(
+            {
+              businessId,
+              isActive: true,
+              name: "servicecharge",
+            },
+            {
+              $set: {
+                value: value || 0,
+              },
+            },
+          );
         }
 
         const isTableMerge = await MergeTable.findOne({

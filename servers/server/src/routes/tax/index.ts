@@ -50,10 +50,7 @@ const taxRouter = new Hono()
       );
     }
 
-    const menu = await Menu.findById(requestData.menuId);
-    if (!menu) {
-      return respond(c, "Menu not found", true, 404, {});
-    }
+   
 
     const createTax = await Tax.create({
       ...requestData,
@@ -71,13 +68,7 @@ const taxRouter = new Hono()
       );
     }
 
-    if (menu.serviceType === "BASE") {
-      await addInTempMenuChanges(
-        "tax",
-        createTax._id.toString(),
-        menu.businessId,
-      );
-    }
+   
 
     return c.json(
       {
@@ -110,14 +101,9 @@ const taxRouter = new Hono()
           return respond(c, "Tax not found", true, 404, {});
         }
 
-        const menu = await Menu.findById(tax.menuId);
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, {});
-        }
+       
 
-        if (menu.serviceType === "BASE" && dishIds?.length) {
-          return respond(c, "linking tax to menu not allowed", true, 400, {});
-        }
+       
 
         const result = await Dish.updateMany(
           { _id: { $in: dishIds } },
@@ -161,14 +147,9 @@ const taxRouter = new Hono()
           return respond(c, "Tax not found", true, 404, {});
         }
 
-        const menu = await Menu.findById(tax.menuId);
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, {});
-        }
+      
 
-        if (menu.serviceType === "BASE" && dishIds?.length) {
-          return respond(c, "linking tax to menu not allowed", true, 400, {});
-        }
+       
 
         const result = await Dish.updateMany(
           { _id: { $in: dishIds } },
@@ -202,10 +183,7 @@ const taxRouter = new Hono()
       }
     }
 
-    const menu = await Menu.findById(menuId);
-    if (!menu) {
-      return respond(c, "Menu not found", true, 404, {});
-    }
+  
 
     const tax = await Tax.findByIdAndUpdate(
       taxId,
@@ -217,9 +195,7 @@ const taxRouter = new Hono()
       return respond(c, "Tax not found", true, 404, {});
     }
 
-    if (menu.serviceType === "BASE") {
-      await addInTempMenuChanges("tax", tax._id.toString(), menu.businessId);
-    }
+    
 
     return respond(c, "Tax updated successfully", false, 200, {
       _id: tax._id,
@@ -248,19 +224,51 @@ const taxRouter = new Hono()
 
       const menu = await Menu.findById(tax.menuId);
 
-      if (!menu) {
-        return respond(c, "Menu not found", true, 404, {});
-      }
-
-      if (menu.serviceType === "BASE") {
-        await addInTempMenuChanges("tax", tax._id.toString(), menu.businessId);
-      }
+  
 
       return respond(c, "Tax updated successfully", false, 200, {
         _id: tax._id,
       });
     },
   )
+
+   .put("/service_charge", zValidator("json", updateTaxTypeSchema), async (c) => {
+    const requestData = await c.req.json();
+
+    const { taxId, name, value, menuId } = requestData;
+
+    const findTax = await Tax.findById(taxId);
+    if (!findTax) {
+      return respond(c, "Tax not found", true, 404, {});
+    }
+
+    if (findTax.name.includes("gst")) {
+      const rateInName = extractGstRate(findTax.name);
+      if (rateInName !== value) {
+        throw new Error(
+          `GST mismatch: name indicates ${rateInName}%, but payload has ${value}%`,
+        );
+      }
+    }
+
+  
+
+    const tax = await Tax.findByIdAndUpdate(
+      taxId,
+      { $set: { value, menuId } },
+      { new: true },
+    );
+
+    if (!tax) {
+      return respond(c, "Tax not found", true, 404, {});
+    }
+
+    
+
+    return respond(c, "Tax updated successfully", false, 200, {
+      _id: tax._id,
+    });
+  })
 
   .get(
     "/:taxId",
