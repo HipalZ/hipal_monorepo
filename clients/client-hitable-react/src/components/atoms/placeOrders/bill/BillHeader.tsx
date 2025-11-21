@@ -160,7 +160,7 @@ const BillHeader = memo(({ isSplitBill, selectedBill, onBackToGrid, onReprintBil
             <div className="space-y-3">
               <div className="space-y-1">
                 <Label htmlFor="customerName">Customer Name *</Label>
-                <Input id="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="e.g. Sankalesh" />
+                <Input id="customerName" value={customerName || ''} onChange={(e) => setCustomerName(e.target.value)} placeholder="e.g. Sankalesh" />
                 {nameError && <p className="text-xs text-red-500">{nameError}</p>}
               </div>
 
@@ -168,7 +168,7 @@ const BillHeader = memo(({ isSplitBill, selectedBill, onBackToGrid, onReprintBil
                 <Label htmlFor="customerPhone">Phone (optional)</Label>
                 <Input
                   id="customerPhone"
-                  value={customerPhone}
+                  value={customerPhone || ''}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="10-digit mobile number"
                   maxLength={10}
