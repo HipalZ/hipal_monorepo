@@ -33,6 +33,7 @@ export type ExecutiveReportInput = {
   salesExceptionData?: {
     exceptionSale: {
       totalComplementary: number;
+      totalDuesGetBack: number;
       totalDiscount: number;
       totalDuesGiven: number;
       totalNpc: number;
@@ -179,11 +180,11 @@ export function buildExecutiveSalesReportPdf(input: ExecutiveReportInput) {
     Number(salesExceptionData?.rewardSale.totalCoinsUsed ?? 0) || 0;
   const complementary =
     Number(salesExceptionData?.exceptionSale.totalComplementary ?? 0) || 0;
+  const npc = Number(salesExceptionData?.exceptionSale.totalNpc ?? 0) || 0;
 
   const netSales =
     (salesData?.subTotal || 0) -
-    (discountTotal + couponDiscount + coinsUsed + complementary);
-
+    (discountTotal + couponDiscount + coinsUsed + complementary + npc);
   const billingRows: RowInput[] = [
     ["Sub Total (taxable):", fmtAmt(salesData.subTotal)],
     ["Order Count:", String(salesData.totalOrders)],
@@ -242,6 +243,10 @@ export function buildExecutiveSalesReportPdf(input: ExecutiveReportInput) {
     [
       "Total Dues Given:",
       fmtAmt(salesExceptionData?.exceptionSale.totalDuesGiven),
+    ],
+    [
+      "Total Dues Get Back:",
+      fmtAmt(salesExceptionData?.exceptionSale.totalDuesGetBack),
     ],
     ["Total NPC:", fmtAmt(salesExceptionData?.exceptionSale.totalNpc)],
   ];

@@ -64,7 +64,7 @@ const MemoSalesCards = ({ data, openModel }: SalesCardsProps) => {
             {data?.tableName && (
               <span className="-ml-4 mt-6 inline-flex items-center gap-1.5 rounded-r-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
                 <MdTableBar className="h-6 w-6" />
-                Table {data.tableName}
+                {data.tableName}
               </span>
             )}
 
