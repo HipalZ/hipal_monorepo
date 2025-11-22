@@ -1889,21 +1889,34 @@ const paymentsRouter = new Hono()
 
     const body = JSON.parse(rawBody);
 
-    const { id, order_id } = body.payload.payment.entity;
+    console.log("entity", body.payload.payment.entity);
 
-    if (!id || !order_id) {
+    const {
+      id,
+      order_id,
+      mode,
+      acquirer_data,
+      error_description,
+      error_reason,
+    } = body.payload.payment.entity;
+
+    if (!id || !order_id || !mode) {
       console.log("❌ Missing id/order_id");
       return c.json({ status: "ignored" });
     }
 
     const saveQueueModel = await RazorpayWebhookQueueModel.create({
+      status: "PENDING",
       merchantId: merchantId,
       razorpayEventId: razorpayEventId,
       order_id: order_id,
       id: id,
       event: body.event,
       date: Date.now(),
-      status: "PENDING",
+      mode: mode,
+      acquirer_data: acquirer_data,
+      error_description: error_description,
+      error_reason: error_reason,
     });
 
     if (!saveQueueModel) {
@@ -1919,6 +1932,10 @@ const paymentsRouter = new Hono()
       id: id,
       event: body.event,
       status: "PENDING",
+      acquirer_data: acquirer_data,
+      error_description: error_description,
+      error_reason: error_reason,
+      mode: mode,
     });
 
     console.log(
@@ -2552,7 +2569,8 @@ const paymentsRouter = new Hono()
                           isSplitBillVariant: true,
                           billInvoice: splitBillTableSessionData?.billInvoice,
                           paxCount: tableSession?.paxCount || 0,
-                             serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+                          serviceChargePercentage:
+                            tableSession?.serviceChargePercentage || 0,
                         },
                       ],
                       { session },
@@ -2783,7 +2801,8 @@ const paymentsRouter = new Hono()
                             isSplitBillVariant: true,
                             billInvoice: splitBillTableSessionData?.billInvoice,
                             paxCount: tableSession?.paxCount || 0,
-                               serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+                            serviceChargePercentage:
+                              tableSession?.serviceChargePercentage || 0,
                           },
                         ],
                         { session },
@@ -3179,7 +3198,8 @@ const paymentsRouter = new Hono()
                     billItems: tableSession?.items || [],
                     billInvoice: tableSession?.billInvoice || 0,
                     paxCount: tableSession?.paxCount || 0,
-                       serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+                    serviceChargePercentage:
+                      tableSession?.serviceChargePercentage || 0,
                   },
                 ],
                 { session },

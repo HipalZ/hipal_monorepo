@@ -64,6 +64,10 @@ export const razorpayOnlinePaymentSchema = z.object({
   event: z.string(),
   date: z.coerce.number(),
   status: z.enum(["SUCCESS", "FAILED", "PROCESSING", "PENDING"]),
+  mode: z.string(),
+  acquirer_data: z.object({}),
+  error_description: z.string(),
+  error_reason: z.string(),
 });
 
 export type RazorpayPaymentHandlerTypeValidator = z.infer<

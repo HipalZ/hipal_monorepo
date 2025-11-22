@@ -494,8 +494,8 @@ const hipalzPosPaymentHandler = async (
 const CommonPaymentHandler = async (getOrder: OrderType) => {
   await PaymentAlert.updateOne(
     {
-      tableName: getOrder?.tableName,
-      businessId: getOrder?.businessId,
+      tableName: getOrder.tableName,
+      businessId: getOrder.businessId,
       isAccepted: false,
       alertType: "OFFLINE",
     },
@@ -548,7 +548,7 @@ const CommonPaymentHandler = async (getOrder: OrderType) => {
 };
 
 async function razorpayPaymentHandler(job: Job) {
-  const { merchantId, razorpayEventId, order_id, id, event, date, status } =
+  const { merchantId, razorpayEventId, order_id, id, event, date, status,acquirer_data, error_description, error_reason,mode } = job.data as RazorpayPaymentHandlerTypeValidator;
     job.data as RazorpayPaymentHandlerTypeValidator;
 
   console.log("aa raha");

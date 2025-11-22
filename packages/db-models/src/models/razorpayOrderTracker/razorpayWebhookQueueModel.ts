@@ -33,6 +33,25 @@ const razorpayWebhookQueueModelSchema =
       type: Number,
       required: false,
     },
+    mode: {
+      type: String,
+      required: true,
+    },
+    error_description: {
+      type: String,
+      required: false,
+      default: "",
+    },
+    error_reason: {
+      type: String,
+      required: false,
+      default: "",
+    },
+    acquirer_data: {
+      type: Object,
+      required: false,
+      default: {},
+    },
   });
 
 const RazorpayWebhookQueueModel: Model<RazorpayWebhookQueueModelValidatorType> =

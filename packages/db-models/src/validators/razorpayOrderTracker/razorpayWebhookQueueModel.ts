@@ -8,6 +8,10 @@ export const razorpayWebhookQueueModelValidator = z.object({
   merchantId: z.string().min(1).max(100),
   status: z.enum(["SUCCESS", "FAILED", "PROCESSING", "PENDING"]),
   date: z.number().optional(),
+  error_description: z.string().optional(),
+  error_reason: z.string().optional(),
+  acquirer_data: z.object({}).optional(),
+  mode: z.string(),
 });
 
 export type RazorpayWebhookQueueModelValidatorType = z.infer<
