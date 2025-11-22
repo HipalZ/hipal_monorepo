@@ -15,7 +15,7 @@ import {
 } from "../../../utils/whatsappWebhookHandlers/helper";
 import { whatsAppBlockUserHandler } from "../../../utils/whatsappWebhookHandlers/whatsappBlockUser";
 import path = require("path");
-const { google } = require("googleapis");
+import { google } from "googleapis";
 
 /* ----------------------------------------------------------------------------
  * FLOW CACHE (per business)
