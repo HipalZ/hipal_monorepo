@@ -1,4 +1,5 @@
 import DateRangePicker from '@/components/atoms/dateRangePicker';
+import ExecutiveReportButton from '@/components/atoms/salesLite/ExecutiveReportButton';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import useTimings from '@/components/store/useTimings';
 import type { TableData } from '@/components/store/useZonesAndTable.ts';
@@ -14,45 +15,13 @@ import { BarChart } from './BarChart';
 import { InfoCard } from './InfoCard';
 import { LineChart } from './LineChart';
 import { PieChart } from './PieCharts';
-
-export interface SalesData {
-  overAllAmount: number;
-  onlineSale: Record<string, number>;
-  offlineSale: Record<string, number>;
-  totalOrders: number;
-  totalActiveTableValue: number;
-}
-
-interface OtherAndWarningData {
-  otherSale: {
-    totalTax: number;
-    totalTip: number;
-    totalServiceCharge: number;
-  };
-  warningSale: {
-    totalForceSettle: number;
-    totalFreeSettle: number;
-  };
-}
-
-interface SalesExceptionData {
-  exceptionSale: {
-    totalDuesReceived: number;
-    totalDuesGiven: number;
-    totalNpc: number;
-    totalComplementary: number;
-    totalDiscount: number;
-  };
-  rewardSale: {
-    totalCoinsGiven: number;
-    totalCoinUsed: number;
-    totalCouponUsed: number;
-  };
-}
+import type { OtherAndWarningData, SalesData, SalesExceptionData } from './sales.types';
 
 const SalesLite = () => {
   const selectedBiz = useHiClientZ((s) => s.selectedBiz);
   const businessId = selectedBiz?.businessId?._id;
+  const businessName = selectedBiz.businessId.name || 'My Business';
+  const businessLogo = selectedBiz.businessId.logo || '';
   const handleEnvelope = useApiErrorHandler().handleEnvelope;
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
@@ -234,10 +203,26 @@ const SalesLite = () => {
   return (
     <div className="mx-auto xl:container lg:px-4">
       <DateRangePicker />
-
+      <div className="mt-2 flex items-center justify-between px-4">
+        <h2 className="text-lg font-semibold">Executive Summary</h2>
+        <ExecutiveReportButton
+          businessName={businessName || 'My Business'}
+          businessLogo={businessLogo || ''}
+          from={timeStampStart}
+          to={timeStampEnd}
+          salesData={salesData}
+          otherData={otherData}
+          salesExceptionData={salesExceptionData}
+        />
+      </div>
       <div className="grid grid-cols-2 gap-4 p-4 md:grid-cols-4 lg:grid-cols-4">
         <section className="col-span-2">
-          <InfoCard title="Total Sales" value={salesData.overAllAmount} icon={<IndianRupee className="h-4 w-4" />} breakdown={totalSalesBreakdown} />
+          <InfoCard
+            title={`Total Sales (${salesData.totalOrders} Orders)`}
+            value={salesData.overAllAmount}
+            icon={<IndianRupee className="h-4 w-4" />}
+            breakdown={totalSalesBreakdown}
+          />
         </section>
         <section className="col-span-2">
           <InfoCard
@@ -257,6 +242,7 @@ const SalesLite = () => {
           icon={<AlertTriangle className="h-4 w-4" />}
           breakdown={taxesServiceBreakdown}
         />
+        <InfoCard title="Total Guest" value={salesData.totalPaxCount} icon={<IndianRupee className="h-4 w-4" />} breakdown={totalSalesBreakdown} />
 
         {shouldShowCard && (
           <InfoCard

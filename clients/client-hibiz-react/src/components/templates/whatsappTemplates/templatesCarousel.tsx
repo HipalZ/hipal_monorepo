@@ -38,8 +38,8 @@ const MemoTemplatesCarousel = () => {
     switch (format) {
       case 'TEXT':
         return (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-center">
-            <p className="line-clamp-3 px-3 text-sm font-semibold text-gray-700">{template?.components?.[0]?.text || 'Sample Text Header'}</p>
+          <div className="flex h-full flex-col items-center justify-center bg-gray-100 text-gray-500">
+            <span className="text-sm">{template?.components?.[0]?.text || 'Sample Text Header'}</span>
           </div>
         );
 
@@ -95,13 +95,13 @@ const MemoTemplatesCarousel = () => {
             <section
               className={cn(
                 template?.status === 'REJECTED' ? 'pointer-events-none opacity-75' : 'cursor-pointer',
-                'max-h-[240px] max-w-full overflow-hidden rounded-lg shadow-md transition-shadow duration-300 hover:shadow-lg md:h-full md:max-w-[240px] lg:max-h-[170px]',
+                'max-h-[240px] min-h-[170px] max-w-full overflow-hidden rounded-lg shadow-md transition-shadow duration-300 hover:shadow-lg md:h-full md:max-w-[240px] lg:max-h-[170px]',
               )}
               onClick={() => handleTemplateClick(template)}
               onKeyDown={(e) => e.key === 'Enter' && handleTemplateClick(template)}
               aria-label={`Select ${template.name} template`}
             >
-              <article className="relative h-full">
+              <article className="relative h-[170px] w-full">
                 {/* Status badge */}
                 <div className="absolute left-0 right-0 top-0 z-10 px-2 py-1">
                   <span

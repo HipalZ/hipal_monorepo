@@ -77,7 +77,7 @@ const groupSubcategoriesByParent = (
     { parent: CategoryType; subcategories: CategoryType[] }
   > = {};
 
-  parentCategories.forEach((parent) => {
+  for (const parent of parentCategories) {
     if (parent.visibility && parent.subCategoryIds?.length > 0) {
       // Filter child categories that match this parent and pass filterDishesByType
       const subcats = childCategories.filter(
@@ -93,7 +93,7 @@ const groupSubcategoriesByParent = (
         };
       }
     }
-  });
+  }
 
   return result;
 };

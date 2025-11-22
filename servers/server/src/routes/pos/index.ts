@@ -279,9 +279,12 @@ const posRouter = new Hono()
           businessId,
           tableName: isTableMerge?.parentTableId.name || tableName,
         }).populate({
-          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billInvoice serviceChargePercentage",
+          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billingUserId",
           select: "name phone",
         });
+
+        const billingUserName = tableSession?.billingUserId?.name;
+        const billingUserPhone = tableSession?.billingUserId?.phone;
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -415,8 +418,8 @@ const posRouter = new Hono()
             message: "Data fetched successfully",
             err: false,
             data: {
-              customerName: tableSession.customerName,
-              customerPhone: kotOrders[0].phone,
+              customerName: billingUserName || tableSession.customerName,
+              customerPhone: billingUserPhone || kotOrders[0].phone,
               tableName: tableSession.tableName,
               couponId: tableSession.couponId,
               discountAppliedOn: tableSession.discountAppliedOn,
@@ -1508,6 +1511,118 @@ const posRouter = new Hono()
     },
   )
 
+  .post(
+    "/bill/user",
+    zValidator(
+      "json",
+      z.object({
+        customerName: z.string().min(1).max(50),
+        phone: z.string().min(10).max(10).optional(),
+        businessId: z.string().min(24).max(24),
+        tableName: z.string().min(1).max(100),
+        variantId: z.string().min(24).max(24).optional(),
+      }),
+    ),
+    async (c) => {
+      const { customerName, phone, businessId, tableName, variantId } =
+        c.req.valid("json");
+
+      const getOrCreateUserWithAnalytics = async ({
+        phone,
+        customerName,
+        businessId,
+        session,
+      }: {
+        phone?: string;
+        customerName: string;
+        businessId: string;
+        session: ClientSession;
+      }) => {
+        const phoneToUse = phone ?? "**********";
+
+        let user = await User.findOneAndUpdate(
+          { phone: phoneToUse },
+          {
+            name: customerName,
+          },
+          { session },
+        );
+        if (!user) {
+          user = new User({
+            phone: phoneToUse,
+            name: customerName,
+          });
+
+          await user.save({ session });
+
+          const userAnalytics = new UserAnalytic({
+            userId: user._id,
+            businessId,
+            totalSpend: 0,
+            visitCount: 1,
+            dateOfJoining: Date.now(),
+            coinzIssued: 0,
+            coinzUsed: 0,
+            couponCount: 0,
+            currentCoins: 0,
+            avgSpend: 0,
+          });
+
+          await userAnalytics.save({ session });
+        }
+
+        return user;
+      };
+
+      // @ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const isBillSplit = await checkOriginBillIsSplit(tableSession);
+
+        if (isBillSplit && !variantId) {
+          return respond(
+            c,
+            "variantId is required for split bill",
+            true,
+            400,
+            {},
+          );
+        }
+
+        const user = await getOrCreateUserWithAnalytics({
+          phone,
+          customerName,
+          businessId,
+          session,
+        });
+
+        if (isBillSplit) {
+          await SplitBillTableSession.findOneAndUpdate(
+            { _id: variantId },
+            { billingUserId: user._id },
+            { session },
+          );
+        } else {
+          await UserSession.findOneAndUpdate(
+            { businessId, tableName },
+            { billingUserId: user._id },
+            { session },
+          );
+        }
+
+        return respond(c, "sucess", false, 200, {});
+      });
+    },
+  )
+
   .put(
     "/link_user_to_bill",
 
@@ -1924,6 +2039,9 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
+        }).populate({
+          path: "billingUserId",
+          select: "name phone",
         });
 
         if (!tableSession) {
@@ -1955,7 +2073,12 @@ const posRouter = new Hono()
             );
           }
 
-          const variant = await SplitBillTableSession.findById(variantId);
+          const variant = await SplitBillTableSession.findById(
+            variantId,
+          ).populate({
+            path: "billingUserId",
+            select: "name phone",
+          });
           if (!variant) {
             return respond(c, "Variant not found", true, 404, {});
           }
@@ -1967,11 +2090,20 @@ const posRouter = new Hono()
             tableName: tableName,
             businessId: businessId,
             customerName:
-              variant.customerName || tableSession?.customerName || "customer",
-            customerPhone: tableSession?.phoneNumbers?.[0] || "customer",
+              variant.billingUserId?.name ||
+              variant.customerName ||
+              tableSession?.customerName ||
+              "customer",
+            customerPhone:
+              variant.billingUserId?.name ||
+              tableSession?.phoneNumbers?.[0] ||
+              "customer",
             items: billItems,
             posRestName: businessPosConfig.restName,
-            generatedBy: tableSession?.billGeneratedBy || generatedBy,
+            generatedBy:
+              variant.billingUserId?.name ||
+              tableSession?.billGeneratedBy ||
+              generatedBy,
             date: Date.now(),
             serviceCharge: variant?.serviceCharge || 0,
             discount: variant?.discount || 0,
@@ -2014,11 +2146,15 @@ const posRouter = new Hono()
         sendBillPrintEvent({
           tableName: tableName,
           businessId: businessId,
-          customerName: KotOrders[0].name,
-          customerPhone: KotOrders[0].phone,
+          customerName: tableSession?.billingUserId?.name || KotOrders[0].name,
+          customerPhone:
+            tableSession?.billingUserId?.phone || KotOrders[0].phone,
           items: billItems,
           posRestName: businessPosConfig.restName,
-          generatedBy: tableSession?.billGeneratedBy || generatedBy,
+          generatedBy:
+            tableSession.billingUserId?.name ||
+            tableSession?.billGeneratedBy ||
+            generatedBy,
           date: Date.now(),
           serviceCharge: tableSession?.serviceCharge || 0,
           discount: tableSession?.discount || 0,

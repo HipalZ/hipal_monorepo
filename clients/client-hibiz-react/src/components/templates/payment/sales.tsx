@@ -286,7 +286,6 @@ const MemoPaymentSales = () => {
         </PopUp>
       )}
 
-      {/* 🔍 Search Bill modal */}
       {isSearchOpen && (
         <PopUp
           height="h-[100dvh] md:h-[60dvh]"

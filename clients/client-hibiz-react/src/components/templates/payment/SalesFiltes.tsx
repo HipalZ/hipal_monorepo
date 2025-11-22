@@ -7,27 +7,15 @@ import { useCallback, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 
 const SalesFilters = () => {
-  const {
-    selectedPaymentModes,
-    selectedDiscountTypes,
-    selectedWarnings,
-    setSelectedPaymentModes,
-    setSelectedDiscountTypes,
-    setSelectedWarnings,
-    setOpenFilterModal,
-    setSelectedFilters,
-    selectedFilters,
-  } = useSalesStore((s) => ({
-    selectedPaymentModes: s.selectedPaymentModes,
-    selectedDiscountTypes: s.selectedDiscountTypes,
-    selectedWarnings: s.selectedWarnings,
-    setSelectedPaymentModes: s.setSelectedPaymentModes,
-    setSelectedDiscountTypes: s.setSelectedDiscountTypes,
-    setSelectedWarnings: s.setSelectedWarnings,
-    setOpenFilterModal: s.setOpenFilterModal,
-    setSelectedFilters: s.setSelectedFilters,
-    selectedFilters: s.selectedFilters,
-  }));
+  const selectedPaymentModes = useSalesStore((s) => s.selectedPaymentModes);
+  const selectedDiscountTypes = useSalesStore((s) => s.selectedDiscountTypes);
+  const selectedWarnings = useSalesStore((s) => s.selectedWarnings);
+  const setSelectedPaymentModes = useSalesStore((s) => s.setSelectedPaymentModes);
+  const setSelectedDiscountTypes = useSalesStore((s) => s.setSelectedDiscountTypes);
+  const setSelectedWarnings = useSalesStore((s) => s.setSelectedWarnings);
+  const setOpenFilterModal = useSalesStore((s) => s.setOpenFilterModal);
+  const setSelectedFilters = useSalesStore((s) => s.setSelectedFilters);
+  const selectedFilters = useSalesStore((s) => s.selectedFilters);
 
   const { data: modesData } = useAllModes();
 

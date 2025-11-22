@@ -66,6 +66,7 @@ export const userSessionSchema = z.object({
   billInvoice: z.coerce.number().optional().default(0),
   isBillInvoiced: z.boolean().optional().default(false),
   paxCount: z.coerce.number().optional().default(0),
+  billingUserId: ObjectIdSchema.optional(),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;
