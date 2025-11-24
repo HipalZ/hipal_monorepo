@@ -1,10 +1,5 @@
-import {
-  Subscriber,
-  User,
-  UserAnalytic,
-  WhatsAppBusinessConfig,
-} from "@hi/db-models";
-import type { QrParseResult, QrType } from "./whatsAppHandlerTypes";
+import { Subscriber, User, UserAnalytic, WhatsAppBusinessConfig } from '@hi/db-models';
+import type { QrParseResult, QrType } from './whatsAppHandlerTypes';
 //@ts-ignore
 async function whatsAppEventData(whatsAppWebhookEventBody) {
   const entry = whatsAppWebhookEventBody.entry?.[0];
@@ -15,10 +10,13 @@ async function whatsAppEventData(whatsAppWebhookEventBody) {
   const statuses = value?.statuses;
 
   const phon_no_id = value?.metadata?.phone_number_id;
+  console.log('phon_no_id', phon_no_id);
 
   const whatsAppBusinessConfigData = await WhatsAppBusinessConfig.findOne({
     phoneId: phon_no_id,
   });
+
+  console.log('whatsAppBusinessConfigData', whatsAppBusinessConfigData);
 
   return {
     entry,
@@ -42,6 +40,9 @@ async function whatsAppUserAndTextMessage(
   const userName = contacts?.profile?.name;
   const userPhone = contacts?.wa_id?.toString().slice(2);
   const userInput = messages?.text?.body;
+  console.log('userPhone', userPhone);
+  console.log('userInput', userInput);
+  console.log('whatsAppBusinessConfigData', whatsAppBusinessConfigData);
 
   let isAlreadyRegisteredUser = await User.findOne({
     phone: userPhone,
@@ -71,7 +72,7 @@ async function whatsAppUserAndTextMessage(
     isAlreadyRegisteredUser = await User.create({
       phone: userPhone,
       name: userName,
-      role: ["HIPAL_CUSTOMER", "OWNER", "MANAGER", "CAPTAIN", "CO_OWNER"],
+      role: ['HIPAL_CUSTOMER', 'OWNER', 'MANAGER', 'CAPTAIN', 'CO_OWNER'],
     });
   }
 
@@ -91,6 +92,8 @@ async function whatsAppUserAndTextMessage(
     });
   }
 
+  console.log('isAlreadyRegisteredUser', isAlreadyRegisteredUser);
+
   return {
     userData: isAlreadyRegisteredUser,
     userInput,
@@ -101,10 +104,10 @@ function identifyQrTypeFromMessage(userInput: string): QrParseResult | null {
   if (!userInput) return null;
 
   const patterns: Array<{ qrType: QrType; re: RegExp }> = [
-    { qrType: "TABLE_QR", re: /\bdetails\s*-\s*([\w\W]+)/i },
-    { qrType: "CHECK_IN_QR", re: /\bQR\s*-\s*([\w\W]+)/i },
-    { qrType: "COUPON_QR", re: /\blink\s*-\s*([\w\W]+)/i },
-    { qrType: "ROOM_QR", re: /\broom\s*-\s*([\w\W]+)/i },
+    { qrType: 'TABLE_QR', re: /\bdetails\s*-\s*([\w\W]+)/i },
+    { qrType: 'CHECK_IN_QR', re: /\bQR\s*-\s*([\w\W]+)/i },
+    { qrType: 'COUPON_QR', re: /\blink\s*-\s*([\w\W]+)/i },
+    { qrType: 'ROOM_QR', re: /\broom\s*-\s*([\w\W]+)/i },
   ];
 
   for (const { qrType, re } of patterns) {
@@ -120,8 +123,4 @@ function identifyQrTypeFromMessage(userInput: string): QrParseResult | null {
   return null;
 }
 
-export {
-  identifyQrTypeFromMessage,
-  whatsAppEventData,
-  whatsAppUserAndTextMessage,
-};
+export { identifyQrTypeFromMessage, whatsAppEventData, whatsAppUserAndTextMessage };
