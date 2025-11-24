@@ -98,7 +98,7 @@ const MemoGetBill = () => {
   const { isPrinting, reprintBill } = useReprintBill(currentBill);
 
   // Custom hooks
-  const { qrBillId, isPending, mutate, removeClaimedCoins, removeCouponHandler, openServiceChargeModal, clickOnKey, toggleQr } =
+  const { qrBillId, isPending, mutate, openTipsModal, removeClaimedCoins, removeCouponHandler, openServiceChargeModal, clickOnKey, toggleQr } =
     useBillActions(currentBill);
 
   const { isModalOpen, isPhoneVerified, copyTick, handleProtectedAction, handlePasswordVerify, handleModalClose } = usePhoneActions(currentBill);
@@ -246,6 +246,7 @@ const MemoGetBill = () => {
                 onRemoveClaimedCoins={removeClaimedCoins}
                 onRemoveCoupon={removeCouponHandler}
                 onOpenServiceChargeModal={openServiceChargeModal}
+                onOpenTipsModal={openTipsModal}
                 onSetActiveModal={setActiveModal}
               />
             )}

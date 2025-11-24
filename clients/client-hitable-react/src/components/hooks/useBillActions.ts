@@ -73,6 +73,11 @@ export const useBillActions = (currentBill: IBillData | null) => {
     setActiveModal("serviceCharge");
   }, [setShowMoreOption, setActiveModal]);
 
+  const openTipsModal = useCallback(() => {
+    setShowMoreOption(true);
+    setActiveModal("tips");
+  }, [setShowMoreOption, setActiveModal]);
+
   const clickOnKey = useCallback(
     (key: string) => {
       if (key === "discount" || key === "serviceCharge") {
@@ -94,6 +99,7 @@ export const useBillActions = (currentBill: IBillData | null) => {
     removeClaimedCoins,
     removeCouponHandler,
     openServiceChargeModal,
+    openTipsModal,
     clickOnKey,
     toggleQr,
   };

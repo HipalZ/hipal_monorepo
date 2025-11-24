@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/utils.ts';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { IoClose } from 'react-icons/io5';
 import type { BillSummaryProps } from './bill.types.ts';
 
@@ -17,14 +17,14 @@ const BillSummary = memo(
     onRemoveCoupon,
     onOpenServiceChargeModal,
     onSetActiveModal,
+    onOpenTipsModal,
   }: BillSummaryProps) => {
     const billItems = [
       ['subTotal', currentBill.subTotal],
-      ['serviceCharge', currentBill.serviceCharge],
-      ['tips', currentBill.tips],
       ['discount', currentBill.discount],
       ['CGst', currentBill.gst / 2],
       ['SGst', currentBill.gst / 2],
+      ['serviceCharge', currentBill.serviceCharge],
       ['otherTax', currentBill.otherTax],
       ['claimedCoins', currentBill.claimedCoins],
       ['couponDiscount', currentBill.couponDiscount],
@@ -33,6 +33,13 @@ const BillSummary = memo(
     const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
     const canUseLoyalty = hasPermission('add_coins');
     const canUseCoupon = hasPermission('add_coupon');
+    const canAddOrRemoveServiceCharge = hasPermission('add_or_remove_service_charge');
+    const canAddOrRemoveDiscount = hasPermission('add_discount');
+    const canAddOrRemoveTips = hasPermission('add_tip');
+
+    const tipValue = useMemo(() => {
+      return currentBill.tips || 0;
+    }, [currentBill.tips]);
 
     return (
       <>
@@ -48,7 +55,7 @@ const BillSummary = memo(
           </>
         )}
 
-        <div className="mb-4 space-y-3">
+        <div className="mb-4 space-y-1.5">
           {billItems.map(([key, value]) => {
             const isDeduction = key === 'claimedCoins' || key === 'discount' || key === 'couponDiscount';
             return (
@@ -60,31 +67,31 @@ const BillSummary = memo(
                     onClickKey(key);
                   }
                 }}
-                className="flex cursor-pointer items-center justify-between text-sm"
+                className="flex cursor-pointer items-center justify-between"
               >
-                <p className="flex items-center gap-2 capitalize text-gray-700">
+                <p className="flex items-center font-semibold capitalize text-gray-700">
                   {key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
                 </p>
                 <div className="flex items-center space-x-2">
-                  <p className={`font-medium ${isDeduction ? 'text-red-600' : 'text-gray-900'}`}>
+                  <p className={`font-semibold ${isDeduction ? 'text-red-600' : 'text-gray-900'}`}>
                     {isDeduction ? `-${formatCurrency(Number(value))}` : formatCurrency(Number(value))}
                   </p>
-                  {key === 'claimedCoins' && (
+                  {key === 'claimedCoins' && canUseLoyalty && (
                     <button type="button" onClick={onRemoveClaimedCoins} className="text-2xl text-red-600 hover:underline">
                       <IoClose />
                     </button>
                   )}
-                  {key === 'couponDiscount' && (
+                  {key === 'couponDiscount' && canUseCoupon && (
                     <button type="button" onClick={onRemoveCoupon} className="text-2xl text-red-600 hover:underline">
                       <IoClose />
                     </button>
                   )}
-                  {key === 'serviceCharge' && (
+                  {key === 'serviceCharge' && canAddOrRemoveServiceCharge && (
                     <button type="button" onClick={onOpenServiceChargeModal} className="text-2xl text-red-600 hover:underline">
                       <IoClose />
                     </button>
                   )}
-                  {key === 'discount' && (
+                  {key === 'discount' && canAddOrRemoveDiscount && (
                     <button type="button" onClick={() => onSetActiveModal('discount')} className="text-2xl text-red-600 hover:underline">
                       <IoClose />
                     </button>
@@ -93,6 +100,25 @@ const BillSummary = memo(
               </div>
             );
           })}
+          {canAddOrRemoveTips && (
+            <div className="mt-2 flex items-center justify-between">
+              <p className="flex items-center font-semibold text-gray-700">
+                Tips
+                <Button className="mt-1" type="button" size="sm" variant="ghost" onClick={onOpenTipsModal}>
+                  {tipValue > 0 ? 'Edit' : 'Add'}
+                </Button>
+              </p>
+              <div className="flex items-center space-x-2">
+                {tipValue > 0 && <p className="font-semibold text-gray-900">{formatCurrency(Number(tipValue))}</p>}
+                {tipValue > 0 && (
+                  <button type="button" onClick={onOpenTipsModal} className="text-2xl text-red-600 hover:underline">
+                    <IoClose />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-between border-t pb-[10rem] pt-2 text-base font-semibold">
             <p className="text-black">Total</p>
             <p className="text-black">{formatCurrency(currentBill.total)}</p>

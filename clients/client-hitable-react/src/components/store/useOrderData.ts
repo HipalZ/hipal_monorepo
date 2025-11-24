@@ -25,6 +25,7 @@ type ModalType =
   | "coupon"
   | "coinz"
   | "options"
+  | "tips"
   | "split";
 
 interface ISettleMode {
