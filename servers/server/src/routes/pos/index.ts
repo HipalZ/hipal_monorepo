@@ -3299,6 +3299,7 @@ const posRouter = new Hono()
               {},
             );
           }
+          console.log("vale", value);
 
           await updateSplitTableSession(
             variantId,

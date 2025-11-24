@@ -128,17 +128,16 @@ const returnSplitBillVariants = async (
     let serviceChargeAmount = 0;
     const menuId = cartItems[0]?.dish?.menuId;
 
-    if (menuId) {
-      const serviceCharge = await Tax.findOne({
-        businessId,
-        menuId,
-        isActive: true,
-        name: "servicecharge",
-      });
+    const serviceCharge = await Tax.findOne({
+      businessId,
+      menuId,
+      isActive: true,
+      name: "servicecharge",
+    });
 
-      const percentage = serviceCharge?.value || 0;
-      serviceChargeAmount = Math.round((percentage / 100) * totalDishTotal);
-    }
+    const percentage =
+      variant.serviceChargePercentage || serviceCharge?.value || 0;
+    serviceChargeAmount = Math.round((percentage / 100) * totalDishTotal);
 
     if (variant.isServiceChargeRemoved) {
       serviceChargeAmount = 0;
@@ -175,6 +174,8 @@ const returnSplitBillVariants = async (
         subTotal: totalDishTotal,
         items: cartItems,
         totalGst: totalGst,
+        serviceChargePercentage:
+          variant.serviceChargePercentage || serviceCharge?.value || 0,
       },
       session,
     );
@@ -209,6 +210,8 @@ const returnSplitBillVariants = async (
       variantId: variant._id.toString(),
       variantName: variant.variantName,
       isPaid: variant.isPaid,
+      serviceChargePercentage:
+        variant.serviceChargePercentage || serviceCharge?.value || 0,
     });
   }
 
@@ -253,17 +256,16 @@ const returnSplitBillVariantsForItemWise = async (
     let serviceChargeAmount = 0;
     const menuId = cartItems[0]?.dish?.menuId;
 
-    if (menuId) {
-      const serviceCharge = await Tax.findOne({
-        businessId,
-        menuId,
-        isActive: true,
-        name: "servicecharge",
-      });
+    const serviceCharge = await Tax.findOne({
+      businessId,
+      menuId,
+      isActive: true,
+      name: "servicecharge",
+    });
 
-      const percentage = serviceCharge?.value || 0;
-      serviceChargeAmount = Math.round((percentage / 100) * totalDishTotal);
-    }
+    const percentage =
+      variant.serviceChargePercentage || serviceCharge?.value || 0;
+    serviceChargeAmount = Math.round((percentage / 100) * totalDishTotal);
 
     if (variant.isServiceChargeRemoved) {
       serviceChargeAmount = 0;
@@ -299,6 +301,8 @@ const returnSplitBillVariantsForItemWise = async (
         items: cartItems,
         billPrintCount: (variant.billPrintCount || 0) + 1,
         totalGst: Number(totalGst?.toFixed(2)),
+        serviceChargePercentage:
+          variant.serviceChargePercentage || serviceCharge?.value || 0,
       },
       session,
     );
@@ -331,6 +335,8 @@ const returnSplitBillVariantsForItemWise = async (
       variantId: variant._id.toString(),
       variantName: variant.variantName,
       isPaid: variant.isPaid,
+      serviceChargePercentage:
+        variant.serviceChargePercentage || serviceCharge?.value || 0,
     });
   }
 
