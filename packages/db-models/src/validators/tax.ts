@@ -10,6 +10,8 @@ export const TaxTypeSchema = z
     isActive: z.boolean().default(true).optional(),
     isDeleted: z.boolean().default(false).optional(),
     menuId: ObjectIdSchema,
+    baseMenuTaxId: ObjectIdSchema.optional(),
+    baseMenuId: ObjectIdSchema.optional(),
   })
   .refine(
     (data) => {

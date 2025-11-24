@@ -1,124 +1,154 @@
-import { format } from "date-fns"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import { AlertTriangle, ChevronLeft, ChevronRight, Download } from "lucide-react"
-import type { EscalationItem } from "@/components/types/hotelTypes"
+import type { EscalationItem } from '@/components/types/hotelTypes';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { format } from 'date-fns';
+import { AlertTriangle, ChevronLeft, ChevronRight, Clock, Download } from 'lucide-react';
 
-// Format timestamp to readable date
-const formatDate = (timestamp: number) => format(new Date(timestamp), "MMM dd, yyyy HH:mm")
+const formatDate = (ts: number) => format(new Date(ts), 'MMM dd, HH:mm');
+const msToMin = (ms: number) => (ms / 60000).toFixed(1);
 
 interface EscalationTableProps {
-    isLoading: boolean
-    data: EscalationItem[]
-    pageNumber: number
-    setPageNumber: (page: number) => void
-    onExport: () => void
+  isLoading: boolean;
+  data: EscalationItem[];
+  pageNumber: number;
+  setPageNumber: (page: number) => void;
+  onExport: () => void;
 }
 
-export default function EscalationTable({
-    isLoading,
-    data,
-    pageNumber,
-    setPageNumber,
-    onExport,
-}: EscalationTableProps) {
-    // Render empty state
-    const renderEmpty = (message: string) => (
-        <div className="flex flex-col items-center justify-center h-[300px] py-10 text-muted-foreground">
-            <AlertTriangle className="h-10 w-10 mb-4 text-muted-foreground/50" />
-            <p>{message}</p>
-            <Button variant="outline" size="sm" className="mt-4">
-                Try Again
-            </Button>
+export default function EscalationTable({ isLoading, data, pageNumber, setPageNumber, onExport }: EscalationTableProps) {
+  const renderEmpty = (msg: string) => (
+    <div className="text-muted-foreground flex h-64 flex-col items-center justify-center">
+      <AlertTriangle className="mb-3 h-10 w-10 opacity-50" />
+      <p>{msg}</p>
+      <Button variant="outline" size="sm" className="mt-3">
+        Try Again
+      </Button>
+    </div>
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle>Escalation Details</CardTitle>
+            <CardDescription>Full history with delay & severity</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={onExport} disabled={data.length === 0} className="flex items-center gap-1">
+            <Download className="h-3 w-3" />
+            <span className="hidden sm:inline">Export ({data.length})</span>
+          </Button>
         </div>
-    )
-    return (
-        <Card>
-            <CardHeader>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle>Escalation Details</CardTitle>
-                        <CardDescription>Complete list of all escalation records</CardDescription>
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1"
-                        onClick={onExport}
-                        disabled={data.length === 0}
-                    >
-                        <Download className="h-3 w-3" />
-                        <span className="hidden sm:inline">Export</span>
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="rounded-md border overflow-x-auto">
-                    {isLoading ? (
-                        <div className="p-4">
-                            <Skeleton className="h-6 w-full mb-4" />
-                            {[1, 2, 3].map((i) => (
-                                <Skeleton key={i} className="h-12 w-full mb-2" />
+      </CardHeader>
+
+      <CardContent className="p-0">
+        <div className="overflow-hidden rounded-md border">
+          {isLoading ? (
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-10 w-full" />
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))}
+            </div>
+          ) : data.length > 0 ? (
+            <ScrollArea className="h-[500px]">
+              <Table>
+                <TableHeader className="bg-background sticky top-0 z-10">
+                  <TableRow>
+                    {['#', 'Date', 'Service', 'User', 'Room', 'Status', 'Delay', 'Level'].map((h) => (
+                      <TableHead key={h} className="font-semibold">
+                        {h}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.map((item, i) => {
+                    const delayMin = item.deliveredAt && item.createdAt ? msToMin(item.deliveredAt - item.createdAt) : null;
+
+                    const isDelayed = delayMin && Number.parseFloat(delayMin) > 5;
+                    const isPending = item.alertProgress.includes('NON_ACCEPTED');
+
+                    return (
+                      <TableRow key={item._id} className="hover:bg-muted/50 transition-colors duration-200">
+                        {/* # */}
+                        <TableCell className="font-medium">{i + 1}</TableCell>
+
+                        {/* Date */}
+                        <TableCell className="whitespace-nowrap">{formatDate(item.createdAt)}</TableCell>
+
+                        {/* Services */}
+                        <TableCell>
+                          <div className="flex max-w-[180px] flex-wrap gap-1">
+                            {item.serviceIds.map((s) => (
+                              <Badge key={s._id} variant="secondary" className="whitespace-nowrap text-xs">
+                                {s.name}
+                              </Badge>
                             ))}
-                        </div>
-                    ) : data.length > 0 ? (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    {["#", "Date", "Service", "User", "Room", "Delivery Time"].map((head) => (
-                                        <TableHead key={head}>{head}</TableHead>
-                                    ))}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {data.map((item, index) => (
-                                    <TableRow key={item._id} className="hover:bg-muted/50 transition-colors">
-                                        <TableCell className="font-medium">{index + 1}</TableCell>
-                                        <TableCell>{formatDate(item?.createdAt)}</TableCell>
-                                        <TableCell className="flex flex-wrap gap-1 max-w-[200px]">
-                                            {item.serviceIds.map((service) => (
-                                                <Badge key={service._id} variant="outline" className="whitespace-nowrap text-xs">
-                                                    {service.name}
-                                                </Badge>
-                                            ))}
-                                        </TableCell>
-                                        <TableCell>{item.userId?.name || "-"}</TableCell>
-                                        <TableCell>{item.roomId?.name || "-"}</TableCell>
-                                        {item?.deliveredAt && <TableCell>{formatDate(item?.deliveredAt) || "-"}</TableCell>}
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    ) : (
-                        renderEmpty("No escalation data available for the selected period")
-                    )}
-                </div>
-            </CardContent>
-            <CardFooter className="flex items-center justify-between pt-2">
-                <div className="text-sm text-muted-foreground">Showing {data.length} records</div>
-                <div className="flex items-center space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPageNumber(Math.max(1, pageNumber - 1))}
-                        disabled={pageNumber <= 1 || isLoading}
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm">Page {pageNumber}</span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPageNumber(pageNumber + 1)}
-                        disabled={data.length === 0 || isLoading}
-                    >
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-                </div>
-            </CardFooter>
-        </Card>
-    )
+                          </div>
+                        </TableCell>
+
+                        {/* User */}
+                        <TableCell>{item.userId?.name || '-'}</TableCell>
+
+                        {/* Room */}
+                        <TableCell>{item.roomId?.name || '-'}</TableCell>
+
+                        {/* Status */}
+                        <TableCell>
+                          <Badge variant={isPending ? 'destructive' : 'default'} className="text-xs">
+                            {isPending ? 'Pending' : 'Delivered'}
+                          </Badge>
+                        </TableCell>
+
+                        {/* Delay */}
+                        <TableCell>
+                          {delayMin ? (
+                            <div className="flex items-center gap-1">
+                              <Clock className="text-muted-foreground h-3 w-3" />
+                              <span className={isDelayed ? 'text-destructive font-medium' : ''}>{delayMin} min</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+
+                        {/* Level */}
+                        <TableCell>
+                          <Badge variant={item.level >= 3 ? 'destructive' : item.level === 2 ? 'default' : 'secondary'} className="text-xs">
+                            L{item.level}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          ) : (
+            renderEmpty('No escalation data for selected period')
+          )}
+        </div>
+      </CardContent>
+
+      <CardFooter className="flex items-center justify-between pt-3">
+        <div className="text-muted-foreground text-sm">
+          Showing {data.length} record{data.length !== 1 ? 's' : ''}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setPageNumber(Math.max(1, pageNumber - 1))} disabled={pageNumber <= 1 || isLoading}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-medium">Page {pageNumber}</span>
+          <Button variant="outline" size="sm" onClick={() => setPageNumber(pageNumber + 1)} disabled={data.length === 0 || isLoading}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardFooter>
+    </Card>
+  );
 }

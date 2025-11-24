@@ -8,6 +8,7 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { pushToken } from "../../services/token";
 import { respond } from "../../utils/response";
 
 const hotelRoomTypeRouter = new Hono()
@@ -45,6 +46,8 @@ const hotelRoomTypeRouter = new Hono()
 
     async (c) => {
       const { businessId } = c.req.query();
+
+      pushToken(c);
 
       const roomTypes = await HotelRoomType.find({
         businessId,

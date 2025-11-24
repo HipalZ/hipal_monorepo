@@ -4,10 +4,14 @@ import DeleteKotPanel from '@/components/delete/DeleteKot.tsx';
 import DesktopTablePOS from '@/components/desktop/DesktopTablePOS';
 import { useHomeNavigation } from '@/components/hooks/useNavigateHome.ts';
 import { useCart } from '@/components/store/useCart';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { type orderModal, useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import type { TableData } from '@/components/store/useZonesAndTable';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useStaffPermissions } from '@/hooks/useCheckPermission';
 import { apiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -15,8 +19,6 @@ import { HomeIcon } from 'lucide-react';
 import { Suspense, lazy, memo, useCallback, useState } from 'react';
 import { MdReceipt, MdRestaurantMenu } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useIsMobile } from '../../../../hooks/use-mobile';
-
 // Lazy loaded components
 const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));
 const BottomPopUp = lazy(() => import('@/components/atoms/universalPopup'));
@@ -49,6 +51,12 @@ const MemoTablePos = () => {
   const transferModal = useOrderStore((s) => s.transferModal);
   const setTransferModal = useOrderStore((s) => s.setTransferModal);
   const setTransferTable = useOrderStore((s) => s.setTransferTable);
+  const captainData = useHiClientZ((s) => s.captainData);
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canViewBill = hasPermission('bill');
+
+  useStaffPermissions(captainData?._id, businessId);
+
   const isMobile = useIsMobile();
 
   const closeTransferModal = () => {
@@ -117,14 +125,16 @@ const MemoTablePos = () => {
                   <MdRestaurantMenu className="mr-2 h-5 w-5" />
                   Orders
                 </Button>
-                <Button
-                  variant={activeTab === 'bill' ? 'default' : 'ghost'}
-                  className="flex-1 rounded-none border border-black"
-                  onClick={() => openOrderModalHandler('bill')}
-                >
-                  <MdReceipt className="mr-2 h-5 w-5" />
-                  Bill
-                </Button>
+                {canViewBill && (
+                  <Button
+                    variant={activeTab === 'bill' ? 'default' : 'ghost'}
+                    className="flex-1 rounded-none border border-black"
+                    onClick={() => openOrderModalHandler('bill')}
+                  >
+                    <MdReceipt className="mr-2 h-5 w-5" />
+                    Bill
+                  </Button>
+                )}
               </div>
             )}
           </section>
@@ -223,12 +233,10 @@ const MemoTablePos = () => {
           <Suspense fallback={<SpinnerMemo />}>
             {transferTable === 'ITEM' && <TransferItem />}
             {transferTable === 'TABLE' && <EmptyTableList transfer />}
-
             {transferTable === 'DELETE' && <DeleteKotPanel />}
           </Suspense>
         </BottomPopUp>
       )}
-      {/* {!isMobile && <DesktopTablePOS />} */}
     </>
   );
 };

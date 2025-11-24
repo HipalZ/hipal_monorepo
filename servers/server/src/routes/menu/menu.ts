@@ -256,13 +256,19 @@ const menuRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session) => {
         const { tableName, businessId } = c.req.query();
+
+        const isHavePos = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+        });
+
         // Find the table by name and businessId
         const tableData = await Table.findOne({
           name: tableName,
           businessId,
         }).lean();
 
-        if (!tableData) {
+        if (!tableData && !isHavePos) {
           const findDefaultZone = await Zone.findOne({
             businessId,
             name: "Default",
@@ -311,8 +317,7 @@ const menuRouter = new Hono()
         const currentTimeInMinutes =
           indianDate.getHours() * 60 + indianDate.getMinutes();
 
-        // Find the active menu for the zone and business
-        const menu = await Menu.findOne({
+        let menu = await Menu.findOne({
           zoneIds: zone?._id,
           businessId,
           isActive: true,

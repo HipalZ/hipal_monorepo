@@ -1,74 +1,47 @@
-import { apiRpc } from "@hi/common";
-import { filterPayload } from "@/components/utils/helper";
-import { type FormEvent, lazy, memo, useRef } from "react";
-import { useCheckValidations } from "../../helpers/bannersHelper";
-import { useCroppedImg } from "@/components/helpers/explorePageHelpers";
-import { useExploreStore } from "@/components/store/useExploreStore";
-import { useNavigate, useParams } from "react-router-dom";
-import BottomButton from "@/components/atom/bottomButton";
-import EasyReactCropper from "@/components/cropper/cropper";
-import toast from "react-hot-toast";
-import type { CropperRef, IBizPayload } from "@/components/types/businessData";
-import useShowErrorToasts from "@/components/atom/errorToasts";
-import { useExploreTemp } from "@/components/store/useExploreTemp";
-import useBusinessData from "@/components/store/useBusinessData";
-import { storeImageAfterSave } from "@/components/uploadAdmin/imageUpload";
-const CategoryTopBanner = lazy(() => import("./categoryTopBanner"));
+import BottomButton from '@/components/atom/bottomButton';
+import useShowErrorToasts from '@/components/atom/errorToasts';
+import EasyReactCropper from '@/components/cropper/cropper';
+import { useCroppedImg } from '@/components/helpers/explorePageHelpers';
+import useBusinessData from '@/components/store/useBusinessData';
+import { useExploreStore } from '@/components/store/useExploreStore';
+import { useExploreTemp } from '@/components/store/useExploreTemp';
+import type { CropperRef, IBizPayload } from '@/components/types/businessData';
+import { storeImageAfterSave } from '@/components/uploadAdmin/imageUpload';
+import { filterPayload } from '@/components/utils/helper';
+import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { apiRpc } from '@hi/common';
+import { type FormEvent, lazy, memo, useRef } from 'react';
+import toast from 'react-hot-toast';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useCheckValidations } from '../../helpers/bannersHelper';
+const CategoryTopBanner = lazy(() => import('./categoryTopBanner'));
 
-const SocialMediaLinks = lazy(
-  () => import("@/components/templates/explorePage/socialMediaLinks"),
-);
+const SocialMediaLinks = lazy(() => import('@/components/templates/explorePage/socialMediaLinks'));
 
-const BannerSection = lazy(
-  () => import("@/components/templates/explorePage/bannerSection"),
-);
-const ExplorePageTopSection = lazy(
-  () => import("@/components/templates/explorePage/explorePageTopSection"),
-);
-const UniquelyYoursPopUp = lazy(
-  () => import("@/components/templates/explorePage/uniquelyYoursPopUp"),
-);
+const BannerSection = lazy(() => import('@/components/templates/explorePage/bannerSection'));
+const ExplorePageTopSection = lazy(() => import('@/components/templates/explorePage/explorePageTopSection'));
+const UniquelyYoursPopUp = lazy(() => import('@/components/templates/explorePage/uniquelyYoursPopUp'));
 
-const PopUp = lazy(() => import("@/components/atom/popUp"));
-const FooterSection = lazy(
-  () => import("@/components/templates/explorePage/footerSection"),
-);
-const UniquelyYoursSection = lazy(
-  () => import("@/components/templates/explorePage/uniquelyYoursSection"),
-);
+const PopUp = lazy(() => import('@/components/atom/popUp'));
+const FooterSection = lazy(() => import('@/components/templates/explorePage/footerSection'));
+const UniquelyYoursSection = lazy(() => import('@/components/templates/explorePage/uniquelyYoursSection'));
 
 const MemoMainForm = () => {
   const { checkValidations } = useCheckValidations();
   const cropperRef = useRef<CropperRef>(null);
   const outletInfo = useBusinessData((s) => s.outletInfo);
-  const {
-    bizInfo,
-    showUniquePopUp,
-    setShowUniquePopUp,
-    showCropper,
-    cropping,
-    setShowCropper,
-    hotelBanners,
-    setHotelBanners,
-  } = useExploreStore((s) => ({
-    bizInfo: s.bizInfo,
-    showUniquePopUp: s.showUniquePopUp,
-    showCropper: s.showCropper,
-    cropping: s.cropping,
-    setShowCropper: s.setShowCropper,
-    setShowUniquePopUp: s.setShowUniquePopUp,
-    hotelBanners: s.hotelBanners,
-    setHotelBanners: s.setHotelBanners,
-  }));
 
-  const { setIsLoading } = useExploreTemp((s) => ({
-    setIsLoading: s.setIsLoading,
-  }));
-
-  const { socialMediaLinks } = useExploreTemp((s) => ({
-    socialMediaLinks: s.socialMediaLinks,
-  }));
-
+  const bizInfo = useExploreStore((s) => s.bizInfo);
+  const showUniquePopUp = useExploreStore((s) => s.showUniquePopUp);
+  const setShowUniquePopUp = useExploreStore((s) => s.setShowUniquePopUp);
+  const showCropper = useExploreStore((s) => s.showCropper);
+  const cropping = useExploreStore((s) => s.cropping);
+  const setShowCropper = useExploreStore((s) => s.setShowCropper);
+  const hotelBanners = useExploreStore((s) => s.hotelBanners);
+  const setHotelBanners = useExploreStore((s) => s.setHotelBanners);
+  const setIsLoading = useExploreTemp((s) => s.setIsLoading);
+  const socialMediaLinks = useExploreTemp((s) => s.socialMediaLinks);
+  const handleEnvelope = useApiErrorHandler().handleEnvelope;
   const navigate = useNavigate();
   const businessId = useParams()?.businessId;
   const hotelId = useParams()?.hotelId;
@@ -80,8 +53,7 @@ const MemoMainForm = () => {
   const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!businessId && !hotelId) return;
-    const { bannerExplore, logoExplore, footerExplore, categoryTopBanner } =
-      await checkValidations();
+    const { bannerExplore, logoExplore, footerExplore, categoryTopBanner } = await checkValidations();
 
     // Upload base64 previews in hotelBanners
     const uploadedHotelBanners: string[] = [];
@@ -89,14 +61,13 @@ const MemoMainForm = () => {
     for (let i = 0; i < hotelBanners.length; i++) {
       const base64 = hotelBanners[i];
 
-      if (base64?.startsWith("data:image")) {
-        const fileType =
-          base64.match(/^data:(image\/\w+);base64,/)?.[1] || "image/jpeg";
+      if (base64?.startsWith('data:image')) {
+        const fileType = base64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
         const blob = await (await fetch(base64)).blob();
-        const file = new File([blob], "hotel-banner.jpg", { type: fileType });
+        const file = new File([blob], 'hotel-banner.jpg', { type: fileType });
         const url = await storeImageAfterSave(file, base64);
 
-        const finalUrl = url || "";
+        const finalUrl = url || '';
 
         setHotelBanners((prev) => {
           const updated = [...prev];
@@ -113,10 +84,8 @@ const MemoMainForm = () => {
     // Validate social links
     const validSocialMediaLinks = socialMediaLinks.filter((item) => item.link);
     for (const item of validSocialMediaLinks) {
-      if (!item.link.startsWith("https://")) {
-        toast.error(
-          `Invalid social media link for ${item.icon}. Link should start with 'https://'`,
-        );
+      if (!item.link.startsWith('https://')) {
+        toast.error(`Invalid social media link for ${item.icon}. Link should start with 'https://'`);
         return; // Exit the function early if an invalid link is found
       }
     }
@@ -145,23 +114,23 @@ const MemoMainForm = () => {
 
     let res: { status: number };
 
-    if (bizInfo?._id === "") {
+    if (bizInfo?._id === '') {
       res = await apiRpc.businesses.outletInfo.$post({ json: filteredPayload });
     }
 
-    if (bizInfo?._id !== "" || (res && res.status === 409)) {
-      const outletInfo = await apiRpc.businesses.outletInfo.update[
-        ":businessId"
-      ].$put({
+    if (bizInfo?._id !== '' || (res && res.status === 409)) {
+      const outletInfo = await apiRpc.businesses.outletInfo.update[':businessId'].$put({
         json: filteredPayload,
         param: {
           businessId: businessId || hotelId,
         },
       });
 
+      await handleEnvelope(outletInfo);
+
       const outletInfoData = await outletInfo.json();
       if (outletInfo.status === 200) {
-        toast.success("Data saved successfully");
+        toast.success('Data saved successfully');
         if (businessId) navigate(`/app/business/${businessId}/explorePage`);
         if (hotelId) navigate(`/app/hotel/${hotelId}/website-display`);
       } else if (outletInfo.status === 400) {
@@ -190,36 +159,28 @@ const MemoMainForm = () => {
       <ExplorePageTopSection />
       <br />
       <BannerSection />
-      {outletInfo?.outLetType !== "HOTEL" && !outletInfo?.isPosEnabled && (
-        <UniquelyYoursSection />
-      )}
-      {outletInfo?.outLetType !== "HOTEL" && <CategoryTopBanner />}
+      {outletInfo?.outLetType !== 'HOTEL' && !outletInfo?.isPosEnabled && <UniquelyYoursSection />}
+      {outletInfo?.outLetType !== 'HOTEL' && <CategoryTopBanner />}
       <FooterSection />
       <SocialMediaLinks />
-      <button type="submit" className="cursor-pointer bottom_btn">
+      <button type="submit" className="bottom_btn cursor-pointer">
         Save
       </button>
 
       <PopUp hide show={showCropper} onClose={() => setShowCropper(false)}>
         <section className="my-[10rem]">
-          <EasyReactCropper
-            key={cropping.image}
-            image={cropping.image}
-            ref={cropperRef}
-            width={cropConfig.width}
-            height={cropConfig.height}
-          />
+          <EasyReactCropper key={cropping.image} image={cropping.image} ref={cropperRef} width={cropConfig.width} height={cropConfig.height} />
         </section>
         <BottomButton
           buttons={[
             {
-              text: "Crop",
+              text: 'Crop',
               onClick: () => handleCrop(cropperRef),
             },
             {
-              text: "Cancel",
+              text: 'Cancel',
               onClick: () => setShowCropper(false),
-              type: "button",
+              type: 'button',
             },
           ]}
         />

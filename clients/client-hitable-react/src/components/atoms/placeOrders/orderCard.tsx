@@ -1,21 +1,22 @@
 import { useReprintKot } from '@/components/hooks/usePrint.ts';
+import { useKotItemStatus, useKotPriority } from '@/components/hooks/usePriority';
+import type { ICartItem } from '@/components/store/useCartStore';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
+import { useKotSelectionStore } from '@/components/store/usePriorityStore';
 import type { OrderData } from '@/components/types/hiClientzData';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button.tsx';
 import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { GripVertical } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo } from 'react';
 import { BiSync } from 'react-icons/bi';
 import { MdPerson, MdRestaurantMenu } from 'react-icons/md';
 import { useParams } from 'react-router-dom';
-import { cn } from '../../../lib/utils';
-import { useKotItemStatus, useKotPriority } from '../../hooks/usePriority';
-import type { ICartItem } from '../../store/useCartStore';
-import { useKotSelectionStore } from '../../store/usePriorityStore';
 
 interface CompactOrderCardProps {
   order: OrderData;
@@ -41,6 +42,8 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
   const enableSelectionMode = useKotSelectionStore((s) => s.enableSelectionMode);
   const disableSelectionMode = useKotSelectionStore((s) => s.disableSelectionMode);
   const isSelected = useKotSelectionStore((s) => s.isSelected);
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canReprintKot = hasPermission('re_print_kot');
 
   const filteredCartItems = useMemo(() => order?.cart || [], [order?.cart]);
 
@@ -97,19 +100,26 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={cn('relative mx-auto w-full max-w-lg')}
+      className={cn('lg:-pl-6 relative mx-auto w-full max-w-lg')}
     >
       <Card className={cn('mb-4 overflow-hidden', order?.priority && 'border-y-[1rem] border-red-900')}>
         <CardContent className="p-3">
           {/* Header: name | datetime | menu */}
-          <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="mb-2 flex items-start justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <MdPerson className="h-4 w-4 flex-shrink-0 text-gray-500" />
               <span className="truncate font-semibold">{order?.name}</span>
             </div>
-
-            <div className="hidden shrink-0 text-sm font-semibold opacity-60 sm:block">{new Date(order?.date).toLocaleString('en-In')}</div>
-
+            <section className="pr-4">
+              <div className="hidden shrink-0 text-sm font-semibold opacity-60 sm:block">
+                {new Date(order?.date).toLocaleString('en-In').slice(0, 9)}
+              </div>
+              <div className="hidden shrink-0 text-sm font-semibold opacity-60 sm:block">
+                {new Date(order?.date).toLocaleString('en-In').slice(11)}
+              </div>
+            </section>
+          </div>
+          <section className="absolute right-1 top-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -118,18 +128,21 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => mutateAsync(order._id.toString())}
-                  disabled={isPending}
-                  className="flex cursor-pointer items-center gap-2"
-                >
-                  {isPending ? (
-                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  ) : (
-                    <BiSync className="h-4 w-4" />
-                  )}
-                  {isPending ? 'Re-Printing...' : 'Re-Print KOT'}
-                </DropdownMenuItem>
+                {canReprintKot && (
+                  <DropdownMenuItem
+                    onClick={() => mutateAsync(order._id.toString())}
+                    disabled={isPending}
+                    className="flex cursor-pointer items-center gap-2"
+                  >
+                    {isPending ? (
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <BiSync className="h-4 w-4" />
+                    )}
+                    {isPending ? 'Re-Printing...' : 'Re-Print KOT'}
+                  </DropdownMenuItem>
+                )}
+
                 <DropdownMenuItem
                   onClick={() => setPriority({ kotId: order._id.toString() })}
                   disabled={isPrioritizing}
@@ -144,7 +157,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </section>
 
           {/* Date (mobile) */}
           <div className="mb-1 block text-xs font-semibold opacity-60 sm:hidden">{new Date(order?.date).toLocaleString('en-In')}</div>
@@ -167,10 +180,11 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
               filteredCartItems.map((item: any) => {
                 const id = (item._id ?? item.id) as string;
                 const isItemDeleted = item.isDeleted;
+                const itemDeletedBy = item.deletedBy;
                 const status: 'IN_PROGRESS' | 'COOKED' | 'DELIVERED' | 'CANCELLED' | undefined = item?.itemStatus;
 
                 const eligible = !isItemDeleted && status !== 'DELIVERED' && status !== 'CANCELLED';
-                const itemTextClasses = isItemDeleted ? 'line-through text-red-700' : '';
+                const itemTextClasses = isItemDeleted ? 'line-through text-red-700' : 'font-semibold';
                 const lineTotal = calculateTotalPrice(item);
 
                 const addOns = item?.extras?.length ? item.extras.map((e: any) => `${e.name} x${e.quantity * item.quantity}`).join(', ') : '';
@@ -190,8 +204,8 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                     )}
                   >
                     {/* Row 1 */}
-                    <div className="grid grid-cols-12 items-center gap-2">
-                      <div className="col-span-1 -ml-4 flex justify-center">
+                    <div className="grid grid-cols-12 items-start gap-2">
+                      <div className="col-span-1 -ml-4 mt-1 flex justify-center">
                         {eligible ? (
                           <input
                             type="checkbox"
@@ -208,7 +222,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                       <div className="col-span-7 -ml-4 min-w-0">
                         <div className="flex items-start gap-1">
                           <MdRestaurantMenu className="mt-1 h-4 w-4 text-gray-500" />
-                          <h6 className={cn('truncate', itemTextClasses)} title={item?.dish?.name}>
+                          <h6 className={cn('line-clamp-2 max-h-[3rem]', itemTextClasses)} title={item?.dish?.name}>
                             {item?.dish?.name}
                           </h6>
                           {isItemDeleted && <Badge variant="destructive">Deleted</Badge>}
@@ -218,6 +232,7 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                       <div className="col-span-2 text-center text-sm">x{item?.quantity}</div>
                       <div className="col-span-2 -ml-2 text-right font-medium">₹{lineTotal.toFixed(1)}</div>
                     </div>
+                    {isItemDeleted && itemDeletedBy && <div className="ml-9 mt-1 text-xs font-semibold text-red-600">Deleted by {itemDeletedBy}</div>}
 
                     {/* Row 2 */}
                     <div className="mt-1 grid grid-cols-12 items-center gap-2">

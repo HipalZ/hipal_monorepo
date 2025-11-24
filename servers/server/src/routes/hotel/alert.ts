@@ -1060,6 +1060,7 @@ const hotelAlertRouter = new Hono()
         deliverOnTime: number;
         deliverTotal: number;
         alertIds: Set<string>;
+        totalActiveMinutes: number;
       };
       const byStaff: Record<string, Totals> = {};
 
@@ -1076,6 +1077,7 @@ const hotelAlertRouter = new Hono()
             deliverOnTime: 0,
             deliverTotal: 0,
             alertIds: new Set<string>(),
+            totalActiveMinutes: 0,
           };
         }
         return byStaff[id];
@@ -1105,10 +1107,11 @@ const hotelAlertRouter = new Hono()
           Number.isFinite(acceptedAt)
         ) {
           const s = ensureStaff(a.acceptedBy);
-          const actualAcceptMin = Math.ceil((acceptedAt - createdAt) / 60000);
+          const actualAcceptMin = (acceptedAt - createdAt) / 60000;
 
           if (s) {
             s.acceptTotal += 1;
+            s.totalActiveMinutes += actualAcceptMin;
             s.alertIds.add(String(a._id));
             if (avgAccept === 0 || actualAcceptMin <= avgAccept)
               s.acceptOnTime += 1;
@@ -1132,12 +1135,11 @@ const hotelAlertRouter = new Hono()
           Number.isFinite(deliveredAt)
         ) {
           const s = ensureStaff(a.deliveredBy);
-          const actualDeliverMin = Math.ceil(
-            (deliveredAt - acceptedAt) / 60000,
-          );
+          const actualDeliverMin = (deliveredAt - acceptedAt) / 60000;
 
           if (s) {
             s.deliverTotal += 1;
+            s.totalActiveMinutes += actualDeliverMin;
             s.alertIds.add(String(a._id));
             if (avgDeliver === 0 || actualDeliverMin <= avgDeliver)
               s.deliverOnTime += 1;
@@ -1189,13 +1191,15 @@ const hotelAlertRouter = new Hono()
       const grandLate = Math.max(grandTotal - grandOnTime, 0);
 
       const totalActualCount = gAcceptCount + gDeliverCount;
+
       const totalActualAvg =
         totalActualCount > 0
           ? (gAcceptActualSum + gDeliverActualSum) / totalActualCount
           : 0;
+
       const totalSLAAvg =
         totalActualCount > 0
-          ? (gAcceptSLASum + gDeliverSLASum) / totalActualCount
+          ? (gAcceptActualSum + gDeliverActualSum) / totalActualCount
           : 0;
 
       const overAll = {

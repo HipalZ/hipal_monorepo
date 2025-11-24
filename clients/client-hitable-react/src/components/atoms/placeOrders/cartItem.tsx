@@ -4,6 +4,7 @@ import { useCart } from '@/components/store/useCart';
 import { type ICartItem, useCartStore } from '@/components/store/useCartStore';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/components/utils/helpers';
@@ -30,13 +31,17 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
   const { setIsCartEdit, isCartEdit } = useCart();
   const captainData = useHiClientZ((s) => s.captainData);
   const { businessId } = useParams();
-  const { setModalType, orderError, showOrderError, setShowOrderError } = useOrderStore();
+  const setModalType = useOrderStore((s) => s.setModalType);
+  const orderError = useOrderStore((s) => s.orderError);
+  const showOrderError = useOrderStore((s) => s.showOrderError);
+  const setShowOrderError = useOrderStore((s) => s.setShowOrderError);
   const { createOrder, isPending } = useCreateOrder();
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const [selectedCartItem, setSelectedCartItem] = useState<ICartItem | null>(null);
   const outletInfo = useBusinessData((s) => s.outletInfo);
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const isPlaceOrderAllowed = hasPermission('place_order');
 
-  // Filter the cart items based on dishId (if provided)
   const filteredCart = useMemo(() => {
     return dishId ? cart.filter((cartItem) => cartItem.dish?._id === dishId) : cart;
   }, [cart, dishId]);
@@ -106,7 +111,7 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
   };
 
   return (
-    <section className="min-h-screen md:pt-20 lg:pt-0">
+    <section className="hide-scrollbar h-[100dvh] overflow-auto pb-20 md:pt-20 lg:pt-0">
       <AnimatePresence>
         {filteredCart.length > 0 ? (
           <div className="mx-4 grid gap-4 py-[5.5rem] md:grid-cols-2 md:py-[2rem] lg:mx-0 lg:grid-cols-1 lg:py-0 2xl:grid-cols-2">
@@ -187,7 +192,6 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
           </motion.div>
         )}
       </AnimatePresence>
-
       {showOrderError && (
         <BottomPopUp width="w-[30rem]" height="h-[50dvh]" show={showOrderError} onClose={() => setShowOrderError(false)}>
           <div className="p-6">
@@ -199,7 +203,6 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
           </div>
         </BottomPopUp>
       )}
-
       {showInstructionPopup && (
         <BottomPopUp width="w-[30rem]" height="h-[50dvh]" show={showInstructionPopup} onClose={() => setShowInstructionPopup(false)}>
           {outletInfo?.outLetType === 'OTHER' ? null : (
@@ -236,16 +239,14 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
           />
         </BottomPopUp>
       )}
-
       {!hide && (
         <CommonBottomButton
           maxWidth="30rem"
           position="mid"
           fixed={true}
-          shadow
           buttons={[
             {
-              text: 'Back',
+              text: '',
               isBackButton: true,
               onClick: () => setModalType('addItem'),
               className: 'rounded-md pl-3 lg:hidden flex items-center',
@@ -255,7 +256,7 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
             {
               text: 'Place Order',
               onClick: placeOrder,
-              className: 'rounded-full py-6',
+              className: cn('rounded-md shadow-md w-full h-[3rem]', isPlaceOrderAllowed ? '' : 'hidden'),
               disable: filteredCart.length === 0 || isPending,
               isLoading: isPending,
               swipe: true,

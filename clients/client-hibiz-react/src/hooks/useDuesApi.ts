@@ -1,19 +1,22 @@
 import type { ISettleMode } from "@/components/store/useDues";
 import type { IMode } from "@/components/templates/payment/selectPaymentMode";
 import type { IDuesPersonsData } from "@/components/types/businessData";
+import { useApiErrorHandler } from "@/hooks/useApiErrorHandler";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 
 export const useAllDueUsers = (businessId: string) => {
+  const { handleEnvelope } = useApiErrorHandler();
   const getAllUsers = async () => {
     const response = await apiRpc.dues[":businessId"].$get({
       param: {
         businessId: businessId,
       },
     });
-    const res = await response.json();
-    let duesData = res.data as IDuesPersonsData[];
+    const res = await handleEnvelope(response);
+    let duesData = res as IDuesPersonsData[];
+
     duesData = duesData.filter((due) => due.userId !== null);
     return duesData as IDuesPersonsData[];
   };
@@ -31,6 +34,7 @@ export const useGetAllModes = (
   businessId: string,
   showPaymentMode: boolean,
 ) => {
+  const { handleEnvelope } = useApiErrorHandler();
   const { isLoading, data: paymentMode } = useQuery({
     queryKey: ["getAllModes"],
     queryFn: async () => {
@@ -39,8 +43,9 @@ export const useGetAllModes = (
           businessId: businessId || "",
         },
       });
-      const res = await response.json();
-      return (res?.data as IMode[]) || [];
+      const res = await handleEnvelope(response);
+
+      return (res as IMode[]) || [];
     },
     enabled: !!businessId && !!showPaymentMode,
     staleTime: 1000 * 60,
@@ -180,6 +185,8 @@ export interface GetUserDuesHistoryResponse {
 
 export const useUserDuesHistory = (duesUserId: string) => {
   const businessId = useParams().businessId;
+  const { handleEnvelope } = useApiErrorHandler();
+
   const getUserDuesHistory = async (): Promise<GetUserDuesHistoryResponse> => {
     const response = await apiRpc.dues.dues_history[":duesUserId"][
       ":businessId"
@@ -189,15 +196,17 @@ export const useUserDuesHistory = (duesUserId: string) => {
         businessId: businessId || "",
       },
     });
-    return response.json();
+
+    const res = await handleEnvelope(response);
+    return res as GetUserDuesHistoryResponse;
   };
 
-  const { isLoading, data: userDuesHistory } = useQuery<GetUserDuesHistoryResponse>({
-    queryKey: ["getUserDuesHistory", duesUserId, businessId],
-    queryFn: getUserDuesHistory,
-    enabled: !!duesUserId,
-  });
+  const { isLoading, data: userDuesHistory } =
+    useQuery<GetUserDuesHistoryResponse>({
+      queryKey: ["getUserDuesHistory", duesUserId, businessId],
+      queryFn: getUserDuesHistory,
+      enabled: !!duesUserId,
+    });
 
   return { isLoading, userDuesHistory };
 };
-

@@ -354,6 +354,7 @@ const categoriesRouter = new Hono()
         isDeleted: false,
         active: true,
       });
+
       if (menu) {
         const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
         const query = {

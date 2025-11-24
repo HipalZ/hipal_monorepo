@@ -384,7 +384,7 @@ const MemoOrders = () => {
                               >
                                 {outletInfo?.currencySymbol}
                                 {(
-                                  (item?.dish?.price || item?.portion?.price) *
+                                  (item?.portion ? item.portion?.price || 0 : item.dish.price) *
                                   item?.quantity
                                 ).toFixed(2)}
                               </p>

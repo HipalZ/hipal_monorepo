@@ -2,6 +2,7 @@ import AlertToRemove from "@/components/atoms/alertToRemove";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useUpdateBill } from "@/components/hooks/usePayments";
+import { useUserCoinz } from "@/components/hooks/useUserCoinz";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
@@ -19,22 +20,22 @@ import { RxCross2 } from "react-icons/rx";
 import { toast } from "react-toastify";
 
 const AvailableCoinz = () => {
-  const {
-    billValue,
-    userCoinz,
-    claimedCoins,
-    claimCouponz,
-    setClaimCouponz,
-    setClaimedCoins,
-    isModalOpen,
-    setIsModalOpen,
-    billData,
-  } = usePaymentStore();
+
+  const billValue = usePaymentStore((s) => s.billValue);
+  const userCoinz = usePaymentStore((s) => s.userCoinz);
+  const claimedCoins = usePaymentStore((s) => s.claimedCoins);
+  const claimCouponz = usePaymentStore((s) => s.claimCouponz);
+  const setClaimCouponz = usePaymentStore((s) => s.setClaimCouponz);
+  const setClaimedCoins = usePaymentStore((s) => s.setClaimedCoins);
+  const isModalOpen = usePaymentStore((s) => s.isModalOpen);
+  const setIsModalOpen = usePaymentStore((s) => s.setIsModalOpen);
+  const billData = usePaymentStore((s) => s.billData);
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { addCoins, removeCoinz, removeCouponz } = useUpdateBill();
    const  businessId  = useBusinessDetails((s) => s.businessDetails?.businessId);
 
   const { loyaltySetting } = useLoyaltyData();
+  useUserCoinz(loyaltySetting?.loyaltyId || "");
   const addCoinsMutation = useMutation({ mutationFn: addCoins });
   const removeCoinsMutation = useMutation({ mutationFn: removeCoinz });
   const removeCouponMutation = useMutation({ mutationFn: removeCouponz });

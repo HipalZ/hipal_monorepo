@@ -9,6 +9,7 @@ import { cn } from '@/components/utils/helper';
 import { useDishes } from '@/hooks/useDish';
 import type { DishType } from '@hi/db-models/src/validators';
 import Fuse from 'fuse.js';
+import { RefreshCw } from 'lucide-react';
 import { memo, useCallback, useMemo, useState } from 'react';
 import { FaEye, FaEyeSlash, FaListUl, FaThLarge } from 'react-icons/fa';
 
@@ -23,7 +24,7 @@ const MemoListOfDishes = () => {
 
   const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
   const { dishes } = useDishesStore((s) => ({ dishes: s.dishes }));
-  const { isLoading } = useDishes();
+  const { isLoading, refetch } = useDishes();
 
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
 
@@ -72,8 +73,11 @@ const MemoListOfDishes = () => {
     <section className="relative mx-4 mt-[7rem] flex flex-col gap-4 lg:mt-[5rem]">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between">
-        <h3 className="text-xl font-semibold">
+        <h3 className="flex items-center text-xl font-semibold">
           {outLetType === 'OTHER' ? 'Services' : 'Dishes'} ({filteredDishes?.length})
+          <Button onClick={() => refetch()} variant="outline" size="sm" className="ml-4 flex items-center gap-2">
+            <RefreshCw />
+          </Button>
         </h3>
 
         <div className="flex items-center gap-2">
@@ -83,7 +87,7 @@ const MemoListOfDishes = () => {
             onClick={() => setViewMode('card')}
             className={cn('flex items-center gap-2', viewMode === 'card' && 'bg-[#8C63FF] text-white')}
           >
-            <FaThLarge /> Card View
+            <FaThLarge />
           </Button>
           <Button
             variant={viewMode === 'table' ? 'default' : 'outline'}
@@ -91,7 +95,7 @@ const MemoListOfDishes = () => {
             onClick={() => setViewMode('table')}
             className={cn('flex items-center gap-2', viewMode === 'table' && 'bg-[#8C63FF] text-white')}
           >
-            <FaListUl /> Table View
+            <FaListUl />
           </Button>
         </div>
       </div>

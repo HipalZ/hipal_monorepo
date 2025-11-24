@@ -1,4 +1,4 @@
-import { Dish, Tax, TaxName } from "@hi/db-models";
+import { Dish, Menu, Tax, TaxName } from "@hi/db-models";
 import {
   TaxTypeSchema,
   updateTaxTypeSchema,
@@ -7,6 +7,7 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { addInTempMenuChanges } from "../../services/tempMenuChanges";
 import { respond } from "../../utils/response";
 //
 
@@ -49,6 +50,8 @@ const taxRouter = new Hono()
       );
     }
 
+   
+
     const createTax = await Tax.create({
       ...requestData,
       name: taxName,
@@ -64,6 +67,8 @@ const taxRouter = new Hono()
         400,
       );
     }
+
+   
 
     return c.json(
       {
@@ -95,6 +100,10 @@ const taxRouter = new Hono()
         if (!tax) {
           return respond(c, "Tax not found", true, 404, {});
         }
+
+       
+
+       
 
         const result = await Dish.updateMany(
           { _id: { $in: dishIds } },
@@ -138,6 +147,10 @@ const taxRouter = new Hono()
           return respond(c, "Tax not found", true, 404, {});
         }
 
+      
+
+       
+
         const result = await Dish.updateMany(
           { _id: { $in: dishIds } },
           { $set: { gst: 0 } },
@@ -170,6 +183,8 @@ const taxRouter = new Hono()
       }
     }
 
+  
+
     const tax = await Tax.findByIdAndUpdate(
       taxId,
       { $set: { value, menuId } },
@@ -179,6 +194,8 @@ const taxRouter = new Hono()
     if (!tax) {
       return respond(c, "Tax not found", true, 404, {});
     }
+
+    
 
     return respond(c, "Tax updated successfully", false, 200, {
       _id: tax._id,
@@ -201,16 +218,57 @@ const taxRouter = new Hono()
         { $set: { isActive } },
         { new: true },
       );
-
       if (!tax) {
-        return respond(c, "Tax not found", true, 404, {});
+        return respond(c, "Menu not found", true, 404, {});
       }
+
+      const menu = await Menu.findById(tax.menuId);
+
+  
 
       return respond(c, "Tax updated successfully", false, 200, {
         _id: tax._id,
       });
     },
   )
+
+   .put("/service_charge", zValidator("json", updateTaxTypeSchema), async (c) => {
+    const requestData = await c.req.json();
+
+    const { taxId, name, value, menuId } = requestData;
+
+    const findTax = await Tax.findById(taxId);
+    if (!findTax) {
+      return respond(c, "Tax not found", true, 404, {});
+    }
+
+    if (findTax.name.includes("gst")) {
+      const rateInName = extractGstRate(findTax.name);
+      if (rateInName !== value) {
+        throw new Error(
+          `GST mismatch: name indicates ${rateInName}%, but payload has ${value}%`,
+        );
+      }
+    }
+
+  
+
+    const tax = await Tax.findByIdAndUpdate(
+      taxId,
+      { $set: { value, menuId } },
+      { new: true },
+    );
+
+    if (!tax) {
+      return respond(c, "Tax not found", true, 404, {});
+    }
+
+    
+
+    return respond(c, "Tax updated successfully", false, 200, {
+      _id: tax._id,
+    });
+  })
 
   .get(
     "/:taxId",

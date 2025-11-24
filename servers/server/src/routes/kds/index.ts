@@ -59,7 +59,9 @@ const kdsRouter = new Hono()
 
       const kots = await KotOrder.find({
         accepted: true,
-        settled: false,
+        settled: {
+          $in: [false, true],
+        },
         businessId: businessId,
         kotStatus: "COMPLETED",
         "cart.dish.kitchenId": kitchenId,

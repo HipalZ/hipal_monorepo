@@ -1,12 +1,15 @@
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
 import SearchComponent from '@/components/atoms/placeOrders/searchComponent';
+import SearchResultsGrid from '@/components/atoms/placeOrders/searchResultsGrid';
 import { useGetAllOrders } from '@/components/hooks/useOrder';
 import { useCartStore } from '@/components/store/useCartStore';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import { useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { CategoryType } from '@hi/db-models/src/validators';
 import { FileText, Receipt, ShoppingCart } from 'lucide-react';
 import { lazy, memo, Suspense, useEffect, useState } from 'react';
 import CartWithPos from '../atoms/cartItem/cartWithpos';
@@ -30,7 +33,11 @@ const DesktopTablePOS = () => {
   const cartData = useLiteStore((s) => s.cartData);
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const cart = useCartStore((s) => s.cart);
+  const searchActive = useOrderStore((s) => s.searchActive);
   const { data: orders, isLoading: ordersLoading, refetch: refetchOrders } = useGetAllOrders();
+
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canViewBill = hasPermission('bill');
 
   useEffect(() => {
     if (cart.length > 0) {
@@ -57,7 +64,7 @@ const DesktopTablePOS = () => {
           <SidebarCategories />
           <SidebarInset className="flex-1 overflow-hidden">
             <div className="grid h-full grid-cols-[60%_40%] overflow-hidden">
-              <main className="bg-muted/30 flex flex-col rounded-xl border-r-2 bg-gray-300">
+              <main className="bg-muted/30 flex flex-col overflow-y-auto rounded-xl border-r-2 bg-gray-300">
                 <div className="bg-background border-b-2">
                   <div className="px-4 pb-2 pt-4">
                     <TableQuickNav key={selectedCategory?._id} />
@@ -66,9 +73,10 @@ const DesktopTablePOS = () => {
                   </div>
                 </div>
                 <ScrollArea className="flex-1">
-                  <div className="hide-scrollbar h-[90dvh] overflow-auto p-4 pb-[10rem]">
+                  <div className="overflow-y-auto p-2">
+                    {searchActive && <SearchResultsGrid />}
                     <Suspense fallback={<SpinnerMemo />}>
-                      <CompactDishGrid selectedCategory={selectedCategory as any} />
+                      <CompactDishGrid selectedCategory={selectedCategory as CategoryType} />
                     </Suspense>
                   </div>
                 </ScrollArea>
@@ -95,7 +103,7 @@ const DesktopTablePOS = () => {
                             <span className="bg-primary text-primary-foreground ml-1 rounded-full px-2 py-0.5 text-xs">{orders.length}</span>
                           )}
                         </TabsTrigger>
-                        {orders && orders.length > 0 && (
+                        {orders && orders.length > 0 && canViewBill && (
                           <TabsTrigger value="bill" className="w-full gap-2">
                             <Receipt className="h-4 w-4" />
                             Bill
@@ -111,7 +119,7 @@ const DesktopTablePOS = () => {
                 </div>
 
                 <ScrollArea className="flex-1">
-                  <div className="hide-scrollbar h-[90dvh] overflow-auto bg-gray-200 p-3">
+                  <div className="hide-scrollbar h-[90dvh] overflow-auto bg-gray-200 p-0.5">
                     <Suspense fallback={<SpinnerMemo />}>
                       {rightPanelView === 'cart' && (
                         <>
@@ -166,7 +174,6 @@ export default memo(DesktopTablePOS);
 
 function HorizontalScroll({ children }: { children: React.ReactNode }) {
   const ref = useHorizontalScroll<HTMLDivElement>();
-  console.log(ref);
 
   return (
     <div

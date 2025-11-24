@@ -1,12 +1,12 @@
 import { WhatsAppAnalyticsUser } from "@hi/db-models";
 import axios from "axios";
 import type { Job } from "bullmq";
-import { enqueueWhatsAppJob } from "../../enqueue";
 import type {
   AxiosError,
   sendTemplateTypeValidator,
 } from "../../types/jobtypes";
 import { returnBodyComponents } from "../../utils/helper";
+import { enqueueWhatsAppJob } from "../../enqueue";
 
 async function sendTemplate(job: Job) {
   const {
@@ -22,11 +22,17 @@ async function sendTemplate(job: Job) {
     templateId,
     campaignId,
     userId,
+    category,
   } = job.data as sendTemplateTypeValidator;
+
+  const apiEndpoint =
+    category === "UTILITY" ? "messages" : "marketing_messages";
+
+  console.log("endpoint", apiEndpoint);
 
   try {
     const res = await axios.post(
-      `${whatsAppApiBaseUrl}${version}/${phoneId}/messages`,
+      `${whatsAppApiBaseUrl}${version}/${phoneId}/${apiEndpoint}`,
       {
         messaging_product: "whatsapp",
         to: to.toString(),
@@ -99,7 +105,9 @@ async function pushCustomerIntoQueue(job: Job) {
     templateId,
     campaignId,
     customersArray,
+    category,
   } = job.data;
+
   for (const customer of customersArray) {
     // return components for the body
     const components = await returnBodyComponents(
@@ -124,6 +132,7 @@ async function pushCustomerIntoQueue(job: Job) {
       templateId,
       campaignId: campaignId,
       userId: customer._id,
+      category: category,
     };
     await enqueueWhatsAppJob("sendTemplate", payload);
   }

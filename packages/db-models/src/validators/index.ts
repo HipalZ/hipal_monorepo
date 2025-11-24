@@ -105,8 +105,11 @@ export * from "./whatsappChatbot";
 export * from "./zone";
 
 export * from "./attendence";
+export * from "./billInvoiceNumber";
 export * from "./discount";
+export * from "./kotInvoiceNumber";
 export * from "./mergeTable";
 export * from "./qrs";
 export * from "./splitBill";
+export * from "./tableSessionCounter";
 export * from "./termsAndConditions";

@@ -59,7 +59,7 @@ const PosBillBreakdown = () => {
   const grandTotal = Number(billData?.total ?? 0);
 
   return (
-    <section className="flex flex-col pb-36 space-y-2 text-4xl transition-all rounded-t-3xl text-[#101018] poppins-regular mt-4">
+    <section className="flex flex-col pb-8 space-y-2 text-4xl transition-all rounded-t-3xl text-[#101018] poppins-regular mt-4">
       <h6 className="mx-4 mt-4 mb-2 text-xl">Bill Detailz</h6>
 
       <div

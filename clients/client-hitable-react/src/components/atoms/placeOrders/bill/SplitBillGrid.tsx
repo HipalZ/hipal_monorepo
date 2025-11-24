@@ -2,13 +2,14 @@ import { useReprintBill } from '@/components/hooks/api/useSettle.ts';
 import { useClubBill } from '@/components/hooks/useBill.ts';
 import { useHomeNavigation } from '@/components/hooks/useNavigateHome.ts';
 import { useOrderStore } from '@/components/store/useOrderData.ts';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { calculateBillItems, calculateTotalAmount, calculateTotalItems, cn, formatCurrency } from '@/lib/utils.ts';
-import { ArrowLeft, CreditCard, HomeIcon, Phone, ReceiptText } from 'lucide-react';
+import { ArrowLeft, CreditCard, HomeIcon, PersonStandingIcon, Phone, ReceiptText } from 'lucide-react';
 import { memo, useCallback, useMemo, useState } from 'react';
 import { MdTableBar } from 'react-icons/md';
 import { useParams } from 'react-router-dom';
@@ -25,6 +26,9 @@ const SplitBillGrid = memo<SplitBillGridProps>(({ billData, onSelectBill, onBack
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedVariants, setSelectedVariants] = useState<string[]>([]);
 
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canPrintBill = hasPermission('print_bill');
+
   const handleEnterSelect = () => {
     setSelectedVariants([]);
     setIsSelecting(true);
@@ -36,24 +40,24 @@ const SplitBillGrid = memo<SplitBillGridProps>(({ billData, onSelectBill, onBack
   }, []);
 
   const handlePrintSelected = useCallback(() => {
-    selectedVariants.forEach((variantId) =>
+    for (const variantId of selectedVariants) {
       reprintBill({
         businessId,
         tableName: selectedTable?.name || '',
         variantId,
-      }),
-    );
+      });
+    }
     setIsSelecting(false);
   }, [selectedVariants, reprintBill, businessId, selectedTable?.name]);
 
   const handlePrintAll = useCallback(() => {
-    billData.forEach((bill) =>
+    for (const bill of billData) {
       reprintBill({
         businessId,
         tableName: selectedTable?.name || '',
         variantId: bill.variantId || '',
-      }),
-    );
+      });
+    }
     setIsSelecting(false);
   }, [billData, reprintBill, businessId, selectedTable?.name]);
 
@@ -72,62 +76,63 @@ const SplitBillGrid = memo<SplitBillGridProps>(({ billData, onSelectBill, onBack
   // Hide Merge Bill if any variant is already paid
   const hasPaid = useMemo(() => billData.some((bill) => bill.isPaid), [billData]);
 
-  const bottomButtons = isSelecting
-    ? [
-        {
-          text: 'Back',
-          isBackButton: true,
-          onClick: handleExitSelect,
-          className: 'rounded-md !w-[4rem]',
-        },
-        {
-          text: 'Print Selected',
-          onClick: handlePrintSelected,
-          isLoading: isPrinting,
-          disable: isPrinting || selectedVariants.length === 0,
-          className: 'rounded-md ml-4',
-        },
-        {
-          text: 'Print All',
-          onClick: handlePrintAll,
-          isLoading: isPrinting,
-          disable: isPrinting,
-          className: 'rounded-md ml-4',
-        },
-      ]
-    : [
-        {
-          text: '',
-          onClick: goHome,
-          icon: <HomeIcon />,
-          className: 'rounded-md !w-[8rem] pl-2',
-        },
-        {
-          text: 'Back',
-          isBackButton: true,
-          onClick: onBack,
-          className: 'rounded-md !w-[8rem] pl-3 ml-4',
-        },
-        !hasPaid && {
-          text: 'Merge Bill',
-          onClick: handleClub,
-          isLoading: isClubbing,
-          disable: isClubbing,
-          className: 'rounded-md w-full ml-4 !bg-purple-600',
-        },
-        {
-          text: 'Print Bills',
-          onClick: handleEnterSelect,
-          isLoading: isPrinting,
-          disable: isPrinting,
-          className: 'rounded-md ml-4',
-        },
-        // Conditionally include Merge Bill
-      ].filter(Boolean as any);
+  const bottomButtons =
+    isSelecting && canPrintBill
+      ? [
+          {
+            text: '',
+            isBackButton: true,
+            onClick: handleExitSelect,
+            className: 'rounded-md !w-[4rem] px-3',
+          },
+          {
+            text: 'Print Selected',
+            onClick: handlePrintSelected,
+            isLoading: isPrinting,
+            disable: isPrinting || selectedVariants.length === 0,
+            className: 'rounded-md ml-4',
+          },
+          {
+            text: 'Print All',
+            onClick: handlePrintAll,
+            isLoading: isPrinting,
+            disable: isPrinting,
+            className: 'rounded-md ml-4',
+          },
+        ]
+      : [
+          {
+            text: '',
+            onClick: goHome,
+            icon: <HomeIcon />,
+            className: 'rounded-md !w-[8rem] pl-2',
+          },
+          {
+            text: 'Back',
+            isBackButton: true,
+            onClick: onBack,
+            className: 'rounded-md !w-[8rem] pl-3 ml-4',
+          },
+          !hasPaid && {
+            text: 'Merge Bill',
+            onClick: handleClub,
+            isLoading: isClubbing,
+            disable: isClubbing,
+            className: 'rounded-md w-full ml-4 !bg-purple-600',
+          },
+          canPrintBill && {
+            text: 'Print Bills',
+            onClick: handleEnterSelect,
+            isLoading: isPrinting,
+            disable: isPrinting,
+            className: 'rounded-md ml-4',
+          },
+          // Conditionally include Merge Bill
+        ].filter(Boolean as any);
 
   return (
     <>
-      <Card className="mx-auto mb-8 h-[90dvh] max-w-lg border border-none pb-[7rem] pt-[5rem] shadow-none md:pb-[8rem] md:pt-16 lg:pt-0">
+      <Card className="mx-auto mb-8 min-h-[90dvh] max-w-lg border border-none pb-[7rem] pt-[5rem] shadow-none md:pb-[8rem] md:pt-16 lg:pt-0">
         <CardHeader className="p-2 md:p-6">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -144,10 +149,8 @@ const SplitBillGrid = memo<SplitBillGridProps>(({ billData, onSelectBill, onBack
           {/* Customer & Table Info */}
           <div className="mb-4 space-y-2">
             <div className="flex items-center gap-2">
-              <Phone className="h-5 w-5 text-gray-600" />
-              <p className="text-sm text-gray-700">
-                {billData[0]?.customerName} ({billData[0]?.customerPhone})
-              </p>
+              <PersonStandingIcon className="h-5 w-5 text-gray-600" />
+              <p className="text-sm text-gray-700">{billData[0]?.customerName}</p>
             </div>
             <div className="flex items-center gap-2">
               <MdTableBar className="h-5 w-5 text-gray-600" />
@@ -272,12 +275,7 @@ const SplitBillGrid = memo<SplitBillGridProps>(({ billData, onSelectBill, onBack
       </Card>
 
       {/* Bottom action buttons */}
-      <CommonBottomButton
-        maxWidth={screenSize === 'xs' ? '30rem' : '48rem'}
-        backgroundColor={screenSize === 'xs' ? '' : 'white'}
-        fixed={true}
-        buttons={bottomButtons}
-      />
+      <CommonBottomButton maxWidth="30rem" backgroundColor={screenSize === 'xs' ? '' : 'white'} fixed={true} buttons={bottomButtons} />
     </>
   );
 });

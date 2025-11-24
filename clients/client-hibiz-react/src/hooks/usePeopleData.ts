@@ -10,6 +10,7 @@ import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
+import { useError } from "../components/store/useError";
 
 export const useSummarizedPeopleData = (from: number, to: number) => {
   const businessData = useBusinessData((state) => state.businessData);
@@ -78,7 +79,7 @@ export const useGetAllPeoples = () => {
       return [];
     }
     if (res.status === 200 || res.status === 201) {
-      const filteredData = data.filter(item => item.userId !== null);
+      const filteredData = data.filter((item) => item.userId !== null);
       return filteredData;
     }
   }, [businessData?._id]);
@@ -278,4 +279,94 @@ export const useCreateGroup = () => {
     mutateCreateGroup,
     isCreatingGroupPending,
   };
+};
+
+export interface FilterUserAnalyticsPayload {
+  businessId: string;
+  search?: string;
+  spendMin?: string;
+  spendMax?: string;
+  totalSpendMin?: string;
+  totalSpendMax?: string;
+  visitsMin?: string;
+  visitsMax?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  pageNumber?: string;
+}
+
+export const useFilterUserAnalytics = () => {
+  const { setError, setOpenErrorModal } = useError();
+
+  const {
+    mutateAsync: filterUserAnalytics,
+    isPending: filterAnalyticsLoading,
+  } = useMutation({
+    mutationFn: async (payload: FilterUserAnalyticsPayload) => {
+      const response = await apiRpc.payments.users.Analytics.filter.$get({
+        query: payload,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData?.error?.message || "Failed to fetch filtered analytics",
+        );
+      }
+
+      const result = await response.json();
+      return result.data;
+    },
+
+    onSuccess: (data) => {
+      toast.success(`Fetched ${data.length} records successfully`);
+    },
+
+    onError: (error: Error) => {
+      setError(error.message);
+      setOpenErrorModal(true);
+      toast.error(error.message);
+    },
+  });
+
+  return {
+    filterUserAnalytics,
+    filterAnalyticsLoading,
+  };
+};
+
+export const useGetAllTodayPeople = () => {
+  const businessData = useBusinessData((state) => state.businessData);
+
+  const getAllTodayPeople = useCallback(async () => {
+    if (!businessData?._id) return [];
+    const res = await apiRpc.payments.users.Analytics.today.$get({
+      query: {
+        businessId: businessData._id,
+      },
+    });
+
+    const data = (await res.json()).data as ICustomerRecord[];
+    if (res.status === 400) {
+      toast.error("Please select a valid date range");
+      return [];
+    }
+    if (res.status === 401 || res.status === 403) {
+      toast.error("Unauthorized");
+      return [];
+    }
+    if (res.status === 200 || res.status === 201) {
+      const filteredData = data.filter((item) => item.userId !== null);
+      return filteredData;
+    }
+  }, [businessData?._id]);
+
+  const { data: todayPeopleData, isLoading } = useQuery({
+    queryKey: ["getAllTodayPeople", businessData?._id],
+    queryFn: getAllTodayPeople,
+    enabled: !!businessData?._id,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  return { todayPeopleData, isLoading };
 };

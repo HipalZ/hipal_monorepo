@@ -1,19 +1,22 @@
 import type { IDuesPersonsData } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
+import { useApiErrorHandler } from "./useApiErrorHandler";
 
 export const useAllNpcUsers = (businessId: string) => {
-  if(businessId === "") return ;
+  const { handleEnvelope } = useApiErrorHandler();
+  if (businessId === "") return;
   const getAllUsers = async () => {
     const response = await apiRpc.npc[":businessId"].$get({
       param: {
         businessId: businessId,
       },
     });
-    const res = await response.json();
-    let npcData = res.data as IDuesPersonsData[];
-    npcData = npcData.filter(npc => npc.userId !== null);
-    return npcData ?? [] as IDuesPersonsData[];
+    const res = await handleEnvelope(response);
+
+    let npcData = res as IDuesPersonsData[];
+    npcData = npcData.filter((npc) => npc.userId !== null);
+    return npcData ?? ([] as IDuesPersonsData[]);
   };
 
   const { isLoading, data } = useQuery({

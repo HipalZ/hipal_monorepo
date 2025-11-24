@@ -5,6 +5,7 @@ import {
   Category,
   Dish,
   Menu,
+  OutLetInfo,
   Table,
   UrlModel,
   Zone,
@@ -49,7 +50,7 @@ async function petPoojaPosSetupHandler(payload: {
 
     const businessInfo = await Business.findById(businessId).session(session);
     if (!businessInfo) {
-      throw new Error("Business not found");
+      throw new Error("Business not founds");
     }
     const modelsToUpdate = [Dish, Category, AddOn, Zone, Table];
     const updateOps = modelsToUpdate.map((Model) =>
@@ -258,6 +259,7 @@ async function petPoojaPosSetupHandler(payload: {
           pos: true,
           rank: pc?.rank,
           active: pc?.active === "1",
+          menuId: menuDoc._id,
         },
         { upsert: true, new: true, session },
       );
@@ -383,6 +385,20 @@ async function petPoojaPosSetupHandler(payload: {
         }
       }
     }
+
+    await OutLetInfo.updateOne(
+      { businessId },
+      {
+        $set: {
+          isPosEnabled: true,
+          isHipalzPos: false,
+          shareCart: false,
+        },
+      },
+      {
+        session,
+      },
+    );
     return true;
   } catch (error) {
     throw new Error((error as Error).message || "Internal error in POS setup");
@@ -400,29 +416,34 @@ async function petPoojaPosSyncMenuHandler(payload: {
     const { businessId, restId, orderVerificationType, posId, session } =
       payload;
 
-    await Menu.deleteMany({
-      businessId,
-    });
-
-    let businessPosConfig = await BusinessPosConfig.findOne({
+    const businessPosConfig = await BusinessPosConfig.findOne({
       businessId,
       isDeleted: false,
       active: true,
     });
 
-    if (businessPosConfig) {
-      throw new Error("Business already configured for this POS");
+    if (!businessPosConfig) {
+      throw new Error("Business not configured for this POS");
     }
 
     const businessInfo = await Business.findById(businessId).session(session);
     if (!businessInfo) {
       throw new Error("Business not found");
     }
+
+    const menu = await Menu.findOne({ businessId, isActive: true }).session(
+      session,
+    );
+
+    if (!menu) {
+      throw new Error("Menu not found");
+    }
+
     const modelsToUpdate = [Dish, Category, AddOn, Zone, Table];
     const updateOps = modelsToUpdate.map((Model) =>
       Model.updateMany(
-        { businessId },
-        { $set: { isDeleted: true } },
+        { businessId, active: true, isDeleted: false },
+        { $set: { active: false } },
         { session },
       ),
     );
@@ -430,24 +451,6 @@ async function petPoojaPosSyncMenuHandler(payload: {
 
     let zoneSyncCount = 0;
     let tableSyncCount = 0;
-
-    if (!businessPosConfig) {
-      businessPosConfig = new BusinessPosConfig({
-        businessId,
-        orderMode: "WITH_ORDER",
-        accessKey: petpoojaPosConfig.accessKey,
-        secretKey: petpoojaPosConfig.secretKey,
-        authToken: petpoojaPosConfig.authToken,
-        restId,
-        orderVerificationType,
-        posName: POS_NAME.PETPOOJA,
-        posId,
-        isDeleted: false,
-        date: Date.now(),
-        active: true,
-      });
-      await businessPosConfig.save({ session });
-    }
 
     const { data: areaTableRes } = await axios.post(
       posApiPaths.fetchAreaAndTables,
@@ -564,38 +567,18 @@ async function petPoojaPosSyncMenuHandler(payload: {
       (z) => z._id.toString(),
     );
 
-    const [menuDoc] = await Menu.create(
-      [
-        {
-          name: "Default",
-          businessId,
-          zoneIds,
-          menuType: 2,
-          days: [1, 2, 3, 4, 5, 6, 7],
-          startTime: 240,
-          endTime: 239,
-          isActive: true,
-          isDeleted: false,
-          categoryLayout: 2,
-          cardLayout: 2,
-          primaryColor: "#ec4899",
-          secondaryColor: "#fce7f3",
-          default: true,
-        },
-      ],
+    await Menu.findOneAndUpdate(
+      { businessId, isActive: true },
+      { zoneIds },
       { session },
     );
-
-    const dtableName = await Table.findOne({
-      businessId: businessId,
-    }).session(session);
 
     const { data: menuRes } = await axios.post(posApiPaths.fetchMenu, {
       "app-key": businessPosConfig.accessKey,
       "app-secret": businessPosConfig.secretKey,
       "access-token": businessPosConfig.authToken,
       restID: businessPosConfig.restId,
-      tableNo: dtableName?.name,
+      tableNo: businessPosConfig.defaultTableName,
     });
     let dishSyncCount = 0;
     let categorySyncCount = 0;
@@ -622,6 +605,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
           subCategoryIds: [],
           dishIds: [],
           coverImage: pc?.coverImage,
+          menuId: menu._id,
           pos: true,
           rank: pc?.rank,
           active: pc?.active === "1",
@@ -642,7 +626,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
           businessId,
           coverImage: cat.coverImage,
           hierarchy: cat.hierarchy,
-          menuId: menuDoc._id,
+          menuId: menu._id,
           parentCategoryIds: [], // we fill below
           subCategoryIds: [],
           dishIds: [],
@@ -690,7 +674,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
             ignoreDiscount: dish.ignoreDiscount,
             ignoreTax: dish.ignoreTax,
             posDishId: dish._id,
-            menuId: menuDoc._id,
+            menuId: menu._id,
             categoryIds: [],
             addOnIds: [],
             recommendationIds: [],
@@ -728,7 +712,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
               compulsory: addOn.addon_item_selection_min === "1" ? 1 : 0,
               choiceType: addOn.choiceType,
               choices: addOn.choices,
-              menuId: menuDoc._id,
+              menuId: menu._id,
               dishIds: [],
               active: addOn.active === "1",
             },

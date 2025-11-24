@@ -1,4 +1,4 @@
-import DatePicker from "react-datepicker";
+import DatePicker from 'react-datepicker';
 
 interface StartDatePickerProps {
   startDate: Date;
@@ -7,21 +7,16 @@ interface StartDatePickerProps {
   setValidationError: (error: string) => void;
 }
 
-const StartDatePicker: React.FC<StartDatePickerProps> = ({
-  startDate,
-  endDate,
-  setStartDate,
-  setValidationError,
-}) => {
+const StartDatePicker: React.FC<StartDatePickerProps> = ({ startDate, endDate, setStartDate, setValidationError }) => {
   return (
     <DatePicker
       selected={startDate}
       onChange={(date: Date) => {
         setStartDate(date);
         if (date > endDate) {
-          setValidationError("Start date cannot be after end date.");
+          setValidationError('Start date cannot be after end date.');
         } else {
-          setValidationError("");
+          setValidationError('');
         }
       }}
       maxDate={endDate || new Date()}

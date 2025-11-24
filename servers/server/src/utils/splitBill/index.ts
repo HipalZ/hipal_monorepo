@@ -127,6 +127,7 @@ function splitBillWithPortionAndPercentage(
 
     originTableSessionId: mainTableSession._id,
     variantName,
+    billInvoice: mainTableSession.billInvoice + variantName - 1,
   };
 }
 
@@ -265,6 +266,7 @@ async function saveItemWiseSplitBillSessionVariant(
     generatedBy: originBillSession.billGeneratedBy,
     totalDishTotal: Number(totalDishTotal.toFixed(2)),
     totalGst: Number(totalGst.toFixed(2)),
+    billInvoice: originBillSession.billInvoice + variantName - 1,
   };
 
   const splitBillTableSession = new SplitBillTableSession(

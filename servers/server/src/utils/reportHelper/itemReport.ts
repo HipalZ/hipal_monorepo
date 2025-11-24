@@ -9,6 +9,7 @@ export interface AggregatedItem {
   tax: number;
   // quantity: number;
   totalSales: number;
+  kitchenId?: string;
 }
 
 export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
@@ -16,9 +17,11 @@ export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
     .flatMap((p) => p.billItems)
     .reduce<Record<string, AggregatedItem>>((acc, item: BillItem) => {
       const { dish, portion, extras = [], quantity, discount = 0 } = item;
+      if (!dish || !dish._id) return acc;
       const key = dish._id.toString();
 
       const unitPrice = portion ? portion.price : dish.price;
+      const kitchenId = dish.kitchenId;
 
       const extrasTotal = extras.reduce(
         (sum, e) => sum + (e.price || 0) * (e.quantity || 1),
@@ -42,7 +45,7 @@ export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
       }
 
       const grp = acc[key];
-      grp.itemCount += 1;
+      grp.itemCount += quantity;
       // grp.quantity += quantity;
       grp.discount += discount;
       grp.tax += Number(lineTax?.toFixed(2));
@@ -50,6 +53,7 @@ export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
       grp.totalSales += Number(
         (lineAmountExclTax - discount + lineTax)?.toFixed(2),
       );
+      grp.kitchenId = kitchenId;
 
       return acc;
     }, {});

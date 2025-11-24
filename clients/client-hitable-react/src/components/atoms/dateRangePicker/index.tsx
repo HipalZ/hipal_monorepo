@@ -1,222 +1,239 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import useTimings from "@/components/store/useTimings";
-import {
-  endOfDay,
-  endOfMonth,
-  startOfDay,
-  startOfMonth,
-  subDays,
-} from "date-fns";
-import StartDatePicker from "./start";
-import EndDatePicker from "./end";
-import { FaArrowLeft } from "react-icons/fa";
-import PopUp from "../popUp";
-import "react-datepicker/dist/react-datepicker.css";
-import CommonBottomButton from "@/components/atoms/bottomButton";
+import CommonBottomButton from '@/components/atoms/bottomButton';
+import useTimings, { type PresetRange } from '@/components/store/useTimings';
+import { format as dfFormat, endOfDay, endOfMonth, isSameDay, setHours, setMinutes, startOfDay, startOfMonth, subDays } from 'date-fns';
+import { memo, useCallback, useMemo, useState } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import PopUp from '../popUp';
 
-const formatDate = (date: Date) => {
-  return `${String(date?.getDate()).padStart(2, "0")}-${String(
-    date?.getMonth() + 1,
-  ).padStart(2, "0")}-${date?.getFullYear()}`;
-};
+// Helper: compute date range for a preset (defaults to day bounds)
+function computePresetRange(preset: PresetRange): { start: Date; end: Date } {
+  const now = new Date();
+  switch (preset) {
+    case 'today': {
+      return { start: startOfDay(now), end: endOfDay(now) };
+    }
+    case 'yesterday': {
+      const y = subDays(now, 1);
+      return { start: startOfDay(y), end: endOfDay(y) };
+    }
+    case 'last7': {
+      const s = startOfDay(subDays(now, 6));
+      const e = endOfDay(now);
+      return { start: s, end: e };
+    }
+    case 'thisMonth': {
+      return { start: startOfDay(startOfMonth(now)), end: endOfDay(endOfMonth(now)) };
+    }
+    case 'custom':
+    default:
+      return { start: now, end: now };
+  }
+}
 
-const DateRangePicker: React.FC = memo(() => {
-  const setInTime = useTimings((s) => s.setInTime);
-  const setTimeStampStart = useTimings((s) => s.setTimeStampStart);
-  const setTimeStampEnd = useTimings((s) => s.setTimeStampEnd);
-  const setOutTime = useTimings((s) => s.setOutTime);
+const fmtDateTime = (date: Date) => dfFormat(date, 'dd-MM-yyyy hh:mm a');
+
+// day bounds for a given date (used to create valid min/max time pairs)
+const dayStart = (d: Date) => setMinutes(setHours(new Date(d), 0), 0); // 00:00
+const dayEnd = (d: Date) => setMinutes(setHours(new Date(d), 23), 59); // 23:59
+
+const DateRangePicker = memo(() => {
   const selectedRange = useTimings((s) => s.selectedRange);
   const setSelectedRange = useTimings((s) => s.setSelectedRange);
+  const startDate = useTimings((s) => s.startDate);
+  const endDate = useTimings((s) => s.endDate);
+  const setRange = useTimings((s) => s.setRange);
+  const setInTime = useTimings((s) => s.setInTime);
+  const setOutTime = useTimings((s) => s.setOutTime);
+  const setApplied = useTimings((s) => s.setIsApplied);
+  const isCustomDate = useTimings((s) => s.isCustomDate);
+  const setIsCustomDate = useTimings((s) => s.setIsCustomDate);
+  const [validationError, setValidationError] = useState('');
+  const [tempStart, setTempStart] = useState<Date>(startDate ?? new Date());
+  const [tempEnd, setTempEnd] = useState<Date>(endDate ?? new Date());
 
-  const [startDate, setStartDate] = useState(startOfDay(new Date()));
-  const [endDate, setEndDate] = useState(endOfDay(new Date()));
-  const [isCustomDate, setIsCustomDate] = useState(false);
-  const [validationError, setValidationError] = useState("");
+  const applyRange = useCallback(
+    (s: Date, e: Date) => {
+      const curS = startDate?.getTime();
+      const curE = endDate?.getTime();
+      const nextS = s.getTime();
+      const nextE = e.getTime();
+      if (curS === nextS && curE === nextE) return; // no-op
 
-  const fetchReportForRange = useCallback(
-    (start: Date, end: Date) => {
-      setStartDate(start);
-      setTimeStampStart(Date.parse(start.toString()));
-      setEndDate(end);
-      setTimeStampEnd(Date.parse(end.toString()));
-      setInTime(formatDate(start));
-      setOutTime(formatDate(end));
+      setRange({ startDate: s, endDate: e });
+      setInTime(fmtDateTime(s));
+      setOutTime(fmtDateTime(e));
     },
-    [setTimeStampStart, setTimeStampEnd, setInTime, setOutTime],
+    [startDate, endDate, setRange, setInTime, setOutTime],
   );
 
-  const handleTodayClick = useCallback(() => {
-    setSelectedRange("today");
-    fetchReportForRange(startOfDay(new Date()), endOfDay(new Date()));
-  }, [setSelectedRange, fetchReportForRange]);
+  const quickPick = useCallback(
+    (preset: PresetRange) => {
+      if (selectedRange !== preset) setSelectedRange(preset);
 
-  const handleYesterdayClick = useCallback(() => {
-    setSelectedRange("yesterday");
-    const yesterday = subDays(new Date(), 1);
-    fetchReportForRange(startOfDay(yesterday), endOfDay(yesterday));
-  }, [setSelectedRange, fetchReportForRange]);
-
-  const handleThisMonthClick = useCallback(() => {
-    setSelectedRange("thisMonth");
-    fetchReportForRange(startOfMonth(new Date()), endOfMonth(new Date()));
-  }, [setSelectedRange, fetchReportForRange]);
-
-  const handleCustomDatesClick = useCallback(() => {
-    setSelectedRange("custom");
-    setIsCustomDate(true);
-    setValidationError("");
-  }, [setSelectedRange]);
+      const { start, end } = computePresetRange(preset);
+      setTempStart(start);
+      setTempEnd(end);
+      setValidationError('');
+      setIsCustomDate(true);
+    },
+    [selectedRange, setSelectedRange],
+  );
 
   const dateRangeDisplay = useMemo(() => {
-    if (startDate && endDate) {
-      return (
-        <div className="flex justify-center items-center py-2 px-4 rounded-md border border-[#8C63FF] bg-[#F5F1FF] w-full md:w-[21.25rem] md:ml-4 md:text-base">
-          <p className="font-semibold text-[#8C63FF] text-sm">
-            Selected date range: {formatDate(startDate)} - {formatDate(endDate)}
-          </p>
-        </div>
-      );
-    }
-    return "";
+    if (!startDate || !endDate) return null;
+    return (
+      <center className="w-full bg-[#8C63FF30] py-1 text-sm font-semibold text-[#8C63FF] md:ml-4 md:w-[28rem] md:text-sm">
+        Selected: {fmtDateTime(startDate)} – {fmtDateTime(endDate)}
+      </center>
+    );
   }, [startDate, endDate]);
 
-  useEffect(() => {
-    if (selectedRange === "today") {
-      handleTodayClick();
+  const startPickerTimes = useMemo(() => {
+    if (tempStart && tempEnd && isSameDay(tempStart, tempEnd)) {
+      return {
+        minTime: dayStart(tempStart), // 00:00 of that day
+        maxTime: new Date(tempStart.getFullYear(), tempStart.getMonth(), tempStart.getDate(), tempEnd.getHours(), tempEnd.getMinutes(), 0, 0),
+      };
     }
-  }, [selectedRange, handleTodayClick]);
+    return {}; // omit both
+  }, [tempStart, tempEnd]);
 
-  const handleSave = () => {
-    if (validationError) {
-      // Do not proceed if there's a validation error
-      return;
+  const endPickerTimes = useMemo(() => {
+    if (tempStart && tempEnd && isSameDay(tempStart, tempEnd)) {
+      return {
+        minTime: new Date(tempEnd.getFullYear(), tempEnd.getMonth(), tempEnd.getDate(), tempStart.getHours(), tempStart.getMinutes(), 0, 0),
+        maxTime: dayEnd(tempEnd), // 23:59 of that day
+      };
     }
-    fetchReportForRange(startDate, endDate);
+    return {}; // omit both
+  }, [tempStart, tempEnd]);
+
+  const onSaveCustom = () => {
+    if (validationError) return;
+    applyRange(tempStart, tempEnd);
     setIsCustomDate(false);
+    setApplied(true);
   };
 
   return (
     <>
-      <div className="flex items-center justify-between pt-4 pl-4 space-x-2">
-        <div className="sticky top-0">
-          <div className="flex flex-wrap items-center justify-start space-x-2">
+      <div className="flex items-center justify-between space-x-2 pl-4 pt-4">
+        <div className="sticky top-0 overflow-hidden">
+          <div className="flex w-full max-w-[30rem] gap-2 overflow-x-auto text-nowrap px-4 md:max-w-full">
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${
-                selectedRange === "today"
-                  ? "bg-[#000000] text-white"
-                  : "bg-white"
-              }`}
-              onClick={handleTodayClick}
+              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'today' ? 'bg-black text-white' : 'bg-white'}`}
+              onClick={() => quickPick('today')}
             >
               Today
             </button>
             <button
               type="button"
-              className={`rounded-lg border px-2 py-1 text-xs ${
-                selectedRange === "yesterday"
-                  ? "bg-[#000000] text-white"
-                  : "bg-white"
-              }`}
-              onClick={handleYesterdayClick}
+              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'yesterday' ? 'bg-black text-white' : 'bg-white'}`}
+              onClick={() => quickPick('yesterday')}
             >
               Yesterday
             </button>
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${
-                selectedRange === "thisMonth"
-                  ? "bg-[#000000] text-white"
-                  : "bg-white"
-              }`}
-              onClick={handleThisMonthClick}
+              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'last7' ? 'bg-black text-white' : 'bg-white'}`}
+              onClick={() => quickPick('last7')}
+            >
+              Last 7 Days
+            </button>
+            <button
+              type="button"
+              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'thisMonth' ? 'bg-black text-white' : 'bg-white'}`}
+              onClick={() => quickPick('thisMonth')}
             >
               This Month
             </button>
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${
-                selectedRange === "custom"
-                  ? "bg-[#000000] text-white"
-                  : "bg-white"
-              }`}
-              onClick={handleCustomDatesClick}
+              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'custom' ? 'bg-black text-white' : 'bg-white'}`}
+              onClick={() => quickPick('custom')}
             >
-              Custom dates
+              Custom
             </button>
           </div>
         </div>
-        <div className="mx-6 date-picker-container">
+
+        {/* Modal for ALL presets to tweak time */}
+        <div className="date-picker-container mx-6">
           {isCustomDate && (
             <PopUp
-              hide
+              rightTopBack
               show={isCustomDate}
               onClose={() => setIsCustomDate(false)}
-              width="w-full max-w-[36rem]"
-              height="h-[100dvh] md:h-[80dvh] lg:h-[30rem] bg-white"
+              width="w-full max-w-[48rem]"
+              height="h-[100dvh] md:h-[80dvh] lg:h-[30rem]"
+              hide
             >
-              <button
-                type="button"
-                className="absolute left-4 top-4 px-2 py-1 text-xs bg-[#ffffff] border rounded-md"
-                onClick={() => setIsCustomDate(false)}
-              >
-                <FaArrowLeft className="mr-1" />
-              </button>
-              <h3 className="mt-4 font-semibold text-center">
-                Select the Custom Date Range
-              </h3>
-              <div className="flex flex-col items-center pt-6 date-picker-container">
-                <div className="flex flex-col items-start lg:flex-row lg:gap-4">
+              <h3 className="mt-4 text-center font-semibold">Pick your date & time range</h3>
+
+              <div className="pt-6">
+                <div className="flex h-[90dvh] w-full flex-col gap-6 overflow-auto pb-[10rem] text-center lg:flex-row lg:items-start lg:justify-center">
+                  {/* Start DateTime */}
                   <div>
-                    <p className="text-sm font-medium">Start Date:</p>
-                    <StartDatePicker
-                      startDate={startDate}
-                      endDate={endDate}
-                      setStartDate={(date) => {
-                        setStartDate(date);
-                        if (date > endDate) {
-                          setValidationError(
-                            "Start date cannot be after end date.",
-                          );
-                        } else {
-                          setValidationError("");
-                        }
+                    <p className="mb-2 text-sm font-medium">Start</p>
+                    <DatePicker
+                      selected={tempStart}
+                      onChange={(date: Date) => {
+                        const next = date ?? tempStart;
+                        setTempStart(next);
+                        if (next > tempEnd) setValidationError('Start cannot be after End.');
+                        else setValidationError('');
                       }}
-                      setValidationError={setValidationError}
+                      showTimeSelect
+                      timeIntervals={1}
+                      timeCaption="Time"
+                      dateFormat="dd-MM-yyyy hh:mm aa"
+                      maxDate={tempEnd || new Date()}
+                      // pass BOTH or NONE
+                      {...startPickerTimes}
+                      inline
                     />
                   </div>
+
+                  {/* End DateTime */}
                   <div>
-                    <p className="text-sm font-medium">End Date:</p>
-                    <EndDatePicker
-                      startDate={startDate}
-                      endDate={endDate}
-                      setEndDate={(date) => {
-                        setEndDate(date);
-                        if (date < startDate) {
-                          setValidationError(
-                            "End date cannot be before start date.",
-                          );
-                        } else {
-                          setValidationError("");
-                        }
+                    <p className="mb-2 text-sm font-medium">End</p>
+                    <DatePicker
+                      selected={tempEnd}
+                      onChange={(date: Date) => {
+                        const next = date ?? tempEnd;
+                        setTempEnd(next);
+                        if (next < tempStart) setValidationError('End cannot be before Start.');
+                        else setValidationError('');
                       }}
-                      setValidationError={setValidationError}
+                      showTimeSelect
+                      timeIntervals={1}
+                      timeCaption="Time"
+                      dateFormat="dd-MM-yyyy hh:mm aa"
+                      minDate={tempStart}
+                      // pass BOTH or NONE
+                      {...endPickerTimes}
+                      maxDate={(() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() + 1); // ✅ today + 1 day
+                        return d;
+                      })()}
+                      inline
                     />
                   </div>
                 </div>
-                {validationError && (
-                  <p className="mt-2 text-sm font-medium text-red-600">
-                    {validationError}
-                  </p>
-                )}
+
+                {validationError && <p className="mt-2 text-sm font-medium text-red-600">{validationError}</p>}
+
                 <CommonBottomButton
-                  fixed={false}
+                  fixed={true}
                   maxWidth="30rem"
                   buttons={[
                     {
-                      text: "Save",
-                      onClick: handleSave,
-                      className: "!min-w-[22rem]",
+                      text: 'Apply',
+                      onClick: onSaveCustom,
+                      className: 'mb-4 !w-[20rem]',
                     },
                   ]}
                 />
@@ -225,6 +242,7 @@ const DateRangePicker: React.FC = memo(() => {
           )}
         </div>
       </div>
+
       <div className="mt-4 w-full max-w-[28rem]">{dateRangeDisplay}</div>
     </>
   );

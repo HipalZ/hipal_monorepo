@@ -104,7 +104,7 @@ export const useTableTransfer = (businessId: string) => {
     onSuccess: (data) => {
       if (!data?.ok) {
         setOpenErrorModal(true);
-        setError("Bill already fetched");
+        setError(data.message || "Failed to transfer table");
       }
       if (data?.ok) {
         toast.success("Transferred successfully");
@@ -187,6 +187,27 @@ export const useGetAllModes = (
     isLoading,
     paymentMode,
   };
+};
+
+export const useAllModes = () => {
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const getAllModes = async () => {
+    const response = await apiRpc.upi_mode.all_modes[":businessId"].$get({
+      param: {
+        businessId,
+      },
+    });
+    const res = await response.json();
+    return res.data as IPaymentMode[];
+  };
+
+  const { isLoading, data } = useQuery({
+    queryKey: ["allModes", businessId],
+    queryFn: getAllModes,
+    enabled: !!businessId,
+  });
+
+  return { isLoading, data };
 };
 
 export const useCheckLoyalty = () => {

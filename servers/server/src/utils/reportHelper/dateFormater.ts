@@ -17,14 +17,24 @@ export function formatToIST(ts: number, withTime = true): string {
 }
 
 export function formatDateToIST(date: number): string {
-  const dateObj = new Date(date);
+  const opts: Intl.DateTimeFormatOptions = {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  };
 
-  const istOffset = 5.5 * 60;
-  const utcTime = dateObj.getTime();
-  const istTime = new Date(utcTime + istOffset * 60 * 1000);
-  const day = String(istTime.getDate()).padStart(2, "0");
-  const month = String(istTime.getMonth() + 1).padStart(2, "0");
-  const year = istTime.getFullYear();
+  const formatter = new Intl.DateTimeFormat("en-GB", opts);
+  const parts = formatter.formatToParts(new Date(date));
 
-  return `${day}-${month}-${year}`;
+  const day = parts.find((p) => p.type === "day")?.value;
+  const month = parts.find((p) => p.type === "month")?.value;
+  const year = parts.find((p) => p.type === "year")?.value;
+  const hour = parts.find((p) => p.type === "hour")?.value;
+  const minute = parts.find((p) => p.type === "minute")?.value;
+
+  return `${day}-${month}-${year} ${hour}:${minute}`;
 }

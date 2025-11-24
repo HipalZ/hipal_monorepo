@@ -1117,7 +1117,7 @@ export const useUpdateBill = () => {
     const { tips, variantId } = data;
     const payload = {
       value: tips,
-      businessId: loyaltySetting.businessId,
+      businessId: outletInfo.businessId,
       tableName,
     };
     if (variantId) {
@@ -1146,7 +1146,7 @@ export const useUpdateBill = () => {
   const removeTips = async (payload) => {
     const response = await apiRpc.pos.remove_tip.$post({
       json: {
-        businessId: loyaltySetting.businessId,
+        businessId: outletInfo.businessId,
         tableName,
         ...payload,
       },

@@ -263,6 +263,7 @@ export interface ILoyaltyData {
 export interface IOutletInfo {
   _id: string;
   businessId: string;
+  isHipalzPos: boolean;
   __v: number;
   address: string;
   amenities: string[];

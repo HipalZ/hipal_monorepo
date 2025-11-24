@@ -65,7 +65,6 @@ export const useCreateTemplate = () => {
         );
         return;
       }
-
       setTemplateId(data?.data?.id);
       setShowSuccessPopup(true);
       setTemplateStatus(data?.data?.status);
@@ -128,7 +127,7 @@ export const useEditTemplate = () => {
       setIsLoading(false);
       if (data?.err || !data?.data) {
         setStep(Step.SETUP);
-        setTemplateSteps(TemplateSteps.NONE);
+        setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
         setShowSuccessPopup(false);
         toast.error(
           data?.data?.error?.error_user_msg || "Failed to update template",
@@ -139,7 +138,7 @@ export const useEditTemplate = () => {
       setShowSuccessPopup(true);
       setTemplateStatus(data?.data?.status);
       setStep(Step.SETUP);
-      setTemplateSteps(TemplateSteps.NONE);
+      setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
       queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
     onError: (error) => {

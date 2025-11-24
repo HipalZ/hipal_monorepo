@@ -58,7 +58,6 @@ export const useRemoveServiceCharge = (currentBill: IBillData | null = null) => 
       return response
     },
     onSuccess: async (data) => {
-      console.log("remove service charge response", data)
       const extraData: ApiResponse = await data.json()
       if (data.status === 400 || data.status === 401) {
         setError(extraData.message || "Failed to remove service charge")

@@ -57,7 +57,7 @@ const MemoCoinzRewardSection = () => {
     userCouponz: s.userCouponz,
   }));
   const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
-  const { userCoinZ, setUrlFrom, userDetails } = useLogin();
+  const {  setUrlFrom, userDetails } = useLogin();
   const accessToken = useUserToken.getState().accessToken;
   const { loyaltySetting } = useLoyaltyData((s) => ({
     loyaltySetting: s.loyaltySetting,
@@ -70,6 +70,7 @@ const MemoCoinzRewardSection = () => {
     editBillModal,
     setEditBillModal,
     billData,
+    userCoinz
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
     claimedCoins: s.claimedCoins,
@@ -78,6 +79,7 @@ const MemoCoinzRewardSection = () => {
     editBillModal: s.editBillModal,
     setEditBillModal: s.setEditBillModal,
     billData: s.billData,
+    userCoinz: s.userCoinz
   }));
 
   const openCoinz = useCallback(() => {
@@ -161,7 +163,7 @@ const MemoCoinzRewardSection = () => {
               </article>
               <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
                 {accessToken && userDetails?._id && (
-                  <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>
+                  <h1 className="mb-1 text-base">Coinz : {userCoinz - claimedCoins}</h1>
                 )}
                 {claimedCoins > 0 && !billData?.couponId && (
                   <h1 className="text-sm">Coinz Applied: {claimedCoins}</h1>

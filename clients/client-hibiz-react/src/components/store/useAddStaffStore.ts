@@ -1,3 +1,4 @@
+// src/components/store/useAddStaffStore.ts
 import { create } from "zustand";
 
 export type AddStaffProps =
@@ -8,6 +9,7 @@ export type AddStaffProps =
   | "ADD_ROLE"
   | "ADD_PERMISSIONS"
   | "COMPLETED";
+
 export type role =
   | ""
   | "CO_OWNER"
@@ -29,8 +31,29 @@ export interface IPermissions {
 }
 
 interface AddStaffState {
+  // legacy, kept only to avoid breaking any other code
   pageToggle: AddStaffProps;
+  setPageToggle: (value: AddStaffProps) => void;
 
+  // wizard step
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
+  goNext: () => void;
+  goBack: () => void;
+
+  // add / edit states
+  isEditing: boolean;
+  setIsEditing: (value: boolean) => void;
+  editStaffId: string;
+  setEditStaffId: (value: string) => void;
+
+  // modal control
+  isEditStaffOpen: boolean;
+  isAddStaffOpen: boolean;
+  setIsAddStaffOpen: (value: boolean) => void;
+  setIsEditStaffOpen: (value: boolean) => void;
+
+  // basic info
   name: string;
   setName: (value: string) => void;
 
@@ -40,47 +63,54 @@ interface AddStaffState {
   password: string;
   setPassword: (value: string) => void;
 
+  // role
+  selectedRole: role;
+  setSelectedRole: (value: role) => void;
+
+  // permissions (selected)
   selectedPermissions: string[];
   setSelectedPermissions: (value: string[]) => void;
   addPermission: (value: string) => void;
 
-  selectedRole: role;
-  setSelectedRole: (value: role) => void;
-
+  // master roles + permissions lists
   roles: IRoles[];
   setRoles: (value: IRoles[]) => void;
 
   permissions: IPermissions[];
   setPermissions: (value: IPermissions[]) => void;
 
-  isEditing: boolean;
-  editStaffId: string;
-  isEditStaffOpen: boolean;
-  isAddStaffOpen: boolean;
-  setIsAddStaffOpen: (value: boolean) => void;
-  setIsEditing: (value: boolean) => void;
-  setEditStaffId: (value: string) => void;
-  setPageToggle: (value: AddStaffProps) => void;
-  setIsEditStaffOpen: (value: boolean) => void;
+  // reset
   removeStaffStore: () => void;
 }
 
 export const useAddStaffStore = create<AddStaffState>((set) => ({
   pageToggle: "ADD_STAFF",
+  setPageToggle: (value: AddStaffProps) => set({ pageToggle: value }),
 
-  selectedPermissions: [],
-  setSelectedPermissions: (value: string[]) =>
-    set({ selectedPermissions: value }),
-
-  addPermission: (value: string) =>
+  currentStep: 1,
+  setCurrentStep: (step: number) => set({ currentStep: step }),
+  goNext: () =>
     set((state) => ({
-      selectedPermissions: state.selectedPermissions.includes(value)
-        ? state.selectedPermissions.filter((permission) => permission !== value)
-        : [...state.selectedPermissions, value],
+      currentStep: Math.min(state.currentStep + 1, 4),
     })),
+  goBack: () =>
+    set((state) => ({
+      currentStep: Math.max(state.currentStep - 1, 1),
+    })),
+
+  isEditing: false,
+  setIsEditing: (value: boolean) => set({ isEditing: value }),
+  editStaffId: "",
+  setEditStaffId: (value: string) => set({ editStaffId: value }),
+
+  isEditStaffOpen: false,
+  isAddStaffOpen: false,
+  setIsAddStaffOpen: (value: boolean) => set({ isAddStaffOpen: value }),
+  setIsEditStaffOpen: (value: boolean) => set({ isEditStaffOpen: value }),
 
   name: "",
   setName: (value: string) => set({ name: value }),
+
   phone: "",
   setPhone: (value: string) => set({ phone: value }),
 
@@ -90,28 +120,32 @@ export const useAddStaffStore = create<AddStaffState>((set) => ({
   selectedRole: "",
   setSelectedRole: (value: role) => set({ selectedRole: value }),
 
+  selectedPermissions: [],
+  setSelectedPermissions: (value: string[]) =>
+    set({ selectedPermissions: value }),
+  addPermission: (value: string) =>
+    set((state) => ({
+      selectedPermissions: state.selectedPermissions.includes(value)
+        ? state.selectedPermissions.filter((p) => p !== value)
+        : [...state.selectedPermissions, value],
+    })),
+
   roles: [],
   setRoles: (value: IRoles[]) => set({ roles: value }),
 
   permissions: [],
   setPermissions: (value: IPermissions[]) => set({ permissions: value }),
 
-  isEditing: false,
-  editStaffId: "",
-  isEditStaffOpen: false,
-  isAddStaffOpen: false,
-
-  setIsAddStaffOpen: (value: boolean) => set({ isAddStaffOpen: value }),
-  setIsEditStaffOpen: (value: boolean) => set({ isEditStaffOpen: value }),
-  setIsEditing: (value: boolean) => set({ isEditing: value }),
-  setEditStaffId: (value: string) => set({ editStaffId: value }),
-  setPageToggle: (value: AddStaffProps) => set({ pageToggle: value }),
-
   removeStaffStore: () =>
     set({
       name: "",
       phone: "",
+      password: "",
       selectedRole: "",
       selectedPermissions: [],
+      currentStep: 1,
+      editStaffId: "",
+      isEditing: false,
+      pageToggle: "ADD_STAFF",
     }),
 }));

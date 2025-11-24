@@ -130,8 +130,6 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
   const getAlertLabel = (progress?: string) => ALERT_PROGRESS_LABELS[progress ?? ''] || progress || 'Unknown';
 
-  console.log('Rendering AlertCardHotel for alert:', alert);
-
   return (
     <Card
       className={`${

@@ -19,6 +19,7 @@ const MemoPOS = () => {
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showCodeModal, setShowCodeModal] = useState(false);
   const { posConfig, isLoading, refetch } = useGetPosConfig(businessId as string);
+
   const handleConfigurePos = useCallback(() => {
     setShowSetupModal(true);
   }, []);

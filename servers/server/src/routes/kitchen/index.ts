@@ -1,9 +1,10 @@
-import { Dish, Kitchen, PrinterConfig, Table, Zone } from "@hi/db-models";
+import { Dish, Kitchen, Menu, PrinterConfig, Table, Zone } from "@hi/db-models";
 import { KitchenAttrs, updateKitchenAttrs } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { addInTempMenuChanges } from "../../services/tempMenuChanges";
 import { respond } from "../../utils/response";
 //
 //dates
@@ -30,6 +31,7 @@ const kitchenRouter = new Hono()
       const existingKitchen = await Kitchen.exists({
         name: updateName,
         businessId,
+        menuId,
       }).session(session);
 
       if (existingKitchen) {
@@ -42,6 +44,17 @@ const kitchenRouter = new Hono()
           409,
         );
       }
+
+      const menu = await Menu.findById(menuId);
+      if (!menu) {
+        return respond(c, "Menu not found", true, 404, {});
+      }
+      // if (
+      //   (menu.serviceType === "BASE" && dishIds?.length) ||
+      //   staffIds?.length
+      // ) {
+      //   return respond(c, "linking kitchen to menu not allowed", true, 400, {});
+      // }
 
       const allKitchens = await Kitchen.find({
         businessId,
@@ -81,6 +94,14 @@ const kitchenRouter = new Hono()
         );
       }
 
+      if (menu.serviceType === "BASE") {
+        await addInTempMenuChanges(
+          "kitchen",
+          kitchen._id.toString(),
+          menu.businessId,
+        );
+      }
+
       await Dish.updateMany(
         { _id: { $in: dishIds } },
         { $set: { kitchenId: kitchen._id } },
@@ -109,6 +130,30 @@ const kitchenRouter = new Hono()
         // Scenario-1: “All” days
 
         const kitchens = await Kitchen.find({ businessId, menuId })
+          .session(session)
+          .lean()
+          .select("name description staffIds dishIds");
+
+        return respond(c, "fetched successfully", false, 200, kitchens);
+      });
+    },
+  )
+  .get(
+    "/kitchenByBusiness",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(1).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId } = c.req.query();
+
+        // Scenario-1: “All” days
+
+        const kitchens = await Kitchen.find({ businessId })
           .session(session)
           .lean()
           .select("name description staffIds dishIds");
@@ -151,7 +196,7 @@ const kitchenRouter = new Hono()
     },
   )
   .get(
-    "/:businessId/:staffId",
+    "/staff/:businessId/:staffId",
     zValidator(
       "param",
       z.object({
@@ -261,7 +306,7 @@ const kitchenRouter = new Hono()
     zValidator(
       "param",
       z.object({
-        tableName: z.string().min(2).max(50),
+        tableName: z.string().min(1).max(50),
         businessId: z.string().min(2).max(50),
       }),
     ),
@@ -321,6 +366,18 @@ const kitchenRouter = new Hono()
         return respond(c, "Kitchen not found", true, 404, {});
       }
 
+      const menu = await Menu.findById(kitchenData.menuId);
+      if (!menu) {
+        return respond(c, "Menu not found", true, 404, {});
+      }
+      // if (
+      //   (menu.serviceType === "BASE" && removeDishIds?.length) ||
+      //   dishIds?.length ||
+      //   staffIds?.length
+      // ) {
+      //   return respond(c, "linking kitchen to menu not allowed", true, 400, {});
+      // }
+
       const allKitchens = await Kitchen.find({
         businessId: kitchenData.businessId,
         menuId: kitchenData.menuId,
@@ -356,6 +413,14 @@ const kitchenRouter = new Hono()
             err: true,
           },
           404,
+        );
+      }
+
+      if (menu.serviceType === "BASE") {
+        await addInTempMenuChanges(
+          "kitchen",
+          kitchen._id.toString(),
+          menu.businessId,
         );
       }
 

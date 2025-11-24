@@ -12,6 +12,8 @@ type KotSelectionState = {
   add: (id: string) => void;
   remove: (id: string) => void;
   toggle: (id: string) => void;
+  addMany: (ids: string[]) => void;
+  removeMany: (ids: string[]) => void;
   clear: () => void;
   selectFrom: (ids: string[]) => void;
   isSelected: (id: string) => boolean;
@@ -47,6 +49,20 @@ export const useKotSelectionStore = create<KotSelectionState>()(
         set({ selectedItemIds: [...selectedItemIds, id] });
       }
     },
+
+    addMany: (ids) =>
+      set((s) => {
+        const setIds = new Set(s.selectedItemIds);
+        for (const i of ids) {
+          setIds.add(i);
+        }
+        return { selectedItemIds: Array.from(setIds) };
+      }),
+    removeMany: (ids) =>
+      set((s) => {
+        const rm = new Set(ids);
+        return { selectedItemIds: s.selectedItemIds.filter((x) => !rm.has(x)) };
+      }),
 
     clear: () => set({ selectedItemIds: [] }),
 

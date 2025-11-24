@@ -89,6 +89,17 @@ const menuSchema = new mongoose.Schema<MenuTypeValidator>({
     type: Boolean,
     default: false,
   },
+  // serviceType: {
+  //   type: String,
+  //   enum: ["DINE_IN", "TAKE_AWAY", "DELIVERY", "BASE"],
+  //   default: "BASE",
+  // },
+  // baseMenuId: {
+  //   type: ObjectId,
+  //   ref: "menu",
+  //   required: false,
+  //   default: null,
+  // },
 });
 
 const Menu: Model<MenuTypeValidator> = mongoose.model<MenuTypeValidator>(

@@ -1,93 +1,51 @@
-import { memo, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useHiClientZ } from "@/components/store/useHiClientzData";
-import useTimings from "@/components/store/useTimings";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { apiRpc } from "@hi/common";
-import DateRangePickerMemo from "../dateRangePicker";
-import { InfoCard } from "./InfoCard";
-import { PieChart } from "./PieCharts";
-import { BarChart } from "./BarChart";
-import { LineChart } from "./LineChart";
-import { motion } from "framer-motion";
-import { CreditCard, Gift, AlertTriangle, IndianRupee } from "lucide-react";
-import type { TableData } from "@/components/store/useZonesAndTable.ts";
-
-export interface SalesData {
-  overAllAmount: number;
-  onlineSale: Record<string, number>;
-  offlineSale: Record<string, number>;
-  totalOrders: number;
-  totalActiveTableValue: number;
-}
-
-interface OtherAndWarningData {
-  otherSale: {
-    totalTax: number;
-    totalTip: number;
-    totalServiceCharge: number;
-  };
-  warningSale: {
-    totalForceSettle: number;
-    totalFreeSettle: number;
-  };
-}
-
-interface SalesExceptionData {
-  exceptionSale: {
-    totalDuesReceived: number;
-    totalDuesGiven: number;
-    totalNpc: number;
-    totalComplementary: number;
-    totalDiscount: number;
-  };
-  rewardSale: {
-    totalCoinsGiven: number;
-    totalCoinUsed: number;
-    totalCouponUsed: number;
-  };
-}
+import DateRangePicker from '@/components/atoms/dateRangePicker';
+import ExecutiveReportButton from '@/components/atoms/salesLite/ExecutiveReportButton';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
+import useTimings from '@/components/store/useTimings';
+import type { TableData } from '@/components/store/useZonesAndTable.ts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { apiRpc } from '@hi/common';
+import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { AlertTriangle, CreditCard, Gift, IndianRupee } from 'lucide-react';
+import { memo, useMemo } from 'react';
+import { BarChart } from './BarChart';
+import { InfoCard } from './InfoCard';
+import { LineChart } from './LineChart';
+import { PieChart } from './PieCharts';
+import type { OtherAndWarningData, SalesData, SalesExceptionData } from './sales.types';
 
 const SalesLite = () => {
-  const { selectedBiz } = useHiClientZ((s) => ({
-    selectedBiz: s.selectedBiz,
-  }));
+  const selectedBiz = useHiClientZ((s) => s.selectedBiz);
   const businessId = selectedBiz?.businessId?._id;
-
+  const businessName = selectedBiz.businessId.name || 'My Business';
+  const businessLogo = selectedBiz.businessId.logo || '';
+  const handleEnvelope = useApiErrorHandler().handleEnvelope;
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
 
-    const isToday = (timestamp: string | number | Date) => {
+  const isToday = (timestamp: string | number | Date) => {
     const date = new Date(timestamp);
     const today = new Date();
 
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
+    return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
   };
 
-  const shouldShowCard =
-  isToday(timeStampStart) && isToday(timeStampEnd);
-
+  const shouldShowCard = isToday(timeStampStart) && isToday(timeStampEnd);
 
   const handleHistoryData = async (): Promise<SalesData> => {
     try {
-      const response = await apiRpc.payments[":id"].salesDashboard.$get({
+      const response = await apiRpc.payments[':id'].salesDashboard.$get({
         query: {
           businessId: businessId,
           from: timeStampStart.toString(),
           to: timeStampEnd.toString(),
         },
-        param: { id: businessId || "" },
+        param: { id: businessId || '' },
       });
-      const data = (await response.json()).data as SalesData;
-      if (response.status === 200) {
-        return data;
-      }
-      throw new Error("Failed to fetch sales data");
+      return handleEnvelope<SalesData>(response);
     } catch (err) {
       console.error(err);
       throw err;
@@ -102,8 +60,7 @@ const SalesLite = () => {
         to: timeStampEnd.toString(),
       },
     });
-    const data = (await response.json()).data as OtherAndWarningData;
-    return data;
+    return handleEnvelope<OtherAndWarningData>(response);
   };
 
   const salesException = async (): Promise<SalesExceptionData> => {
@@ -114,79 +71,75 @@ const SalesLite = () => {
         to: timeStampEnd.toString(),
       },
     });
-    const data = (await response.json()).data as SalesExceptionData;
-    return data;
+    return handleEnvelope<SalesExceptionData>(response);
   };
 
- const fetchTables = async (businessId: string): Promise<TableData[]> => {
-    const response = await apiRpc.table.all[":businessId"].$get({
+  const fetchTables = async (businessId: string): Promise<TableData[]> => {
+    const response = await apiRpc.table.all[':businessId'].$get({
       param: { businessId },
     });
-    const json = await response.json();
-    return json.data || [];
+    return handleEnvelope<TableData[]>(response);
   };
 
   const {
     data: salesData,
-    isLoading,
+    isLoading: isLoadingSales,
     error,
   } = useQuery<SalesData, Error>({
-    queryKey: ["salesData", businessId, timeStampStart, timeStampEnd],
+    queryKey: ['salesData', businessId, timeStampStart, timeStampEnd],
     queryFn: handleHistoryData,
-    enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
+    enabled: !!businessId,
+    staleTime: 1000 * 60 * 5,
   });
 
-  const { data: otherData } = useQuery<OtherAndWarningData, Error>({
-    queryKey: ["otherAndWarning", businessId, timeStampStart, timeStampEnd],
+  const { data: otherData, isLoading: isLoadingOther } = useQuery<OtherAndWarningData, Error>({
+    queryKey: ['otherAndWarning', businessId, timeStampStart, timeStampEnd],
     queryFn: otherAndWarning,
-    enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
+    enabled: !!businessId,
+    staleTime: 1000 * 60 * 5,
   });
 
-  const { data: salesExceptionData } = useQuery<SalesExceptionData, Error>({
-    queryKey: ["salesException", businessId, timeStampStart, timeStampEnd],
+  const { data: salesExceptionData, isLoading: isLoadingExc } = useQuery<SalesExceptionData, Error>({
+    queryKey: ['salesException', businessId, timeStampStart, timeStampEnd],
     queryFn: salesException,
-    enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
+    enabled: !!businessId,
+    staleTime: 1000 * 60 * 5,
   });
 
-    const {  data: tablesData } = useQuery({
-      queryKey: ["tables", businessId],
-      queryFn: () => fetchTables(businessId || ""),
-      enabled: !!businessId,
-      refetchInterval: 1000 * 30,
-    });
-  
-    const runningTablesBreakdown = useMemo(() => {
-      return tablesData
-        ? tablesData
-            .filter((table) => table.active && table.currentTableAmount > 0)
-            .map((table) => ({
-              label: ` ${table.name}`,
-              value: table.currentTableAmount,
-            }))
-        : [];
-    }, [tablesData]);
+  const { data: tablesData } = useQuery({
+    queryKey: ['tables', businessId],
+    queryFn: () => fetchTables(businessId || ''),
+    enabled: !!businessId,
+    refetchInterval: 1000 * 30,
+  });
 
-  if (isLoading) {
+  const runningTablesBreakdown = useMemo(() => {
+    return tablesData
+      ? tablesData
+          .filter((table) => table.active && table.currentTableAmount > 0)
+          .map((table) => ({
+            label: ` ${table.name}`,
+            value: table.currentTableAmount,
+          }))
+      : [];
+  }, [tablesData]);
+
+  if (isLoadingSales || isLoadingOther || isLoadingExc) {
     return <OverviewSkeleton />;
   }
 
   if (error || !salesData) {
     return (
-      <Card className="w-full h-[70vh] px-4 mx-auto xl:container">
-        <DateRangePickerMemo />
+      <Card className="mx-auto h-[70vh] w-full px-4 xl:container">
+        <DateRangePicker />
         <CardContent>
-          <p className="text-center text-muted-foreground">
-            No sales data found
-          </p>
+          <p className="text-muted-foreground text-center">No sales data found</p>
         </CardContent>
       </Card>
     );
   }
 
- const totalOfflineSale = Object.values(salesData.offlineSale).reduce(
-    (acc, curr) => acc + curr,
-    0,
-  );
+  const totalOfflineSale = Object.values(salesData.offlineSale).reduce((acc, curr) => acc + curr, 0);
 
   const totalExceptionAndReward = salesExceptionData
     ? salesExceptionData.exceptionSale.totalComplementary +
@@ -196,49 +149,41 @@ const SalesLite = () => {
       salesExceptionData.rewardSale.totalCouponDiscount
     : 0;
 
-  const totalOtherAndWarning = otherData
-    ? otherData.otherSale.totalTax +
-      otherData.otherSale.totalTip +
-      otherData.otherSale.totalServiceCharge
-    : 0;
+  const totalOtherAndWarning = otherData ? otherData.otherSale.totalTax + otherData.otherSale.totalTip + otherData.otherSale.totalServiceCharge : 0;
 
   // Create breakdown data
   const totalSalesBreakdown = [
-    { label: "Hipalz Razorpay Sales", value: salesData.onlineSale.online },
-    { label: "Pay To Captain Sales", value: totalOfflineSale },
+    { label: 'Hipalz Razorpay Sales', value: salesData.onlineSale.online },
+    { label: 'Pay To Captain Sales', value: totalOfflineSale },
   ];
 
-  const onlineSalesBreakdown = [
-    { label: "Online Payment", value: salesData.onlineSale.online },
-  ];
+  const onlineSalesBreakdown = [{ label: 'Online Payment', value: salesData.onlineSale.online }];
 
-  const offlineSalesBreakdown = Object.entries(salesData.offlineSale).map(
-    ([method, amount]) => ({
-      label: method.charAt(0).toUpperCase() + method.slice(1),
-      value: amount,
-    }),
-  );
+  const offlineSalesBreakdown = Object.entries(salesData.offlineSale).map(([method, amount]) => ({
+    label: method.charAt(0).toUpperCase() + method.slice(1),
+    value: amount,
+  }));
 
   const loyaltyRewardsBreakdown = salesExceptionData
     ? [
         {
-          label: "Total Complementary",
+          label: 'Total Complementary',
           value: salesExceptionData.exceptionSale.totalComplementary,
         },
         {
-          label: "Total Discount",
+          label: 'Total Discount',
           value: salesExceptionData.exceptionSale.totalDiscount,
         },
         {
-          label: "Total Coins Given",
+          label: 'Total Coins Given',
           value: salesExceptionData.rewardSale.totalCoinsGiven,
         },
         {
-          label: "Total Coins Used",
+          label: 'Total Coins Used',
           value: salesExceptionData.rewardSale.totalCoinsUsed,
         },
         {
-          label: "Total Coupon Discount",
+          label: 'Total Coupon Discount',
           value: salesExceptionData.rewardSale.totalCouponDiscount,
         },
       ]
@@ -246,112 +191,94 @@ const SalesLite = () => {
 
   const taxesServiceBreakdown = otherData
     ? [
-        { label: "Total Tax", value: otherData.otherSale.totalTax },
-        { label: "Total Tip", value: otherData.otherSale.totalTip },
+        { label: 'Total Tax', value: otherData.otherSale.totalTax },
+        { label: 'Total Tip', value: otherData.otherSale.totalTip },
         {
-          label: "Total Service Charge",
+          label: 'Total Service Charge',
           value: otherData.otherSale.totalServiceCharge,
         },
       ]
     : [];
 
   return (
-    <div className="mx-auto lg:px-4 xl:container">
-      <DateRangePickerMemo />
-
+    <div className="mx-auto xl:container lg:px-4">
+      <DateRangePicker />
+      <div className="mt-2 flex items-center justify-between px-4">
+        <h2 className="text-lg font-semibold">Executive Summary</h2>
+        <ExecutiveReportButton
+          businessName={businessName || 'My Business'}
+          businessLogo={businessLogo || ''}
+          from={timeStampStart}
+          to={timeStampEnd}
+          salesData={salesData}
+          otherData={otherData}
+          salesExceptionData={salesExceptionData}
+        />
+      </div>
       <div className="grid grid-cols-2 gap-4 p-4 md:grid-cols-4 lg:grid-cols-4">
         <section className="col-span-2">
           <InfoCard
-            title="Total Sales"
+            title={`Total Sales (${salesData.totalOrders} Orders)`}
             value={salesData.overAllAmount}
-            icon={<IndianRupee className="w-4 h-4" />}
+            icon={<IndianRupee className="h-4 w-4" />}
             breakdown={totalSalesBreakdown}
           />
         </section>
         <section className="col-span-2">
-        <InfoCard
-                    title="Hipalz Razorpay Sales"
-                    value={salesData.onlineSale.online}
-                    icon={<IndianRupee className="w-4 h-4" />}
-                    breakdown={onlineSalesBreakdown}
-                  />
-        </section>
-       
-               <InfoCard
-                 title="Pay To Captain Sales"
-                 value={totalOfflineSale}
-                 icon={<CreditCard className="w-4 h-4" />}
-                 breakdown={offlineSalesBreakdown}
-               />
           <InfoCard
-          title="Loyalty & Rewards"
-          value={totalExceptionAndReward}
-          icon={<Gift className="w-4 h-4" />}
-          breakdown={loyaltyRewardsBreakdown}
-        />
+            title="Hipalz Razorpay Sales"
+            value={salesData.onlineSale.online}
+            icon={<IndianRupee className="h-4 w-4" />}
+            breakdown={onlineSalesBreakdown}
+          />
+        </section>
+
+        <InfoCard title="Pay To Captain Sales" value={totalOfflineSale} icon={<CreditCard className="h-4 w-4" />} breakdown={offlineSalesBreakdown} />
+        <InfoCard title="Loyalty & Rewards" value={totalExceptionAndReward} icon={<Gift className="h-4 w-4" />} breakdown={loyaltyRewardsBreakdown} />
 
         <InfoCard
           title="Taxes & Service Charges"
           value={totalOtherAndWarning}
-          icon={<AlertTriangle className="w-4 h-4" />}
+          icon={<AlertTriangle className="h-4 w-4" />}
           breakdown={taxesServiceBreakdown}
         />
+        <InfoCard title="Total Guest" value={salesData.totalPaxCount} icon={<IndianRupee className="h-4 w-4" />} breakdown={totalSalesBreakdown} />
 
-        {shouldShowCard && <InfoCard
-          title="Running Tables"
-          value={salesData.totalActiveTableValue}
-          icon={<CreditCard className="w-4 h-4" />}
-          breakdown={runningTablesBreakdown}
-        />}
+        {shouldShowCard && (
+          <InfoCard
+            title="Running Tables"
+            value={salesData.totalActiveTableValue}
+            icon={<CreditCard className="h-4 w-4" />}
+            breakdown={runningTablesBreakdown}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
           <Card>
             <CardHeader>
               <CardTitle>Sales Distribution</CardTitle>
             </CardHeader>
             <CardContent>
-              <PieChart
-                data={[
-                  ...Object.entries(salesData.offlineSale).map(
-                    ([mode, amount]) => ({ name: mode, value: amount }),
-                  ),
-                ]}
-              />
+              <PieChart data={[...Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount }))]} />
             </CardContent>
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}>
           <Card>
             <CardHeader>
               <CardTitle>Offline Payment Modes</CardTitle>
             </CardHeader>
             <CardContent>
-              <BarChart
-                data={Object.entries(salesData.offlineSale).map(
-                  ([mode, amount]) => ({ name: mode, value: amount }),
-                )}
-              />
+              <BarChart data={Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount }))} />
             </CardContent>
           </Card>
         </motion.div>
 
         {salesExceptionData && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }}>
             <Card>
               <CardHeader>
                 <CardTitle>Loyalty & Rewards</CardTitle>
@@ -359,12 +286,8 @@ const SalesLite = () => {
               <CardContent>
                 <LineChart
                   data={[
-                    ...Object.entries(salesExceptionData.exceptionSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
-                    ...Object.entries(salesExceptionData.rewardSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
+                    ...Object.entries(salesExceptionData.exceptionSale).map(([key, value]) => ({ name: key, value })),
+                    ...Object.entries(salesExceptionData.rewardSale).map(([key, value]) => ({ name: key, value })),
                   ]}
                 />
               </CardContent>
@@ -373,11 +296,7 @@ const SalesLite = () => {
         )}
 
         {otherData && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.8 }}>
             <Card>
               <CardHeader>
                 <CardTitle>Taxes & Service Charges</CardTitle>
@@ -385,12 +304,8 @@ const SalesLite = () => {
               <CardContent>
                 <BarChart
                   data={[
-                    ...Object.entries(otherData.otherSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
-                    ...Object.entries(otherData.warningSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
+                    ...Object.entries(otherData.otherSale).map(([key, value]) => ({ name: key, value })),
+                    ...Object.entries(otherData.warningSale).map(([key, value]) => ({ name: key, value })),
                   ]}
                 />
               </CardContent>
@@ -403,9 +318,9 @@ const SalesLite = () => {
 };
 
 const OverviewSkeleton = () => (
-  <div className="container p-4 mx-auto space-y-6">
+  <div className="container mx-auto space-y-6 p-4">
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <Skeleton className="h-40 col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4" />
+      <Skeleton className="col-span-1 h-40 sm:col-span-2 lg:col-span-3 xl:col-span-4" />
       <Skeleton className="col-span-1 h-80 sm:col-span-2 lg:col-span-3" />
       <Skeleton className="col-span-1 h-80" />
       <Skeleton className="col-span-1 h-80 sm:col-span-2 lg:col-span-3" />

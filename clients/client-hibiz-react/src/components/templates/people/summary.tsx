@@ -66,7 +66,7 @@ const MemoSummary = () => {
             <>
              <div className="relative w-full">
                 <div className="absolute inset-0 flex flex-col items-center justify-center -mt-8">
-                  <span className="text-3xl font-semibold">{peopleData.totalSubscriberCount?.toLocaleString()}</span>
+                  <span className="text-3xl font-semibold">{peopleData?.totalSubscriberCount?.toLocaleString()}</span>
                   <span className="text-sm text-muted-foreground"> Subscribers</span>
                 </div>
                 <ChartContainer

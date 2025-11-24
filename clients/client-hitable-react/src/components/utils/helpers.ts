@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import { useHiClientZ } from "../store/useHiClientzData";
 import type { NavItemTypes } from "../types/hiClientzData";
+import { useStaffPermissionStore } from "@/components/store/usePermissions";
 
 export function timestampToDateTime(timestamp: number): string {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
@@ -88,25 +89,26 @@ export const useErrorHandling = () => {
   return { errorText };
 };
 
-export function createNavItems(isPos: boolean): Array<{
+export function createNavItems(
+  isPos: boolean,
+  canViewSales: boolean,
+): Array<{
   type: NavItemTypes;
   icon: IconType;
 }> {
-  const permissions = useHiClientZ((s) => s.selectedBiz?.permissions);
-
-  let navItems = [
+  let navItems: Array<{ type: NavItemTypes; icon: IconType }> = [
     { type: "Cart" as NavItemTypes, icon: HiOutlineShoppingCart },
     { type: "Alerts" as NavItemTypes, icon: CiGlobe },
     { type: "Sales" as NavItemTypes, icon: BsGraphUpArrow },
     { type: "History" as NavItemTypes, icon: MdOutlineHistory },
   ];
 
-  if (permissions?.sale_summary === false) {
-    navItems = navItems.filter(
-      (item) => item.type !== "Sales" && item.type !== "History",
-    );
+  // Remove Sales if no permission
+  if (!canViewSales) {
+    navItems = navItems.filter((item) => item.type !== "Sales");
   }
 
+  // Add Tables at the beginning for POS
   if (isPos) {
     navItems.unshift({
       type: "Tables" as NavItemTypes,

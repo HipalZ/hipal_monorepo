@@ -1,59 +1,48 @@
-import PopUp from "@/components/atom/popUp";
-import useTimings from "@/components/store/useTimings";
-import { memo, useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
-import PaymentModal from "./paymentModal";
-import { CiFilter } from "react-icons/ci";
-import { RxCrossCircled } from "react-icons/rx";
-import type { IExistingPayments } from "@/components/types/businessData";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import Pagination from "@/components/atom/pagination";
-import usePaginationStore from "@/components/store/usePaginationStore";
-import NoData from "@/assets/nodata.jpg";
-import { Button } from "@/components/ui/button";
-import { TableView } from "./TableView";
-import { Download, LayoutGrid, Table } from "lucide-react";
-import { useSalesStore } from "@/components/store/useSalesStore";
-import SalesFilters from "./SalesFiltes";
-import { useGetallSalesByGet } from "@/hooks/useSales";
-import SalesCards from "./SalesCards";
-import ConvertIntoCsv from "./ConvertIntoCsv";
-import useBusinessData from "@/components/store/useBusinessData.ts";
+import NoData from '@/assets/nodata.jpg';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import Pagination from '@/components/atom/pagination';
+import PopUp from '@/components/atom/popUp';
+import useBusinessData from '@/components/store/useBusinessData.ts';
+import usePaginationStore from '@/components/store/usePaginationStore';
+import { useSalesStore } from '@/components/store/useSalesStore';
+import useTimings from '@/components/store/useTimings';
+import ConvertIntoCsv from '@/components/templates/payment/ConvertIntoCsv';
+import MemoizedPaymentModal from '@/components/templates/payment/paymentModal';
+import SalesCards from '@/components/templates/payment/SalesCards';
+import SalesFilters from '@/components/templates/payment/SalesFiltes';
+import { TableView } from '@/components/templates/payment/TableView';
+import type { IExistingPayments } from '@/components/types/businessData';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
+import { useGetallSalesByGet } from '@/hooks/useSales';
+import { apiRpc } from '@hi/common';
+import { useMutation } from '@tanstack/react-query';
+import { Download, LayoutGrid, RefreshCw, Search, Table } from 'lucide-react';
+import { memo, useCallback, useState } from 'react';
+import toast from 'react-hot-toast';
+import { CiFilter } from 'react-icons/ci';
+import { RxCrossCircled } from 'react-icons/rx';
 
 const MemoPaymentSales = () => {
-  const params = useParams();
-  const { timeStampStart, timeStampEnd, selectedRange } = useTimings();
-  const {
-    open,
-    setOpen,
-    totalSales,
-    historyData,
-    viewMode,
-    setViewMode,
-    salesData,
-    setSalesData,
-    openFilterModal,
-    setOpenFilterModal,
-    selectedFilters,
-    setSelectedFilters,
-    downloadCsv,
-    setDownloadCsv,
-  } = useSalesStore((s) => ({
-    open: s.open,
-    setOpen: s.setOpen,
-    totalSales: s.totalSales,
-    historyData: s.historyData,
-    viewMode: s.viewMode,
-    setViewMode: s.setViewMode,
-    salesData: s.salesData,
-    setSalesData: s.setSalesData,
-    openFilterModal: s.openFilterModal,
-    setOpenFilterModal: s.setOpenFilterModal,
-    selectedFilters: s.selectedFilters,
-    setSelectedFilters: s.setSelectedFilters,
-    downloadCsv: s.downloadCsv,
-    setDownloadCsv: s.setDownloadCsv,
-  }));
+  const timeStampStart = useTimings((s) => s.timeStampStart);
+  const timeStampEnd = useTimings((s) => s.timeStampEnd);
+
+  const open = useSalesStore((s) => s.open);
+  const setOpen = useSalesStore((s) => s.setOpen);
+  const historyData = useSalesStore((s) => s.historyData);
+  const setHistoryData = useSalesStore((s) => s.setHistoryData);
+  const viewMode = useSalesStore((s) => s.viewMode);
+  const setViewMode = useSalesStore((s) => s.setViewMode);
+  const salesData = useSalesStore((s) => s.salesData);
+  const setSalesData = useSalesStore((s) => s.setSalesData);
+  const openFilterModal = useSalesStore((s) => s.openFilterModal);
+  const setOpenFilterModal = useSalesStore((s) => s.setOpenFilterModal);
+  const selectedFilters = useSalesStore((s) => s.selectedFilters);
+  const setSelectedFilters = useSalesStore((s) => s.setSelectedFilters);
+  const downloadCsv = useSalesStore((s) => s.downloadCsv);
+  const setDownloadCsv = useSalesStore((s) => s.setDownloadCsv);
   const [currentSalesIndex, setCurrentSalesIndex] = useState(0);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
 
@@ -61,8 +50,18 @@ const MemoPaymentSales = () => {
     pageNumber: s.pageNumber,
   }));
 
-  const { isLoading } = useGetallSalesByGet({
-    businessId: businessId || "",
+  const { handleEnvelope } = useApiErrorHandler();
+
+  // 🔍 Search modal UI state
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchBillInvoice, setSearchBillInvoice] = useState('');
+  const [searchUserName, setSearchUserName] = useState('');
+  const [searchUserPhone, setSearchUserPhone] = useState('');
+  const [searchTotal, setSearchTotal] = useState('');
+  const [isSearchActive, setIsSearchActive] = useState(false); // ✅ track if search is applied
+
+  const { isLoading, refetch } = useGetallSalesByGet({
+    businessId: businessId || '',
     pageNumber: pageNumber.toString(),
     from: timeStampStart.toString(),
     to: timeStampEnd.toString(),
@@ -71,7 +70,7 @@ const MemoPaymentSales = () => {
 
   const closeModel = useCallback(() => {
     setOpen(false);
-  }, []);
+  }, [setOpen]);
 
   const openModel = useCallback(
     (data: IExistingPayments) => {
@@ -80,7 +79,7 @@ const MemoPaymentSales = () => {
       const index = historyData.findIndex((item) => item._id === data._id);
       setCurrentSalesIndex(index >= 0 ? index : 0);
     },
-    [historyData],
+    [historyData, setOpen, setSalesData],
   );
 
   const handleNavigate = useCallback(
@@ -88,7 +87,7 @@ const MemoPaymentSales = () => {
       setCurrentSalesIndex(newIndex);
       setSalesData(historyData[newIndex]);
     },
-    [historyData],
+    [historyData, setSalesData],
   );
 
   const removeSingleFilter = useCallback(
@@ -107,74 +106,118 @@ const MemoPaymentSales = () => {
           .filter((filter) => filter.value.length > 0),
       );
     },
-    [selectedFilters],
+    [selectedFilters, setSelectedFilters],
   );
 
+  const { mutate: searchBills, isPending: isSearching } = useMutation({
+    mutationFn: async () => {
+      if (!businessId) {
+        throw new Error('Business ID missing');
+      }
+
+      const hasAnyField = searchBillInvoice.trim() || searchUserName.trim() || searchUserPhone.trim() || searchTotal.trim();
+
+      if (!hasAnyField) {
+        toast.error('Enter at least one search field');
+        throw new Error('No search fields');
+      }
+
+      const payload: any = {
+        businessId,
+      };
+
+      if (searchBillInvoice.trim()) {
+        const num = Number(searchBillInvoice.trim());
+        if (!Number.isNaN(num)) payload.billInvoice = num;
+      }
+
+      if (searchUserName.trim()) {
+        payload.userName = searchUserName.trim();
+      }
+
+      if (searchUserPhone.trim()) {
+        payload.userPhone = searchUserPhone.trim();
+      }
+
+      if (searchTotal.trim()) {
+        const num = Number(searchTotal.trim());
+        if (!Number.isNaN(num)) payload.total = num;
+      }
+
+      const response = await apiRpc.payments.filter_bills.$post({
+        json: payload,
+      });
+
+      const data = await handleEnvelope(response);
+      setHistoryData(data.existingPayments || []);
+      setIsSearchActive(true);
+      setIsSearchOpen(false);
+      toast.success('Bills filtered successfully');
+      return data as IExistingPayments[];
+    },
+
+    onError: (err) => {
+      console.error(err);
+      toast.error('Failed to search bills');
+    },
+  });
+
+  const clearSearchFields = () => {
+    setSearchBillInvoice('');
+    setSearchUserName('');
+    setSearchUserPhone('');
+    setSearchTotal('');
+  };
+
+  const handleRefresh = async () => {
+    clearSearchFields();
+    setIsSearchActive(false);
+    await refetch();
+    toast.success('Listing refreshed');
+  };
+
   return (
-    <main className="relative h-[100dvh]">
+    <main className="relative overflow-auto">
       {isLoading ? (
         <LoadingSpinner />
       ) : (
         <>
-          <article className="card_payment">
-            <div className="sales_payment_background_effect1" />
-            <div className="sales_payment_background_effect2" />
-            <div className="sales_payment_background_effect3" />
-            <div className="absolute capitalize opacity-50 left-6 top-6">
-              {selectedRange} Sales
-            </div>
-            <h1 className="absolute text-3xl left-6 top-12">
-              ₹ {totalSales?.toLocaleString("en-IN")}
-            </h1>
-            <p className="absolute bottom-6 left-6">
-              <span className="opacity-50">
-                Last {historyData?.length} transactions
-              </span>{" "}
-              recently
-            </p>
-          </article>
-          <section className="flex gap-2 w-full max-w-[30rem] px-4 md:max-w-full overflow-x-auto">
-            <Button
-              variant={viewMode === "grid" ? "secondary" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("grid")}
-              className="shrink-0"
-            >
-              <LayoutGrid className="w-4 h-4" />
+          {/* Top controls row */}
+          <section className="mt-4 flex w-full max-w-[30rem] gap-2 overflow-x-auto px-4 md:max-w-full">
+            <Button variant={viewMode === 'grid' ? 'secondary' : 'outline'} size="icon" onClick={() => setViewMode('grid')} className="shrink-0">
+              <LayoutGrid className="h-4 w-4" />
             </Button>
-            <Button
-              variant={viewMode === "table" ? "secondary" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("table")}
-              className="shrink-0"
-            >
-              <Table className="w-4 h-4 " />
+            <Button variant={viewMode === 'table' ? 'secondary' : 'outline'} size="icon" onClick={() => setViewMode('table')} className="shrink-0">
+              <Table className="h-4 w-4" />
             </Button>
-            <Button
-              variant="default"
-              size="icon"
-              onClick={() => setDownloadCsv(true)}
-              className="px-4 shrink-2 w-[5rem] bg-blue-500"
-            >
+            <Button variant="default" size="icon" onClick={() => setDownloadCsv(true)} className="shrink-2 w-[5rem] bg-blue-500 px-4">
               <Download />
               Sales
             </Button>
-            <Button variant="outline" onClick={() => setOpenFilterModal(true)}>
-              <CiFilter className="mr-2" /> Filters
+
+            {/* 🔍 Search Bill button */}
+            <Button variant="outline" onClick={() => setIsSearchOpen(true)} className="shrink-0">
+              <Search className="h-4 w-4" />
+              Bill
             </Button>
+
+            {/* 🔄 Refresh button — only when search is active */}
+            {isSearchActive && (
+              <Button variant="outline" size="icon" onClick={handleRefresh} className="shrink-0">
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            )}
+
+            <Button variant="outline" onClick={() => setOpenFilterModal(true)}>
+              <CiFilter className="" /> Filters
+            </Button>
+
             {selectedFilters && selectedFilters.length > 0 && (
               <>
                 {selectedFilters.map((filter) => (
-                  <div
-                    key={filter.key}
-                    className="flex items-center space-x-2 flex-nowrap"
-                  >
+                  <div key={filter.key} className="flex flex-nowrap items-center space-x-2">
                     {filter?.value?.map((value) => (
-                      <Button
-                        onClick={() => removeSingleFilter(filter.key, value)}
-                        key={value}
-                        className="capitalize whitespace-nowrap"
-                      >
+                      <Button onClick={() => removeSingleFilter(filter.key, value)} key={value} className="whitespace-nowrap capitalize">
                         {value}
                         <RxCrossCircled className="ml-2" />
                       </Button>
@@ -184,46 +227,35 @@ const MemoPaymentSales = () => {
               </>
             )}
           </section>
-          <section className="pb-[5rem] mx-4 mt-4">
+
+          {/* Grid / Table view */}
+          <section className="mx-4 mt-4 pb-[5rem]">
             {historyData.length > 0 ? (
-              viewMode === "grid" ? (
+              viewMode === 'grid' ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {historyData.map((data) => (
-                    <SalesCards
-                      key={data?._id}
-                      data={data}
-                      openModel={openModel}
-                    />
+                    <SalesCards key={data?._id} data={data} openModel={openModel} />
                   ))}
                 </div>
               ) : (
                 <TableView data={historyData} onRowClick={openModel} />
               )
             ) : (
-              <div className="flex flex-col items-center justify-center h-[50vh] mt-8">
-                <img
-                  src={NoData || "/placeholder.svg"}
-                  alt="No Data Found"
-                  className="w-1/2 h-auto max-w-xs"
-                />
-                <p className="mt-4 text-lg font-medium text-muted-foreground">
-                  No Data Found
-                </p>
+              <div className="mt-8 flex h-[50vh] flex-col items-center justify-center">
+                <img src={NoData || '/placeholder.svg'} alt="No Data Found" className="h-auto w-1/2 max-w-xs" />
+                <p className="text-muted-foreground mt-4 text-lg font-medium">No Data Found</p>
               </div>
             )}
           </section>
         </>
       )}
+
       <Pagination dataLength={historyData?.length || 1} />
+
+      {/* Payment details modal */}
       {open && (
-        <PopUp
-          height="h-[100dvh] lg:h-[80dvh]"
-          hide
-          width="w-[30rem]"
-          onClose={closeModel}
-          show={open}
-        >
-          <PaymentModal
+        <PopUp height="h-[100dvh] lg:h-[80dvh]" hide width="w-full max-w-[48rem]" onClose={closeModel} show={open} rightTopBack>
+          <MemoizedPaymentModal
             salesData={salesData}
             onClose={closeModel}
             allSalesData={historyData}
@@ -232,18 +264,15 @@ const MemoPaymentSales = () => {
           />
         </PopUp>
       )}
+
+      {/* Filters modal */}
       {openFilterModal && (
-        <PopUp
-          height="h-[100dvh] md:h-[75dvh]"
-          width="w-[42rem]"
-          onClose={() => setOpenFilterModal(false)}
-          show={openFilterModal}
-          rightTopBack
-          hide
-        >
+        <PopUp height="h-[100dvh] md:h-[75dvh]" width="w-[42rem]" onClose={() => setOpenFilterModal(false)} show={openFilterModal} rightTopBack hide>
           <SalesFilters />
         </PopUp>
       )}
+
+      {/* CSV Download modal */}
       {downloadCsv && (
         <PopUp
           height="h-[40rem] lg:h-[35rem]"
@@ -254,6 +283,59 @@ const MemoPaymentSales = () => {
           hide
         >
           <ConvertIntoCsv />
+        </PopUp>
+      )}
+
+      {isSearchOpen && (
+        <PopUp
+          height="h-[100dvh] md:h-[60dvh]"
+          width="w-[28rem] md:w-[32rem]"
+          onClose={() => setIsSearchOpen(false)}
+          show={isSearchOpen}
+          rightTopBack
+          hide
+        >
+          <section className="space-y-5 p-2 md:p-4">
+            <h2 className="text-lg font-semibold">Search Bill</h2>
+            <p className="text-muted-foreground text-sm">Search by bill invoice number, customer name, phone number or total amount.</p>
+
+            <div className="grid gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="billInvoice">Bill invoice number</Label>
+                <Input
+                  id="billInvoice"
+                  type="number"
+                  value={searchBillInvoice}
+                  onChange={(e) => setSearchBillInvoice(e.target.value)}
+                  placeholder="e.g. 1024"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="userName">Customer name</Label>
+                <Input id="userName" value={searchUserName} onChange={(e) => setSearchUserName(e.target.value)} placeholder="e.g. Akhil" />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="userPhone">Customer phone</Label>
+                <Input id="userPhone" value={searchUserPhone} onChange={(e) => setSearchUserPhone(e.target.value)} placeholder="e.g. 98765 43210" />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="totalAmount">Total amount</Label>
+                <Input id="totalAmount" type="number" value={searchTotal} onChange={(e) => setSearchTotal(e.target.value)} placeholder="e.g. 1249" />
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <Button variant="outline" onClick={clearSearchFields}>
+                Clear
+              </Button>
+              <Button onClick={() => searchBills()} disabled={isSearching}>
+                {isSearching ? 'Searching…' : 'Search'}
+              </Button>
+            </div>
+          </section>
         </PopUp>
       )}
     </main>

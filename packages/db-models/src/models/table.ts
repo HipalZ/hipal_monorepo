@@ -132,6 +132,11 @@ const tableSchema = new mongoose.Schema<TableType>(
       ref: "User",
       default: null,
     },
+    isBillGenerated: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   {
     timestamps: true,

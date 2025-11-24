@@ -135,7 +135,7 @@ const MemoTemplateTerms = () => {
     }
 
     // BODY (required)
-    const body = clean(bodyText, 1024) || ''; // Body must exist
+    const body = bodyText;
     const bodyComp: any = { type: 'BODY', text: body };
     const bodyVars = Array.isArray(variables) ? variables.map((v) => clean(v) || '') : [];
     if (bodyVars.length > 0) bodyComp.example = { body_text: [bodyVars] };

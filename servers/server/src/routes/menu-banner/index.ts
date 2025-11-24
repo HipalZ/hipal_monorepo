@@ -7,6 +7,7 @@ import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
 import { z } from "zod";
+import { pushToken } from "../../services/token";
 const menuBannerRouter = new Hono()
   .get(
     "/explore/:businessId",
@@ -17,6 +18,8 @@ const menuBannerRouter = new Hono()
         businessId,
         isPublished: true,
       }).lean();
+
+      pushToken(c);
 
       const allHoursDelights = await MenuBanner.findOne({
         businessId,

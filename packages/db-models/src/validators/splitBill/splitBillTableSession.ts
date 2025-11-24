@@ -46,6 +46,8 @@ export const splitBillTableSessionSchema = z.object({
   itemIds: z.array(z.string()).default([]),
   itemGst: z.coerce.number().optional().default(0),
   itemGstAfterDiscount: z.coerce.number().optional().default(0),
+  billInvoice: z.coerce.number().optional().default(0),
+  billingUserId:ObjectIdSchema.optional(),
 });
 
 export type SplitBillTableSessionValidator = z.infer<

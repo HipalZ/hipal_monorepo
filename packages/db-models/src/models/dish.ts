@@ -177,6 +177,18 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
       default: 0,
     },
+    baseMenuDishId: {
+      type: ObjectId,
+      required: false,
+      ref: "Dish",
+      default: null,
+    },
+    baseMenuId: {
+      type: ObjectId,
+      required: false,
+      ref: "menu",
+      default: null,
+    },
   },
   {
     timestamps: true,

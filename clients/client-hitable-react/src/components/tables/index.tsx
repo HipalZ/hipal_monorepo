@@ -1,25 +1,27 @@
+import CommonBottomButton from '@/components/atoms/bottomButton';
+import SpinnerMemo from '@/components/atoms/loadingSpinner';
 import MergeTablesModal from '@/components/desktop/MergeTableModal';
+import { useTableData, useTableTransfer } from '@/components/hooks/useTableData';
+import useBusinessData from '@/components/store/useBusinessData';
+import { useCart } from '@/components/store/useCart';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
+import { useMergeTableStore } from '@/components/store/useMergeTableStore';
+import { useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
+import { useZonesAndTablesStore, type TableData } from '@/components/store/useZonesAndTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useIsMobile } from '../../hooks/use-mobile';
-import { cn } from '../../lib/utils';
-import CommonBottomButton from '../atoms/bottomButton';
-import SpinnerMemo from '../atoms/loadingSpinner';
-import { useTableData, useTableTransfer } from '../hooks/useTableData';
-import { useCart } from '../store/useCart';
-import { useHiClientZ } from '../store/useHiClientzData';
-import { useMergeTableStore } from '../store/useMergeTableStore';
-import { useOrderStore } from '../store/useOrderData';
-import { useZonesAndTablesStore, type TableData } from '../store/useZonesAndTable';
-
 interface EmptyTableListProps {
   transfer?: boolean;
+  onClose?: () => void;
 }
 
-const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
+const MemoEmptyTableList = ({ transfer, onClose }: EmptyTableListProps) => {
   const navigate = useNavigate();
   const { businessId } = useParams();
   const setIsPlacingNewOrder = useCart((s) => s.setIsPlacingNewOrder);
@@ -28,6 +30,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
     businessIdOverride: businessId,
     enabled: true,
   });
+  const isHipalzPos = useBusinessData((s) => s?.outletInfo?.isHipalzPos);
   const zones = useZonesAndTablesStore((s) => s.zones);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -37,6 +40,8 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
   const setShowMergeModal = useMergeTableStore((s) => s.setShowMergeModal);
   const showMergeModal = useMergeTableStore((s) => s.showMergeModal);
   const userDetails = useHiClientZ((s) => s.captainData);
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canMergeTable = hasPermission('merge_table');
 
   const { toTable, setToTable, isConfirming, setIsConfirming, isPending, closeTransferModal, confirmTransfer } = useTableTransfer(businessId || '');
 
@@ -325,16 +330,23 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
         />
       )}
 
-      {!transfer && (
+      {!transfer && isHipalzPos && canMergeTable && (
         <CommonBottomButton
           fixed={true}
-          position="mid"
+          maxWidth="30rem"
           buttons={[
+            {
+              text: '',
+              isBackButton: true,
+              onClick: onClose,
+              type: 'button',
+              className: cn('pl-3 rounded-md', onClose ? '' : 'hidden'),
+            },
             {
               text: 'Merge Tables',
               onClick: handleMergeClick,
               type: 'button',
-              className: 'rounded-full !w-[90dvh] !max-w-[26rem] flex-none',
+              className: 'rounded-full',
             },
           ]}
         />

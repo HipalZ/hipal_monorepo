@@ -50,15 +50,6 @@ const addonRouter = new Hono()
           posName: "HIPAL_Z",
         });
 
-        const existingAddon = await AddOn.findOne({
-          name: requestData.name,
-          isDeleted: false,
-          businessId: requestData.businessId,
-          active: true,
-        });
-
-        if (existingAddon) return respond(c, "already exist", true, 409, {});
-
         const addon = await AddOn.create({ ...requestData, pos: !!hipalZPos });
 
         if (!addon) return respond(c, "failed", true, 400, addon);

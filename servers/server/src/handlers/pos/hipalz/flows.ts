@@ -17,10 +17,344 @@ import { whatsAppBlockUserHandler } from "../../../utils/whatsappWebhookHandlers
 import path = require("path");
 import { google } from "googleapis";
 
+interface InteractiveParams {
+  interactiveTitleOrId: string;
+  session: any;
+  chatbotList: any[];
+  whatsAppBusinessConfigData: any;
+  from: string;
+  contactName: string;
+  c: any;
+}
+
+export async function processInteractiveReply({
+  interactiveTitleOrId,
+  session,
+  chatbotList,
+  whatsAppBusinessConfigData,
+  from,
+  contactName,
+  c,
+}: InteractiveParams) {
+  console.log("Handle interactive reply:", interactiveTitleOrId);
+
+  const currentRoutes = session.interactiveCtx?.routes || {};
+
+  let targetNodeId: string | null = null;
+
+  // Route match → targetNodeId
+  for (const [routeKey, routeVal] of Object.entries(currentRoutes)) {
+    if (
+      routeKey === interactiveTitleOrId ||
+      routeKey.toLowerCase() === interactiveTitleOrId?.toLowerCase()
+    ) {
+      targetNodeId = routeVal && routeVal.trim() !== "" ? routeVal : null;
+      console.log("Matched route:", routeKey, "→", targetNodeId);
+      break;
+    }
+  }
+
+  // Load last chatbot session
+  const lastSession = await ChatbotSessionModel.findOne({ userId: from })
+    .sort({ startTime: -1 })
+    .select("_id chatbotId")
+    .lean();
+
+  let activeBot =
+    chatbotList.find(
+      (b) => b.flow._id.toString() === lastSession?.chatbotId?.toString(),
+    ) || chatbotList[0];
+
+  const { flow: FLOW, NODE_BY_ID } = activeBot;
+
+  // Current node in chatbot
+  const currentNode = NODE_BY_ID.get(session.currentNodeId);
+
+  // -------------------------
+  // CASE 1: Route Found
+  // -------------------------
+  if (targetNodeId) {
+    setSession(from, {
+      currentNodeId: targetNodeId,
+      waitingFor: null,
+      interactiveCtx: undefined,
+    });
+
+    if (lastSession?._id) {
+      setSession(from, { _id: lastSession._id });
+    }
+
+    await advance(
+      FLOW,
+      NODE_BY_ID,
+      from,
+      from,
+      whatsAppBusinessConfigData,
+      contactName,
+    );
+
+    return respond(c, "flow continued (interactive reply)", false, 200, {});
+  }
+
+  // -------------------------
+  // CASE 2: No route → fallback to next
+  // -------------------------
+  if (!targetNodeId && currentNode?.next) {
+    setSession(from, {
+      currentNodeId: currentNode.next,
+      waitingFor: null,
+      interactiveCtx: undefined,
+    });
+
+    if (lastSession?._id) {
+      setSession(from, { _id: lastSession._id });
+    }
+
+    await advance(
+      FLOW,
+      NODE_BY_ID,
+      from,
+      from,
+      whatsAppBusinessConfigData,
+      contactName,
+    );
+
+    return respond(
+      c,
+      "flow continued (interactive reply - fallback next)",
+      false,
+      200,
+      {},
+    );
+  }
+
+  // -------------------------
+  // CASE 3: No route & no next → end flow
+  // -------------------------
+
+  if (lastSession?._id) {
+    const fullSession = await ChatbotSessionModel.findById(lastSession._id);
+
+    if (fullSession) {
+      const now = Date.now();
+      fullSession.completed = true;
+      fullSession.endTime = new Date(now);
+
+      if (fullSession.startTime) {
+        fullSession.sessionDurationMs =
+          now - new Date(fullSession.startTime).getTime();
+      }
+
+      if (session.currentNodeId) {
+        fullSession.lastNodeId = session.currentNodeId;
+      }
+
+      await fullSession.save();
+    }
+  }
+
+  // Reset chatbot state
+  setSession(from, {
+    currentNodeId: null,
+    waitingFor: null,
+    interactiveCtx: undefined,
+  });
+
+  return respond(c, "flow ended (no route)", false, 200, {});
+}
+
+interface AskNodeParams {
+  textBody: string;
+  sessionState: any;
+  chatbotList: any[];
+  whatsAppBusinessConfigData: any;
+  from: string;
+  contactName: string;
+  c: any;
+}
+
+export async function processAskNodeReply({
+  textBody,
+  sessionState,
+  chatbotList,
+  whatsAppBusinessConfigData,
+  from,
+  contactName,
+  c,
+}: AskNodeParams) {
+  const lastSession = await ChatbotSessionModel.findOne({ userId: from })
+    .sort({ startTime: -1 })
+    .select("chatbotId")
+    .lean();
+
+  const activeBot =
+    chatbotList.find(
+      (b) => b.flow._id.toString() === lastSession?.chatbotId?.toString(),
+    ) || chatbotList[0];
+
+  const { flow: FLOW, NODE_BY_ID } = activeBot;
+  const node = NODE_BY_ID.get(sessionState.currentNodeId);
+
+  if (!node || node.type !== "ask_question") {
+    return null; // not handled here
+  }
+
+  const value = textBody.trim();
+
+  const varKey = node.variable?.startsWith("@")
+    ? node.variable
+    : `@${node.variable}`;
+
+  setSession(from, {
+    variables: {
+      ...sessionState.variables,
+      [varKey]: value,
+    },
+  });
+
+  setSession(from, {
+    waitingFor: null,
+    currentNodeId: node.next || null,
+  });
+
+  await advance(
+    FLOW,
+    NODE_BY_ID,
+    from,
+    from,
+    whatsAppBusinessConfigData,
+    contactName,
+  );
+
+  return respond(c, "flow continued (ask reply)", false, 200, {});
+}
+
+export async function handleChatbotFlow({
+  messages,
+  contacts,
+  statuses,
+  whatsAppBusinessConfigData,
+  c,
+}) {
+  const businessId = whatsAppBusinessConfigData?.businessId;
+  if (!businessId) return null;
+
+  const chatbotList = await getAllChatbotFlows(businessId);
+  if (!chatbotList.length) return null;
+
+  const from = messages?.from || contacts?.[0]?.wa_id || contacts?.[0]?.waId;
+
+  let session = getSession(from);
+  const contactName = contacts?.profile?.name || session.userName || "Guest";
+  setSession(from, { userName: contactName });
+
+  let textBody: string | undefined;
+  let interactiveTitleOrId: string | undefined;
+
+  if (messages) {
+    if (messages.type === "interactive") {
+      const inter = messages.interactive;
+      interactiveTitleOrId =
+        inter?.button_reply?.id ||
+        inter?.button_reply?.title ||
+        inter?.list_reply?.id ||
+        inter?.list_reply?.title;
+    } else if (messages?.text?.body) {
+      textBody = messages.text.body;
+    }
+  }
+
+  // ------------------------------
+  // 1️⃣ Interactive Reply Handling
+  // ------------------------------
+
+  session = getSession(from);
+
+  if (interactiveTitleOrId && session.waitingFor === "interactive") {
+    return await processInteractiveReply({
+      interactiveTitleOrId,
+      session,
+      chatbotList,
+      whatsAppBusinessConfigData,
+      from,
+      contactName,
+      c,
+    });
+  }
+
+  // ------------------------------
+  // 2️⃣ Ask Question Reply
+  // ------------------------------
+  const sessionState = getSession(from);
+
+  if (
+    textBody &&
+    sessionState.waitingFor === "ask" &&
+    sessionState.currentNodeId
+  ) {
+    return await processAskNodeReply({
+      textBody,
+      sessionState,
+      chatbotList,
+      whatsAppBusinessConfigData,
+      from,
+      contactName,
+      c,
+    });
+  }
+
+  // ------------------------------
+  // 3️⃣ Trigger-based Start
+  // ------------------------------
+
+  const messageInput = textBody || interactiveTitleOrId;
+  let matchedBot = null;
+
+  if (messageInput) {
+    matchedBot = chatbotList.find((bot) =>
+      matchTriggerStart(bot.flow, from, messageInput),
+    );
+  }
+
+  if (!matchedBot) {
+    matchedBot = chatbotList.find((b) => b.flow?.isDefault) || chatbotList[0];
+  }
+
+  if (matchedBot) {
+    const { flow: FLOW, NODE_BY_ID } = matchedBot;
+
+    const newSession = await ChatbotSessionModel.create({
+      chatbotId: FLOW._id,
+      userId: from,
+      startTime: new Date(),
+      completed: false,
+    });
+
+    setSession(from, {
+      _id: newSession._id,
+      currentNodeId: FLOW.triggers?.[0]?.start || null,
+      waitingFor: null,
+      variables: {},
+    });
+
+    await advance(
+      FLOW,
+      NODE_BY_ID,
+      from,
+      from,
+      whatsAppBusinessConfigData,
+      contactName,
+    );
+
+    return respond(c, "chatbot flow started", false, 200, {});
+  }
+
+  return null; // hand control back to main webhook
+}
 /* ----------------------------------------------------------------------------
  * FLOW CACHE (per business)
  * ------------------------------------------------------------------------- */
-async function getAllChatbotFlows(businessId: string) {
+export async function getAllChatbotFlows(businessId: string) {
   const flows = await WhatsappChatbotModel.find({
     businessId,
     active: true,
@@ -749,367 +1083,3 @@ export async function advance(
     break;
   }
 }
-
-/* ----------------------------------------------------------------------------
- * MAIN WEBHOOK
- * ------------------------------------------------------------------------- */
-export const waWebhookHandler = async (c: Context) => {
-  const body = await c.req.json();
-  // health-check ping
-  if ((body as any).action === "ping")
-    return c.json({ version: "3.0", data: { status: "active" } }, 200);
-
-  if (!body?.object) return c.json({ message: "ignored", err: false }, 200);
-  const { messages, contacts, statuses, whatsAppBusinessConfigData } =
-    await whatsAppEventData(body as any);
-
-  const from = messages?.from || contacts?.[0]?.wa_id || contacts?.[0]?.waId;
-  let session = getSession(from);
-  const contactName = contacts?.profile?.name || session.userName || "Guest";
-  setSession(from, { userName: contactName });
-  let textBody: string | undefined;
-  let interactiveTitleOrId: string | undefined;
-  // --- Parse message types
-  if (messages) {
-    if (messages.type === "interactive") {
-      const inter = messages.interactive;
-      interactiveTitleOrId =
-        inter?.button_reply?.id ||
-        inter?.button_reply?.title ||
-        inter?.list_reply?.id ||
-        inter?.list_reply?.title;
-    } else if (messages?.text?.body) {
-      textBody = messages.text.body;
-    }
-  }
-
-  const businessId = whatsAppBusinessConfigData?.businessId;
-  if (!businessId)
-    return respond(c, "Missing businessId in config", true, 400, {});
-
-  // Load all active chatbots for the business
-  const chatbotList = await getAllChatbotFlows(businessId);
-  if (!chatbotList.length)
-    return respond(c, "No active chatbots found", true, 404, {});
-
-  // ---------------------------------------------------------------
-  // 1️⃣ Handle interactive button/list replies (continue existing flow)
-  // ---------------------------------------------------------------
-  session = getSession(from);
-
-  if (interactiveTitleOrId && session.waitingFor === "interactive") {
-    console.log("Handle interactive button/list replies", interactiveTitleOrId);
-    const currentRoutes = session.interactiveCtx?.routes || {};
-
-    let targetNodeId: string | null = null;
-
-    // Find matching route
-    for (const [routeKey, routeVal] of Object.entries(currentRoutes)) {
-      if (
-        routeKey === interactiveTitleOrId ||
-        routeKey.toLowerCase() === interactiveTitleOrId?.toLowerCase()
-      ) {
-        // 🔥 Fix: treat "" or undefined as null (fallback to next node)
-        targetNodeId = routeVal && routeVal.trim() !== "" ? routeVal : null;
-        console.log(
-          "Matched routeKey:",
-          routeKey,
-          "with targetNodeId:",
-          targetNodeId,
-        );
-        break;
-      }
-    }
-
-    // Fetch last session & active bot
-    const lastSession = await ChatbotSessionModel.findOne({ userId: from })
-      .sort({ startTime: -1 })
-      .select("_id chatbotId")
-      .lean();
-
-    let activeBot =
-      chatbotList.find(
-        (b) => b.flow._id.toString() === lastSession?.chatbotId?.toString(),
-      ) || chatbotList[0];
-
-    const { flow: FLOW, NODE_BY_ID } = activeBot;
-
-    // 🔍 Which node is user currently on?
-    const currentNode = NODE_BY_ID.get(session.currentNodeId);
-    console.log("currentNode for interactive reply:", currentNode);
-    // CASE 1: Route FOUND → Jump to that node
-    if (targetNodeId) {
-      setSession(from, {
-        currentNodeId: targetNodeId,
-        waitingFor: null,
-        interactiveCtx: undefined,
-      });
-
-      if (lastSession?._id) setSession(from, { _id: lastSession._id });
-
-      await advance(
-        FLOW,
-        NODE_BY_ID,
-        from,
-        from,
-        whatsAppBusinessConfigData,
-        contactName,
-      );
-
-      return respond(c, "flow continued (interactive reply)", false, 200, {});
-    }
-
-    // CASE 2: Route NOT FOUND → Use the node.next as fallback
-    if (!targetNodeId && currentNode?.next) {
-      setSession(from, {
-        currentNodeId: currentNode.next,
-        waitingFor: null,
-        interactiveCtx: undefined,
-      });
-
-      if (lastSession?._id) setSession(from, { _id: lastSession._id });
-
-      await advance(
-        FLOW,
-        NODE_BY_ID,
-        from,
-        from,
-        whatsAppBusinessConfigData,
-        contactName,
-      );
-
-      return respond(
-        c,
-        "flow continued (interactive reply - fallback next)",
-        false,
-        200,
-        {},
-      );
-    }
-
-    // CASE 3: No route & no next → end flow
-    if (lastSession?._id) {
-      // load full session to compute duration
-      const fullSession = await ChatbotSessionModel.findById(lastSession._id);
-
-      if (fullSession) {
-        const now = Date.now();
-        fullSession.completed = true; // or `false` + `droppedAtNode` if you want to treat as drop-off
-        fullSession.endTime = new Date(now);
-        if (fullSession.startTime) {
-          fullSession.sessionDurationMs =
-            now - new Date(fullSession.startTime).getTime();
-        }
-        // lastNodeId: the node user was on when they clicked (the interactive node)
-        if (session.currentNodeId) {
-          fullSession.lastNodeId = session.currentNodeId;
-        }
-        await fullSession.save();
-      }
-    }
-
-    setSession(from, {
-      currentNodeId: null,
-      waitingFor: null,
-      interactiveCtx: undefined,
-    });
-
-    return respond(c, "flow ended (no route)", false, 200, {});
-  }
-
-  // ---------------------------------------------------------------
-  // 🟢 1.5 Handle text replies to "Ask Question" nodes
-  // ---------------------------------------------------------------
-  const sessionState = getSession(from);
-
-  if (
-    textBody &&
-    sessionState.waitingFor === "ask" &&
-    sessionState.currentNodeId
-  ) {
-    const lastSession = await ChatbotSessionModel.findOne({ userId: from })
-      .sort({ startTime: -1 })
-      .select("chatbotId")
-      .lean();
-
-    const activeBot =
-      chatbotList.find(
-        (b) => b.flow._id.toString() === lastSession?.chatbotId?.toString(),
-      ) || chatbotList[0];
-
-    const { flow: FLOW, NODE_BY_ID } = activeBot;
-    const node = NODE_BY_ID.get(sessionState.currentNodeId);
-
-    if (node && node.type === "ask_question") {
-      const value = textBody.trim();
-      const varKey = node.variable?.startsWith("@")
-        ? node.variable
-        : `@${node.variable}`;
-      setSession(from, {
-        variables: {
-          ...sessionState.variables,
-          [varKey]: value,
-        },
-      });
-
-      setSession(from, {
-        waitingFor: null,
-        currentNodeId: node.next || null,
-      });
-
-      await advance(
-        FLOW,
-        NODE_BY_ID,
-        from,
-        from,
-        whatsAppBusinessConfigData,
-        contactName,
-      );
-      return respond(c, "flow continued (ask reply)", false, 200, {});
-    }
-  }
-
-  // ---------------------------------------------------------------
-  // 2️⃣ Handle trigger-based start (first message or keyword)
-  // ---------------------------------------------------------------
-  const messageInput = textBody || interactiveTitleOrId;
-  let matchedBot: { flow: any; NODE_BY_ID: Map<string, any> } | null = null;
-
-  if (messageInput) {
-    for (const bot of chatbotList) {
-      const { flow } = bot;
-      if (matchTriggerStart(flow, from, messageInput)) {
-        matchedBot = bot;
-        break;
-      }
-    }
-  }
-
-  // 2️⃣ If nothing matched, pick a fallback/default bot
-  if (!matchedBot) {
-    // Prefer a bot with flow.isDefault === true
-    const fallbackBot =
-      chatbotList.find((b) => b.flow?.isDefault) || chatbotList[0];
-
-    if (fallbackBot) {
-      console.log(
-        "No keyword matched. Using fallback chatbot:",
-        fallbackBot.flow?.chatbotName || fallbackBot.flow?._id,
-      );
-      matchedBot = fallbackBot;
-
-      // Also set the session's currentNodeId based on a "fallback" trigger if you want
-      const FLOW = fallbackBot.flow;
-
-      // If you want per-flow fallback trigger, you can add something like t.isFallback
-      const fallbackTrigger =
-        (FLOW.triggers || []).find((t: any) => t.isFallback) ||
-        FLOW.triggers?.[0];
-
-      if (fallbackTrigger?.start) {
-        setSession(from, {
-          currentNodeId: fallbackTrigger.start,
-          waitingFor: null,
-          interactiveCtx: undefined,
-        });
-      }
-    }
-  }
-
-  if (matchedBot) {
-    const { flow: FLOW, NODE_BY_ID } = matchedBot;
-
-    const newSession = await ChatbotSessionModel.create({
-      chatbotId: FLOW._id,
-      userId: from,
-      startTime: new Date(),
-      completed: false,
-    });
-
-    setSession(from, {
-      _id: newSession._id,
-      currentNodeId: FLOW.triggers?.[0]?.start || null,
-      waitingFor: null,
-      variables: {},
-    });
-
-    await advance(
-      FLOW,
-      NODE_BY_ID,
-      from,
-      from,
-      whatsAppBusinessConfigData,
-      contactName,
-    );
-    return respond(c, "flow started (trigger)", false, 200, {});
-  }
-
-  // ---------------------------------------------------------------
-  // 3️⃣ Fallback — other messages or campaign status
-  // ---------------------------------------------------------------
-  if (messages && whatsAppBusinessConfigData) {
-    // A safe fallback text: text body OR interactive id/title OR empty string
-    const safeText = (
-      messages?.text?.body ??
-      (messages?.interactive?.button_reply?.id ||
-        messages?.interactive?.button_reply?.title ||
-        messages?.interactive?.list_reply?.id ||
-        messages?.interactive?.list_reply?.title) ??
-      ""
-    ).toString();
-
-    // Your helper may return undefined userInput for interactive events; guard it.
-    const { userData, userInput } = await whatsAppUserAndTextMessage(
-      contacts,
-      messages,
-      whatsAppBusinessConfigData,
-    );
-
-    // Pick the best available text to use in downstream handlers
-    const effectiveInput = (
-      typeof userInput === "string" && userInput.trim().length > 0
-        ? userInput
-        : safeText
-    ).trim();
-    console.log("effectiveInput:", effectiveInput);
-    // QR handlers only run if we actually have some input
-    if (effectiveInput) {
-      const qrType = identifyQrTypeFromMessage(effectiveInput);
-      if (qrType?.qrType && qrHandlers[qrType.qrType]) {
-        await qrHandlers[qrType.qrType](
-          qrType.value,
-          userData.phone,
-          userData._id.toString(),
-          userData.name || "Guest",
-          whatsAppBusinessConfigData,
-        );
-      }
-    }
-
-    // Chat handler: only if feature is on AND we have a non-empty message
-    if (whatsAppBusinessConfigData.chat && effectiveInput) {
-      console.log("triggered inside waWebhookHandler - chat handler");
-      await whatsAppChatHandler(
-        effectiveInput,
-        userData._id.toString(),
-        whatsAppBusinessConfigData,
-      );
-    }
-
-    // Block handler: pass a string always; handler will guard internally too
-    await whatsAppBlockUserHandler(
-      whatsAppBusinessConfigData,
-      userData?.phone,
-      userData._id.toString(),
-      messages?.id,
-      effectiveInput, // string (possibly empty)
-    );
-  }
-
-  // ✅ Keep this part as it is
-  if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
-    await whatsAppCampaignHandler(whatsAppBusinessConfigData, statuses);
-  }
-
-  return respond(c, "event received", false, 200, {});
-};

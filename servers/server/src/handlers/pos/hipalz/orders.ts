@@ -649,6 +649,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                       }
                     }
                   }
+
                   const createPayment = await Payment.create(
                     [
                       {
@@ -705,6 +706,10 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                           splitBillTableSessionData?.couponDiscount,
                         billItems: splitBillTableSessionData?.items || [],
                         isSplitBillVariant: true,
+                        billInvoice: splitBillTableSessionData?.billInvoice,
+                        paxCount: tableSession?.paxCount || 0,
+                        serviceChargePercentage:
+                          tableSession?.serviceChargePercentage || 0,
                       },
                     ],
                     { session },
@@ -865,6 +870,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                         }
                       }
                     }
+
                     const createPayment = await Payment.create(
                       [
                         {
@@ -925,6 +931,10 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                             splitBillTableSessionData?.couponDiscount,
                           billItems: splitBillTableSessionData?.items || [],
                           isSplitBillVariant: true,
+                          billInvoice: splitBillTableSessionData?.billInvoice,
+                          paxCount: tableSession?.paxCount || 0,
+                          serviceChargePercentage:
+                            tableSession?.serviceChargePercentage || 0,
                         },
                       ],
                       { session },
@@ -1053,6 +1063,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                           isMerge: false,
                           mergeTableIds: [],
                           mergedBy: null,
+                          isBillGenerated: false,
                         },
                       },
                       {
@@ -1108,6 +1119,9 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                 if (order.cashbackAvailable === false) {
                   cashBack = 0;
                 }
+              }
+
+              if (existingLoyalty?.loyaltyId) {
                 finalCashBack = await addCoins(
                   cashBack,
                   order.userId.toString(),
@@ -1196,6 +1210,9 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                   discount: tableSession?.discount || 0,
                   couponDiscount: tableSession?.couponDiscount || 0,
                   billItems: tableSession?.items || [],
+                  billInvoice: tableSession?.billInvoice || 0,
+                  paxCount: tableSession?.paxCount || 0,
+                     serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
                 },
               ],
               { session },
@@ -1274,6 +1291,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                     isMerge: false,
                     mergeTableIds: [],
                     mergedBy: null,
+                    isBillGenerated: false,
                   },
                 },
                 {
@@ -1436,7 +1454,7 @@ async function hipalzPosNormalSettleHandler(payload: {
                 userId:
                   paymentMode?.name === "npc"
                     ? npcUser?.userId
-                    : splitTableSessionData?.customerIds?.[0] || captainId,
+                    : splitTableSessionData?.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                 claimedCoins: splitTableSessionData?.claimedCoins || 0,
                 tableName: table?.name,
                 tips: splitTableSessionData?.tips || 0,
@@ -1494,6 +1512,9 @@ async function hipalzPosNormalSettleHandler(payload: {
                 billId: splitTableSessionData?._id.toString(),
                 billItems: splitTableSessionData?.items || [],
                 isSplitBillVariant: true,
+                billInvoice: splitTableSessionData?.billInvoice,
+                paxCount: tableSession?.paxCount || 0,
+                   serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
               },
             ],
             { session },
@@ -1633,7 +1654,7 @@ async function hipalzPosNormalSettleHandler(payload: {
                 userId:
                   paymentMode?.name === "npc"
                     ? npcUser?.userId
-                    : splitTableSessionData?.customerIds?.[0] || captainId,
+                    : splitTableSessionData?.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                 claimedCoins: splitTableSessionData?.claimedCoins || 0,
                 tableName: table?.name,
                 tips: splitTableSessionData?.tips || 0,
@@ -1691,6 +1712,9 @@ async function hipalzPosNormalSettleHandler(payload: {
                 billId: splitTableSessionData?._id.toString(),
                 billItems: splitTableSessionData?.items || [],
                 isSplitBillVariant: true,
+                billInvoice: splitTableSessionData?.billInvoice,
+                paxCount: tableSession?.paxCount || 0,
+                   serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
               },
             ],
             { session },
@@ -1831,6 +1855,7 @@ async function hipalzPosNormalSettleHandler(payload: {
               isMerge: false,
               mergeTableIds: [],
               mergedBy: null,
+              isBillGenerated: false,
             },
             { session },
           );
@@ -1900,7 +1925,7 @@ async function hipalzPosNormalSettleHandler(payload: {
             userId:
               paymentMode?.name === "npc"
                 ? npcUser?.userId
-                : tableSession?.customerIds?.[0] || captainId,
+                : tableSession?.billingUserId || tableSession?.customerIds?.[0] || captainId,
             claimedCoins: tableSession?.claimedCoins || 0,
             tableName: table?.name,
             tips: tableSession?.tips || 0,
@@ -1916,6 +1941,8 @@ async function hipalzPosNormalSettleHandler(payload: {
         ],
         { session },
       );
+
+      console.log("coun", tableSession.billInvoice);
 
       const createPayment = await Payment.create(
         [
@@ -1957,6 +1984,9 @@ async function hipalzPosNormalSettleHandler(payload: {
             billId: tableSession?._id.toString(),
             billItems: tableSession?.items || [],
             pin: tableSession?.pin,
+            billInvoice: tableSession?.billInvoice || 0,
+            paxCount: tableSession?.paxCount || 0,
+               serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
           },
         ],
         { session },
@@ -2013,6 +2043,7 @@ async function hipalzPosNormalSettleHandler(payload: {
           isMerge: false,
           mergeTableIds: [],
           mergedBy: null,
+          isBillGenerated: false,
         },
         { session },
       );

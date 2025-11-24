@@ -6,6 +6,7 @@ import {
   DeviceToken,
   Dish,
   Kitchen,
+  KotInvoiceNumber,
   KotOrder,
   MergeTable,
   OutLetInfo,
@@ -15,6 +16,7 @@ import {
   Pos,
   SplitBillTableSession,
   Table,
+  TableSessionCounter,
   Tax,
   UnsettleTable,
   User,
@@ -33,7 +35,6 @@ import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import {
   applyCoinToVariantBill,
   applyCouponToVariantBill,
@@ -88,6 +89,20 @@ export const saveKotOrder = async (
   editedBy?: string,
   session?: ClientSession,
 ) => {
+  const kotInvoiceNumber = await KotInvoiceNumber.findOneAndUpdate(
+    {
+      businessId,
+    },
+    {
+      $inc: {
+        kotInvoiceNumber: 1,
+      },
+    },
+    {
+      session,
+      upsert: true,
+    },
+  );
   const saveKot = await KotOrder.create(
     [
       {
@@ -102,6 +117,7 @@ export const saveKotOrder = async (
         tableId: tableId,
         edited: edited,
         editedBy: editedBy,
+        kotInvoiceNumber: kotInvoiceNumber?.kotInvoiceNumber,
       },
     ],
     {
@@ -263,13 +279,30 @@ const posRouter = new Hono()
           businessId,
           tableName: isTableMerge?.parentTableId.name || tableName,
         }).populate({
-          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
+          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billingUserId",
           select: "name phone",
         });
+
+        const billingUserName = tableSession?.billingUserId?.name;
+        const billingUserPhone = tableSession?.billingUserId?.phone;
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
+
+        await TableSessionCounter.findOneAndUpdate(
+          {
+            businessId,
+            tableSessionId: tableSession._id.toString(),
+          },
+          {},
+
+          { upsert: true },
+        );
+
+        const sessionCount = await TableSessionCounter.countDocuments({
+          businessId,
+        });
 
         if (tableSession.isSplit) {
           if (tableSession.splitType === "ITEM") {
@@ -302,6 +335,10 @@ const posRouter = new Hono()
           order.cart.filter((item) => !item.isDeleted),
         ) as Item[];
 
+        if (cartItems.length === 0) {
+          return respond(c, "No items in the cart", true, 400, {});
+        }
+
         const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
 
         const billItems = groupItemsByGST(cartItems);
@@ -321,7 +358,8 @@ const posRouter = new Hono()
           name: "servicecharge",
         });
 
-        const serviceChargePercentage = serviceCharge?.value || 0;
+        const serviceChargePercentage =
+          tableSession.serviceChargePercentage || serviceCharge?.value || 0;
 
         let serviceChargeAmount = Math.round(
           (serviceChargePercentage / 100) * totalDishTotal,
@@ -363,6 +401,11 @@ const posRouter = new Hono()
             items: cartItems,
             billPrintCount: tableSession.billPrintCount + 1,
             totalGst: Number(totalGst?.toFixed(2)),
+            ...(tableSession.billInvoice === 0 && {
+              billInvoice: sessionCount,
+            }),
+            serviceChargePercentage:
+              tableSession.serviceChargePercentage || serviceCharge?.value || 0,
           },
         );
 
@@ -375,8 +418,8 @@ const posRouter = new Hono()
             message: "Data fetched successfully",
             err: false,
             data: {
-              customerName: tableSession.customerName,
-              customerPhone: kotOrders[0].phone,
+              customerName: billingUserName || tableSession.customerName,
+              customerPhone: billingUserPhone || kotOrders[0].phone,
               tableName: tableSession.tableName,
               couponId: tableSession.couponId,
               discountAppliedOn: tableSession.discountAppliedOn,
@@ -397,6 +440,10 @@ const posRouter = new Hono()
               tips: tableSession.tips,
               total: tableSession.total,
               billId: tableSession._id.toString(),
+              serviceChargePercentage:
+                tableSession.serviceChargePercentage ||
+                serviceCharge?.value ||
+                0,
             },
           },
           200,
@@ -552,7 +599,7 @@ const posRouter = new Hono()
           await c.req.json();
 
         const posData = await Pos.findById(posId);
-        if (!posData) return respond(c, "POS not found", true, 404);
+        if (!posData) return respond(c, "POS not founds", true, 404);
 
         const result = await executePosHandler(posData.name, "setup", {
           businessId,
@@ -733,12 +780,6 @@ const posRouter = new Hono()
         }
 
         if (userTableSession) {
-          const ifOrderAlreadyExists = userTableSession.isOrderInitiated;
-
-          if (ifOrderAlreadyExists) {
-            return respond(c, "Order already initiated", true, 400, {});
-          }
-
           if (
             !userTableSession.phoneNumbers.includes(userData.phone) &&
             // if captain place the order then we need to check if the table is already occupied by user
@@ -788,6 +829,7 @@ const posRouter = new Hono()
               customerIds: [userData._id],
               performedBy: "user",
               date: Date.now(),
+              paxCount: 1,
             },
             {
               session,
@@ -956,6 +998,7 @@ const posRouter = new Hono()
               phoneNumbers: customerPhone,
               customerIds: userData?._id,
             },
+            paxCount: userTableSession.paxCount + 1,
           },
           {
             session,
@@ -997,7 +1040,7 @@ const posRouter = new Hono()
 
   .post(
     "/captain/save_kot",
-    ubacMiddleware("place_order"),
+    // ubacMiddleware("place_order"),
     zValidator(
       "json",
       z.object({
@@ -1468,6 +1511,118 @@ const posRouter = new Hono()
     },
   )
 
+  .post(
+    "/bill/user",
+    zValidator(
+      "json",
+      z.object({
+        customerName: z.string().min(1).max(50),
+        phone: z.string().min(10).max(10).optional(),
+        businessId: z.string().min(24).max(24),
+        tableName: z.string().min(1).max(100),
+        variantId: z.string().min(24).max(24).optional(),
+      }),
+    ),
+    async (c) => {
+      const { customerName, phone, businessId, tableName, variantId } =
+        c.req.valid("json");
+
+      const getOrCreateUserWithAnalytics = async ({
+        phone,
+        customerName,
+        businessId,
+        session,
+      }: {
+        phone?: string;
+        customerName: string;
+        businessId: string;
+        session: ClientSession;
+      }) => {
+        const phoneToUse = phone ?? "**********";
+
+        let user = await User.findOneAndUpdate(
+          { phone: phoneToUse },
+          {
+            name: customerName,
+          },
+          { session },
+        );
+        if (!user) {
+          user = new User({
+            phone: phoneToUse,
+            name: customerName,
+          });
+
+          await user.save({ session });
+
+          const userAnalytics = new UserAnalytic({
+            userId: user._id,
+            businessId,
+            totalSpend: 0,
+            visitCount: 1,
+            dateOfJoining: Date.now(),
+            coinzIssued: 0,
+            coinzUsed: 0,
+            couponCount: 0,
+            currentCoins: 0,
+            avgSpend: 0,
+          });
+
+          await userAnalytics.save({ session });
+        }
+
+        return user;
+      };
+
+      // @ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const isBillSplit = await checkOriginBillIsSplit(tableSession);
+
+        if (isBillSplit && !variantId) {
+          return respond(
+            c,
+            "variantId is required for split bill",
+            true,
+            400,
+            {},
+          );
+        }
+
+        const user = await getOrCreateUserWithAnalytics({
+          phone,
+          customerName,
+          businessId,
+          session,
+        });
+
+        if (isBillSplit) {
+          await SplitBillTableSession.findOneAndUpdate(
+            { _id: variantId },
+            { billingUserId: user._id },
+            { session },
+          );
+        } else {
+          await UserSession.findOneAndUpdate(
+            { businessId, tableName },
+            { billingUserId: user._id },
+            { session },
+          );
+        }
+
+        return respond(c, "sucess", false, 200, {});
+      });
+    },
+  )
+
   .put(
     "/link_user_to_bill",
 
@@ -1590,6 +1745,33 @@ const posRouter = new Hono()
             },
             200,
           );
+        }
+
+        const userAnalytics = await UserAnalytic.findOneAndUpdate({
+          userId: userData._id,
+          businessId: tableData.businessId,
+        });
+
+        if (!userAnalytics) {
+          const createAnalytics = new UserAnalytic({
+            avgSpend: 0,
+            totalSpend: 0,
+            totalOrders: 0,
+            userId: userData._id,
+            businessId: tableData.businessId,
+            totalItemCount: 0,
+            totalBillCount: 0,
+            visitCount: 0,
+            lastVisit: Date.now(),
+            coinzIssued: 0,
+            coinzUsed: 0,
+            couponCount: 0,
+            currentCoins: 0,
+            dateOfJoining: Date.now(),
+            tableName: tableData.name,
+          });
+
+          await createAnalytics.save({ session });
         }
 
         const userSession = await UserSession.findOneAndUpdate(
@@ -1825,6 +2007,7 @@ const posRouter = new Hono()
   )
   .post(
     "/re_print_bill",
+    // ubacMiddleware("print_bill"),
     zValidator(
       "json",
       z.object({
@@ -1856,11 +2039,26 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
+        }).populate({
+          path: "billingUserId",
+          select: "name phone",
         });
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
+
+        await Table.findOneAndUpdate(
+          {
+            businessId,
+            name: tableName,
+          },
+          {
+            $set: {
+              isBillGenerated: true,
+            },
+          },
+        );
 
         const billAlreadySplit = checkOriginBillIsSplit(tableSession);
 
@@ -1875,7 +2073,12 @@ const posRouter = new Hono()
             );
           }
 
-          const variant = await SplitBillTableSession.findById(variantId);
+          const variant = await SplitBillTableSession.findById(
+            variantId,
+          ).populate({
+            path: "billingUserId",
+            select: "name phone",
+          });
           if (!variant) {
             return respond(c, "Variant not found", true, 404, {});
           }
@@ -1887,11 +2090,20 @@ const posRouter = new Hono()
             tableName: tableName,
             businessId: businessId,
             customerName:
-              variant.customerName || tableSession?.customerName || "customer",
-            customerPhone: tableSession?.phoneNumbers?.[0] || "customer",
+              variant.billingUserId?.name ||
+              variant.customerName ||
+              tableSession?.customerName ||
+              "customer",
+            customerPhone:
+              variant.billingUserId?.name ||
+              tableSession?.phoneNumbers?.[0] ||
+              "customer",
             items: billItems,
             posRestName: businessPosConfig.restName,
-            generatedBy: tableSession?.billGeneratedBy || generatedBy,
+            generatedBy:
+              variant.billingUserId?.name ||
+              tableSession?.billGeneratedBy ||
+              generatedBy,
             date: Date.now(),
             serviceCharge: variant?.serviceCharge || 0,
             discount: variant?.discount || 0,
@@ -1905,7 +2117,7 @@ const posRouter = new Hono()
             gst: outLetInfo?.gst || "",
             address: outLetInfo?.address || "",
             fssai: outLetInfo?.fssai || "",
-            billInvoiceNumber: variant?.variantInvoiceNumber || 0,
+            billInvoiceNumber: variant?.billInvoice || 0,
           });
           return respond(c, "sucess", true, 200, {});
         }
@@ -1921,16 +2133,28 @@ const posRouter = new Hono()
           order.cart.filter((item) => !item.isDeleted),
         ) as Item[];
 
+        const { totalDishTotal } = calculateBillTotals(KotOrders);
+
+        if (!billAlreadySplit) {
+          if (totalDishTotal !== tableSession.subTotal) {
+            return respond(c, "please sync all kots", true, 401, {});
+          }
+        }
+
         const billItems = groupItemsByGST(cartItems);
 
         sendBillPrintEvent({
           tableName: tableName,
           businessId: businessId,
-          customerName: KotOrders[0].name,
-          customerPhone: KotOrders[0].phone,
+          customerName: tableSession?.billingUserId?.name || KotOrders[0].name,
+          customerPhone:
+            tableSession?.billingUserId?.phone || KotOrders[0].phone,
           items: billItems,
           posRestName: businessPosConfig.restName,
-          generatedBy: tableSession?.billGeneratedBy || generatedBy,
+          generatedBy:
+            tableSession.billingUserId?.name ||
+            tableSession?.billGeneratedBy ||
+            generatedBy,
           date: Date.now(),
           serviceCharge: tableSession?.serviceCharge || 0,
           discount: tableSession?.discount || 0,
@@ -1944,7 +2168,7 @@ const posRouter = new Hono()
           gst: outLetInfo?.gst || "",
           address: outLetInfo?.address || "",
           fssai: outLetInfo?.fssai || "",
-          billInvoiceNumber: tableSession?.billInvoiceNumber || 0,
+          billInvoiceNumber: tableSession?.billInvoice || 0,
         });
 
         return respond(c, "sucess", true, 200, {});
@@ -1954,6 +2178,7 @@ const posRouter = new Hono()
 
   .post(
     "/settle_bill_print",
+    // ubacMiddleware("settle_bill_print"),
     zValidator(
       "json",
       z.object({
@@ -2003,7 +2228,7 @@ const posRouter = new Hono()
           items: billItems,
           posRestName: businessPosConfig.restName,
           generatedBy: payment.userId.name || payment?.waiterName,
-          date: Date.now(),
+          date: payment.date || Date.now(),
           serviceCharge: payment.serviceCharge || 0,
           discount: payment.discount || 0,
           tax: payment.tax || 0,
@@ -2027,6 +2252,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_discount",
+    // ubacMiddleware("add_discount"),
     zValidator(
       "json",
       z
@@ -2285,6 +2511,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_coins",
+    // ubacMiddleware("add_coins"),
     zValidator(
       "json",
       z.object({
@@ -2423,6 +2650,7 @@ const posRouter = new Hono()
 
   .post(
     "/add_coupon",
+    // ubacMiddleware("add_coupon"),
     zValidator(
       "json",
       z.object({
@@ -3006,20 +3234,27 @@ const posRouter = new Hono()
 
   .post(
     "/add_service_charge",
+    // ubacMiddleware("add_or_remove_service_charge"),
     zValidator(
       "json",
       z.object({
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
         serviceChargeAppliedBy: z.string().min(1).max(50),
-        variantId: z.string().min(24).max(24).optional(),
+        variantId: z.string().length(24).optional(),
+        value: z.number().positive().min(1).max(100).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, serviceChargeAppliedBy, variantId } =
-          await c.req.json();
+        const {
+          businessId,
+          tableName,
+          serviceChargeAppliedBy,
+          variantId,
+          value,
+        } = await c.req.json();
 
         const tInfo = await Table.findOne({ businessId, name: tableName });
 
@@ -3071,6 +3306,7 @@ const posRouter = new Hono()
               serviceChargeAppliedBy,
               isServiceChargeRemoved: false,
               serviceChargeRemovedBy: null,
+              ...(value ? { serviceChargePercentage: value } : {}),
             },
             session,
           );
@@ -3086,6 +3322,7 @@ const posRouter = new Hono()
             serviceChargeAppliedBy,
             isServiceChargeRemoved: false,
             serviceChargeRemovedBy: null,
+            ...(value ? { serviceChargePercentage: value } : {}),
           },
         );
 
@@ -3096,6 +3333,7 @@ const posRouter = new Hono()
 
   .post(
     "/remove_service_charge",
+    // ubacMiddleware("add_or_remove_service_charge"),
     zValidator(
       "json",
       z.object({
@@ -3192,6 +3430,7 @@ const posRouter = new Hono()
                   reasonOfServiceCharge,
                   isServiceChargeRemoved: true,
                   serviceChargeAppliedBy: null,
+                  serviceChargePercentage: 0,
                 },
               },
               {
@@ -3223,6 +3462,7 @@ const posRouter = new Hono()
               reasonOfServiceCharge,
               isServiceChargeRemoved: true,
               serviceChargeAppliedBy: null,
+              serviceChargePercentage: 0,
             },
           },
           { session, new: true },

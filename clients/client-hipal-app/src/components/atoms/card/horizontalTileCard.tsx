@@ -145,7 +145,7 @@ const HorizontalTileCard = ({
       {isModalOpen && (
         <ItemDescriptionPopup show={isModalOpen} onClose={closeModal}>
           <DishPopup dishData={isSelectedDish} />
-          <CommonBottomButton
+          {/* <CommonBottomButton
             buttons={[
               {
                 text: "Go to cart",
@@ -153,7 +153,7 @@ const HorizontalTileCard = ({
                 className: "shadow-md",
               },
             ]}
-          />
+          /> */}
         </ItemDescriptionPopup>
       )}
       {isDishInCart && (

@@ -36,7 +36,11 @@ export const useGetAllKitchens = () => {
     }
   }, []);
 
-  const { isLoading: kitchenLoading, data: kitchenData } = useQuery({
+  const {
+    isLoading: kitchenLoading,
+    data: kitchenData,
+    refetch: refetchKitchens,
+  } = useQuery({
     queryKey: ["fetchKitchens", businessId],
     queryFn: fetchKitchens,
     enabled: !!businessId,
@@ -176,5 +180,34 @@ export const useGetIndividualKitchen = (kitchenId: string) => {
   return {
     LoadingKitchen,
     gettingKitchenData,
+  };
+};
+
+export const useGetAllKitchenByBusiness = () => {
+  const businessId = useParams<{ businessId: string }>().businessId;
+  const fetchKitchensByBusiness = useCallback(async (businessId: string) => {
+    try {
+      const response = await apiRpc.kitchen.kitchenByBusiness.$get({
+        query: {
+          businessId: businessId,
+        },
+      });
+      const kitchenByBusiness = await response.json();
+      return kitchenByBusiness?.data || ([] as KitchenData[]);
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }, []);
+
+  const { isLoading: LoadingKitchensByBusiness, data: kitchenByBusinessData } =
+    useQuery({
+      queryKey: ["fetchKitchensByBusiness", businessId],
+      queryFn: () => fetchKitchensByBusiness(businessId || ""),
+      enabled: !!businessId,
+    });
+  return {
+    LoadingKitchensByBusiness,
+    kitchenByBusinessData,
   };
 };

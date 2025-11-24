@@ -23,6 +23,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { pushToken } from "../../services/token";
 import { respond } from "../../utils/response";
 //
 const dishesRouter = new Hono()
@@ -454,6 +455,8 @@ const dishesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      pushToken(c);
+
       const dishes = await UniquelyYours.find({ businessId, isDeleted: false });
 
       return respond(c, "fetched successfully", false, 200, dishes);
@@ -514,21 +517,23 @@ const dishesRouter = new Hono()
           );
         }
 
+        const hipalZPos = await BusinessPosConfig.findOne({
+          businessId: dishes[0].businessId,
+          isDeleted: false,
+          active: true,
+          posName: "HIPAL_Z",
+        });
+
         for (const dish of dishes) {
-          const dishAlreadyExists = await Dish.findOne({
-            businessId: dish.businessId,
-            name: dish.name,
-            isDeleted: false,
-            active: true,
-          });
-          if (!dishAlreadyExists) {
-            const createDish = await Dish.create([dish], { session });
-            if (!createDish) {
-              return c.json(
-                { err: true, message: "Error in creating", data: {} },
-                400,
-              );
-            }
+          const createDish = await Dish.create(
+            [{ ...dish, pos: !!hipalZPos }],
+            { session },
+          );
+          if (!createDish) {
+            return c.json(
+              { err: true, message: "Error in creating", data: {} },
+              400,
+            );
           }
         }
         return c.json({

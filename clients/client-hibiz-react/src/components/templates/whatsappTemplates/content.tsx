@@ -103,7 +103,6 @@ const MemoContent = () => {
             { type: HeaderInterface.Image, icon: '🖼️', label: 'Image' },
             { type: HeaderInterface.Video, icon: '🎥', label: 'Video ' },
             { type: HeaderInterface.Document, icon: '📄', label: 'Document' },
-            { type: HeaderInterface.Audio, icon: '🎵', label: 'Audio' },
           ].map((btn) => {
             const active = headerType === btn.type;
             return (

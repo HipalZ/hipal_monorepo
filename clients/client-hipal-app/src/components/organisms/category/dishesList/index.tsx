@@ -22,7 +22,7 @@ interface IDishesProps {
   menuLayout: IMenuLayout;
 }
 
-const DishesList: FC<IDishesProps> = ({
+const DishesList = ({
   childCategory,
   parentCategory,
   menuLayout,

@@ -152,7 +152,7 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
                   <CoinzRewardSection />
                   <section className="absolute z-30 w-full mt-10 bg-white rounded-2xl">
                     {/* <CouponzBlink /> */}
-                    <RefferalCouponz />
+                    {/* <RefferalCouponz /> */}
                     <BillSummary />
                     <SuggestCouponz />
                     <TotalBillButton />

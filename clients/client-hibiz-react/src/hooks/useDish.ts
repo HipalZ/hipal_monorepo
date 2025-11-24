@@ -79,6 +79,7 @@ export const useDishes = () => {
     queryKey: ["getAllDishes", businessId],
     queryFn: getAllDishes,
     enabled: !!businessId,
+    staleTime: 5 * 360 * 1000, // 30 minutes
   });
 
   return { data, isLoading, isError, refetch };
@@ -126,7 +127,10 @@ export const useLinkedDishes = () => {
 };
 
 export const useAddons = (dishStep: string) => {
-  const { businessId, menuId } = useParams<{ businessId?: string; menuId:string }>();
+  const { businessId, menuId } = useParams<{
+    businessId?: string;
+    menuId: string;
+  }>();
   const { setAddons } = useMenuPageStore((s) => ({
     setAddons: s.setAddons,
   }));

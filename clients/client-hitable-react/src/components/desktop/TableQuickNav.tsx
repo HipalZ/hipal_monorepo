@@ -1,21 +1,26 @@
+// src/components/Table/TableQuickNav.tsx (path as per your structure)
 import { useCart } from '@/components/store/useCart';
 import { useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { apiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeftRight, Merge, Plus } from 'lucide-react';
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { MdTableBar } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
+
 import { useIsMobile } from '../../hooks/use-mobile';
 import SpinnerMemo from '../atoms/loadingSpinner';
 import { useTableData } from '../hooks/useTableData';
+import useBusinessData from '../store/useBusinessData';
 import { useHiClientZ } from '../store/useHiClientzData';
 import { useMergeTableStore } from '../store/useMergeTableStore';
 import { useTempItemStore } from '../store/useTempItemStore';
 import type { TableData } from '../store/useZonesAndTable';
+
 import MergeTablesModal from './MergeTableModal';
 import SwitchTablesModal from './SwitchTable';
 import TempItemModal from './TempItem';
@@ -23,34 +28,46 @@ import TempItemModal from './TempItem';
 const TableQuickNav = () => {
   const { businessId } = useParams();
   const navigate = useNavigate();
+
   const setSelectedBill = useOrderStore((s) => s.setSelectedBill);
+  const selectedTable = useOrderStore((s) => s.selectedTable);
+
   const { setIsPlacingNewOrder } = useCart((s) => ({
     setIsPlacingNewOrder: s.setIsPlacingNewOrder,
   }));
 
+  const isHipalzPos = useBusinessData((s) => s?.outletInfo?.isHipalzPos);
+
   const userDetails = useHiClientZ((s) => s.captainData);
+
   const setShowMergeModal = useMergeTableStore((s) => s.setShowMergeModal);
   const showMergeModal = useMergeTableStore((s) => s.showMergeModal);
+
   const openItem = useTempItemStore((s) => s.openItem);
   const setOpenItem = useTempItemStore((s) => s.setOpenItem);
 
   const isMobile = useIsMobile();
 
+  // 🔐 Permission checks (cheap + stable)
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canMergeTable = hasPermission('merge_table');
+  const canAddTempItem = hasPermission('temp_item');
+
   const [switchPopoverOpen, setSwitchPopoverOpen] = useState(false);
+
   const { filteredTables } = useTableData({
     enabled: switchPopoverOpen || showMergeModal,
     businessIdOverride: businessId,
   });
-  const selectedTable = useOrderStore((s) => s.selectedTable);
 
-  const fetchTables = async (businessId: string) => {
+  const fetchTables = useCallback(async (bizId: string) => {
     const response = await apiRpc.table.all[':businessId'].$get({
-      param: { businessId },
+      param: { businessId: bizId },
     });
     const json = await response.json();
     const tablesData = json.data || [];
     return tablesData;
-  };
+  }, []);
 
   const { data: tables = [], isLoading } = useQuery({
     queryKey: ['tables', businessId],
@@ -63,18 +80,20 @@ const TableQuickNav = () => {
     return merged as TableData[];
   }, [tables, filteredTables]) as TableData[];
 
-  const goToTable = (table: TableData) => {
-    if (isMobile) {
-      setIsPlacingNewOrder(true);
-    }
-    setSelectedBill(null);
-    setSwitchPopoverOpen(false);
-    navigate(`/${businessId}/alerts/${table._id}`);
-    return;
-  };
+  const goToTable = useCallback(
+    (table: TableData) => {
+      if (isMobile) {
+        setIsPlacingNewOrder(true);
+      }
+      setSelectedBill(null);
+      setSwitchPopoverOpen(false);
+      navigate(`/${businessId}/alerts/${table._id}`);
+    },
+    [businessId, isMobile, navigate, setIsPlacingNewOrder, setSelectedBill],
+  );
 
-  const handleMergeClick = () => setShowMergeModal(true);
-  const handleMergeCancel = () => setShowMergeModal(false);
+  const handleMergeClick = useCallback(() => setShowMergeModal(true), [setShowMergeModal]);
+  const handleMergeCancel = useCallback(() => setShowMergeModal(false), [setShowMergeModal]);
 
   if (isLoading) {
     return <SpinnerMemo />;
@@ -89,6 +108,7 @@ const TableQuickNav = () => {
             <MdTableBar className="h-10 w-10 flex-shrink-0 text-purple-600" />
             <p className="truncate text-3xl font-semibold leading-tight">{selectedTable ? selectedTable.name : 'No Table'}</p>
           </section>
+
           {selectedTable?.isMerge && selectedTable.mergeTableIds?.length > 0 && (
             <div className="flex flex-wrap items-center gap-1">
               <span className="text-muted-foreground text-[11px] font-medium">Merged:</span>
@@ -112,16 +132,23 @@ const TableQuickNav = () => {
 
         {/* Action Buttons */}
         <section className="space-x-2 space-y-2 text-right">
+          {/* Switch Table - always allowed */}
           <Button onClick={() => setSwitchPopoverOpen(true)} variant="outline" size="default" className="gap-2 bg-transparent font-semibold">
             <ArrowLeftRight className="h-4 w-4" />
             <span className="hidden sm:inline">Switch</span>
             <MdTableBar className="mt-0.5 h-4 w-4" />
           </Button>
-          <Button onClick={() => setOpenItem(true)} variant="outline" size="default" className="gap-2 bg-transparent font-semibold">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add Item</span>
-          </Button>
-          {!selectedTable?.isMerge && (
+
+          {/* Add Temp Item - only if POS + permission temp_item */}
+          {isHipalzPos && canAddTempItem && (
+            <Button onClick={() => setOpenItem(true)} variant="outline" size="default" className="gap-2 bg-transparent font-semibold">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Item</span>
+            </Button>
+          )}
+
+          {/* Merge Table - only if POS + permission merge_table + table not already merged */}
+          {isHipalzPos && canMergeTable && !selectedTable?.isMerge && (
             <Button variant="outline" size="default" className="gap-2 bg-transparent font-semibold" onClick={handleMergeClick}>
               <Merge className="h-4 w-4" />
               <span className="hidden sm:inline">Merge</span>
@@ -138,7 +165,7 @@ const TableQuickNav = () => {
           onClose={() => setSwitchPopoverOpen(false)}
           currentTable={selectedTable}
           tables={activeTables}
-          onSwitch={(table) => goToTable(table)}
+          onSwitch={goToTable}
         />
       )}
 
@@ -146,6 +173,8 @@ const TableQuickNav = () => {
       {showMergeModal && (
         <MergeTablesModal show={showMergeModal} onClose={handleMergeCancel} staffId={userDetails?._id || ''} tables={activeTables} />
       )}
+
+      {/* Temp Item Modal */}
       {openItem && <TempItemModal show={openItem} onClose={() => setOpenItem(false)} />}
     </>
   );

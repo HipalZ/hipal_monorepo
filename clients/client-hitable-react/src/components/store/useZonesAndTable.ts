@@ -22,6 +22,7 @@ export interface TableData {
   capacity?: number;
   displayForCaptains: boolean;
   isDeleted: boolean;
+  isBillGenerated: boolean;
   name: string;
   rank: string;
   staffIds: string[];

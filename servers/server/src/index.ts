@@ -23,8 +23,8 @@ const app = new Hono({
 // app.use(checkOrigin());
 
 const limiter = rateLimiter({
-  windowMs: 15 * 60 * 1000,
-  limit: 10000,
+  windowMs: 60 * 1000, // 1 minute
+  limit: 100, // 100 requests per minute
   standardHeaders: "draft-6",
   keyGenerator: (c) => c.req.header("authorization") ?? "new-user",
   // store: new RedisStore({ client: redisClient }),
@@ -71,6 +71,7 @@ app.use(
 );
 app.use(csrf());
 app.use(logger());
+// app.use("*", tokenVerification);
 app.use("/assets/*", serveStatic({ path: "./assets" }));
 app.get("/ui", swaggerUI({ url: "/doc" }));
 app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404));
@@ -78,7 +79,6 @@ app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404));
 (async () => {
   await connectDB();
 })();
-/////
 
 app.route("/", routes);
 

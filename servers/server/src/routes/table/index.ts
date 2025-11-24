@@ -4,7 +4,6 @@ import {
   BusinessPosConfig,
   DuesUser,
   KotOrder,
-  LoyaltySettings,
   MergeTable,
   NpcUser,
   Order,
@@ -31,7 +30,6 @@ import { Hono } from "hono";
 import type { ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { executePosHandler } from "../../utils/executePoshandlers.ts";
 import { calculateCartBill } from "../../utils/helper";
@@ -269,6 +267,7 @@ const tableRouter = new Hono()
   )
   .put(
     "/update_guest",
+    // ubacMiddleware("add_pax"),
     zValidator(
       "json",
       z.object({
@@ -289,6 +288,18 @@ const tableRouter = new Hono()
         },
       );
 
+      await UserSession.findOneAndUpdate(
+        {
+          tableName: table?.name,
+          businessId: table?.businessId,
+        },
+        {
+          $set: {
+            paxCount: guestCount,
+          },
+        },
+      );
+
       return c.json(
         {
           message: "Table updated successfully",
@@ -302,7 +313,7 @@ const tableRouter = new Hono()
 
   .post(
     "/normal_settle",
-    ubacMiddleware("normal_settle"),
+    // ubacMiddleware("normal_settle"),
     zValidator("json", normalSettleSchema),
     async (c) => {
       //@ts-ignore
@@ -316,43 +327,27 @@ const tableRouter = new Hono()
           npcUserId,
           variantId,
         } = await c.req.json();
-        const paymentMode = await UpiMode.findById(settleModes[0]?._id);
-
-        if (!paymentMode) {
-          return respond(c, "Payment mode not found", true, 404, {});
-        }
-
-        const billAlreadySettled = await Payment.findOne({
-          billId: variantId ? variantId : billId,
-        });
-
-        if (billAlreadySettled) {
-          return respond(c, "Bill already settled", true, 409, {});
-        }
 
         const table = await Table.findById(tableId);
-        const tableSession = await UserSession.findOne({
-          businessId: table?.businessId,
-          tableName: table?.name,
-        });
+
         const captain = await User.findById(captainId);
 
-        if (!table || !tableSession || !captain) {
-          return respond(c, "Table or Captain not found", true, 404, {});
-        }
-        const businessLoyalty = await LoyaltySettings.findOne({
-          businessId: table?.businessId,
-        });
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
           isDeleted: false,
           active: true,
         });
+
         if (!pos) {
           return respond(c, "Pos not found", true, 400, {});
         }
 
+        if (!table || !captain) {
+          return respond(c, "Table or Captain not found", true, 404, {});
+        }
+
         if (pos.posName === "HIPAL_Z") {
+          console.log("jk");
           const result = await executePosHandler(pos.posName, "normal_settle", {
             tableId: table._id,
             captainId: captain._id,
@@ -372,10 +367,35 @@ const tableRouter = new Hono()
           }
         }
 
-        const npcUser = await NpcUser.findById(npcUserId);
-        //no
+        const paymentMode = await UpiMode.findById(settleModes[0]?._id);
+
+        if (!paymentMode) {
+          return respond(c, "Payment mode not found", true, 404, {});
+        }
+
+        const billAlreadySettled = await Payment.findOne({
+          billId: variantId ? variantId : billId,
+        });
+
+        if (billAlreadySettled) {
+          return respond(c, "Bill already settled", true, 409, {});
+        }
+
+        const tableSession = await UserSession.findOne({
+          businessId: table?.businessId,
+          tableName: table?.name,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+
+        console.log("norold", tableSession.billInvoice);
+
+        const npcUser = await NpcUser.findById(npcUserId);
+
         if (originBillIsSplit) {
           if (!variantId) {
             return respond(
@@ -427,7 +447,7 @@ const tableRouter = new Hono()
                   userId:
                     paymentMode?.name === "npc"
                       ? npcUser?.userId
-                      : splitTableSessionData?.customerIds?.[0] || captainId,
+                      : splitTableSessionData.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                   claimedCoins: splitTableSessionData?.claimedCoins || 0,
                   tableName: table?.name,
                   tips: splitTableSessionData?.tips || 0,
@@ -485,6 +505,10 @@ const tableRouter = new Hono()
                   billId: splitTableSessionData?._id.toString(),
                   billItems: splitTableSessionData?.items || [],
                   isSplitBillVariant: true,
+                  billInvoice: splitTableSessionData?.billInvoice,
+                  paxCount: tableSession?.paxCount || 0,
+                  serviceChargePercentage:
+                    tableSession?.serviceChargePercentage || 0,
                 },
               ],
               { session },
@@ -624,7 +648,7 @@ const tableRouter = new Hono()
                   userId:
                     paymentMode?.name === "npc"
                       ? npcUser?.userId
-                      : splitTableSessionData?.customerIds?.[0] || captainId,
+                      : splitTableSessionData.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                   claimedCoins: splitTableSessionData?.claimedCoins || 0,
                   tableName: table?.name,
                   tips: splitTableSessionData?.tips || 0,
@@ -682,6 +706,10 @@ const tableRouter = new Hono()
                   billId: splitTableSessionData?._id.toString(),
                   billItems: splitTableSessionData?.items || [],
                   isSplitBillVariant: true,
+                  billInvoice: splitTableSessionData?.billInvoice,
+                  paxCount: tableSession?.paxCount || 0,
+                  serviceChargePercentage:
+                    tableSession?.serviceChargePercentage || 0,
                 },
               ],
               { session },
@@ -831,6 +859,7 @@ const tableRouter = new Hono()
                 isMerge: false,
                 mergeTableIds: [],
                 mergedBy: null,
+                isBillGenerated: false,
               },
               { session },
             );
@@ -988,7 +1017,7 @@ const tableRouter = new Hono()
               userId:
                 paymentMode?.name === "npc"
                   ? npcUser?.userId
-                  : tableSession?.customerIds?.[0] || captainId,
+                  : tableSession.billingUserId ||  tableSession?.customerIds?.[0] || captainId,
               claimedCoins: tableSession?.claimedCoins || 0,
               tableName: table?.name,
               tips: tableSession?.tips || 0,
@@ -1054,6 +1083,10 @@ const tableRouter = new Hono()
               billId: tableSession?._id.toString(),
               billItems: tableSession?.items || [],
               pin: tableSession?.pin,
+              billInvoice: tableSession?.billInvoice || 0,
+              paxCount: tableSession?.paxCount || 0,
+              serviceChargePercentage:
+                tableSession?.serviceChargePercentage || 0,
             },
           ],
           { session },
@@ -1110,6 +1143,7 @@ const tableRouter = new Hono()
             isMerge: false,
             mergeTableIds: [],
             mergedBy: null,
+            isBillGenerated: false,
           },
           { session },
         );
@@ -1379,6 +1413,7 @@ const tableRouter = new Hono()
   )
   .post(
     "/merge",
+    // ubacMiddleware("merge_table"),
     zValidator(
       "json",
       z.object({
@@ -1510,6 +1545,7 @@ const tableRouter = new Hono()
               isMerge: false,
               mergedBy: null,
               mergeTableNames: [],
+              isBillGenerated: false,
             },
             { session },
           );
@@ -1546,7 +1582,8 @@ const tableRouter = new Hono()
               pin: tenDigitCode,
               tableName: destTable.name,
               customerName: customerNames[0] || "Guest",
-              phoneNumbers,
+              phoneNumbers:
+                phoneNumbers.length > 0 ? phoneNumbers : [staff.phone],
               performedBy: "captain",
               date: Date.now(),
               isMerged: true,
@@ -1665,6 +1702,7 @@ const tableRouter = new Hono()
   )
   .post(
     "/e_bill",
+    // ubacMiddleware("e_bill"),
     zValidator(
       "json",
       z.object({
@@ -1833,251 +1871,149 @@ const tableRouter = new Hono()
     },
   )
 
-  .post("/transfer_table", zValidator("json", switchTableschema), async (c) => {
-    //@ts-ignore
-    return runInTransaction(async (session: ClientSession) => {
-      const {
-        businessId,
-        transferBy,
-        transferType,
-        fromTableId,
-        toTableId,
-        itemIds = [],
-      } = (await c.req.json()) as SwitchTableType;
+  .post(
+    "/transfer_table",
+    // ubacMiddleware("transfer_item_or_table"),
 
-      const sourceTable = await Table.findById(fromTableId);
-      const destinationTable = await Table.findById(toTableId);
-
-      if (fromTableId === toTableId) {
-        return respond(
-          c,
-          "Cannot switch tables to the same table",
-          true,
-          400,
-          {},
-        );
-      }
-
-      const posConfigData = await BusinessPosConfig.findOne({
-        businessId,
-        isDeleted: false,
-        active: true,
-      });
-
-      if (!posConfigData) {
-        return respond(c, "Pos not found", true, 400, {});
-      }
-
-      if (!sourceTable || !destinationTable) {
-        return respond(c, "Table not found", true, 404, {});
-      }
-
-      const tableSession = await UserSession.findOne({
-        tableName: sourceTable.name,
-        businessId,
-      });
-
-      if (!tableSession || sourceTable.status === "EMPTY") {
-        return respond(
-          c,
-          `No active session found for table ${sourceTable.name}`,
-          true,
-          400,
-          {},
-        );
-      }
-
-      const billAlreadySplit = checkOriginBillIsSplit(tableSession);
-      if (billAlreadySplit) {
-        return respond(
-          c,
-          "Bill already split you cannot transfer the table and items",
-          true,
-          400,
-          {},
-        );
-      }
-
-      if (transferType === "TABLE") {
-        await KotOrder.updateMany(
-          {
-            tableName: sourceTable.name,
-            settled: false,
-            accepted: true,
-            businessId,
-          },
-          {
-            $set: {
-              tableName: destinationTable.name,
-              tableId: destinationTable._id,
-              transferd: true,
-              transferedBy: transferBy,
-              fromTable: sourceTable.name,
-              toTable: destinationTable.name,
-            },
-          },
-          { session },
-        );
-
-        await UserSession.findOneAndUpdate(
-          {
-            tableName: sourceTable.name,
-            businessId,
-          },
-          {
-            $set: {
-              tableName: destinationTable.name,
-              transferTableFrom: sourceTable._id,
-              transferTableTo: destinationTable._id,
-              isTransfer: true,
-              transferBy,
-              transferType: "TABLE",
-            },
-          },
-          { session, upsert: true },
-        );
-
-        await Table.findByIdAndUpdate(
+    zValidator("json", switchTableschema),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const {
+          businessId,
+          transferBy,
+          transferType,
           fromTableId,
-          {
-            status: "EMPTY",
-            capacity: 0,
-            hiCode: "",
-            transferTableFrom: "",
-            transferTableTo: "",
-            currentTableAmount: 0,
-            totalItemCount: 0,
-            userIds: [],
-            isTransfer: false,
-            isMerge: false,
-            mergeTableIds: [],
-            mergedBy: null,
-          },
-          { session },
-        );
-
-        await Table.findByIdAndUpdate(
           toTableId,
-          {
-            status: sourceTable.status,
-            capacity: sourceTable?.capacity,
-            hiCode: sourceTable?.hiCode,
-            currentTableAmount: sourceTable?.currentTableAmount,
-            totalItemCount: sourceTable?.totalItemCount,
-            userIds: sourceTable?.userIds,
-            isTransfer: true,
-          },
-          { session },
-        );
-        await MergeTable.deleteOne(
-          {
-            parentTableId: fromTableId,
-          },
-          {
-            session,
-          },
-        );
+          itemIds = [],
+        } = (await c.req.json()) as SwitchTableType;
 
-        return c.json(
-          { message: "Table transfer successfully", err: false, data: {} },
-          200,
-        );
-      }
+        const sourceTable = await Table.findById(fromTableId);
+        const destinationTable = await Table.findById(toTableId);
 
-      if (transferType === "ITEM") {
-        const kotOrders = await KotOrder.find({
-          cart: { $elemMatch: { _id: { $in: itemIds } } },
-          settled: false,
-          accepted: true,
-          tableName: sourceTable.name,
-        });
-
-        if (kotOrders.length === 0) {
-          return respond(c, "No items found in the KotOrder", true, 400, {});
+        if (fromTableId === toTableId) {
+          return respond(
+            c,
+            "Cannot switch tables to the same table",
+            true,
+            400,
+            {},
+          );
         }
 
-        const destinationTableSession = await UserSession.findOne({
+        const posConfigData = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (!posConfigData) {
+          return respond(c, "Pos not found", true, 400, {});
+        }
+
+        if (!sourceTable || !destinationTable) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
+        const tableSession = await UserSession.findOne({
+          tableName: sourceTable.name,
+          businessId,
+        });
+
+        const destTableSession = await UserSession.findOne({
           tableName: destinationTable.name,
           businessId,
         });
 
-        for (const kotOrder of kotOrders) {
-          const removedItems = kotOrder.cart.filter((item) =>
-            itemIds.includes(item._id.toString()),
+        if (!tableSession || sourceTable.status === "EMPTY") {
+          return respond(
+            c,
+            `No active session found for table ${sourceTable.name}`,
+            true,
+            400,
+            {},
           );
+        }
 
-          kotOrder.cart = kotOrder.cart.filter(
-            (item) => !itemIds.includes(item._id.toString()),
+        const billAlreadySplit = checkOriginBillIsSplit(tableSession);
+        if (billAlreadySplit) {
+          return respond(
+            c,
+            "Bill already split you cannot transfer the table and items",
+            true,
+            400,
+            {},
           );
+        }
 
-          if (kotOrder.cart.length === 0) {
-            await KotOrder.deleteOne({ _id: kotOrder._id }, { session });
-          } else {
-            await kotOrder.save({ session });
+        if (destTableSession) {
+          const billAlreadySplit = checkOriginBillIsSplit(destTableSession);
+          if (billAlreadySplit) {
+            return respond(
+              c,
+              "Bill already split you cannot transfer the table and items",
+              true,
+              400,
+              {},
+            );
           }
+        }
 
-          const { _id, ...newKotOrderData } = kotOrder.toObject();
-
-          const calculateBillDishIds = removedItems.filter(
-            (item) => !item.dish.isDeleted,
-          );
-          const totalBill = calculateCartBill(calculateBillDishIds);
-
-          await KotOrder.create(
-            [
-              {
-                ...newKotOrderData,
-                cart: removedItems,
+        if (transferType === "TABLE") {
+          await KotOrder.updateMany(
+            {
+              tableName: sourceTable.name,
+              settled: false,
+              accepted: true,
+              businessId,
+            },
+            {
+              $set: {
                 tableName: destinationTable.name,
                 tableId: destinationTable._id,
                 transferd: true,
                 transferedBy: transferBy,
-                businessId,
-                date: Date.now(),
                 fromTable: sourceTable.name,
                 toTable: destinationTable.name,
               },
-            ],
+            },
             { session },
           );
 
-          let hiCode = "";
-          if (!destinationTableSession || destinationTable.status === "EMPTY") {
-            hiCode = Math.floor(1000 + Math.random() * 9000).toString();
-            const tenDigitCode = generateTenDigitCode();
-
-            await UserSession.findOneAndUpdate(
-              { businessId, tableName: destinationTable.name },
-              {
-                $setOnInsert: {
-                  customerName: tableSession?.customerName || "Guest",
-                  hiCode,
-                  pin: tenDigitCode,
-                  date: Date.now(),
-                },
-                $set: {
-                  transferTableFrom: sourceTable._id,
-                  transferTableTo: destinationTable._id,
-                  isTransfer: true,
-                  transferBy,
-                  transferType: "ITEM",
-                },
+          await UserSession.findOneAndUpdate(
+            {
+              tableName: sourceTable.name,
+              businessId,
+            },
+            {
+              $set: {
+                tableName: destinationTable.name,
+                transferTableFrom: sourceTable._id,
+                transferTableTo: destinationTable._id,
+                isTransfer: true,
+                transferBy,
+                transferType: "TABLE",
               },
-              {
-                upsert: true,
-                session,
-                new: true,
-              },
-            );
-          }
+            },
+            { session, upsert: true },
+          );
 
           await Table.findByIdAndUpdate(
             fromTableId,
             {
-              $inc: {
-                currentTableAmount: -totalBill,
-                totalItemCount: -removedItems.length,
-              },
+              status: "EMPTY",
+              capacity: 0,
+              hiCode: "",
+              transferTableFrom: "",
+              transferTableTo: "",
+              currentTableAmount: 0,
+              totalItemCount: 0,
+              userIds: [],
+              isTransfer: false,
+              isMerge: false,
+              mergeTableIds: [],
+              mergedBy: null,
+              isBillGenerated: false,
             },
             { session },
           );
@@ -2085,30 +2021,160 @@ const tableRouter = new Hono()
           await Table.findByIdAndUpdate(
             toTableId,
             {
-              $inc: {
-                currentTableAmount: totalBill,
-                totalItemCount: removedItems.length,
-              },
-              hiCode: destinationTableSession?.hiCode || hiCode,
-              status: "ACTIVE",
+              status: sourceTable.status,
+              capacity: sourceTable?.capacity,
+              hiCode: sourceTable?.hiCode,
+              currentTableAmount: sourceTable?.currentTableAmount,
+              totalItemCount: sourceTable?.totalItemCount,
+              userIds: sourceTable?.userIds,
               isTransfer: true,
-              transferType: "ITEM",
             },
             { session },
           );
+          await MergeTable.deleteOne(
+            {
+              parentTableId: fromTableId,
+            },
+            {
+              session,
+            },
+          );
+
+          return c.json(
+            { message: "Table transfer successfully", err: false, data: {} },
+            200,
+          );
         }
 
-        return c.json(
-          {
-            message: "Items transferred successfully",
-            err: false,
-            data: {},
-          },
-          200,
-        );
-      }
-    });
-  })
+        if (transferType === "ITEM") {
+          const kotOrders = await KotOrder.find({
+            cart: { $elemMatch: { _id: { $in: itemIds } } },
+            settled: false,
+            accepted: true,
+            tableName: sourceTable.name,
+          });
+
+          if (kotOrders.length === 0) {
+            return respond(c, "No items found in the KotOrder", true, 400, {});
+          }
+
+          const destinationTableSession = await UserSession.findOne({
+            tableName: destinationTable.name,
+            businessId,
+          });
+
+          for (const kotOrder of kotOrders) {
+            const removedItems = kotOrder.cart.filter((item) =>
+              itemIds.includes(item._id.toString()),
+            );
+
+            kotOrder.cart = kotOrder.cart.filter(
+              (item) => !itemIds.includes(item._id.toString()),
+            );
+
+            if (kotOrder.cart.length === 0) {
+              await KotOrder.deleteOne({ _id: kotOrder._id }, { session });
+            } else {
+              await kotOrder.save({ session });
+            }
+
+            const { _id, ...newKotOrderData } = kotOrder.toObject();
+
+            const calculateBillDishIds = removedItems.filter(
+              (item) => !item.dish.isDeleted,
+            );
+            const totalBill = calculateCartBill(calculateBillDishIds);
+
+            await KotOrder.create(
+              [
+                {
+                  ...newKotOrderData,
+                  cart: removedItems,
+                  tableName: destinationTable.name,
+                  tableId: destinationTable._id,
+                  transferd: true,
+                  transferedBy: transferBy,
+                  businessId,
+                  date: Date.now(),
+                  fromTable: sourceTable.name,
+                  toTable: destinationTable.name,
+                },
+              ],
+              { session },
+            );
+
+            let hiCode = "";
+            if (
+              !destinationTableSession ||
+              destinationTable.status === "EMPTY"
+            ) {
+              hiCode = Math.floor(1000 + Math.random() * 9000).toString();
+              const tenDigitCode = generateTenDigitCode();
+
+              await UserSession.findOneAndUpdate(
+                { businessId, tableName: destinationTable.name },
+                {
+                  $setOnInsert: {
+                    customerName: tableSession?.customerName || "Guest",
+                    hiCode,
+                    pin: tenDigitCode,
+                    date: Date.now(),
+                  },
+                  $set: {
+                    transferTableFrom: sourceTable._id,
+                    transferTableTo: destinationTable._id,
+                    isTransfer: true,
+                    transferBy,
+                    transferType: "ITEM",
+                  },
+                },
+                {
+                  upsert: true,
+                  session,
+                  new: true,
+                },
+              );
+            }
+
+            await Table.findByIdAndUpdate(
+              fromTableId,
+              {
+                $inc: {
+                  currentTableAmount: -totalBill,
+                  totalItemCount: -removedItems.length,
+                },
+              },
+              { session },
+            );
+
+            await Table.findByIdAndUpdate(
+              toTableId,
+              {
+                $inc: {
+                  currentTableAmount: totalBill,
+                  totalItemCount: removedItems.length,
+                },
+                hiCode: destinationTableSession?.hiCode || hiCode,
+                status: "ACTIVE",
+                isTransfer: true,
+                transferType: "ITEM",
+              },
+              { session },
+            );
+          }
+
+          return c.json(
+            {
+              message: "Items transferred successfully",
+              err: false,
+              data: {},
+            },
+            200,
+          );
+        }
+      });
+    },
+  )
 
   .post(
     "/save_unsettle_table",

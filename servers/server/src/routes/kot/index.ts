@@ -17,8 +17,8 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
+import { pushToken } from "../../services/token";
 import { calculateCartBill } from "../../utils/helper";
 import {
   convertToHipalzCart,
@@ -40,6 +40,8 @@ const kotRouter = new Hono()
     ),
     async (c) => {
       const { tableId } = c.req.param();
+
+      pushToken(c);
 
       const tableName = await Table.findOne({
         _id: tableId,
@@ -86,18 +88,101 @@ const kotRouter = new Hono()
     },
   )
   .post(
+    "/tables_kot",
+    zValidator(
+      "json",
+      z.object({
+        tableIds: z.array(z.string().min(1)).nonempty(),
+      }),
+    ),
+    async (c) => {
+      try {
+        const { tableIds } = await c.req.json();
+
+        // pushToken(c)
+        const tables = await Table.find({ _id: { $in: tableIds } });
+        if (!tables.length) {
+          return c.json(
+            {
+              message: "Tables not found",
+              err: true,
+              data: null,
+            },
+            404,
+          );
+        }
+
+        const tableNames = tables.map((t) => t.name);
+        const businessIds = [
+          ...new Set(tables.map((t) => t.businessId.toString())),
+        ];
+
+        const kots = await KotOrder.find({
+          tableName: { $in: tableNames },
+          businessId: { $in: businessIds },
+          settled: false,
+          accepted: true,
+        })
+          .populate({ path: "businessId", select: "name" })
+          .populate({ path: "transferedBy", select: "name phone" })
+          .populate({ path: "editedBy", select: "name phone" });
+        return c.json(
+          { message: "KOTs fetched successfully", err: false, data: kots },
+          200,
+        );
+      } catch (err) {
+        console.error("Error fetching KOTs:", err);
+        return c.json(
+          { message: "Internal server error", err: true, data: null },
+          500,
+        );
+      }
+    },
+  )
+  .post(
     "/table_user",
     zValidator(
       "json",
       z.object({
         userIds: z.array(z.string()).min(1).max(100),
+        businessId: z.string().min(1).max(100),
       }),
     ),
     async (c) => {
-      const { userIds = [] } = await c.req.json();
+      const { userIds = [], businessId } = await c.req.json();
+
+      for (const id of userIds) {
+        const user = await User.findById(id);
+        const userAnalytic = await UserAnalytic.findOne({
+          userId: id,
+          businessId,
+        });
+
+        if (!userAnalytic) {
+          const newUserAnalytic = new UserAnalytic({
+            userId: id,
+            businessId,
+            avgSpend: 0,
+            totalSpend: 0,
+            totalOrders: 0,
+
+            totalItemCount: 0,
+            totalBillCount: 0,
+            visitCount: 0,
+            lastVisit: Date.now(),
+            coinzIssued: 0,
+            coinzUsed: 0,
+            couponCount: 0,
+            currentCoins: 0,
+            dateOfJoining: Date.now(),
+          });
+          await newUserAnalytic.save();
+        }
+      }
 
       const kot = await UserAnalytic.find({
         userId: { $in: userIds },
+        businessId,
       })
         .populate({
           path: "userId",
@@ -121,6 +206,7 @@ const kotRouter = new Hono()
 
   .post(
     "/open_item",
+    // ubacMiddleware("temp_item"),
     zValidator(
       "json",
       z.object({
@@ -166,6 +252,10 @@ const kotRouter = new Hono()
 
         if (!pos) {
           return respond(c, "POS not found", true, 404, {});
+        }
+
+        if (pos.posName !== "HIPAL_Z") {
+          return respond(c, "operation not allowed", true, 401, {});
         }
 
         const tableSession = (await UserSession.findOne({
@@ -354,6 +444,7 @@ const kotRouter = new Hono()
 
   .post(
     "/reprint_kot",
+    // ubacMiddleware("re_print_kot"),
     zValidator(
       "json",
       z.object({
@@ -410,6 +501,8 @@ const kotRouter = new Hono()
 
   .post(
     "/delete_kot",
+
+    // ubacMiddleware("delete_kot"),
     zValidator(
       "json",
       z.object({
@@ -622,7 +715,7 @@ const kotRouter = new Hono()
 
   .put(
     "/",
-    ubacMiddleware("order_accept"),
+    // ubacMiddleware("order_accept"),
     zValidator("json", kotOrderAcceptSchema),
 
     async (c) => {
@@ -872,7 +965,8 @@ const kotRouter = new Hono()
 
         for (const kot of affectedKots) {
           const allCooked = kot.cart.every(
-            (item) => item.itemStatus === "COOKED",
+            (item) =>
+              item.itemStatus === "COOKED" || item.itemStatus === "DELIVERED",
           );
           if (allCooked && kot.kotStatus !== "COMPLETED") {
             await KotOrder.updateOne(

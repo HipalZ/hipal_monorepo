@@ -3,6 +3,7 @@ import { useGetBill } from '@/components/hooks/useBill';
 import { useHomeNavigation } from '@/components/hooks/useNavigateHome.ts';
 import useBusinessData from '@/components/store/useBusinessData';
 import { useOrderStore } from '@/components/store/useOrderData';
+import { useStaffPermissionStore } from '@/components/store/usePermissions.ts';
 import type { IBillData } from '@/components/types/hiClientzData.ts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -65,11 +66,14 @@ const MemoGetBill = () => {
   const selectedBill = useOrderStore((s) => s.selectedBill);
   const setSelectedBill = useOrderStore((s) => s.setSelectedBill);
 
+  const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
+  const canSettle = hasPermission('normal_settle');
+
   const closeOrderModalHandler = useCallback(() => {
     setOpenOrderModal(false);
   }, [setOpenOrderModal]);
 
-  const { isLoading, data: billData } = useGetBill();
+  const { isLoading, data: billData, getBillCall } = useGetBill();
 
   // Memoized values
   const isSplitBill = useMemo(() => Array.isArray(billData), [billData]);
@@ -108,12 +112,13 @@ const MemoGetBill = () => {
     setSelectedBill(null);
   }, []);
 
-  const reprintBillHandler = useCallback(() => {
+  const reprintBillHandler = useCallback(async () => {
+    await getBillCall();
     reprintBill({
       businessId: businessId || '',
       tableName: selectedTable?.name || '',
     });
-  }, [reprintBill, businessId, selectedTable?.name]);
+  }, [reprintBill, businessId, selectedTable?.name, getBillCall]);
 
   const closeMoreOptions = useCallback(() => {
     setShowMoreOption(false);
@@ -193,8 +198,8 @@ const MemoGetBill = () => {
         <Card
           key={currentBill.id}
           className={cn(
-            'mx-auto mb-8 min-h-[90dvh] max-w-lg border border-none py-[5rem] shadow-none md:py-[8rem] lg:pb-20 lg:pt-0',
-            currentBill.isPaid ? 'h-full overflow-auto bg-green-100' : 'bg-white',
+            'hide-scrollbar mx-auto mb-8 h-[95dvh] max-w-lg overflow-auto border border-none py-[5rem] shadow-none md:py-[8rem] lg:pb-20 lg:pt-0',
+            currentBill.isPaid ? 'h-full bg-green-100' : 'bg-white',
           )}
         >
           <BillHeader
@@ -317,7 +322,7 @@ const MemoGetBill = () => {
           {
             text: 'Settle',
             onClick: openNormalSettle,
-            className: 'rounded-md !bg-purple-600 ',
+            className: cn('rounded-md !bg-purple-600 ', !canSettle && 'hidden'),
           },
           {
             text: 'Hi Settle',
@@ -330,7 +335,7 @@ const MemoGetBill = () => {
             disable: isPending,
             isLoading: isPending,
             highlight: true,
-            className: 'rounded-md',
+            className: cn('rounded-md', !canSettle && 'hidden'),
           },
         ]}
       />

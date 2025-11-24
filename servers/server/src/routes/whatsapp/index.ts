@@ -46,7 +46,6 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { enqueueWhatsAppJob } from "../../queues/enqueue";
 import { getMerchantConfig } from "../../utils/cacheHelper";
 import { getFutureSeconds } from "../../utils/dateAndTime";
 import {
@@ -64,7 +63,8 @@ import {
   whatsAppUserAndTextMessage,
 } from "../../utils/whatsappWebhookHandlers/helper";
 import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
-import { waWebhookHandler } from "../../handlers/pos/hipalz/flows";
+import { handleChatbotFlow } from "../../handlers/pos/hipalz/flows";
+import { enqueueWhatsAppJob } from "../../queues/enqueue";
 interface AxiosError {
   response?: {
     status?: number;
@@ -147,6 +147,7 @@ const pushToQueue = async (
     templateName: string;
     languageCode: string;
     templateId: string;
+    category: string;
   },
   businessName: string,
   address: string,
@@ -201,6 +202,7 @@ const pushToQueue = async (
     templateId,
     campaignId: createCampaign._id.toString(),
     customersArray: customersArray,
+    category: template.category,
   };
 
   await enqueueWhatsAppJob("pushCustomerIntoQueue", payload, {
@@ -1719,7 +1721,81 @@ const whatsappRouter = new Hono()
     },
   )
 
-  .post("/wa-webhooks", waWebhookHandler)
+  .post(
+    "/wa-webhooks",
+
+    async (c) => {
+      const body = await c.req.json();
+      if (body.action === "ping") {
+        return c.json(
+          {
+            version: "3.0",
+            data: { status: "active" },
+          },
+          200,
+        );
+      }
+      if (!body?.object) {
+        return c.json({ message: "ignored", err: false }, 200);
+      }
+      const { messages, contacts, statuses, whatsAppBusinessConfigData } =
+        await whatsAppEventData(body);
+      const handled = await handleChatbotFlow({
+        messages,
+        contacts,
+        statuses,
+        whatsAppBusinessConfigData,
+        c,
+      });
+
+      if (handled) return handled;
+      if (
+        messages &&
+        messages?.text?.body?.length > 1 &&
+        whatsAppBusinessConfigData
+      ) {
+        const { userData, userInput } = await whatsAppUserAndTextMessage(
+          contacts,
+          messages,
+          whatsAppBusinessConfigData,
+        );
+
+        const qrType = identifyQrTypeFromMessage(userInput);
+        console.log("qrType", qrType);
+
+        if (qrType?.qrType && qrHandlers[qrType.qrType]) {
+          await qrHandlers[qrType.qrType](
+            qrType.value,
+            userData.phone,
+            userData._id.toString(),
+            userData.name || "Guest",
+            whatsAppBusinessConfigData,
+          );
+        }
+        if (whatsAppBusinessConfigData.chat) {
+          await whatsAppChatHandler(
+            messages?.text?.body,
+            userData._id.toString(),
+            whatsAppBusinessConfigData,
+          );
+        }
+
+        await whatsAppBlockUserHandler(
+          whatsAppBusinessConfigData,
+          userData?.phone,
+          userData._id.toString(),
+          messages?.id,
+          messages?.text?.body,
+        );
+      }
+
+      if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
+        await whatsAppCampaignHandler(whatsAppBusinessConfigData, statuses);
+      }
+
+      return respond(c, "event received", false, 200, {});
+    },
+  )
 
   .get(
     "/whatsapp_config/:businessId",

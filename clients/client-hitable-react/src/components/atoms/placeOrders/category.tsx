@@ -1,4 +1,6 @@
+import SearchResultsGrid from '@/components/atoms/placeOrders/searchResultsGrid';
 import { useOrderStore } from '@/components/store/useOrderData';
+import type { CategoryType } from '@hi/db-models/src/validators';
 import { motion } from 'framer-motion';
 import { memo } from 'react';
 import { useCategories } from '../../hooks/useCategories';
@@ -11,7 +13,7 @@ import Subtypes from './subtypes';
 const MemoCategory = () => {
   const { isLoading, error } = useCategories();
   const selectedCategory = useOrderStore((s) => s.selectedCategory);
-
+  const searchActive = useOrderStore((s) => s.searchActive);
   if (isLoading) {
     return <SpinnerMemo />;
   }
@@ -29,8 +31,9 @@ const MemoCategory = () => {
       <Subtypes />
       <div className="w-3/4 overflow-auto border-l border-gray-200 p-2 pb-[5rem] md:p-4">
         <SearchComponent />
+        {searchActive && <SearchResultsGrid />}
         <h2 className="mb-6 pt-6 text-xl font-bold">{selectedCategory ? selectedCategory.name : 'Select a category'}</h2>
-        <CompactDishGrid selectedCategory={selectedCategory} />
+        <CompactDishGrid selectedCategory={selectedCategory as CategoryType} />
       </div>
       <LiveCart />
     </div>

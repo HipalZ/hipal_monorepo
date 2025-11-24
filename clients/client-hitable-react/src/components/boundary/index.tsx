@@ -53,10 +53,10 @@ const ErrorFallback = ({ resetErrorBoundary }: { resetErrorBoundary: () => void 
           <p className="text-muted-foreground">If your connection dropped or the app crashed, refresh to restart.</p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button onClick={goHome} variant="outline" className="w-full">
-              Refresh
+              Go Home
             </Button>
             <Button onClick={hardRefresh} className="w-full">
-              Go Home
+              Refresh
             </Button>
           </div>
         </CardContent>

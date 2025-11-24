@@ -1,4 +1,9 @@
-import { Subscriber, User, WhatsAppBusinessConfig } from "@hi/db-models";
+import {
+  Subscriber,
+  User,
+  UserAnalytic,
+  WhatsAppBusinessConfig,
+} from "@hi/db-models";
 import type { QrParseResult, QrType } from "./whatsAppHandlerTypes";
 //@ts-ignore
 async function whatsAppEventData(whatsAppWebhookEventBody) {
@@ -67,6 +72,22 @@ async function whatsAppUserAndTextMessage(
       phone: userPhone,
       name: userName,
       role: ["HIPAL_CUSTOMER", "OWNER", "MANAGER", "CAPTAIN", "CO_OWNER"],
+    });
+  }
+
+  const userAnalytics = await UserAnalytic.findOne({
+    userId: isAlreadyRegisteredUser?._id.toString(),
+    businessId: whatsAppBusinessConfigData?.businessId,
+  });
+
+  if (!userAnalytics) {
+    await UserAnalytic.create({
+      userId: isAlreadyRegisteredUser?._id.toString(),
+      businessId: whatsAppBusinessConfigData?.businessId,
+      visitCount: 1,
+      totalSpend: 0,
+      avgSpend: 0,
+      dateOfJoining: Date.now(),
     });
   }
 

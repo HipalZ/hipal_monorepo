@@ -104,8 +104,7 @@ export const useAddTemplate = () => {
 
   const handleBodyTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const trimmedValue = normalizeInput(e.target.value);
-      setBodyText(trimmedValue);
+      setBodyText(e.target.value.trimStart());
     },
     [setBodyText],
   );

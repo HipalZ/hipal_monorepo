@@ -1,3 +1,4 @@
+import useBusinessData from '@/components/store/useBusinessData';
 import { useOrderStore } from '@/components/store/useOrderData';
 import type { ICustomerInformation, ITag } from '@/components/types/hiClientzData';
 import { Badge } from '@/components/ui/badge';
@@ -13,21 +14,25 @@ import AddCustomerModal from './AddCustomerModal';
 const MemoCustomerInformation = () => {
   const { selectedTable } = useOrderStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const businessId = useBusinessData((s) => s?.outletInfo?.businessId);
   const getCustomerInformation = useCallback(async () => {
+    const onlyIds = selectedTable?.userIds?.map((u: any) => (typeof u === 'string' ? u : u._id)) || [];
+
     const response = await apiRpc.kot.table_user.$post({
       json: {
-        userIds: selectedTable?.userIds || [],
+        userIds: onlyIds,
+        businessId: businessId || '',
       },
     });
+
     const res = await response.json();
     return (res?.data as ICustomerInformation[]) ?? [];
-  }, [selectedTable]);
+  }, [selectedTable, businessId]);
 
   const { isLoading, data, refetch } = useQuery({
     queryKey: ['getCustomerInformation', selectedTable?.userIds],
-    queryFn: getCustomerInformation,
-    enabled: !!selectedTable?.userIds?.length,
+    queryFn: () => getCustomerInformation(selectedTable?.userIds),
+    enabled: selectedTable?.userIds?.length > 0,
   });
 
   const handleAddCustomerSuccess = () => {
@@ -66,6 +71,7 @@ const MemoCustomerInformation = () => {
         ) : (
           data?.map((customerInfo: ICustomerInformation, index: number) => {
             const tagMap = getTagCounts(customerInfo?.tagIds ?? []);
+            if (customerInfo?.businessId !== businessId) return;
             return (
               <Card key={customerInfo?._id || index} className="w-[22rem] overflow-hidden">
                 <CardHeader className="bg-black">

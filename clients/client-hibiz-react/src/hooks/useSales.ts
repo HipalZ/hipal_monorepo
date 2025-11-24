@@ -1,7 +1,7 @@
 import { type Filters, useSalesStore } from "@/components/store/useSalesStore";
-import type { HistoryData } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
+import { useApiErrorHandler } from "./useApiErrorHandler";
 
 export interface salesPayload {
   businessId: string;
@@ -13,7 +13,11 @@ export interface salesPayload {
 }
 
 export const useGetallSalesByGet = (payload: salesPayload) => {
-  const { setHistoryData, setTotalSales, selectedFilters } = useSalesStore();
+  const setHistoryData = useSalesStore((s) => s.setHistoryData);
+  const setTotalSales = useSalesStore((s) => s.setTotalSales);
+  const selectedFilters = useSalesStore((s) => s.selectedFilters);
+  const { handleEnvelope } = useApiErrorHandler();
+
   if (!payload.businessId) return;
 
   const allSalesData = async (payload: salesPayload) => {
@@ -26,7 +30,7 @@ export const useGetallSalesByGet = (payload: salesPayload) => {
         id: payload.businessId,
       },
     });
-    const data = (await response.json()).data as HistoryData;
+    const data = await handleEnvelope(response);
     if (response.status === 200) {
       setHistoryData(data.existingPayments);
       setTotalSales(data.totalSale);
@@ -34,7 +38,7 @@ export const useGetallSalesByGet = (payload: salesPayload) => {
     return data;
   };
 
-  const { isLoading } = useQuery({
+  const { isLoading, refetch } = useQuery({
     queryKey: [
       "allSalesDataByGet",
       payload.businessId,
@@ -52,5 +56,5 @@ export const useGetallSalesByGet = (payload: salesPayload) => {
       !!payload.pageNumber,
   });
 
-  return { isLoading };
+  return { isLoading, refetch };
 };
