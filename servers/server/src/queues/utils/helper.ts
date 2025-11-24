@@ -260,7 +260,6 @@ export const addCoins = async (
   existingLoyalty: LoyaltyType,
 ) => {
   const existingUser = await UserReward.findOne({ userId, loyaltyId });
-  console.log("existingUser", existingUser);
 
   if (existingUser && existingLoyalty) {
     const coinsCalculated = await calculateReward(
