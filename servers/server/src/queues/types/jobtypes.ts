@@ -57,17 +57,18 @@ export type pushCustomerIntoQueueTypeValidator = z.infer<
 >;
 
 export const razorpayOnlinePaymentSchema = z.object({
+  date: z.coerce.number(),
   merchantId: z.string(),
   razorpayEventId: z.string(),
   order_id: z.string(),
   id: z.string(),
   event: z.string(),
-  date: z.coerce.number(),
+
   status: z.enum(["SUCCESS", "FAILED", "PROCESSING", "PENDING"]),
-  mode: z.string(),
   acquirer_data: z.object({}),
   error_description: z.string(),
   error_reason: z.string(),
+  mode: z.string(),
 });
 
 export type RazorpayPaymentHandlerTypeValidator = z.infer<

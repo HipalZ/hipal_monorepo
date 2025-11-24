@@ -7,6 +7,8 @@ const razorpayWebhookQueueModelSchema =
     razorpayEventId: {
       type: String,
       required: true,
+      unique: true,
+      index: true,
     },
     order_id: {
       type: String,

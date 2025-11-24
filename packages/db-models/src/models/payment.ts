@@ -27,16 +27,17 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: ObjectId,
       required: true,
       ref: "User",
-      index: true,
     },
 
     mode: {
       required: true,
       type: String,
+      default: "upi",
     },
     paymentMode: {
       required: true,
       type: String,
+      default: "online",
     },
     billValue: {
       required: true,
@@ -47,6 +48,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     tableName: {
       type: String,
       required: true,
+      default: "upi",
     },
     order_id: {
       type: ObjectId,
@@ -65,7 +67,6 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
 
     razorpayOrderId: {
@@ -110,17 +111,20 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: ObjectId,
       required: false,
       ref: "COUPONZ",
+      default: null,
     },
 
     reviewId: {
       type: ObjectId,
       required: false,
       ref: "customerReviews",
+      default: null,
     },
     channelId: {
       type: ObjectId,
       required: false,
       ref: "CouponChannel",
+      default: null,
     },
 
     settleType: {
@@ -136,6 +140,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
         "COMPLIMENTARY_SETTLE",
       ],
       required: false,
+      default: "NORMAL_SETTLE",
     },
     comment: {
       type: String,
