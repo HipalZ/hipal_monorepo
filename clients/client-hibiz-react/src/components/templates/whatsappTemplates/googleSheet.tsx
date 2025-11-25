@@ -1,4 +1,5 @@
 import useBusinessData from '@/components/store/useBusinessData';
+import { VariableDropdown } from '@/components/templates/whatsappTemplates/chatbots/variableDropDown';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,13 +11,14 @@ import { useQuery } from '@tanstack/react-query';
 import { Handle, Position } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { MessageCircle, Plus, X } from 'lucide-react';
-import { useState } from 'react';
+import { lazy, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuid } from 'uuid';
-import DeleteButton from './deleteButton';
-import { VariableDropdown } from './flows';
+import type { SendNodeProps } from './chatbots/chatbotHelpers';
 
-export default function GoogleSheets({ data, selected }: { data: any; selected: boolean }) {
+const DeleteButton = lazy(() => import('./deleteButton'));
+
+export default function GoogleSheetNode({ data, selected }: SendNodeProps) {
   const [isAuthed, setIsAuthed] = useState(false);
   const [spreadsheetId, setSpreadsheetId] = useState('');
   const [selectedSpreadsheetName, setSelectedSpreadsheetName] = useState('');
