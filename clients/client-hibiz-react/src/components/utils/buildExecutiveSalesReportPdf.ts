@@ -67,12 +67,6 @@ const formatForFile = (d: Date | string) => {
   return dfFormat(dateObj, 'yyyy-MM-dd_HH-mm');
 };
 
-const formatForFile = (d: Date | string) => {
-  const dateObj = d instanceof Date ? d : new Date(d);
-  // Example: 2025-11-18_10-35
-  return dfFormat(dateObj, 'yyyy-MM-dd_HH-mm');
-};
-
 const asDateTime = (v: number | string | Date) =>
   new Date(v).toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
