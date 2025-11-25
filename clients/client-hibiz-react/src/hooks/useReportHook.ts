@@ -1,10 +1,10 @@
-import { useError } from "@/components/store/useError.ts";
-import { apiRpc } from "@hi/common";
-import { useMutation } from "@tanstack/react-query";
-import toast from "react-hot-toast";
-import useReports from "@/components/store/useReports.ts";
-import { formatDate } from "@/components/utils/helper.ts";
-import { useApiErrorHandler } from "./useApiErrorHandler.ts";
+import { useError } from '@/components/store/useError.ts';
+import useReports from '@/components/store/useReports.ts';
+import { formatDate } from '@/components/utils/helper.ts';
+import { apiRpc } from '@hi/common';
+import { useMutation } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { useApiErrorHandler } from './useApiErrorHandler.ts';
 
 interface GetReportsPayload {
   from: string;
@@ -36,14 +36,13 @@ export const useCategoryReports = () => {
         json: payload,
       });
       const categoryData = await handleEnvelope(response);
-      console.log("Category Report Data:", categoryData);
       setCategoryReports((categoryData as BusinessCategoryReport[]) || []);
       return response;
     },
 
     onError: (data) => {
       console.log(data);
-      toast.error("Failed to fetch reports");
+      toast.error('Failed to fetch reports');
     },
   });
 
@@ -64,13 +63,13 @@ export const useGetReportsCsv = () => {
     },
     onSuccess: async (blob, variables) => {
       const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       const fromStr = formatDate(Number(variables.from));
       const toStr = formatDate(Number(variables.to));
       const fileName = `category reports ${fromStr} to ${toStr}.csv`;
 
       link.href = url;
-      link.setAttribute("download", fileName);
+      link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -117,25 +116,19 @@ export const useItemReports = () => {
         json: payload,
       });
       const itemsData = await handleEnvelope(response);
-      console.log("Item Report Data:", itemsData);
       if (!itemsData || !Array.isArray(itemsData)) {
-        throw new Error("Invalid data format received");
+        throw new Error('Invalid data format received');
       }
       setItemReports((itemsData as BusinessItemReport[]) || []);
-      const totalItems = itemsData.reduce(
-        (acc, business) => acc + business.items.length,
-        0,
-      );
-      toast.success(
-        `Report generated successfully! Found ${totalItems} items.`,
-      );
+      const totalItems = itemsData.reduce((acc, business) => acc + business.items.length, 0);
+      toast.success(`Report generated successfully! Found ${totalItems} items.`);
       return response;
     },
     onError: (error) => {
-      console.error("Report generation error:", error);
+      console.error('Report generation error:', error);
       setOpenErrorModal(true);
-      setError("Failed to fetch reports. Please try again.");
-      toast.error("Failed to fetch reports. Please try again.");
+      setError('Failed to fetch reports. Please try again.');
+      toast.error('Failed to fetch reports. Please try again.');
     },
   });
 
@@ -164,17 +157,17 @@ export const useGetItemReportsCsv = () => {
       try {
         // Validate blob
         if (!blob || blob.size === 0) {
-          throw new Error("Empty file received");
+          throw new Error('Empty file received');
         }
 
         const url = window.URL.createObjectURL(new Blob([blob]));
-        const link = document.createElement("a");
+        const link = document.createElement('a');
         const fromStr = formatDate(Number(variables.from));
         const toStr = formatDate(Number(variables.to));
         const fileName = `item-reports-${fromStr}-to-${toStr}.csv`;
 
         link.href = url;
-        link.setAttribute("download", fileName);
+        link.setAttribute('download', fileName);
         document.body.appendChild(link);
         link.click();
 
@@ -186,13 +179,13 @@ export const useGetItemReportsCsv = () => {
 
         toast.success(`CSV file "${fileName}" downloaded successfully!`);
       } catch (downloadError) {
-        console.error("Download error:", downloadError);
-        toast.error("Failed to download CSV file");
+        console.error('Download error:', downloadError);
+        toast.error('Failed to download CSV file');
       }
     },
     onError: (error) => {
-      console.error("CSV generation error:", error);
-      toast.error("Failed to generate CSV file. Please try again.");
+      console.error('CSV generation error:', error);
+      toast.error('Failed to generate CSV file. Please try again.');
     },
   });
 
@@ -233,26 +226,20 @@ export const useDiscountReports = () => {
         json: payload,
       });
       const discountData = await handleEnvelope(response);
-      console.log("Discount Report Data:", discountData);
       if (!discountData || !Array.isArray(discountData)) {
-        throw new Error("Invalid data format received");
+        throw new Error('Invalid data format received');
       }
       setDiscountReports((discountData as BusinessDiscountReport[]) || []);
-      const totalDiscounts = discountData.reduce(
-        (acc, business) => acc + business.discounts.length,
-        0,
-      );
-      toast.success(
-        `Report generated successfully! Found ${totalDiscounts} discount types.`,
-      );
+      const totalDiscounts = discountData.reduce((acc, business) => acc + business.discounts.length, 0);
+      toast.success(`Report generated successfully! Found ${totalDiscounts} discount types.`);
       return response;
     },
 
     onError: (error) => {
-      console.error("Report generation error:", error);
+      console.error('Report generation error:', error);
       setOpenErrorModal(true);
-      setError("Failed to fetch reports. Please try again.");
-      toast.error("Failed to fetch reports. Please try again.");
+      setError('Failed to fetch reports. Please try again.');
+      toast.error('Failed to fetch reports. Please try again.');
     },
   });
 
@@ -280,17 +267,17 @@ export const useGetDiscountReportsCsv = () => {
       try {
         // Validate blob
         if (!blob || blob.size === 0) {
-          throw new Error("Empty file received");
+          throw new Error('Empty file received');
         }
 
         const url = window.URL.createObjectURL(new Blob([blob]));
-        const link = document.createElement("a");
+        const link = document.createElement('a');
         const fromStr = formatDate(Number(variables.from));
         const toStr = formatDate(Number(variables.to));
         const fileName = `discount-reports-${fromStr}-to-${toStr}.csv`;
 
         link.href = url;
-        link.setAttribute("download", fileName);
+        link.setAttribute('download', fileName);
         document.body.appendChild(link);
         link.click();
 
@@ -302,13 +289,13 @@ export const useGetDiscountReportsCsv = () => {
 
         toast.success(`CSV file "${fileName}" downloaded successfully!`);
       } catch (downloadError) {
-        console.error("Download error:", downloadError);
-        toast.error("Failed to download CSV file");
+        console.error('Download error:', downloadError);
+        toast.error('Failed to download CSV file');
       }
     },
     onError: (error) => {
-      console.error("CSV generation error:", error);
-      toast.error("Failed to generate CSV file. Please try again.");
+      console.error('CSV generation error:', error);
+      toast.error('Failed to generate CSV file. Please try again.');
     },
   });
 
@@ -351,26 +338,20 @@ export const useAddonReports = () => {
         json: payload,
       });
       const addonData = await handleEnvelope(response);
-      console.log("Addon Report Data:", addonData);
       if (!addonData || !Array.isArray(addonData)) {
-        throw new Error("Invalid data format received");
+        throw new Error('Invalid data format received');
       }
       setAddonReports((addonData as BusinessAddonReport[]) || []);
-      const totalAddons = addonData.reduce(
-        (acc, business) => acc + business.addOns.length,
-        0,
-      );
-      toast.success(
-        `Report generated successfully! Found ${totalAddons} addon types.`,
-      );
+      const totalAddons = addonData.reduce((acc, business) => acc + business.addOns.length, 0);
+      toast.success(`Report generated successfully! Found ${totalAddons} addon types.`);
       return response;
     },
 
     onError: (error) => {
-      console.error("Report generation error:", error);
+      console.error('Report generation error:', error);
       setOpenErrorModal(true);
-      setError("Failed to fetch reports. Please try again.");
-      toast.error("Failed to fetch reports. Please try again.");
+      setError('Failed to fetch reports. Please try again.');
+      toast.error('Failed to fetch reports. Please try again.');
     },
   });
 
@@ -398,17 +379,17 @@ export const useGetAddonReportsCsv = () => {
       try {
         // Validate blob
         if (!blob || blob.size === 0) {
-          throw new Error("Empty file received");
+          throw new Error('Empty file received');
         }
 
         const url = window.URL.createObjectURL(new Blob([blob]));
-        const link = document.createElement("a");
+        const link = document.createElement('a');
         const fromStr = formatDate(Number(variables.from));
         const toStr = formatDate(Number(variables.to));
         const fileName = `addon-reports-${fromStr}-to-${toStr}.csv`;
 
         link.href = url;
-        link.setAttribute("download", fileName);
+        link.setAttribute('download', fileName);
         document.body.appendChild(link);
         link.click();
 
@@ -420,13 +401,13 @@ export const useGetAddonReportsCsv = () => {
 
         toast.success(`CSV file "${fileName}" downloaded successfully!`);
       } catch (downloadError) {
-        console.error("Download error:", downloadError);
-        toast.error("Failed to download CSV file");
+        console.error('Download error:', downloadError);
+        toast.error('Failed to download CSV file');
       }
     },
     onError: (error) => {
-      console.error("CSV generation error:", error);
-      toast.error("Failed to generate CSV file. Please try again.");
+      console.error('CSV generation error:', error);
+      toast.error('Failed to generate CSV file. Please try again.');
     },
   });
 
@@ -462,31 +443,24 @@ export const useServiceChargeReports = () => {
       });
       const serviceChargeData = await handleEnvelope(response);
 
-      console.log("Service Charge Report Data:", serviceChargeData);
       if (!serviceChargeData || !Array.isArray(serviceChargeData)) {
-        throw new Error("Invalid data format received");
+        throw new Error('Invalid data format received');
       }
-      setServiceChargeReports(
-        (serviceChargeData as ServiceChargeReport[]) || [],
-      );
-      const totalServiceCharges = serviceChargeData.reduce(
-        (acc, business) => acc + business.serviceCharge,
-        0,
-      );
+      setServiceChargeReports((serviceChargeData as ServiceChargeReport[]) || []);
+      const totalServiceCharges = serviceChargeData.reduce((acc, business) => acc + business.serviceCharge, 0);
       toast.success(
-        `Report generated successfully! Total service charge: ${new Intl.NumberFormat(
-          "en-IN",
-          { style: "currency", currency: "INR" },
-        ).format(totalServiceCharges)}.`,
+        `Report generated successfully! Total service charge: ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(
+          totalServiceCharges,
+        )}.`,
       );
       return response;
     },
 
     onError: (error) => {
-      console.error("Report generation error:", error);
+      console.error('Report generation error:', error);
       setOpenErrorModal(true);
-      setError("Failed to fetch reports. Please try again.");
-      toast.error("Failed to fetch reports. Please try again.");
+      setError('Failed to fetch reports. Please try again.');
+      toast.error('Failed to fetch reports. Please try again.');
     },
   });
 
@@ -515,17 +489,17 @@ export const useGetServiceChargeReportsCsv = () => {
       try {
         // Validate blob
         if (!blob || blob.size === 0) {
-          throw new Error("Empty file received");
+          throw new Error('Empty file received');
         }
 
         const url = window.URL.createObjectURL(new Blob([blob]));
-        const link = document.createElement("a");
+        const link = document.createElement('a');
         const fromStr = formatDate(Number(variables.from));
         const toStr = formatDate(Number(variables.to));
         const fileName = `service-charge-reports-${fromStr}-to-${toStr}.csv`;
 
         link.href = url;
-        link.setAttribute("download", fileName);
+        link.setAttribute('download', fileName);
         document.body.appendChild(link);
         link.click();
 
@@ -537,13 +511,13 @@ export const useGetServiceChargeReportsCsv = () => {
 
         toast.success(`CSV file "${fileName}" downloaded successfully!`);
       } catch (downloadError) {
-        console.error("Download error:", downloadError);
-        toast.error("Failed to download CSV file");
+        console.error('Download error:', downloadError);
+        toast.error('Failed to download CSV file');
       }
     },
     onError: (error) => {
-      console.error("CSV generation error:", error);
-      toast.error("Failed to generate CSV file. Please try again.");
+      console.error('CSV generation error:', error);
+      toast.error('Failed to generate CSV file. Please try again.');
     },
   });
 

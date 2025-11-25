@@ -26,9 +26,7 @@ export const useGetAllPasswords = () => {
         businessId: businessId,
       },
     });
-    await handleEnvelope(response);
-    const res = await response.json();
-    const passwords = res?.data as Password[];
+    const passwords = (await handleEnvelope(response)) as Password[];
     return passwords;
   };
 

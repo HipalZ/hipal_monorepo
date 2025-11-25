@@ -35,7 +35,7 @@ export const useError = create<IErrorState>((set) => ({
       error: msg,
       statusCode: code ?? null,
       openErrorModal: true,
-      requireReauth: code === 401 || code === 403 ? true : false,
+      requireReauth: code === 401 ? true : false,
     }),
 
   setRequireReauth: (v) => set({ requireReauth: v }),

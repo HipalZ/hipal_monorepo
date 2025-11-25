@@ -38,4 +38,5 @@ export interface BillSummaryProps {
   onRemoveCoupon: () => void;
   onOpenServiceChargeModal: () => void;
   onSetActiveModal: (modal: string) => void;
+  onOpenTipsModal: () => void;
 }

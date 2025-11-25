@@ -1890,6 +1890,8 @@ const paymentsRouter = new Hono()
                     isSplitBillVariant: true,
                     billInvoice: splitBillTableSessionData?.billInvoice,
                     paxCount: tableSession?.paxCount || 0,
+                    serviceChargePercentage:
+                      tableSession?.serviceChargePercentage || 0,
                   },
                 ],
                 { session },
@@ -2103,6 +2105,8 @@ const paymentsRouter = new Hono()
                     isSplitBillVariant: true,
                     billInvoice: splitBillTableSessionData?.billInvoice,
                     paxCount: tableSession?.paxCount || 0,
+                    serviceChargePercentage:
+                      tableSession?.serviceChargePercentage || 0,
                   },
                 ],
                 { session },
@@ -2389,7 +2393,7 @@ const paymentsRouter = new Hono()
           await OrderIdTracker.create({
             order_id: getOrder?.order_id.toString(),
           });
-          console.log('step_7');
+          console.log("step_7");
           const pos = await BusinessPosConfig.findOne({
             businessId: getOrder?.businessId,
             isDeleted: false,
@@ -2481,6 +2485,8 @@ const paymentsRouter = new Hono()
                 billItems: tableSession?.items || [],
                 billInvoice: tableSession?.billInvoice || 0,
                 paxCount: tableSession?.paxCount || 0,
+                serviceChargePercentage:
+                  tableSession?.serviceChargePercentage || 0,
               },
             ],
             { session },
@@ -3258,6 +3264,8 @@ const paymentsRouter = new Hono()
                           isSplitBillVariant: true,
                           billInvoice: splitBillTableSessionData?.billInvoice,
                           paxCount: tableSession?.paxCount || 0,
+                          serviceChargePercentage:
+                            tableSession?.serviceChargePercentage || 0,
                         },
                       ],
                       { session },
@@ -3441,6 +3449,8 @@ const paymentsRouter = new Hono()
                             isSplitBillVariant: true,
                             billInvoice: splitBillTableSessionData?.billInvoice,
                             paxCount: tableSession?.paxCount || 0,
+                            serviceChargePercentage:
+                              tableSession?.serviceChargePercentage || 0,
                           },
                         ],
                         { session },
@@ -3779,6 +3789,8 @@ const paymentsRouter = new Hono()
                     billItems: tableSession?.items || [],
                     billInvoice: tableSession?.billInvoice || 0,
                     paxCount: tableSession?.paxCount || 0,
+                    serviceChargePercentage:
+                      tableSession?.serviceChargePercentage || 0,
                   },
                 ],
                 { session },
@@ -4111,146 +4123,177 @@ const paymentsRouter = new Hono()
       });
     },
   )
-  .get(
-    '/:id/salesDashboard',
-    // authTokenValidator,
-    // requireAuthorization([
-    //   ClientRoles.OWNER,
-    //   ClientRoles.HIPAL_CUSTOMER,
-    //   ClientRoles.CAPTAIN,
-    // ]),
-    // ubacMiddleware("sale_summary"),
-    zValidator('query', paramsSchema),
-    async (c) => {
-      const { businessId, from, to } = c.req.query();
+  .get("/:id/salesDashboard", zValidator("query", paramsSchema), async (c) => {
+    const { businessId, from, to } = c.req.query();
 
-      const fromDate = Number(from) || startOfToday.getTime();
-      const toDate = Number(to) || endOfToday.getTime();
-      const isToday = isTodayIST(fromDate);
+    // Safer date parsing
+    const fromDate = !isNaN(Number(from))
+      ? Number(from)
+      : startOfToday.getTime();
+    const toDate = !isNaN(Number(to)) ? Number(to) : endOfToday.getTime();
 
-      const dateRange = getISTDateRange(Date.now());
-      if (fromDate > toDate) {
-        return c.json({
-          err: true,
-          data: {},
-          message: 'from date should be less than to date',
-        });
-      }
+    const isToday = isTodayIST(fromDate);
+    const dateRange = getISTDateRange(Date.now());
 
-      const payments = await Payment.find(
-        {
-          businessId,
-          isDeleted: false,
-          date: { $gte: fromDate, $lte: toDate },
-          mode: { $ne: 'dues' },
-        },
-        {
-          total: 1,
-          paymentMode: 1,
-          mode: 1,
-          splitModes: 1,
-          tax: 1,
-          serviceCharge: 1,
-          tips: 1,
-          discount: 1,
-          paxCount: 1,
-          billValue: 1,
-          claimedCoins: 1,
-          couponDiscount: 1,
-          billInvoice: 1,
-        },
-      ).sort({ billInvoice: 1 });
+    if (fromDate > toDate) {
+      return c.json({
+        err: true,
+        data: {},
+        message: "from date should be less than to date",
+      });
+    }
 
-      const countOrders = await Payment.find({
+    // 🔹 SINGLE QUERY: include ALL modes (including dues) so invoice range is correct
+    const payments = await Payment.find(
+      {
         businessId,
         isDeleted: false,
         date: { $gte: fromDate, $lte: toDate },
-      }).countDocuments();
+      },
+      {
+        total: 1,
+        paymentMode: 1,
+        mode: 1,
+        splitModes: 1,
+        tax: 1,
+        serviceCharge: 1,
+        tips: 1,
+        discount: 1,
+        paxCount: 1,
+        billValue: 1,
+        claimedCoins: 1,
+        couponDiscount: 1,
+        billInvoice: 1,
+      },
+    ).sort({ billInvoice: 1 });
 
-      const startInvoiceNumber = payments[0]?.billInvoice || 0;
-      const endInvoiceNumber = payments[payments.length - 1]?.billInvoice || 0;
+    // 👉 Invoice range uses ALL payments (including dues)
+    const startInvoiceNumber = payments[0]?.billInvoice || 0;
+    const endInvoiceNumber = payments[payments.length - 1]?.billInvoice || 0;
 
-      let overAllAmount = 0;
-      let totalOnlineSale = 0;
-      let totalPaxCount = 0;
-      const offlineSales: Record<string, number> = {};
-      // NEW aggregates for the report
-      let subTotalSum = 0; // -> “Sub Total (taxable)”
-      let taxSum = 0; // CGST+SGST combined
-      let serviceChargeSum = 0;
-      let tipSum = 0;
-      let discountSum = 0;
+    let overAllAmount = 0;
+    let totalOnlineSale = 0;
+    let totalPaxCount = 0;
+    const offlineSales: Record<string, number> = {};
 
-      const activeTable = await Table.find({
-        businessId: businessId,
-        status: 'ACTIVE',
-      });
-      const totalActiveTableValue = activeTable.reduce((acc, table) => {
-        return acc + (table?.currentTableAmount ?? 0);
-      }, 0);
+    let subTotalSum = 0;
+    let taxSum = 0;
+    let serviceChargeSum = 0;
+    let tipSum = 0;
+    let discountSum = 0;
+    let totalOrders = 0; // ✅ only non-dues will increment this
 
-      for (const payment of payments) {
-        const { total = 0, paymentMode, mode, splitModes, paxCount, billValue } = payment;
-        totalPaxCount += paxCount;
+    const activeTable = await Table.find({
+      businessId: businessId,
+      status: "ACTIVE",
+    });
 
-        if (mode === 'split' && Array.isArray(splitModes)) {
-          let splitTotal = 0;
+    const totalActiveTableValue = activeTable.reduce((acc, table) => {
+      return acc + (table?.currentTableAmount ?? 0);
+    }, 0);
 
-          for (const settle of splitModes) {
-            if (settle.name !== 'complementary') {
-              splitTotal += settle.amount ?? 0;
-              offlineSales[settle.name] = (offlineSales[settle.name] || 0) + (settle.amount ?? 0);
-            }
-          }
+    for (const payment of payments) {
+      const {
+        total = 0,
+        paymentMode,
+        mode,
+        splitModes,
+        paxCount = 0,
+        billValue = 0,
+      } = payment;
 
-          overAllAmount += splitTotal; // Only add non-complementary split values
-        } else if (!['dues', 'npc', 'complementary'].includes(mode)) {
-          overAllAmount += total; // Add total if it's not dues, npc, or complementary
-        }
-
-        if (paymentMode === 'online') {
-          totalOnlineSale += total;
-        } else if (!['dues', 'npc', 'complementary'].includes(paymentMode)) {
-          offlineSales[mode] = (offlineSales[mode] || 0) + total;
-        }
-        subTotalSum += billValue;
-        taxSum += payment.tax || 0;
-        serviceChargeSum += payment.serviceCharge || 0;
-        tipSum += payment.tips || 0;
-        discountSum += payment.discount || 0;
+      // ❌ Skip dues from all sales metrics
+      if (mode === "dues") {
+        continue;
       }
 
-      delete offlineSales['complementary'];
-      delete offlineSales['split'];
+      totalOrders += 1; // ✅ only non-dues counted as orders
+      totalPaxCount += paxCount;
 
-      return c.json({
-        err: false,
-        data: {
-          overAllAmount, // Excludes complementary but includes cash in split modes
-          onlineSale: { online: totalOnlineSale },
-          offlineSale: offlineSales,
-          totalOrders: countOrders,
-          totalActiveTableValue,
-          subTotal: subTotalSum, // “Sub Total (taxable)”
-          totalTax: taxSum, // CGST+SGST combined
-          totalServiceCharge: serviceChargeSum,
-          totalTip: tipSum,
-          totalDiscount: discountSum,
-          totalPaxCount: totalPaxCount || 0,
-          startInvoiceNumber,
-          endInvoiceNumber,
-        },
-      });
-    },
-  )
+      // 🧮 SPLIT BILLS – handle each settle separately
+      if (mode === "split" && Array.isArray(splitModes)) {
+        let splitTotal = 0;
+
+        for (const settle of splitModes) {
+          const settleName = settle?.name;
+          const amt = settle?.amount ?? 0;
+
+          // Exclude dues / npc / complementary from revenue & breakdown
+          if (["dues", "npc", "complementary"].includes(settleName)) continue;
+
+          splitTotal += amt;
+
+          if (settleName === "online") {
+            totalOnlineSale += amt;
+          } else {
+            offlineSales[settleName] = (offlineSales[settleName] || 0) + amt;
+          }
+        }
+
+        // Only add the non-dues / non-npc / non-complementary split total
+        overAllAmount += splitTotal;
+      } else {
+        // 🧮 NON-SPLIT BILL
+
+        // Exclude npc & complementary from overAllAmount
+        if (!["npc", "complementary"].includes(mode)) {
+          overAllAmount += total;
+        }
+
+        // Online vs offline – ignore npc/complementary/dues as payment modes
+        if (paymentMode === "online") {
+          totalOnlineSale += total;
+        } else if (!["dues", "npc", "complementary"].includes(paymentMode)) {
+          // group offline sales by paymentMode (cash/card/upi/etc)
+          offlineSales[paymentMode] = (offlineSales[paymentMode] || 0) + total;
+        }
+      }
+
+      // 🧮 Bill-level components (dues already skipped above)
+      subTotalSum += billValue;
+      taxSum += payment.tax || 0;
+      serviceChargeSum += payment.serviceCharge || 0;
+      tipSum += payment.tips || 0;
+      discountSum += payment.discount || 0;
+    }
+
+    // Just in case, but dues / split keys shouldn't be present now
+    delete offlineSales["complementary"];
+    delete offlineSales["split"];
+    delete offlineSales["dues"];
+
+    return c.json({
+      err: false,
+      data: {
+        overAllAmount, // ✅ no dues, no npc, no complementary
+        onlineSale: { online: totalOnlineSale },
+        offlineSale: offlineSales,
+        totalOrders: payments.length, // ✅ only non-dues
+        totalActiveTableValue,
+        subTotal: subTotalSum,
+        totalTax: taxSum,
+        totalServiceCharge: serviceChargeSum,
+        totalTip: tipSum,
+        totalDiscount: discountSum,
+        totalPaxCount: totalPaxCount || 0,
+        startInvoiceNumber, // ✅ includes dues in range
+        endInvoiceNumber, // ✅ includes dues in range
+      },
+    });
+  })
 
   .get(
     '/:id/bills',
     authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER, ClientRoles.CAPTAIN]),
-    zValidator('query', paramsSchema),
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
+    zValidator("query", paramsSchema),
     async (c) => {
-      let { appliedFilter, appliedFilters, businessId, from, to, pageNumber } = c.req.query();
+      let { appliedFilter, appliedFilters, businessId, from, to, pageNumber } =
+        c.req.query();
 
       const fromDate = Number(from) || startOfToday.getTime();
       const toDate = Number(to) || endOfToday.getTime();
@@ -4260,7 +4303,7 @@ const paymentsRouter = new Hono()
           {
             err: true,
             data: {},
-            message: 'from date should be less than to date',
+            message: "from date should be less than to date",
           },
           400,
         );
@@ -4275,9 +4318,10 @@ const paymentsRouter = new Hono()
 
       if (rawFilter) {
         try {
-          parsedFilters = typeof rawFilter === 'string' ? JSON.parse(rawFilter) : rawFilter;
+          parsedFilters =
+            typeof rawFilter === "string" ? JSON.parse(rawFilter) : rawFilter;
         } catch (e) {
-          console.error('Invalid appliedFilter', rawFilter);
+          console.error("Invalid appliedFilter", rawFilter);
           parsedFilters = [];
         }
       }
@@ -4299,7 +4343,7 @@ const paymentsRouter = new Hono()
           if (!f?.key || !Array.isArray(f.value)) continue;
 
           // Mode filter (dynamic)
-          if (f.key === 'mode') {
+          if (f.key === "mode") {
             const modesList = f.value.map((x: string) => x.toLowerCase());
             filterConditions.push({
               paymentMode: { $in: modesList },
@@ -4307,23 +4351,23 @@ const paymentsRouter = new Hono()
           }
 
           // Discount type filter (numeric-based)
-          if (f.key === 'type') {
+          if (f.key === "type") {
             const values: string[] = f.value || [];
             const orConditions: any[] = [];
 
-            if (values.includes('Coinz')) {
+            if (values.includes("Coinz")) {
               orConditions.push({ claimedCoins: { $gt: 0 } });
             }
 
-            if (values.includes('Couponz')) {
+            if (values.includes("Couponz")) {
               orConditions.push({ couponDiscount: { $gt: 0 } });
             }
 
-            if (values.includes('Discount')) {
+            if (values.includes("Discount")) {
               orConditions.push({ discount: { $gt: 0 } });
             }
 
-            if (values.includes('No Rewardz')) {
+            if (values.includes("No Rewardz")) {
               orConditions.push({
                 claimedCoins: 0,
                 couponDiscount: 0,
@@ -4355,15 +4399,17 @@ const paymentsRouter = new Hono()
       for (const payment of existingPayments) {
         const { total, mode, splitModes } = payment;
 
-        if (mode === 'split' && Array.isArray(splitModes)) {
+        if (mode === "split" && Array.isArray(splitModes)) {
           let sum = 0;
           for (const s of splitModes) {
-            if (s.name !== 'complementary') {
+            if (s.name !== "complementary") {
               sum += s.amount || 0;
             }
           }
           totalSale += sum;
-        } else if (!['npc', 'dues', 'complementary'].includes((mode || '').toLowerCase())) {
+        } else if (
+          !["npc", "dues", "complementary"].includes((mode || "").toLowerCase())
+        ) {
           totalSale += total ?? 0;
         }
       }
@@ -4375,6 +4421,143 @@ const paymentsRouter = new Hono()
           existingPayments,
         },
         message: 'existing payment',
+      });
+    },
+  )
+
+  .post(
+    "/filter_bills",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(24).max(24),
+        billId: z.string().optional(),
+        billInvoice: z.number().optional(),
+        billNo: z.union([z.number(), z.string()]).optional(),
+        tableName: z.string().optional(),
+        total: z.number().optional(),
+        userName: z.string().optional(),
+        userPhone: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const {
+        businessId,
+        billId,
+        billInvoice,
+        billNo,
+        tableName,
+        total,
+        userName,
+        userPhone,
+      } = await c.req.json();
+
+      const filterConditions: any[] = [{ businessId }, { isDeleted: false }];
+
+      // 🔹 Bill ID (internal string)
+      if (billId && billId.trim() !== "") {
+        filterConditions.push({ billId });
+      }
+
+      // 🔹 Bill Invoice (number)
+      if (typeof billInvoice === "number") {
+        filterConditions.push({ billInvoice });
+      }
+
+      // 🔹 Bill No (stored as Number in Payment schema)
+      if (typeof billNo === "number") {
+        filterConditions.push({ billNo });
+      } else if (typeof billNo === "string" && billNo.trim() !== "") {
+        const billNoNum = Number(billNo);
+        if (!Number.isNaN(billNoNum)) {
+          filterConditions.push({ billNo: billNoNum });
+        }
+      }
+
+      // 🔹 Table name (case-insensitive partial match)
+      if (tableName && tableName.trim() !== "") {
+        filterConditions.push({ tableName: new RegExp(tableName.trim(), "i") });
+      }
+
+      // 🔹 Exact total match
+      if (typeof total === "number") {
+        filterConditions.push({ total });
+      }
+
+      // 🔹 User search by name / phone (via User collection)
+      if (
+        (userName && userName.trim() !== "") ||
+        (userPhone && userPhone.trim() !== "")
+      ) {
+        const userQuery: any = {};
+
+        if (userName && userName.trim() !== "") {
+          userQuery.name = new RegExp(userName.trim(), "i");
+        }
+
+        if (userPhone && userPhone.trim() !== "") {
+          userQuery.phone = new RegExp(userPhone.trim(), "i");
+        }
+
+        const users = await User.find(userQuery).select("_id");
+        const userIds = users.map((u) => u._id);
+
+        if (userIds.length === 0) {
+          return c.json({
+            err: false,
+            data: {
+              existingPayments: [],
+              totalSale: 0,
+            },
+            message: "No payments found",
+          });
+        }
+
+        filterConditions.push({ userId: { $in: userIds } });
+      }
+
+      const queryObject = { $and: filterConditions };
+
+      const existingPayments = await Payment.find(queryObject)
+        .sort({ _id: -1 })
+        .populate({ path: "order_id" })
+        .populate({ path: "userId", select: "name phone" });
+
+      // 🔹 Compute totalSale with split logic
+      let totalSale = 0;
+
+      for (const payment of existingPayments) {
+        const { total = 0, mode, splitModes } = payment;
+        const modeLower = (mode || "").toLowerCase();
+
+        if (modeLower === "split" && Array.isArray(splitModes)) {
+          let splitTotal = 0;
+
+          for (const settle of splitModes) {
+            if ((settle?.name || "").toLowerCase() !== "complementary") {
+              splitTotal += settle.amount ?? 0;
+            }
+          }
+
+          totalSale += splitTotal;
+        } else if (!["dues", "npc", "complementary"].includes(modeLower)) {
+          totalSale += total;
+        }
+      }
+
+      return c.json({
+        err: false,
+        data: {
+          existingPayments,
+          totalSale,
+        },
+        message: "Filtered payments retrieved successfully",
       });
     },
   )
@@ -4397,35 +4580,35 @@ const paymentsRouter = new Hono()
         to,
       } = c.req.query();
 
-      // 1️⃣ DATE RANGE
-      const fromDate = Number(from) || startOfToday.getTime();
-      const toDate = Number(to) || endOfToday.getTime();
+      const fromDate = !isNaN(Number(from))
+        ? Number(from)
+        : startOfToday.getTime();
+      const toDate = !isNaN(Number(to)) ? Number(to) : endOfToday.getTime();
 
       if (fromDate > toDate) {
         return c.json(
           {
             err: true,
             data: {},
-            message: 'from date should be less than to date',
+            message: "from date should be less than to date",
           },
           400,
         );
       }
 
-      // 2️⃣ NORMALIZE FILTERS
       let parsedFilters: any[] = [];
       const rawFilter = appliedFilter || appliedFilters;
 
       if (rawFilter) {
         try {
-          parsedFilters = typeof rawFilter === 'string' ? JSON.parse(rawFilter) : rawFilter;
+          parsedFilters =
+            typeof rawFilter === "string" ? JSON.parse(rawFilter) : rawFilter;
         } catch (err) {
-          console.error('Failed to parse appliedFilter', rawFilter);
+          console.error("Failed to parse appliedFilter", rawFilter);
           parsedFilters = [];
         }
       }
 
-      // 3️⃣ BASE CONDITIONS
       const filterConditions: any[] = [
         { businessId },
         {
@@ -4436,13 +4619,11 @@ const paymentsRouter = new Hono()
         },
       ];
 
-      // 4️⃣ APPLY MODE & TYPE FILTERS (same as /bills)
       if (Array.isArray(parsedFilters) && parsedFilters.length > 0) {
         for (const f of parsedFilters) {
           if (!f?.key || !Array.isArray(f.value)) continue;
 
-          // ⭐ MODE FILTER (fully dynamic)
-          if (f.key === 'mode') {
+          if (f.key === "mode") {
             const modesList = f.value as string[];
             if (modesList.length > 0) {
               filterConditions.push({
@@ -4451,28 +4632,23 @@ const paymentsRouter = new Hono()
             }
           }
 
-          // ⭐ TYPE FILTER (amount-based: Coinz / Couponz / Disscount / No Rewardz)
-          if (f.key === 'type') {
+          if (f.key === "type") {
             const values: string[] = f.value || [];
             const orConditions: any[] = [];
 
-            // Coinz → claimedCoins > 0
-            if (values.includes('Coinz')) {
+            if (values.includes("Coinz")) {
               orConditions.push({ claimedCoins: { $gt: 0 } });
             }
 
-            // Couponz → couponDiscount > 0
-            if (values.includes('Couponz')) {
+            if (values.includes("Couponz")) {
               orConditions.push({ couponDiscount: { $gt: 0 } });
             }
 
-            // Disscount → discount > 0
-            if (values.includes('Discount')) {
+            if (values.includes("Discount")) {
               orConditions.push({ discount: { $gt: 0 } });
             }
 
-            // No Rewardz → none of the above present
-            if (values.includes('No Rewardz')) {
+            if (values.includes("No Rewardz")) {
               orConditions.push({
                 claimedCoins: 0,
                 couponDiscount: 0,
@@ -4487,19 +4663,33 @@ const paymentsRouter = new Hono()
         }
       }
 
-      // 5️⃣ FINAL QUERY OBJECT
-      const queryObject = {
+      const baseQuery = {
         $and: filterConditions,
         isDeleted: false,
-        mode: { $ne: 'dues' }, // EXCLUDE npc payments
       };
 
-      const existingPayments = await Payment.find(queryObject)
-        .sort({ billInvoice: 1 })
-        .populate({ path: 'order_id' })
-        .populate({ path: 'userId', select: 'name phone' });
+      const paidQuery = {
+        ...baseQuery,
+        mode: { $ne: "dues" },
+      };
 
-      // 6️⃣ TOTALS
+      const existingPayments = await Payment.find(paidQuery)
+        .sort({ billInvoice: 1 })
+        .populate({ path: "order_id" })
+        .populate({ path: "userId", select: "name phone" });
+
+      const duesQuery = {
+        ...baseQuery,
+        mode: "dues",
+      };
+
+      const duesPayments = await Payment.find(duesQuery)
+        .sort({ billInvoice: 1 })
+        .populate({ path: "userId", select: "name phone" });
+
+      const business = await OutLetInfo.findOne({ businessId }).select("name");
+      const businessName = business?.name || "Business";
+
       let totalBillValue = 0;
       let totalTax = 0;
       let totalServiceCharge = 0;
@@ -4509,9 +4699,11 @@ const paymentsRouter = new Hono()
       let totalEarnCoins = 0;
       let totalDiscount = 0;
       let totalCouponDiscount = 0;
-      let totalTotalDiscount = 0; // NEW: total of all discounts (coins + discount + coupon)
+      let totalTotalDiscount = 0;
+      let totalComplementary = 0;
+      let totalNpc = 0;
 
-      const rows = existingPayments.map((payment: any) => {
+      const billRows = existingPayments.map((payment: any) => {
         const {
           date,
           userId,
@@ -4526,10 +4718,7 @@ const paymentsRouter = new Hono()
           tax = 0,
           serviceCharge = 0,
           total = 0,
-          order_id,
           waiterName,
-          posBillId,
-          posBillRequestId,
           settleType,
           comment,
           splitModes = [],
@@ -4537,10 +4726,9 @@ const paymentsRouter = new Hono()
           couponDiscount = 0,
         } = payment;
 
-        // per-row total discount
-        const rowTotalDiscount = (claimedCoins || 0) + (discount || 0) + (couponDiscount || 0);
+        const rowTotalDiscount =
+          (claimedCoins || 0) + (discount || 0) + (couponDiscount || 0);
 
-        // aggregate totals
         totalBillValue += billValue;
         totalTax += tax;
         totalServiceCharge += serviceCharge;
@@ -4552,76 +4740,230 @@ const paymentsRouter = new Hono()
         totalCouponDiscount += couponDiscount;
         totalTotalDiscount += rowTotalDiscount;
 
-        const splitInfo = Array.isArray(splitModes) ? splitModes.map((m: any) => `${m.name}=${m.amount}`).join('; ') : '';
+        if (mode === "complementary") totalComplementary += billValue;
+        if (mode === "npc") totalNpc += billValue;
+
+        const splitInfo = Array.isArray(splitModes)
+          ? splitModes.map((m: any) => `${m.name}=${m.amount}`).join("; ")
+          : "";
 
         // ✅ Human-readable headers: no underscores, first letter capital
         return {
-          'Bill Invoice': billInvoice,
+          "Bill Invoice": billInvoice,
           Date: new Date(date).toLocaleString(),
-          'User Name': userId?.name ?? '',
-          'User Phone': userId?.phone ?? '',
-          'Table Name': tableName || '',
+          "User Name": userId?.name ?? "",
+          "User Phone": userId?.phone ?? "",
+          "Table Name": tableName || "",
           Mode: mode,
-          'Payment Mode': paymentMode,
+          "Payment Mode": paymentMode,
           Subtotal: billValue,
-          'Claimed Coins': claimedCoins,
+          "Claimed Coins": claimedCoins,
           Discount: discount,
-          'Coupon Discount': couponDiscount,
-          'Total Discount': rowTotalDiscount,
+          "Coupon Discount": couponDiscount,
+          "Total Discount": rowTotalDiscount,
           Tax: tax,
-          'Service Charge': serviceCharge,
+          "Service Charge": serviceCharge,
           Tips: tips,
           Total: total,
-          'Split Modes': splitInfo,
-          'Settle Type': settleType,
+          "Split Modes": splitInfo,
+          "Settle Type": settleType,
           Comment: comment,
-          'Waiter Name': waiterName,
-          'Earned Coins': earnCoins,
+          "Waiter Name": waiterName,
+          "Earned Coins": earnCoins,
         };
       });
 
-      // 7️⃣ TOTALS ROW (same headers)
-      rows.push({
-        'Bill Invoice': 'Totals (do not edit this row)',
-        Date: '',
-        'User Name': '',
-        'User Phone': '',
-        'Table Name': '',
-        Mode: '',
-        'Payment Mode': '',
-        Subtotal: `="${totalBillValue.toFixed(2)}"`,
-        'Claimed Coins': `="${totalClaimedCoins.toFixed(2)}"`,
-        Discount: `="${totalDiscount.toFixed(2)}"`,
-        'Coupon Discount': `="${totalCouponDiscount.toFixed(2)}"`,
-        'Total Discount': `="${totalTotalDiscount.toFixed(2)}"`,
-        Tax: `="${totalTax.toFixed(2)}"`,
-        'Service Charge': `="${totalServiceCharge.toFixed(2)}"`,
-        Tips: `="${totalTips.toFixed(2)}"`,
-        Total: `="${totalAmount.toFixed(2)}"`,
-        'Split Modes': '',
-        'Settle Type': '',
-        Comment: '',
-        'Waiter Name': '',
-        'Earned Coins': `="${totalEarnCoins.toFixed(2)}"`,
+      const totalOrdersCount = existingPayments.length;
+      const discountWithNpcAndComp =
+        totalComplementary + totalNpc + totalTotalDiscount;
+      const netSales = totalBillValue - discountWithNpcAndComp;
+      const allDiscounts = totalTotalDiscount;
+
+      let duesSubtotal = 0;
+      let duesTax = 0;
+      let duesServiceCharge = 0;
+      let duesDiscount = 0; // includes coins+discount+coupon
+      let duesTotal = 0;
+      let duesOrderCount = 0;
+
+      duesOrderCount = duesPayments.length;
+
+      for (const p of duesPayments) {
+        const billValue = p.billValue || 0;
+        const tax = p.tax || 0;
+        const svc = p.serviceCharge || 0;
+        const total = p.total || 0;
+        const claimedCoins = p.claimedCoins || 0;
+        const discount = p.discount || 0;
+        const couponDiscount = p.couponDiscount || 0;
+
+        duesSubtotal += billValue;
+        duesTax += tax;
+        duesServiceCharge += svc;
+        duesDiscount += claimedCoins + discount + couponDiscount;
+        duesTotal += total;
+      }
+
+      // 1️⃣1️⃣ SECTION 1 + 2 → SUMMARY & DUES TABLE
+      type SummaryRow = {
+        Label: string;
+        Value: string | number;
+      };
+
+      const summaryRows: SummaryRow[] = [];
+
+      const addGap = () => {
+        summaryRows.push({ Label: "", Value: "" });
+      };
+
+      // SECTION 1 – ALL SUMMARY (PAID)
+      summaryRows.push({
+        Label: "Business Name",
+        Value: businessName,
+      });
+      summaryRows.push({
+        Label: "Date Range",
+        Value: `${new Date(fromDate).toLocaleString()} → ${new Date(
+          toDate,
+        ).toLocaleString()}`,
       });
 
-      const csvString = Papa.unparse(rows, {
+      addGap();
+
+      summaryRows.push({
+        Label: "Subtotal",
+        Value: totalBillValue.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Total Orders",
+        Value: totalOrdersCount,
+      });
+      summaryRows.push({
+        Label: "Discount",
+        Value: totalDiscount.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Coins Discount",
+        Value: totalClaimedCoins.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Coupon Discount",
+        Value: totalCouponDiscount.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "All Discounts",
+        Value: allDiscounts.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Complementary",
+        Value: totalComplementary.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "NPC",
+        Value: totalNpc.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Service Charge",
+        Value: totalServiceCharge.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "GST (CGST+SGST)",
+        Value: totalTax.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Tips",
+        Value: totalTips.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Total Sales",
+        Value: totalAmount.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Net Sales (Total + Tips)",
+        Value: netSales.toFixed(2),
+      });
+
+      addGap();
+
+      summaryRows.push({
+        Label: "Dues Subtotal",
+        Value: duesSubtotal.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Dues Orders Count",
+        Value: duesOrderCount,
+      });
+      summaryRows.push({
+        Label: "Dues GST",
+        Value: duesTax.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Dues Service Charge",
+        Value: duesServiceCharge.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Dues Discount (All)",
+        Value: duesDiscount.toFixed(2),
+      });
+      summaryRows.push({
+        Label: "Dues Total",
+        Value: duesTotal.toFixed(2),
+      });
+
+      const detailRows = [...billRows];
+
+      detailRows.push({
+        "Bill Invoice": "Totals (do not edit this row)",
+        Date: "",
+        "User Name": "",
+        "User Phone": "",
+        "Table Name": "",
+        Mode: "",
+        "Payment Mode": "",
+        Subtotal: `="${totalBillValue.toFixed(2)}"`,
+        "Claimed Coins": `="${totalClaimedCoins.toFixed(2)}"`,
+        Discount: `="${totalDiscount.toFixed(2)}"`,
+        "Coupon Discount": `="${totalCouponDiscount.toFixed(2)}"`,
+        "Total Discount": `="${totalTotalDiscount.toFixed(2)}"`,
+        Tax: `="${totalTax.toFixed(2)}"`,
+        "Service Charge": `="${totalServiceCharge.toFixed(2)}"`,
+        Tips: `="${totalTips.toFixed(2)}"`,
+        Total: `="${totalAmount.toFixed(2)}"`,
+        "Split Modes": "",
+        "Settle Type": "",
+        Comment: "",
+        "Waiter Name": "",
+        "Earned Coins": `="${totalEarnCoins.toFixed(2)}"`,
+      });
+
+      const summaryCsv = Papa.unparse(summaryRows, {
         header: true,
         quotes: true,
         skipEmptyLines: true,
       });
 
+      const detailCsv = Papa.unparse(detailRows, {
+        header: true,
+        quotes: true,
+        skipEmptyLines: true,
+      });
+
+      const csvString = `${summaryCsv}\n\n${detailCsv}`;
+
       const formatDate = (timestamp: number) => {
         const d = new Date(timestamp);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          "0",
+        )}-${String(d.getDate()).padStart(2, "0")}`;
       };
 
       const fromStr = formatDate(fromDate);
       const toStr = formatDate(toDate);
       const fileName = `payments_${fromStr}_to_${toStr}.csv`;
 
-      c.header('Content-Type', 'text/csv');
-      c.header('Content-Disposition', `attachment; filename="${fileName}"`);
+      c.header("Content-Type", "text/csv");
+      c.header("Content-Disposition", `attachment; filename="${fileName}"`);
 
       return c.body(csvString);
     },
@@ -5333,6 +5675,7 @@ const paymentsRouter = new Hono()
       let totalComplementary = 0;
       let totalCoinsGiven = 0;
       let totalCoinsUsed = 0;
+      let totalDuesGetBack = 0;
 
       for (const payment of payments) {
         totalDiscount += payment.discount ?? 0;
@@ -5345,7 +5688,11 @@ const paymentsRouter = new Hono()
           totalNpc += payment.billValue;
         }
 
-        if (payment.mode === 'complementary') {
+        if (payment.settleType === "DUES_SETTLE") {
+          totalDuesGetBack += payment.total;
+        }
+
+        if (payment.mode === "complementary") {
           totalComplementary += payment.billValue;
         }
 
@@ -5371,6 +5718,7 @@ const paymentsRouter = new Hono()
         data: {
           exceptionSale: {
             totalDuesGiven,
+            totalDuesGetBack,
             totalNpc,
             totalComplementary,
             totalDiscount,
@@ -5403,8 +5751,12 @@ const paymentsRouter = new Hono()
     ),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fromDate = from ? Number(from) : startOfToday.getTime();
-      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      // Safer date parsing (same pattern as salesDashboard)
+      const fromDate = !isNaN(Number(from))
+        ? Number(from)
+        : startOfToday.getTime();
+      const toDate = !isNaN(Number(to)) ? Number(to) : endOfToday.getTime();
 
       const isToday = isTodayIST(fromDate);
       const dateRange = getISTDateRange(Date.now());
@@ -5417,6 +5769,7 @@ const paymentsRouter = new Hono()
         });
       }
 
+      // 🔹 EXCLUDE dues COMPLETELY
       const payments = await Payment.find({
         businessId,
         isDeleted: false,
@@ -5424,6 +5777,7 @@ const paymentsRouter = new Hono()
           $gte: fromDate,
           $lte: toDate,
         },
+        mode: { $ne: "dues" },
       });
 
       let totalTax = 0;
@@ -5431,9 +5785,7 @@ const paymentsRouter = new Hono()
       let totalServiceCharge = 0;
 
       for (const payment of payments) {
-        if (payment.mode !== 'dues') {
-          totalTax += payment.tax ?? 0;
-        }
+        totalTax += payment.tax ?? 0;
         totalTip += payment.tips ?? 0;
         totalServiceCharge += payment.serviceCharge ?? 0;
       }

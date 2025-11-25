@@ -1,40 +1,30 @@
-import { memo, useCallback } from "react";
-import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
-import { Download } from "lucide-react";
-import DateRangePicker from "@/components/molecules/dateRangePicker";
-import { type Filters, useSalesStore } from "@/components/store/useSalesStore";
-import { useParams } from "react-router-dom";
-import useTimings from "@/components/store/useTimings";
-import { Button } from "@/components/ui/button";
-import { RxCrossCircled } from "react-icons/rx";
-import { CiFilter } from "react-icons/ci";
-import { useMutation } from "@tanstack/react-query";
-import { apiRpc } from "@hi/common";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
+import AdvancedBottomButton from '@/components/atom/bottomButton/advancedBottomButton';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import DateRangePicker from '@/components/molecules/dateRangePicker';
+import { type Filters, useSalesStore } from '@/components/store/useSalesStore';
+import useTimings from '@/components/store/useTimings';
+import { Button } from '@/components/ui/button';
+import { apiRpc } from '@hi/common';
+import { useMutation } from '@tanstack/react-query';
+import { Download } from 'lucide-react';
+import { memo, useCallback } from 'react';
+import { CiFilter } from 'react-icons/ci';
+import { RxCrossCircled } from 'react-icons/rx';
+import { useParams } from 'react-router-dom';
 
 const formatDate = (timestamp: number) => {
   const d = new Date(timestamp);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-    2,
-    "0",
-  )}-${String(d.getDate()).padStart(2, "0")}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
 const MemoConvertIntoCsv = () => {
   const params = useParams();
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
-  const {
-    selectedFilters,
-    setSelectedFilters,
-    setDownloadCsv,
-    setOpenFilterModal,
-  } = useSalesStore((s) => ({
-    selectedFilters: s.selectedFilters,
-    setSelectedFilters: s.setSelectedFilters,
-    setDownloadCsv: s.setDownloadCsv,
-    setOpenFilterModal: s.setOpenFilterModal,
-  }));
+  const selectedFilters = useSalesStore((s) => s.selectedFilters);
+  const setSelectedFilters = useSalesStore((s) => s.setSelectedFilters);
+  const setDownloadCsv = useSalesStore((s) => s.setDownloadCsv);
+  const setOpenFilterModal = useSalesStore((s) => s.setOpenFilterModal);
 
   const removeSingleFilter = useCallback(
     (key: string, value: string) => {
@@ -64,7 +54,7 @@ const MemoConvertIntoCsv = () => {
 
   const { isPending, mutateAsync } = useMutation({
     mutationFn: async (payload: ISalesPayloadCSV) => {
-      const response = await apiRpc.payments[":id"].bills_csv.$get({
+      const response = await apiRpc.payments[':id'].bills_csv.$get({
         query: {
           ...payload,
           appliedFilter: JSON.stringify(selectedFilters),
@@ -77,13 +67,13 @@ const MemoConvertIntoCsv = () => {
     },
     onSuccess: async (blob, variables) => {
       const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       const fromStr = formatDate(Number(variables.from));
       const toStr = formatDate(Number(variables.to));
       const fileName = `payments ${fromStr} to ${toStr}.csv`;
 
       link.href = url;
-      link.setAttribute("download", fileName);
+      link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -100,13 +90,9 @@ const MemoConvertIntoCsv = () => {
   }
 
   return (
-    <div className="flex flex-col space-y-4 w-full max-w-[30rem] lg:max-w-[40rem] px-4">
+    <div className="flex w-full max-w-[30rem] flex-col space-y-4 px-4 lg:max-w-[40rem]">
       <DateRangePicker />
-      <Button
-        className="w-[7rem]"
-        variant="outline"
-        onClick={() => setOpenFilterModal(true)}
-      >
+      <Button className="w-[7rem]" variant="outline" onClick={() => setOpenFilterModal(true)}>
         <CiFilter className="mr-2" /> Filters
       </Button>
       {selectedFilters && selectedFilters.length > 0 && (
@@ -114,11 +100,7 @@ const MemoConvertIntoCsv = () => {
           {selectedFilters.map((filter) => (
             <div key={filter.key} className="flex flex-wrap items-center gap-4">
               {filter?.value?.map((value) => (
-                <Button
-                  onClick={() => removeSingleFilter(filter.key, value)}
-                  key={value}
-                  className="capitalize whitespace-nowrap"
-                >
+                <Button onClick={() => removeSingleFilter(filter.key, value)} key={value} className="whitespace-nowrap capitalize">
                   {value}
                   <RxCrossCircled className="ml-2" />
                 </Button>
@@ -132,7 +114,7 @@ const MemoConvertIntoCsv = () => {
         fixed={false}
         buttons={[
           {
-            text: "Download",
+            text: 'Download',
             onClick: () =>
               mutateAsync({
                 businessId: params.businessId,
@@ -140,7 +122,7 @@ const MemoConvertIntoCsv = () => {
                 to: timeStampEnd.toString(),
               }),
             icon: <Download />,
-            className: "px-4  w-full",
+            className: 'px-4  w-full',
           },
         ]}
       />

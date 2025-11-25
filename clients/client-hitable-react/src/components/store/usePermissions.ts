@@ -21,7 +21,8 @@ export type PermissionKey =
   | "merge_table" //
   | "delete_kot" //
   | "temp_item" //
-  | "add_pax"; //
+  | "add_pax"
+  | "add_tip";
 
 export const ALL_PERMISSION_KEYS: PermissionKey[] = [
   "normal_settle",
@@ -44,6 +45,7 @@ export const ALL_PERMISSION_KEYS: PermissionKey[] = [
   "temp_item",
   "delete_kot",
   "add_pax",
+  "add_tip",
 ];
 
 export type StaffPermissionsMap = Record<PermissionKey, boolean>;

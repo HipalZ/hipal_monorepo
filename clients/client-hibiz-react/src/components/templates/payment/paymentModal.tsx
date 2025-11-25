@@ -459,19 +459,19 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
           {
             text: '',
             onClick: onClose,
-            className: 'rounded-md pl-3 !w-[8rem]',
+            className: 'rounded-md pl-3',
             isBackButton: true,
           },
           {
             text: 'Prev',
             onClick: goToPrevious,
-            className: 'rounded-md',
+            className: 'rounded-md !flex-none w-[4rem]',
             disable: currentIndex === 0,
           },
           {
             text: 'Next',
             onClick: goToNext,
-            className: 'rounded-md',
+            className: 'rounded-md !flex-none w-[4rem]',
             disable: currentIndex === allSalesData.length - 1,
           },
           {

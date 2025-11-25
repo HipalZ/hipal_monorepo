@@ -34,26 +34,36 @@ import {
 import { runInTransaction } from '@hi/utils';
 import { createHmac } from 'node:crypto';
 
-import { zValidator } from '@hono/zod-validator';
-import axios from 'axios';
-import { Hono } from 'hono';
-import type { ClientSession } from 'mongoose';
-import { nanoid } from 'nanoid';
-import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
-import { z } from 'zod';
-import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
-import { authTokenValidator } from '../../../middleware/tokenValidator';
-import { enqueueWhatsAppJob } from '../../queues/enqueue';
-import { getMerchantConfig } from '../../utils/cacheHelper';
-import { getFutureSeconds } from '../../utils/dateAndTime';
-import { type MerchantConfig, razorpayWrapper } from '../../utils/razorpay-wrapper';
-import { respond } from '../../utils/response';
-import whatsAppApiBaseUrl from '../../utils/whatsAppApiBaseUrl/apiPaths';
-import { qrHandlers } from '../../utils/whatsappWebhookHandlers/allQrHandler';
-import { whatsAppCampaignHandler } from '../../utils/whatsappWebhookHandlers/campaign';
-import { whatsAppChatHandler } from '../../utils/whatsappWebhookHandlers/chatHandler';
-import { identifyQrTypeFromMessage, whatsAppEventData, whatsAppUserAndTextMessage } from '../../utils/whatsappWebhookHandlers/helper';
-import { whatsAppBlockUserHandler } from '../../utils/whatsappWebhookHandlers/whatsappBlockUser';
+import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
+import { Hono } from "hono";
+import type { ClientSession } from "mongoose";
+import { nanoid } from "nanoid";
+import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
+import { z } from "zod";
+import {
+  ClientRoles,
+  requireAuthorization,
+} from "../../../middleware/authorization";
+import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { getMerchantConfig } from "../../utils/cacheHelper";
+import { getFutureSeconds } from "../../utils/dateAndTime";
+import {
+  type MerchantConfig,
+  razorpayWrapper,
+} from "../../utils/razorpay-wrapper";
+import { respond } from "../../utils/response";
+import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
+import { qrHandlers } from "../../utils/whatsappWebhookHandlers/allQrHandler";
+import { whatsAppCampaignHandler } from "../../utils/whatsappWebhookHandlers/campaign";
+import { whatsAppChatHandler } from "../../utils/whatsappWebhookHandlers/chatHandler";
+import {
+  identifyQrTypeFromMessage,
+  whatsAppEventData,
+  whatsAppUserAndTextMessage,
+} from "../../utils/whatsappWebhookHandlers/helper";
+import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
+import { enqueueWhatsAppJob } from "../../queues/enqueue";
 interface AxiosError {
   response?: {
     status?: number;
@@ -230,7 +240,7 @@ const pushToQueue = async (
     category: template.category,
   };
 
-  await enqueueWhatsAppJob('pushCustomerIntoQueue', payload, {
+  await enqueueWhatsAppJob("pushCustomerIntoQueue", payload, {
     delay: delay,
   });
 

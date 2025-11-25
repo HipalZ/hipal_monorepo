@@ -5,7 +5,7 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { cn } from "@hi/common";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import Image from "next/image";
-import { memo, useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { InView } from "react-intersection-observer";
 import { motion } from "framer-motion";
 
@@ -17,7 +17,9 @@ import GridDishCard from "@/components/atoms/card/GridDishCard";
 import { getRandomBlurImg } from "@/components/utils/images";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
 import OtherOutletCard from "@/components/atoms/card/otherOutletCard";
+import NoDishesCard from "@/components/atoms/empty/NoDishesCard";
 
+/* ----------------------- Dish Renderer ------------------------ */
 function DishRenderer({
   dishes,
   primaryColor,
@@ -45,10 +47,7 @@ function DishRenderer({
   }
 
   return (
-    <div
-      className="flex flex-col"
-      style={{ backgroundColor: `${secondaryColor}20` }}
-    >
+    <div className="flex flex-col" style={{ backgroundColor: `${secondaryColor}20` }}>
       {dishes.map((dishData, dishIndex) => (
         <HorizontalCard
           key={`${dishData._id}-${dishIndex}`}
@@ -61,6 +60,7 @@ function DishRenderer({
   );
 }
 
+/* ----------------------- Filter Dishes ------------------------ */
 function filterDishes(visibleDishes: DishType[], activeType: string) {
   const typeMap: Record<string, string[]> = {
     all: [],
@@ -79,39 +79,51 @@ function filterDishes(visibleDishes: DishType[], activeType: string) {
   }
 
   const allowedTypes = typeMap[activeType.toLowerCase()] || [];
+
   return visibleDishes.filter((dish) =>
     dish.dishTypes?.some((type) => allowedTypes.includes(type)),
   );
 }
 
-interface ISubTypes {
-  childCategory: CategoryType[];
-  primaryColor?: string;
-  secondaryColor?: string;
-  isHorizontalCard?: boolean; // toggles between grid or horizontal layout for dishes
-}
+/* ----------------------- Component ------------------------ */
 
 function MemoSubTypes({
   childCategory,
   primaryColor = "#ec4899",
   secondaryColor = "#fce7f3",
   isHorizontalCard = false,
-}: ISubTypes) {
-  const {
-    isActiveCategory,
-    isActiveDishType,
-    setActiveCategory,
-    setActiveParentCategory,
-    setActiveChildCategory,
-    setObserverActive,
-    observerActive,
-  } = useActiveClass();
+}: {
+  childCategory: CategoryType[];
+  primaryColor?: string;
+  secondaryColor?: string;
+  isHorizontalCard?: boolean;
+}) {
+  const isActiveCategory = useActiveClass((s) => s.isActiveCategory);
+  const isActiveDishType = useActiveClass((s) => s.isActiveDishType);
+  const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
+  const setActiveParentCategory = useActiveClass((s) => s.setActiveParentCategory);
+  const setActiveChildCategory = useActiveClass((s) => s.setActiveChildCategory);
+  const setObserverActive = useActiveClass((s) => s.setObserverActive);
+  const observerActive = useActiveClass((s) => s.observerActive);
+  const setActiveDishType = useActiveClass((s) => s.setActiveDishType);
 
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
-  /**
-   * Clicking on a category in Splide should scroll us to that category’s section.
-   */
+  /* ---------------------- CATEGORY FILTERING (FIX) ----------------------- */
+  const filteredCategories = useMemo(() => {
+    return childCategory
+      .map((cat) => {
+        const visible = cat.dishIds?.filter((d) => d.visibility) || [];
+        const filtered = filterDishes(visible, isActiveDishType);
+        return { ...cat, __filteredDishes: filtered };
+      })
+      .filter((cat) => cat.__filteredDishes.length > 0); // hide empty categories
+  }, [childCategory, isActiveDishType]);
+
+  const nothingFound = filteredCategories.length === 0;
+
+
+  /* ---------------------- Handle Category Click ----------------------- */
   const handleCategoryClick = useCallback(
     (category: CategoryType) => {
       setObserverActive(false);
@@ -123,44 +135,32 @@ function MemoSubTypes({
       setActiveCategory(category._id?.toString() || "");
       setActiveChildCategory(category._id?.toString() || "");
 
-      // Smooth scroll to the corresponding section
       const element = document.getElementById(category._id?.toString() || "");
       if (element) {
-        // Adjust for top padding so the heading is visible
         element.style.scrollMarginTop = "150px";
         element.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
-      // Re-enable the observer after a short delay
       setTimeout(() => {
         setObserverActive(true);
       }, 1000);
     },
-    [
-      setActiveCategory,
-      setActiveParentCategory,
-      setActiveChildCategory,
-      setObserverActive,
-    ],
+    [],
   );
 
-  /**
-   * Keeps track of which sections are visible and picks the one
-   * closest to the top to define the active category.
-   */
+  /* ---------------------- Active Category Scroll Logic ----------------------- */
   const visibleCategoriesRef = useRef<{ [key: string]: number }>({});
 
   const updateActiveCategory = useCallback(() => {
     if (!observerActive) return;
+
     const entries = Object.entries(visibleCategoriesRef.current);
     if (entries.length === 0) return;
 
     const closest = entries.reduce(
       (prev, curr) => {
         const offset = curr[1];
-        if (offset < prev.offset) {
-          return { id: curr[0], offset };
-        }
+        if (offset < prev.offset) return { id: curr[0], offset };
         return prev;
       },
       { id: "", offset: Number.POSITIVE_INFINITY },
@@ -169,29 +169,28 @@ function MemoSubTypes({
     if (closest.id && closest.id !== isActiveCategory) {
       setActiveCategory(closest.id);
     }
-  }, [observerActive, isActiveCategory, setActiveCategory]);
+  }, [observerActive, isActiveCategory]);
 
-  /**
-   * If you want Splide to automatically jump to the “active category”
-   * (e.g., when scrolling), you can do so in this optional effect:
-   */
+  /* ---------------------- Splide Sync With Active ----------------------- */
   const splideRef = useRef<SplideInstance>(null);
 
   useEffect(() => {
     if (isActiveCategory && splideRef.current) {
-      // find the category index
-      const slideIndex = childCategory.findIndex(
+      const index = filteredCategories.findIndex(
         (item) => item._id?.toString() === isActiveCategory,
       );
-      if (slideIndex !== -1) {
-        splideRef.current.go(slideIndex);
+      if (index !== -1) {
+        splideRef.current.go(index);
       }
     }
-  }, [isActiveCategory, childCategory]);
+  }, [isActiveCategory, filteredCategories]);
+
+  /* ---------------------- RENDER ----------------------- */
 
   return (
     <section className="h-[calc(100dvh)] flex flex-col bg-white">
-      {/* 1) Splide top bar for categories */}
+
+      {/* -------------------- CATEGORY BAR -------------------- */}
       <div className={cn("top-[2.75rem] sticky z-50 bg-white border-b")}>
         <Splide
           ref={splideRef}
@@ -202,65 +201,51 @@ function MemoSubTypes({
             snap: true,
             arrows: false,
             autoWidth: true,
-            // Additional Splide config as needed
           }}
           className="w-full no-scrollbar"
         >
-          {childCategory.map((cat: CategoryType, index: number) => {
+          {filteredCategories.map((cat) => {
             const active = cat._id?.toString() === isActiveCategory;
+
             return (
               <SplideSlide key={cat._id}>
                 <motion.button
                   type="button"
                   onClick={() => handleCategoryClick(cat)}
-                  className={cn(
-                    "relative flex flex-col items-center px-2 py-2 mx-2",
-                    active ? "" : "hover:bg-gray-50",
-                  )}
+                  className="relative flex flex-col items-center px-2 py-2 mx-2"
                   whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  {/* Category cover image or fallback initial */}
                   {cat.coverImage ? (
                     <div className="w-12 h-12 mb-1 overflow-hidden rounded-md">
                       <Image
-                        src={cat.coverImage || ""}
+                        src={cat.coverImage}
                         alt={cat.name}
                         width={48}
                         height={48}
-                        quality={95}
-                        blurDataURL={getRandomBlurImg(48, 48)}
-                        className="object-cover w-full h-full rounded-md"
+                        className="object-cover w-full h-full"
                       />
                     </div>
                   ) : (
-                    <div
-                      className="flex items-center justify-center w-12 h-12 mb-1 rounded-md"
-                      style={{ backgroundColor: secondaryColor }}
-                    >
-                      <span className="text-lg font-semibold text-gray-800">
+                    <div className="flex items-center justify-center w-12 h-12 mb-1 rounded-md"
+                      style={{ backgroundColor: secondaryColor }}>
+                      <span className="text-lg font-semibold">
                         {cat.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
+
                   <span
-                    className="w-full max-w-[6rem] text-sm font-medium poppins-regular  leading-4 text-center line-clamp-2 h-[2rem]"
-                    style={{ color: active ? primaryColor : "#000000" }}
+                    className="w-full max-w-[6rem] text-sm font-medium leading-4 text-center line-clamp-2"
+                    style={{ color: active ? primaryColor : "#000" }}
                   >
                     {cat.name}
                   </span>
 
-                  {/* Active category indicator */}
                   {active && (
                     <motion.div
-                      layoutId="activeCategoryIndicator"
+                      layoutId="activeIndicator"
                       className="absolute bottom-0 w-full h-1 rounded-t-md"
                       style={{ backgroundColor: primaryColor }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 30,
-                      }}
                     />
                   )}
                 </motion.button>
@@ -270,22 +255,23 @@ function MemoSubTypes({
         </Splide>
       </div>
 
-      {/* 2) Main content with vertical sections */}
-      <div
-        className="w-full pt-4 pb-8 overflow-y-auto scroll-pt-32"
-        style={{ backgroundColor: `${secondaryColor}50` }}
-      >
-        {childCategory.map((cat: CategoryType, index) => {
-          const visibleDishes =
-            cat.dishIds?.filter((dish: DishType) => dish.visibility) || [];
-          const dishesToRender = filterDishes(visibleDishes, isActiveDishType);
-          if (dishesToRender.length === 0) return null;
+      {/* -------------------- DISH LIST -------------------- */}
+      <div className="w-full pt-4 pb-8 overflow-y-auto scroll-pt-32"
+        style={{ backgroundColor: `${secondaryColor}50` }}>
+
+       {nothingFound ? (
+                 <NoDishesCard
+                   subtitle="Try clearing your dish-type filter."
+                   onClear={() => setActiveDishType("all")}
+                 />
+               ) : (filteredCategories.map((cat, index) => {
+          const dishes = cat.__filteredDishes;
 
           return (
             <motion.section
-              key={`${cat._id}-${index}`}
-              className="w-full mb-6 overflow-hidden bg-white rounded-lg shadow-sm"
+              key={cat._id}
               id={cat._id?.toString()}
+              className="w-full mb-6 overflow-hidden bg-white rounded-lg shadow-sm"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
@@ -294,22 +280,20 @@ function MemoSubTypes({
                 rootMargin="-150px 0px 0px 0px"
                 threshold={0.25}
                 onChange={(inView, entry) => {
-                  const categoryId = cat._id?.toString();
-                  if (!categoryId) return;
+                  const id = cat._id?.toString();
+                  if (!id) return;
 
-                  // If inView, store distance from top
                   if (inView) {
-                    const offset = Math.abs(entry.boundingClientRect.top);
-                    visibleCategoriesRef.current[categoryId] = offset;
+                    visibleCategoriesRef.current[id] = Math.abs(entry.boundingClientRect.top);
                   } else {
-                    delete visibleCategoriesRef.current[categoryId];
+                    delete visibleCategoriesRef.current[id];
                   }
+
                   updateActiveCategory();
                 }}
               >
                 {({ ref }) => (
                   <>
-                    {/* Category heading */}
                     <div
                       ref={ref}
                       className="z-40 flex items-center justify-between px-4 h-[3rem] font-bold border-l-4 rounded-t-lg"
@@ -319,34 +303,27 @@ function MemoSubTypes({
                       }}
                     >
                       <h2
-                        className="w-full text-2xl font-semibold text-center capitalize truncate poppins-regular "
+                        className="w-full text-2xl font-semibold text-center capitalize truncate"
                         style={{ color: primaryColor }}
-                        title={cat.name || "Unnamed Category"}
                       >
-                        {cat.name || "Unnamed Category"}
+                        {cat.name}
                       </h2>
                     </div>
 
-                    {/* Render dishes */}
                     <div className="flex flex-col">
-                      {dishesToRender.length > 0 &&
+                      {dishes.length > 0 &&
                         (outletInfo?.outLetType !== "OTHER" ? (
                           <DishRenderer
-                            dishes={dishesToRender}
+                            dishes={dishes}
                             primaryColor={primaryColor}
                             secondaryColor={secondaryColor}
                             isHorizontalCard={isHorizontalCard}
                           />
                         ) : (
                           <section className="grid gap-4 px-4 mt-4">
-                            {dishesToRender.map(
-                              (dishData: DishType, dishIndex: number) => (
-                                <OtherOutletCard
-                                  key={`${dishData._id}-${dishIndex}`}
-                                  dishData={dishData}
-                                />
-                              ),
-                            )}
+                            {dishes.map((dish, i) => (
+                              <OtherOutletCard key={dish._id} dishData={dish} />
+                            ))}
                           </section>
                         ))}
                     </div>
@@ -355,7 +332,7 @@ function MemoSubTypes({
               </InView>
             </motion.section>
           );
-        })}
+        }))}
       </div>
     </section>
   );

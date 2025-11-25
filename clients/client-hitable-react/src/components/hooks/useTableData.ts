@@ -189,6 +189,27 @@ export const useGetAllModes = (
   };
 };
 
+export const useAllModes = () => {
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const getAllModes = async () => {
+    const response = await apiRpc.upi_mode.all_modes[":businessId"].$get({
+      param: {
+        businessId,
+      },
+    });
+    const res = await response.json();
+    return res.data as IPaymentMode[];
+  };
+
+  const { isLoading, data } = useQuery({
+    queryKey: ["allModes", businessId],
+    queryFn: getAllModes,
+    enabled: !!businessId,
+  });
+
+  return { isLoading, data };
+};
+
 export const useCheckLoyalty = () => {
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const checkLoyalty = async () => {

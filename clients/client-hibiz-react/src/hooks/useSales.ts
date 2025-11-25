@@ -38,7 +38,7 @@ export const useGetallSalesByGet = (payload: salesPayload) => {
     return data;
   };
 
-  const { isLoading } = useQuery({
+  const { isLoading, refetch } = useQuery({
     queryKey: [
       "allSalesDataByGet",
       payload.businessId,
@@ -56,5 +56,5 @@ export const useGetallSalesByGet = (payload: salesPayload) => {
       !!payload.pageNumber,
   });
 
-  return { isLoading };
+  return { isLoading, refetch };
 };

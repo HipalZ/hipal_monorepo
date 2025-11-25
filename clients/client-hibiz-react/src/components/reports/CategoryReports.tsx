@@ -43,16 +43,22 @@ const MemoCategoryReports = () => {
     <>
       <div className="space-y-6 p-4">
         <div className="flex items-center justify-between">
-          {hasCategories && <h2 className="text-2xl font-bold">Category Reports</h2>}
+          {hasCategories && (
+            <h2 className="text-2xl font-bold">
+              <p>Category Reports</p>
+              <p className="text-primary w-[60%] text-sm md:w-full">
+                {categoryReports[0]?.from} ~ {categoryReports[0]?.to}
+              </p>
+            </h2>
+          )}
           {hasCategories && <LayoutToggleButtons />}
         </div>
-
         {hasReports && (
           <div className="space-y-6 pb-[5rem]">
             {categoryReports.map((business) => (
-              <Card key={business.businessId} className="w-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
+              <Card key={business.businessId} className="w-full border-none !p-0 shadow-none">
+                <CardHeader className="w-full border-none p-0 pb-6 shadow-none">
+                  <CardTitle className="flex items-center justify-start gap-4 text-lg font-semibold">
                     <div className="flex items-center gap-2">
                       <Package className="h-5 w-5" />
                       {business.businessName}
@@ -60,7 +66,7 @@ const MemoCategoryReports = () => {
                     <div className="text-muted-foreground text-sm">{business.categories.length} categories</div>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-2">
+                <CardContent className="border-none !p-0 shadow-none">
                   {business.categories.length === 0 ? (
                     <p className="text-muted-foreground py-8 text-center">No category data available for the selected date range.</p>
                   ) : (

@@ -130,7 +130,6 @@ const MemoErrorPopup = () => {
   const error = useError((s) => s.error);
   const resetErrorStates = useError((s) => s.resetErrorStates);
   const requireReauth = useError((s) => s.requireReauth);
-  console.log('Rendering ErrorPopup:', { openErrorModal, error, requireReauth });
 
   const onClose = () => {
     resetErrorStates();

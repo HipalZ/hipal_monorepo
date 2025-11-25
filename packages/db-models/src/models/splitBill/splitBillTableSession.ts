@@ -253,6 +253,7 @@ const splitBillTableSessionSchema =
       default: null,
       ref: "User",
     },
+    
   });
 
 splitBillTableSessionSchema.index(

@@ -1,45 +1,58 @@
-export type DiscountType = "ON_BILL" | "ON_DISH"
+export type DiscountType = "ON_BILL" | "ON_DISH";
 
 // Base interface for variant support
 interface BasePayload {
-  businessId: string
-  tableName: string
-  variantId?: string // Optional variant ID for split bills
+  businessId: string;
+  tableName: string;
+  variantId?: string; // Optional variant ID for split bills
 }
 
 export interface DiscountPayload extends BasePayload {
-  value: number
-  reasonOfDiscount?: string
-  discountAppliedBy: string
-  discountAppliedOn: DiscountType
-  itemIds?: string[]
+  value: number;
+  reasonOfDiscount?: string;
+  discountAppliedBy: string;
+  discountAppliedOn: DiscountType;
+  itemIds?: string[];
 }
 
 export interface RemoveDiscountPayload extends BasePayload {
-  discountRemovedBy: string
+  discountRemovedBy: string;
 }
 
 export interface AddCoinzPayload extends BasePayload {
-  value: number
+  value: number;
 }
 
 export interface RemoveCoinzPayload extends BasePayload {
-  coinzRemovedBy: string
+  coinzRemovedBy: string;
 }
 
 export interface AddCouponPayload extends BasePayload {
-  couponId: string
+  couponId: string;
 }
 
 export interface RemoveCouponPayload extends BasePayload {}
 
 export interface AddServiceChargePayload extends BasePayload {
-  serviceChargeAppliedBy: string
+  serviceChargeAppliedBy: string;
+}
+
+export interface UpdateServiceChargePayload extends BasePayload {
+  serviceChargeAppliedBy: string;
+  value: number;
 }
 
 export interface RemoveServiceChargePayload extends BasePayload {
-  serviceChargeRemovedBy: string
-  reasonOfServiceCharge: string
+  serviceChargeRemovedBy: string;
+  reasonOfServiceCharge: string;
+}
+
+export interface ApplyTipsPayload extends BasePayload {
+  value: number;
+}
+
+export interface RemoveTipsPayload extends BasePayload {
+  value: number;
 }
 
 export interface SettleTypePayload extends BasePayload {}
@@ -48,12 +61,12 @@ export interface ReprintPayload extends BasePayload {}
 
 // API Response types
 export interface ApiResponse<T = any> {
-  status: number
-  message?: string
-  data?: T
+  status: number;
+  message?: string;
+  data?: T;
 }
 
 export interface ApiError {
-  message: string
-  status?: number
+  message: string;
+  status?: number;
 }

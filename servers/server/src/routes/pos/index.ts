@@ -26,13 +26,12 @@ import {
 } from '@hi/db-models';
 import { OrderVerificationTypeEnum, type UserSessionSchemaType } from '@hi/db-models/src/validators';
 
-import { runInTransaction } from '@hi/utils';
-import { zValidator } from '@hono/zod-validator';
-import axios from 'axios';
-import { Hono } from 'hono';
-import type { ClientSession } from 'mongoose';
-import { z } from 'zod';
-import { ubacMiddleware } from '../../../middleware/checkPermissions';
+import { runInTransaction } from "@hi/utils";
+import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
+import { Hono } from "hono";
+import type { ClientSession } from "mongoose";
+import { z } from "zod";
 import {
   applyCoinToVariantBill,
   applyCouponToVariantBill,
@@ -261,9 +260,8 @@ const posRouter = new Hono()
           businessId,
           tableName: isTableMerge?.parentTableId.name || tableName,
         }).populate({
-          path: 'discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billingUserId',
-
-          select: 'name phone',
+          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy billingUserId",
+          select: "name phone",
         });
 
         const billingUserName = tableSession?.billingUserId?.name;
@@ -294,6 +292,7 @@ const posRouter = new Hono()
               tableSession.businessId.toString(),
               tableSession.tableName,
               session,
+              tableSession.billInvoice
             );
 
             return respond(c, 'success', false, 200, splitBillVariants);
@@ -303,6 +302,7 @@ const posRouter = new Hono()
             tableSession.businessId.toString(),
             tableSession.tableName,
             session,
+             tableSession.billInvoice
           );
 
           return respond(c, 'success', false, 200, splitBillVariants);
@@ -337,7 +337,8 @@ const posRouter = new Hono()
           name: 'servicecharge',
         });
 
-        const serviceChargePercentage = serviceCharge?.value || 0;
+        const serviceChargePercentage =
+          tableSession.serviceChargePercentage || serviceCharge?.value || 0;
 
         let serviceChargeAmount = Math.round((serviceChargePercentage / 100) * totalDishTotal);
         if (tableSession.isServiceChargeRemoved) serviceChargeAmount = 0;
@@ -351,19 +352,26 @@ const posRouter = new Hono()
         const newTotal = calculateFinalTotal(totalDishTotal, totalDis, newGst, serviceChargeAmount, tableSession.otherTax, tableSession.tips);
 
         // Update table session with new values
-        tableSession = await updateTableSession(businessId, tableSession.tableName, session, {
-          gst: Number(newGst.toFixed(2)),
-          total: newTotal,
-          serviceCharge: serviceChargeAmount,
-          billGeneratedBy: generatedBy,
-          subTotal: totalDishTotal,
-          items: cartItems,
-          billPrintCount: tableSession.billPrintCount + 1,
-          totalGst: Number(totalGst?.toFixed(2)),
-          ...(tableSession.billInvoice === 0 && {
-            billInvoice: sessionCount,
-          }),
-        });
+        tableSession = await updateTableSession(
+          businessId,
+          tableSession.tableName,
+          session,
+          {
+            gst: Number(newGst.toFixed(2)),
+            total: newTotal,
+            serviceCharge: serviceChargeAmount,
+            billGeneratedBy: generatedBy,
+            subTotal: totalDishTotal,
+            items: cartItems,
+            billPrintCount: tableSession.billPrintCount + 1,
+            totalGst: Number(totalGst?.toFixed(2)),
+            ...(tableSession.billInvoice === 0 && {
+              billInvoice: sessionCount,
+            }),
+            serviceChargePercentage:
+              tableSession.serviceChargePercentage || serviceCharge?.value || 0,
+          },
+        );
 
         if (!tableSession) {
           return respond(c, 'Table session not found', true, 404, {});
@@ -396,6 +404,10 @@ const posRouter = new Hono()
               tips: tableSession.tips,
               total: tableSession.total,
               billId: tableSession._id.toString(),
+              serviceChargePercentage:
+                tableSession.serviceChargePercentage ||
+                serviceCharge?.value ||
+                0,
             },
           },
           200,
@@ -968,7 +980,7 @@ const posRouter = new Hono()
   )
 
   .post(
-    '/captain/save_kot',
+    "/captain/save_kot",
     // ubacMiddleware("place_order"),
     zValidator(
       'json',
@@ -1425,9 +1437,9 @@ const posRouter = new Hono()
   )
 
   .post(
-    '/bill/user',
+    "/bill/user",
     zValidator(
-      'json',
+      "json",
       z.object({
         customerName: z.string().min(1).max(50),
         phone: z.string().min(10).max(10).optional(),
@@ -1437,7 +1449,8 @@ const posRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { customerName, phone, businessId, tableName, variantId } = c.req.valid('json');
+      const { customerName, phone, businessId, tableName, variantId } =
+        c.req.valid("json");
 
       const getOrCreateUserWithAnalytics = async ({
         phone,
@@ -1494,13 +1507,19 @@ const posRouter = new Hono()
         });
 
         if (!tableSession) {
-          return respond(c, 'Table session not found', true, 404, {});
+          return respond(c, "Table session not found", true, 404, {});
         }
 
         const isBillSplit = await checkOriginBillIsSplit(tableSession);
 
         if (isBillSplit && !variantId) {
-          return respond(c, 'variantId is required for split bill', true, 400, {});
+          return respond(
+            c,
+            "variantId is required for split bill",
+            true,
+            400,
+            {},
+          );
         }
 
         const user = await getOrCreateUserWithAnalytics({
@@ -1511,12 +1530,20 @@ const posRouter = new Hono()
         });
 
         if (isBillSplit) {
-          await SplitBillTableSession.findOneAndUpdate({ _id: variantId }, { billingUserId: user._id }, { session });
+          await SplitBillTableSession.findOneAndUpdate(
+            { _id: variantId },
+            { billingUserId: user._id },
+            { session },
+          );
         } else {
-          await UserSession.findOneAndUpdate({ businessId, tableName }, { billingUserId: user._id }, { session });
+          await UserSession.findOneAndUpdate(
+            { businessId, tableName },
+            { billingUserId: user._id },
+            { session },
+          );
         }
 
-        return respond(c, 'sucess', false, 200, {});
+        return respond(c, "sucess", false, 200, {});
       });
     },
   )
@@ -1894,7 +1921,7 @@ const posRouter = new Hono()
     },
   )
   .post(
-    '/re_print_bill',
+    "/re_print_bill",
     // ubacMiddleware("print_bill"),
     zValidator(
       'json',
@@ -1927,8 +1954,8 @@ const posRouter = new Hono()
           businessId,
           tableName,
         }).populate({
-          path: 'billingUserId',
-          select: 'name phone',
+          path: "billingUserId",
+          select: "name phone",
         });
 
         if (!tableSession) {
@@ -1954,9 +1981,11 @@ const posRouter = new Hono()
             return respond(c, 'variantId is required for split bill', true, 400, {});
           }
 
-          const variant = await SplitBillTableSession.findById(variantId).populate({
-            path: 'billingUserId',
-            select: 'name phone',
+          const variant = await SplitBillTableSession.findById(
+            variantId,
+          ).populate({
+            path: "billingUserId",
+            select: "name phone",
           });
           if (!variant) {
             return respond(c, 'Variant not found', true, 404, {});
@@ -1968,11 +1997,21 @@ const posRouter = new Hono()
           sendBillPrintEvent({
             tableName: tableName,
             businessId: businessId,
-            customerName: variant.billingUserId?.name || variant.customerName || tableSession?.customerName || 'customer',
-            customerPhone: variant.billingUserId?.name || tableSession?.phoneNumbers?.[0] || 'customer',
+            customerName:
+              variant.billingUserId?.name ||
+              variant.customerName ||
+              tableSession?.customerName ||
+              "customer",
+            customerPhone:
+              variant.billingUserId?.name ||
+              tableSession?.phoneNumbers?.[0] ||
+              "customer",
             items: billItems,
             posRestName: businessPosConfig.restName,
-            generatedBy: variant.billingUserId?.name || tableSession?.billGeneratedBy || generatedBy,
+            generatedBy:
+              variant.billingUserId?.name ||
+              tableSession?.billGeneratedBy ||
+              generatedBy,
             date: Date.now(),
             serviceCharge: variant?.serviceCharge || 0,
             discount: variant?.discount || 0,
@@ -2014,10 +2053,14 @@ const posRouter = new Hono()
           tableName: tableName,
           businessId: businessId,
           customerName: tableSession?.billingUserId?.name || KotOrders[0].name,
-          customerPhone: tableSession?.billingUserId?.phone || KotOrders[0].phone,
+          customerPhone:
+            tableSession?.billingUserId?.phone || KotOrders[0].phone,
           items: billItems,
           posRestName: businessPosConfig.restName,
-          generatedBy: tableSession.billingUserId?.name || tableSession?.billGeneratedBy || generatedBy,
+          generatedBy:
+            tableSession.billingUserId?.name ||
+            tableSession?.billGeneratedBy ||
+            generatedBy,
           date: Date.now(),
           serviceCharge: tableSession?.serviceCharge || 0,
           discount: tableSession?.discount || 0,
@@ -2040,7 +2083,7 @@ const posRouter = new Hono()
   )
 
   .post(
-    '/settle_bill_print',
+    "/settle_bill_print",
     // ubacMiddleware("settle_bill_print"),
     zValidator(
       'json',
@@ -2114,7 +2157,7 @@ const posRouter = new Hono()
   )
 
   .post(
-    '/add_discount',
+    "/add_discount",
     // ubacMiddleware("add_discount"),
     zValidator(
       'json',
@@ -2846,7 +2889,7 @@ const posRouter = new Hono()
   )
 
   .post(
-    '/add_service_charge',
+    "/add_service_charge",
     // ubacMiddleware("add_or_remove_service_charge"),
     zValidator(
       'json',
@@ -2854,13 +2897,20 @@ const posRouter = new Hono()
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
         serviceChargeAppliedBy: z.string().min(1).max(50),
-        variantId: z.string().min(24).max(24).optional(),
+        variantId: z.string().length(24).optional(),
+        value: z.number().positive().min(1).max(100).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, serviceChargeAppliedBy, variantId } = await c.req.json();
+        const {
+          businessId,
+          tableName,
+          serviceChargeAppliedBy,
+          variantId,
+          value,
+        } = await c.req.json();
 
         const tInfo = await Table.findOne({ businessId, name: tableName });
 
@@ -2893,6 +2943,7 @@ const posRouter = new Hono()
           if (variantIsPaid) {
             return respond(c, 'You cannot apply servicecharge on paid variant', true, 400, {});
           }
+          console.log("vale", value);
 
           await updateSplitTableSession(
             variantId,
@@ -2900,6 +2951,7 @@ const posRouter = new Hono()
               serviceChargeAppliedBy,
               isServiceChargeRemoved: false,
               serviceChargeRemovedBy: null,
+              ...(value ? { serviceChargePercentage: value } : {}),
             },
             session,
           );
@@ -2907,11 +2959,17 @@ const posRouter = new Hono()
           return respond(c, 'Success', true, 200, {});
         }
 
-        await updateTableSession(businessId, isTableMerge?.parentTableId?.name || tableName, session, {
-          serviceChargeAppliedBy,
-          isServiceChargeRemoved: false,
-          serviceChargeRemovedBy: null,
-        });
+        await updateTableSession(
+          businessId,
+          isTableMerge?.parentTableId?.name || tableName,
+          session,
+          {
+            serviceChargeAppliedBy,
+            isServiceChargeRemoved: false,
+            serviceChargeRemovedBy: null,
+            ...(value ? { serviceChargePercentage: value } : {}),
+          },
+        );
 
         return respond(c, 'Success', true, 200, {});
       });
@@ -2919,10 +2977,9 @@ const posRouter = new Hono()
   )
 
   .post(
-    '/remove_service_charge',
-    // ubacMiddleware("add_or_remove_service_charge"),
+    "/remove_service_charge",
     zValidator(
-      'json',
+      "json",
       z.object({
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
@@ -2935,29 +2992,42 @@ const posRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, serviceChargeRemovedBy, reasonOfServiceCharge, password, variantId } = await c.req.json();
+        const {
+          businessId,
+          tableName,
+          serviceChargeRemovedBy,
+          reasonOfServiceCharge,
+          password,
+          variantId,
+        } = await c.req.json();
 
         const tInfo = await Table.findOne({ businessId, name: tableName });
 
         if (!tInfo) {
-          return respond(c, 'Table not found', true, 404, {});
+          return respond(c, "Table not found", true, 404, {});
         }
 
         const isTableMerge = await MergeTable.findOne({
           businessId: businessId,
           childTableIds: tInfo._id.toString(),
-        }).populate('parentTableId');
+        }).populate("parentTableId");
 
         if (password) {
           const passwordManager = await PasswordManager.findOne({
             businessId,
-            name: 'SERVICE_CHARGE',
+            name: "SERVICE_CHARGE",
             isActive: true,
             password: password,
           });
 
           if (!passwordManager) {
-            return respond(c, 'Please enter the correct service charge removal password.', true, 400, {});
+            return respond(
+              c,
+              "Please enter the correct service charge removal password.",
+              true,
+              400,
+              {},
+            );
           }
         }
 
@@ -2967,41 +3037,60 @@ const posRouter = new Hono()
         }).session(session);
 
         if (!tableSession) {
-          return respond(c, 'Table session not found', true, 404, {});
+          return respond(c, "Table session not found", true, 404, {});
         }
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
         if (originBillIsSplit) {
           if (!variantId) {
-            return respond(c, 'variantId is required for split bill', true, 400, {});
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
           }
           const variantIsPaid = await checkVariantIsPaid(tableSession._id);
           if (variantIsPaid) {
-            return respond(c, 'You cannot apply servicecharge on paid variant', true, 400, {});
+            return respond(
+              c,
+              "You cannot apply servicecharge on paid variant",
+              true,
+              400,
+              {},
+            );
           }
 
-          const removeServiceChargeFromAllVariants = await SplitBillTableSession.updateMany(
-            {
-              originTableSessionId: tableSession._id.toString(),
-            },
-            {
-              $set: {
-                serviceCharge: 0,
-                serviceChargeRemovedBy,
-                reasonOfServiceCharge,
-                isServiceChargeRemoved: true,
-                serviceChargeAppliedBy: null,
+          const removeServiceChargeFromAllVariants =
+            await SplitBillTableSession.updateMany(
+              {
+                originTableSessionId: tableSession._id.toString(),
               },
-            },
-            {
-              session,
-            },
-          );
+              {
+                $set: {
+                  serviceCharge: 0,
+                  serviceChargeRemovedBy,
+                  reasonOfServiceCharge,
+                  isServiceChargeRemoved: true,
+                  serviceChargeAppliedBy: null,
+                },
+              },
+              {
+                session,
+              },
+            );
 
           if (!removeServiceChargeFromAllVariants) {
-            return respond(c, 'Failed to remove service charge', true, 400, {});
+            return respond(c, "Failed to remove service charge", true, 400, {});
           }
-          return respond(c, 'Service charge removed successfully', false, 200, {});
+          return respond(
+            c,
+            "Service charge removed successfully",
+            false,
+            200,
+            {},
+          );
         }
 
         await UserSession.findOneAndUpdate(
@@ -3021,7 +3110,7 @@ const posRouter = new Hono()
           { session, new: true },
         );
 
-        return respond(c, 'Success', true, 200, {});
+        return respond(c, "Success", true, 200, {});
       });
     },
   )
