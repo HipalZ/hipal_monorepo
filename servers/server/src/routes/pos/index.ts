@@ -311,6 +311,7 @@ const posRouter = new Hono()
               tableSession.businessId.toString(),
               tableSession.tableName,
               session,
+              tableSession.billInvoice
             );
 
             return respond(c, "success", false, 200, splitBillVariants);
@@ -320,6 +321,7 @@ const posRouter = new Hono()
             tableSession.businessId.toString(),
             tableSession.tableName,
             session,
+             tableSession.billInvoice
           );
 
           return respond(c, "success", false, 200, splitBillVariants);

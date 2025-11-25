@@ -1,4 +1,8 @@
-import { SplitBillTableSession, UserSession } from "@hi/db-models";
+import {
+  SplitBillTableSession,
+  TableSessionCounter,
+  UserSession,
+} from "@hi/db-models";
 import {
   splitBillItemSchema,
   splitBillPortionAndPercentageSchema,
@@ -6,6 +10,7 @@ import {
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { nanoid } from "nanoid";
 import { z } from "zod";
 import {
   checkOfflinePaymentRequest,
@@ -19,7 +24,6 @@ import {
   splitBillWithPortionAndPercentage,
   splitItemQuantityWithPortionAndPercentage,
 } from "../../utils/splitBill";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 //
 const splitBillRouter = new Hono()
 
@@ -87,10 +91,15 @@ const splitBillRouter = new Hono()
             portionPercentage,
           );
 
+           
+          
+
+
           const updateBill = splitBillWithPortionAndPercentage(
             fetchOriginalTableSession,
             portionPercentage,
             i + 1,
+            
           );
 
           const updatedObject = {

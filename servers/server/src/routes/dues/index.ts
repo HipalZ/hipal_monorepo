@@ -261,15 +261,18 @@ const duesRouter = new Hono()
         { session },
       );
 
-      const saveTableSessionCounter = new TableSessionCounter({
-        businessId: businessId,
-        tableSessionId: saveOrder[0]._id,
-      });
+      await TableSessionCounter.findOneAndUpdate(
+        {
+          businessId,
+          tableSessionId: duesUserId.toString(),
+        },
+        {},
 
-      await saveTableSessionCounter.save({ session });
+        { upsert: true },
+      );
 
       const sessionCount = await TableSessionCounter.countDocuments({
-        businessId: businessId,
+        businessId,
       });
 
       const savePayment = await Payment.create(

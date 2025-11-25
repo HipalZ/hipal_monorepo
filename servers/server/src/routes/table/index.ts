@@ -13,6 +13,7 @@ import {
   QrBill,
   SplitBillTableSession,
   Table,
+  TableSessionCounter,
   UnsettleTable,
   UpiMode,
   User,
@@ -447,7 +448,9 @@ const tableRouter = new Hono()
                   userId:
                     paymentMode?.name === "npc"
                       ? npcUser?.userId
-                      : splitTableSessionData.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
+                      : splitTableSessionData.billingUserId ||
+                        splitTableSessionData?.customerIds?.[0] ||
+                        captainId,
                   claimedCoins: splitTableSessionData?.claimedCoins || 0,
                   tableName: table?.name,
                   tips: splitTableSessionData?.tips || 0,
@@ -648,7 +651,9 @@ const tableRouter = new Hono()
                   userId:
                     paymentMode?.name === "npc"
                       ? npcUser?.userId
-                      : splitTableSessionData.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
+                      : splitTableSessionData.billingUserId ||
+                        splitTableSessionData?.customerIds?.[0] ||
+                        captainId,
                   claimedCoins: splitTableSessionData?.claimedCoins || 0,
                   tableName: table?.name,
                   tips: splitTableSessionData?.tips || 0,
@@ -1017,7 +1022,9 @@ const tableRouter = new Hono()
               userId:
                 paymentMode?.name === "npc"
                   ? npcUser?.userId
-                  : tableSession.billingUserId ||  tableSession?.customerIds?.[0] || captainId,
+                  : tableSession.billingUserId ||
+                    tableSession?.customerIds?.[0] ||
+                    captainId,
               claimedCoins: tableSession?.claimedCoins || 0,
               tableName: table?.name,
               tips: tableSession?.tips || 0,
@@ -1430,6 +1437,7 @@ const tableRouter = new Hono()
         const staff = await User.findById(staffId).session(session);
         if (!staff) return respond(c, "Staff not found", true, 404, {});
 
+        const tableSessionIds = [];
         const destTable = await Table.findById(toTableId).session(session);
         if (!destTable || destTable.isMerge)
           return respond(
@@ -1476,16 +1484,25 @@ const tableRouter = new Hono()
         let totalBillCount = 0;
         let totalItemCount = 0;
 
-        const destSession = await UserSession.findOne({
-          businessId: destTable.businessId,
-          tableName: destTable.name,
-        }).session(session);
+        const destSession = await UserSession.findOneAndUpdate(
+          {
+            businessId: destTable.businessId,
+            tableName: destTable.name,
+          },
+          {
+            billInvoice: 0,
+          },
+        ).session(session);
 
         for (const srcTable of sourceTables) {
           const srcSession = await UserSession.findOne({
             businessId: srcTable.businessId,
             tableName: srcTable.name,
           }).session(session);
+          await TableSessionCounter.deleteOne({
+            businessId: srcTable.businessId,
+            tableSessionId: srcSession?._id?.toString(),
+          });
 
           if (srcSession && checkOriginBillIsSplit(srcSession))
             throw new Error(`Bill already split for table ${srcTable.name}`);
@@ -1649,6 +1666,11 @@ const tableRouter = new Hono()
           parentTableId: toTableId,
           childTableIds: fromTableIds,
         }).save({ session });
+
+        await TableSessionCounter.deleteOne({
+          businessId: destTable.businessId,
+          tableSessionId: { $in: tableSessionIds },
+        });
 
         return respond(c, "Tables merged successfully", false, 200, {});
       });
@@ -1993,6 +2015,7 @@ const tableRouter = new Hono()
                 isTransfer: true,
                 transferBy,
                 transferType: "TABLE",
+                billInvoice: tableSession.billInvoice,
               },
             },
             { session, upsert: true },

@@ -95,6 +95,7 @@ const returnSplitBillVariants = async (
   businessId: string,
   tableName: string,
   session: ClientSession,
+  billInvoice: number
 ) => {
   const fetchVariants = await SplitBillTableSession.find({
     businessId,
@@ -176,6 +177,7 @@ const returnSplitBillVariants = async (
         totalGst: totalGst,
         serviceChargePercentage:
           variant.serviceChargePercentage || serviceCharge?.value || 0,
+        billInvoice:billInvoice
       },
       session,
     );
@@ -212,6 +214,7 @@ const returnSplitBillVariants = async (
       isPaid: variant.isPaid,
       serviceChargePercentage:
         variant.serviceChargePercentage || serviceCharge?.value || 0,
+
     });
   }
 
@@ -223,6 +226,7 @@ const returnSplitBillVariantsForItemWise = async (
   businessId: string,
   tableName: string,
   session: ClientSession,
+  billInvoice: number
 ) => {
   const fetchVariants = await SplitBillTableSession.find({
     businessId,
@@ -303,6 +307,7 @@ const returnSplitBillVariantsForItemWise = async (
         totalGst: Number(totalGst?.toFixed(2)),
         serviceChargePercentage:
           variant.serviceChargePercentage || serviceCharge?.value || 0,
+           billInvoice:billInvoice
       },
       session,
     );
