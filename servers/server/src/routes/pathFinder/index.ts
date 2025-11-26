@@ -33,7 +33,7 @@ const pathFinderRouter = new Hono().get(
           $gte: fromDate,
           $lte: toDate,
         },
-      });
+      }).sort({ billInvoice: 1 });
 
       const data = await transformToIntegraFormat(payments);
 

@@ -1,6 +1,7 @@
 import { SplitBillTableSession, UserSession } from "@hi/db-models";
 import type { ClientSession } from "mongoose";
 import type { BillGroup, Item } from "../billTypes";
+import { BillItem } from "../reportHelper/itemType";
 
 // Reference to a business populated with name
 export interface BusinessRef {
@@ -126,6 +127,42 @@ function calculateBillTotals(kots: KotOrderTypes[]): {
         const gstPercent = item.dish.gst || 0;
         totalGst += (lineTotal * gstPercent) / 100;
       }
+    }
+  } catch (err) {
+    console.error("Error calculating bill totals:", err);
+    throw new Error("Invalid data structure in KOTs");
+  }
+
+  return { totalDishTotal, totalGst };
+}
+function calculateBillTotalsForBillItems(billItems: BillItem[]): {
+  totalDishTotal: number;
+  totalGst: number;
+} {
+  let totalDishTotal = 0;
+  let totalGst = 0;
+
+  try {
+    for (const item of billItems) {
+      // Skip deleted items
+      if (item.isDeleted) continue;
+
+      // Base price comes from portion if present, otherwise dish.price
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      // Sum up all extras (price * quantity)
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      // Line total for this item
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+      totalDishTotal += lineTotal;
+
+      // Determine GST percentage (prefer gst field)
+      const gstPercent = item.dish.gst || 0;
+      totalGst += (lineTotal * gstPercent) / 100;
     }
   } catch (err) {
     console.error("Error calculating bill totals:", err);
@@ -709,6 +746,7 @@ export {
   billPrintItems,
   calculateBillDishIds,
   calculateBillTotals,
+  calculateBillTotalsForBillItems,
   calculateFinalTotal,
   calculateGst,
   calculateItemUpdated,
