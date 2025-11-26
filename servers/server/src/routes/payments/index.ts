@@ -77,6 +77,7 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
+import { formatDateToIST } from "../../utils/reportHelper/dateFormater";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -4618,7 +4619,7 @@ const paymentsRouter = new Hono()
     let serviceChargeSum = 0;
     let tipSum = 0;
     let discountSum = 0;
-    let totalOrders = 0; // ✅ only non-dues will increment this
+    let totalOrders = 0;
 
     const activeTable = await Table.find({
       businessId: businessId,
@@ -5259,9 +5260,7 @@ const paymentsRouter = new Hono()
       });
       summaryRows.push({
         Label: "Date Range",
-        Value: `${new Date(fromDate).toLocaleString()} → ${new Date(
-          toDate,
-        ).toLocaleString()}`,
+        Value: `${formatDateToIST(fromDate)} to ${formatDateToIST(toDate)}`,
       });
 
       addGap();
@@ -6166,7 +6165,9 @@ const paymentsRouter = new Hono()
       let totalDuesGetBack = 0;
 
       for (const payment of payments) {
-        totalDiscount += payment.discount ?? 0;
+        if (payment.mode !== "dues") {
+          totalDiscount += payment.discount ?? 0;
+        }
 
         if (payment.mode === "dues") {
           totalDuesGiven += payment.total;
