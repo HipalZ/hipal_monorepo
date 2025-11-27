@@ -625,7 +625,7 @@ const paymentsRouter = new Hono()
             }).lean()) as KotOrderTypes[];
 
             const cartItems = kotOrders.flatMap((order) =>
-              order.cart.filter((item) => !item.isDeleted),
+              order.cart.filter((item) => !item.isDeleted || !item.isOpenItem),
             );
 
             const unsettleTable = await UnsettleTable.find({
@@ -815,10 +815,15 @@ const paymentsRouter = new Hono()
           accepted: true,
           businessId,
           isSync: false,
+          cart: {
+            $elemMatch: {
+              isOpenItem: true,
+            },
+          },
         }).lean()) as KotOrderTypes[];
 
         const cartItems = kotOrders.flatMap((order) =>
-          order.cart.filter((item) => !item.isDeleted),
+          order.cart.filter((item) => !item.isDeleted || !item.isOpenItem),
         );
 
         const unsettleTable = await UnsettleTable.find({
@@ -1233,7 +1238,7 @@ const paymentsRouter = new Hono()
             }).lean()) as KotOrderTypes[];
 
             const cartItems = kotOrders.flatMap((order) =>
-              order.cart.filter((item) => !item.isDeleted),
+              order.cart.filter((item) => !item.isDeleted || !item.isOpenItem),
             );
 
             const unsettleTable = await UnsettleTable.find({
@@ -1439,7 +1444,7 @@ const paymentsRouter = new Hono()
         }).lean()) as KotOrderTypes[];
 
         const cartItems = kotOrders.flatMap((order) =>
-          order.cart.filter((item) => !item.isDeleted),
+          order.cart.filter((item) => !item.isDeleted || !item.isOpenItem),
         );
 
         const unsettleTable = await UnsettleTable.find({

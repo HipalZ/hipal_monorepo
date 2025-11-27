@@ -311,7 +311,7 @@ const posRouter = new Hono()
               tableSession.businessId.toString(),
               tableSession.tableName,
               session,
-              tableSession.billInvoice
+              tableSession.billInvoice,
             );
 
             return respond(c, "success", false, 200, splitBillVariants);
@@ -321,7 +321,7 @@ const posRouter = new Hono()
             tableSession.businessId.toString(),
             tableSession.tableName,
             session,
-             tableSession.billInvoice
+            tableSession.billInvoice,
           );
 
           return respond(c, "success", false, 200, splitBillVariants);
@@ -3597,7 +3597,7 @@ const posRouter = new Hono()
       }).lean()) as KotOrderTypes[];
 
       const cartItems = kotOrders.flatMap((order) =>
-        order.cart.filter((item) => !item.isDeleted),
+        order.cart.filter((item) => !item.isDeleted || item.isOpenItem),
       );
 
       if (kotOrders.length > 0) {

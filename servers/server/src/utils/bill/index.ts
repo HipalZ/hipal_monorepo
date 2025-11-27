@@ -68,6 +68,7 @@ export interface CartItem {
   extras: Extra[];
   quantity: number;
   isDeleted: boolean;
+  isOpenItem: boolean;
 }
 
 // The KOT (Kitchen Order Ticket) document
