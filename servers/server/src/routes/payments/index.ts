@@ -4830,7 +4830,7 @@ const paymentsRouter = new Hono()
         Value: totalAmount.toFixed(2),
       });
       summaryRows.push({
-        Label: 'Net Sales (Total + Tips)',
+        Label: 'Net Sales',
         Value: netSales.toFixed(2),
       });
 
