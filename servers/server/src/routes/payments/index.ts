@@ -5746,7 +5746,7 @@ const paymentsRouter = new Hono()
       }
 
       const page = Number(pageNumber) || 1;
-      const limit = 1000;
+      const limit = 5000;
       const skip = (page - 1) * limit;
 
       // Execute
