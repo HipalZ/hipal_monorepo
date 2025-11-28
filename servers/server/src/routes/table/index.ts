@@ -511,7 +511,9 @@ const tableRouter = new Hono()
                   billInvoice: splitTableSessionData?.billInvoice,
                   paxCount: tableSession?.paxCount || 0,
                   serviceChargePercentage:
-                    tableSession?.serviceChargePercentage || 0,
+                    splitTableSessionData?.serviceChargePercentage || 0,
+                  roundOffType: splitTableSessionData?.roundOffType || 0,
+                  roundOffAmount: splitTableSessionData?.roundOffAmount || 0,
                 },
               ],
               { session },
@@ -715,6 +717,8 @@ const tableRouter = new Hono()
                   paxCount: tableSession?.paxCount || 0,
                   serviceChargePercentage:
                     tableSession?.serviceChargePercentage || 0,
+                  roundOffType: tableSession?.roundOffType || 0,
+                  roundOffAmount: tableSession?.roundOffAmount || 0,
                 },
               ],
               { session },
@@ -1094,6 +1098,8 @@ const tableRouter = new Hono()
               paxCount: tableSession?.paxCount || 0,
               serviceChargePercentage:
                 tableSession?.serviceChargePercentage || 0,
+              roundOffType: tableSession?.roundOffType || 0,
+              roundOffAmount: tableSession?.roundOffAmount || 0,
             },
           ],
           { session },

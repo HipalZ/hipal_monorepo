@@ -1,7 +1,7 @@
 import { SplitBillTableSession, UserSession } from "@hi/db-models";
 import type { ClientSession } from "mongoose";
 import type { BillGroup, Item } from "../billTypes";
-import { BillItem } from "../reportHelper/itemType";
+import type { BillItem } from "../reportHelper/itemType";
 
 // Reference to a business populated with name
 export interface BusinessRef {
@@ -342,7 +342,7 @@ const calculateTotalDiscount = (
   claimedCoins: number,
   couponDiscount: number,
 ) => {
-  const dis = Math.round(discount + claimedCoins + couponDiscount);
+  const dis = discount + claimedCoins + couponDiscount;
   if (dis < 0) return 0;
   return dis;
 };
@@ -366,6 +366,20 @@ const calculateFinalTotal = (
   const total = Math.round(
     subtotal - totalDiscount + gst + serviceCharge + otherTax + tips,
   );
+  if (total < 0) return 0;
+  return total;
+};
+
+const calculateFinalTotalWithoutRoundOff = (
+  subtotal: number,
+  totalDiscount: number,
+  gst: number,
+  serviceCharge: number,
+  otherTax: number,
+  tips: number,
+) => {
+  const total =
+    subtotal - totalDiscount + gst + serviceCharge + otherTax + tips;
   if (total < 0) return 0;
   return total;
 };
@@ -743,12 +757,100 @@ function groupSplitItemsByGST(items: Item[]): BillGroup[] {
   }));
 }
 
+// Return 0 (minus) or 1 (plus)
+export const getRoundOffType = (amount: number): 0 | 1 => {
+  const decimal = amount - Math.floor(amount);
+
+  if (decimal === 0) return 1; // no change but treat as "plus 0"
+
+  return decimal >= 0.5 ? 1 : 0;
+};
+
+// Return the round-off value (always positive)
+export const getRoundOffValue = (amount: number): number => {
+  const decimal = amount - Math.floor(amount);
+
+  if (decimal === 0) return 0;
+
+  const value = decimal >= 0.5 ? 1 - decimal : decimal;
+  // round to 2 decimals to avoid 0.100000000003 issues
+  return Number(value.toFixed(2));
+};
+
+// Optional: single helper that gives both
+export const getRoundOff = (amount: number) => {
+  const type = getRoundOffType(amount);
+  const value = getRoundOffValue(amount);
+  return { type, value };
+};
+
+export function groupItems(items: Item[]): BillGroup[] {
+  const mergedItems = Object.values(
+    items.reduce<Record<string, Item>>((acc, item) => {
+      const key = item.id;
+
+      if (acc[key]) {
+        // Same item: just increase quantity
+        acc[key] = {
+          ...acc[key],
+          quantity: acc[key].quantity + item.quantity,
+        };
+      } else {
+        // First time seeing this id
+        acc[key] = { ...item };
+      }
+
+      return acc;
+    }, {}),
+  );
+  const map = mergedItems.reduce<Record<number, BillGroup>>((acc, item) => {
+    const rate = item.dish.gst ?? 0;
+
+    if (!acc[rate]) {
+      acc[rate] = {
+        gst: rate,
+        subTotal: 0,
+        totalGst: 0,
+        items: [],
+      };
+    }
+
+    // Pick the right base price
+    const basePrice = item.portion?.price ?? item.dish.price;
+
+    // Compute total extras per unit
+    const extrasPerUnit = item.extras.reduce(
+      (sum, ex) => sum + ex.price * ex.quantity,
+      0,
+    );
+
+    // Net total for this item (without tax)
+    const netTotal = (basePrice + extrasPerUnit) * item.quantity;
+
+    // Accumulate
+    acc[rate].subTotal += netTotal;
+    acc[rate].totalGst += netTotal * (rate / 100);
+    acc[rate].items.push(item);
+
+    return acc;
+  }, {});
+
+  // Round to two decimal places
+  return Object.values(map).map((group) => ({
+    gst: group.gst,
+    subTotal: Number(group.subTotal.toFixed(2)),
+    totalGst: Number(group.totalGst.toFixed(2)),
+    items: group.items,
+  }));
+}
+
 export {
   billPrintItems,
   calculateBillDishIds,
   calculateBillTotals,
   calculateBillTotalsForBillItems,
   calculateFinalTotal,
+  calculateFinalTotalWithoutRoundOff,
   calculateGst,
   calculateItemUpdated,
   calculateItemUpdatedGstAfterDiscount,

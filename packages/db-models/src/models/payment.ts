@@ -272,6 +272,16 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       default: 0,
     },
+    roundOffType: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    roundOffAmount: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
 
   { timestamps: true },

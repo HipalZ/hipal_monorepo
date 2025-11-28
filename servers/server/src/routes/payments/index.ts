@@ -75,9 +75,9 @@ import {
   type MerchantConfig,
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
+import { formatDateToIST } from "../../utils/reportHelper/dateFormater";
 import { respond } from "../../utils/response";
 import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
-import { formatDateToIST } from "../../utils/reportHelper/dateFormater";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -2123,6 +2123,8 @@ const paymentsRouter = new Hono()
                     paxCount: tableSession?.paxCount || 0,
                     serviceChargePercentage:
                       tableSession?.serviceChargePercentage || 0,
+                    roundOffType: tableSession?.roundOffType || 0,
+                    roundOffAmount: tableSession?.roundOffAmount || 0,
                   },
                 ],
                 { session },
@@ -2350,6 +2352,8 @@ const paymentsRouter = new Hono()
                     paxCount: tableSession?.paxCount || 0,
                     serviceChargePercentage:
                       tableSession?.serviceChargePercentage || 0,
+                    roundOffType: tableSession?.roundOffType || 0,
+                    roundOffAmount: tableSession?.roundOffAmount || 0,
                   },
                 ],
                 { session },
@@ -2746,6 +2750,8 @@ const paymentsRouter = new Hono()
                 paxCount: tableSession?.paxCount || 0,
                 serviceChargePercentage:
                   tableSession?.serviceChargePercentage || 0,
+                roundOffType: tableSession?.roundOffType || 0,
+                roundOffAmount: tableSession?.roundOffAmount || 0,
               },
             ],
             { session },
@@ -3585,6 +3591,8 @@ const paymentsRouter = new Hono()
                           paxCount: tableSession?.paxCount || 0,
                           serviceChargePercentage:
                             tableSession?.serviceChargePercentage || 0,
+                          roundOffType: tableSession?.roundOffType || 0,
+                          roundOffAmount: tableSession?.roundOffAmount || 0,
                         },
                       ],
                       { session },
@@ -3817,6 +3825,8 @@ const paymentsRouter = new Hono()
                             paxCount: tableSession?.paxCount || 0,
                             serviceChargePercentage:
                               tableSession?.serviceChargePercentage || 0,
+                            roundOffType: tableSession?.roundOffType || 0,
+                            roundOffAmount: tableSession?.roundOffAmount || 0,
                           },
                         ],
                         { session },
@@ -4214,6 +4224,8 @@ const paymentsRouter = new Hono()
                     paxCount: tableSession?.paxCount || 0,
                     serviceChargePercentage:
                       tableSession?.serviceChargePercentage || 0,
+                    roundOffType: tableSession?.roundOffType || 0,
+                    roundOffAmount: tableSession?.roundOffAmount || 0,
                   },
                 ],
                 { session },

@@ -53,12 +53,14 @@ import {
   calculateBillDishIds,
   calculateBillTotals,
   calculateFinalTotal,
+  calculateFinalTotalWithoutRoundOff,
   calculateItemUpdated,
   calculateItemUpdatedGstAfterDiscount,
   calculateTotalDiscount,
   calculateUpdatedGstAfterDiscount,
+  getRoundOff,
+  groupItems,
   groupItemsByGST,
-  groupSplitItemsByGST,
   updateSplitTableSession,
   updateTableSession,
 } from "../../utils/bill";
@@ -363,9 +365,8 @@ const posRouter = new Hono()
         const serviceChargePercentage =
           tableSession.serviceChargePercentage || serviceCharge?.value || 0;
 
-        let serviceChargeAmount = Math.round(
-          (serviceChargePercentage / 100) * totalDishTotal,
-        );
+        let serviceChargeAmount =
+          (serviceChargePercentage / 100) * totalDishTotal;
         if (tableSession.isServiceChargeRemoved) serviceChargeAmount = 0;
 
         const gst = tableSession.isDiscountApplied
@@ -389,15 +390,26 @@ const posRouter = new Hono()
           tableSession.tips,
         );
 
+        const totalWithoutRoundOff = calculateFinalTotalWithoutRoundOff(
+          totalDishTotal,
+          totalDis,
+          newGst,
+          serviceChargeAmount,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        const { type, value } = getRoundOff(totalWithoutRoundOff);
+
         // Update table session with new values
         tableSession = await updateTableSession(
           businessId,
           tableSession.tableName,
           session,
           {
-            gst: Number(newGst.toFixed(2)),
+            gst: Number(newGst?.toFixed(2)),
             total: newTotal,
-            serviceCharge: serviceChargeAmount,
+            serviceCharge: Number(serviceChargeAmount?.toFixed(2)),
             billGeneratedBy: generatedBy,
             subTotal: totalDishTotal,
             items: cartItems,
@@ -408,6 +420,9 @@ const posRouter = new Hono()
             }),
             serviceChargePercentage:
               tableSession.serviceChargePercentage || serviceCharge?.value || 0,
+
+            roundOffType: type,
+            roundOffAmount: value,
           },
         );
 
@@ -442,6 +457,8 @@ const posRouter = new Hono()
               tips: tableSession.tips,
               total: tableSession.total,
               billId: tableSession._id.toString(),
+              roundOffType: type,
+              roundOffAmount: value,
               serviceChargePercentage:
                 tableSession.serviceChargePercentage ||
                 serviceCharge?.value ||
@@ -2086,7 +2103,7 @@ const posRouter = new Hono()
           }
 
           const cartItems = variant.items as Item[];
-          const billItems = groupSplitItemsByGST(cartItems);
+          const billItems = groupItems(cartItems);
 
           sendBillPrintEvent({
             tableName: tableName,
@@ -2143,7 +2160,7 @@ const posRouter = new Hono()
           }
         }
 
-        const billItems = groupItemsByGST(cartItems);
+        const billItems = groupItems(cartItems);
 
         sendBillPrintEvent({
           tableName: tableName,
@@ -2220,7 +2237,7 @@ const posRouter = new Hono()
 
         const cartItems = payment.billItems as Item[];
 
-        const billItems = groupItemsByGST(cartItems);
+        const billItems = groupItems(cartItems);
 
         sendBillPrintEvent({
           tableName: payment.tableName,
@@ -2382,7 +2399,7 @@ const posRouter = new Hono()
         let saveGstAfterDiscount = 0;
 
         if (discountAppliedOn === "ON_BILL") {
-          const dis = Math.round((value / 100) * newSubTotal);
+          const dis = (value / 100) * newSubTotal;
 
           // Calculate discount on the bill
           discountAmount = Math.min(
@@ -2410,7 +2427,7 @@ const posRouter = new Hono()
           );
           dishIdsArray = dishIds;
 
-          const dishDis = Math.round((value / 100) * totalDishTotal);
+          const dishDis = (value / 100) * totalDishTotal;
           // discountAmount = Math.min(dishDis, totalDishTotal);
           discountAmount = Math.min(
             dishDis,
@@ -2496,7 +2513,7 @@ const posRouter = new Hono()
             discountAppliedBy,
             isDiscountApplied: true,
             discountRemovedBy: null,
-            discount: discountAmount,
+            discount: Number(discountAmount.toFixed(2)),
             dishIds: dishIdsArray,
             discountPercentage:
               discountAppliedOn === "ON_BILL" ? Number(value.toFixed(2)) : 0,
