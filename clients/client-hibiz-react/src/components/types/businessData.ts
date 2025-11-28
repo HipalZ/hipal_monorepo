@@ -118,6 +118,7 @@ export interface IPaymentMode {
 }
 
 export interface IOutletInfo {
+  isHipalzPos: boolean;
   _id: string;
   businessId: string;
   __v: number;

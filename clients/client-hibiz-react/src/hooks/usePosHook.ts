@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { useApiErrorHandler } from "./useApiErrorHandler.ts";
+import useBusinessData from "@/components/store/useBusinessData.ts";
 export interface PosConfigData {
   _id: string;
   businessId: string;
@@ -25,6 +26,7 @@ export interface PosConfigData {
 
 export const useGetPosConfig = (businessId: string) => {
   const { handleEnvelope } = useApiErrorHandler();
+  const outletInfo = useBusinessData((s) => s.outletInfo);
 
   const fetchPosConfig = useCallback(
     async (businessId: string) => {
@@ -43,7 +45,9 @@ export const useGetPosConfig = (businessId: string) => {
     [handleEnvelope],
   );
 
-  // Query to Fetch POS Config
+  const shouldFetch =
+    outletInfo?.isPosEnabled === true || outletInfo?.isHipalzPos === true;
+
   const {
     data: posConfig,
     isLoading,
@@ -51,7 +55,7 @@ export const useGetPosConfig = (businessId: string) => {
   } = useQuery({
     queryKey: ["fetchPosConfig", businessId],
     queryFn: () => fetchPosConfig(businessId || ""),
-    enabled: !!businessId,
+    enabled: !!businessId && shouldFetch,
     retry: false,
   });
 
