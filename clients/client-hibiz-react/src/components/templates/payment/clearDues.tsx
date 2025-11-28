@@ -132,9 +132,14 @@ const MemoClearDues = ({ selectedUser, closeSettleDues }: ClearDuesProps) => {
   });
 
   const filteredPaymentModes = useMemo(() => {
-    return paymentMode?.filter((pm) => pm?.name?.toLowerCase() !== 'complementary');
+    return paymentMode?.filter((pm) => {
+      const name = pm?.name?.toLowerCase();
+      return name !== 'complementary' && name !== 'npc';
+    });
   }, [paymentMode]);
+
   if (isPending) return <LoadingSpinner />;
+
   return (
     <>
       <div className="space-y-6">
