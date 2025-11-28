@@ -1,7 +1,7 @@
+import StoreVariable from '@/components/templates/whatsappTemplates/chatbots/storeVariable';
 import type { SendNodeMeta, SendNodeProps } from '@/components/templates/whatsappTemplates/chatbots/types';
 import { VariableDropdown } from '@/components/templates/whatsappTemplates/chatbots/variableDropDown';
 import DeleteButton from '@/components/templates/whatsappTemplates/deleteButton';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/components/utils/helper';
 import { useMediaUpload } from '@/hooks/useTemplates';
 import { Handle, Position } from '@xyflow/react';
-import { FileText, FileUp, ImageIcon, MessageCircle, Plus, Trash2, Upload } from 'lucide-react';
+import { FileText, FileUp, ImageIcon, MessageCircle, Trash2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -30,24 +30,7 @@ export function SendNode({ data, selected }: SendNodeProps) {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   const { uploadMediaPassFile } = useMediaUpload();
-  const [localVar, setLocalVar] = useState(m.variable?.replace(/^@/, '') || '');
 
-  // Local variable typing
-  const handleVariableTyping = (e) => setLocalVar(e.target.value);
-  const handleAddVariable = () => {
-    const inputValue = localVar.trim().replace(/^@/, '');
-    if (!inputValue) return;
-    const freshMeta = data.meta || {};
-
-    data.onPatch({
-      meta: { ...freshMeta, variable: inputValue },
-    });
-
-    if (Array.isArray(data.variables) && typeof data.onVariableAdd === 'function') {
-      data.onVariableAdd([inputValue]);
-    }
-    toast.success('variable added');
-  };
   const insertVariable = (variable) => {
     if (!variable) return;
     const el = textRef.current;
@@ -182,12 +165,12 @@ export function SendNode({ data, selected }: SendNodeProps) {
 
           {m.contentType === 'text' && (
             <div className="space-y-3">
-              {data.variables?.length > 0 && (
+              {data?.variables?.length > 0 && (
                 <VariableDropdown
                   value={null}
                   onChange={insertVariable}
-                  variables={data.variables || []} // Non-prefixed (e.g., userName)
-                  flowParams={data.variables.map((v) => `@${v}`)} // Prefixed (e.g., @userName)
+                  variables={data?.variables || []} // Non-prefixed (e.g., userName)
+                  flowParams={data?.variables.map((v) => `@${v}`)} // Prefixed (e.g., @userName)
                   placeholder="Insert variable..."
                 />
               )}
@@ -196,15 +179,21 @@ export function SendNode({ data, selected }: SendNodeProps) {
                   <FileText className="h-3 w-3 text-emerald-600" />
                   Message Text
                 </label>
-                <Textarea
-                  ref={textRef}
-                  value={m.text || ''}
-                  onChange={(e) => updateMetaField('text', e.target.value)}
-                  placeholder="Type your msg @var_name or {{variable_name}} here "
-                  className="min-h-[80px] resize-none border-gray-300 text-sm transition-colors placeholder:text-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
-                  rows={3}
-                  aria-describedby="text-help"
-                />
+                <div className="relative">
+                  <Textarea
+                    ref={textRef}
+                    value={m.text || ''}
+                    onChange={(e) => updateMetaField('text', e.target.value)}
+                    placeholder="Type your message"
+                    className="min-h-[80px] resize-none border-gray-300 text-sm transition-colors placeholder:text-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+                    rows={3}
+                    aria-describedby="text-help"
+                    maxLength={1024}
+                  />
+                  <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                    {(m.text || '').length} / 1024
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -224,23 +213,26 @@ export function SendNode({ data, selected }: SendNodeProps) {
                   {m.useUpload ? 'Switch to URL' : 'Upload Image'}
                 </Button>
               </div>
-
               {m.useUpload ? (
                 <div className="space-y-2">
                   <label
-                    className="group flex h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gradient-to-r from-gray-100 to-gray-200 text-xs text-gray-700 transition-all hover:from-emerald-50 hover:to-emerald-100 hover:text-emerald-600"
                     aria-label="Upload image file"
+                    className="group relative flex h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gradient-to-r from-gray-100 to-gray-200 text-xs text-gray-700 transition-all hover:from-emerald-50 hover:to-emerald-100 hover:text-emerald-600"
                   >
-                    <Upload className="h-4 w-4 transition-transform group-hover:rotate-12" />
-                    <span>{uploading ? `Uploading... ${uploadProgress}%` : 'Click to select image'}</span>
+                    <Upload className="h-4 w-4" />
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg, image/png"
                       className="hidden"
-                      onChange={(e) => handleUpload(e.target.files?.[0], 'image')}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        handleUpload(file, 'image');
+                      }}
                       disabled={uploading}
                     />
+                    {uploading ? 'Uploading...' : 'Click to upload image'}
                   </label>
+                  <span className="text-xs">*Max Upload size is 5MB (jpeg/png)</span>
                   {uploading && (
                     <div className="h-1.5 w-full rounded-full bg-gray-200">
                       <div className="h-1.5 rounded-full bg-emerald-600 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
@@ -248,7 +240,7 @@ export function SendNode({ data, selected }: SendNodeProps) {
                   )}
                   {m.mediaUrl && !uploading && (
                     <div className="relative">
-                      <img src={m.mediaUrl} alt="Uploaded" className="h-24 w-full rounded-lg border object-cover shadow-sm" />
+                      <img src={m.mediaUrl} alt="Uploaded" className="h-full w-full rounded-lg border object-cover shadow-sm" />
                       <button
                         onClick={() => updateMetaField('mediaUrl', '')}
                         className="absolute right-1 top-1 rounded-full bg-white/80 p-1 hover:bg-red-50"
@@ -288,12 +280,18 @@ export function SendNode({ data, selected }: SendNodeProps) {
                   <FileText className="h-3 w-3 text-emerald-600" />
                   Caption (Optional)
                 </label>
-                <Input
-                  value={m.caption || ''}
-                  onChange={(e) => updateMetaField('caption', e.target.value)}
-                  placeholder="Describe the image for better context..."
-                  className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
-                />
+                <div className="relative">
+                  <Textarea
+                    value={m.caption || ''}
+                    onChange={(e) => updateMetaField('caption', e.target.value)}
+                    placeholder="Describe the image for better context..."
+                    className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+                    maxLength={1024}
+                  />
+                  <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                    {(m.caption || '').length} / 1024
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -320,15 +318,16 @@ export function SendNode({ data, selected }: SendNodeProps) {
                     aria-label="Upload document file"
                   >
                     <Upload className="h-4 w-4 transition-transform group-hover:rotate-12" />
-                    <span>{uploading ? `Uploading... ${uploadProgress}%` : 'Click to select PDF/Doc'}</span>
+                    <span>{uploading ? `Uploading... ${uploadProgress}%` : 'Click to select document'}</span>
                     <input
                       type="file"
-                      accept=".pdf,.doc,.docx"
+                      accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
                       className="hidden"
                       onChange={(e) => handleUpload(e.target.files?.[0], 'document')}
                       disabled={uploading}
                     />
                   </label>
+                  <span className="text-[0.65rem]">*Max Upload size is 5MB ( pdf, doc, docx, txt, xls, xlsx, ppt, pptx)</span>
                   {uploading && (
                     <div className="h-1.5 w-full rounded-full bg-gray-200">
                       <div className="h-1.5 rounded-full bg-emerald-600 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
@@ -359,41 +358,39 @@ export function SendNode({ data, selected }: SendNodeProps) {
               <div className="space-y-1">
                 <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
                   <FileUp className="h-3 w-3 text-emerald-600" />
-                  File Name
+                  File Name (Optional)
                 </label>
                 <Input
                   value={m.fileName || ''}
                   onChange={(e) => updateMetaField('fileName', e.target.value)}
                   placeholder="document.pdf"
+                  maxLength={24}
                   className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                  <FileUp className="h-3 w-3 text-emerald-600" />
+                  Caption (Optional)
+                </label>
+                <div className="relative">
+                  <Textarea
+                    value={m.caption || ''}
+                    placeholder="Enter caption about file"
+                    onChange={(e) => updateMetaField('caption', e.target.value)}
+                    className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+                    maxLength={1024}
+                  />
+                  <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                    {(m.caption || '').length} / 1024
+                  </div>
+                </div>
               </div>
             </div>
           )}
           {/* Response Variable */}
-          <div className="flex items-center gap-2">
-            <Input
-              value={localVar}
-              onChange={handleVariableTyping}
-              placeholder="user name"
-              prefix="@"
-              className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddVariable}
-              disabled={!localVar.trim()}
-              className="bg-emerald-400 text-white"
-            >
-              <Plus className="mr-1 h-3 w-3" />
-              Add
-            </Button>
-          </div>
-          <Badge variant="outline" className="bg-orange-100 text-xs text-orange-800">
-            {m.variable?.replace(/^@/, '')}
-          </Badge>
+          <StoreVariable data={data} />
         </CardContent>
       </Card>
 

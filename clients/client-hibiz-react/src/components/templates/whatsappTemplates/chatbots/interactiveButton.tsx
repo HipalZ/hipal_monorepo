@@ -55,13 +55,20 @@ export function InteractiveButtonNode({ data, selected }: InteractiveButtonNodeP
         </div>
 
         <CardContent className="space-y-5 bg-gray-50 p-5">
-          <Textarea
-            placeholder="Enter your message..."
-            value={m.bodyText}
-            onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
-            className="min-h-24 resize-none border-gray-300 focus:border-indigo-500"
-          />
+          <div className="relative">
+            <Textarea
+              placeholder="Enter your message..."
+              value={m.bodyText || ''}
+              onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
+              className="min-h-24 border-gray-300 focus:border-indigo-500"
+              maxLength={4096}
+            />
+            <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+              {(m.bodyText || '').length} / 4096
+            </div>
+          </div>
           <div className="space-y-3">
+            <p className="text-xs">*Max 3 buttons allowed</p>
             {(m.buttons || []).map((btn, i) => (
               <div
                 key={btn.id}
@@ -71,19 +78,25 @@ export function InteractiveButtonNode({ data, selected }: InteractiveButtonNodeP
                   type="source"
                   id={btn.id}
                   position={Position.Right}
-                  className="z-50 -mr-2 !h-5 !w-5 !border-4 !border-white !bg-gray-600 shadow-xl"
+                  className="z-50 mt-4 !h-5 !w-5 !border-4 !border-white !bg-blue-600 shadow-xl"
                 />
                 <div className="flex items-center">
                   <span className="rounded-md bg-indigo-600/10 px-2 py-1 text-xs font-medium text-indigo-700">Reply Button</span>
                 </div>
 
                 {/* Title Input */}
-                <Input
-                  placeholder="Button Text"
-                  value={btn.title}
-                  onChange={(e) => updateButton(i, { title: e.target.value })}
-                  className="h-10 flex-1 text-sm font-medium focus:ring-0"
-                />
+                <div className="relative">
+                  <Input
+                    placeholder="Button Text"
+                    value={btn.title}
+                    maxLength={20}
+                    onChange={(e) => updateButton(i, { title: e.target.value })}
+                    className="h-10 flex-1 text-sm font-medium focus:ring-0"
+                  />
+                  <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                    {(btn.title || '').length} / 20
+                  </div>
+                </div>
                 {/* Remove Button */}
                 <button
                   type="button"

@@ -306,3 +306,22 @@ export interface CategoryHeaderProps {
 export interface JSONPanelProps {
   finalObject: FinalObject;
 }
+
+export type ConditionJoin = "if" | "and" | "or";
+
+export interface ConditionRow {
+  join: ConditionJoin; // if | and | or
+  var: string; // variable name
+  op: string; // eq, ne, exists, etc.
+  value: string; // user input
+}
+
+export interface CondNodeMeta {
+  logic: ConditionRow[];
+}
+
+export interface CondNodeData {
+  meta: CondNodeMeta;
+  variables: string[];
+  onPatch: (patch: Partial<CondNodeData>) => void;
+}

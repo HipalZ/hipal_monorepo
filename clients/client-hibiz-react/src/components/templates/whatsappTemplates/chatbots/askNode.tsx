@@ -1,34 +1,14 @@
-import type { SendNodeProps } from '@/components/templates/whatsappTemplates/chatbots/chatbotHelpers';
+import type { SendNodeProps } from '@/components/templates/whatsappTemplates/chatbots/types';
 import DeleteButton from '@/components/templates/whatsappTemplates/deleteButton';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/components/utils/helper';
 import { Handle, Position } from '@xyflow/react';
-import { FileInputIcon, FileText, Plus } from 'lucide-react';
-import { useState } from 'react';
-import toast from 'react-hot-toast';
+import { FileInputIcon, FileText } from 'lucide-react';
+import StoreVariable from './storeVariable';
 
 export function AskNode({ data, selected }: SendNodeProps) {
   const m = data.meta || {};
-  const [localVar, setLocalVar] = useState(m.variable?.replace(/^@/, '') || '');
-  const handleVariableTyping = (e) => setLocalVar(e.target.value);
-  const handleAddVariable = () => {
-    const inputValue = localVar.trim().replace(/^@/, '');
-    if (!inputValue) return;
-    const freshMeta = data.meta || {};
-
-    data.onPatch({
-      meta: { ...freshMeta, variable: inputValue },
-    });
-
-    if (Array.isArray(data.variables) && typeof data.onVariableAdd === 'function') {
-      data.onVariableAdd([inputValue]);
-    }
-    toast.success('variable added');
-  };
 
   return (
     <div className="relative">
@@ -54,45 +34,22 @@ export function AskNode({ data, selected }: SendNodeProps) {
               <FileText className="h-3 w-3" />
               Question Prompt
             </label>
-            <Textarea
-              value={m.prompt || ''}
-              onChange={(e) => data.onPatch({ meta: { ...m, prompt: e.target.value } })}
-              placeholder="Ask something... (e.g., 'What's your name?')"
-              className="min-h-16 resize-none border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
+            <div className="relative">
+              <Textarea
+                value={m.prompt || ''}
+                maxLength={72}
+                onChange={(e) => data.onPatch({ meta: { ...m, prompt: e.target.value } })}
+                placeholder="Ask something..."
+                className="min-h-16 resize-none border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+              <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                {(m.prompt || '').length} / 72
+              </div>
+            </div>
           </div>
 
           {/* STORE VARIABLE */}
-          <div className="space-y-1.5">
-            <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
-              <FileText className="h-3 w-3 text-emerald-600" />
-              Store Response In (Optional)
-            </label>
-
-            <div className="flex items-center gap-2">
-              <Input
-                value={localVar}
-                onChange={handleVariableTyping}
-                placeholder="user name"
-                prefix="@"
-                className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddVariable}
-                disabled={!localVar.trim()}
-                className="bg-emerald-400 text-white"
-              >
-                <Plus className="mr-1 h-3 w-3" />
-                Add
-              </Button>
-            </div>
-            <Badge variant="outline" className="bg-orange-100 text-xs text-orange-800">
-              {m.variable?.replace(/^@/, '')}
-            </Badge>
-          </div>
+          <StoreVariable data={data} />
         </CardContent>
       </Card>
 

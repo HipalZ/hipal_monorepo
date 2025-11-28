@@ -73,19 +73,25 @@ export function TriggerNode({ data, selected }) {
             <label className="text-xs font-semibold uppercase tracking-wider text-gray-700">Trigger Keywords</label>
 
             <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={keywordInput}
-                onChange={(e) => setKeywordInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddKeyword();
-                  }
-                }}
-                placeholder="e.g. hi, hello, start"
-                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm placeholder-gray-400 transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200"
-              />
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={keywordInput}
+                  maxLength={24}
+                  onChange={(e) => setKeywordInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddKeyword();
+                    }
+                  }}
+                  placeholder="e.g. hi, hello, start"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 pr-12 text-sm placeholder-gray-400 transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                />
+                <div aria-hidden className="absolute right-3 top-1/2 -translate-y-1/2 select-none text-xs text-gray-500">
+                  {keywordInput.length} / 24
+                </div>
+              </div>
               <Button
                 onClick={handleAddKeyword}
                 disabled={!keywordInput.trim()}

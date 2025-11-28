@@ -47,6 +47,17 @@ export function InteractiveListNode({ data, selected }: InteractiveListNodeProps
     data.onPatch({ meta: { ...m, list: { ...m.list, sections: updatedSections } } });
   };
 
+  const removeListRow = (si: number, ri: number) => {
+    const updatedSections = m.list.sections.map((sec, i) => (i === si ? { ...sec, rows: sec.rows.filter((_, j) => j !== ri) } : sec));
+
+    data.onPatch({
+      meta: {
+        ...m,
+        list: { ...m.list, sections: updatedSections },
+      },
+    });
+  };
+
   return (
     <div className="relative">
       <Handle type="target" position={Position.Left} className="z-50 !h-5 !w-5 !border-4 !border-white !bg-gray-600 shadow-xl" />
@@ -64,48 +75,73 @@ export function InteractiveListNode({ data, selected }: InteractiveListNodeProps
         <CardContent className="space-y-5 p-4">
           {/* Header Text */}
           <div>
-            <label className="text-xs font-medium text-gray-700">Header Text (Optional)</label>
-            <Input
-              placeholder="Menu Header"
-              value={m.headerText || ''}
-              onChange={(e) => data.onPatch({ meta: { ...m, headerText: e.target.value } })}
-              className="mt-1"
-            />
+            <label className="text-xs font-medium text-gray-700">header Text (Optional)</label>
+            <div className="relative">
+              <Input
+                placeholder="Header text..."
+                value={m.headerText || ''}
+                onChange={(e) => data.onPatch({ meta: { ...m, headerText: e.target.value } })}
+                maxLength={60}
+                className="mt-1"
+              />
+              <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                {(m.headerText || '').length} / 60
+              </div>
+            </div>
           </div>
-
           {/* Body Text */}
           <div>
             <label className="text-xs font-medium text-gray-700">Body Text</label>
-            <Textarea
-              placeholder="Main message (required)"
-              value={m.bodyText || ''}
-              onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
-              className="min-h-24"
-            />
+            <div className="relative">
+              <Textarea
+                placeholder="Main message (required)"
+                value={m.bodyText || ''}
+                onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
+                className="min-h-24 resize-none"
+                maxLength={4096}
+              />
+              <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                {(m.bodyText || '').length} / 4096
+              </div>
+            </div>
           </div>
 
           {/* Footer Text */}
           <div>
             <label className="text-xs font-medium text-gray-700">Footer Text (Optional)</label>
-            <Input
-              placeholder="Footer text..."
-              value={m.footerText || ''}
-              onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
-            />
+            <div className="relative">
+              <Input
+                placeholder="Footer text..."
+                value={m.footerText || ''}
+                onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
+                maxLength={60}
+                className="mt-1"
+              />
+              <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                {(m.footerText || '').length} / 60
+              </div>
+            </div>
           </div>
 
           {/* Button Label */}
           <div>
             <label className="text-xs font-medium text-gray-700">List Button Text</label>
-            <Input
-              placeholder="e.g., View Menu"
-              value={m.list?.buttonText || ''}
-              onChange={(e) =>
-                data.onPatch({
-                  meta: { ...m, list: { ...m.list, buttonText: e.target.value } },
-                })
-              }
-            />
+            <div className="relative">
+              <Input
+                placeholder="e.g., View Menu"
+                value={m.list?.buttonText || ''}
+                onChange={(e) =>
+                  data.onPatch({
+                    meta: { ...m, list: { ...m.list, buttonText: e.target.value } },
+                  })
+                }
+                maxLength={20}
+                className="mt-1"
+              />
+              <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                {(m.list?.buttonText || '').length} / 20
+              </div>
+            </div>
           </div>
 
           {/* Sections */}
@@ -123,12 +159,11 @@ export function InteractiveListNode({ data, selected }: InteractiveListNodeProps
                   <Input
                     placeholder="Section title"
                     value={section.title || ''}
+                    maxLength={24}
                     onChange={(e) => {
-                      const sections: ListSection[] = [...m.list.sections];
+                      const sections = [...m.list.sections];
                       sections[si].title = e.target.value;
-                      data.onPatch({
-                        meta: { ...m, list: { ...m.list, sections } },
-                      });
+                      data.onPatch({ meta: { ...m, list: { ...m.list, sections } } });
                     }}
                     className="text-lg font-semibold"
                   />
@@ -137,28 +172,48 @@ export function InteractiveListNode({ data, selected }: InteractiveListNodeProps
                   </Button>
                 </div>
 
-                <div className="ml-4 space-y-3">
+                <div className="space-y-3">
                   {(section.rows || []).map((row, ri) => (
-                    <div key={row.id} className="relative rounded-lg border border-gray-300 bg-white p-4 pr-14 transition-all hover:border-green-500">
+                    <div key={row.id} className="relative rounded-lg border border-gray-300 bg-white p-4 pr-7 transition-all hover:border-green-500">
                       <Handle
                         type="source"
                         position={Position.Right}
                         id={row.id}
-                        className="z-50 -mr-2 !h-5 !w-5 !border-4 !border-white !bg-gray-600 shadow-xl"
+                        style={{ right: '-10%' }}
+                        className="z-50 !h-6 !w-6 rounded-full !border-4 !border-white !bg-blue-600 shadow-xl hover:!bg-blue-700"
                       />
+                      <div className="relative w-full">
+                        <Input
+                          placeholder="Row title"
+                          value={row.title}
+                          onChange={(e) => updateListRow(si, ri, { title: e.target.value })}
+                          className="font-medium"
+                          maxLength={24}
+                        />
+                        <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                          {(row.title || '').length} / 24
+                        </div>
+                      </div>
 
-                      <Input
-                        placeholder="Option title"
-                        value={row.title}
-                        onChange={(e) => updateListRow(si, ri, { title: e.target.value })}
-                        className="font-medium"
-                      />
-                      <Input
-                        placeholder="Description (optional)"
-                        value={row.description || ''}
-                        onChange={(e) => updateListRow(si, ri, { description: e.target.value })}
-                        className="mt-2 text-sm text-gray-600"
-                      />
+                      <div className="relative mt-2">
+                        <Input
+                          placeholder="Description (optional)"
+                          value={row.description || ''}
+                          onChange={(e) => updateListRow(si, ri, { description: e.target.value })}
+                          className="h-16 text-sm text-gray-600"
+                          maxLength={72}
+                        />
+                        <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                          {(row.description || '').length} / 72
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeListRow(si, ri)}
+                        className="absolute -right-2 -top-2 rounded-full border border-red-100 bg-white p-1.5 text-red-500"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
                     </div>
                   ))}
 

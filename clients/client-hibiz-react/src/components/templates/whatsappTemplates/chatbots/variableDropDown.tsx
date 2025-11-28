@@ -20,14 +20,24 @@ export function VariableDropdown({ value, onChange, variables = [], flowParams =
       <SelectTrigger className="h-8 text-xs">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
+      <SelectContent className="max-w-[20rem]">
+        {variables.length > 0 && (
+          <div className="px-2 py-1">
+            <div className="px-2 py-1 text-sm font-medium uppercase tracking-wide text-gray-500">Default variables</div>
 
-      <SelectContent className="w-[180px]">
+            {['name', 'phone'].map((param) => (
+              <SelectItem key={param} value={param} className="text-base">
+                {formatDisplay(param)}
+              </SelectItem>
+            ))}
+          </div>
+        )}
         {flowParams.length > 0 && (
           <div className="px-2 py-1">
-            <div className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-gray-500">Stored variables</div>
+            <div className="px-2 py-1 text-sm font-medium uppercase tracking-wide text-gray-500">Stored variables</div>
 
             {flowParams.map((param) => (
-              <SelectItem key={param} value={param} className="text-xs">
+              <SelectItem key={param} value={param} className="text-base">
                 {formatDisplay(param)}
               </SelectItem>
             ))}

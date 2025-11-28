@@ -1,5 +1,4 @@
 import DeleteButton from '@/components/templates/whatsappTemplates/deleteButton';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,8 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/components/utils/helper';
 import { useMediaUpload } from '@/hooks/useTemplates';
 import { Handle, Position } from '@xyflow/react';
-import { FileText, MessageCircle, Plus, Upload, X } from 'lucide-react';
+import { MessageCircle, Plus, Upload, X } from 'lucide-react';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 export function InteractiveReply({ data, selected }) {
   const m = data.meta ?? {
@@ -24,24 +24,9 @@ export function InteractiveReply({ data, selected }) {
 
   const { uploadMediaPassFile } = useMediaUpload();
   const [uploading, setUploading] = useState(false);
-  const [localVar, setLocalVar] = useState(m.variable?.replace(/^@/, '') || '');
 
   // Local variable typing
-  const handleVariableTyping = (e) => setLocalVar(e.target.value);
-  const handleAddVariable = () => {
-    const inputValue = localVar.trim().replace(/^@/, '');
-    if (!inputValue) return;
-    const freshMeta = data.meta || {};
 
-    data.onPatch({
-      meta: { ...freshMeta, variable: inputValue },
-    });
-
-    if (Array.isArray(data.variables) && typeof data.onVariableAdd === 'function') {
-      data.onVariableAdd([inputValue]);
-    }
-    toast.success('variable added');
-  };
   const nid = () => `${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
   // === BUTTON LOGIC ===
@@ -105,6 +90,7 @@ export function InteractiveReply({ data, selected }) {
 
   const handleHeaderUpload = async (file) => {
     if (!file) return;
+    if (file && file.size >= 5 * 1024 * 1024) return toast.error('File size limit is 5MB');
     try {
       setUploading(true);
       const { url } = await uploadMediaPassFile(file);
@@ -119,6 +105,17 @@ export function InteractiveReply({ data, selected }) {
     } finally {
       setUploading(false);
     }
+  };
+
+  const removeListRow = (si: number, ri: number) => {
+    const updatedSections = m.list.sections.map((sec, i) => (i === si ? { ...sec, rows: sec.rows.filter((_, j) => j !== ri) } : sec));
+
+    data.onPatch({
+      meta: {
+        ...m,
+        list: { ...m.list, sections: updatedSections },
+      },
+    });
   };
 
   return (
@@ -206,10 +203,19 @@ export function InteractiveReply({ data, selected }) {
                       {!m.header?.mediaUrl && (
                         <label className="relative flex h-12 cursor-pointer items-center justify-center gap-2 rounded bg-gray-200 text-xs text-gray-700 hover:text-blue-600">
                           <Upload className="h-4 w-4" />
-                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleHeaderUpload(e.target.files?.[0])} />
+                          <input
+                            type="file"
+                            accept="image/jpeg, image/png"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              handleHeaderUpload(file);
+                            }}
+                          />
                           {uploading ? 'Uploading...' : 'Click to upload image'}
                         </label>
                       )}
+                      <span className="text-xs">*Max Upload size is 5MB (jpeg/png)</span>
 
                       {/* Preview with Delete Option */}
                       {m.header?.mediaUrl && (
@@ -255,20 +261,32 @@ export function InteractiveReply({ data, selected }) {
           {/* Body and Footer */}
           <div>
             <label className="text-xs font-medium text-gray-700">Body Text</label>
-            <Textarea
-              value={m.bodyText || ''}
-              onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
-              placeholder="Message content..."
-              className="focus:border-bg-white min-h-40 resize-none border-gray-300 bg-white"
-            />
+            <div className="relative">
+              <Textarea
+                value={m.bodyText || ''}
+                maxLength={4096}
+                onChange={(e) => data.onPatch({ meta: { ...m, bodyText: e.target.value } })}
+                placeholder="Message content..."
+                className="focus:border-bg-white min-h-40 resize-none border-gray-300 bg-white pr-12"
+              />
+              <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                {(m.bodyText || '').length} / 4096
+              </div>
+            </div>
           </div>
 
           {/* Footer */}
-          <Input
-            placeholder="Footer text (optional)"
-            value={m.footerText}
-            onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
-          />
+          <div className="relative">
+            <Input
+              placeholder="Footer text (optional)"
+              value={m.footerText || ''}
+              maxLength={60}
+              onChange={(e) => data.onPatch({ meta: { ...m, footerText: e.target.value } })}
+            />
+            <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+              {(m.footerText || '').length} / 60
+            </div>
+          </div>
 
           {/* BUTTONS LAYOUT - FULLY RESTORED */}
           {m.layout === 'button' && (
@@ -281,12 +299,12 @@ export function InteractiveReply({ data, selected }) {
               </div>
 
               {(m.buttons || []).map((btn, i) => (
-                <div key={btn.id} className="relative rounded-xl pr-16 transition-all">
+                <div key={btn.id} className="relative rounded-xl pr-4 transition-all">
                   <Handle
                     type="source"
                     position={Position.Right}
                     id={btn.id}
-                    style={{ top: '50%', transform: 'translateY(-50%)' }}
+                    style={{ right: '-10%' }}
                     className="z-50 !h-6 !w-6 rounded-full !border-4 !border-white !bg-blue-600 shadow-xl transition-all hover:scale-110 hover:!bg-blue-700"
                   />
 
@@ -301,12 +319,19 @@ export function InteractiveReply({ data, selected }) {
                     </div>
 
                     {/* Title */}
-                    <Input
-                      placeholder="Button text (e.g. Yes, I'm interested)"
-                      value={btn.title}
-                      onChange={(e) => updateButton(i, { title: e.target.value })}
-                      className="font-medium"
-                    />
+
+                    <div className="relative">
+                      <Input
+                        placeholder="(e.g. Yes, I'm interested)"
+                        value={btn.title}
+                        maxLength={20}
+                        onChange={(e) => updateButton(i, { title: e.target.value })}
+                        className="font-medium"
+                      />
+                      <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                        {(btn.title || '').length} / 20
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -322,13 +347,25 @@ export function InteractiveReply({ data, selected }) {
                   <Plus className="mr-1 h-4 w-4" /> Add Section
                 </Button>
               </div>
-
+              {/* Button */}
+              <div className="relative">
+                <Input
+                  placeholder="Button text (optional)"
+                  value={m.buttonText || ''}
+                  maxLength={20}
+                  onChange={(e) => data.onPatch({ meta: { ...m, buttonText: e.target.value } })}
+                />
+                <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                  {(m.buttonText || '').length} / 20
+                </div>
+              </div>
               {(m.list?.sections || []).map((section, si) => (
                 <div key={section.id} className="rounded-xl border-2 border-gray-300 bg-gray-50 p-4">
                   <div className="mb-3 flex justify-between">
                     <Input
                       placeholder="Section title"
                       value={section.title || ''}
+                      maxLength={24}
                       onChange={(e) => {
                         const sections = [...m.list.sections];
                         sections[si].title = e.target.value;
@@ -341,32 +378,52 @@ export function InteractiveReply({ data, selected }) {
                     </Button>
                   </div>
 
-                  <div className="ml-4 space-y-3">
+                  <div className="space-y-3">
                     {(section.rows || []).map((row, ri) => (
                       <div
                         key={row.id}
-                        className="relative rounded-lg border border-gray-300 bg-white p-4 pr-14 transition-all hover:border-green-500"
+                        className="relative rounded-lg border border-gray-300 bg-white p-2 pr-7 transition-all hover:border-green-500"
                       >
                         <Handle
                           type="source"
                           position={Position.Right}
                           id={row.id}
-                          style={{ top: '50%', transform: 'translateY(-50%)' }}
-                          className="z-50 !h-6 !w-6 rounded-full !border-4 !border-white !bg-green-600 shadow-xl hover:!bg-green-700"
+                          style={{ right: '-10%' }}
+                          className="z-50 !h-6 !w-6 rounded-full !border-4 !border-white !bg-blue-600 shadow-xl hover:!bg-blue-700"
                         />
 
-                        <Input
-                          placeholder="Option title"
-                          value={row.title}
-                          onChange={(e) => updateListRow(si, ri, { title: e.target.value })}
-                          className="font-medium"
-                        />
-                        <Input
-                          placeholder="Description (optional)"
-                          value={row.description || ''}
-                          onChange={(e) => updateListRow(si, ri, { description: e.target.value })}
-                          className="mt-2 text-sm text-gray-600"
-                        />
+                        <div className="relative w-full">
+                          <Input
+                            placeholder="Row title"
+                            value={row.title}
+                            onChange={(e) => updateListRow(si, ri, { title: e.target.value })}
+                            className="font-medium"
+                            maxLength={24}
+                          />
+                          <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                            {(row.title || '').length} / 24
+                          </div>
+                        </div>
+
+                        <div className="relative mt-2">
+                          <Input
+                            placeholder="Description (optional)"
+                            value={row.description || ''}
+                            onChange={(e) => updateListRow(si, ri, { description: e.target.value })}
+                            className="h-16 text-sm text-gray-600"
+                            maxLength={72}
+                          />
+                          <div aria-hidden className="absolute bottom-2 right-3 select-none text-xs text-gray-500">
+                            {(row.description || '').length} / 72
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeListRow(si, ri)}
+                          className="absolute -right-2 -top-2 rounded-full border border-red-100 bg-white p-1.5 text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
                       </div>
                     ))}
 
@@ -379,37 +436,6 @@ export function InteractiveReply({ data, selected }) {
             </div>
           )}
         </CardContent>
-        {/* STORE VARIABLE */}
-        <div className="space-y-1.5 p-4">
-          <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
-            <FileText className="h-3 w-3 text-emerald-600" />
-            Store Response In (Optional)
-          </label>
-
-          <div className="flex items-center gap-2">
-            <Input
-              value={localVar}
-              onChange={handleVariableTyping}
-              placeholder="user name"
-              prefix="@"
-              className="text-sm transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddVariable}
-              disabled={!localVar.trim()}
-              className="bg-emerald-400 text-white"
-            >
-              <Plus className="mr-1 h-3 w-3" />
-              Add
-            </Button>
-          </div>
-          <Badge variant="outline" className="bg-orange-100 text-xs text-orange-800">
-            {m.variable?.replace(/^@/, '')}
-          </Badge>
-        </div>
       </Card>
     </div>
   );
