@@ -3,18 +3,8 @@ import {
   ChatbotSessionModel,
   WhatsappChatbotModel,
 } from "@hi/db-models";
-import type { Context } from "hono";
 import { respond } from "../../../utils/response";
-import { qrHandlers } from "../../../utils/whatsappWebhookHandlers/allQrHandler";
-import { whatsAppCampaignHandler } from "../../../utils/whatsappWebhookHandlers/campaign";
-import { whatsAppChatHandler } from "../../../utils/whatsappWebhookHandlers/chatHandler";
-import {
-  identifyQrTypeFromMessage,
-  whatsAppEventData,
-  whatsAppUserAndTextMessage,
-} from "../../../utils/whatsappWebhookHandlers/helper";
-import { whatsAppBlockUserHandler } from "../../../utils/whatsappWebhookHandlers/whatsappBlockUser";
-import path = require("path");
+import path = require("node:path");
 import { google } from "googleapis";
 
 interface InteractiveParams {
@@ -27,6 +17,27 @@ interface InteractiveParams {
   c: any;
 }
 
+interface AskNodeParams {
+  textBody: string;
+  sessionState: any;
+  chatbotList: any[];
+  whatsAppBusinessConfigData: any;
+  from: string;
+  contactName: string;
+  c: any;
+}
+
+type SessionState = {
+  startTime: string | number | Date;
+  _id?: string; // ✅ add this
+  userId: string;
+  currentNodeId: string | null;
+  waitingFor: null | "ask" | "interactive";
+  variables: Record<string, any>;
+  interactiveCtx?: { routes: Record<string, string | null> };
+  userName?: string;
+};
+
 export async function processInteractiveReply({
   interactiveTitleOrId,
   session,
@@ -36,8 +47,6 @@ export async function processInteractiveReply({
   contactName,
   c,
 }: InteractiveParams) {
-  console.log("Handle interactive reply:", interactiveTitleOrId);
-
   const currentRoutes = session.interactiveCtx?.routes || {};
 
   let targetNodeId: string | null = null;
@@ -161,16 +170,6 @@ export async function processInteractiveReply({
   });
 
   return respond(c, "flow ended (no route)", false, 200, {});
-}
-
-interface AskNodeParams {
-  textBody: string;
-  sessionState: any;
-  chatbotList: any[];
-  whatsAppBusinessConfigData: any;
-  from: string;
-  contactName: string;
-  c: any;
 }
 
 export async function processAskNodeReply({
@@ -373,16 +372,7 @@ export async function getAllChatbotFlows(businessId: string) {
 /* ----------------------------------------------------------------------------
  * RUNTIME SESSION
  * ------------------------------------------------------------------------- */
-type SessionState = {
-  startTime: string | number | Date;
-  _id?: string; // ✅ add this
-  userId: string;
-  currentNodeId: string | null;
-  waitingFor: null | "ask" | "interactive";
-  variables: Record<string, any>;
-  interactiveCtx?: { routes: Record<string, string | null> };
-  userName?: string;
-};
+
 const sessions = new Map<string, SessionState>();
 
 function getSession(userId: string): SessionState {
@@ -450,12 +440,9 @@ function interpolate(
 
 function evalRow(row, vars) {
   let key = String(row.var || "").trim();
-  console.log("key", key);
   let left = vars[key];
-  console.log("left", left);
   if (left === undefined) {
     const altKey = key.startsWith("@") ? key.slice(1) : `@${key}`;
-    console.log("left after altKey check", altKey);
     left = vars[altKey];
   }
 
@@ -482,8 +469,25 @@ function evalRow(row, vars) {
 function evalCondition(node: any, vars: Record<string, any>) {
   const rules = node?.logic || [];
   if (!Array.isArray(rules) || rules.length === 0) return false;
-  return rules.every((r: any) => evalRow(r, vars));
+
+  let result = evalRow(rules[0], vars);
+
+  for (let i = 1; i < rules.length; i++) {
+    const row = rules[i];
+    const current = evalRow(row, vars);
+
+    if (row.join === "and") {
+      result = result && current;
+    } else if (row.join === "or") {
+      result = result || current;
+    } else {
+      console.warn("Unknown join operator:", row.join);
+    }
+  }
+
+  return result;
 }
+
 function isEndNode(node: any): boolean {
   return (
     !node?.next &&
