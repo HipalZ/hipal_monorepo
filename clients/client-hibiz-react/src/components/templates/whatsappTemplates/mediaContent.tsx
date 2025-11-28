@@ -1,5 +1,5 @@
 import useWhatsapp, { HeaderInterface } from '@/components/store/useWhatsapp';
-import { cn } from '@/components/utils/helper';
+import { cn, storeImageAfterSave } from '@/components/utils/helper';
 import { type ChangeEvent, memo, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { BiFile, BiMusic, BiPlus, BiVideo, BiX } from 'react-icons/bi';
@@ -11,12 +11,11 @@ const MemoMediaContent = () => {
   const setImageFiles = useWhatsapp((s) => s.setImageFiles);
   const setImagePreview = useWhatsapp((s) => s.setImagePreview);
   const templateMediaRef = useRef<HTMLInputElement | null>(null);
-
   const handleFileChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
+    async (event: ChangeEvent<HTMLInputElement>) => {
       const file = event?.target?.files?.[0];
       if (!file) return;
-
+      setImageFiles(file);
       const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSizeInBytes) {
         toast.error('File size exceeds 5MB. Please select a smaller file.');
@@ -29,11 +28,22 @@ const MemoMediaContent = () => {
       else if (type.startsWith('audio/')) setHeaderType(HeaderInterface.Audio);
       else setHeaderType(HeaderInterface.Document);
 
+      // Read file for preview
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-        setImageFiles(file);
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+
+        // Show preview immediately
+        setImagePreview(base64);
+
+        // Immediately upload the image
+        const uploadedUrl = await storeImageAfterSave(file, base64);
+
+        if (uploadedUrl) {
+          // Store final URL in state
+          setImagePreview(uploadedUrl);
+        }
       };
     },
     [setHeaderType, setImageFiles, setImagePreview],
@@ -52,7 +62,7 @@ const MemoMediaContent = () => {
 
       <div
         className={cn(
-          'relative mb-4 h-56 w-64 rounded-lg bg-white transition-all duration-300',
+          'relative mb-4 h-40 w-40 rounded-lg bg-white transition-all duration-300',
           imagePreview ? 'shadow-md hover:shadow-lg' : 'border-2 border-dashed border-gray-300 hover:border-blue-400',
         )}
       >

@@ -1,7 +1,7 @@
 import pastaDummy from '@/assets/pastaDummy.png';
 import Hi from '@/assets/svg/hi.svg';
 import whatzAppDoodle from '@/assets/whatzapp/whatsappdoodle.jpg';
-import useWhatsapp, { HeaderInterface } from '@/components/store/useWhatsapp';
+import useWhatsapp, { ActionType, HeaderInterface } from '@/components/store/useWhatsapp';
 import { memo } from 'react';
 import { BsCameraVideo, BsTelephone } from 'react-icons/bs';
 import { FaBatteryFull, FaSignal, FaWifi } from 'react-icons/fa';
@@ -19,7 +19,8 @@ const MemoTemplatePreview = () => {
   const secondButtonText = useWhatsapp((s) => s.secondButtonText);
   const firstButtonEnable = useWhatsapp((s) => s.firstButtonEnable);
   const secondButtonEnable = useWhatsapp((s) => s.secondButtonEnable);
-
+  const firstActionType = useWhatsapp((s)=>s.firstActionType)
+  const secondActionType = useWhatsapp((s)=>s.secondActionType)
   const renderBodyText = () => {
     if (typeof bodyText !== 'string') {
       return <p className="text-red-500">{bodyText}</p>;
@@ -92,20 +93,34 @@ const MemoTemplatePreview = () => {
 
           <div className="space-y-2 p-3">
             {headerType === HeaderInterface.Text && <h3 className="text-lg font-semibold">{headerText}</h3>}
-            {bodyText && <p className="max-w-[248px] break-words text-[0.9375rem]">{renderBodyText()}</p>}
+            {bodyText && <p className="max-w-[248px] whitespace-pre-wrap break-words text-[0.9375rem]">{renderBodyText()}</p>}
             {footerText && <p className="text-xs text-gray-500">{footerText}</p>}
           </div>
           {firstButtonEnable && (
             <div className="border-t border-gray-100">
               <button type="button" className="flex w-full items-center justify-center py-3 text-sm font-medium text-[#34B7F1]">
-                <FiExternalLink className="mr-2" /> {buttonText}
+                {firstActionType === ActionType.VisitWebsite ? (
+                  <FiExternalLink className="mr-2" />
+                ) : firstActionType === ActionType.CallUs ? (
+                  <BsTelephone className="mr-2" />
+                ) : (
+                  <FiExternalLink className="mr-2" />
+                )}
+                {buttonText}
               </button>
             </div>
           )}
           {secondButtonEnable && (
             <div className="border-t border-gray-100">
               <button type="button" className="flex w-full items-center justify-center py-3 text-sm font-medium text-[#34B7F1]">
-                <MdOutlineReply className="mr-2" /> {secondButtonText}
+                {secondActionType === ActionType.VisitWebsite ? (
+                  <FiExternalLink className="mr-2" />
+                ) : secondActionType === ActionType.CallUs ? (
+                  <BsTelephone className="mr-2" />
+                ) : (
+                  <MdOutlineReply className="mr-2" />
+                )}
+                {secondButtonText}
               </button>
             </div>
           )}

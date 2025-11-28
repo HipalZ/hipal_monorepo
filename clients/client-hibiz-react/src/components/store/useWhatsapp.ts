@@ -125,9 +125,6 @@ interface whatsappTemplate {
   templateName: string;
   setTemplateName: (templateName: string) => void;
 
-  language: string;
-  setLanguage: (language: string) => void;
-
   headerType: HeaderInterface;
   setHeaderType: (headerType: HeaderInterface) => void;
 
@@ -164,8 +161,11 @@ interface whatsappTemplate {
 
   removeVariable: (index: number) => void;
 
-  actionType: string;
-  setActionType: (actionType: string) => void;
+  firstActionType: ActionType;
+  setFirstActionType: (actionType: ActionType) => void;
+
+  secondActionType: ActionType;
+  setSecondActionType: (actionType: ActionType) => void;
 
   buttonText: string;
   setButtonText: (buttonText: string) => void;
@@ -181,6 +181,12 @@ interface whatsappTemplate {
 
   secondButtonText: string;
   setSecondButtonText: (secondButtonText: string) => void;
+
+  secondWebsiteUrl: string;
+  setSecondWebsiteUrl: (secondWebsiteUrl: string) => void;
+
+  secondPhoneNumber: string;
+  setSecondPhoneNumber: (secondPhoneNumber: string) => void;
 
   buttonFooterText: string;
   setButtonFooterText: (buttonFooterText: string) => void;
@@ -312,9 +318,6 @@ export const useWhatsapp = create(
         templateName: "",
         setTemplateName: (templateName: string) => set({ templateName }),
 
-        language: "en_US",
-        setLanguage: (language: string) => set({ language }),
-
         headerType: HeaderInterface.Image,
         setHeaderType: (headerType: HeaderInterface) => set({ headerType }),
 
@@ -399,8 +402,13 @@ export const useWhatsapp = create(
           });
         },
 
-        actionType: ActionType.VisitWebsite,
-        setActionType: (actionType: string) => set({ actionType }),
+        firstActionType: "",
+        setFirstActionType: (actionType: ActionType) =>
+          set({ firstActionType: actionType }),
+
+        secondActionType: "",
+        setSecondActionType: (actionType: ActionType) =>
+          set({ secondActionType: actionType }),
 
         buttonText: "Visit US",
         setButtonText: (buttonText: string) => set({ buttonText }),
@@ -414,7 +422,13 @@ export const useWhatsapp = create(
         phoneNumber: "",
         setPhoneNumber: (phoneNumber: string) => set({ phoneNumber }),
 
-        secondButtonText: "Stop Promotions",
+        secondWebsiteUrl: "",
+        setSecondWebsiteUrl: (websiteUrl: string) => set({ websiteUrl }),
+
+        secondPhoneNumber: "",
+        setSecondPhoneNumber: (phoneNumber: string) => set({ phoneNumber }),
+
+        secondButtonText: "",
         setSecondButtonText: (secondButtonText: string) =>
           set({ secondButtonText }),
 
@@ -442,34 +456,46 @@ export const useWhatsapp = create(
           );
 
           const variables =
-            bodyComponent?.example?.body_text[0]?.map((text: string) => text) ||
-            [];
-          const headerImage = headerComponent?.example?.header_handle[0] || "";
+            bodyComponent?.example?.body_text?.[0]?.map((v: string) => v) || [];
+
+          const headerImage =
+            headerComponent?.example?.header_handle?.[0] || "";
+
+          const buttons = buttonsComponent?.buttons || [];
+
+          const primary = buttons[0] || null;
+          const secondary = buttons[1] || null;
+
+          const getActionType = (btn: any) => {
+            if (!btn) return "";
+            if (btn.type === "URL") return ActionType.VisitWebsite;
+            if (btn.type === "PHONE_NUMBER") return ActionType.CallUs;
+            return ActionType.Flow;
+          };
+
           set({
-            templateType: data.category,
             templateName: data.name,
-            headerType: headerComponent?.format || HeaderInterface.Text,
+            templateType: data.category,
+            headerType: headerComponent?.format,
             headerText: headerComponent?.text,
-            imagePreview: headerImage || headerComponent?.imagePreview,
+            imagePreview: headerImage,
+
             bodyText: bodyComponent?.text,
             bodyVariables: variables,
+
+            // ⭐ PRIMARY CTA
+            firstActionType: getActionType(primary),
+            buttonText: primary?.text || "",
+            websiteUrl: primary?.url || "",
+            phoneNumber: primary?.phone_number?.replace(/^\+91/, "") || "",
+
+            // ⭐ SECONDARY CTA
+            secondActionType: getActionType(secondary),
+            secondButtonText: secondary?.text || "",
+            secondWebsiteUrl: secondary?.url || "",
+            secondPhoneNumber:
+              secondary?.phone_number?.replace(/^\+91/, "") || "",
             footerText: footerComponent?.text,
-            actionType:
-              buttonsComponent?.buttons[0]?.type === "URL"
-                ? ActionType.VisitWebsite
-                : buttonsComponent?.buttons[0]?.type === "PHONE_NUMBER"
-                  ? ActionType.CallUs
-                  : ActionType.Flow,
-            buttonText: buttonsComponent?.buttons[0]?.text || "",
-            urlType:
-              buttonsComponent?.buttons[0]?.type === "URL"
-                ? "Static"
-                : undefined,
-            websiteUrl: buttonsComponent?.buttons[0]?.url,
-            phoneNumber: buttonsComponent?.buttons[0]?.phone_number?.replace(
-              /^\+91/,
-              "",
-            ),
             templateId: data.id,
             templateStatus: data?.status,
             bodyVariableSequence: variables,
@@ -499,13 +525,16 @@ export const useWhatsapp = create(
             footerText: "",
             bodyVariables: [],
             bodyVariableSequence: [],
-            actionType: ActionType.VisitWebsite,
+            firstActionType: ActionType.VisitWebsite,
+            secondActionType: ActionType.VisitWebsite,
             buttonText: "",
             urlType: "Static",
             websiteUrl: `${BASE_URL}/${
               useBusinessData.getState().businessData?.customLink || ""
             }`,
             phoneNumber: "",
+            secondWebsiteUrl: "",
+            secondPhoneNumber: "",
             templateId: "",
             imageFiles: null,
             cropping: {
