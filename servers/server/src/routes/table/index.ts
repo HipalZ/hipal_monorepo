@@ -567,29 +567,6 @@ const tableRouter = new Hono()
               { isAccepted: true, isRejected: true },
               { session },
             );
-            await PaymentAlert.create(
-              [
-                {
-                  businessId: saveOrder[0]?.businessId,
-                  alertType: "NORMAL_SETTLE",
-                  payment_id: createPayment[0]._id,
-                  coinsApplied: !!(
-                    splitTableSessionData?.claimedCoins &&
-                    splitTableSessionData?.claimedCoins > 0
-                  ),
-                  status: "SUCCESS",
-                  order_id: saveOrder[0]?._id,
-                  message: `Paid ${saveOrder[0]?.total}`,
-                  tableName: saveOrder[0]?.tableName,
-                  isAccepted: false,
-                  userId: saveOrder[0]?.userId,
-                  posDiscount: 0,
-                  date: Date.now(),
-                  mode: paymentMode?.name,
-                },
-              ],
-              { session },
-            );
 
             await SplitBillTableSession.updateOne(
               { _id: variantId },
@@ -770,29 +747,6 @@ const tableRouter = new Hono()
                 businessId: table?.businessId,
               },
               { isAccepted: true, isRejected: true },
-              { session },
-            );
-            await PaymentAlert.create(
-              [
-                {
-                  businessId: saveOrder[0]?.businessId,
-                  alertType: "NORMAL_SETTLE",
-                  payment_id: createPayment[0]._id,
-                  coinsApplied: !!(
-                    splitTableSessionData?.claimedCoins &&
-                    splitTableSessionData?.claimedCoins > 0
-                  ),
-                  status: "SUCCESS",
-                  order_id: saveOrder[0]?._id,
-                  message: `Paid ${saveOrder[0]?.total}`,
-                  tableName: saveOrder[0]?.tableName,
-                  isAccepted: false,
-                  userId: saveOrder[0]?.userId,
-                  posDiscount: 0,
-                  date: Date.now(),
-                  mode: paymentMode?.name,
-                },
-              ],
               { session },
             );
 
@@ -1272,28 +1226,6 @@ const tableRouter = new Hono()
             businessId: table?.businessId,
           },
           { isAccepted: true, isRejected: true },
-          { session },
-        );
-        await PaymentAlert.create(
-          [
-            {
-              businessId: saveOrder[0]?.businessId,
-              alertType: "NORMAL_SETTLE",
-              payment_id: createPayment[0]._id,
-              coinsApplied: !!(
-                tableSession?.claimedCoins && tableSession?.claimedCoins > 0
-              ),
-              status: "SUCCESS",
-              order_id: saveOrder[0]?._id,
-              message: `Paid ${saveOrder[0]?.total}`,
-              tableName: saveOrder[0]?.tableName,
-              isAccepted: false,
-              userId: saveOrder[0]?.userId,
-              posDiscount: 0,
-              date: Date.now(),
-              mode: paymentMode?.name,
-            },
-          ],
           { session },
         );
 
