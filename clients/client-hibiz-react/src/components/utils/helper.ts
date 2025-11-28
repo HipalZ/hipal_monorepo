@@ -12,7 +12,6 @@ import { AlertCircle, DownloadCloud, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { twMerge } from "tailwind-merge";
 import { DishSteps } from "../store/useMenuStorage";
-import useBusinessData from "@/components/store/useBusinessData";
 
 export async function storeImageAfterSave(
   image: File,
@@ -20,8 +19,6 @@ export async function storeImageAfterSave(
   setIsLoading?: (loading: boolean) => void,
 ) {
   if (!image || !imagePreview) return;
-
-  console.log("imagePreview", imagePreview, image);
 
   const imageId = crypto.randomUUID();
   setIsLoading?.(true);

@@ -968,7 +968,7 @@ export interface WhatsAppTemplatePayload {
   parameter_format: string;
   status: string;
   id: string;
-  businessId: string;
+  businessId: string | undefined;
   name: string;
   language: string;
   templateId?: string; // Optional, only applies to existing templates
