@@ -119,8 +119,9 @@ export const outLetInfoSchema = z.object({
     )
     .optional(),
   address: z.string().min(4).max(100).optional(),
-  startTime: z.coerce.number().optional().default(0),
-  endTime: z.coerce.number().optional().default(24),
+  startBillTime: z.coerce.number().optional().default(0),
+  endBillTime: z.coerce.number().optional().default(1440),
+  extendBillTime: z.coerce.number().optional().default(0),
   footerDescription: z.string().min(10).max(200).optional(),
   socialMediaLinks: z.array(SocialMedia).optional(),
 
