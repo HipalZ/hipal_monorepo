@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { hideMiddleNumbers } from '@/lib/utils';
 import { IndianRupee, Percent, Receipt, Table2, Wallet } from 'lucide-react';
+import { MdTableBar } from 'react-icons/md';
 
 interface TableViewProps {
   data: IExistingPayments[];
@@ -86,7 +87,7 @@ export function TableView({ data, onRowClick }: TableViewProps) {
                     </span>
                     {item?.tableName && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
-                        <Table2 className="h-3 w-3" />
+                        <MdTableBar className="h-3 w-3" />
                         {item.tableName}
                       </span>
                     )}

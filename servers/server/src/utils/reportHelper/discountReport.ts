@@ -1,6 +1,9 @@
+import type { Workbook } from "exceljs";
 import { Business } from "@hi/db-models";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { formatDateToIST } from "./dateFormater";
+import type { AnyPayment, BaseContext } from "./types";
+import { addBoldHeaderRow, addKeyValueRow, autoFitColumns } from "./excelUtils";
 
 interface DiscountReport {
   businessId: string;
@@ -13,6 +16,10 @@ interface DiscountDetails {
   discountCount: number;
   amount: number;
 }
+
+// ---------------------------------------------------------------------
+// Helper: Discount Report sheet
+// ---------------------------------------------------------------------
 
 export async function buildDiscountReport(
   payments: PaymentType[],
@@ -78,4 +85,47 @@ export async function buildDiscountReport(
   });
 
   return report;
+}
+
+export async function buildDiscountSheet(workbook: Workbook, ctx: BaseContext) {
+  const { businessIds, allPayments, from, to } = ctx;
+
+  const sheet = workbook.addWorksheet("Discount Report");
+
+  const discountEligiblePayments = allPayments.filter((p: AnyPayment) => {
+    return (
+      typeof p.discount !== "undefined" &&
+      typeof p.couponDiscount !== "undefined" &&
+      typeof p.claimedCoins !== "undefined"
+    );
+  }) as PaymentType[];
+
+  const discountReport = await buildDiscountReport(
+    discountEligiblePayments,
+    businessIds,
+    from,
+    to,
+  );
+
+  const header = ["DiscountName", "DiscountCount", "Amount"];
+
+  for (const { businessId, businessName, discounts } of discountReport) {
+    sheet.addRow([]);
+    addKeyValueRow(sheet, "BusinessId", businessId);
+    addKeyValueRow(sheet, "BusinessName", businessName);
+    addBoldHeaderRow(sheet, header);
+
+    for (const discount of discounts as Array<{
+      discountName: string;
+      discountCount: number;
+      amount: number;
+    }>) {
+      sheet.addRow([
+        discount.discountName,
+        discount.discountCount,
+        discount.amount,
+      ]);
+    }
+  }
+  autoFitColumns(sheet);
 }

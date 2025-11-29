@@ -12,6 +12,7 @@ export type ReportsTypes =
   | "item"
   | "discount"
   | "serviceCharge"
+  | "combined"
   | "addOn";
 
 export type LayoutType = "table" | "compact";

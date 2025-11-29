@@ -7,7 +7,6 @@ import useReports from '../store/useReports.ts';
 import useTimings from '../store/useTimings.ts';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card.tsx';
 import EmptyStateInstructions from './categoryLayouts/EmptyStateInstructions.tsx';
-import DiscountCardLayout from './discountLayouts/DiscountCardLayout.tsx';
 import DiscountCompactLayout from './discountLayouts/DiscountCompactLayout.tsx';
 import DiscountTableLayout from './discountLayouts/DiscountTableLayout.tsx';
 import LayoutToggleButtons from './LayoutToggleButtons.tsx';
