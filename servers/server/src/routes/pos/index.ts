@@ -2285,6 +2285,7 @@ const posRouter = new Hono()
           discountAppliedBy: z.string().min(1).max(50),
           password: z.string().min(4).max(50).optional(),
           variantId: z.string().min(24).max(24).optional(),
+          discountType: z.enum(["RP", "PCT"]).optional(),
         })
         .refine(
           (data) =>
@@ -2294,6 +2295,17 @@ const posRouter = new Hono()
             message:
               "itemIds must be a non-empty array when discountAppliedOn is ON_DISH",
             path: ["itemIds"],
+          },
+        )
+        .refine(
+          (data) =>
+            data.discountAppliedOn !== "ON_BILL" ||
+            data.discountType === "RP" ||
+            data.discountType === "PCT",
+          {
+            message:
+              "discountType is required when discountAppliedOn is ON_BILL",
+            path: ["discountType"],
           },
         ),
     ),
