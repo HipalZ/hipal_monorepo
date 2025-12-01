@@ -560,6 +560,16 @@ const kotRouter = new Hono()
           );
         }
 
+        if (tableSession.isDiscountApplied) {
+          return respond(
+            c,
+            "Discount already applied for this table please remove it first",
+            true,
+            400,
+            {},
+          );
+        }
+
         if (password) {
           const passwordManager = await PasswordManager.findOne({
             businessId: kotDocs[0].businessId,
