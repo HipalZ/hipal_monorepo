@@ -121,14 +121,6 @@ const MemoCategoryTableLayout = ({ business }: CategoryCardLayoutProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Print Button */}
-      {/* <div className="flex justify-end">
-        <Button onClick={reactToPrintFn} variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
-          <Printer className="h-4 w-4" />
-          Print Report
-        </Button>
-      </div> */}
-
       {/* Summary + filters */}
       <Card className="border-none !p-0 shadow-none">
         <CardContent className="-mt-4 flex flex-col gap-4 p-0">

@@ -26,6 +26,7 @@ const KotOrderSchema = z.object({
   priority: z.boolean().default(false).optional(),
   deliveredBy: z.string().min(1).max(150).optional(),
   cookedBy: z.string().min(1).max(150).optional(),
+  isOpenItem: z.boolean().default(false).optional(),
 });
 
 // Define the main cart schema

@@ -11,8 +11,6 @@ type Props = {
 
 const MemoBulkUpload = ({ setShowConfirmPopup, setUploadPreview }: Props) => {
   const { mutate: uploadContacts } = useBulkUploadContacts();
-  const bulkCustomers = useMessageRecipientsStore((s) => s.bulkCustomers);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -23,9 +21,9 @@ const MemoBulkUpload = ({ setShowConfirmPopup, setUploadPreview }: Props) => {
     setSelectedFile(file);
 
     try {
-      await uploadContacts(file);
-      setUploadPreview(bulkCustomers || []);
-      setShowConfirmPopup(true);
+      const parsedContacts = await uploadContacts(file);
+    setUploadPreview(parsedContacts);
+    setShowConfirmPopup(true)
     } catch (error) {
       console.error('Upload error:', error);
     }

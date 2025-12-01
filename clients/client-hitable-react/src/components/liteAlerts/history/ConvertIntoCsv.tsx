@@ -4,6 +4,7 @@ import SpinnerMemo from '@/components/atoms/loadingSpinner';
 import { type Filters, useSalesStore } from '@/components/store/useSalesStore';
 import useTimings from '@/components/store/useTimings';
 import { Button } from '@/components/ui/button';
+import { formatDateToIST } from '@/components/utils/helpers';
 import { apiRpc } from '@hi/common';
 import { useMutation } from '@tanstack/react-query';
 import { Download } from 'lucide-react';
@@ -66,17 +67,20 @@ const MemoConvertIntoCsv = () => {
       return response.blob();
     },
     onSuccess: async (blob, variables) => {
-      const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement('a');
-      const fromStr = formatDate(Number(variables.from));
-      const toStr = formatDate(Number(variables.to));
-      const fileName = `payments ${fromStr} to ${toStr}.csv`;
+      const url = window.URL.createObjectURL(blob);
 
+      const fromStr = formatDateToIST(Number(variables.from));
+      const toStr = formatDateToIST(Number(variables.to));
+      const fileName = `Combine reports ${fromStr} to ${toStr}.xlsx`;
+
+      const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', fileName);
+
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
+
       window.URL.revokeObjectURL(url);
       setDownloadCsv(false);
     },

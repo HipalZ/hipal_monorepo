@@ -3,10 +3,10 @@ import { useSalesStore } from '@/components/store/useSalesStore';
 import { Button } from '@/components/ui/button';
 import { useAllModes } from '@/hooks/useMode';
 import { X } from 'lucide-react';
-import { useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 
-const SalesFilters = () => {
+const MemoSalesFilters = () => {
   const selectedPaymentModes = useSalesStore((s) => s.selectedPaymentModes);
   const selectedDiscountTypes = useSalesStore((s) => s.selectedDiscountTypes);
   const selectedWarnings = useSalesStore((s) => s.selectedWarnings);
@@ -154,4 +154,5 @@ const SalesFilters = () => {
   );
 };
 
+const SalesFilters = memo(MemoSalesFilters);
 export default SalesFilters;

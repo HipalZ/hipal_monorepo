@@ -50,12 +50,14 @@ import {
   calculateBillDishIds,
   calculateBillTotals,
   calculateFinalTotal,
+  calculateFinalTotalWithoutRoundOff,
   calculateItemUpdated,
   calculateItemUpdatedGstAfterDiscount,
   calculateTotalDiscount,
   calculateUpdatedGstAfterDiscount,
+  getRoundOff,
+  groupItems,
   groupItemsByGST,
-  groupSplitItemsByGST,
   updateSplitTableSession,
   updateTableSession,
 } from '../../utils/bill';
@@ -292,7 +294,7 @@ const posRouter = new Hono()
               tableSession.businessId.toString(),
               tableSession.tableName,
               session,
-              tableSession.billInvoice
+              tableSession.billInvoice,
             );
 
             return respond(c, 'success', false, 200, splitBillVariants);
@@ -302,7 +304,7 @@ const posRouter = new Hono()
             tableSession.businessId.toString(),
             tableSession.tableName,
             session,
-             tableSession.billInvoice
+            tableSession.billInvoice,
           );
 
           return respond(c, 'success', false, 200, splitBillVariants);
@@ -340,7 +342,8 @@ const posRouter = new Hono()
         const serviceChargePercentage =
           tableSession.serviceChargePercentage || serviceCharge?.value || 0;
 
-        let serviceChargeAmount = Math.round((serviceChargePercentage / 100) * totalDishTotal);
+        let serviceChargeAmount =
+          (serviceChargePercentage / 100) * totalDishTotal;
         if (tableSession.isServiceChargeRemoved) serviceChargeAmount = 0;
 
         const gst = tableSession.isDiscountApplied ? tableSession.gst : totalGst;
@@ -351,15 +354,26 @@ const posRouter = new Hono()
         // Final total
         const newTotal = calculateFinalTotal(totalDishTotal, totalDis, newGst, serviceChargeAmount, tableSession.otherTax, tableSession.tips);
 
+        const totalWithoutRoundOff = calculateFinalTotalWithoutRoundOff(
+          totalDishTotal,
+          totalDis,
+          newGst,
+          serviceChargeAmount,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        const { type, value } = getRoundOff(totalWithoutRoundOff);
+
         // Update table session with new values
         tableSession = await updateTableSession(
           businessId,
           tableSession.tableName,
           session,
           {
-            gst: Number(newGst.toFixed(2)),
+            gst: Number(newGst?.toFixed(2)),
             total: newTotal,
-            serviceCharge: serviceChargeAmount,
+            serviceCharge: Number(serviceChargeAmount?.toFixed(2)),
             billGeneratedBy: generatedBy,
             subTotal: totalDishTotal,
             items: cartItems,
@@ -370,6 +384,9 @@ const posRouter = new Hono()
             }),
             serviceChargePercentage:
               tableSession.serviceChargePercentage || serviceCharge?.value || 0,
+
+            roundOffType: type,
+            roundOffAmount: value,
           },
         );
 
@@ -404,6 +421,8 @@ const posRouter = new Hono()
               tips: tableSession.tips,
               total: tableSession.total,
               billId: tableSession._id.toString(),
+              roundOffType: type,
+              roundOffAmount: value,
               serviceChargePercentage:
                 tableSession.serviceChargePercentage ||
                 serviceCharge?.value ||
@@ -1049,6 +1068,16 @@ const posRouter = new Hono()
         const billAlreadySplit = checkOriginBillIsSplit(tableSession);
         if (billAlreadySplit) {
           return respond(c, 'Bill already split you cannot place order', true, 400, {});
+        }
+
+        if (tableSession.isDiscountApplied) {
+          return respond(
+            c,
+            "Discount already applied for this table please remove it first",
+            true,
+            400,
+            {},
+          );
         }
 
         const orderAlreadyExist = await PaymentAlert.findOne({
@@ -1992,7 +2021,7 @@ const posRouter = new Hono()
           }
 
           const cartItems = variant.items as Item[];
-          const billItems = groupSplitItemsByGST(cartItems);
+          const billItems = groupItems(cartItems);
 
           sendBillPrintEvent({
             tableName: tableName,
@@ -2047,7 +2076,7 @@ const posRouter = new Hono()
           }
         }
 
-        const billItems = groupItemsByGST(cartItems);
+        const billItems = groupItems(cartItems);
 
         sendBillPrintEvent({
           tableName: tableName,
@@ -2124,7 +2153,7 @@ const posRouter = new Hono()
 
         const cartItems = payment.billItems as Item[];
 
-        const billItems = groupItemsByGST(cartItems);
+        const billItems = groupItems(cartItems);
 
         sendBillPrintEvent({
           tableName: payment.tableName,
@@ -2172,11 +2201,29 @@ const posRouter = new Hono()
           discountAppliedBy: z.string().min(1).max(50),
           password: z.string().min(4).max(50).optional(),
           variantId: z.string().min(24).max(24).optional(),
+          discountType: z.enum(["RP", "PCT"]).optional(),
         })
-        .refine((data) => data.discountAppliedOn !== 'ON_DISH' || (Array.isArray(data.itemIds) && data.itemIds.length > 0), {
-          message: 'itemIds must be a non-empty array when discountAppliedOn is ON_DISH',
-          path: ['itemIds'],
-        }),
+        .refine(
+          (data) =>
+            data.discountAppliedOn !== "ON_DISH" ||
+            (Array.isArray(data.itemIds) && data.itemIds.length > 0),
+          {
+            message:
+              "itemIds must be a non-empty array when discountAppliedOn is ON_DISH",
+            path: ["itemIds"],
+          },
+        ),
+      // .refine(
+      //   (data) =>
+      //     data.discountAppliedOn !== "ON_BILL" ||
+      //     data.discountType === "RP" ||
+      //     data.discountType === "PCT",
+      //   {
+      //     message:
+      //       "discountType is required when discountAppliedOn is ON_BILL",
+      //     path: ["discountType"],
+      //   },
+      // ),
     ),
     async (c) => {
       //@ts-ignore
@@ -2270,7 +2317,7 @@ const posRouter = new Hono()
 
           const { totalDishTotal, totalGst } = calculateBillDishIds(kotOrder, itemIds);
 
-          const dishDis = Math.round((value / 100) * totalDishTotal);
+          const dishDis = (value / 100) * totalDishTotal;
           // discountAmount = Math.min(dishDis, totalDishTotal);
           discountAmount = Math.min(dishDis, tableSession.subTotal - tableSession.claimedCoins - tableSession.couponDiscount);
 
@@ -3232,8 +3279,9 @@ const posRouter = new Hono()
         isSync: false,
       }).lean()) as KotOrderTypes[];
 
-      const cartItems = kotOrders.flatMap((order) => order.cart.filter((item) => !item.isDeleted));
-      let g;
+      const cartItems = kotOrders.flatMap((order) =>
+        order.cart.filter((item) => !item.isDeleted || !item.isOpenItem),
+      );
 
       if (kotOrders.length > 0) {
         const petpoojaCart = convertToPetpoojaCart(
@@ -3247,7 +3295,7 @@ const posRouter = new Hono()
 
           pos.authToken,
         );
-        g = petpoojaCart;
+      
 
         await KotOrder.updateMany(
           {
@@ -3283,7 +3331,7 @@ const posRouter = new Hono()
         }
       }
 
-      return respond(c, 'Success', true, 200, { g: g });
+      return respond(c, 'Success', true, 200, { });
     },
   )
 

@@ -224,9 +224,9 @@ const kotRouter = new Hono()
           return respond(c, 'POS not found', true, 404, {});
         }
 
-        if (pos.posName !== 'HIPAL_Z') {
-          return respond(c, 'operation not allowed', true, 401, {});
-        }
+        // if (pos.posName !== "HIPAL_Z") {
+        //   return respond(c, "operation not allowed", true, 401, {});
+        // }
 
         const tableSession = (await UserSession.findOne({
           tableName: tableName,
@@ -509,6 +509,16 @@ const kotRouter = new Hono()
         const billAlreadySplit = checkOriginBillIsSplit(tableSession);
         if (billAlreadySplit) {
           return respond(c, 'Bill already split you cannot delete the KOT', true, 400, {});
+        }
+
+        if (tableSession.isDiscountApplied) {
+          return respond(
+            c,
+            "Discount already applied for this table please remove it first",
+            true,
+            400,
+            {},
+          );
         }
 
         if (password) {

@@ -3,6 +3,7 @@ import {
   AddOn,
   Banner,
   Business,
+  BusinessPosConfig,
   Category,
   Dish,
   LoyaltySettings,
@@ -11,7 +12,7 @@ import {
   Permissions,
   Role,
   Theme,
-  UserReward,
+  UserReward
 } from "@hi/db-models";
 import {
   BranchSchema,
@@ -513,6 +514,18 @@ const businessesRouter = new Hono()
           hotelBanners: requestData?.hotelBanners,
         },
         { new: true },
+      );
+
+      await BusinessPosConfig.findOneAndUpdate(
+        { businessId },
+        {
+          $set: {
+            restName: requestData.name,
+          },
+        },
+        {
+          new: true,
+        },
       );
 
       return respond(c, "outletInfo updated", false, 200, updateOutletInfo);

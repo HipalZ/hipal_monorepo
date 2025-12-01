@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useDeferredValue } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,24 +16,28 @@ interface Business {
 export default function AllBusiness() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const getAllBusiness = async (): Promise<Business[]> => {
+  const deferredSearch = useDeferredValue(searchTerm);
+  const animateList = searchTerm.length === 0;
+
+    const getAllBusiness = async (): Promise<Business[]> => {
     const response = await apiRpc.businesses.getAllbusinesses.$get();
     const data = await response.json();
     return data.data || [];
   };
-
   const { isLoading, data } = useQuery({
     queryKey: ["allBusiness"],
     queryFn: getAllBusiness,
   });
 
-  // ✅ Use useMemo to filter based on search term
+  // Filtered List
   const filteredData = useMemo(() => {
     if (!data) return [];
+    if (!deferredSearch.trim()) return data;
+
     return data.filter((business) =>
-      business.name.toLowerCase().includes(searchTerm.toLowerCase()),
+      business.name.toLowerCase().includes(deferredSearch.toLowerCase())
     );
-  }, [data, searchTerm]);
+  }, [data, deferredSearch]);
 
   const handleBusinessClick = (customLink: string) => {
     window.open(`${BUSINESS_KEYID}/${customLink}`, "_blank");
@@ -49,24 +53,22 @@ export default function AllBusiness() {
           exit={{ opacity: 0 }}
           className="space-y-4"
         >
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="sticky top-0 z-10 p-4 bg-white shadow-md"
-          >
+          {/* Search Box */}
+          <div className="sticky top-0 z-10 p-4 bg-white shadow-md">
             <input
               type="text"
               placeholder="Search businesses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border border-gray-300 rounded-md text-black"
             />
-          </motion.div>
+          </div>
 
+          {/* Loader */}
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <motion.div
-                className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full"
+                className="w-16 h-16 border-t-4 border-blue-500 rounded-full"
                 animate={{ rotate: 360 }}
                 transition={{
                   duration: 1,
@@ -78,35 +80,51 @@ export default function AllBusiness() {
           ) : (
             <motion.div
               className="grid gap-6 md:grid-cols-1 lg:grid-cols-2"
-              initial="hidden"
-              animate="visible"
-              variants={{
-                visible: { transition: { staggerChildren: 0.1 } },
-              }}
+              initial={animateList ? "hidden" : false}
+              animate={animateList ? "visible" : false}
+              variants={
+                animateList
+                  ? {
+                      hidden: { opacity: 0, y: 25 },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        transition: { staggerChildren: 0.04 },
+                      },
+                    }
+                  : undefined
+              }
             >
               {filteredData.map((business) => (
                 <motion.button
                   key={business._id}
                   onClick={() => handleBusinessClick(business.customLink)}
                   className="flex p-4 text-left bg-white rounded-lg shadow-md"
-                  variants={{
-                    hidden: { opacity: 0, y: 20 },
-                    visible: { opacity: 1, y: 0 },
-                  }}
+                  variants={
+                    animateList
+                      ? {
+                          hidden: { opacity: 0, y: 20 },
+                          visible: { opacity: 1, y: 0 },
+                        }
+                      : undefined
+                  }
                 >
+                  {/* Logo */}
                   <div className="flex-shrink-0 mr-4">
                     {business.logo ? (
                       <img
                         src={business.logo}
-                        alt={`${business.name} logo`}
-                        className="object-cover w-24 h-24 rounded-md"
+                        alt="logo"
+                        className="w-24 h-24 rounded-md object-cover"
                       />
                     ) : (
-                      <div className="flex items-center justify-center w-24 h-24 text-2xl font-bold text-black bg-gray-300 rounded-md">
+                      <div className="w-24 h-24 flex items-center justify-center bg-gray-300 rounded-md text-2xl font-bold">
                         {business.name.charAt(0)}
                       </div>
                     )}
                   </div>
+
+                  {/* Content */}
                   <div className="flex-grow">
                     <h3 className="mb-2 text-2xl font-semibold text-black">
                       {business.name}
@@ -115,9 +133,7 @@ export default function AllBusiness() {
                       Custom Link: {business.customLink}
                     </p>
                     {business.address && (
-                      <p className="text-sm text-gray-700">
-                        Address: {business.address}
-                      </p>
+                      <p className="text-sm text-gray-700">{business.address}</p>
                     )}
                   </div>
                 </motion.button>

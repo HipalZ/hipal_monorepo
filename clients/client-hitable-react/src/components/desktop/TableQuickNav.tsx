@@ -140,7 +140,7 @@ const TableQuickNav = () => {
           </Button>
 
           {/* Add Temp Item - only if POS + permission temp_item */}
-          {isHipalzPos && canAddTempItem && (
+          { canAddTempItem && (
             <Button onClick={() => setOpenItem(true)} variant="outline" size="default" className="gap-2 bg-transparent font-semibold">
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">Add Item</span>

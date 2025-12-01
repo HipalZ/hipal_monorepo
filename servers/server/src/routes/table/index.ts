@@ -479,7 +479,9 @@ const tableRouter = new Hono()
                   billInvoice: splitTableSessionData?.billInvoice,
                   paxCount: tableSession?.paxCount || 0,
                   serviceChargePercentage:
-                    tableSession?.serviceChargePercentage || 0,
+                    splitTableSessionData?.serviceChargePercentage || 0,
+                  roundOffType: splitTableSessionData?.roundOffType || 0,
+                  roundOffAmount: splitTableSessionData?.roundOffAmount || 0,
                 },
               ],
               { session },
@@ -531,26 +533,6 @@ const tableRouter = new Hono()
                 businessId: table?.businessId,
               },
               { isAccepted: true, isRejected: true },
-              { session },
-            );
-            await PaymentAlert.create(
-              [
-                {
-                  businessId: saveOrder[0]?.businessId,
-                  alertType: 'NORMAL_SETTLE',
-                  payment_id: createPayment[0]._id,
-                  coinsApplied: !!(splitTableSessionData?.claimedCoins && splitTableSessionData?.claimedCoins > 0),
-                  status: 'SUCCESS',
-                  order_id: saveOrder[0]?._id,
-                  message: `Paid ${saveOrder[0]?.total}`,
-                  tableName: saveOrder[0]?.tableName,
-                  isAccepted: false,
-                  userId: saveOrder[0]?.userId,
-                  posDiscount: 0,
-                  date: Date.now(),
-                  mode: paymentMode?.name,
-                },
-              ],
               { session },
             );
 
@@ -658,6 +640,8 @@ const tableRouter = new Hono()
                   paxCount: tableSession?.paxCount || 0,
                   serviceChargePercentage:
                     tableSession?.serviceChargePercentage || 0,
+                  roundOffType: tableSession?.roundOffType || 0,
+                  roundOffAmount: tableSession?.roundOffAmount || 0,
                 },
               ],
               { session },
@@ -709,26 +693,6 @@ const tableRouter = new Hono()
                 businessId: table?.businessId,
               },
               { isAccepted: true, isRejected: true },
-              { session },
-            );
-            await PaymentAlert.create(
-              [
-                {
-                  businessId: saveOrder[0]?.businessId,
-                  alertType: 'NORMAL_SETTLE',
-                  payment_id: createPayment[0]._id,
-                  coinsApplied: !!(splitTableSessionData?.claimedCoins && splitTableSessionData?.claimedCoins > 0),
-                  status: 'SUCCESS',
-                  order_id: saveOrder[0]?._id,
-                  message: `Paid ${saveOrder[0]?.total}`,
-                  tableName: saveOrder[0]?.tableName,
-                  isAccepted: false,
-                  userId: saveOrder[0]?.userId,
-                  posDiscount: 0,
-                  date: Date.now(),
-                  mode: paymentMode?.name,
-                },
-              ],
               { session },
             );
 
@@ -1007,6 +971,8 @@ const tableRouter = new Hono()
               paxCount: tableSession?.paxCount || 0,
               serviceChargePercentage:
                 tableSession?.serviceChargePercentage || 0,
+              roundOffType: tableSession?.roundOffType || 0,
+              roundOffAmount: tableSession?.roundOffAmount || 0,
             },
           ],
           { session },
@@ -1176,26 +1142,6 @@ const tableRouter = new Hono()
             businessId: table?.businessId,
           },
           { isAccepted: true, isRejected: true },
-          { session },
-        );
-        await PaymentAlert.create(
-          [
-            {
-              businessId: saveOrder[0]?.businessId,
-              alertType: 'NORMAL_SETTLE',
-              payment_id: createPayment[0]._id,
-              coinsApplied: !!(tableSession?.claimedCoins && tableSession?.claimedCoins > 0),
-              status: 'SUCCESS',
-              order_id: saveOrder[0]?._id,
-              message: `Paid ${saveOrder[0]?.total}`,
-              tableName: saveOrder[0]?.tableName,
-              isAccepted: false,
-              userId: saveOrder[0]?.userId,
-              posDiscount: 0,
-              date: Date.now(),
-              mode: paymentMode?.name,
-            },
-          ],
           { session },
         );
 

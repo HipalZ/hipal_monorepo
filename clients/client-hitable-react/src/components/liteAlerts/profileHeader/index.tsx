@@ -68,7 +68,7 @@ const ProfileHeader = () => {
           <div className="px-1 py-1">
             <MenuItem>
               {({ focus }) => (
-                <a href="https://t-static.blr1.digitaloceanspaces.com/app-debug.apk" className={cn(defaultClass, focus ? 'bg-gray-100' : '')}>
+                <a href="https://assets.hipalz.com/hiclient-share-cart.apk" className={cn(defaultClass, focus ? 'bg-gray-100' : '')}>
                   <FiDownload className="mr-2 text-blue-500" size={20} /> Download App
                 </a>
               )}

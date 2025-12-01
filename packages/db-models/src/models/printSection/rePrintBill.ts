@@ -9,6 +9,11 @@ const reBillPrintSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+    expires: 60 * 60 * 24, // 1 day in seconds
+  },
 });
 
 const ReBillPrint = mongoose.model("rebillprint", reBillPrintSchema);

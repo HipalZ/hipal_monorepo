@@ -269,7 +269,7 @@ export const useBulkUploadContacts = () => {
 
               // 🔹 Step 6: Save parsed contacts
               setBulkCustomers(uniqueContacts);
-              resolve('Contacts uploaded successfully');
+              resolve(uniqueContacts);
             } catch (error: any) {
               toast.error(error.message || 'File processing failed');
               reject(error);
@@ -282,7 +282,7 @@ export const useBulkUploadContacts = () => {
         });
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['getAllPeoples'] });
     },
     onError: () => {

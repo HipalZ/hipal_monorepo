@@ -27,18 +27,21 @@ const MemoCampaignAccordion = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const { fetchCampaignAnalytics } = useCampaignAnalytics();
 
-  const toggleAccordion = useCallback(
-    async (index: number, campaign: Campaign) => {
-      setSelectedCampaign(campaign);
-      await fetchCampaignAnalytics(campaign?._id, 1, "");
-      if (activeIndex === index) {
-        setActiveIndex(null);
-      } else {
-        setActiveIndex(index);
-      }
-    },
-    [activeIndex, fetchCampaignAnalytics, setSelectedCampaign],
-  );
+const toggleAccordion = useCallback(
+  async (index: number, campaign: Campaign) => {
+    if (activeIndex === index) {
+      setActiveIndex(null);
+      return;
+    }
+
+    setActiveIndex(index);
+    setSelectedCampaign(campaign);
+
+    await fetchCampaignAnalytics(campaign?._id, 1, "");
+  },
+  [activeIndex, fetchCampaignAnalytics, setSelectedCampaign]
+);
+
 
   const statsConfig = [
     {

@@ -204,13 +204,17 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     required: false,
     ref: "businessposconfig",
   },
-  startTime: {
+  startBillTime: {
     type: Number,
     default: 0,
   },
-  endTime: {
+  endBillTime: {
     type: Number,
-    default: 24,
+    default: 1400,
+  },
+  extendBillTime: {
+    type: Number,
+    default: 0,
   },
   aadharCard: {
     type: String,

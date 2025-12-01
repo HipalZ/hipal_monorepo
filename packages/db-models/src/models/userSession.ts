@@ -315,6 +315,16 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     ref: "User",
     default: null,
   },
+  roundOffType: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  roundOffAmount: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });

@@ -279,7 +279,10 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                     isSplitBillVariant: true,
                     billInvoice: splitBillTableSessionData?.billInvoice,
                     paxCount: tableSession?.paxCount || 0,
-                       serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+                    serviceChargePercentage:
+                      tableSession?.serviceChargePercentage || 0,
+                    roundOffType: tableSession?.roundOffType || 0,
+                    roundOffAmount: tableSession?.roundOffAmount || 0,
                   },
                 ],
                 { session },
@@ -502,7 +505,11 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                     isSplitBillVariant: true,
                     billInvoice: splitBillTableSessionData?.billInvoice,
                     paxCount: tableSession?.paxCount || 0,
-                       serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+                    serviceChargePercentage:
+                      splitBillTableSessionData?.serviceChargePercentage || 0,
+                    roundOffType: splitBillTableSessionData?.roundOffType || 0,
+                    roundOffAmount:
+                      splitBillTableSessionData?.roundOffAmount || 0,
                   },
                 ],
                 { session },
@@ -799,7 +806,10 @@ async function hipalzPosRazorpayWebhookHandler(payload: {
                 billItems: tableSession?.items || [],
                 billInvoice: tableSession?.billInvoice || 0,
                 paxCount: tableSession?.paxCount || 0,
-                   serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+                serviceChargePercentage:
+                  tableSession?.serviceChargePercentage || 0,
+                roundOffType: tableSession?.roundOffType || 0,
+                roundOffAmount: tableSession?.roundOffAmount || 0,
               },
             ],
             { session },
