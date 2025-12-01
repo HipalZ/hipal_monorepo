@@ -1136,6 +1136,16 @@ const posRouter = new Hono()
           );
         }
 
+        if (tableSession.isDiscountApplied) {
+          return respond(
+            c,
+            "Discount already applied for this table please remove it first",
+            true,
+            400,
+            {},
+          );
+        }
+
         const orderAlreadyExist = await PaymentAlert.findOne({
           businessId,
           tableName: tableInfo.name,
@@ -2296,18 +2306,18 @@ const posRouter = new Hono()
               "itemIds must be a non-empty array when discountAppliedOn is ON_DISH",
             path: ["itemIds"],
           },
-        )
-        .refine(
-          (data) =>
-            data.discountAppliedOn !== "ON_BILL" ||
-            data.discountType === "RP" ||
-            data.discountType === "PCT",
-          {
-            message:
-              "discountType is required when discountAppliedOn is ON_BILL",
-            path: ["discountType"],
-          },
         ),
+      // .refine(
+      //   (data) =>
+      //     data.discountAppliedOn !== "ON_BILL" ||
+      //     data.discountType === "RP" ||
+      //     data.discountType === "PCT",
+      //   {
+      //     message:
+      //       "discountType is required when discountAppliedOn is ON_BILL",
+      //     path: ["discountType"],
+      //   },
+      // ),
     ),
     async (c) => {
       //@ts-ignore
