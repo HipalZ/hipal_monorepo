@@ -254,9 +254,9 @@ const kotRouter = new Hono()
           return respond(c, "POS not found", true, 404, {});
         }
 
-        if (pos.posName !== "HIPAL_Z") {
-          return respond(c, "operation not allowed", true, 401, {});
-        }
+        // if (pos.posName !== "HIPAL_Z") {
+        //   return respond(c, "operation not allowed", true, 401, {});
+        // }
 
         const tableSession = (await UserSession.findOne({
           tableName: tableName,
