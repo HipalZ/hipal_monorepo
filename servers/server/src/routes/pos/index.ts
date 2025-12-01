@@ -3636,7 +3636,7 @@ const posRouter = new Hono()
       }).lean()) as KotOrderTypes[];
 
       const cartItems = kotOrders.flatMap((order) =>
-        order.cart.filter((item) => !item.isDeleted || item.isOpenItem),
+        order.cart.filter((item) => !item.isDeleted || !item.isOpenItem),
       );
 
       if (kotOrders.length > 0) {
