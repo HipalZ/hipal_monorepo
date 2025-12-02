@@ -216,6 +216,7 @@ const kotRouter = new Hono()
         itemName: z.string().min(1).max(100),
         itemPrice: z.number().min(1).max(2000).positive(),
         itemQuantity: z.number().min(1).max(100),
+        kitchenId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
@@ -228,6 +229,7 @@ const kotRouter = new Hono()
           itemName,
           itemPrice,
           itemQuantity,
+          kitchenId = null,
         } = await c.req.json();
         const tableInfo = await Table.findOne({
           businessId: businessId,
@@ -382,7 +384,7 @@ const kotRouter = new Hono()
           itemName,
           itemPrice,
           itemQuantity,
-          kitchenId: kitchenInfo?._id.toString(),
+          kitchenId: kitchenId || kitchenInfo?._id.toString(),
         });
 
         const res = await saveKotOrder(
