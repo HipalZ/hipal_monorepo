@@ -33,7 +33,6 @@ function computePresetRange(preset: PresetRange): { start: Date; end: Date } {
     case 'thisMonth': {
       return { start: startOfDay(startOfMonth(now)), end: endOfDay(endOfMonth(now)) };
     }
-    case 'custom':
     default:
       return { start: now, end: now };
   }

@@ -253,7 +253,6 @@ const SwitchTablesModal = ({ show, onClose, currentTable, tables, onSwitch }: Pr
               color: '#7c3aed',
               textColor: '#ffffff',
               disable: !selectedTable,
-              swipe: true,
             },
           ]}
         />

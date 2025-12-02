@@ -12,6 +12,7 @@ export const useGetAllOrders = () => {
   const { tableId } = useParams();
   const { setIsPlacingNewOrder } = useCart();
   const { setOrderDataStore } = useOrderStore();
+
   const getTableOrders = useCallback(async () => {
     const response = await apiRpc.kot.table_kot[":tableId"].$get({
       param: { tableId: tableId || "" },
