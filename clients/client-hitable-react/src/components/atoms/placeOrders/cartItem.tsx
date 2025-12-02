@@ -254,7 +254,21 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
               isLoading: isPending,
             },
             {
-              text: 'Place Order',
+              text: `Place Order ₹${filteredCart
+                .reduce((total, item) => {
+                  const basePrice = item.dish.price;
+                  const extrasPrice = item.extras?.reduce((sum, extra) => (sum + extra.price) * extra.quantity, 0) || 0;
+                  const portionPrice = item.portion?.price || 0;
+
+                  let itemTotal = 0;
+                  if (portionPrice > 0) {
+                    itemTotal = (extrasPrice + portionPrice) * item.quantity;
+                  } else {
+                    itemTotal = (basePrice + extrasPrice + portionPrice) * item.quantity;
+                  }
+                  return total + itemTotal;
+                }, 0)
+                .toFixed(2)}`,
               onClick: placeOrder,
               className: cn('rounded-md shadow-md w-full h-[3rem]', isPlaceOrderAllowed ? '' : 'hidden'),
               disable: filteredCart.length === 0 || isPending,

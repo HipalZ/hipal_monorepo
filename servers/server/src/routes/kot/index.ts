@@ -193,12 +193,21 @@ const kotRouter = new Hono()
         itemName: z.string().min(1).max(100),
         itemPrice: z.number().min(1).max(2000).positive(),
         itemQuantity: z.number().min(1).max(100),
+        kitchenId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { staffId, tableName, businessId, itemName, itemPrice, itemQuantity } = await c.req.json();
+        const {
+          staffId,
+          tableName,
+          businessId,
+          itemName,
+          itemPrice,
+          itemQuantity,
+          kitchenId = null,
+        } = await c.req.json();
         const tableInfo = await Table.findOne({
           businessId: businessId,
           name: tableName,
@@ -279,7 +288,7 @@ const kotRouter = new Hono()
             itemName,
             itemPrice,
             itemQuantity,
-            kitchenId: kitchenInfo?._id.toString(),
+            kitchenId: kitchenId || kitchenInfo?._id.toString(),
           });
 
           const res = await saveKotOrder(
@@ -340,7 +349,7 @@ const kotRouter = new Hono()
           itemName,
           itemPrice,
           itemQuantity,
-          kitchenId: kitchenInfo?._id.toString(),
+          kitchenId: kitchenId || kitchenInfo?._id.toString(),
         });
 
         const res = await saveKotOrder(
@@ -511,14 +520,16 @@ const kotRouter = new Hono()
           return respond(c, 'Bill already split you cannot delete the KOT', true, 400, {});
         }
 
-        if (tableSession.isDiscountApplied) {
-          return respond(
-            c,
-            "Discount already applied for this table please remove it first",
-            true,
-            400,
-            {},
-          );
+        if (tableSession) {
+          if (tableSession.isDiscountApplied) {
+            return respond(
+              c,
+              "Discount already applied for this table please remove it first",
+              true,
+              400,
+              {},
+            );
+          }
         }
 
         if (password) {
@@ -698,6 +709,18 @@ const kotRouter = new Hono()
           const billAlreadySplit = checkOriginBillIsSplit(tableSession);
           if (billAlreadySplit) {
             return respond(c, 'Bill already split you cannot acept the order', true, 400, {});
+          }
+
+          if (tableSession) {
+            if (tableSession.isDiscountApplied) {
+              return respond(
+                c,
+                "Discount already applied for this table please remove it first",
+                true,
+                400,
+                {},
+              );
+            }
           }
           const orderAlreadyExist = await PaymentAlert.findOne({
             businessId: kot.businessId,

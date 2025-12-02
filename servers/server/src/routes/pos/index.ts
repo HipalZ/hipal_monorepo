@@ -1070,14 +1070,16 @@ const posRouter = new Hono()
           return respond(c, 'Bill already split you cannot place order', true, 400, {});
         }
 
-        if (tableSession.isDiscountApplied) {
-          return respond(
-            c,
-            "Discount already applied for this table please remove it first",
-            true,
-            400,
-            {},
-          );
+        if (tableSession) {
+          if (tableSession.isDiscountApplied) {
+            return respond(
+              c,
+              "Discount already applied for this table please remove it first",
+              true,
+              400,
+              {},
+            );
+          }
         }
 
         const orderAlreadyExist = await PaymentAlert.findOne({
@@ -2979,6 +2981,22 @@ const posRouter = new Hono()
           return respond(c, 'Table session not found', true, 404, {});
         }
 
+        const serviceCharge = await Tax.findOne({
+          businessId,
+          isActive: true,
+          name: "servicecharge",
+        });
+
+        if (!serviceCharge) {
+          return respond(
+            c,
+            "Service charge not active for this business",
+            true,
+            400,
+            {},
+          );
+        }
+
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
 
         if (originBillIsSplit) {
@@ -3280,10 +3298,10 @@ const posRouter = new Hono()
       }).lean()) as KotOrderTypes[];
 
       const cartItems = kotOrders.flatMap((order) =>
-        order.cart.filter((item) => !item.isDeleted || !item.isOpenItem),
+        order.cart.filter((item) => !item.isDeleted && !item.isOpenItem),
       );
 
-      if (kotOrders.length > 0) {
+      if (cartItems.length > 0) {
         const petpoojaCart = convertToPetpoojaCart(
           cartItems,
           pos.restId,

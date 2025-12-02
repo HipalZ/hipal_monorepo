@@ -1,5 +1,6 @@
 import { useOrderStore } from '@/components/store/useOrderData';
 import { useStaffPermissionStore } from '@/components/store/usePermissions';
+import { useTempItemStore } from '@/components/store/useTempItemStore';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BookmarkX, CookingPot, Plus, UserCheck, Users, X } from 'lucide-react';
 import { memo, useCallback, useMemo, useState } from 'react';
@@ -40,7 +41,8 @@ const MemoFloatingTableActions = ({
   const canAddPax = hasPermission('add_pax');
   const canTransfer = hasPermission('transfer_item_or_table');
   const canDeleteKot = hasPermission('delete_kot');
-
+  const canAddTempItem = hasPermission('temp_item');
+  const setOpenItem = useTempItemStore((s) => s.setOpenItem);
   // helpers
   const toggleModalType = useCallback(
     (type: 'guest' | 'customer') => {
@@ -110,8 +112,21 @@ const MemoFloatingTableActions = ({
       );
     }
 
+    // 🟨 Temp Item — temp_item permission
+    if (canAddTempItem) {
+      actions.push({
+        label: 'Temp Item',
+        icon: <MdTableBar className="h-5 w-5" />,
+        onClick: () => {
+          setOpenItem(true);
+          setOpen(false);
+        },
+        color: 'bg-purple-500 text-white',
+      });
+    }
+
     return actions;
-  }, [canAddPax, canDeleteKot, canTransfer, toggleModalType, handleTransferTable]);
+  }, [canAddPax, canAddTempItem, setOpenItem, canDeleteKot, canTransfer, toggleModalType, handleTransferTable]);
 
   /** Final Actions List */
   const actionsToRender: Action[] = useMemo(
