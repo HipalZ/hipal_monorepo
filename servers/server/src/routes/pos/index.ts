@@ -3700,7 +3700,7 @@ const posRouter = new Hono()
         const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
         if (saveKot.data.success === "0") {
-          return respond(c, "Error in saving kot", true, 400, {});
+          return respond(c, "Error in saving kot", true, 400, { cartItems });
         }
       }
 

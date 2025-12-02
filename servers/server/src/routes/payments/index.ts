@@ -505,8 +505,6 @@ const paymentsRouter = new Hono()
 
         const { totalDishTotal } = calculateBillTotals(kotItems);
 
-        console.log("totalDishTotal", totalDishTotal);
-
         if (totalDishTotal !== tableSession.subTotal) {
           return respond(
             c,
@@ -701,7 +699,7 @@ const paymentsRouter = new Hono()
               { new: true },
             );
 
-            if (kotOrders.length > 0) {
+            if (cartItems.length > 0) {
               const petpoojaCart = convertToPetpoojaCart(
                 cartItems,
                 businessPosConfig.restId,
@@ -815,11 +813,6 @@ const paymentsRouter = new Hono()
           accepted: true,
           businessId,
           isSync: false,
-          cart: {
-            $elemMatch: {
-              isOpenItem: true,
-            },
-          },
         }).lean()) as KotOrderTypes[];
 
         const cartItems = kotOrders.flatMap((order) =>
@@ -895,7 +888,7 @@ const paymentsRouter = new Hono()
           { new: true },
         );
 
-        if (kotOrders.length > 0) {
+        if (cartItems.length > 0) {
           const petpoojaCart = convertToPetpoojaCart(
             cartItems,
             businessPosConfig.restId,
