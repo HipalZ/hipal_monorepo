@@ -3319,6 +3319,22 @@ const posRouter = new Hono()
           return respond(c, "Table session not found", true, 404, {});
         }
 
+        const serviceCharge = await Tax.findOne({
+          businessId,
+          isActive: true,
+          name: "servicecharge",
+        });
+
+        if (!serviceCharge) {
+          return respond(
+            c,
+            "Service charge not active for this business",
+            true,
+            400,
+            {},
+          );
+        }
+
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
 
         if (originBillIsSplit) {

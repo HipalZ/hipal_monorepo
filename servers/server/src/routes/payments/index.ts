@@ -74,11 +74,10 @@ import {
   type MerchantConfig,
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
-import { formatDateToIST } from "../../utils/reportHelper/dateFormater";
-import { respond } from "../../utils/response";
-import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
-import { buildBillsExcelBuffer } from "../../utils/sales";
 import { buildUnifiedDashboardCore } from "../../utils/reportHelper/unifiedSalesDashBoard";
+import { respond } from "../../utils/response";
+import { buildBillsExcelBuffer } from "../../utils/sales";
+import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -626,7 +625,7 @@ const paymentsRouter = new Hono()
             }).lean()) as KotOrderTypes[];
 
             const cartItems = kotOrders.flatMap((order) =>
-              order.cart.filter((item) => !item.isDeleted || !item.isOpenItem),
+              order.cart.filter((item) => !item.isDeleted && !item.isOpenItem),
             );
 
             const unsettleTable = await UnsettleTable.find({
@@ -824,7 +823,7 @@ const paymentsRouter = new Hono()
         }).lean()) as KotOrderTypes[];
 
         const cartItems = kotOrders.flatMap((order) =>
-          order.cart.filter((item) => !item.isDeleted || !item.isOpenItem),
+          order.cart.filter((item) => !item.isDeleted && !item.isOpenItem),
         );
 
         const unsettleTable = await UnsettleTable.find({
@@ -1239,7 +1238,7 @@ const paymentsRouter = new Hono()
             }).lean()) as KotOrderTypes[];
 
             const cartItems = kotOrders.flatMap((order) =>
-              order.cart.filter((item) => !item.isDeleted || !item.isOpenItem),
+              order.cart.filter((item) => !item.isDeleted && !item.isOpenItem),
             );
 
             const unsettleTable = await UnsettleTable.find({
@@ -1445,7 +1444,7 @@ const paymentsRouter = new Hono()
         }).lean()) as KotOrderTypes[];
 
         const cartItems = kotOrders.flatMap((order) =>
-          order.cart.filter((item) => !item.isDeleted || !item.isOpenItem),
+          order.cart.filter((item) => !item.isDeleted && !item.isOpenItem),
         );
 
         const unsettleTable = await UnsettleTable.find({

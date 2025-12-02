@@ -785,6 +785,18 @@ const kotRouter = new Hono()
               {},
             );
           }
+
+          if (tableSession) {
+            if (tableSession.isDiscountApplied) {
+              return respond(
+                c,
+                "Discount already applied for this table please remove it first",
+                true,
+                400,
+                {},
+              );
+            }
+          }
           const orderAlreadyExist = await PaymentAlert.findOne({
             businessId: kot.businessId,
             tableName: kot.tableName,
