@@ -65,6 +65,7 @@ import {
 import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
 import { handleChatbotFlow } from "../../handlers/pos/hipalz/flows";
 import { enqueueWhatsAppJob } from "../../queues/enqueue";
+import { exchangeCodeForToken } from "../../utils/instagram";
 interface AxiosError {
   response?: {
     status?: number;
@@ -1700,7 +1701,6 @@ const whatsappRouter = new Hono()
       );
     },
   )
-
   .get(
     "/wa-webhooks",
 
@@ -1720,7 +1720,6 @@ const whatsappRouter = new Hono()
       });
     },
   )
-
   .post(
     "/wa-webhooks",
 
@@ -1796,6 +1795,143 @@ const whatsappRouter = new Hono()
       return respond(c, "event received", false, 200, {});
     },
   )
+
+  // 1) VERIFY WEBHOOK (GET)
+  .get("/instagram-webhooks", async (c) => {
+    const mode = c.req.query("hub.mode");
+    const token = c.req.query("hub.verify_token");
+    const challenge = c.req.query("hub.challenge");
+
+    console.log("🔍 IG Webhook Verification Request:", {
+      mode,
+      token,
+      challenge,
+    });
+
+    if (mode === "subscribe" && token === "hipalz_ig_token") {
+      return c.text(challenge ?? "", 200);
+    }
+
+    return c.text("Verification failed", 403);
+  })
+
+  // 2) RECEIVE EVENTS (POST)
+  .post("/instagram-webhooks", async (c) => {
+    const body = await c.req.json();
+    console.log("📥 IG Event:", JSON.stringify(body, null, 2));
+
+    const entry = body.entry?.[0];
+    const messaging = entry?.messaging?.[0];
+
+    if (!messaging) {
+      console.log("⚠️ No messaging object found");
+      return c.json({ success: true });
+    }
+
+    const senderId = messaging.sender?.id; // IG USER ID
+    const recipientId = messaging.recipient?.id; // YOUR IG BUSINESS ID
+    const text = messaging.message?.text; // USER TEXT
+
+    console.log("➡️ Incoming IG Message:", text);
+
+    // ===========================
+    //  AUTO REPLY BACK TO USER
+    // ===========================
+
+    const IG_BUSINESS_ID = recipientId; // same as entry id
+    const PAGE_ACCESS_TOKEN =
+      "IGAAJL5qBYXRZABZAFN0bmJoOWVyOUY0SXJXZAnBTbVJoRWZAEWlg5RUx6RUFNSWozZAGM2UWt3VFpSNnJhM1NxamRsYkdyNHhrZAjJwd2Qtcl9rQzh5RnN6VHlVZA2pwdFVWOUpYVl9NSFZAlM1p1cTM3aFA4ZAEdB"; // store in DB/env
+
+    const replyText = `Thanks for approaching us by ${text} us! We appreciate your message and will get back to you shortly.`;
+    console.log("IG_BUSINESS_ID", IG_BUSINESS_ID);
+    console.log("PAGE_ACCESS_TOKEN", PAGE_ACCESS_TOKEN);
+    console.log("senderId", senderId);
+    console.log("replyText", replyText);
+    try {
+      const sendUrl = `https://graph.facebook.com/v21.0/${IG_BUSINESS_ID}/messages`;
+
+      const payload = {
+        recipient: { id: senderId },
+        message: { text: replyText },
+      };
+
+      const resp = await axios.post(sendUrl, payload, {
+        headers: {
+          Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const respJson = await resp.data;
+      console.log("📤 IG Auto-Reply Sent:", respJson);
+    } catch (err) {
+      console.log("❌ Error sending IG reply:", err);
+    }
+
+    return c.json({ success: true });
+  })
+
+  .get("/auth/instagram/callback", async (c) => {
+    const APP_ID = "646403858128150"; // instagram App ID
+    const APP_SECRET = "48d11bfcc7f0993b0bc521833f2a5b98"; // instagram App Secret
+    const REDIRECT_URI =
+      "https://0563dda5e50c.ngrok-free.app/whatsapp/auth/instagram/callback";
+
+    try {
+      // Check if this is a POST request from frontend with code in body
+      const contentType = c.req.header("content-type");
+
+      if (contentType?.includes("application/json")) {
+        const { code } = await c.req.json();
+        console.log("POST request with code:", code);
+        if (!code) {
+          return c.json({ error: "Authorization code is required" }, 400);
+        }
+
+        return await exchangeCodeForToken(
+          c,
+          code,
+          APP_ID,
+          APP_SECRET,
+          REDIRECT_URI,
+        );
+      }
+      // This is the initial callback from Instagram (GET request with code in query params)
+      const code = c.req.query("code");
+
+      if (!code) {
+        return c.json({ error: "No authorization code provided" }, 400);
+      }
+
+      const result = await exchangeCodeForToken(
+        c,
+        code,
+        APP_ID,
+        APP_SECRET,
+        REDIRECT_URI,
+      );
+
+      // Return a simple success page since this is the direct callback from Instagram
+      return c.html(`
+        <!DOCTYPE html>
+        <html>
+          <head><title>Instagram Connected</title></head>
+          <body>
+            <div style="text-align: center; margin-top: 50px;">
+              <h2>Instagram account connected successfully!</h2>
+              <p>You can now close this window and return to the application.</p>
+            </div>
+          </body>
+        </html>
+      `);
+    } catch (error) {
+      console.error("Callback error:", error);
+      return c.json(
+        { error: "Failed to process callback", details: error },
+        500,
+      );
+    }
+  })
 
   .get(
     "/whatsapp_config/:businessId",

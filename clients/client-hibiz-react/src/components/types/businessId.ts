@@ -152,6 +152,12 @@ export const getButtons = (
       description: "Manage your WhatsApp",
       navigateTo: "whatzapp",
     },
+    {
+      image: WhatzappImage,
+      text: "Instagram",
+      description: "Manage your Instagram",
+      navigateTo: "instagram",
+    },
     ...(!isPosEnabled
       ? [
           {
