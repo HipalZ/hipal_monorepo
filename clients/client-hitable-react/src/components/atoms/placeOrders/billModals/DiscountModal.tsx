@@ -403,68 +403,6 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
           </RadioGroup>
         </div>
       </div>
-
-      <div>
-        <Label htmlFor="discount-value">
-          Discount{" "}
-          {discountValueType === "percentage" ? "Percentage" : "Amount"}
-        </Label>
-        <Input
-          id="discount-value"
-          type="number"
-          placeholder={
-            discountValueType === "percentage"
-              ? "Enter percentage (0-100)"
-              : "Enter amount in rupees"
-          }
-          value={discountValue || ""}
-          max={getMaxDiscountValue()}
-          onChange={(e) => {
-            const value = Number(e.target.value);
-            const maxValue = getMaxDiscountValue();
-            setDiscountValue(value > maxValue ? maxValue : value);
-          }}
-        />
-        <p className="mt-1 text-xs text-gray-600">
-          Max:{" "}
-          {discountValueType === "percentage"
-            ? "100%"
-            : `₹${getMaxDiscountValue()}`}
-          {discountValue > 0 && (
-            <>
-              {discountValueType === "percentage"
-                ? ` | Amount: ₹${calculatePreviewAmount().toFixed(2)}`
-                : ` | Equivalent: ${calculateEquivalentPercentage()}%`}
-            </>
-          )}
-        </p>
-
-        {/* 🔹 Quick % buttons */}
-        <div className="mt-2 flex flex-wrap gap-2">
-          {QUICK_PERCENTAGES.map((p) => (
-            <Button
-              key={p}
-              type="button"
-              variant={
-                discountValueType === "percentage" && discountValue === p
-                  ? "default"
-                  : "outline"
-              }
-              size="sm"
-              onClick={() => {
-                setDiscountValueType("percentage");
-                const maxVal = getMaxDiscountValue();
-                const applied = p > maxVal ? maxVal : p;
-                setDiscountValue(applied);
-              }}
-              className="h-7 px-2 text-xs"
-            >
-              {p}%
-            </Button>
-          ))}
-        </div>
-      </div>
-
       {discountType === "ON_DISH" && allItems.length > 0 && (
         <div>
           <Label>Select Items for Discount</Label>
@@ -576,6 +514,66 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
           )}
         </div>
       )}
+      <div>
+        <Label htmlFor="discount-value">
+          Discount{" "}
+          {discountValueType === "percentage" ? "Percentage" : "Amount"}
+        </Label>
+        <Input
+          id="discount-value"
+          type="number"
+          placeholder={
+            discountValueType === "percentage"
+              ? "Enter percentage (0-100)"
+              : "Enter amount in rupees"
+          }
+          value={discountValue || ""}
+          max={getMaxDiscountValue()}
+          onChange={(e) => {
+            const value = Number(e.target.value);
+            const maxValue = getMaxDiscountValue();
+            setDiscountValue(value > maxValue ? maxValue : value);
+          }}
+        />
+        <p className="mt-1 text-xs text-gray-600">
+          Max:{" "}
+          {discountValueType === "percentage"
+            ? "100%"
+            : `₹${getMaxDiscountValue()}`}
+          {discountValue > 0 && (
+            <>
+              {discountValueType === "percentage"
+                ? ` | Amount: ₹${calculatePreviewAmount().toFixed(2)}`
+                : ` | Equivalent: ${calculateEquivalentPercentage()}%`}
+            </>
+          )}
+        </p>
+
+        {/* 🔹 Quick % buttons */}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {QUICK_PERCENTAGES.map((p) => (
+            <Button
+              key={p}
+              type="button"
+              variant={
+                discountValueType === "percentage" && discountValue === p
+                  ? "default"
+                  : "outline"
+              }
+              size="sm"
+              onClick={() => {
+                setDiscountValueType("percentage");
+                const maxVal = getMaxDiscountValue();
+                const applied = p > maxVal ? maxVal : p;
+                setDiscountValue(applied);
+              }}
+              className="h-7 px-2 text-xs"
+            >
+              {p}%
+            </Button>
+          ))}
+        </div>
+      </div>
 
       <div>
         <Label htmlFor="discount-reason">Reason for Discount</Label>
