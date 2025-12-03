@@ -370,7 +370,7 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
   }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-2 p-4">
       <h3 className="text-lg font-semibold">Discount Management</h3>
 
       <div className="grid grid-cols-2 gap-4">
