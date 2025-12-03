@@ -63,6 +63,11 @@ export const kotSchema = z.object({
     .default("IN_PROGRESS")
     .optional(),
   priority: z.boolean().default(false).optional(),
+  kotPrintStatus: z
+    .enum(["FAILED", "IN_PROGRESS", "COMPLETED"])
+    .default("IN_PROGRESS")
+    .optional(),
+  kotPrintRetryCount: z.number().default(0).optional(),
 });
 
 export type KotOrderType = z.infer<typeof kotSchema>;
