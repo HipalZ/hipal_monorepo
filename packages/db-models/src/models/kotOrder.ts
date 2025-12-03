@@ -173,6 +173,15 @@ const KotOrderSchema = new Schema<KotOrderType>(
       type: Boolean,
       default: false,
     },
+    kotPrintStatus: {
+      type: String,
+      enum: ["FAILED", "IN_PROGRESS", "COMPLETED"],
+      default: "IN_PROGRESS",
+    },
+    kotPrintRetryCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

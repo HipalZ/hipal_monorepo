@@ -72,39 +72,39 @@ export const MenuSchema = z
     primaryColor: z.string().min(1).max(7),
     secondaryColor: z.string().min(1).max(7),
     default: z.boolean().optional().default(false),
-    serviceType: z.enum(serviceTypeEnum),
+    // serviceType: z.enum(serviceTypeEnum),
     baseMenuId: ObjectIdSchema.optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.serviceType === "BASE") {
-      // BASE: zoneIds and baseMenuId are not required
-      if (data.zoneIds && data.zoneIds.length > 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "zoneIds are not allowed for BASE service type",
-          path: ["zoneIds"],
-        });
-      }
-      if (data.baseMenuId) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "baseMenuId is not allowed for BASE service type",
-          path: ["baseMenuId"],
-        });
-      }
-    } else if (
-      data.serviceType === "DINE_IN" ||
-      data.serviceType === "TAKE_AWAY"
-    ) {
-      // DINE_IN / TAKE_AWAY: zoneIds required, baseMenuId required
-      if (!data.zoneIds || data.zoneIds.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "zoneIds are required for DINE_IN or TAKE_AWAY service type",
-          path: ["zoneIds"],
-        });
-      }
-    }
+    // if (data.serviceType === "BASE") {
+    //   // BASE: zoneIds and baseMenuId are not required
+    //   if (data.zoneIds && data.zoneIds.length > 0) {
+    //     ctx.addIssue({
+    //       code: z.ZodIssueCode.custom,
+    //       message: "zoneIds are not allowed for BASE service type",
+    //       path: ["zoneIds"],
+    //     });
+    //   }
+    //   if (data.baseMenuId) {
+    //     ctx.addIssue({
+    //       code: z.ZodIssueCode.custom,
+    //       message: "baseMenuId is not allowed for BASE service type",
+    //       path: ["baseMenuId"],
+    //     });
+    //   }
+    // } else if (
+    //   data.serviceType === "DINE_IN" ||
+    //   data.serviceType === "TAKE_AWAY"
+    // ) {
+    //   // DINE_IN / TAKE_AWAY: zoneIds required, baseMenuId required
+    //   if (!data.zoneIds || data.zoneIds.length === 0) {
+    //     ctx.addIssue({
+    //       code: z.ZodIssueCode.custom,
+    //       message: "zoneIds are required for DINE_IN or TAKE_AWAY service type",
+    //       path: ["zoneIds"],
+    //     });
+    //   }
+    // }
   });
 
 export const UpdateMenuSchema = z.object({
