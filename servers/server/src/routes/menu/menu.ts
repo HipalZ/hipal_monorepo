@@ -474,6 +474,32 @@ const menuRouter = new Hono()
       });
     },
   )
+  .get(
+    "/menuByBusiness/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string().min(1).max(36),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const businessId = c.req.param("businessId");
+
+        const menus = await Menu.find({
+          businessId: businessId,
+          isActive: true,
+        }).lean();
+
+        if (menus.length === 0) {
+          return respond(c, "No menus found", true, 404);
+        }
+
+        return respond(c, "Menus fetched successfully", false, 200, menus);
+      });
+    },
+  )
 
   .put("/update_menu", zValidator("json", UpdateMenuSchema), async (c) => {
     //@ts-ignore
