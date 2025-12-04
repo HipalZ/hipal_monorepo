@@ -238,7 +238,7 @@ const printSectionRouter = new Hono()
         err: false,
       });
     }
-    if (kotCountData.kotIdCount < 3) {
+    if (kotCountData.kotIdCount < 2) {
       if (!status) {
         const kotData = await KotOrder.findById(kotId);
 
@@ -264,7 +264,7 @@ const printSectionRouter = new Hono()
             kotPrintStatus: "FAILED",
             kotPrintRetryCount: kotCountData.kotIdCount + 1,
           },
-          { new: true },
+          { new: true, upsert: true },
         );
         sendKOTPrintEvent({
           tableName: kotData?.tableName as string,
