@@ -14,9 +14,11 @@ const MemoizedHeader = lazy(() => import('@/components/molecules/header'));
 const Overview = lazy(() => import('@/components/templates/payment/overview'));
 const PaymentSales = lazy(() => import('@/components/templates/payment/sales'));
 const Dues = lazy(() => import('@/components/templates/payment/dues'));
+const UnifiedSales = lazy(() => import('@/components/templates/payment/UnifiedSales'));
 
 enum PaymentTabs {
   Overview = 'Overview',
+  UnifiedSales = 'Unified Sales',
   Sales = 'Sales',
   Dues = 'Dues',
   Npc = 'Npc',
@@ -30,6 +32,7 @@ const Payments = () => {
 
   const sidebarItems = [
     { text: PaymentTabs.Overview, onClick: () => setSelectedTab(PaymentTabs.Overview) },
+    { text: PaymentTabs.UnifiedSales, onClick: () => setSelectedTab(PaymentTabs.UnifiedSales) },
     { text: PaymentTabs.Sales, onClick: () => setSelectedTab(PaymentTabs.Sales) },
     { text: PaymentTabs.Dues, onClick: () => setSelectedTab(PaymentTabs.Dues) },
     { text: PaymentTabs.Npc, onClick: () => setSelectedTab(PaymentTabs.Npc) },
@@ -77,7 +80,9 @@ const Payments = () => {
 
         <PaymentNavbar items={sidebarItems} selectedNavItem={selectedTab} />
 
-        {selectedTab === PaymentTabs.Overview || selectedTab === PaymentTabs.Sales ? <DateRangePicker /> : null}
+        {selectedTab === PaymentTabs.Overview || selectedTab === PaymentTabs.Sales || selectedTab === PaymentTabs.UnifiedSales ? (
+          <DateRangePicker />
+        ) : null}
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -92,6 +97,7 @@ const Payments = () => {
             {selectedTab === PaymentTabs.Dues && <Dues />}
             {selectedTab === PaymentTabs.Npc && <Npc />}
             {selectedTab === PaymentTabs.Modes && <Modes />}
+            {selectedTab === PaymentTabs.UnifiedSales && <UnifiedSales />}
           </motion.div>
         </AnimatePresence>
       </Suspense>

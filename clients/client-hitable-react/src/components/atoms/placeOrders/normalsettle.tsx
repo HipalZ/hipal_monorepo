@@ -1,22 +1,22 @@
-import { memo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { apiRpc } from "@hi/common";
-import { CreditCard, Banknote, Smartphone } from "lucide-react";
-import CommonBottomButton from "../bottomButton";
-import SpinnerMemo from "@/components/atoms/loadingSpinner";
-import toast from "react-hot-toast";
-import type { Alert, IBillData } from "@/components/types/hiClientzData";
-import { useOrderStore } from "@/components/store/useOrderData";
-import { useHiClientZ } from "@/components/store/useHiClientzData";
-import MultipleModes from "./multipleModes";
-import SingleMode from "./singleMode";
-import { useLiteStore } from "@/components/store/useLiteStore";
-import { useGetAllModes } from "@/components/hooks/useTableData";
-import { useError } from "@/components/store/useError";
-import { SettleConfirmationDialog } from "./SettleConfirmation.tsx";
-import { useConfirmSettle } from "@/components/hooks/api/useSettle.ts";
-import { useGetBill } from "@/components/hooks/useBill.ts";
+import SpinnerMemo from '@/components/atoms/loadingSpinner';
+import { useConfirmSettle } from '@/components/hooks/api/useSettle.ts';
+import { useGetBill } from '@/components/hooks/useBill.ts';
+import { useGetAllModes } from '@/components/hooks/useTableData';
+import { useError } from '@/components/store/useError';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
+import { useLiteStore } from '@/components/store/useLiteStore';
+import { useOrderStore } from '@/components/store/useOrderData';
+import type { Alert, IBillData } from '@/components/types/hiClientzData';
+import { apiRpc } from '@hi/common';
+import { useMutation } from '@tanstack/react-query';
+import { Banknote, CreditCard, Smartphone } from 'lucide-react';
+import { memo, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useNavigate, useParams } from 'react-router-dom';
+import CommonBottomButton from '../bottomButton';
+import MultipleModes from './multipleModes';
+import { SettleConfirmationDialog } from './SettleConfirmation.tsx';
+import SingleMode from './singleMode';
 
 export interface IMode {
   _id: string;
@@ -26,12 +26,12 @@ export interface IMode {
 
 export const ModeIcon = ({ name }: { name: string }) => {
   switch (name.toLowerCase()) {
-    case "cash":
-      return <Banknote className="w-6 h-6" />;
-    case "upi":
-      return <Smartphone className="w-6 h-6" />;
+    case 'cash':
+      return <Banknote className="h-6 w-6" />;
+    case 'upi':
+      return <Smartphone className="h-6 w-6" />;
     default:
-      return <CreditCard className="w-6 h-6" />;
+      return <CreditCard className="h-6 w-6" />;
   }
 };
 
@@ -71,10 +71,7 @@ const MemoNormalSettle = ({
 
   const captainData = useHiClientZ((s) => s.captainData);
 
-  const { isLoading, paymentMode } = useGetAllModes(
-    businessId,
-    captainData?.name,
-  );
+  const { isLoading, paymentMode } = useGetAllModes(businessId, captainData?.name);
 
   const { mutateAsync: settleTable, isPending: isSettling } = useMutation({
     mutationFn: async (payload: {
@@ -95,10 +92,10 @@ const MemoNormalSettle = ({
       });
       if (response.status === 401 || response.status === 403) {
         setOpenErrorModal(true);
-        setError("You are not authorized to perform this action");
+        setError('You are not authorized to perform this action');
         return {
           err: true,
-          message: "You are not authorized to perform this action",
+          message: 'You are not authorized to perform this action',
         };
       }
       const res = await response.json();
@@ -110,7 +107,7 @@ const MemoNormalSettle = ({
         return;
       }
       if (!data?.err) {
-        toast.success("Table settled successfully!");
+        toast.success('Table settled successfully!');
         setSettleModes([]);
         closeNormalSettle();
         setIsSplit(false);
@@ -118,7 +115,7 @@ const MemoNormalSettle = ({
         setSettleModes([]);
         setSaveDueUser(null);
         if (!isBillSplit) {
-          toast.success("Split bill settled successfully!");
+          toast.success('Split bill settled successfully!');
           setOpenOrderModal(false);
           navigate(`/${businessId}/alerts`);
         } else {
@@ -128,7 +125,7 @@ const MemoNormalSettle = ({
       }
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Something went wrong.");
+      toast.error(error?.message || 'Something went wrong.');
     },
   });
 
@@ -140,19 +137,19 @@ const MemoNormalSettle = ({
       settleModes: { _id: string; name: string; amount: number }[];
       duesUserId?: string;
     }) => {
-      const res = await apiRpc.payments[":pid"].order[":alertId"].$put({
+      const res = await apiRpc.payments[':pid'].order[':alertId'].$put({
         param: { alertId: payload.id },
         json: payload,
       });
       if (res.status === 401 || res.status === 403) {
         setOpenErrorModal(true);
-        setError("You are not authorized to perform this action");
+        setError('You are not authorized to perform this action');
         return res.json();
       }
       if (res.status === 200 || res.status === 201) {
         removeOnlineAlert(payload.id);
         removeOnlineCount();
-        toast.success("Order confirmed successfully!");
+        toast.success('Order confirmed successfully!');
         setSettleModes([]);
         setIsSplit(false);
         closeNormalSettle();
@@ -172,72 +169,61 @@ const MemoNormalSettle = ({
       }
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Something went wrong.");
+      toast.error(error?.message || 'Something went wrong.');
     },
   });
 
   const handleConfirm = async (alertData: Alert) => {
     try {
       if (settleModes.length === 0) {
-        toast.error("Please select at least one payment mode.");
+        toast.error('Please select at least one payment mode.');
         return;
       }
       // Validate total
       const sum = settleModes.reduce((acc, item) => acc + item.amount, 0);
-      if (
-        sum !==
-        (alertData?.order_id?.total
-          ? alertData.order_id.total
-          : billData?.total ?? 0)
-      ) {
-        toast.error("Selected amounts must match the total bill.");
+      if (sum !== (alertData?.order_id?.total ? alertData.order_id.total : (billData?.total ?? 0))) {
+        toast.error('Selected amounts must match the total bill.');
         return;
       }
 
       const isMultiple = settleModes.length > 1;
-      const hasDuesMode = settleModes.some(
-        (mode) => mode.name.toLowerCase() === "dues",
-      );
-      const hasNpcMode = settleModes.some(
-        (mode) => mode.name.toLowerCase() === "npc",
-      );
+      const hasDuesMode = settleModes.some((mode) => mode.name.toLowerCase() === 'dues');
+      const hasNpcMode = settleModes.some((mode) => mode.name.toLowerCase() === 'npc');
 
-      if (alertData?.alertType === "OFFLINE") {
+      if (alertData?.alertType === 'OFFLINE') {
         const payload = {
           id: alertData._id,
           waiterName: captainData?.name,
-          comment: isMultiple
-            ? "Confirmed by waiter (split)."
-            : "Confirmed by waiter (single).",
+          comment: isMultiple ? 'Confirmed by waiter (split).' : 'Confirmed by waiter (single).',
           settleModes,
         };
 
         if (hasDuesMode && saveDueUser?._id) {
-          payload["duesUserId"] = saveDueUser._id;
+          payload['duesUserId'] = saveDueUser._id;
         }
         if (hasNpcMode && saveDueUser?._id) {
-          payload["npcUserId"] = saveDueUser?._id;
+          payload['npcUserId'] = saveDueUser?._id;
         }
 
         await confirmAlert(payload);
       } else {
         const payload = {
-          tableId: selectedTable?._id || "",
-          billId: billData?.billId || "",
-          captainId: captainData?._id || "",
+          tableId: selectedTable?._id || '',
+          billId: billData?.billId || '',
+          captainId: captainData?._id || '',
           settleModes,
           split: isMultiple,
         };
 
         // If there's a "dues" mode selected, append the duesUserId
         if (hasDuesMode && saveDueUser?._id) {
-          payload["duesUserId"] = saveDueUser._id;
+          payload['duesUserId'] = saveDueUser._id;
         }
         if (hasNpcMode && saveDueUser?._id) {
-          payload["npcUserId"] = saveDueUser?._id;
+          payload['npcUserId'] = saveDueUser?._id;
         }
         if (billData?.variantId) {
-          payload["variantId"] = billData?.variantId;
+          payload['variantId'] = billData?.variantId;
         }
 
         // Call the API
@@ -245,13 +231,13 @@ const MemoNormalSettle = ({
       }
     } catch (err) {
       console.error(err);
-      toast.error("Something went wrong. Please try again.");
+      toast.error('Something went wrong. Please try again.');
     }
   };
 
   const openNormalSettle = () => {
     if (billData?.isPaid) {
-      return toast.error("This bill is already settled.");
+      return toast.error('This bill is already settled.');
     }
     setShowConfirmDialog(true);
   };
@@ -259,13 +245,13 @@ const MemoNormalSettle = ({
   const handleConfirmSettle = async () => {
     setShowConfirmDialog(false);
 
-    if (alertData?.alertType === "OFFLINE") {
+    if (alertData?.alertType === 'OFFLINE') {
       await handleConfirm(alertData);
       return;
     }
     const response = await confirmSettle({
-      businessId: businessId || "",
-      tableName: selectedTable?.name || "",
+      businessId: businessId || '',
+      tableName: selectedTable?.name || '',
     });
 
     if (response.status === 200 || response.status === 201) {
@@ -273,34 +259,27 @@ const MemoNormalSettle = ({
     }
   };
 
+  const filteredPaymentModes = useMemo(() => {
+    const mode = paymentMode?.filter((pm) => pm?.name?.toLowerCase() !== 'complementary');
+    return mode;
+  }, [paymentMode]);
+
   if (isLoading) {
     return <SpinnerMemo />;
   }
 
   return (
     <section className="mx-auto">
-      <h2 className="flex items-center justify-between p-4 mb-2 text-2xl font-bold text-center">
-        <span>{isSplit ? "Split Payment" : "Select Payment Mode"}</span>
-        <span>
-          ₹
-          {alertData?.order_id?.total
-            ? alertData.order_id.total
-            : billData?.total}
-        </span>
+      <h2 className="mb-2 flex items-center justify-between p-4 text-center text-2xl font-bold">
+        <span>{isSplit ? 'Split Payment' : 'Select Payment Mode'}</span>
+        <span>₹{alertData?.order_id?.total ? alertData.order_id.total : billData?.total}</span>
       </h2>
 
       {/* =======================
           SINGLE MODE UI
       ======================== */}
       {!isSplit && (
-        <SingleMode
-          paymentModes={paymentMode || []}
-          billData={
-            alertData?.order_id?.total
-              ? { total: Number(alertData.order_id.total) }
-              : billData
-          }
-        />
+        <SingleMode paymentModes={paymentMode || []} billData={alertData?.order_id?.total ? { total: Number(alertData.order_id.total) } : billData} />
       )}
 
       {/* =======================
@@ -308,12 +287,8 @@ const MemoNormalSettle = ({
       ======================== */}
       {isSplit && (
         <MultipleModes
-          paymentModes={paymentMode || []}
-          billData={
-            alertData?.order_id?.total
-              ? { total: Number(alertData.order_id.total) }
-              : billData
-          }
+          paymentModes={filteredPaymentModes || []}
+          billData={alertData?.order_id?.total ? { total: Number(alertData.order_id.total) } : billData}
         />
       )}
 
@@ -326,7 +301,7 @@ const MemoNormalSettle = ({
           maxWidth="30rem"
           buttons={[
             {
-              text: "Back",
+              text: 'Back',
               onClick: () => {
                 if (isSplit) {
                   setIsSplit(false);
@@ -334,20 +309,20 @@ const MemoNormalSettle = ({
                   closeNormalSettle();
                 }
               },
-              className: " rounded-md pl-3 !w-[8rem]",
+              className: ' rounded-md pl-3 !w-[8rem]',
               isBackButton: true,
             },
             {
-              text: isSplit ? "Normal" : "Split",
+              text: isSplit ? 'Normal' : 'Split',
               onClick: () => {
                 setIsSplit(!isSplit);
               },
-              className: "w-full rounded-md pl-3",
+              className: 'w-full rounded-md pl-3',
             },
             {
-              text: "Confirm",
+              text: 'Confirm',
               onClick: openNormalSettle,
-              className: "w-full rounded-md",
+              className: 'w-full rounded-md',
               disable: settleModes.length === 0,
               isLoading: isSettling || isAlertLoading || isConfirming,
             },
@@ -359,19 +334,19 @@ const MemoNormalSettle = ({
           maxWidth="30rem"
           buttons={[
             {
-              text: "Back",
+              text: 'Back',
               onClick: () => {
                 setOpenDues(false);
                 setSettleModes([]);
                 setSaveDueUser(null);
               },
-              className: "w-full rounded-md pl-3 ",
+              className: 'w-full rounded-md pl-3 ',
               isBackButton: true,
             },
             {
-              text: "Confirm",
+              text: 'Confirm',
               onClick: openNormalSettle,
-              className: "w-full rounded-md",
+              className: 'w-full rounded-md',
               disable: settleModes.length === 0,
               isLoading: isSettling || isAlertLoading || isConfirming,
             },

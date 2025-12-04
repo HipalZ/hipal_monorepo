@@ -56,6 +56,7 @@ const MemoSubtypes = () => {
       onClick: () => setShowCategoryModal(true),
       color: 'bg-purple-500 text-white',
     },
+
   ];
 
   return (

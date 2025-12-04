@@ -1,4 +1,5 @@
 import NoData from '@/assets/nodata.jpg';
+import AdvancedBottomButton from '@/components/atom/bottomButton/advancedBottomButton';
 import LoadingSpinner from '@/components/atom/loadingSpinner';
 import Pagination from '@/components/atom/pagination';
 import PopUp from '@/components/atom/popUp';
@@ -46,9 +47,7 @@ const MemoPaymentSales = () => {
   const [currentSalesIndex, setCurrentSalesIndex] = useState(0);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
 
-  const { pageNumber } = usePaginationStore((s) => ({
-    pageNumber: s.pageNumber,
-  }));
+  const pageNumber = usePaginationStore((s) => s.pageNumber);
 
   const { handleEnvelope } = useApiErrorHandler();
 
@@ -182,7 +181,6 @@ const MemoPaymentSales = () => {
         <LoadingSpinner />
       ) : (
         <>
-          {/* Top controls row */}
           <section className="mt-4 flex w-full max-w-[30rem] gap-2 overflow-x-auto px-4 md:max-w-full">
             <Button variant={viewMode === 'grid' ? 'secondary' : 'outline'} size="icon" onClick={() => setViewMode('grid')} className="shrink-0">
               <LayoutGrid className="h-4 w-4" />
@@ -190,21 +188,20 @@ const MemoPaymentSales = () => {
             <Button variant={viewMode === 'table' ? 'secondary' : 'outline'} size="icon" onClick={() => setViewMode('table')} className="shrink-0">
               <Table className="h-4 w-4" />
             </Button>
-            <Button variant="default" size="icon" onClick={() => setDownloadCsv(true)} className="shrink-2 w-[5rem] bg-blue-500 px-4">
+            <Button variant="default" size="icon" onClick={() => setDownloadCsv(true)} className="shrink-2 w-[5rem] bg-purple-500 px-4">
               <Download />
               Sales
             </Button>
 
-            {/* 🔍 Search Bill button */}
             <Button variant="outline" onClick={() => setIsSearchOpen(true)} className="shrink-0">
               <Search className="h-4 w-4" />
               Bill
             </Button>
 
-            {/* 🔄 Refresh button — only when search is active */}
             {isSearchActive && (
-              <Button variant="outline" size="icon" onClick={handleRefresh} className="shrink-0">
+              <Button variant="destructive" size="icon" onClick={handleRefresh} className="w-[5rem] shrink-0">
                 <RefreshCw className="h-4 w-4" />
+                Clear
               </Button>
             )}
 
@@ -228,7 +225,6 @@ const MemoPaymentSales = () => {
             )}
           </section>
 
-          {/* Grid / Table view */}
           <section className="mx-4 mt-4 pb-[5rem]">
             {historyData.length > 0 ? (
               viewMode === 'grid' ? (
@@ -252,7 +248,6 @@ const MemoPaymentSales = () => {
 
       <Pagination dataLength={historyData?.length || 1} />
 
-      {/* Payment details modal */}
       {open && (
         <PopUp height="h-[100dvh] lg:h-[80dvh]" hide width="w-full max-w-[48rem]" onClose={closeModel} show={open} rightTopBack>
           <MemoizedPaymentModal
@@ -275,8 +270,8 @@ const MemoPaymentSales = () => {
       {/* CSV Download modal */}
       {downloadCsv && (
         <PopUp
-          height="h-[40rem] lg:h-[35rem]"
-          width="w-[30rem] lg:w-[40rem]"
+          height="h-[100dvh] lg:h-[80dvh]"
+          width="w-full lg:w-[64rem]"
           onClose={() => setDownloadCsv(false)}
           show={downloadCsv}
           rightTopBack
@@ -288,8 +283,8 @@ const MemoPaymentSales = () => {
 
       {isSearchOpen && (
         <PopUp
-          height="h-[100dvh] md:h-[60dvh]"
-          width="w-[28rem] md:w-[32rem]"
+          height="h-[100dvh] md:h-[80dvh]"
+          width="w-[28rem] md:w-[34rem]"
           onClose={() => setIsSearchOpen(false)}
           show={isSearchOpen}
           rightTopBack
@@ -326,16 +321,25 @@ const MemoPaymentSales = () => {
                 <Input id="totalAmount" type="number" value={searchTotal} onChange={(e) => setSearchTotal(e.target.value)} placeholder="e.g. 1249" />
               </div>
             </div>
-
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="outline" onClick={clearSearchFields}>
-                Clear
-              </Button>
-              <Button onClick={() => searchBills()} disabled={isSearching}>
-                {isSearching ? 'Searching…' : 'Search'}
-              </Button>
-            </div>
           </section>
+          <AdvancedBottomButton
+            fixed={true}
+            maxWidth="28rem"
+            buttons={[
+              {
+                text: '',
+                isBackButton: true,
+                onClick: () => setIsSearchOpen(false),
+                className: 'rounded-md pl-3 w-full',
+              },
+              {
+                text: 'Search',
+                onClick: () => searchBills(),
+                className: 'rounded-md w-full',
+                disable: isSearching,
+              },
+            ]}
+          />
         </PopUp>
       )}
     </main>

@@ -95,6 +95,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
       alertId: alertId,
       cart: localCart,
     });
+    setShowOrderDetails(null);
   };
 
   const cancelChanges = () => {

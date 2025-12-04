@@ -20,7 +20,7 @@ const PopupBulkUpload = (props: Props) => {
   const { mutate: executeBulkUploadContacts, isPending } = useUploadCustomers();
 
   const { showConfirmPopup, setShowConfirmPopup, uploadPreview } = props;
-  const handleConfirmUpload = () => {
+  const handleConfirmUpload = async () => {
     if (!uploadPreview.length) return;
     const payload: Payload = {
       businessId,
@@ -33,7 +33,7 @@ const PopupBulkUpload = (props: Props) => {
         };
       }),
     };
-    executeBulkUploadContacts(payload);
+    await executeBulkUploadContacts(payload);
     setShowConfirmPopup(false);
   };
 

@@ -5,11 +5,10 @@ import useWhatsapp, { Step, TemplateSteps, TemplateType } from '@/components/sto
 import { Tabs, useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
 import { useFetchTemplates } from '@/hooks/useTemplates';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, MessageCircle, Workflow } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import { lazy, memo, useCallback, useState } from 'react';
 import { HiOutlineTemplate } from 'react-icons/hi';
 import { MdCampaign } from 'react-icons/md';
-import { TbSettingsAutomation } from 'react-icons/tb';
 
 const ChatbotDashboard = lazy(() => import('./chatbotDashboard'));
 const WhatsappChatbotSettings = lazy(() => import('./whatsappchatbotsettings'));

@@ -15,6 +15,7 @@ import { memo, useMemo } from 'react';
 import { BarChart } from './BarChart';
 import { InfoCard } from './InfoCard';
 import { PieChart } from './PieCharts';
+import {useIsTodayBillRange}  from '@/hooks/useIsTodayBillRange';
 
 const Overview = () => {
   const business = useBusinessData((s) => s.businessData);
@@ -22,14 +23,8 @@ const Overview = () => {
   const handleEnvelope = useApiErrorHandler().handleEnvelope;
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
-  const isToday = (timestamp: string | number | Date) => {
-    const date = new Date(timestamp);
-    const today = new Date();
 
-    return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
-  };
-
-  const shouldShowCard = isToday(timeStampStart) && isToday(timeStampEnd);
+  const isTodayRange = useIsTodayBillRange(timeStampStart, timeStampEnd);
 
   const handleHistoryData = async (): Promise<SalesData> => {
     const res = await apiRpc.payments[':id'].salesDashboard.$get({
@@ -259,7 +254,7 @@ const Overview = () => {
           breakdown={totalSalesBreakdown}
         />
 
-        {shouldShowCard && (
+        {isTodayRange && (
           <InfoCard
             title="Running Tables"
             value={salesData.totalActiveTableValue}
@@ -267,7 +262,7 @@ const Overview = () => {
             gradient="from-blue-600 to-blue-200"
             breakdown={runningTablesBreakdown}
           />
-        )}
+        )} 
       </div>
       {open && <TableKotPopUp />}
 

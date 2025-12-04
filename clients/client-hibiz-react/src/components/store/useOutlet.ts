@@ -4,36 +4,56 @@ export interface OutletFormState {
   formData: {
     placeId: string;
     placeUrl: string;
-    billingStartTime: string;
-    billingEndTime: string;
+
+    // UI time fields
+    endTime: string; // closing time (user selects)
+    extendEndTime: string; // extended closing time (user selects)
+
+    // Other outlet fields
     brandName: string;
     branchName: string;
     url: string;
+
+    // Backend numeric time fields (HHmm)
+    startBillTime: number; // auto: 1 min after closing
+    endBillTime: number; // closing time numeric
+    extendBillTime: number; // extended closing numeric
+
     _id?: string;
   };
   setEntireFormData: (data: Partial<OutletFormState["formData"]>) => void;
-  setFormData: (key: keyof OutletFormState["formData"], value: string) => void;
+  setFormData: (
+    key: keyof OutletFormState["formData"],
+    value: string | number,
+  ) => void;
 }
 
 export const useOutletFormStore = create<OutletFormState>((set) => ({
   formData: {
-    billingStartTime: "",
-    billingEndTime: "",
+    placeId: "",
+    placeUrl: "",
+
+    endTime: "",
+    extendEndTime: "",
+
     brandName: "",
     branchName: "",
     url: "",
+
+    startBillTime: 0,
+    endBillTime: 0,
+    extendBillTime: 0,
+
     _id: "",
-    placeId: "",
-    placeUrl: "",
   },
-  setFormData: (key: keyof OutletFormState["formData"], value: string) =>
+  setFormData: (key, value) =>
     set((state) => ({
       formData: {
         ...state.formData,
         [key]: value,
       },
     })),
-  setEntireFormData: (data: Partial<OutletFormState["formData"]>) =>
+  setEntireFormData: (data) =>
     set((state) => ({
       formData: {
         ...state.formData,
@@ -41,6 +61,8 @@ export const useOutletFormStore = create<OutletFormState>((set) => ({
       },
     })),
 }));
+
+// ---------------- Business form (unchanged) ----------------
 
 export interface BusinessFormState {
   businessFormData: {

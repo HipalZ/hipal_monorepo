@@ -1,3 +1,4 @@
+import TipsModal from '@/components/atoms/placeOrders/billModals/TipsModal.tsx';
 import { useOrderStore } from '@/components/store/useOrderData.ts';
 import { useStaffPermissionStore } from '@/components/store/usePermissions.ts';
 import type { IBillData } from '@/components/types/hiClientzData.ts';
@@ -181,6 +182,7 @@ const MemoBillOptions = ({ data }: BillOptionsProps) => {
       {activeModal === 'discount' && <DiscountModal data={data} onClose={closeModal} />}
       {activeModal === 'serviceCharge' && <ServiceChargeModal data={data} onClose={closeModal} />}
       {activeModal === 'split' && <SplitBillModal data={data} onClose={closeModal} />}
+      {activeModal === 'tips' && <TipsModal data={data} onClose={closeModal} />}
 
       {/* Password Modal */}
       <PasswordModal isOpen={isModalOpen} onVerify={handlePasswordVerify} onClose={handleModalClose} />

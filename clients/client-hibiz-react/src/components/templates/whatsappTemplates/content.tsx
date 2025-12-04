@@ -73,7 +73,7 @@ const MemoContent = () => {
   }, [outLetType, setVariableOptions]);
 
   return (
-    <section className="mx-auto mb-4 w-full max-w-2xl rounded-lg bg-white p-3 shadow-md">
+    <section className="mx-auto mb-4 w-full rounded-lg border bg-white p-3 shadow-md">
       <div className="mb-4">
         <label htmlFor="templateName" className="mb-2 block font-bold">
           Template Name <span className="text-red-500">*</span>
@@ -153,13 +153,13 @@ const MemoContent = () => {
         <div className="relative">
           <textarea
             id="bodyText"
-            rows={5}
+            rows={8}
             minLength={24}
             maxLength={1028}
             placeholder="Write your message content here"
             value={bodyText}
             onChange={handleBodyTextChange}
-            className="w-full resize-none rounded-md border border-gray-300 px-3 py-2"
+            className="w-full rounded-md border border-gray-300 px-3 py-2"
           />
           <small className="absolute bottom-2 right-3 text-gray-500">{bodyText?.length || 0}/1028</small>
         </div>

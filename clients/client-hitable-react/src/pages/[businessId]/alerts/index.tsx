@@ -7,6 +7,7 @@ import { useStaffPermissionStore } from '@/components/store/usePermissions';
 import { useZonesAndTablesStore } from '@/components/store/useZonesAndTable';
 import { NavItemTypesEnum } from '@/components/types/hiClientzData';
 import { useStaffPermissions } from '@/hooks/useCheckPermission';
+import { useGetAllMenuByBusinessId } from '@/hooks/useGetAllMenuByBusinessId';
 import { useScreenSize } from '@/hooks/useScreenSize';
 import { Suspense, lazy, memo, useCallback, useState } from 'react';
 
@@ -26,24 +27,24 @@ const EmptyTableList = lazy(() => import('@/components/tables'));
 const CallCaptanMainComp = lazy(() => import('@/components/liteAlerts/callWaiter'));
 const AlertsMemo = () => {
   const { selectedNavItem } = useLiteStore();
+  const businessId = useBusinessData((s) => s?.outletInfo?.businessId);
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setIsFilterOpen = useZonesAndTablesStore((s) => s.setIsFilterOpen);
   const isFilterOpen = useZonesAndTablesStore((s) => s.isFilterOpen);
+  useGetAllMenuByBusinessId(businessId || "" , selectedNavItem === NavItemTypesEnum.TABLES);
 
   const captainData = useHiClientZ((s) => s.captainData);
-  const businessId = useBusinessData((s) => s?.outletInfo?.businessId);
-
   const { isLoading: isStaffLoading } = useStaffPermissions(captainData?._id, businessId);
   const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
-
+  
   const [openTable, setOpenTable] = useState<boolean>(false);
   const payFilter = useFilters((s) => s.payFilter);
   const screenSize = useScreenSize();
-
+  
   const toggleEmptyTableModal = useCallback(() => {
     setOpenTable(!openTable);
   }, [setOpenTable, openTable]);
-
+  
   return (
     <main className="relative min-h-screen bg-gray-100 pb-[5rem]">
       <Suspense fallback={<SpinnerMemo />}>

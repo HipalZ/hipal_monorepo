@@ -23,7 +23,6 @@ interface InfoCardProps {
 
 export const InfoCard = ({ title, value, icon, gradient, breakdown }: InfoCardProps) => {
   const setOpen = useKotStore((state) => state.setOpen);
-  console.log('breakdown', breakdown);
   const setSelectedTableId = useKotStore((state) => state.setSelectedTableId);
   const { mutateAsync } = useTablesKotMutation();
   const getAllTableIds = useMemo(() => {

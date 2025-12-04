@@ -49,8 +49,10 @@ const KotItemSchema = new Schema<KotOrderItemType>({
     type: Boolean,
     default: false,
   },
+
   cookedBy: { type: String, default: "" },
   deliveredBy: { type: String, default: "" },
+  isOpenItem: { type: Boolean, default: false },
 });
 
 // Main Cart Schema
@@ -170,6 +172,15 @@ const KotOrderSchema = new Schema<KotOrderType>(
     priority: {
       type: Boolean,
       default: false,
+    },
+    kotPrintStatus: {
+      type: String,
+      enum: ["FAILED", "IN_PROGRESS", "COMPLETED"],
+      default: "IN_PROGRESS",
+    },
+    kotPrintRetryCount: {
+      type: Number,
+      default: 0,
     },
   },
   {

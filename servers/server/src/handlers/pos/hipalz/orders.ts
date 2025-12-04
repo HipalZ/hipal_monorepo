@@ -710,6 +710,8 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                         paxCount: tableSession?.paxCount || 0,
                         serviceChargePercentage:
                           tableSession?.serviceChargePercentage || 0,
+                        roundOffType: tableSession?.roundOffType || 0,
+                        roundOffAmount: tableSession?.roundOffAmount || 0,
                       },
                     ],
                     { session },
@@ -935,6 +937,8 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                           paxCount: tableSession?.paxCount || 0,
                           serviceChargePercentage:
                             tableSession?.serviceChargePercentage || 0,
+                          roundOffType: tableSession?.roundOffType || 0,
+                          roundOffAmount: tableSession?.roundOffAmount || 0,
                         },
                       ],
                       { session },
@@ -1212,7 +1216,10 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                   billItems: tableSession?.items || [],
                   billInvoice: tableSession?.billInvoice || 0,
                   paxCount: tableSession?.paxCount || 0,
-                     serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+                  serviceChargePercentage:
+                    tableSession?.serviceChargePercentage || 0,
+                  roundOffType: tableSession?.roundOffType || 0,
+                  roundOffAmount: tableSession?.roundOffAmount || 0,
                 },
               ],
               { session },
@@ -1454,7 +1461,9 @@ async function hipalzPosNormalSettleHandler(payload: {
                 userId:
                   paymentMode?.name === "npc"
                     ? npcUser?.userId
-                    : splitTableSessionData?.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
+                    : splitTableSessionData?.billingUserId ||
+                      splitTableSessionData?.customerIds?.[0] ||
+                      captainId,
                 claimedCoins: splitTableSessionData?.claimedCoins || 0,
                 tableName: table?.name,
                 tips: splitTableSessionData?.tips || 0,
@@ -1514,7 +1523,10 @@ async function hipalzPosNormalSettleHandler(payload: {
                 isSplitBillVariant: true,
                 billInvoice: splitTableSessionData?.billInvoice,
                 paxCount: tableSession?.paxCount || 0,
-                   serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+                serviceChargePercentage:
+                  tableSession?.serviceChargePercentage || 0,
+                roundOffType: splitTableSessionData?.roundOffType || 0,
+                roundOffAmount: splitTableSessionData?.roundOffAmount || 0,
               },
             ],
             { session },
@@ -1566,29 +1578,6 @@ async function hipalzPosNormalSettleHandler(payload: {
               businessId: table?.businessId,
             },
             { isAccepted: true, isRejected: true },
-            { session },
-          );
-          await PaymentAlert.create(
-            [
-              {
-                businessId: saveOrder[0]?.businessId,
-                alertType: "NORMAL_SETTLE",
-                payment_id: createPayment[0]._id,
-                coinsApplied: !!(
-                  splitTableSessionData?.claimedCoins &&
-                  splitTableSessionData?.claimedCoins > 0
-                ),
-                status: "SUCCESS",
-                order_id: saveOrder[0]?._id,
-                message: `Paid ${saveOrder[0]?.total}`,
-                tableName: saveOrder[0]?.tableName,
-                isAccepted: false,
-                userId: saveOrder[0]?.userId,
-                posDiscount: 0,
-                date: Date.now(),
-                mode: paymentMode?.name,
-              },
-            ],
             { session },
           );
 
@@ -1654,7 +1643,9 @@ async function hipalzPosNormalSettleHandler(payload: {
                 userId:
                   paymentMode?.name === "npc"
                     ? npcUser?.userId
-                    : splitTableSessionData?.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
+                    : splitTableSessionData?.billingUserId ||
+                      splitTableSessionData?.customerIds?.[0] ||
+                      captainId,
                 claimedCoins: splitTableSessionData?.claimedCoins || 0,
                 tableName: table?.name,
                 tips: splitTableSessionData?.tips || 0,
@@ -1714,7 +1705,10 @@ async function hipalzPosNormalSettleHandler(payload: {
                 isSplitBillVariant: true,
                 billInvoice: splitTableSessionData?.billInvoice,
                 paxCount: tableSession?.paxCount || 0,
-                   serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+                serviceChargePercentage:
+                  tableSession?.serviceChargePercentage || 0,
+                roundOffType: splitTableSessionData?.roundOffType || 0,
+                roundOffAmount: splitTableSessionData?.roundOffAmount || 0,
               },
             ],
             { session },
@@ -1766,29 +1760,6 @@ async function hipalzPosNormalSettleHandler(payload: {
               businessId: table?.businessId,
             },
             { isAccepted: true, isRejected: true },
-            { session },
-          );
-          await PaymentAlert.create(
-            [
-              {
-                businessId: saveOrder[0]?.businessId,
-                alertType: "NORMAL_SETTLE",
-                payment_id: createPayment[0]._id,
-                coinsApplied: !!(
-                  splitTableSessionData?.claimedCoins &&
-                  splitTableSessionData?.claimedCoins > 0
-                ),
-                status: "SUCCESS",
-                order_id: saveOrder[0]?._id,
-                message: `Paid ${saveOrder[0]?.total}`,
-                tableName: saveOrder[0]?.tableName,
-                isAccepted: false,
-                userId: saveOrder[0]?.userId,
-                posDiscount: 0,
-                date: Date.now(),
-                mode: paymentMode?.name,
-              },
-            ],
             { session },
           );
 
@@ -1925,7 +1896,9 @@ async function hipalzPosNormalSettleHandler(payload: {
             userId:
               paymentMode?.name === "npc"
                 ? npcUser?.userId
-                : tableSession?.billingUserId || tableSession?.customerIds?.[0] || captainId,
+                : tableSession?.billingUserId ||
+                  tableSession?.customerIds?.[0] ||
+                  captainId,
             claimedCoins: tableSession?.claimedCoins || 0,
             tableName: table?.name,
             tips: tableSession?.tips || 0,
@@ -1986,7 +1959,9 @@ async function hipalzPosNormalSettleHandler(payload: {
             pin: tableSession?.pin,
             billInvoice: tableSession?.billInvoice || 0,
             paxCount: tableSession?.paxCount || 0,
-               serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+            serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
+            roundOffType: tableSession?.roundOffType || 0,
+            roundOffAmount: tableSession?.roundOffAmount || 0,
           },
         ],
         { session },
@@ -2073,28 +2048,6 @@ async function hipalzPosNormalSettleHandler(payload: {
           businessId: table?.businessId,
         },
         { isAccepted: true, isRejected: true },
-        { session },
-      );
-      await PaymentAlert.create(
-        [
-          {
-            businessId: saveOrder[0]?.businessId,
-            alertType: "NORMAL_SETTLE",
-            payment_id: createPayment[0]._id,
-            coinsApplied: !!(
-              tableSession?.claimedCoins && tableSession?.claimedCoins > 0
-            ),
-            status: "SUCCESS",
-            order_id: saveOrder[0]?._id,
-            message: `Paid ${saveOrder[0]?.total}`,
-            tableName: saveOrder[0]?.tableName,
-            isAccepted: false,
-            userId: saveOrder[0]?.userId,
-            posDiscount: 0,
-            date: Date.now(),
-            mode: paymentMode?.name,
-          },
-        ],
         { session },
       );
 

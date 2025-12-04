@@ -253,6 +253,16 @@ const splitBillTableSessionSchema =
       default: null,
       ref: "User",
     },
+    roundOffType: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    roundOffAmount: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   });
 
 splitBillTableSessionSchema.index(

@@ -40,6 +40,51 @@ export const e164 = (p?: string | null, defaultCC = '91') => {
   return `+${defaultCC}${t}`;
 };
 
+const buildButton = ({
+  actionType,
+  text,
+  url,
+  phone,
+  flowId,
+}: {
+  actionType: ActionType;
+  text?: string | null;
+  url?: string | null;
+  phone?: string | null;
+  flowId?: string | null;
+}) => {
+  const label = cap(text, 25);
+
+  switch (actionType) {
+    case ActionType.VisitWebsite: {
+      const finalUrl = httpsUrl(url);
+      if (label && finalUrl) return { type: 'URL', text: label, url: finalUrl };
+      break;
+    }
+
+    case ActionType.MarketingOptOut: {
+      if (label) return { type: 'QUICK_REPLY', text: label };
+      break;
+    }
+
+    case ActionType.Flow: {
+      if (label && flowId) return { type: 'FLOW', text: label, flow_id: flowId };
+      break;
+    }
+
+    case ActionType.CallUs: {
+      const phone_number = e164(phone);
+      if (label && phone_number) return { type: 'PHONE_NUMBER', text: label, phone_number };
+      break;
+    }
+
+    default:
+      return null;
+  }
+
+  return null;
+};
+
 const MemoTemplateTerms = () => {
   const { businessId, businessName } = useBusinessData((s) => ({
     businessId: s.businessData?._id,
@@ -55,8 +100,11 @@ const MemoTemplateTerms = () => {
   const variables = useWhatsapp((s) => s.bodyVariables);
   const websiteUrl = useWhatsapp((s) => s.websiteUrl);
   const buttonText = useWhatsapp((s) => s.buttonText);
-  const actionType = useWhatsapp((s) => s.actionType);
+  const firstActionType = useWhatsapp((s) => s.firstActionType);
+  const secondActionType = useWhatsapp((s) => s.secondActionType);
   const phoneNumber = useWhatsapp((s) => s.phoneNumber);
+  const secondWebsiteUrl = useWhatsapp((s) => s.secondWebsiteUrl);
+  const secondPhoneNumber = useWhatsapp((s) => s.secondPhoneNumber);
   const bodyVariableSequence = useWhatsapp((s) => s.bodyVariableSequence);
   const templateId = useWhatsapp((s) => s.templateId);
   const setShowSuccessPopup = useWhatsapp((s) => s.setShowSuccessPopup);
@@ -71,27 +119,18 @@ const MemoTemplateTerms = () => {
   const { uploadMedia } = useMediaUpload();
 
   const handleConfirmPopUp = useCallback(async () => {
-    // Step 1: Upload media if required
     setIsLoading(true);
     let whatsappImageHandler = imagePreview || '';
-    let storageImageUrl = '';
 
     if (
       (headerType === HeaderInterface.Image ||
         headerType === HeaderInterface.Video ||
         headerType === HeaderInterface.Document ||
         headerType === HeaderInterface.Audio) &&
-      imagePreview.length > 0 &&
-      imagePreview.includes('data:')
+      imagePreview.length > 0
     ) {
-      // Upload file to storage (Spaces, S3, etc.)
-      const { url, handle } = await uploadMedia();
-
-      // Meta media handle (used for WhatsApp template)
+      const { handle } = await uploadMedia();
       whatsappImageHandler = handle;
-
-      // Public file URL (stored in our DB / analytics)
-      storageImageUrl = url;
     }
 
     const components: any[] = [];
@@ -146,39 +185,27 @@ const MemoTemplateTerms = () => {
     if (footer) components.push({ type: 'FOOTER', text: footer });
     // BUTTONS (optional)
     const buttons: any[] = [];
-    switch (actionType) {
-      case ActionType.VisitWebsite: {
-        const text = cap(buttonText, 25);
-        const url = httpsUrl(websiteUrl);
-        if (text && url) buttons.push({ type: 'URL', text, url });
-        break;
-      }
-      case ActionType.MarketingOptOut: {
-        // QUICK_REPLY supports only "text"
-        const text = cap(secondButtonText || 'Stop', 25);
-        if (text) buttons.push({ type: 'QUICK_REPLY', text });
-        break;
-      }
-      case ActionType.Flow: {
-        const text = cap(buttonText || 'Continue', 25);
-        const flow_id = flow?.id;
-        if (text && flow_id) buttons.push({ type: 'FLOW', text, flow_id });
-        break;
-      }
-      case ActionType.CallUs: {
-        const text = cap(buttonText, 25);
-        const phone_number = e164(phoneNumber);
-        if (text && phone_number)
-          buttons.push({
-            type: 'PHONE_NUMBER',
-            text,
-            phone_number,
-          });
-        break;
-      }
-      default:
-        break;
-    }
+
+    const firstButton = buildButton({
+      actionType: firstActionType,
+      text: buttonText,
+      url: websiteUrl,
+      phone: phoneNumber,
+      flowId: flow?.id,
+    });
+
+    if (firstButton) buttons.push(firstButton);
+
+    const secondButton = buildButton({
+      actionType: secondActionType,
+      text: secondButtonText,
+      url: secondWebsiteUrl,
+      phone: secondPhoneNumber,
+      flowId: flow?.id,
+    });
+
+    if (secondButton) buttons.push(secondButton);
+
     if (buttons.length > 0) components.push({ type: 'BUTTONS', buttons });
 
     // FINAL payload
@@ -189,11 +216,9 @@ const MemoTemplateTerms = () => {
       ...(templateId?.length ? { templateId } : {}),
       category: templateType,
       components,
-      ...(storageImageUrl ? { imageUrl: storageImageUrl } : {}),
+      ...(imagePreview ? { imageUrl: imagePreview } : {}),
       ...(Array.isArray(bodyVariableSequence) ? { bodyVariableSequence } : {}),
     };
-
-    console.log('payload', payload);
     if (templateId?.length > 0) {
       await editTemplate(payload);
     } else {
@@ -213,7 +238,6 @@ const MemoTemplateTerms = () => {
     variables,
     websiteUrl,
     buttonText,
-    actionType,
     phoneNumber,
     templateId,
     uploadMedia,
@@ -224,7 +248,11 @@ const MemoTemplateTerms = () => {
     setIsLoading,
     imagePreview,
     secondButtonText,
-    flow,
+    firstActionType,
+    secondActionType,
+    secondPhoneNumber,
+    secondWebsiteUrl,
+    flow?.id
   ]);
 
   const [isAccepted, setIsAccepted] = useState(false);

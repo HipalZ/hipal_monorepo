@@ -100,20 +100,25 @@ export const useEditTemplate = () => {
     mutationFn: async (payload: WhatsAppTemplatePayload) => {
       let res;
       if (outLetType === "HOTEL") {
-        res = await apiRpc.hotel.whats_app.templates[":templateId"].$put({
-          json: payload,
-          param: {
-            templateId: payload.templateId,
-          },
-        });
-      } else {
-        res = await apiRpc.whatsapp.template[":templateId"].$put({
+        res = await apiRpc.hotel.whats_app.templates[":templateid"][
+          ":businessId"
+        ].$put({
           json: payload,
           param: {
             templateid: payload.templateId,
             businessId: payload.businessId,
           },
         });
+      } else {
+        res = await apiRpc.whatsapp.template[":templateid"][":businessId"].$put(
+          {
+            json: payload,
+            param: {
+              templateid: payload.templateId,
+              businessId: payload.businessId,
+            },
+          },
+        );
       }
 
       const data = await res.json();
@@ -283,18 +288,6 @@ export const useMediaUpload = () => {
       storageFormData.append("fileName", `${imageId}`);
       storageFormData.append("bucketName", "assets");
 
-      const storageResponse = await axios.post(
-        "https://storage.test.hipalz.com/upload",
-        storageFormData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      );
-
-      if (storageResponse.status === 201 || storageResponse.status === 200) {
-        setImageUrl(storageResponse.data.url);
-      }
-
       // Step 3: Upload the file
       const formData = new FormData();
       formData.append("file", imageFiles);
@@ -308,7 +301,6 @@ export const useMediaUpload = () => {
       setIsUploading(false);
 
       return {
-        url: storageResponse.data.url as string,
         handle: uploadResponse.data.h as string,
       };
     } catch (error) {

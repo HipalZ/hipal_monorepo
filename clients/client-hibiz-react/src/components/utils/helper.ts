@@ -12,7 +12,6 @@ import { AlertCircle, DownloadCloud, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { twMerge } from "tailwind-merge";
 import { DishSteps } from "../store/useMenuStorage";
-import useBusinessData from "@/components/store/useBusinessData";
 
 export async function storeImageAfterSave(
   image: File,
@@ -20,8 +19,6 @@ export async function storeImageAfterSave(
   setIsLoading?: (loading: boolean) => void,
 ) {
   if (!image || !imagePreview) return;
-
-  console.log("imagePreview", imagePreview, image);
 
   const imageId = crypto.randomUUID();
   setIsLoading?.(true);
@@ -678,3 +675,26 @@ export const findRole = (
       ?.role.replace(/_/g, " ") ?? ""
   );
 };
+
+export function formatDateToIST(date: number): string {
+  const opts: Intl.DateTimeFormatOptions = {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  };
+
+  const formatter = new Intl.DateTimeFormat("en-GB", opts);
+  const parts = formatter.formatToParts(new Date(date));
+
+  const day = parts.find((p) => p.type === "day")?.value;
+  const month = parts.find((p) => p.type === "month")?.value;
+  const year = parts.find((p) => p.type === "year")?.value;
+  const hour = parts.find((p) => p.type === "hour")?.value;
+  const minute = parts.find((p) => p.type === "minute")?.value;
+
+  return `${day}-${month}-${year} ${hour}:${minute}`;
+}

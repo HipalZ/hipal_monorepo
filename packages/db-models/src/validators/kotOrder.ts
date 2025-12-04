@@ -26,6 +26,7 @@ const KotOrderSchema = z.object({
   priority: z.boolean().default(false).optional(),
   deliveredBy: z.string().min(1).max(150).optional(),
   cookedBy: z.string().min(1).max(150).optional(),
+  isOpenItem: z.boolean().default(false).optional(),
 });
 
 // Define the main cart schema
@@ -62,6 +63,11 @@ export const kotSchema = z.object({
     .default("IN_PROGRESS")
     .optional(),
   priority: z.boolean().default(false).optional(),
+  kotPrintStatus: z
+    .enum(["FAILED", "IN_PROGRESS", "COMPLETED"])
+    .default("IN_PROGRESS")
+    .optional(),
+  kotPrintRetryCount: z.number().default(0).optional(),
 });
 
 export type KotOrderType = z.infer<typeof kotSchema>;
