@@ -6,14 +6,16 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/components/utils/helpers";
 import { motion } from "framer-motion";
-import { ImageIcon, List, Menu, RefreshCcw, Search } from "lucide-react";
+import { ImageIcon, Menu, RefreshCcw, Search, SquareMenu } from "lucide-react";
 import { memo, useCallback, useMemo, useState } from "react";
 import FloatingTableActions from "./FloatingButton";
 import MenuListModal from "@/components/desktop/MenuListModal";
 import { useParams } from "react-router-dom";
+import { useBusinessMenuStore } from "@/components/store/useBusinessStore";
 
 const MemoSubtypes = () => {
   const selectedCategory = useOrderStore((s) => s.selectedCategory);
+  const selectedMenu = useBusinessMenuStore((s) => s.selectedMenu);
   const setSelectedCategory = useOrderStore((s) => s.setSelectedCategory);
   const allCategories = useOrderStore((s) => s.allCategories);
   const { refetch } = useCategories();
@@ -62,8 +64,8 @@ const MemoSubtypes = () => {
       color: "bg-purple-500 text-white",
     },
     {
-      label: "View Menus",
-      icon: <List className="h-5 w-5" />,
+      label: `Menu (${selectedMenu?.name})`,
+      icon: <SquareMenu className="h-5 w-5" />,
       onClick: () => setOpenMenuModal(true),
       color: "bg-purple-500 text-white",
     },
