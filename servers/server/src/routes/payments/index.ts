@@ -4583,6 +4583,7 @@ const paymentsRouter = new Hono()
 
     const isToday = isTodayIST(fromDate);
     const dateRange = getISTDateRange(Date.now());
+    console.log(businessId, from, to, { isToday, dateRange });
 
     if (fromDate > toDate) {
       return c.json({
@@ -4613,14 +4614,18 @@ const paymentsRouter = new Hono()
         claimedCoins: 1,
         couponDiscount: 1,
         billInvoice: 1,
+        roundOffType: 1,
+        roundOffAmount: 1,
       },
     ).sort({ billInvoice: 1 });
+
+    console.log("payments length:", payments.length);
 
     // 👉 Invoice range uses ALL payments (including dues)
     const startInvoiceNumber = payments[0]?.billInvoice || 0;
     const endInvoiceNumber = payments[payments.length - 1]?.billInvoice || 0;
 
-    let overAllAmount = 0;
+    let overAllAmount = 0; // this is raw sum (with round-off)
     let totalOnlineSale = 0;
     let totalPaxCount = 0;
     const offlineSales: Record<string, number> = {};
@@ -4631,6 +4636,9 @@ const paymentsRouter = new Hono()
     let tipSum = 0;
     let discountSum = 0;
     let totalOrders = 0;
+
+    // 🔹 net round off for the period (plus - minus)
+    let totalRoundOff = 0;
 
     const activeTable = await Table.find({
       businessId: businessId,
@@ -4649,7 +4657,9 @@ const paymentsRouter = new Hono()
         splitModes,
         paxCount = 0,
         billValue = 0,
-      } = payment;
+        roundOffType = 0,
+        roundOffAmount = 0,
+      } = payment as any;
 
       // ❌ Skip dues from all sales metrics
       if (mode === "dues") {
@@ -4658,6 +4668,17 @@ const paymentsRouter = new Hono()
 
       totalOrders += 1; // ✅ only non-dues counted as orders
       totalPaxCount += paxCount;
+
+      // 🔹 accumulate net round-off
+      if (roundOffAmount) {
+        if (roundOffType === 1) {
+          // plus
+          totalRoundOff += roundOffAmount;
+        } else {
+          // 0 = minus
+          totalRoundOff -= roundOffAmount;
+        }
+      }
 
       // 🧮 SPLIT BILLS – handle each settle separately
       if (mode === "split" && Array.isArray(splitModes)) {
@@ -4679,7 +4700,7 @@ const paymentsRouter = new Hono()
           }
         }
 
-        // Only add the non-dues / non-npc / non-complementary split total
+        // Raw sales including round-off effect
         overAllAmount += splitTotal;
       } else {
         // 🧮 NON-SPLIT BILL
@@ -4711,13 +4732,19 @@ const paymentsRouter = new Hono()
     delete offlineSales["split"];
     delete offlineSales["dues"];
 
+    // 🔹 Final: remove net round-off from overall sales
+    const overAllAmountWithoutRoundOff = overAllAmount - totalRoundOff;
+
     return c.json({
       err: false,
       data: {
-        overAllAmount, // ✅ no dues, no npc, no complementary
+        overAllAmount: overAllAmountWithoutRoundOff,
+        totalRoundOff,
+
         onlineSale: { online: totalOnlineSale },
         offlineSale: offlineSales,
-        totalOrders: payments.length, // ✅ only non-dues
+        totalOrders,
+
         totalActiveTableValue,
         subTotal: subTotalSum,
         totalTax: taxSum,
@@ -4774,6 +4801,8 @@ const paymentsRouter = new Hono()
           couponDiscount: 1,
           total: 1,
           billInvoice: 1,
+          roundOffType: 1,
+          roundOffAmount: 1,
         },
       ).sort({ billInvoice: 1 });
 

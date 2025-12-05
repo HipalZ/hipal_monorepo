@@ -1,4 +1,5 @@
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
+import UnifiedSalesDashboard from "@/components/atoms/salesLite/UnifiedSalesReport";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useFilters } from "@/components/store/useFilters";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
@@ -75,7 +76,7 @@ const AlertsMemo = () => {
           {selectedNavItem === NavItemTypesEnum.TABLES && <Zones />}
           {selectedNavItem === NavItemTypesEnum.HISTORY && <HistoryMemo />}
           {selectedNavItem === NavItemTypesEnum.SALES &&
-            hasPermission("sale_summary") && <SalesLiteMemo />}
+            hasPermission("sale_summary") && <UnifiedSalesDashboard />}
 
           {selectedNavItem === NavItemTypesEnum.CART && <CartItems />}
           {clickViewMore && <BillPopUpMemo />}

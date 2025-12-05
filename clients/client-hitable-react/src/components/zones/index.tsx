@@ -35,21 +35,14 @@ const MemoZones = () => {
   const navigate = useNavigate();
   const [isFailedKotModalOpen, setIsFailedKotModalOpen] = useState(false);
   const setIsPlacingNewOrder = useCart((s) => s.setIsPlacingNewOrder);
-  const { isPending, mutateAsync: reprint } = useReprintKot();
+  const { mutateAsync: reprint } = useReprintKot();
   const zones = useZonesAndTablesStore((s) => s.zones);
   const tables = useZonesAndTablesStore((s) => s.tables);
   const activeFilter = useZonesAndTablesStore((s) => s.activeFilter);
   const searchQuery = useZonesAndTablesStore((s) => s.searchQuery);
   const setZones = useZonesAndTablesStore((s) => s.setZones);
   const setTables = useZonesAndTablesStore((s) => s.setTables);
-  const { inProgress, failed, inProgressCount, failedCount } =
-    useKotPrintingStatus(businessId);
-  console.log("KOT Printing Status:", {
-    inProgress,
-    failed,
-    inProgressCount,
-    failedCount,
-  });
+  const { failed, failedCount } = useKotPrintingStatus(businessId);
   const hasPermission = useStaffPermissionStore((s) => s.hasPermission);
   const canPrintBill = hasPermission("print_bill");
 
@@ -234,19 +227,19 @@ const MemoZones = () => {
             </h1>
 
             {/* ⚠ Failed KOT banner button – only appears if failedCount > 0 */}
-            {/* {failedCount < 0 && ( */}
-            <Button
-              variant="destructive"
-              className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md"
-              onClick={() => setIsFailedKotModalOpen(true)}
-            >
-              <AlertTriangle className="h-4 w-4" />
-              <span>
-                {failedCount} failed KOT
-                {failedCount > 1 ? "s" : ""} – click here to review & reprint
-              </span>
-            </Button>
-            {/* )} */}
+            {failedCount > 0 && (
+              <Button
+                variant="destructive"
+                className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-md"
+                onClick={() => setIsFailedKotModalOpen(true)}
+              >
+                <AlertTriangle className="h-4 w-4" />
+                <span>
+                  {failedCount} failed KOT
+                  {failedCount > 1 ? "s" : ""} – click here to review & reprint
+                </span>
+              </Button>
+            )}
           </div>
 
           <div className="space-y-8 pb-[7rem]">
