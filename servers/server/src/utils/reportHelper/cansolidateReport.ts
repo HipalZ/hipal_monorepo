@@ -169,7 +169,7 @@ export async function buildConsolidatedSheet(
     // ==========================================================
     addSectionTitle(`Summary - ${businessName}`);
 
-    addKeyValueRow("Date", `${fromDateStr} - ${toDateStr}`);
+    // addKeyValueRow("Date", `${fromDateStr} - ${toDateStr}`);
     addKeyValueRow("Net Sale", Number(netSales.toFixed(2)));
     addKeyValueRow("Gross Sale (Subtotal)", Number(totalBillValue.toFixed(2)));
     addKeyValueRow("Total Orders (Paid)", paidOrdersCount);

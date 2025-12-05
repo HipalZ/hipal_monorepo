@@ -59,7 +59,7 @@ export async function buildNetAndSalesSheets(
 ) {
   const { businessIds, from, to, allPayments, bizNameMap } = ctx;
 
-  const netSheet = workbook.addWorksheet("Net Sales Report");
+  // const netSheet = workbook.addWorksheet("Net Sales Report");
   const salesSheet = workbook.addWorksheet("Sales Report");
 
   for (const biz of businessIds) {
@@ -308,70 +308,70 @@ export async function buildNetAndSalesSheets(
     // =======================
     // NET SALES SHEET
     // =======================
-    netSheet.addRow([]);
-    let r = netSheet.addRow(["BusinessId", biz]);
-    r.getCell(1).font = { bold: true };
+    // netSheet.addRow([]);
+    // let r = netSheet.addRow(["BusinessId", biz]);
+    // r.getCell(1).font = { bold: true };
 
-    r = netSheet.addRow(["Business Name", businessName]);
-    r.getCell(1).font = { bold: true };
+    // r = netSheet.addRow(["Business Name", businessName]);
+    // r.getCell(1).font = { bold: true };
 
-    r = netSheet.addRow(["Date Range", `${fromStr} → ${toStr}`]);
-    r.getCell(1).font = { bold: true };
+    // r = netSheet.addRow(["Date Range", `${fromStr} → ${toStr}`]);
+    // r.getCell(1).font = { bold: true };
 
-    r = netSheet.addRow([
-      "Invoice Range (Paid only)",
-      `${startInvoice} → ${endInvoice}`,
-    ]);
-    r.getCell(1).font = { bold: true };
+    // r = netSheet.addRow([
+    //   "Invoice Range (Paid only)",
+    //   `${startInvoice} → ${endInvoice}`,
+    // ]);
+    // r.getCell(1).font = { bold: true };
 
-    netSheet.addRow([]);
+    // netSheet.addRow([]);
 
-    const addSummaryRow = (label: string, value: number | string) => {
-      const row = netSheet.addRow([label, value]);
-      row.getCell(1).font = { bold: true };
-    };
+    // const addSummaryRow = (label: string, value: number | string) => {
+    //   const row = netSheet.addRow([label, value]);
+    //   row.getCell(1).font = { bold: true };
+    // };
 
-    // Paid summary (all paid incl. dues-settle)
-    addSummaryRow("Subtotal", Number(totalBillValue.toFixed(2)));
-    addSummaryRow("Total Orders", totalOrdersCount);
-    addSummaryRow("Discount", Number(totalDiscount.toFixed(2)));
-    addSummaryRow("Coins Discount", Number(totalClaimedCoins.toFixed(2)));
-    addSummaryRow("Coupon Discount", Number(totalCouponDiscount.toFixed(2)));
-    addSummaryRow(
-      "All Discounts (disc + coins + coupon)",
-      Number(allDiscounts.toFixed(2)),
-    );
-    addSummaryRow("Complementary", Number(totalComplementary.toFixed(2)));
-    addSummaryRow("NPC", Number(totalNpc.toFixed(2)));
-    addSummaryRow("Service Charge", Number(totalServiceCharge.toFixed(2)));
-    addSummaryRow("GST (CGST+SGST)", Number(totalTax.toFixed(2)));
-    addSummaryRow("Tips", Number(totalTips.toFixed(2)));
-    addSummaryRow("Total Sales", Number(totalAmount.toFixed(2)));
+    // // Paid summary (all paid incl. dues-settle)
+    // addSummaryRow("Subtotal", Number(totalBillValue.toFixed(2)));
+    // addSummaryRow("Total Orders", totalOrdersCount);
+    // addSummaryRow("Discount", Number(totalDiscount.toFixed(2)));
+    // addSummaryRow("Coins Discount", Number(totalClaimedCoins.toFixed(2)));
+    // addSummaryRow("Coupon Discount", Number(totalCouponDiscount.toFixed(2)));
+    // addSummaryRow(
+    //   "All Discounts (disc + coins + coupon)",
+    //   Number(allDiscounts.toFixed(2)),
+    // );
+    // addSummaryRow("Complementary", Number(totalComplementary.toFixed(2)));
+    // addSummaryRow("NPC", Number(totalNpc.toFixed(2)));
+    // addSummaryRow("Service Charge", Number(totalServiceCharge.toFixed(2)));
+    // addSummaryRow("GST (CGST+SGST)", Number(totalTax.toFixed(2)));
+    // addSummaryRow("Tips", Number(totalTips.toFixed(2)));
+    // addSummaryRow("Total Sales", Number(totalAmount.toFixed(2)));
 
-    // ✨ Updated label, same formula as Executive Report
-    addSummaryRow(
-      "Net Sales (Subtotal - Discounts - NPC - Complimentary)",
-      Number(netSales.toFixed(2)),
-    );
+    // // ✨ Updated label, same formula as Executive Report
+    // addSummaryRow(
+    //   "Net Sales (Subtotal - Discounts - NPC - Complimentary)",
+    //   Number(netSales.toFixed(2)),
+    // );
 
-    // 💰 Dues Get Back row (non-complementary DUES_SETTLE only)
-    addSummaryRow(
-      "Dues Get Back (DUES_SETTLE, non-complementary)",
-      Number(totalDuesGetBack.toFixed(2)),
-    );
+    // // 💰 Dues Get Back row (non-complementary DUES_SETTLE only)
+    // addSummaryRow(
+    //   "Dues Get Back (DUES_SETTLE, non-complementary)",
+    //   Number(totalDuesGetBack.toFixed(2)),
+    // );
 
-    netSheet.addRow([]);
+    // netSheet.addRow([]);
 
-    // Dues summary
-    const duesTitle = netSheet.addRow(["Dues Summary"]);
-    duesTitle.getCell(1).font = { bold: true };
+    // // Dues summary
+    // const duesTitle = netSheet.addRow(["Dues Summary"]);
+    // duesTitle.getCell(1).font = { bold: true };
 
-    addSummaryRow("Dues Subtotal", Number(duesSubtotal.toFixed(2)));
-    addSummaryRow("Dues Orders Count", duesOrderCount);
-    addSummaryRow("Dues GST", Number(duesTax.toFixed(2)));
-    addSummaryRow("Dues Service Charge", Number(duesServiceCharge.toFixed(2)));
-    addSummaryRow("Dues Discount (All)", Number(duesDiscount.toFixed(2)));
-    addSummaryRow("Dues Total", Number(duesTotal.toFixed(2)));
+    // addSummaryRow("Dues Subtotal", Number(duesSubtotal.toFixed(2)));
+    // addSummaryRow("Dues Orders Count", duesOrderCount);
+    // addSummaryRow("Dues GST", Number(duesTax.toFixed(2)));
+    // addSummaryRow("Dues Service Charge", Number(duesServiceCharge.toFixed(2)));
+    // addSummaryRow("Dues Discount (All)", Number(duesDiscount.toFixed(2)));
+    // addSummaryRow("Dues Total", Number(duesTotal.toFixed(2)));
 
     // =======================
     // SALES SHEET (unchanged)
@@ -383,8 +383,8 @@ export async function buildNetAndSalesSheets(
     sRow = salesSheet.addRow(["Business Name", businessName]);
     sRow.getCell(1).font = { bold: true };
 
-    sRow = salesSheet.addRow(["Date Range", `${fromStr} → ${toStr}`]);
-    sRow.getCell(1).font = { bold: true };
+    // sRow = salesSheet.addRow(["Date Range", `${fromStr} → ${toStr}`]);
+    // sRow.getCell(1).font = { bold: true };
 
     salesSheet.addRow([]);
 
