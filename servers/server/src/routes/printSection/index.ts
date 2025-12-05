@@ -37,15 +37,15 @@ const printSectionRouter = new Hono()
           $gte: fromDate,
           $lte: toDate,
         },
-        kotPrintStatus: {
-          $in: ["IN_PROGRESS", "FAILED"],
-        },
+        kotPrintStatus: "FAILED",
       })
         .populate({
           path: "userId",
           select: "name phone",
         })
-        .select("tableName userId date kotPrintStatus");
+        .select(
+          "tableName userId date kotPrintStatus businessId accepted settled",
+        );
 
       return c.json({
         message: "kot print",
