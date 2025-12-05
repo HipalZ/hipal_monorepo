@@ -548,6 +548,6 @@ export async function buildNetAndSalesSheets(
     salesSheet.addRow([]);
   }
 
-  autoFitColumns(netSheet);
+  // autoFitColumns(netSheet);
   autoFitColumns(salesSheet);
 }
