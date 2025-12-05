@@ -399,42 +399,29 @@ function interpolate(
   str: string | undefined,
   vars: Record<string, any>,
   cfg?: any,
-  userName?: string,
+  userName: string = "",
 ): string {
   if (!str) return "";
-  console.log("str to interpolate:", str);
-  const context = {
-    ...(vars || {}),
-    name: userName || "",
-    phone: cfg?.waProfile?.phone || cfg?.phone || "",
-  };
-  console.log("interpolate context", context);
 
   let result = str;
+  const context = {
+    ...(vars || {}),
+    displayName: userName,
+    phone: cfg?.waProfile?.phone || cfg?.phone || "",
+  };
 
-  // {{var}} – no change needed
-  result = result.replace(/\{\{(\w+)(?:\s*\|\|\s*([^}]+))?\}\}/g, (m, k, f) => {
-    return context[k] ?? f?.trim() ?? "";
+  if (str === "displayName" || str === "{{displayName}}")
+    return (result = context[str]);
+
+  // 2. Handle @variable (e.g. @name, @address)
+  result = result.replace(/@(\w+)/g, (match, key) => {
+    const value = context[`@${key}`] ?? context[key]; // try @key first, then key
+    if (value !== undefined && value !== null && value !== "") {
+      return String(value);
+    }
+    return match; // keep @key if not found
   });
 
-  // @variable – FIX: +? → + (greedy) + escape ] in lookahead
-  result = result.replace(
-    /@([\w\s\-_]+)(?=\s|$|[.,!?;:)}\\""]|$)/g,
-    (match, keyPart) => {
-      const key = keyPart.trim();
-      console.log("key", key);
-      const varKey = key.startsWith("@") ? key : `@${key}`;
-      console.log("varKey", varKey);
-      console.log("context[varKey]", context[varKey], varKey);
-      const val = context[varKey];
-      console.log("val", val);
-      if (val !== undefined && val !== null && val !== "") {
-        return String(val);
-      }
-      return match;
-    },
-  );
-  console.log("interpolate", result);
   return result;
 }
 
@@ -1044,7 +1031,7 @@ export async function advance(
         });
         const client = await auth.getClient();
         const googleSheets = google.sheets({ version: "v4", auth: client });
-
+        console.log("cellls", cells);
         const resolvedRow = cells.map((c: any) =>
           interpolate(c.value, s.variables, cfg, s.userName),
         );

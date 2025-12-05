@@ -25,7 +25,7 @@ export function VariableDropdown({ value, onChange, variables = [], flowParams =
           <div className="px-2 py-1">
             <div className="px-2 py-1 text-sm font-medium uppercase tracking-wide text-gray-500">Default variables</div>
 
-            {['name', 'phone'].map((param) => (
+            {['displayName'].map((param) => (
               <SelectItem key={param} value={param} className="text-base">
                 {formatDisplay(param)}
               </SelectItem>
