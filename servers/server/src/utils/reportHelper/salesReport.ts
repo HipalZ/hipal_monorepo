@@ -109,6 +109,8 @@ export async function buildNetAndSalesSheets(
     let totalNpc = 0;
     // 💰 dues recovered (DUES_SETTLE, non-complementary)
     let totalDuesGetBack = 0;
+    // 🔹 net round-off for PAID (normal + DUES_SETTLE)
+    let totalRoundOff = 0;
 
     const paidRows: SalesRow[] = [];
     const normalPaidRows: SalesRow[] = [];
@@ -135,6 +137,10 @@ export async function buildNetAndSalesSheets(
         splitModes = [],
         billInvoice,
         couponDiscount = 0,
+
+        // round-off fields (if present)
+        roundOffType,
+        roundOffAmount,
       } = payment;
 
       const rowTotalDiscount =
@@ -180,6 +186,17 @@ export async function buildNetAndSalesSheets(
       // ✅ Dues Get Back = DUES_SETTLE but not complementary
       if (isDuesSettle && !isComplementaryMode) {
         totalDuesGetBack += billValue;
+      }
+
+      // 🔹 NET ROUND-OFF (plus/minus) for paid bills
+      if (typeof roundOffAmount === "number" && roundOffAmount !== 0) {
+        if (roundOffType === 1) {
+          // plus
+          totalRoundOff += roundOffAmount;
+        } else if (roundOffType === 0) {
+          // minus
+          totalRoundOff -= roundOffAmount;
+        }
       }
 
       const splitInfo = Array.isArray(splitModes)
@@ -228,6 +245,9 @@ export async function buildNetAndSalesSheets(
     const discountWithNpcAndComp = totalComplementary + totalNpc + allDiscounts;
     // Net Sales = Subtotal - (discounts + complimentary + NPC)
     const netSales = totalBillValue - discountWithNpcAndComp;
+
+    // 🔹 Total Sales excluding net round-off (for reconciliation)
+    const totalSalesExclRoundOff = totalAmount - totalRoundOff;
 
     // =========================
     // DUES TOTALS (pending dues only)
@@ -348,7 +368,13 @@ export async function buildNetAndSalesSheets(
     addSummaryRow("Tips", Number(totalTips.toFixed(2)));
     addSummaryRow("Total Sales", Number(totalAmount.toFixed(2)));
 
-    // ✨ Updated label, same formula as Executive Report
+    // 🔹 New: Net round-off & Total Sales excluding round-off
+    addSummaryRow("Net Round Off (Paid)", Number(totalRoundOff.toFixed(2)));
+    addSummaryRow(
+      "Total Sales (Excl. Round Off)",
+      Number(totalSalesExclRoundOff.toFixed(2)),
+    );
+
     addSummaryRow(
       "Net Sales (Subtotal - Discounts - NPC - Complimentary)",
       Number(netSales.toFixed(2)),
@@ -374,7 +400,7 @@ export async function buildNetAndSalesSheets(
     addSummaryRow("Dues Total", Number(duesTotal.toFixed(2)));
 
     // =======================
-    // SALES SHEET (unchanged)
+    // SALES SHEET
     // =======================
     salesSheet.addRow([]);
     let sRow = salesSheet.addRow(["BusinessId", biz]);
