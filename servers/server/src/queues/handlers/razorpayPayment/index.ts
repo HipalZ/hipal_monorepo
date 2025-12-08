@@ -99,7 +99,7 @@ const failPaymentHandler = async (
   businessPosConfig: BusinessPosConfigType,
   tableSession: UserSessionSchemaType,
 ) => {
-  const isSplit = tableSession.isSplit;
+  const isSplit = tableSession?.isSplit;
   if (!isSplit) {
     const alertExist = await PaymentAlert.findOne({
       order_id: getOrder?._id,
@@ -191,6 +191,10 @@ const petPoojaPosPaymentHandler = async (
     tableName: getOrder?.tableName,
   })) as UserSessionSchemaType;
 
+  if (!tableSession) {
+    return true;
+  }
+
   const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
   if (originBillIsSplit) {
     const res = await petPoojaPosSplitPaymentHandler(
@@ -208,7 +212,7 @@ const petPoojaPosPaymentHandler = async (
       errorReason,
       error_description,
     );
-    return res;
+    return true;
   }
 
   const createPayment = await Payment.create({
@@ -239,6 +243,8 @@ const petPoojaPosPaymentHandler = async (
     billItems: tableSession?.items || [],
     billInvoice: tableSession?.billInvoice || 0,
     paxCount: tableSession?.paxCount || 0,
+    roundOffType: tableSession?.roundOffType || 0,
+    roundOffAmount: tableSession?.roundOffAmount || 0,
   });
 
   await PaymentAlert.create({
@@ -435,6 +441,10 @@ const hipalzPosPaymentHandler = async (
     tableName: isTableMerge?.parentTableId?.name || getOrder.tableName,
   })) as UserSessionSchemaType;
 
+  if (!tableSession) {
+    return true;
+  }
+
   const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
   if (originBillIsSplit) {
     const res = await hipalzPosSplitPaymentHandler(
@@ -478,13 +488,15 @@ const hipalzPosPaymentHandler = async (
     date: Date.now(),
     tax: tableSession?.gst || 0,
     serviceCharge: tableSession?.serviceCharge || 0,
-    billId: tableSession?._id.toString(),
+    billId: tableSession?._id?.toString(),
     settleType: tableSession?.settleType || "PAYMENT_GATEWAY",
     discount: tableSession?.discount || 0,
     couponDiscount: tableSession?.couponDiscount || 0,
     billItems: tableSession?.items || [],
     billInvoice: tableSession?.billInvoice || 0,
     paxCount: tableSession?.paxCount || 0,
+    roundOffType: tableSession?.roundOffType || 0,
+    roundOffAmount: tableSession?.roundOffAmount || 0,
   });
 
   await PaymentAlert.create({
@@ -504,7 +516,7 @@ const hipalzPosPaymentHandler = async (
 
   await QrBill.findOneAndUpdate(
     {
-      billId: tableSession?._id.toString(),
+      billId: tableSession?._id?.toString(),
     },
     {
       $set: {
@@ -631,6 +643,8 @@ const hipalzPosSplitPaymentHandler = async (
         isSplitBillVariant: true,
         billInvoice: splitBillTableSessionData?.billInvoice,
         paxCount: tableSession?.paxCount || 0,
+        roundOffAmount: splitBillTableSessionData?.roundOffAmount || 0,
+        roundOffType: splitBillTableSessionData?.roundOffType || 0,
       });
 
       await PaymentAlert.create({
@@ -727,6 +741,8 @@ const hipalzPosSplitPaymentHandler = async (
         isSplitBillVariant: true,
         billInvoice: splitBillTableSessionData?.billInvoice,
         paxCount: tableSession?.paxCount || 0,
+        roundOffAmount: splitBillTableSessionData?.roundOffAmount || 0,
+        roundOffType: splitBillTableSessionData?.roundOffType || 0,
       });
 
       await PaymentAlert.create([
@@ -887,6 +903,8 @@ const petPoojaPosSplitPaymentHandler = async (
         isSplitBillVariant: true,
         billInvoice: splitBillTableSessionData?.billInvoice,
         paxCount: tableSession?.paxCount || 0,
+        roundOffAmount: splitBillTableSessionData?.roundOffAmount || 0,
+        roundOffType: splitBillTableSessionData?.roundOffType || 0,
       });
 
       await PaymentAlert.create([
@@ -983,6 +1001,8 @@ const petPoojaPosSplitPaymentHandler = async (
         isSplitBillVariant: true,
         billInvoice: splitBillTableSessionData?.billInvoice,
         paxCount: tableSession?.paxCount || 0,
+        roundOffAmount: splitBillTableSessionData?.roundOffAmount || 0,
+        roundOffType: splitBillTableSessionData?.roundOffType || 0,
       });
 
       await PaymentAlert.create([
@@ -1261,15 +1281,13 @@ async function razorpayPaymentHandler(job: Job) {
     if (getOrder && !paymentAlreadyExist) {
       const businessPosConfig = await BusinessPosConfig.findOne({
         businessId: getOrder.businessId,
-        isDeleted: false,
-        active: true,
       });
       const posName = businessPosConfig?.posName;
 
       try {
         const cashback = await CommonPaymentHandler(getOrder);
         if (!businessPosConfig) {
-          console.log("posName", "pop");
+          console.log("pop run zala");
           const res = await popCornPaymentHandler(
             getOrder,
             cashback,
@@ -1286,6 +1304,7 @@ async function razorpayPaymentHandler(job: Job) {
           return true;
         }
         if (posName === "HIPAL_Z") {
+          console.log("hipalz run zala");
           const result = await hipalzPosPaymentHandler(
             getOrder,
             cashback,
@@ -1306,6 +1325,8 @@ async function razorpayPaymentHandler(job: Job) {
           return true;
         }
         if (posName === "PETPOOJA") {
+          console.log("petpooja run zala");
+
           const result = await petPoojaPosPaymentHandler(
             getOrder,
             cashback,
@@ -1397,6 +1418,7 @@ async function razorpayPaymentHandler(job: Job) {
     }
     return true;
   }
+  return true;
 }
 
 export const razorpayHandlers = {

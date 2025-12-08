@@ -28,7 +28,7 @@ function createWorker(
     ...(withLimiter && {
       limiter: {
         max: 1, // 20 jobs
-        duration: 3000, // per second
+        duration: 2000, // per second
       },
     }),
   });
