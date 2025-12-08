@@ -237,3 +237,131 @@ export const categories = [
     ],
   },
 ];
+
+export function convertDbNodesToFlow(nodes: any[]) {
+  return nodes.map((n, index) => ({
+    id: n.id,
+    type: n.type,
+    position: {
+      x: n.x ?? 250,
+      y: n.y ?? index * 180, // Auto spacing
+    },
+    data: {
+      ...n,
+      meta: n,
+    },
+  }));
+}
+
+export function convertDbEdges(nodes: any[], triggers: any[] = []): Edge[] {
+  const edges: Edge[] = [];
+
+  const baseEdgeStyle = {
+    animated: true,
+    style: { stroke: '#6366f1', strokeWidth: 3 },
+  };
+
+  nodes.forEach((n) => {
+    // 1️⃣ Plain "next" edges
+    if (n.next) {
+      edges.push({
+        id: `e-${n.id}-${n.next}`,
+        source: n.id,
+        target: n.next,
+        data: { kind: 'normal' },
+        ...baseEdgeStyle,
+      });
+    }
+
+    // ⭐ 2️⃣ Condition edges: trueNext / falseNext
+    if (n.trueNext) {
+      edges.push({
+        id: `e-${n.id}-${n.trueNext}-true`,
+        source: n.id,
+        target: n.trueNext,
+        sourceHandle: 'true',
+        data: { kind: 'cond:true' },
+        ...baseEdgeStyle,
+      });
+    }
+
+    if (n.falseNext) {
+      edges.push({
+        id: `e-${n.id}-${n.falseNext}-false`,
+        source: n.id,
+        target: n.falseNext,
+        sourceHandle: 'false',
+        data: { kind: 'cond:false' },
+        ...baseEdgeStyle,
+      });
+    }
+
+    // 3️⃣ Interactive routes (buttons / lists)
+    const routes = n.routes || {};
+    Object.entries(routes).forEach(([handleId, targetId]) => {
+      if (!targetId) return;
+
+      const kind = handleId === 'true' ? 'cond:true' : handleId === 'false' ? 'cond:false' : handleId === 'start' ? 'trigger:start' : 'normal';
+
+      edges.push({
+        id: `e-${n.id}-${targetId}-${handleId}`,
+        source: n.id,
+        target: targetId as string,
+        sourceHandle: handleId,
+        data: { kind },
+        ...baseEdgeStyle,
+      });
+    });
+  });
+
+  // 4️⃣ Triggers
+  triggers.forEach((t) => {
+    if (!t.start) return;
+
+    const triggerNodeId = t.id || `trigger_${t.start}`;
+    edges.push({
+      id: `e-${triggerNodeId}-${t.start}`,
+      source: triggerNodeId,
+      target: t.start,
+      sourceHandle: 'start',
+      data: { kind: 'trigger:start' },
+      ...baseEdgeStyle,
+    });
+  });
+
+  return edges;
+}
+
+export function convertTriggersToNodes(triggers) {
+  if (!triggers || triggers.length === 0) return [];
+
+  return triggers.map((t, i) => ({
+    id: `trigger_${i}`,
+    type: NodeTypes.TRIGGER,
+    position: { x: 100, y: 100 + i * 200 },
+    data: {
+      meta: {
+        keywords: t.keywords || [],
+        routes: {
+          start: t.start, // connect trigger → first node
+        },
+      },
+      onPatch: () => {}, // you may patch this if needed
+      remove: () => {},
+    },
+  }));
+}
+
+export function convertTriggerEdges(triggers) {
+  if (!triggers) return [];
+
+  return triggers.map((t, i) => ({
+    id: `e_trigger_${i}`,
+    source: `trigger_${i}`,
+    target: t.start,
+    sourceHandle: 'start',
+    animated: true,
+    style: { stroke: '#f97316', strokeWidth: 3 },
+    data: { kind: 'trigger:start' },
+  }));
+}

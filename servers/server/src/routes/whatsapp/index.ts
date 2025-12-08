@@ -1739,15 +1739,7 @@ const whatsappRouter = new Hono()
       }
       const { messages, contacts, statuses, whatsAppBusinessConfigData } =
         await whatsAppEventData(body);
-      const handled = await handleChatbotFlow({
-        messages,
-        contacts,
-        statuses,
-        whatsAppBusinessConfigData,
-        c,
-      });
 
-      if (handled) return handled;
       if (
         messages &&
         messages?.text?.body?.length > 1 &&
@@ -1760,7 +1752,6 @@ const whatsappRouter = new Hono()
         );
 
         const qrType = identifyQrTypeFromMessage(userInput);
-        console.log("qrType", qrType);
 
         if (qrType?.qrType && qrHandlers[qrType.qrType]) {
           await qrHandlers[qrType.qrType](
@@ -1770,6 +1761,7 @@ const whatsappRouter = new Hono()
             userData.name || "Guest",
             whatsAppBusinessConfigData,
           );
+          return respond(c, "qrHandlers", false, 200, {});
         }
         if (whatsAppBusinessConfigData.chat) {
           await whatsAppChatHandler(
@@ -1786,6 +1778,17 @@ const whatsappRouter = new Hono()
           messages?.id,
           messages?.text?.body,
         );
+      }
+
+      const handled = await handleChatbotFlow({
+        messages,
+        contacts,
+        whatsAppBusinessConfigData,
+        c,
+      });
+
+      if (handled) {
+        return respond(c, "handleChatbotFlow", false, 200, {});
       }
 
       if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {

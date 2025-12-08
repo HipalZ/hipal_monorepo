@@ -1,6 +1,15 @@
 import useBusinessData from '@/components/store/useBusinessData';
 import useWhatsapp from '@/components/store/useWhatsapp';
-import { categories, edgeTypes, nodeTypes, NodeTypes } from '@/components/templates/whatsappTemplates/chatbots/chatbotHelpers';
+import {
+  categories,
+  convertDbEdges,
+  convertDbNodesToFlow,
+  convertTriggerEdges,
+  convertTriggersToNodes,
+  edgeTypes,
+  nodeTypes,
+  NodeTypes,
+} from '@/components/templates/whatsappTemplates/chatbots/chatbotHelpers';
 import { makeNode } from '@/components/templates/whatsappTemplates/chatbots/makeNode';
 import { PaletteItem } from '@/components/templates/whatsappTemplates/chatbots/nodePalette';
 import { Button } from '@/components/ui/button';
@@ -8,6 +17,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useChatBot } from '@/components/utils/chatbotHelper';
 import { cn } from '@/lib/utils';
+import { apiRpc } from '@hi/common';
+import { useQuery } from '@tanstack/react-query';
 import {
   addEdge,
   applyEdgeChanges,
@@ -20,16 +31,15 @@ import {
   type Connection,
   type Edge,
   type Node,
-  type OnConnect,
   type OnEdgesChange,
   type OnNodesChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, Keyboard, PanelLeftOpen, Save, X } from 'lucide-react';
-import { useCallback, useMemo, useRef, useState, type DragEvent, type MouseEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type DragEvent, type MouseEvent } from 'react';
 import toast from 'react-hot-toast';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { buildFinalFromGraph } from './chatbots/chatbotHelpers';
 import type {
   CategoryHeaderProps,
@@ -54,17 +64,32 @@ const useCategoryToggle = (initial: string[]) => {
 /* -------------------------------------------------------
    MAIN EDITOR
 ------------------------------------------------------- */
+
+const useGetChatbot = (chatbotId: string, businessId: string) => {
+  return useQuery({
+    queryKey: ['chatbot', chatbotId],
+    enabled: !!chatbotId && !!businessId,
+    queryFn: async () => {
+      const res = await apiRpc.wa_chatbot.Id[chatbotId].$get({
+        query: { businessId },
+      });
+      const response = await res.json();
+      return response.data;
+    },
+  });
+};
+
 function EditorShell(): JSX.Element {
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
-  const { createChatbot } = useChatBot();
-  const setOpenBot = useWhatsapp((s) => s.setOpenBot);
-
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { screenToFlowPosition } = useReactFlow();
   const { search } = useLocation();
   const chatbotId = new URLSearchParams(search).get('chatbotId');
+  const { data: chatbot } = useGetChatbot(chatbotId, businessId);
+  const { createChatbot, updateChatbot } = useChatBot();
+  const setOpenBot = useWhatsapp((s) => s.setOpenBot);
+  const navigate = useNavigate();
+  const { screenToFlowPosition } = useReactFlow();
 
-  const [chatbotName, setChatbotName] = useState<string>('My Chatbot');
+  const [chatbotName, setChatbotName] = useState<string>('');
   const [rfNodes, setRfNodes] = useState<Node[]>([]);
   const [rfEdges, setRfEdges] = useState<Edge[]>([]);
   const [variables, setVariables] = useState<string[]>([]);
@@ -73,6 +98,21 @@ function EditorShell(): JSX.Element {
   const { open: openCategories, toggle: toggleCategory } = useCategoryToggle(['triggers', 'messages', 'logic']);
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+
+  useEffect(() => {
+    if (!chatbot) return;
+    setChatbotName(chatbot.chatbotName);
+    setVariables(chatbot.variables || []);
+
+    // Convert nodes
+    const flowNodes = [...convertTriggersToNodes(chatbot.triggers || []), ...convertDbNodesToFlow(chatbot.nodes || [])];
+
+    // Convert edges
+    const flowEdges = [...convertTriggerEdges(chatbot.triggers || []), ...convertDbEdges(chatbot.nodes || [])];
+
+    setRfNodes(flowNodes);
+    setRfEdges(flowEdges);
+  }, [chatbot]);
 
   /* -------------------------------------------------------
      GLOBAL HELPERS
@@ -289,11 +329,18 @@ function EditorShell(): JSX.Element {
     [chatbotName, businessId, rfNodes, rfEdges],
   );
 
-  const handleSaveFlow = useCallback(() => {
-    createChatbot(finalObject);
-  }, [finalObject, createChatbot]);
+  const handleSaveFlow = async () => {
+    if (chatbotId) {
+      await updateChatbot({ chatbotId, payload: finalObject });
+    } else {
+      await createChatbot(finalObject);
+    }
+  };
 
-  const handleOpenChatbot = useCallback(() => setOpenBot(false), [setOpenBot]);
+  const handleOpenChatbot = useCallback(() => {
+    navigate(`/app/business/${businessId}/whatzapp`);
+    setOpenBot(false);
+  }, [setOpenBot, navigate, businessId]);
 
   /* -------------------------------------------------------
      RENDER

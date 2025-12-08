@@ -1,4 +1,4 @@
-import BottomButton from '@/components/atom/bottomButton';
+import useBusinessData from '@/components/store/useBusinessData';
 import useWhatsapp from '@/components/store/useWhatsapp';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
+import { useChatBot } from '@/components/utils/chatbotHelper';
 import { useAllChatbots, useChatbotSessions } from '@/hooks/useChatbot';
 import type { WhatsappChatbotType } from '@hi/db-models/src/validators';
 import { Activity, AlertTriangle, BarChart3, Bot, Edit, Loader2, Plus, Search, TrendingDown, TrendingUp, UserCheck, Users } from 'lucide-react';
@@ -20,7 +22,9 @@ const formatDate = (date: string) =>
   });
 
 function ChatbotDashboard() {
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const { data: chatbots, isLoading } = useAllChatbots();
+  const { updateChatbotStatus } = useChatBot();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBot, setSelectedBot] = useState<any>(null);
   const setOpenBot = useWhatsapp((s) => s.setOpenBot);
@@ -114,6 +118,17 @@ function ChatbotDashboard() {
                 >
                   {bot.status ? 'Active' : 'Inactive'}
                 </Badge>
+                <Switch
+                  checked={bot.status === 'active'}
+                  onCheckedChange={(state) =>
+                    updateChatbotStatus({
+                      chatbotId: bot._id,
+                      businessId,
+                      status: state ? 'active' : 'inactive',
+                    })
+                  }
+                />
+
                 <Edit onClick={() => handleEditChatbot(bot)} className="cursor-pointer rounded-lg bg-purple-100 p-1 text-purple-800" />
               </div>
             </CardHeader>
@@ -203,7 +218,7 @@ function StatCard({ title, value, icon, trendIcon }: any) {
 
 function ChatbotSessionsModal({ bot, onClose }: any) {
   const { data: sessions, isLoading } = useChatbotSessions(bot._id);
-
+  console.log('sessions', sessions);
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-3xl">

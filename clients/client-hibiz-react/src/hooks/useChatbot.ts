@@ -73,7 +73,7 @@ export const fetchAllChatbots = async (businessId: string) => {
 export function useAllChatbots() {
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   return useQuery({
-    queryKey: ["chatbots"],
+    queryKey: ["allChatbots"],
     queryFn: () => fetchAllChatbots(businessId),
     enabled: !!businessId,
   });

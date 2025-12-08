@@ -151,7 +151,6 @@ const WhatsappChatbotSchema = new Schema<WhatsappChatbotType>(
     triggers: { type: [TriggerSchema], default: [] },
     variables: { type: [String], default: [] },
     nodes: { type: [NodeSchema], default: [] },
-    active: { type: Boolean, default: true },
     status: {
       type: String,
       enum: ["active", "inactive"],

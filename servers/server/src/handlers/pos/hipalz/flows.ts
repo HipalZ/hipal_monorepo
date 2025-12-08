@@ -231,7 +231,6 @@ export async function processAskNodeReply({
 export async function handleChatbotFlow({
   messages,
   contacts,
-  statuses,
   whatsAppBusinessConfigData,
   c,
 }) {
@@ -240,7 +239,6 @@ export async function handleChatbotFlow({
 
   const chatbotList = await getAllChatbotFlows(businessId);
   if (!chatbotList.length) return null;
-
   const from = messages?.from || contacts?.[0]?.wa_id || contacts?.[0]?.waId;
 
   let session = getSession(from);
@@ -356,7 +354,6 @@ export async function handleChatbotFlow({
 export async function getAllChatbotFlows(businessId: string) {
   const flows = await WhatsappChatbotModel.find({
     businessId,
-    active: true,
     status: "active",
   }).lean();
 

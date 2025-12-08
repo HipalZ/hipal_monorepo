@@ -49,34 +49,102 @@ export function cleanPayload(obj: any): any {
 export const useChatBot = () => {
   const { setError, setOpenErrorModal } = useError();
   const queryClient = useQueryClient();
+
+  /* ---------------------------------------------------------
+     CREATE CHATBOT
+  --------------------------------------------------------- */
   const { isPending: createLoader, mutateAsync: createChatbot } = useMutation({
     mutationFn: async (payload) => {
-      const response = await apiRpc.wa_chatbot.$post({
-        json: payload,
-      });
-      return response;
+      const response = await apiRpc.wa_chatbot.$post({ json: payload });
+      const body = await response.json();
+
+      return { status: response.status, ...body };
     },
+
     onSuccess: (data) => {
-      if (data.status === 400 || data.status === 401) {
-        toast.error("Failed to update category");
-      }
       if (data.status === 409) {
         setOpenErrorModal(true);
-        setError("Chatbot already exists");
-        return toast.error("Chatbot already exists");
+        setError(data?.message);
+        return;
       }
       if (data.status === 200 || data.status === 201) {
         toast.success("Chatbot Successfully Created");
-        queryClient.invalidateQueries({
-          queryKey: ["getServiceCategories"],
-        });
-        return;
+        queryClient.invalidateQueries({ queryKey: ["allChatbots"] });
       }
     },
     onError: (data) => {
       console.log(data);
+      toast.error("Something went wrong");
     },
   });
 
-  return { createLoader, createChatbot };
+  /* ---------------------------------------------------------
+     UPDATE CHATBOT
+  --------------------------------------------------------- */
+  const { isPending: updateLoader, mutateAsync: updateChatbot } = useMutation({
+    mutationFn: async ({ chatbotId, payload }) => {
+      const response = await apiRpc.wa_chatbot[chatbotId].$put({
+        json: payload,
+      });
+      const body = await response.json(); // ✅ Parse JSON
+
+      return { status: response.status, ...body };
+    },
+
+    onSuccess: (data) => {
+      if (data.status === 404) {
+        setOpenErrorModal(true);
+        setError(data?.message);
+        return;
+      }
+      if (data.status === 409) {
+        setOpenErrorModal(true);
+        setError(data?.message);
+        return;
+      }
+      if (data.status === 200) {
+        toast.success("Chatbot Updated Successfully");
+        queryClient.invalidateQueries({ queryKey: ["allChatbots"] });
+      }
+    },
+    onError: (err) => {
+      console.log(err);
+      toast.error("Failed to update chatbot");
+    },
+  });
+
+  const { mutateAsync: updateChatbotStatus } = useMutation({
+    mutationFn: async ({
+      chatbotId,
+      businessId,
+      status,
+    }: { chatbotId: string; businessId: string; status: string }) => {
+      const response = await apiRpc.wa_chatbot.status[chatbotId].$put({
+        json: { businessId, status },
+      });
+
+      const body = await response.json();
+      return { status: response.status, ...body };
+    },
+    onSuccess: (res) => {
+      if (!res.err) {
+        toast.success(res.message);
+        queryClient.invalidateQueries({ queryKey: ["allChatbots"] });
+      } else {
+        toast.error(res.message);
+      }
+    },
+    onError: (err) => {
+      console.error(err);
+      toast.error("Failed to update chatbot status");
+    },
+  });
+
+  return {
+    createLoader,
+    updateLoader,
+    createChatbot,
+    updateChatbot,
+    updateChatbotStatus,
+  };
 };

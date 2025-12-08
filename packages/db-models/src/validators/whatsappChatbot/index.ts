@@ -112,7 +112,6 @@ export const WhatsappChatbotSchema = z.object({
   triggers: z.array(TriggerSchema).default([]),
   variables: z.array(z.string()).default([]),
   nodes: z.array(NodeSchema).default([]),
-  active: z.boolean().default(true),
   status: z.enum(["active", "inactive"]).default("active"),
   isDefault: z.boolean().default(false),
 });

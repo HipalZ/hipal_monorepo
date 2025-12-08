@@ -56,7 +56,7 @@ export function CondNode({ data, selected }: { data: CondNodeData; selected: boo
   };
 
   const conditionPreview = hasLogic
-    ? logic.map((l) => `${l.join.toUpperCase()} ${formatVar(l.var)} ${l.op} "${l.value || '…'}"`).join('\n')
+    ? logic.map((l) => `${l.join?.toUpperCase()} ${formatVar(l.var)} ${l.op} "${l.value || '…'}"`).join('\n')
     : 'No conditions set';
 
   return (
