@@ -373,6 +373,13 @@ const MemoUnifiedSalesDashboard = () => {
       direction: "positive",
     },
     {
+      label: "Round Off",
+      value: paidAll.roundOff.value,
+      direction: `${
+        paidAll.roundOff.type === "positive" ? "positive" : "negative"
+      }`,
+    },
+    {
       label: "Paid Orders",
       value: totalOrdersPaid,
       direction: "neutral",

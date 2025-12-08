@@ -1,42 +1,57 @@
-import LoadingSpinner from '@/components/atom/loadingSpinner';
-import useBusinessData from '@/components/store/useBusinessData';
-import PaymentNavbar from '@/components/templates/menu/sideNavbaar/paymentNavBar';
-import Npc from '@/components/templates/payment/Npc';
-import Modes from '@/components/templates/payment/modes';
-import { cn } from '@/components/utils/helper';
-import { AnimatePresence, motion } from 'framer-motion';
-import { lazy, memo, Suspense, useCallback, useState } from 'react';
-import { FaArrowLeft } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import useBusinessData from "@/components/store/useBusinessData";
+import PaymentNavbar from "@/components/templates/menu/sideNavbaar/paymentNavBar";
+import Npc from "@/components/templates/payment/Npc";
+import Modes from "@/components/templates/payment/modes";
+import { cn } from "@/components/utils/helper";
+import { AnimatePresence, motion } from "framer-motion";
+import { lazy, memo, Suspense, useCallback, useState } from "react";
+import { FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-const DateRangePicker = lazy(() => import('@/components/molecules/dateRangePicker'));
-const MemoizedHeader = lazy(() => import('@/components/molecules/header'));
-const Overview = lazy(() => import('@/components/templates/payment/overview'));
-const PaymentSales = lazy(() => import('@/components/templates/payment/sales'));
-const Dues = lazy(() => import('@/components/templates/payment/dues'));
-const UnifiedSales = lazy(() => import('@/components/templates/payment/UnifiedSales'));
+const DateRangePicker = lazy(
+  () => import("@/components/molecules/dateRangePicker"),
+);
+const MemoizedHeader = lazy(() => import("@/components/molecules/header"));
+const Overview = lazy(() => import("@/components/templates/payment/overview"));
+const PaymentSales = lazy(() => import("@/components/templates/payment/sales"));
+const Dues = lazy(() => import("@/components/templates/payment/dues"));
+const UnifiedSales = lazy(
+  () => import("@/components/templates/payment/UnifiedSales"),
+);
 
 enum PaymentTabs {
-  Overview = 'Overview',
-  UnifiedSales = 'Unified Sales',
-  Sales = 'Sales',
-  Dues = 'Dues',
-  Npc = 'Npc',
-  Modes = 'Modes',
+  // Overview = 'Overview',
+  UnifiedSales = "Unified Sales",
+  Sales = "Sales",
+  Dues = "Dues",
+  Npc = "Npc",
+  Modes = "Modes",
 }
 
 const Payments = () => {
   const navigate = useNavigate();
-  const [selectedTab, setSelectedTab] = useState<PaymentTabs>(PaymentTabs.Overview);
+  const [selectedTab, setSelectedTab] = useState<PaymentTabs>(
+    PaymentTabs.UnifiedSales,
+  );
   const businessData = useBusinessData((s) => s.businessData);
 
   const sidebarItems = [
-    { text: PaymentTabs.Overview, onClick: () => setSelectedTab(PaymentTabs.Overview) },
-    { text: PaymentTabs.UnifiedSales, onClick: () => setSelectedTab(PaymentTabs.UnifiedSales) },
-    { text: PaymentTabs.Sales, onClick: () => setSelectedTab(PaymentTabs.Sales) },
+    // { text: PaymentTabs.Overview, onClick: () => setSelectedTab(PaymentTabs.Overview) },
+    {
+      text: PaymentTabs.UnifiedSales,
+      onClick: () => setSelectedTab(PaymentTabs.UnifiedSales),
+    },
+    {
+      text: PaymentTabs.Sales,
+      onClick: () => setSelectedTab(PaymentTabs.Sales),
+    },
     { text: PaymentTabs.Dues, onClick: () => setSelectedTab(PaymentTabs.Dues) },
     { text: PaymentTabs.Npc, onClick: () => setSelectedTab(PaymentTabs.Npc) },
-    { text: PaymentTabs.Modes, onClick: () => setSelectedTab(PaymentTabs.Modes) },
+    {
+      text: PaymentTabs.Modes,
+      onClick: () => setSelectedTab(PaymentTabs.Modes),
+    },
   ];
 
   const handleBack = useCallback(() => {
@@ -50,9 +65,13 @@ const Payments = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className={cn('sticky top-0 z-50 w-full bg-[#f4f4f4]')}
+          className={cn("sticky top-0 z-50 w-full bg-[#f4f4f4]")}
         >
-          <MemoizedHeader title="Payments" leftIcon={<FaArrowLeft />} onBack={handleBack} />
+          <MemoizedHeader
+            title="Payments"
+            leftIcon={<FaArrowLeft />}
+            onBack={handleBack}
+          />
         </motion.section>
 
         <motion.nav
@@ -66,8 +85,10 @@ const Payments = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={cn(
-                'bg-white pb-3 pt-4',
-                selectedTab?.toLowerCase() === item.text.toLowerCase() ? 'border-b-2 border-[#15BBB3] text-[#15BBB3] transition-all' : '',
+                "bg-white pb-3 pt-4",
+                selectedTab?.toLowerCase() === item.text.toLowerCase()
+                  ? "border-b-2 border-[#15BBB3] text-[#15BBB3] transition-all"
+                  : "",
               )}
               key={item.text}
               type="button"
@@ -80,7 +101,9 @@ const Payments = () => {
 
         <PaymentNavbar items={sidebarItems} selectedNavItem={selectedTab} />
 
-        {selectedTab === PaymentTabs.Overview || selectedTab === PaymentTabs.Sales || selectedTab === PaymentTabs.UnifiedSales ? (
+        {selectedTab === PaymentTabs.Overview ||
+        selectedTab === PaymentTabs.Sales ||
+        selectedTab === PaymentTabs.UnifiedSales ? (
           <DateRangePicker />
         ) : null}
 

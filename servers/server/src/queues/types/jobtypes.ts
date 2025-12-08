@@ -56,6 +56,25 @@ export type pushCustomerIntoQueueTypeValidator = z.infer<
   typeof pushCustomerIntoQueueSchema
 >;
 
+export const razorpayOnlinePaymentSchema = z.object({
+  date: z.coerce.number(),
+  merchantId: z.string(),
+  razorpayEventId: z.string(),
+  order_id: z.string(),
+  id: z.string(),
+  event: z.string(),
+
+  status: z.enum(["SUCCESS", "FAILED", "PROCESSING", "PENDING"]),
+  acquirer_data: z.object({}),
+  error_description: z.string(),
+  error_reason: z.string(),
+  mode: z.string(),
+});
+
+export type RazorpayPaymentHandlerTypeValidator = z.infer<
+  typeof razorpayOnlinePaymentSchema
+>;
+
 export type BillJobTypes = {
   requestOnly: { payload: { orderId: string } };
   requestAndSettle: { payload: { total: number } };
@@ -66,7 +85,12 @@ export type WhatsAppJobTypes = {
   pushCustomerIntoQueue: pushCustomerIntoQueueTypeValidator;
 };
 
+export type RazorpayJobTypes = {
+  razorpayPaymentHandler: RazorpayPaymentHandlerTypeValidator;
+};
+
 export type JobMap = {
   [QUEUE_NAME.BILL_QUEUE]: BillJobTypes;
   [QUEUE_NAME.WHATSAPP_CAMPAIGN_QUEUE]: WhatsAppJobTypes;
+  [QUEUE_NAME.RAZORPAY_WEBHOOK_QUEUE]: RazorpayJobTypes;
 };

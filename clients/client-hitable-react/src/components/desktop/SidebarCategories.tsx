@@ -1,12 +1,13 @@
-import { useCategories } from '@/components/hooks/useCategories';
-import { useOrderStore } from '@/components/store/useOrderData';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { ArrowLeft, RefreshCcw, Settings2 } from 'lucide-react';
-import { memo, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import SpinnerMemo from '../atoms/loadingSpinner';
-import { QuickActionsDrawer } from './QuickActionDrawer';
+import { useCategories } from "@/components/hooks/useCategories";
+import { useOrderStore } from "@/components/store/useOrderData";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ArrowLeft, RefreshCcw, Settings2, List } from "lucide-react";
+import { memo, useCallback, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import SpinnerMemo from "../atoms/loadingSpinner";
+import { QuickActionsDrawer } from "./QuickActionDrawer";
+import MenuListModal from "@/components/desktop/MenuListModal";
 
 const SidebarCategories = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const SidebarCategories = () => {
   const categories = useOrderStore((s) => s.allCategories);
   const selected = useOrderStore((s) => s.selectedCategory);
   const setSelected = useOrderStore((s) => s.setSelectedCategory);
+  const [openMenuModal, setOpenMenuModal] = useState(false);
 
   const goToAlerts = useCallback(() => {
     navigate(`/${businessId}/alerts`);
@@ -31,16 +33,22 @@ const SidebarCategories = () => {
 
   const customActions = [
     {
-      name: 'Refresh Categories',
+      name: "Refresh Categories",
       icon: RefreshCcw,
       onClick: handleRefresh,
-      variant: 'secondary' as const,
+      variant: "secondary" as const,
     },
     {
-      name: 'Quick Edit Dishes',
+      name: "Quick Edit Dishes",
       icon: Settings2,
       onClick: toQuickEdit,
-      variant: 'secondary' as const,
+      variant: "secondary" as const,
+    },
+    {
+      name: "View Menus",
+      icon: List,
+      onClick: () => setOpenMenuModal(true),
+      variant: "secondary" as const,
     },
   ];
 
@@ -53,7 +61,12 @@ const SidebarCategories = () => {
       {/* Header */}
       <div className="flex items-center justify-between border-b p-3">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={goToAlerts} className="h-8 w-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={goToAlerts}
+            className="h-8 w-8"
+          >
             <ArrowLeft size={24} strokeWidth={3} className="h-4 w-4" />
           </Button>
           <span className="poppins text-xl font-medium">Back</span>
@@ -67,17 +80,27 @@ const SidebarCategories = () => {
           <Button
             key={cat._id}
             onClick={() => setSelected(cat)}
-            variant={selected?._id === cat._id ? 'default' : 'ghost'}
+            variant={selected?._id === cat._id ? "default" : "ghost"}
             className={cn(
-              'poppins w-full justify-start rounded-none py-3 pl-3 pr-2 text-left text-lg transition-colors duration-150',
-              'h-auto min-h-[2.5rem] overflow-visible whitespace-normal break-words normal-case leading-snug',
-              selected?._id === cat._id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted',
+              "poppins w-full justify-start rounded-none py-3 pl-3 pr-2 text-left text-lg transition-colors duration-150",
+              "h-auto min-h-[2.5rem] overflow-visible whitespace-normal break-words normal-case leading-snug",
+              selected?._id === cat._id
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted",
             )}
           >
             {cat.name}
           </Button>
         ))}
       </div>
+      {openMenuModal && (
+      <MenuListModal
+          show={openMenuModal}
+          onClose={() => setOpenMenuModal(false)}
+          businessId={businessId}
+          refreshCategories={handleRefresh}
+        />
+      )}
     </div>
   );
 };

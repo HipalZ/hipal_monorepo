@@ -1,7 +1,7 @@
 // utils/reportHelper/salesReport.ts
 import type * as ExcelJS from "exceljs";
-import type { BaseContext } from "./types";
 import { addBoldHeaderRow, autoFitColumns } from "./excelUtils";
+import type { BaseContext } from "./types";
 
 type AnyPayment = any;
 
@@ -59,7 +59,7 @@ export async function buildNetAndSalesSheets(
 ) {
   const { businessIds, from, to, allPayments, bizNameMap } = ctx;
 
-  // const netSheet = workbook.addWorksheet("Net Sales Report");
+  const netSheet = workbook.addWorksheet("Net Sales Report");
   const salesSheet = workbook.addWorksheet("Sales Report");
 
   for (const biz of businessIds) {
@@ -109,6 +109,8 @@ export async function buildNetAndSalesSheets(
     let totalNpc = 0;
     // 💰 dues recovered (DUES_SETTLE, non-complementary)
     let totalDuesGetBack = 0;
+    // 🔹 net round-off for PAID (normal + DUES_SETTLE)
+    let totalRoundOff = 0;
 
     const paidRows: SalesRow[] = [];
     const normalPaidRows: SalesRow[] = [];
@@ -135,6 +137,10 @@ export async function buildNetAndSalesSheets(
         splitModes = [],
         billInvoice,
         couponDiscount = 0,
+
+        // round-off fields (if present)
+        roundOffType,
+        roundOffAmount,
       } = payment;
 
       const rowTotalDiscount =
@@ -180,6 +186,17 @@ export async function buildNetAndSalesSheets(
       // ✅ Dues Get Back = DUES_SETTLE but not complementary
       if (isDuesSettle && !isComplementaryMode) {
         totalDuesGetBack += billValue;
+      }
+
+      // 🔹 NET ROUND-OFF (plus/minus) for paid bills
+      if (typeof roundOffAmount === "number" && roundOffAmount !== 0) {
+        if (roundOffType === 1) {
+          // plus
+          totalRoundOff += roundOffAmount;
+        } else if (roundOffType === 0) {
+          // minus
+          totalRoundOff -= roundOffAmount;
+        }
       }
 
       const splitInfo = Array.isArray(splitModes)
@@ -228,6 +245,9 @@ export async function buildNetAndSalesSheets(
     const discountWithNpcAndComp = totalComplementary + totalNpc + allDiscounts;
     // Net Sales = Subtotal - (discounts + complimentary + NPC)
     const netSales = totalBillValue - discountWithNpcAndComp;
+
+    // 🔹 Total Sales excluding net round-off (for reconciliation)
+    const totalSalesExclRoundOff = totalAmount - totalRoundOff;
 
     // =========================
     // DUES TOTALS (pending dues only)
@@ -308,73 +328,79 @@ export async function buildNetAndSalesSheets(
     // =======================
     // NET SALES SHEET
     // =======================
-    // netSheet.addRow([]);
-    // let r = netSheet.addRow(["BusinessId", biz]);
-    // r.getCell(1).font = { bold: true };
+    netSheet.addRow([]);
+    let r = netSheet.addRow(["BusinessId", biz]);
+    r.getCell(1).font = { bold: true };
 
-    // r = netSheet.addRow(["Business Name", businessName]);
-    // r.getCell(1).font = { bold: true };
+    r = netSheet.addRow(["Business Name", businessName]);
+    r.getCell(1).font = { bold: true };
 
-    // r = netSheet.addRow(["Date Range", `${fromStr} → ${toStr}`]);
-    // r.getCell(1).font = { bold: true };
+    r = netSheet.addRow(["Date Range", `${fromStr} → ${toStr}`]);
+    r.getCell(1).font = { bold: true };
 
-    // r = netSheet.addRow([
-    //   "Invoice Range (Paid only)",
-    //   `${startInvoice} → ${endInvoice}`,
-    // ]);
-    // r.getCell(1).font = { bold: true };
+    r = netSheet.addRow([
+      "Invoice Range (Paid only)",
+      `${startInvoice} → ${endInvoice}`,
+    ]);
+    r.getCell(1).font = { bold: true };
 
-    // netSheet.addRow([]);
+    netSheet.addRow([]);
 
-    // const addSummaryRow = (label: string, value: number | string) => {
-    //   const row = netSheet.addRow([label, value]);
-    //   row.getCell(1).font = { bold: true };
-    // };
+    const addSummaryRow = (label: string, value: number | string) => {
+      const row = netSheet.addRow([label, value]);
+      row.getCell(1).font = { bold: true };
+    };
 
-    // // Paid summary (all paid incl. dues-settle)
-    // addSummaryRow("Subtotal", Number(totalBillValue.toFixed(2)));
-    // addSummaryRow("Total Orders", totalOrdersCount);
-    // addSummaryRow("Discount", Number(totalDiscount.toFixed(2)));
-    // addSummaryRow("Coins Discount", Number(totalClaimedCoins.toFixed(2)));
-    // addSummaryRow("Coupon Discount", Number(totalCouponDiscount.toFixed(2)));
-    // addSummaryRow(
-    //   "All Discounts (disc + coins + coupon)",
-    //   Number(allDiscounts.toFixed(2)),
-    // );
-    // addSummaryRow("Complementary", Number(totalComplementary.toFixed(2)));
-    // addSummaryRow("NPC", Number(totalNpc.toFixed(2)));
-    // addSummaryRow("Service Charge", Number(totalServiceCharge.toFixed(2)));
-    // addSummaryRow("GST (CGST+SGST)", Number(totalTax.toFixed(2)));
-    // addSummaryRow("Tips", Number(totalTips.toFixed(2)));
-    // addSummaryRow("Total Sales", Number(totalAmount.toFixed(2)));
+    // Paid summary (all paid incl. dues-settle)
+    addSummaryRow("Subtotal", Number(totalBillValue.toFixed(2)));
+    addSummaryRow("Total Orders", totalOrdersCount);
+    addSummaryRow("Discount", Number(totalDiscount.toFixed(2)));
+    addSummaryRow("Coins Discount", Number(totalClaimedCoins.toFixed(2)));
+    addSummaryRow("Coupon Discount", Number(totalCouponDiscount.toFixed(2)));
+    addSummaryRow(
+      "All Discounts (disc + coins + coupon)",
+      Number(allDiscounts.toFixed(2)),
+    );
+    addSummaryRow("Complementary", Number(totalComplementary.toFixed(2)));
+    addSummaryRow("NPC", Number(totalNpc.toFixed(2)));
+    addSummaryRow("Service Charge", Number(totalServiceCharge.toFixed(2)));
+    addSummaryRow("GST (CGST+SGST)", Number(totalTax.toFixed(2)));
+    addSummaryRow("Tips", Number(totalTips.toFixed(2)));
+    addSummaryRow("Total Sales", Number(totalAmount.toFixed(2)));
 
-    // // ✨ Updated label, same formula as Executive Report
-    // addSummaryRow(
-    //   "Net Sales (Subtotal - Discounts - NPC - Complimentary)",
-    //   Number(netSales.toFixed(2)),
-    // );
+    // 🔹 New: Net round-off & Total Sales excluding round-off
+    addSummaryRow("Net Round Off (Paid)", Number(totalRoundOff.toFixed(2)));
+    addSummaryRow(
+      "Total Sales (Excl. Round Off)",
+      Number(totalSalesExclRoundOff.toFixed(2)),
+    );
 
-    // // 💰 Dues Get Back row (non-complementary DUES_SETTLE only)
-    // addSummaryRow(
-    //   "Dues Get Back (DUES_SETTLE, non-complementary)",
-    //   Number(totalDuesGetBack.toFixed(2)),
-    // );
+    addSummaryRow(
+      "Net Sales (Subtotal - Discounts - NPC - Complimentary)",
+      Number(netSales.toFixed(2)),
+    );
 
-    // netSheet.addRow([]);
+    // 💰 Dues Get Back row (non-complementary DUES_SETTLE only)
+    addSummaryRow(
+      "Dues Get Back (DUES_SETTLE, non-complementary)",
+      Number(totalDuesGetBack.toFixed(2)),
+    );
 
-    // // Dues summary
-    // const duesTitle = netSheet.addRow(["Dues Summary"]);
-    // duesTitle.getCell(1).font = { bold: true };
+    netSheet.addRow([]);
 
-    // addSummaryRow("Dues Subtotal", Number(duesSubtotal.toFixed(2)));
-    // addSummaryRow("Dues Orders Count", duesOrderCount);
-    // addSummaryRow("Dues GST", Number(duesTax.toFixed(2)));
-    // addSummaryRow("Dues Service Charge", Number(duesServiceCharge.toFixed(2)));
-    // addSummaryRow("Dues Discount (All)", Number(duesDiscount.toFixed(2)));
-    // addSummaryRow("Dues Total", Number(duesTotal.toFixed(2)));
+    // Dues summary
+    const duesTitle = netSheet.addRow(["Dues Summary"]);
+    duesTitle.getCell(1).font = { bold: true };
+
+    addSummaryRow("Dues Subtotal", Number(duesSubtotal.toFixed(2)));
+    addSummaryRow("Dues Orders Count", duesOrderCount);
+    addSummaryRow("Dues GST", Number(duesTax.toFixed(2)));
+    addSummaryRow("Dues Service Charge", Number(duesServiceCharge.toFixed(2)));
+    addSummaryRow("Dues Discount (All)", Number(duesDiscount.toFixed(2)));
+    addSummaryRow("Dues Total", Number(duesTotal.toFixed(2)));
 
     // =======================
-    // SALES SHEET (unchanged)
+    // SALES SHEET
     // =======================
     salesSheet.addRow([]);
     let sRow = salesSheet.addRow(["BusinessId", biz]);
@@ -383,8 +409,8 @@ export async function buildNetAndSalesSheets(
     sRow = salesSheet.addRow(["Business Name", businessName]);
     sRow.getCell(1).font = { bold: true };
 
-    // sRow = salesSheet.addRow(["Date Range", `${fromStr} → ${toStr}`]);
-    // sRow.getCell(1).font = { bold: true };
+    sRow = salesSheet.addRow(["Date Range", `${fromStr} → ${toStr}`]);
+    sRow.getCell(1).font = { bold: true };
 
     salesSheet.addRow([]);
 
@@ -548,6 +574,6 @@ export async function buildNetAndSalesSheets(
     salesSheet.addRow([]);
   }
 
-  // autoFitColumns(netSheet);
+  autoFitColumns(netSheet);
   autoFitColumns(salesSheet);
 }

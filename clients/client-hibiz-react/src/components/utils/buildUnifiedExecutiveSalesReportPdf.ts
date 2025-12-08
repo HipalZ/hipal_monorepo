@@ -160,6 +160,12 @@ export function buildUnifiedExecutiveSalesReportPdf(
     ["GST on Paid:", fmtAmt(taxPaid)],
     ["Service Charge on Paid:", fmtAmt(svcPaid)],
     ["Tips on Paid:", fmtAmt(tipPaid)],
+    [
+      "Round Off",
+      `${paidAll.roundOff.type === "positive" ? "+" : "-"}${fmtAmt(
+        paidAll.roundOff.value,
+      )}`,
+    ],
     ["Net Sales (Paid):", fmtAmt(totalSalesPaid)],
   ];
 

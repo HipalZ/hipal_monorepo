@@ -31,14 +31,21 @@ const printSectionRouter = new Hono()
       const toDate = endOfToday.getTime();
       const kotOrders = await KotOrder.find({
         businessId,
+        accepted: true,
+        settled: false,
         date: {
           $gte: fromDate,
           $lte: toDate,
         },
-        kotPrintStatus: {
-          $in: ["IN_PROGRESS", "FAILED"],
-        },
-      });
+        kotPrintStatus: "FAILED",
+      })
+        .populate({
+          path: "userId",
+          select: "name phone",
+        })
+        .select(
+          "tableName userId date kotPrintStatus businessId accepted settled",
+        );
 
       return c.json({
         message: "kot print",
@@ -63,6 +70,8 @@ const printSectionRouter = new Hono()
       const toDate = endOfToday.getTime();
       const kotOrders = await KotOrder.find({
         businessId,
+        accepted: true,
+        settled: false,
         date: {
           $gte: fromDate,
           $lte: toDate,
@@ -70,7 +79,12 @@ const printSectionRouter = new Hono()
         kotPrintStatus: {
           $in: ["COMPLETED"],
         },
-      });
+      })
+        .populate({
+          path: "userId",
+          select: "name phone",
+        })
+        .select("tableName userId date kotPrintStatus");
 
       return c.json({
         message: "kot print",

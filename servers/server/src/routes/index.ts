@@ -34,6 +34,7 @@ import printSectionRouter from "./printSection";
 import qrRouter from "./qrs";
 import reportRouter from "./report";
 import googleReview from "./reviews";
+import salonPosRouter from "./salonPos";
 import scriptRouter from "./script";
 import settingsRouter from "./settings";
 import splitBillRouter from "./splitBill";
@@ -105,7 +106,8 @@ export const routes = app
   .route("/sync_pos_menu_config", syncPosMenuConfigRouter)
   .route("/kds", kdsRouter)
   .route("/token", tokenRouter)
-  .route("/path_finder", pathFinderRouter);
+  .route("/path_finder", pathFinderRouter)
+  .route("/salon_pos", salonPosRouter);
 
 export type AppType = typeof routes;
 //

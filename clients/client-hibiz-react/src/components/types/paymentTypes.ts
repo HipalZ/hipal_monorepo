@@ -97,6 +97,10 @@ export type SegmentAggregate = {
   rewards: SegmentRewards;
   charges: SegmentCharges;
   totals: SegmentTotals;
+  roundOff: {
+    type: string;
+    value: number;
+  };
   paymentModes: PaymentModeBreakdown;
 };
 

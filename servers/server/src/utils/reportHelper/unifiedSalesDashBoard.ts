@@ -17,6 +17,10 @@ export type PaymentDoc = Document & {
   billInvoice?: number;
   earnCoins?: number;
   total?: number;
+
+  // 🔹 Round-off fields
+  roundOffType?: number | null; // 0 = minus, 1 = plus
+  roundOffAmount?: number | null; // absolute round value
 };
 
 export type SegmentDiscount = {
@@ -42,12 +46,28 @@ export type SegmentTotals = {
   ordersCount: number;
   paxCount: number;
   grossSubtotal: number; // sum of billValue
-  realisedRevenue: number; // like old overAllAmount (no dues/npc/comp, excl tips)
+
+  // realisedRevenue uses `total` (includes round-off) and excludes dues/npc/comp
+  realisedRevenue: number;
+
+  // realisedRevenueExclRoundOff = realisedRevenue - roundOffNet
+  realisedRevenueExclRoundOff: number;
+
   netAfterDiscountBeforeCharges: number; // grossSubtotal - discounts.total
   netAfterDiscountAndCharges: number; // above + tax + svc + tip
+
+  // Round-off metrics (for this segment only)
+  roundOffPlus: number; // sum of (+) rounds (type 1)
+  roundOffMinus: number; // sum of (-) rounds (type 0)
+  roundOffNet: number; // roundOffPlus - roundOffMinus
 };
 
 export type PaymentModeBreakdown = Record<string, number>;
+
+export type SegmentRoundOff = {
+  type: "positive" | "negative" | "zero";
+  value: number; // absolute net value
+};
 
 export type SegmentAggregate = {
   discounts: SegmentDiscount;
@@ -55,6 +75,9 @@ export type SegmentAggregate = {
   charges: SegmentCharges;
   totals: SegmentTotals;
   paymentModes: PaymentModeBreakdown;
+
+  // 🔹 Simple round-off object for this segment
+  roundOff: SegmentRoundOff;
 };
 
 export type UnifiedDashboardCore = {
@@ -118,8 +141,12 @@ const ZERO_TOTALS: SegmentTotals = {
   paxCount: 0,
   grossSubtotal: 0,
   realisedRevenue: 0,
+  realisedRevenueExclRoundOff: 0,
   netAfterDiscountBeforeCharges: 0,
   netAfterDiscountAndCharges: 0,
+  roundOffPlus: 0,
+  roundOffMinus: 0,
+  roundOffNet: 0,
 };
 
 // ---------- SMALL HELPERS ----------
@@ -166,10 +193,10 @@ function getTotal(p: PaymentDoc): number {
 }
 
 /**
- * overAllAmount-style revenue:
- * - Excludes dues, npc, complementary
- * - For split bills: excludes split parts that are dues/npc/complementary
- * - Excludes tips (tips stay in charges.tip)
+ * overAllAmount-style realised revenue:
+ * - Uses `total` (includes round-off).
+ * - Excludes dues, npc, complementary.
+ * - For split bills: sum of split parts excluding dues/npc/complementary.
  */
 function calcRealisedRevenueForPayment(p: PaymentDoc): number {
   const mode = p.mode;
@@ -249,12 +276,6 @@ function buildPaymentModeBreakdown(
 
 /**
  * Aggregate one segment (paidNormal, duesSettlements, duesPending, etc.)
- * INTO:
- *   - discounts (manual / coins / coupon / npc / comp)
- *   - rewards (coinsGiven)
- *   - charges (tax / svc / tips)
- *   - totals  (grossSubtotal, realisedRevenue, net after discounts, etc.)
- *   - paymentModes (cash/card/upi/online etc.)
  */
 function aggregateSegment(payments: PaymentDoc[]): SegmentAggregate {
   const discounts: SegmentDiscount = { ...ZERO_DISCOUNT };
@@ -276,6 +297,11 @@ function aggregateSegment(payments: PaymentDoc[]): SegmentAggregate {
     const couponDiscount = p.couponDiscount ?? 0;
     const earnCoins = p.earnCoins ?? 0;
 
+    // Round-off per payment (0 = minus, 1 = plus)
+    const roundOffType = (p as any).roundOffType ?? null;
+    const rawRoundOff = (p as any).roundOffAmount;
+    const roundOffAmount = typeof rawRoundOff === "number" ? rawRoundOff : 0;
+
     totals.ordersCount += 1;
     totals.paxCount += pax;
     totals.grossSubtotal += billValue;
@@ -291,9 +317,6 @@ function aggregateSegment(payments: PaymentDoc[]): SegmentAggregate {
     rewards.coinsGiven += earnCoins;
 
     // ---------- NPC & COMPLEMENTARY AS DISCOUNT BUCKETS ----------
-    // To avoid double counting:
-    // - If whole bill is NPC/Complimentary → use billValue
-    // - ELSE (normal bill) → only use splitModes named npc/complementary
     if (p.mode === "npc") {
       npcAmount += billValue;
     } else if (Array.isArray(p.splitModes)) {
@@ -315,7 +338,21 @@ function aggregateSegment(payments: PaymentDoc[]): SegmentAggregate {
     }
 
     // ---------- REALISED REVENUE (like overAllAmount) ----------
-    totals.realisedRevenue += calcRealisedRevenueForPayment(p);
+    const realised = calcRealisedRevenueForPayment(p);
+    totals.realisedRevenue += realised;
+
+    // ---------- ROUND-OFF METRICS (segment-local) ----------
+    if (roundOffAmount) {
+      if (roundOffType === 1) {
+        // rounded up
+        totals.roundOffPlus += roundOffAmount;
+        totals.roundOffNet += roundOffAmount;
+      } else if (roundOffType === 0) {
+        // rounded down
+        totals.roundOffMinus += roundOffAmount;
+        totals.roundOffNet -= roundOffAmount;
+      }
+    }
   }
 
   discounts.npcAsDiscount = npcAmount;
@@ -333,9 +370,30 @@ function aggregateSegment(payments: PaymentDoc[]): SegmentAggregate {
     totals.netAfterDiscountBeforeCharges +
     charges.tax +
     charges.serviceCharge +
-    charges.tip;
+    totals.roundOffNet;
+  charges.tip;
+
+  // Revenue excluding round-off for this segment
+  totals.realisedRevenueExclRoundOff =
+    totals.realisedRevenue - totals.roundOffNet;
 
   const paymentModes = buildPaymentModeBreakdown(payments);
+
+  // 🔹 Simple round-off descriptor for this segment
+  let roundType: SegmentRoundOff["type"] = "zero";
+  const net = totals.roundOffNet;
+  const absVal = Math.abs(net);
+
+  if (net > 0) {
+    roundType = "positive";
+  } else if (net < 0) {
+    roundType = "negative";
+  }
+
+  const roundOff: SegmentRoundOff = {
+    type: roundType,
+    value: absVal,
+  };
 
   return {
     discounts,
@@ -343,6 +401,7 @@ function aggregateSegment(payments: PaymentDoc[]): SegmentAggregate {
     charges,
     totals,
     paymentModes,
+    roundOff,
   };
 }
 
@@ -373,7 +432,7 @@ export function buildUnifiedDashboardCore(
 
   const paidAll = [...paidNormal, ...duesSettlements];
 
-  // 2) Aggregate each segment
+  // 2) Aggregate each segment (round-off is kept segment-wise)
   const aggPaidNormal = aggregateSegment(paidNormal);
   const aggDuesSettlements = aggregateSegment(duesSettlements);
   const aggDuesPending = aggregateSegment(duesPending);
@@ -404,7 +463,7 @@ export function buildUnifiedDashboardCore(
 
   return {
     invoiceRange: { start: startInvoice, end: endInvoice },
-    paidAll: aggPaidAll,
+    paidAll: aggPaidAll, // 👉 here you now have paidAll.roundOff
     paidNormal: aggPaidNormal,
     duesSettlements: aggDuesSettlements,
     duesPending: aggDuesPending,
