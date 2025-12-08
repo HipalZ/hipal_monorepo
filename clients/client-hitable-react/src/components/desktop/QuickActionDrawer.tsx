@@ -1,14 +1,27 @@
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import type { LucideIcon } from 'lucide-react';
-import { Bell, CreditCard, Menu, Monitor, UserCheck } from 'lucide-react';
-import { memo, useState } from 'react';
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import type { LucideIcon } from "lucide-react";
+import { Bell, CreditCard, Menu, Monitor, UserCheck } from "lucide-react";
+import { memo, useState } from "react";
 
 export interface QuickAction {
   name: string;
   icon: LucideIcon;
   onClick: () => void;
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
 }
 
 interface QuickActionsDrawerProps {
@@ -19,53 +32,59 @@ interface QuickActionsDrawerProps {
   onKDS?: () => void;
 }
 
-const MemoQuickActionsDrawer = ({ customActions = [], onPayments, onAlerts, onCheckIn, onKDS }: QuickActionsDrawerProps) => {
+const MemoQuickActionsDrawer = ({
+  customActions = [],
+  onPayments,
+  onAlerts,
+  onCheckIn,
+  onKDS,
+}: QuickActionsDrawerProps) => {
   const [open, setOpen] = useState(false);
 
   // Predefined actions
   const predefinedActions: QuickAction[] = [
     {
-      name: 'Payments',
+      name: "Payments",
       icon: CreditCard,
       onClick: () => {
         onPayments?.();
         setOpen(false);
       },
-      variant: 'default',
+      variant: "default" as const,
     },
     {
-      name: 'Alerts',
+      name: "Alerts",
       icon: Bell,
       onClick: () => {
         onAlerts?.();
         setOpen(false);
       },
-      variant: 'default',
+      variant: "default" as const,
     },
     {
-      name: 'Check In',
+      name: "Check In",
       icon: UserCheck,
       onClick: () => {
         onCheckIn?.();
         setOpen(false);
       },
-      variant: 'default',
+      variant: "default" as const,
     },
     {
-      name: 'KDS',
+      name: "KDS",
       icon: Monitor,
       onClick: () => {
         onKDS?.();
         setOpen(false);
       },
-      variant: 'default',
+      variant: "default" as const,
     },
   ].filter((action) => {
     // Only include actions that have callbacks
-    if (action.name === 'Payments' && !onPayments) return false;
-    if (action.name === 'Alerts' && !onAlerts) return false;
-    if (action.name === 'Check In' && !onCheckIn) return false;
-    if (action.name === 'KDS' && !onKDS) return false;
+    if (action.name === "Payments" && !onPayments) return false;
+    if (action.name === "Alerts" && !onAlerts) return false;
+    if (action.name === "Check In" && !onCheckIn) return false;
+    if (action.name === "KDS" && !onKDS) return false;
     return true;
   });
 
@@ -82,7 +101,9 @@ const MemoQuickActionsDrawer = ({ customActions = [], onPayments, onAlerts, onCh
       <SheetContent side="left" className="w-[300px] sm:w-[400px]">
         <SheetHeader>
           <SheetTitle>Quick Actions</SheetTitle>
-          <SheetDescription>Access frequently used features and actions</SheetDescription>
+          <SheetDescription>
+            Access frequently used features and actions
+          </SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-2">
           {allActions.map((action, index) => {
@@ -90,7 +111,7 @@ const MemoQuickActionsDrawer = ({ customActions = [], onPayments, onAlerts, onCh
             return (
               <Button
                 key={`${action.name}-${index}`}
-                variant={action.variant || 'outline'}
+                variant={action.variant || "outline"}
                 className="h-12 w-full justify-start gap-3"
                 onClick={() => {
                   action.onClick();
@@ -102,7 +123,11 @@ const MemoQuickActionsDrawer = ({ customActions = [], onPayments, onAlerts, onCh
               </Button>
             );
           })}
-          {allActions.length === 0 && <p className="text-muted-foreground py-8 text-center text-sm">No actions available</p>}
+          {allActions.length === 0 && (
+            <p className="text-muted-foreground py-8 text-center text-sm">
+              No actions available
+            </p>
+          )}
         </div>
       </SheetContent>
     </Sheet>

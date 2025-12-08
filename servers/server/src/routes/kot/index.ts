@@ -216,6 +216,7 @@ const kotRouter = new Hono()
         itemName: z.string().min(1).max(100),
         itemPrice: z.number().min(1).max(2000).positive(),
         itemQuantity: z.number().min(1).max(100),
+        kitchenId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
@@ -228,6 +229,7 @@ const kotRouter = new Hono()
           itemName,
           itemPrice,
           itemQuantity,
+          kitchenId = null,
         } = await c.req.json();
         const tableInfo = await Table.findOne({
           businessId: businessId,
@@ -254,9 +256,9 @@ const kotRouter = new Hono()
           return respond(c, "POS not found", true, 404, {});
         }
 
-        if (pos.posName !== "HIPAL_Z") {
-          return respond(c, "operation not allowed", true, 401, {});
-        }
+        // if (pos.posName !== "HIPAL_Z") {
+        //   return respond(c, "operation not allowed", true, 401, {});
+        // }
 
         const tableSession = (await UserSession.findOne({
           tableName: tableName,
@@ -382,7 +384,7 @@ const kotRouter = new Hono()
           itemName,
           itemPrice,
           itemQuantity,
-          kitchenId: kitchenInfo?._id.toString(),
+          kitchenId: kitchenId || kitchenInfo?._id.toString(),
         });
 
         const res = await saveKotOrder(
@@ -558,6 +560,18 @@ const kotRouter = new Hono()
             400,
             {},
           );
+        }
+
+        if (tableSession) {
+          if (tableSession.isDiscountApplied) {
+            return respond(
+              c,
+              "Discount already applied for this table please remove it first",
+              true,
+              400,
+              {},
+            );
+          }
         }
 
         if (password) {
@@ -772,6 +786,18 @@ const kotRouter = new Hono()
               400,
               {},
             );
+          }
+
+          if (tableSession) {
+            if (tableSession.isDiscountApplied) {
+              return respond(
+                c,
+                "Discount already applied for this table please remove it first",
+                true,
+                400,
+                {},
+              );
+            }
           }
           const orderAlreadyExist = await PaymentAlert.findOne({
             businessId: kot.businessId,

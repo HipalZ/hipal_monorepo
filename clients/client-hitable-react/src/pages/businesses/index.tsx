@@ -1,39 +1,35 @@
-import bookmarkAfter from "@/assets/svg/bookmarkAfter.svg";
-import bookmarkBefore from "@/assets/svg/bookmarkBefore.svg";
-import ProfileHeader from "@/components/liteAlerts/profileHeader";
-import { useHiClientZ } from "@/components/store/useHiClientzData";
-import { useLiteStore } from "@/components/store/useLiteStore";
-import type { CustomRole } from "@/components/types/hiClientzData";
-import { memo } from "react";
-import { FiDownload } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
-import smartPhone from "@/assets//img/smartphone.png";
-import { apiRpc } from "@hi/common";
-import useBusinessData from "@/components/store/useBusinessData";
+import smartPhone from '@/assets//img/smartphone.png';
+import bookmarkAfter from '@/assets/svg/bookmarkAfter.svg';
+import bookmarkBefore from '@/assets/svg/bookmarkBefore.svg';
+import ProfileHeader from '@/components/liteAlerts/profileHeader';
+import useBusinessData from '@/components/store/useBusinessData';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
+import { useLiteStore } from '@/components/store/useLiteStore';
+import type { CustomRole } from '@/components/types/hiClientzData';
+import { apiRpc } from '@hi/common';
+import { memo } from 'react';
+import { FiDownload } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
 const BusinessesMemo = memo(() => {
-  // store
-  const { captainData, setSelectedBiz } = useHiClientZ((s) => ({
-    captainData: s.captainData,
-    setSelectedBiz: s.setSelectedBiz,
-  }));
+  const captainData = useHiClientZ((s) => s.captainData);
+  const setSelectedBiz = useHiClientZ((s) => s.setSelectedBiz);
+
   const navigate = useNavigate();
 
   const setTriggerSound = useLiteStore((s) => s.setTriggerSound);
 
   const getBusinessInfo = async (id: string) => {
-    const res = await apiRpc.businesses.outletInfo[":businessId"].$get({
+    const res = await apiRpc.businesses.outletInfo[':businessId'].$get({
       param: {
         businessId: id,
       },
     });
-    const loyaltyResponse = await apiRpc.businesses[":businessId"].loyalty.$get(
-      {
-        param: {
-          businessId: id,
-        },
+    const loyaltyResponse = await apiRpc.businesses[':businessId'].loyalty.$get({
+      param: {
+        businessId: id,
       },
-    );
+    });
     const response = (await res.json()).data;
     const loyalty = (await loyaltyResponse.json()).data;
     if (res.status === 200 || res.status === 201) {
@@ -45,81 +41,85 @@ const BusinessesMemo = memo(() => {
   const exploreBusiness = (biz: CustomRole) => {
     setSelectedBiz(biz);
     setTriggerSound(true);
-    getBusinessInfo(biz?.businessId?._id);
-    navigate("/viewInBiz");
+    if (biz?.businessId?._id) {
+      getBusinessInfo(biz.businessId._id);
+    }
+    navigate('/viewInBiz');
   };
 
   return (
-    <main className="relative h-screen">
-      <header className="flex h-[5rem] items-center justify-between px-6 py-4">
-        <h1 className="text-xl font-medium">Hi, {captainData?.name}</h1>
+    <main className="relative min-h-screen bg-gray-50 pb-8">
+      <header className="sticky top-0 z-10 flex h-20 items-center justify-between bg-white px-5 py-4 shadow-sm">
+        <h1 className="text-2xl font-bold text-gray-800">Hello, {captainData?.name?.split(' ')[0] || 'Captain'}!</h1> {/* Simplified greeting */}
         <ProfileHeader />
       </header>
-      <article
-        style={{ backgroundColor: "#4C4DDC" }}
-        className="flex h-[7rem] gap-4 w-full items-center overflow-hidden"
-      >
-        <img
-          src={smartPhone}
-          alt="promoAvatar"
-          width={90}
-          loading="lazy"
-          className="ml-4"
-        />
-        <article className="space-y-2 text-white">
-          <h1>For Better & Faster Experience use Android Application</h1>
+      <article className="mx-5 mt-4 flex items-center gap-4 overflow-hidden rounded-xl p-4 shadow-lg" style={{ backgroundColor: '#4C4DDC' }}>
+        <img src={smartPhone} alt="Smartphone Promotion" width={80} loading="lazy" className="flex-shrink-0" />
+        <article className="flex-grow space-y-1 text-white">
+          <h1 className="text-lg font-semibold leading-snug">Experience Better & Faster Service with our Android App</h1>
           <a
-            href="https://assets.hipalz.com/hiclient-3.apk"
-            className="flex items-center gap-2 p-2 ml-auto text-sm font-semibold text-black bg-white w-36 rounded-xl"
+            href="https://assets.hipalz.com/hiclient-share-cart.apk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-indigo-700 transition duration-200 hover:bg-gray-100 hover:shadow-md"
+            aria-label="Download the Android Application"
           >
             <FiDownload size={16} /> <span>Download App</span>
           </a>
         </article>
       </article>
-      <br />
-      <h1 className="mx-5 mb-4 text-2xl text-black">You are added to</h1>
-      <section className="mx-5 lg:grid lg:grid-cols-2">
-        {captainData?.customRole ? (
-          captainData?.customRole?.map((biz) => (
-            <section
-              onClick={() => exploreBusiness(biz)}
-              onKeyDown={() => exploreBusiness(biz)}
-              key={biz?.businessId?._id}
-              className="my-4 flex h-[6rem] items-center justify-between rounded-2xl p-4"
-              style={{ backgroundColor: "#f2f2f2" }}
-            >
-              <article className="flex items-center">
-                <img
-                  src={biz?.businessId?.logo}
-                  alt="logo"
-                  width={65}
-                  height={65}
-                  className="border border-black rounded-full border-1"
-                />
-                <div className="ml-4">
-                  <h1 className="text-xl font-medium">
-                    {biz?.businessId?.businessName}
-                  </h1>
-                  <p
-                    title={biz?.businessId?.address}
-                    className="w-48 text-base font-medium truncate"
-                  >
-                    {biz?.businessId?.address}
-                  </p>
-                </div>
-              </article>
-              <div>
-                <img
-                  src={biz.bookMark ? bookmarkAfter : bookmarkBefore}
-                  alt="bookmark"
-                />
+      {/* 🏢 Businesses List Section */}
+      <section className="mx-4 mt-8 sm:mx-6 lg:mx-8">
+  <h2 className="mb-5 text-xl font-bold text-gray-800">Your Businesses</h2>
+
+  <div className="grid gap-4 sm:gap-5 lg:gap-6">
+    {/* Force single column on mobile, 2 columns on large screens */}
+    <div className={`grid gap-4 ${captainData?.customRole?.length ? 'grid-cols-1 lg:grid-cols-2' : ''}`}>
+      {captainData?.customRole && captainData.customRole.length > 0 ? (
+        captainData.customRole.map((biz) => (
+          <div
+            key={biz?.businessId?._id}
+            onClick={() => exploreBusiness(biz)}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && exploreBusiness(biz)}
+            role="button"
+            tabIndex={0}
+            className="flex cursor-pointer items-center justify-between rounded-xl border border-gray-200 bg-white p-5 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            <article className="flex flex-1 items-center space-x-4 overflow-hidden">
+              <img
+                src={biz?.businessId?.logo}
+                alt={`${biz?.businessId?.name} Logo`}
+                width={56}
+                height={56}
+                className="h-14 w-14 flex-shrink-0 rounded-full border-2 border-indigo-400 object-cover p-0.5"
+              />
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-lg font-semibold text-gray-800">
+                  {biz?.businessId?.name}
+                </h3>
+                <p className="truncate text-sm text-gray-500">
+                  {biz?.businessId?.address || 'Address not available'}
+                </p>
               </div>
-            </section>
-          ))
-        ) : (
-          <center>No Business Found</center>
-        )}
-      </section>
+            </article>
+
+            <img
+              src={biz.bookMark ? bookmarkAfter : bookmarkBefore}
+              alt={biz.bookMark ? 'Bookmarked' : 'Not Bookmarked'}
+              width={20}
+              height={20}
+              className="ml-4 flex-shrink-0"
+            />
+          </div>
+        ))
+      ) : (
+        <div className="col-span-full rounded-xl bg-white py-16 text-center text-gray-500 shadow-md">
+          <p className="text-lg">No Businesses Found.<br />Please contact support if this seems incorrect.</p>
+        </div>
+      )}
+    </div>
+  </div>
+</section>
     </main>
   );
 });

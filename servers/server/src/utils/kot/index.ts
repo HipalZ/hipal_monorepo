@@ -284,7 +284,7 @@ export const convertToHipalzCart = ({
 }: OpenItemPayload) => {
   const cart = [
     {
-      id: nanoid(15),
+      id: nanoid(24),
       dish: {
         posDishId: nanoid(10),
         isDeleted: false,
@@ -304,6 +304,7 @@ export const convertToHipalzCart = ({
       quantity: itemQuantity,
       isDeleted: false,
       discount: 0,
+      isOpenItem: true,
     },
   ];
 

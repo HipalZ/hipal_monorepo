@@ -2,6 +2,7 @@ import DateRangePicker from '@/components/molecules/dateRangePicker/index.tsx';
 import MemoizedHeader from '@/components/molecules/header/index.tsx';
 import AddonReports from '@/components/reports/AddOnReports.tsx';
 import CategoryReports from '@/components/reports/CategoryReports.tsx';
+import MultiReportDownloadButton from '@/components/reports/CombinedReport';
 import DiscountReports from '@/components/reports/DiscountReport.tsx';
 import ItemReports from '@/components/reports/ItemReports.tsx';
 import ServiceChargeReports from '@/components/reports/ServiceChargeReports.tsx';
@@ -17,6 +18,7 @@ enum ReportType {
   Discount = 'discount',
   ServiceCharge = 'serviceCharge',
   AddOn = 'addOn',
+  Combined = 'combined',
 }
 
 const navItems = [
@@ -27,6 +29,9 @@ const navItems = [
   },
   { text: 'Discount' },
   { text: 'ServiceCharge' },
+  {
+    text: 'Combined',
+  },
 ];
 
 const Reports = () => {
@@ -99,6 +104,11 @@ const Reports = () => {
       {reportPage === ReportType.ServiceCharge.toLowerCase() && (
         <div>
           <ServiceChargeReports />
+        </div>
+      )}
+      {reportPage === ReportType.Combined && (
+        <div>
+          <MultiReportDownloadButton />
         </div>
       )}
     </main>

@@ -14,10 +14,12 @@ import type { UserSessionSchemaType } from "@hi/db-models/src/validators";
 import type { ClientSession } from "mongoose";
 import {
   calculateFinalTotal,
+  calculateFinalTotalWithoutRoundOff,
   calculateSplitBillDishIds,
   calculateSplitTotalsFromItems,
   calculateTotalDiscount,
   calculateUpdatedGstAfterDiscount,
+  getRoundOff,
   groupSplitItemsByGST,
   itemsGroupedByGst,
   splitCalculateItemUpdated,
@@ -95,6 +97,7 @@ const returnSplitBillVariants = async (
   businessId: string,
   tableName: string,
   session: ClientSession,
+  billInvoice: number,
 ) => {
   const fetchVariants = await SplitBillTableSession.find({
     businessId,
@@ -128,17 +131,16 @@ const returnSplitBillVariants = async (
     let serviceChargeAmount = 0;
     const menuId = cartItems[0]?.dish?.menuId;
 
-    if (menuId) {
-      const serviceCharge = await Tax.findOne({
-        businessId,
-        menuId,
-        isActive: true,
-        name: "servicecharge",
-      });
+    const serviceCharge = await Tax.findOne({
+      businessId,
+      menuId,
+      isActive: true,
+      name: "servicecharge",
+    });
 
-      const percentage = serviceCharge?.value || 0;
-      serviceChargeAmount = Math.round((percentage / 100) * totalDishTotal);
-    }
+    const percentage =
+      variant.serviceChargePercentage || serviceCharge?.value || 0;
+    serviceChargeAmount = (percentage / 100) * totalDishTotal;
 
     if (variant.isServiceChargeRemoved) {
       serviceChargeAmount = 0;
@@ -164,17 +166,33 @@ const returnSplitBillVariants = async (
       variant.tips,
     );
 
+    const totalWithoutRoundOff = calculateFinalTotalWithoutRoundOff(
+      totalDishTotal,
+      totalDis,
+      newGst,
+      serviceChargeAmount,
+      0,
+      variant.tips,
+    );
+
+    const { type, value } = getRoundOff(totalWithoutRoundOff);
+
     // Update table session
     variant = await updateSplitTableSession(
       variant._id.toString(),
       {
         gst: Number(newGst.toFixed(2)),
         total: newTotal,
-        serviceCharge: serviceChargeAmount,
+        serviceCharge: Number(serviceChargeAmount?.toFixed(2)),
         billGeneratedBy: variant.generatedBy || "system",
         subTotal: totalDishTotal,
         items: cartItems,
-        totalGst: totalGst,
+        totalGst: Number(totalGst?.toFixed(2)),
+        serviceChargePercentage:
+          variant.serviceChargePercentage || serviceCharge?.value || 0,
+        billInvoice: billInvoice,
+        roundOffType: type,
+        roundOffAmount: value,
       },
       session,
     );
@@ -209,6 +227,10 @@ const returnSplitBillVariants = async (
       variantId: variant._id.toString(),
       variantName: variant.variantName,
       isPaid: variant.isPaid,
+      serviceChargePercentage:
+        variant.serviceChargePercentage || serviceCharge?.value || 0,
+      roundOffType: type,
+      roundOffAmount: value,
     });
   }
 
@@ -220,6 +242,7 @@ const returnSplitBillVariantsForItemWise = async (
   businessId: string,
   tableName: string,
   session: ClientSession,
+  billInvoice: number,
 ) => {
   const fetchVariants = await SplitBillTableSession.find({
     businessId,
@@ -253,17 +276,16 @@ const returnSplitBillVariantsForItemWise = async (
     let serviceChargeAmount = 0;
     const menuId = cartItems[0]?.dish?.menuId;
 
-    if (menuId) {
-      const serviceCharge = await Tax.findOne({
-        businessId,
-        menuId,
-        isActive: true,
-        name: "servicecharge",
-      });
+    const serviceCharge = await Tax.findOne({
+      businessId,
+      menuId,
+      isActive: true,
+      name: "servicecharge",
+    });
 
-      const percentage = serviceCharge?.value || 0;
-      serviceChargeAmount = Math.round((percentage / 100) * totalDishTotal);
-    }
+    const percentage =
+      variant.serviceChargePercentage || serviceCharge?.value || 0;
+    serviceChargeAmount = (percentage / 100) * totalDishTotal;
 
     if (variant.isServiceChargeRemoved) {
       serviceChargeAmount = 0;
@@ -287,18 +309,34 @@ const returnSplitBillVariantsForItemWise = async (
       variant.tips,
     );
 
+    const totalWithoutRoundOff = calculateFinalTotalWithoutRoundOff(
+      totalDishTotal,
+      totalDis,
+      newGst,
+      serviceChargeAmount,
+      0,
+      variant.tips,
+    );
+
+    const { type, value } = getRoundOff(totalWithoutRoundOff);
+
     // Update table session
     variant = await updateSplitTableSession(
       variant._id.toString(),
       {
         gst: Number(newGst.toFixed(2)),
         total: newTotal,
-        serviceCharge: serviceChargeAmount,
+        serviceCharge: Number(serviceChargeAmount?.toFixed(2)),
         billGeneratedBy: variant.generatedBy || "system",
         subTotal: totalDishTotal,
         items: cartItems,
         billPrintCount: (variant.billPrintCount || 0) + 1,
         totalGst: Number(totalGst?.toFixed(2)),
+        serviceChargePercentage:
+          variant.serviceChargePercentage || serviceCharge?.value || 0,
+        billInvoice: billInvoice,
+        roundOffType: type,
+        roundOffAmount: value,
       },
       session,
     );
@@ -331,6 +369,10 @@ const returnSplitBillVariantsForItemWise = async (
       variantId: variant._id.toString(),
       variantName: variant.variantName,
       isPaid: variant.isPaid,
+      serviceChargePercentage:
+        variant.serviceChargePercentage || serviceCharge?.value || 0,
+      roundOffType: type,
+      roundOffAmount: value,
     });
   }
 
@@ -367,7 +409,7 @@ const applyDiscountToVariantBill = async ({
   let saveGstAfterDiscount = 0;
 
   if (discountAppliedOn === "ON_BILL") {
-    const dis = Math.round((value / 100) * newSubTotal);
+    const dis = (value / 100) * newSubTotal;
 
     // Calculate discount on the bill
     discountAmount = Math.min(
@@ -385,7 +427,7 @@ const applyDiscountToVariantBill = async ({
       itemIds,
     );
 
-    const dishDis = Math.round((value / 100) * totalDishTotal);
+    const dishDis = (value / 100) * totalDishTotal;
     discountAmount = Math.min(
       dishDis,
       splitTableSession.subTotal -
@@ -973,6 +1015,8 @@ export const handleNormalBillSettlement = async ({
         billInvoice: splitBillTableSession?.billInvoice,
         serviceChargePercentage:
           splitBillTableSession?.serviceChargePercentage || 0,
+        roundOffType: splitBillTableSession?.roundOffType || 0,
+        roundOffAmount: splitBillTableSession?.roundOffAmount || 0,
       },
     ],
     { session },
@@ -1155,6 +1199,8 @@ const processOfflineOrderPayment = async ({
         billInvoice: splitBillTableSession?.billInvoice,
         serviceChargePercentage:
           splitBillTableSession?.serviceChargePercentage || 0,
+        roundOffType: splitBillTableSession?.roundOffType || 0,
+        roundOffAmount: splitBillTableSession?.roundOffAmount || 0,
       },
     ],
     { session },

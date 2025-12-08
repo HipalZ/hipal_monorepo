@@ -16,41 +16,57 @@ const TemplatePreview = lazy(() => import('./templatePreview'));
 const MemoCreateEditTemplate = () => {
   const templateSteps = useWhatsapp((s) => s.templateSteps);
   const showSuccessPopup = useWhatsapp((s) => s.showSuccessPopup);
-  const templateStatus = useWhatsapp((s) => s.templateStatus);
   const confirmCreate = useWhatsapp((s) => s.confirmCreate);
   const setConfirmCreate = useWhatsapp((s) => s.setConfirmCreate);
+  const isLoading = useWhatsappTempStore((s) => s.isLoading);
 
-  // handle form submit for create and edit template
   const handleSubmitReview = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setConfirmCreate(true);
   };
 
-  // proceed forward after success popup
-  const isLoading = useWhatsappTempStore((s) => s.isLoading);
-
   return (
-    <form onSubmit={handleSubmitReview}>
-      <div className="container p-3 pb-24 font-sans lg:p-4">
+    <form onSubmit={handleSubmitReview} className="flex min-h-screen flex-col bg-gray-50/50">
+      {/* 1. Fixed Header Area (Optional, if StepHeader isn't sticky) */}
+      <div className="container mx-auto px-4 pt-6">
         <StepHeader />
-        <div className="grid gap-8 md:mt-4 md:grid-cols-2">
-          <TemplatePreview />
-          {templateSteps === TemplateSteps.CREATE_EDIT && (
-            <section>
-              <Content />
-              <CallOfAction />
-            </section>
-          )}
-          {templateSteps === TemplateSteps.SHOW_OPTIONS && <ShowOptionsToSend />}
-          {templateSteps === TemplateSteps.SEND && <SendTemplate />}
+      </div>
+
+      {/* 2. Main Workspace Layout */}
+      <div className="container mx-auto mt-8 flex-grow px-4 pb-32">
+        <div className="grid items-start gap-8 lg:grid-cols-12">
+          <div className="sticky top-8 hidden self-start transition-all lg:col-span-5 lg:block">
+            <div className="flex min-h-[600px] items-center justify-center rounded-3xl border border-gray-200 bg-gray-100 p-8 shadow-inner">
+              <TemplatePreview />
+            </div>
+            <p className="mt-4 text-center text-sm text-gray-400">Live Preview</p>
+          </div>
+          <div className="lg:col-span-7">
+            <div className="mb-8 flex justify-center lg:hidden">
+              <TemplatePreview />
+            </div>
+
+            {templateSteps === TemplateSteps.CREATE_EDIT && (
+              <div className="space-y-6">
+                <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+                  <Content />
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+                  <CallOfAction />
+                </div>
+              </div>
+            )}
+
+            {templateSteps === TemplateSteps.SHOW_OPTIONS && <ShowOptionsToSend />}
+            {templateSteps === TemplateSteps.SEND && <SendTemplate />}
+          </div>
         </div>
       </div>
-      {templateStatus === 'REJECTED' ? (
-        <center className="text-red-500">Your template is rejected first update the template before proceeding</center>
-      ) : null}
       <TemplateButtons />
+
+      {/* Modals */}
       {showSuccessPopup && <SuccessPopup />}
-      {confirmCreate ? <TemplateTerms /> : null}
+      {confirmCreate && <TemplateTerms />}
       {isLoading && <LoadingSpinner />}
     </form>
   );

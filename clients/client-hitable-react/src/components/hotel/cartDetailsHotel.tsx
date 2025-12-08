@@ -34,7 +34,7 @@ const MemoCartDetailsHotel = ({ localCart, setLocalCart, readOnly }: CartDetails
             </div>
 
             {/* Cart Items */}
-            <div className="px-4 py-2 h-full">
+            <div className="px-4 py-2 h-full overflow-y-auto max-h-96">
                 {localCart.length > 0 ? (
                     localCart.map((item) => (
                         <div key={item?.id} className="py-2 border-b last:border-b-0 border-gray-100">

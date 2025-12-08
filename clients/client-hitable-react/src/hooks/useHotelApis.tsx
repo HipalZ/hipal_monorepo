@@ -312,9 +312,6 @@ export const useReviewChat = () => {
 
 export const useEscalatedAlerts = () => {
   const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
-  if (outletType !== 'HOTEL') {
-    return;
-  }
   const { setHotelEscalationCount, setEscalatedData } = useHotelStore();
   const captainData = useHiClientZ((s) => s.captainData);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
@@ -326,22 +323,29 @@ export const useEscalatedAlerts = () => {
   }, [customRoles, businessId]);
 
   const escalatedAlerts = async () => {
+    if (!businessId || !captainData?._id) return [];
+
     const response = await apiRpc.hotel.alert.fetch_escalation_alerts.$get({
       query: {
         businessId,
         userId: captainData?._id,
       },
     });
+
     const res = await response.json();
+
     if (response.status === 200 || response.status === 201) {
       setEscalatedData(res.data);
       setHotelEscalationCount(res.data.length);
       return res.data;
     }
+
+    return [];
   };
 
   const roleNamesAllowed = ['MANAGER', 'FRONT_OFFICE'];
-  const isEnabled = Boolean(businessId && captainData?._id) && roleNamesAllowed.includes(roleName);
+
+  const isEnabled = outletType === 'HOTEL' && Boolean(businessId && captainData?._id) && roleNamesAllowed.includes(roleName);
 
   useQuery({
     queryKey: ['escalatedAlerts'],

@@ -1,12 +1,19 @@
+import type { Workbook, Worksheet } from "exceljs";
 import { Business } from "@hi/db-models";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { formatDateToIST } from "./dateFormater";
+import type { AnyPayment, BaseContext } from "./types";
+import { addBoldHeaderRow, autoFitColumns } from "./excelUtils";
 
 interface ServiceChargeReport {
   businessId: string;
   businessName: string;
   serviceCharge: number;
 }
+
+// ---------------------------------------------------------------------
+// Helper: Service Charge Report sheet
+// ---------------------------------------------------------------------
 
 export async function buildServiceChargeReport(
   payments: PaymentType[],
@@ -47,4 +54,32 @@ export async function buildServiceChargeReport(
   });
 
   return report;
+}
+
+export async function buildServiceChargeSheet(
+  workbook: Workbook,
+  ctx: BaseContext,
+) {
+  const { businessIds, allPayments, from, to } = ctx;
+
+  const sheet: Worksheet = workbook.addWorksheet("Service Charge Report");
+
+  const serviceChargePayments = allPayments.filter(
+    (p: AnyPayment) => typeof p.serviceCharge !== "undefined",
+  ) as PaymentType[];
+
+  const serviceChargeData = await buildServiceChargeReport(
+    serviceChargePayments,
+    businessIds,
+    from,
+    to,
+  );
+
+  const header = ["BusinessId", "BusinessName", "ServiceCharge"];
+  addBoldHeaderRow(sheet, header);
+
+  for (const item of serviceChargeData) {
+    sheet.addRow([item.businessId, item.businessName, item.serviceCharge]);
+  }
+  autoFitColumns(sheet);
 }

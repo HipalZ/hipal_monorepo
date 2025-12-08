@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import useReports from "@/components/store/useReports.ts";
 import { formatDate } from "@/components/utils/helper.ts";
 import { useApiErrorHandler } from "./useApiErrorHandler.ts";
+import { formatDateToIST } from "@hipal/server/src/utils/reportHelper/dateFormater.ts";
 
 interface GetReportsPayload {
   from: string;
@@ -546,5 +547,53 @@ export const useGetServiceChargeReportsCsv = () => {
     isPending,
     getServiceChargeReportsCsv: mutateAsync,
     resetError: reset,
+  };
+};
+
+type GetReportsCombinedPayload = {
+  businessIds: (string | undefined)[];
+  from: number;
+  to: number;
+};
+
+export const useDownloadUnifiedExcel = () => {
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: GetReportsCombinedPayload) => {
+      // 👇 update this path to match your backend route binding
+      const response = await apiRpc.report.combine.$post({
+        json: {
+          businessIds: payload.businessIds,
+          from: payload.from,
+          to: payload.to,
+        },
+      });
+
+      return response.blob();
+    },
+    onSuccess: (blob, variables) => {
+      const url = window.URL.createObjectURL(blob);
+
+      const fromStr = formatDateToIST(Number(variables.from));
+      const toStr = formatDateToIST(Number(variables.to));
+      const fileName = `Combine reports ${fromStr} to ${toStr}.xlsx`;
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", fileName);
+
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+
+      window.URL.revokeObjectURL(url);
+    },
+    onError: (error) => {
+      console.error("Excel download failed", error);
+    },
+  });
+
+  return {
+    isPendingExcel: isPending,
+    downloadUnifiedExcel: mutateAsync,
   };
 };

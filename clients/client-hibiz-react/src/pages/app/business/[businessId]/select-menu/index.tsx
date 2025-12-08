@@ -579,6 +579,28 @@ const MemoSelectMenu = () => {
           ]}
         />
       )}
+      {outletInfo?.isHipalzPos ? (
+        <AdvancedBottomButton
+          fixed={true}
+          maxWidth="30rem"
+          buttons={[
+            {
+              text: "Copy Existing Layout",
+              icon: <FaCopy />,
+              onClick: () => setShowCopyLayoutModal(true),
+              className: "pl-3 rounded-md w-full",
+              disable: isLoading,
+            },
+            {
+              text: "Create New Menu Layout",
+              icon: <FaPlus />,
+              onClick: handleCreateNew,
+              className: "pl-3 rounded-md w-full",
+              disable: isLoading,
+            },
+          ]}
+        />
+      ) : null}
     </main>
   );
 };

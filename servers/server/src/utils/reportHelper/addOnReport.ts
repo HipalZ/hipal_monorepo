@@ -1,6 +1,9 @@
+import type * as ExcelJS from "exceljs";
+import type { Workbook } from "exceljs";
 import { Business } from "@hi/db-models";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { formatDateToIST } from "./dateFormater";
+import { autoFitColumns } from "./excelUtils";
 
 interface AddOnReport {
   businessId: string;
@@ -16,6 +19,37 @@ interface AddOnDetails {
   amount: number;
   totalSales: number;
 }
+
+type AnyPayment = any;
+
+type BaseContext = {
+  businessIds: string[];
+  from: number;
+  to: number;
+  allPayments: AnyPayment[];
+  bizNameMap: Record<string, string>;
+  kitchenNameMapByBiz: Record<string, Record<string, string>>;
+};
+
+const addKeyValueRow = (
+  sheet: ExcelJS.Worksheet,
+  key: string,
+  value: string | number,
+) => {
+  const row = sheet.addRow([key, value]);
+  row.getCell(1).font = { bold: true };
+};
+
+const addBoldHeaderRow = (sheet: ExcelJS.Worksheet, headers: string[]) => {
+  const row = sheet.addRow(headers);
+  row.eachCell((cell) => {
+    cell.font = { bold: true };
+  });
+};
+
+// ---------------------------------------------------------------------
+// Helper: Add-on Report sheet
+// ---------------------------------------------------------------------
 
 export async function buildAddOnReport(
   payments: PaymentType[],
@@ -102,4 +136,43 @@ export async function buildAddOnReport(
   });
 
   return report;
+}
+
+export async function buildAddOnSheet(workbook: Workbook, ctx: BaseContext) {
+  const { businessIds, allPayments, from, to } = ctx;
+
+  const sheet = workbook.addWorksheet("AddOn Report");
+
+  const addOnPayments = allPayments.filter((p) =>
+    (p.billItems || []).some(
+      (bi: any) =>
+        bi.extras && Array.isArray(bi.extras) && bi.extras.length > 0,
+    ),
+  ) as PaymentType[];
+
+  const addOnReport = await buildAddOnReport(
+    addOnPayments,
+    businessIds,
+    from,
+    to,
+  );
+
+  const header = ["Name", "No.of Orders", "Net Amount", "Total Sales"];
+
+  for (const item of addOnReport) {
+    sheet.addRow([]);
+    addKeyValueRow(sheet, "businessId", item.businessId);
+    addKeyValueRow(sheet, "businessName", item.businessName);
+    addBoldHeaderRow(sheet, header);
+
+    for (const addOn of item.addOns) {
+      sheet.addRow([
+        addOn.addOnName,
+        addOn.addOnCount,
+        addOn.amount,
+        addOn.totalSales,
+      ]);
+    }
+  }
+  autoFitColumns(sheet);
 }

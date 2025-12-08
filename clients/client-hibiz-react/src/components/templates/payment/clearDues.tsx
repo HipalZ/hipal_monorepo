@@ -131,6 +131,13 @@ const MemoClearDues = ({ selectedUser, closeSettleDues }: ClearDuesProps) => {
     },
   });
 
+  const filteredPaymentModes = useMemo(() => {
+    return paymentMode?.filter((pm) => {
+      const name = pm?.name?.toLowerCase();
+      return name !== 'complementary' && name !== 'npc';
+    });
+  }, [paymentMode]);
+
   if (isPending) return <LoadingSpinner />;
 
   return (
@@ -191,7 +198,7 @@ const MemoClearDues = ({ selectedUser, closeSettleDues }: ClearDuesProps) => {
               <h2 className="text-muted-foreground text-lg">Remain: ₹{selectedUser.totalDuesAmount - amountToPay}</h2>
             </section>
 
-            {payLoading ? <LoadingSpinner /> : <MultipleModes paymentModes={paymentMode} totalAmount={Number(amountToPay)} />}
+            {payLoading ? <LoadingSpinner /> : <MultipleModes paymentModes={filteredPaymentModes} totalAmount={Number(amountToPay)} />}
           </div>
         )}
 

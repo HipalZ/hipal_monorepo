@@ -1,16 +1,17 @@
 import AdvancedBottomButton from '@/components/atom/bottomButton/advancedBottomButton';
 import LoadingSpinner from '@/components/atom/loadingSpinner';
 import DateRangePicker from '@/components/molecules/dateRangePicker';
+import useBusinessData from '@/components/store/useBusinessData';
 import { type Filters, useSalesStore } from '@/components/store/useSalesStore';
 import useTimings from '@/components/store/useTimings';
 import { Button } from '@/components/ui/button';
+import { formatDateToIST } from '@/components/utils/helper';
 import { apiRpc } from '@hi/common';
 import { useMutation } from '@tanstack/react-query';
 import { Download } from 'lucide-react';
 import { memo, useCallback } from 'react';
 import { CiFilter } from 'react-icons/ci';
 import { RxCrossCircled } from 'react-icons/rx';
-import { useParams } from 'react-router-dom';
 
 const formatDate = (timestamp: number) => {
   const d = new Date(timestamp);
@@ -18,7 +19,7 @@ const formatDate = (timestamp: number) => {
 };
 
 const MemoConvertIntoCsv = () => {
-  const params = useParams();
+  const businessId = useBusinessData((s) => s?.outletInfo?.businessId);
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
   const selectedFilters = useSalesStore((s) => s.selectedFilters);
@@ -42,7 +43,7 @@ const MemoConvertIntoCsv = () => {
           .filter((filter) => filter.value.length > 0),
       );
     },
-    [selectedFilters],
+    [selectedFilters, setSelectedFilters],
   );
 
   interface ISalesPayloadCSV {
@@ -66,17 +67,20 @@ const MemoConvertIntoCsv = () => {
       return response.blob();
     },
     onSuccess: async (blob, variables) => {
-      const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement('a');
-      const fromStr = formatDate(Number(variables.from));
-      const toStr = formatDate(Number(variables.to));
-      const fileName = `payments ${fromStr} to ${toStr}.csv`;
+      const url = window.URL.createObjectURL(blob);
 
+      const fromStr = formatDateToIST(Number(variables.from));
+      const toStr = formatDateToIST(Number(variables.to));
+      const fileName = `Payments ${fromStr} to ${toStr}.xlsx`;
+
+      const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', fileName);
+
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
+
       window.URL.revokeObjectURL(url);
       setDownloadCsv(false);
     },
@@ -117,7 +121,7 @@ const MemoConvertIntoCsv = () => {
             text: 'Download',
             onClick: () =>
               mutateAsync({
-                businessId: params.businessId,
+                businessId: businessId || '',
                 from: timeStampStart.toString(),
                 to: timeStampEnd.toString(),
               }),

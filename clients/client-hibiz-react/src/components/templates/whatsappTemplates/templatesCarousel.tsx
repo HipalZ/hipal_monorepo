@@ -103,7 +103,7 @@ const MemoTemplatesCarousel = () => {
             >
               <article className="relative h-[170px] w-full">
                 {/* Status badge */}
-                <div className="absolute left-0 right-0 top-0 z-10 px-2 py-1">
+                <div className="absolute left-0 right-0 top-0 px-2 py-1">
                   <span
                     className={cn(
                       'rounded-full px-2 py-1 text-xs font-semibold text-white',
