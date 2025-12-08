@@ -5,7 +5,7 @@ on:
     branches: ['production']
     paths:
       - 'Dockerfile.bill-prod-worker'
-      - 'bun.lock'
+      - 'bun.lockb'
       - 'servers/server/src/queues/**'
 
 env:
