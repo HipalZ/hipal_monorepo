@@ -3,8 +3,6 @@ import { createHmac } from 'node:crypto';
 import {
   BusinessPosConfig,
   BusinessSettings,
-  CouponClaim,
-  Couponz,
   DeviceToken,
   DuesUser,
   GroupAnalytic,
@@ -27,56 +25,38 @@ import {
   UpiMode,
   User,
   UserAnalytic,
-  UserCouponClaim,
-  UserCouponGrabb,
   UserReward,
   UserRewardHistory,
   UserSession,
   UserTags,
 } from '@hi/db-models';
-import {
-  ReviewsSchema,
-  acceptOrderSchema,
-  paramsSchema,
-  razorpayOrderSchema,
-  validatePaymentSchema
-} from "@hi/db-models/src/validators";
-import { runInTransaction } from "@hi/utils";
-import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
-import { ObjectId } from "bson";
-import { endOfDay, startOfDay } from "date-fns";
-import { Hono } from "hono";
-import type { ClientSession } from "mongoose";
-import { nanoid } from "nanoid";
-import { z } from "zod";
-import {
-  ClientRoles,
-  requireAuthorization,
-} from "../../../middleware/authorization";
-import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { enqueueRazorpayJob } from "../../queues/enqueue";
-import { checkOriginBillIsSplit } from "../../services/splitBill";
-import { type KotOrderTypes, calculateBillTotals } from "../../utils/bill";
-import { getMerchantConfig } from "../../utils/cacheHelper";
-import {
-  adjustFromToTimestamps,
-  getISTDateRange,
-  isTodayIST,
-} from "../../utils/defaultBillingTime";
-import { executePosHandler } from "../../utils/executePoshandlers.ts";
-import { convertToPetpoojaCart } from "../../utils/helper";
-import { posApiPaths } from "../../utils/posConfig/petPooja";
+import { ReviewsSchema, acceptOrderSchema, paramsSchema, razorpayOrderSchema, validatePaymentSchema } from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { zValidator } from '@hono/zod-validator';
+import axios from 'axios';
+import { ObjectId } from 'bson';
+import { endOfDay, startOfDay } from 'date-fns';
+import { Hono } from 'hono';
+import type { ClientSession } from 'mongoose';
+import { nanoid } from 'nanoid';
+import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
+import { authTokenValidator } from '../../../middleware/tokenValidator';
+import { enqueueRazorpayJob } from '../../queues/enqueue';
+import { checkOriginBillIsSplit } from '../../services/splitBill';
+import { type KotOrderTypes, calculateBillTotals } from '../../utils/bill';
+import { getMerchantConfig } from '../../utils/cacheHelper';
+import { adjustFromToTimestamps, getISTDateRange, isTodayIST } from '../../utils/defaultBillingTime';
+import { executePosHandler } from '../../utils/executePoshandlers.ts';
+import { convertToPetpoojaCart } from '../../utils/helper';
+import { posApiPaths } from '../../utils/posConfig/petPooja';
 // import { queueClient } from "../../utils/queue/queueClient";
-import {
-  type MerchantConfig,
-  razorpayWrapper,
-} from "../../utils/razorpay-wrapper";
-import { buildUnifiedDashboardCore } from "../../utils/reportHelper/unifiedSalesDashBoard";
-import { respond } from "../../utils/response";
-import { buildBillsExcelBuffer } from "../../utils/sales";
-import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
-const admin = require("firebase-admin");
+import { razorpayWrapper } from '../../utils/razorpay-wrapper';
+import { buildUnifiedDashboardCore } from '../../utils/reportHelper/unifiedSalesDashBoard';
+import { respond } from '../../utils/response';
+import { buildBillsExcelBuffer } from '../../utils/sales';
+import { generateTenDigitCode, sendPushNotification } from '../pos/index.js';
+const admin = require('firebase-admin');
 // Hash a passwordss
 
 const { validateWebhookSignature } = require('../../utils/razorpay-utils');
@@ -409,6 +389,16 @@ const paymentsRouter = new Hono()
         active: true,
       });
 
+      const merchant = await BusinessSettings.findOne({
+        businessId,
+      })
+        .select('razorpayMerchantId razorpayKeyId businessId')
+        .lean();
+
+      if (!merchant) {
+        return respond(c, 'Merchant not found', true, 404, {});
+      }
+
       if (businessPosConfig) {
         if (!tableSession) {
           return respond(c, 'Table session not found', true, 404, {});
@@ -441,7 +431,7 @@ const paymentsRouter = new Hono()
             currency: currency,
             userId: userId,
             tableName: isTableMerge?.parentTableId?.name || tableName,
-            merchantId: c.req.param().merchantId,
+            merchantId: merchant.razorpayMerchantId,
           });
           if (!result) {
             throw new Error('Error in POS handler');
@@ -482,7 +472,7 @@ const paymentsRouter = new Hono()
 
             //@ts-ignore
             return runInTransaction(async (session: ClientSession) => {
-              const { merchantId } = c.req.param();
+              const merchantId = merchant.razorpayMerchantId as string;
               const uniqueOrderId = nanoid(15);
 
               const client = await razorpayWrapper.getClient(merchantId);
@@ -534,9 +524,7 @@ const paymentsRouter = new Hono()
               isSync: false,
             }).lean()) as KotOrderTypes[];
 
-            const cartItems = kotOrders.flatMap((order) =>
-              order.cart.filter((item) => !item.isDeleted && !item.isOpenItem),
-            );
+            const cartItems = kotOrders.flatMap((order) => order.cart.filter((item) => !item.isDeleted && !item.isOpenItem));
 
             const unsettleTable = await UnsettleTable.find({
               businessId,
@@ -660,7 +648,7 @@ const paymentsRouter = new Hono()
 
             //@ts-ignore
             return runInTransaction(async (session: ClientSession) => {
-              const { merchantId } = c.req.param();
+              const merchantId = merchant.razorpayMerchantId as string;
               const uniqueOrderId = nanoid(15);
 
               const client = await razorpayWrapper.getClient(merchantId);
@@ -712,9 +700,7 @@ const paymentsRouter = new Hono()
           isSync: false,
         }).lean()) as KotOrderTypes[];
 
-        const cartItems = kotOrders.flatMap((order) =>
-          order.cart.filter((item) => !item.isDeleted && !item.isOpenItem),
-        );
+        const cartItems = kotOrders.flatMap((order) => order.cart.filter((item) => !item.isDeleted && !item.isOpenItem));
 
         const unsettleTable = await UnsettleTable.find({
           businessId,
@@ -831,7 +817,7 @@ const paymentsRouter = new Hono()
 
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { merchantId } = c.req.param();
+        const merchantId = merchant.razorpayMerchantId as string;
         const uniqueOrderId = nanoid(15);
 
         const client = await razorpayWrapper.getClient(merchantId);
@@ -1088,9 +1074,7 @@ const paymentsRouter = new Hono()
               isSync: false,
             }).lean()) as KotOrderTypes[];
 
-            const cartItems = kotOrders.flatMap((order) =>
-              order.cart.filter((item) => !item.isDeleted && !item.isOpenItem),
-            );
+            const cartItems = kotOrders.flatMap((order) => order.cart.filter((item) => !item.isDeleted && !item.isOpenItem));
 
             const unsettleTable = await UnsettleTable.find({
               businessId,
@@ -1278,9 +1262,7 @@ const paymentsRouter = new Hono()
           isSync: false,
         }).lean()) as KotOrderTypes[];
 
-        const cartItems = kotOrders.flatMap((order) =>
-          order.cart.filter((item) => !item.isDeleted && !item.isOpenItem),
-        );
+        const cartItems = kotOrders.flatMap((order) => order.cart.filter((item) => !item.isDeleted && !item.isOpenItem));
 
         const unsettleTable = await UnsettleTable.find({
           businessId,
@@ -1465,11 +1447,7 @@ const paymentsRouter = new Hono()
     zValidator(
       'query',
       z.object({
-        userId: z.string().optional(),
-        couponId: z.string().optional(),
-        tableName: z.string().optional(),
-        businessId: z.string().optional(),
-        paidAmount: z.string().optional(),
+        businessId: z.string(),
       }),
     ),
 
@@ -1478,162 +1456,22 @@ const paymentsRouter = new Hono()
       const { response } = requestData;
       const { merchantId } = c.req.param();
       const { userId, couponId, businessId, tableName, paidAmount } = c.req.query();
-      const merchantConfig = (await getMerchantConfig(merchantId)) as MerchantConfig;
-      let RAZORPAY_SECRET = '';
 
-      if (!merchantConfig) {
-        const merchant = await BusinessSettings.findOne({
-          razorpayMerchantId: merchantId,
-        }).select('razorpayKeySecret');
-        RAZORPAY_SECRET = merchant?.razorpayKeySecret as string;
-      } else {
-        RAZORPAY_SECRET = merchantConfig.razorpayKeySecret;
+      const merchant = await BusinessSettings.findOne({
+        razorpayMerchantId: merchantId,
+      }).select('razorpayKeySecret');
+
+      if (!merchant) {
+        return respond(c, 'Merchant not found', true, 404, {});
       }
+
+      const RAZORPAY_SECRET = merchant?.razorpayKeySecret as string;
 
       if (!RAZORPAY_SECRET) return respond(c, 'razorpay_secret missing while validating payments', true, 400, {});
 
       const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
 
-      if (userId && couponId) {
-        let userClaim = await UserCouponClaim.findOne({ userId, couponId });
-        let couponClaim = await CouponClaim.findOne({ couponId });
-
-        const currentDate = Date.now();
-        const oneWeek = 7 * 24 * 60 * 60 * 1000; // One week in milliseconds
-        const oneMonth = 30 * 24 * 60 * 60 * 1000;
-
-        if (!userClaim) {
-          userClaim = await UserCouponClaim.create({
-            userId,
-            couponId,
-            date: currentDate,
-            weekelyLastResetDate: currentDate,
-            monthlyLastResetDate: currentDate,
-            weeklyLimit: 0,
-            monthlyLimit: 0,
-            overAllLimit: 0,
-          });
-        }
-
-        if (!couponClaim) {
-          couponClaim = await CouponClaim.create({
-            couponId,
-            date: currentDate,
-            weekelyLastResetDate: currentDate,
-            monthlyLastResetDate: currentDate,
-            weeklyLimit: 0,
-            monthlyLimit: 0,
-            overAllLimit: 0,
-          });
-        }
-
-        // Function to reset limits if necessary
-        const resetLimitsIfNecessary = (claim, type) => {
-          if (type === 'weekly' && currentDate - claim.weekelyLastResetDate >= oneWeek) {
-            claim.weeklyLimit = 0;
-            claim.weekelyLastResetDate = currentDate;
-          }
-          if (type === 'monthly' && currentDate - claim.monthlyLastResetDate >= oneMonth) {
-            claim.monthlyLimit = 0;
-            claim.monthlyLastResetDate = currentDate;
-          }
-        };
-
-        // Reset limits if necessary
-        resetLimitsIfNecessary(userClaim, 'weekly');
-        resetLimitsIfNecessary(userClaim, 'monthly');
-        resetLimitsIfNecessary(couponClaim, 'weekly');
-        resetLimitsIfNecessary(couponClaim, 'monthly');
-
-        // Function to update limits
-        const updateLimits = (claim: { overAllLimit: number; weeklyLimit: number; monthlyLimit: number }) => {
-          claim.overAllLimit += 1;
-          claim.weeklyLimit += 1;
-          claim.monthlyLimit += 1;
-        };
-
-        // Update limits
-        updateLimits(userClaim);
-        updateLimits(couponClaim);
-
-        // Save the updated claims
-        await userClaim.save();
-        await couponClaim.save();
-        const couponz = await Couponz.findById(couponId).select('conditions.individualUserLimit conditions.expiryClaimLimit businessId');
-
-        if (!couponz) {
-          return c.json(
-            {
-              err: true,
-              message: 'Coupon not found',
-              data: razorpay_order_id,
-            },
-            200,
-          );
-        }
-
-        const individualUserLimit = couponz?.conditions?.individualUserLimit;
-        const expiryClaimLimit = couponz?.conditions?.expiryClaimLimit;
-        const userClaimLimit = individualUserLimit && 'overAllLimit' in individualUserLimit ? individualUserLimit.overAllLimit : 0;
-        const couponClaimLimit = expiryClaimLimit && 'overAllLimit' in expiryClaimLimit ? expiryClaimLimit.overAllLimit : 0;
-
-        const couponOverAllLimit = (await CouponClaim.findOne({
-          couponId,
-        }).select('overAllLimit')) ?? { overAllLimit: 0 };
-        const userOverAllLimit = (await UserCouponClaim.findOne({
-          userId,
-          couponId,
-        }).select('overAllLimit')) ?? { overAllLimit: 0 };
-
-        if (userClaimLimit > 0) {
-          if (userOverAllLimit?.overAllLimit >= userClaimLimit) {
-            const expireAfterClaiming = await UserCouponGrabb.findOneAndUpdate(
-              {
-                userId,
-                couponId,
-              },
-              { $set: { isDeleted: true } },
-            );
-            if (!expireAfterClaiming) {
-              const createGrabb = await UserCouponGrabb.create({
-                userId,
-                couponId,
-                date: Date.now(),
-                isDeleted: true,
-                businessId: couponz?.businessId,
-                expiryDate: Date.now(),
-              });
-              if (!createGrabb) {
-                return c.json(
-                  {
-                    err: true,
-                    message: 'Coupon not found',
-                    data: razorpay_order_id,
-                  },
-                  200,
-                );
-              }
-            }
-          }
-        }
-
-        if (couponClaimLimit > 0) {
-          if (couponOverAllLimit?.overAllLimit >= couponClaimLimit) {
-            await Couponz.findOneAndUpdate(
-              {
-                _id: couponId,
-              },
-              { $set: { isActive: false, isDeleted: true } },
-            );
-          }
-        }
-      }
-
       const signature = createHmac('sha256', RAZORPAY_SECRET).update(`${razorpay_order_id}|${razorpay_payment_id}`).digest('hex');
-
-      const registrationToken = await DeviceToken.find({
-        businessId: businessId,
-      });
 
       if (signature === razorpay_signature) {
         return c.json({
@@ -1659,46 +1497,39 @@ const paymentsRouter = new Hono()
     const rawBody = await c.req.raw.text();
     const headers = c.req.header();
 
-    const signature = headers["x-razorpay-signature"];
-    const razorpayEventId = headers["x-razorpay-event-id"];
+    const signature = headers['x-razorpay-signature'];
+    const razorpayEventId = headers['x-razorpay-event-id'];
     if (!signature || !razorpayEventId) {
-      console.log("❌ Missing signature/event-id");
-      return c.json({ status: "ignored" });
+      console.log('❌ Missing signature/event-id');
+      return c.json({ status: 'ignored' });
     }
 
     const merchantConfig =
       (await getMerchantConfig(merchantId)) ||
       (await BusinessSettings.findOne({
         razorpayMerchantId: merchantId,
-      }).select("razorpayWebhookSecret"));
+      }).select('razorpayWebhookSecret'));
 
     if (!merchantConfig) {
-      console.log("❌ No webhook secret found");
-      return c.json({ status: "ignored" });
+      console.log('❌ No webhook secret found');
+      return c.json({ status: 'ignored' });
     }
 
     const secret = merchantConfig?.razorpayWebhookSecret;
 
     const isValid = validateWebhookSignature(rawBody, signature, secret);
     if (!isValid) {
-      console.log("❌ Invalid webhook signature");
-      return c.json({ status: "ignored" });
+      console.log('❌ Invalid webhook signature');
+      return c.json({ status: 'ignored' });
     }
 
     const body = JSON.parse(rawBody);
 
-    const {
-      id,
-      order_id,
-      method,
-      acquirer_data,
-      error_description,
-      error_reason,
-    } = body.payload.payment.entity;
+    const { id, order_id, method, acquirer_data, error_description, error_reason } = body.payload.payment.entity;
 
     if (!id || !order_id || !method) {
-      console.log("❌ Missing id/order_id method");
-      return c.json({ status: "ignored" });
+      console.log('❌ Missing id/order_id method');
+      return c.json({ status: 'ignored' });
     }
 
     const orderAlreadyExist = await RazorpayWebhookQueueModel.findOne({
@@ -1707,7 +1538,7 @@ const paymentsRouter = new Hono()
 
     if (!orderAlreadyExist) {
       const saveQueueModel = await RazorpayWebhookQueueModel.create({
-        status: "PENDING",
+        status: 'PENDING',
         merchantId: merchantId,
         razorpayEventId: razorpayEventId,
         order_id: order_id,
@@ -1721,18 +1552,18 @@ const paymentsRouter = new Hono()
       });
 
       if (!saveQueueModel) {
-        console.log("📌 Webhook could not be queued");
-        return respond(c, "Webhook could not be queued", false, 200, {});
+        console.log('📌 Webhook could not be queued');
+        return respond(c, 'Webhook could not be queued', false, 200, {});
       }
 
-      enqueueRazorpayJob("razorpayPaymentHandler", {
+      enqueueRazorpayJob('razorpayPaymentHandler', {
         date: Date.now(),
         merchantId: merchantId,
         razorpayEventId: razorpayEventId,
         order_id: order_id,
         id: id,
         event: body.event,
-        status: "PENDING",
+        status: 'PENDING',
         acquirer_data: acquirer_data,
         error_description: error_description,
         error_reason: error_reason,
@@ -1740,7 +1571,7 @@ const paymentsRouter = new Hono()
       });
     }
 
-    return respond(c, "Webhook received successfully", false, 200, {});
+    return respond(c, 'Webhook received successfully', false, 200, {});
   })
 
   // .post("/razorpay-webhook/2/:merchantId", async (c) => {
@@ -2306,8 +2137,7 @@ const paymentsRouter = new Hono()
                           isSplitBillVariant: true,
                           billInvoice: splitBillTableSessionData?.billInvoice,
                           paxCount: tableSession?.paxCount || 0,
-                          serviceChargePercentage:
-                            tableSession?.serviceChargePercentage || 0,
+                          serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
                           roundOffType: tableSession?.roundOffType || 0,
                           roundOffAmount: tableSession?.roundOffAmount || 0,
                         },
@@ -2493,8 +2323,7 @@ const paymentsRouter = new Hono()
                             isSplitBillVariant: true,
                             billInvoice: splitBillTableSessionData?.billInvoice,
                             paxCount: tableSession?.paxCount || 0,
-                            serviceChargePercentage:
-                              tableSession?.serviceChargePercentage || 0,
+                            serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
                             roundOffType: tableSession?.roundOffType || 0,
                             roundOffAmount: tableSession?.roundOffAmount || 0,
                           },
@@ -2835,8 +2664,7 @@ const paymentsRouter = new Hono()
                     billItems: tableSession?.items || [],
                     billInvoice: tableSession?.billInvoice || 0,
                     paxCount: tableSession?.paxCount || 0,
-                    serviceChargePercentage:
-                      tableSession?.serviceChargePercentage || 0,
+                    serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
                     roundOffType: tableSession?.roundOffType || 0,
                     roundOffAmount: tableSession?.roundOffAmount || 0,
                   },
@@ -3172,7 +3000,7 @@ const paymentsRouter = new Hono()
     },
   )
 
-  .get("/:id/salesDashboard", zValidator("query", paramsSchema), async (c) => {
+  .get('/:id/salesDashboard', zValidator('query', paramsSchema), async (c) => {
     const { businessId, from, to } = c.req.query();
 
     // Safer date parsing
@@ -3217,7 +3045,7 @@ const paymentsRouter = new Hono()
       },
     ).sort({ billInvoice: 1 });
 
-    console.log("payments length:", payments.length);
+    console.log('payments length:', payments.length);
 
     // 👉 Invoice range uses ALL payments (including dues)
     const startInvoiceNumber = payments[0]?.billInvoice || 0;
@@ -3248,16 +3076,7 @@ const paymentsRouter = new Hono()
     }, 0);
 
     for (const payment of payments) {
-      const {
-        total = 0,
-        paymentMode,
-        mode,
-        splitModes,
-        paxCount = 0,
-        billValue = 0,
-        roundOffType = 0,
-        roundOffAmount = 0,
-      } = payment as any;
+      const { total = 0, paymentMode, mode, splitModes, paxCount = 0, billValue = 0, roundOffType = 0, roundOffAmount = 0 } = payment as any;
 
       // ❌ Skip dues from all sales metrics
       if (mode === 'dues') {
@@ -3356,90 +3175,81 @@ const paymentsRouter = new Hono()
     });
   })
 
-  .get(
-    "/:id/unified_sales_dashboard",
-    zValidator("query", paramsSchema),
-    async (c) => {
-      const { businessId, from, to } = c.req.query();
+  .get('/:id/unified_sales_dashboard', zValidator('query', paramsSchema), async (c) => {
+    const { businessId, from, to } = c.req.query();
 
-      const fromDate = !isNaN(Number(from))
-        ? Number(from)
-        : startOfToday.getTime();
-      const toDate = !isNaN(Number(to)) ? Number(to) : endOfToday.getTime();
+    const fromDate = !isNaN(Number(from)) ? Number(from) : startOfToday.getTime();
+    const toDate = !isNaN(Number(to)) ? Number(to) : endOfToday.getTime();
 
-      if (fromDate > toDate) {
-        return c.json(
-          {
-            err: true,
-            data: {},
-            message: "from date should be less than to date",
-          },
-          400,
-        );
-      }
-
-      const payments = await Payment.find(
+    if (fromDate > toDate) {
+      return c.json(
         {
-          businessId,
-          isDeleted: false,
-          date: { $gte: fromDate, $lte: toDate },
+          err: true,
+          data: {},
+          message: 'from date should be less than to date',
         },
-        {
-          mode: 1,
-          paymentMode: 1,
-          splitModes: 1,
-          settleType: 1,
-          paxCount: 1,
-          billValue: 1,
-          tax: 1,
-          serviceCharge: 1,
-          tips: 1,
-          discount: 1,
-          claimedCoins: 1,
-          couponDiscount: 1,
-          total: 1,
-          billInvoice: 1,
-          roundOffType: 1,
-          roundOffAmount: 1,
-        },
-      ).sort({ billInvoice: 1 });
-
-      const activeTables = await Table.find({
-        businessId,
-        status: "ACTIVE",
-      }).select("name currentTableAmount");
-
-      const runningTables = activeTables
-        .filter((t) => (t.currentTableAmount ?? 0) > 0)
-        .map((t) => ({
-          id: t._id.toString(),
-          name: t.name,
-          amount: t.currentTableAmount ?? 0,
-        }));
-
-      const totalActiveTableValue = runningTables.reduce(
-        (sum, t) => sum + t.amount,
-        0,
+        400,
       );
+    }
 
-      const core = buildUnifiedDashboardCore(payments as any);
+    const payments = await Payment.find(
+      {
+        businessId,
+        isDeleted: false,
+        date: { $gte: fromDate, $lte: toDate },
+      },
+      {
+        mode: 1,
+        paymentMode: 1,
+        splitModes: 1,
+        settleType: 1,
+        paxCount: 1,
+        billValue: 1,
+        tax: 1,
+        serviceCharge: 1,
+        tips: 1,
+        discount: 1,
+        claimedCoins: 1,
+        couponDiscount: 1,
+        total: 1,
+        billInvoice: 1,
+        roundOffType: 1,
+        roundOffAmount: 1,
+      },
+    ).sort({ billInvoice: 1 });
 
-      return c.json({
-        err: false,
-        data: {
-          dateRange: { from: fromDate, to: toDate },
-          ...core,
-          runningTables: {
-            totalActiveTableValue,
-            tables: runningTables,
-          },
+    const activeTables = await Table.find({
+      businessId,
+      status: 'ACTIVE',
+    }).select('name currentTableAmount');
+
+    const runningTables = activeTables
+      .filter((t) => (t.currentTableAmount ?? 0) > 0)
+      .map((t) => ({
+        id: t._id.toString(),
+        name: t.name,
+        amount: t.currentTableAmount ?? 0,
+      }));
+
+    const totalActiveTableValue = runningTables.reduce((sum, t) => sum + t.amount, 0);
+
+    const core = buildUnifiedDashboardCore(payments as any);
+
+    return c.json({
+      err: false,
+      data: {
+        dateRange: { from: fromDate, to: toDate },
+        ...core,
+        runningTables: {
+          totalActiveTableValue,
+          tables: runningTables,
         },
-      });
-    },
-  )
+      },
+    });
+  })
 
   .get(
-    "/:id/bills",
+    '/:id/bills',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
@@ -3694,7 +3504,7 @@ const paymentsRouter = new Hono()
     },
   )
 
-  .get("/:id/bills_csv", zValidator("query", paramsSchema), async (c) => {
+  .get('/:id/bills_csv', zValidator('query', paramsSchema), async (c) => {
     const {
       appliedFilter,
       appliedFilters, // support both
@@ -3711,7 +3521,7 @@ const paymentsRouter = new Hono()
         {
           err: true,
           data: {},
-          message: "from date should be less than to date",
+          message: 'from date should be less than to date',
         },
         400,
       );
@@ -3723,10 +3533,9 @@ const paymentsRouter = new Hono()
 
     if (rawFilter) {
       try {
-        parsedFilters =
-          typeof rawFilter === "string" ? JSON.parse(rawFilter) : rawFilter;
+        parsedFilters = typeof rawFilter === 'string' ? JSON.parse(rawFilter) : rawFilter;
       } catch (err) {
-        console.error("Failed to parse appliedFilter", rawFilter);
+        console.error('Failed to parse appliedFilter', rawFilter);
         parsedFilters = [];
       }
     }
@@ -3745,7 +3554,7 @@ const paymentsRouter = new Hono()
       for (const f of parsedFilters) {
         if (!f?.key || !Array.isArray(f.value)) continue;
 
-        if (f.key === "mode") {
+        if (f.key === 'mode') {
           const modesList = f.value as string[];
           if (modesList.length > 0) {
             filterConditions.push({
@@ -3754,23 +3563,23 @@ const paymentsRouter = new Hono()
           }
         }
 
-        if (f.key === "type") {
+        if (f.key === 'type') {
           const values: string[] = f.value || [];
           const orConditions: any[] = [];
 
-          if (values.includes("Coinz")) {
+          if (values.includes('Coinz')) {
             orConditions.push({ claimedCoins: { $gt: 0 } });
           }
 
-          if (values.includes("Couponz")) {
+          if (values.includes('Couponz')) {
             orConditions.push({ couponDiscount: { $gt: 0 } });
           }
 
-          if (values.includes("Discount")) {
+          if (values.includes('Discount')) {
             orConditions.push({ discount: { $gt: 0 } });
           }
 
-          if (values.includes("No Rewardz")) {
+          if (values.includes('No Rewardz')) {
             orConditions.push({
               claimedCoins: 0,
               couponDiscount: 0,
@@ -3793,11 +3602,11 @@ const paymentsRouter = new Hono()
     // ---------------- FETCH ALL MATCHED PAYMENTS ONCE ----------------
     const allPayments = await Payment.find(baseQuery)
       .sort({ billInvoice: 1 })
-      .populate({ path: "order_id" })
-      .populate({ path: "userId", select: "name phone" });
+      .populate({ path: 'order_id' })
+      .populate({ path: 'userId', select: 'name phone' });
 
-    const business = await OutLetInfo.findOne({ businessId }).select("name");
-    const businessName = business?.name || "Business";
+    const business = await OutLetInfo.findOne({ businessId }).select('name');
+    const businessName = business?.name || 'Business';
 
     // ---------------- BUILD EXCEL BUFFER VIA HELPER ----------------
     const buffer = await buildBillsExcelBuffer({
@@ -3809,26 +3618,15 @@ const paymentsRouter = new Hono()
 
     const formatDate = (timestamp: number) => {
       const d = new Date(timestamp);
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-        2,
-        "0",
-      )}-${String(d.getDate()).padStart(2, "0")}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     };
 
     const fromStr = formatDate(fromDate);
     const toStr = formatDate(toDate);
     const fileName = `payments_${fromStr}_to_${toStr}.xlsx`;
 
-    c.header(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; charset=utf-8",
-    );
-    c.header(
-      "Content-Disposition",
-      `attachment; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(
-        fileName,
-      )}`,
-    );
+    c.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; charset=utf-8');
+    c.header('Content-Disposition', `attachment; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`);
 
     return c.body(buffer);
   })
@@ -4542,7 +4340,7 @@ const paymentsRouter = new Hono()
       let totalDuesGetBack = 0;
 
       for (const payment of payments) {
-        if (payment.mode !== "dues") {
+        if (payment.mode !== 'dues') {
           totalDiscount += payment.discount ?? 0;
         }
 
