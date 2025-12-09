@@ -3,7 +3,6 @@ import {
   ChatbotSessionModel,
   WhatsappChatbotModel,
 } from "@hi/db-models";
-import { respond } from "../../../utils/response";
 import path = require("node:path");
 import { google } from "googleapis";
 
@@ -14,7 +13,6 @@ interface InteractiveParams {
   whatsAppBusinessConfigData: any;
   from: string;
   contactName: string;
-  c: any;
 }
 
 interface AskNodeParams {
@@ -24,7 +22,6 @@ interface AskNodeParams {
   whatsAppBusinessConfigData: any;
   from: string;
   contactName: string;
-  c: any;
 }
 
 type SessionState = {
@@ -45,7 +42,6 @@ export async function processInteractiveReply({
   whatsAppBusinessConfigData,
   from,
   contactName,
-  c,
 }: InteractiveParams) {
   const currentRoutes = session.interactiveCtx?.routes || {};
 
@@ -102,7 +98,7 @@ export async function processInteractiveReply({
       contactName,
     );
 
-    return respond(c, "flow continued (interactive reply)", false, 200, {});
+    return true;
   }
 
   // -------------------------
@@ -128,13 +124,7 @@ export async function processInteractiveReply({
       contactName,
     );
 
-    return respond(
-      c,
-      "flow continued (interactive reply - fallback next)",
-      false,
-      200,
-      {},
-    );
+    return true;
   }
 
   // -------------------------
@@ -169,7 +159,7 @@ export async function processInteractiveReply({
     interactiveCtx: undefined,
   });
 
-  return respond(c, "flow ended (no route)", false, 200, {});
+  return true;
 }
 
 export async function processAskNodeReply({
@@ -179,7 +169,6 @@ export async function processAskNodeReply({
   whatsAppBusinessConfigData,
   from,
   contactName,
-  c,
 }: AskNodeParams) {
   const lastSession = await ChatbotSessionModel.findOne({ userId: from })
     .sort({ startTime: -1 })
@@ -225,14 +214,13 @@ export async function processAskNodeReply({
     contactName,
   );
 
-  return respond(c, "flow continued (ask reply)", false, 200, {});
+  return true;
 }
 
 export async function handleChatbotFlow({
   messages,
   contacts,
   whatsAppBusinessConfigData,
-  c,
 }) {
   const businessId = whatsAppBusinessConfigData?.businessId;
   if (!businessId) return null;
@@ -275,7 +263,6 @@ export async function handleChatbotFlow({
       whatsAppBusinessConfigData,
       from,
       contactName,
-      c,
     });
   }
 
@@ -296,7 +283,6 @@ export async function handleChatbotFlow({
       whatsAppBusinessConfigData,
       from,
       contactName,
-      c,
     });
   }
 
@@ -343,7 +329,7 @@ export async function handleChatbotFlow({
       contactName,
     );
 
-    return respond(c, "chatbot flow started", false, 200, {});
+    return true;
   }
 
   return null; // hand control back to main webhook

@@ -63,7 +63,7 @@ import {
   whatsAppUserAndTextMessage,
 } from "../../utils/whatsappWebhookHandlers/helper";
 import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
-import { handleChatbotFlow } from "../../handlers/pos/hipalz/flows";
+import { handleChatbotFlow } from "../../utils/whatsappWebhookHandlers/flows";
 import { enqueueWhatsAppJob } from "../../queues/enqueue";
 import { exchangeCodeForToken } from "../../utils/instagram";
 interface AxiosError {
@@ -1778,17 +1778,12 @@ const whatsappRouter = new Hono()
           messages?.id,
           messages?.text?.body,
         );
-      }
-
-      const handled = await handleChatbotFlow({
-        messages,
-        contacts,
-        whatsAppBusinessConfigData,
-        c,
-      });
-
-      if (handled) {
-        return respond(c, "handleChatbotFlow", false, 200, {});
+        await handleChatbotFlow({
+          messages,
+          contacts,
+          whatsAppBusinessConfigData,
+          c,
+        });
       }
 
       if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
