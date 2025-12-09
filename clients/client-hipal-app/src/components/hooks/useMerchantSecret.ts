@@ -1,18 +1,13 @@
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
-import useBusinessDetails from "../store/useBusinessDetails";
 import { usePaymentStore } from "../store/usePaymentStore";
 import { useCouponz } from "../store/useCouponz";
 import useCouponTemp from "../store/useCouponTemp";
 import { toast } from "react-toastify";
 import { useCallback } from "react";
 import { flushSync } from "react-dom";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
-export const useMerchantDetails = () => {
-  const businessId = _useAllBusiness(
-    (state) => state.data.outletInfo?.businessId,
-  );
+export const useMerchantDetails = (businessId: string) => {
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
   }));
