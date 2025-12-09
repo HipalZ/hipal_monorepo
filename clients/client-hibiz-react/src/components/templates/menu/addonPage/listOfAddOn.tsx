@@ -11,39 +11,25 @@ import { useAddOnList } from "@/hooks/useAddOn";
 import type { AddOnType } from "@hi/db-models/src/validators";
 
 const MemoListOfAddon = () => {
-  const {
-    setAvailability,
-    setVisibility,
-    search,
-    visibilityFilter,
-    sortOrder,
-    setOpenMenu,
-    setAddOnChoice,
-    setAddOnId,
-    setAddOnName,
-    setChoices,
-    setMaxChoices,
-    setMinChoices,
-    setAddOnToggle,
-    setRecommendationIds,
-    setRemoveRecommendationIds,
-  } = useMenuPageStore((state) => ({
-    search: state.search,
-    visibilityFilter: state.visibilityFilter,
-    sortOrder: state.sortOrder,
-    setOpenMenu: state.setOpenMenu,
-    setVisibility: state.setVisibility,
-    setAvailability: state.setAvailability,
-    setAddOnId: state.setAddOnId,
-    setAddOnName: state.setAddOnName,
-    setMinChoices: state.setMinChoices,
-    setMaxChoices: state.setMaxChoices,
-    setAddOnChoice: state.setAddOnChoice,
-    setChoices: state.setChoices,
-    setAddOnToggle: state.setAddOnToggle,
-    setRecommendationIds: state.setRecommendationIds,
-    setRemoveRecommendationIds: state.setRemoveRecommendationIds,
-  }));
+  const setAvailability = useMenuPageStore((state) => state.setAvailability);
+  const setVisibility = useMenuPageStore((state) => state.setVisibility);
+  const search = useMenuPageStore((state) => state.search);
+  const visibilityFilter = useMenuPageStore((state) => state.visibilityFilter);
+  const sortOrder = useMenuPageStore((state) => state.sortOrder);
+  const setOpenMenu = useMenuPageStore((state) => state.setOpenMenu);
+  const setAddOnChoice = useMenuPageStore((state) => state.setAddOnChoice);
+  const setAddOnId = useMenuPageStore((state) => state.setAddOnId);
+  const setAddOnName = useMenuPageStore((state) => state.setAddOnName);
+  const setChoices = useMenuPageStore((state) => state.setChoices);
+  const setMaxChoices = useMenuPageStore((state) => state.setMaxChoices);
+  const setMinChoices = useMenuPageStore((state) => state.setMinChoices);
+  const setAddOnToggle = useMenuPageStore((state) => state.setAddOnToggle);
+  const setRecommendationIds = useMenuPageStore(
+    (state) => state.setRecommendationIds,
+  );
+  const setRemoveRecommendationIds = useMenuPageStore(
+    (state) => state.setRemoveRecommendationIds,
+  );
   const { addOns } = useCategoryStore((state) => ({
     addOns: state.addOns,
   }));

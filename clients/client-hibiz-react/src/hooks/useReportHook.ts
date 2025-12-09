@@ -54,20 +54,20 @@ export const useCategoryReports = () => {
   };
 };
 
-export const useGetReportsCsv = () => {
+export const useGetReportsXlsx = () => {
   const { isPending, mutateAsync } = useMutation({
     mutationFn: async (payload: GetReportsPayload) => {
-      const response = await apiRpc.report.category.download_csv.$post({
+      const response = await apiRpc.report.category.download_xlsx.$post({
         json: payload,
       });
       return response.blob();
     },
     onSuccess: async (blob, variables) => {
-      const url = window.URL.createObjectURL(new Blob([blob]));
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       const fromStr = formatDate(Number(variables.from));
       const toStr = formatDate(Number(variables.to));
-      const fileName = `category reports ${fromStr} to ${toStr}.csv`;
+      const fileName = `category reports ${fromStr} to ${toStr}.xlsx`;
 
       link.href = url;
       link.setAttribute("download", fileName);
@@ -80,7 +80,8 @@ export const useGetReportsCsv = () => {
       console.log(error);
     },
   });
-  return { isPending, getReportsCsv: mutateAsync };
+
+  return { isPending, getReportsXlsx: mutateAsync };
 };
 
 interface GetReportsPayload {
@@ -170,7 +171,7 @@ export const useGetItemReportsCsv = () => {
         const link = document.createElement("a");
         const fromStr = formatDate(Number(variables.from));
         const toStr = formatDate(Number(variables.to));
-        const fileName = `item-reports-${fromStr}-to-${toStr}.csv`;
+        const fileName = `item-reports-${fromStr}-to-${toStr}.xlsx`;
 
         link.href = url;
         link.setAttribute("download", fileName);
@@ -183,7 +184,7 @@ export const useGetItemReportsCsv = () => {
         }
         window.URL.revokeObjectURL(url);
 
-        toast.success(`CSV file "${fileName}" downloaded successfully!`);
+        toast.success(` file "${fileName}" downloaded successfully!`);
       } catch (downloadError) {
         console.error("Download error:", downloadError);
         toast.error("Failed to download CSV file");
@@ -595,5 +596,137 @@ export const useDownloadUnifiedExcel = () => {
   return {
     isPendingExcel: isPending,
     downloadUnifiedExcel: mutateAsync,
+  };
+};
+
+// src/hooks/useDeletedItemsReport.ts
+import { useState } from "react";
+
+export type DeletedItemRow = {
+  businessId: string;
+  businessName: string;
+  kotId: string;
+  kotInvoiceNumber: number | null;
+  kotDate: number;
+  tableName: string;
+  waiterName: string;
+  customerPhone: string;
+  itemKey: string;
+  dishName: string;
+  portionName: string;
+  extrasSummary: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+  isOpenItem: boolean;
+  deletedBy: string;
+  reasonOfDeletion: string;
+};
+
+export type DeletedItemSummaryRow = {
+  businessId: string;
+  businessName: string;
+  itemKey: string;
+  dishName: string;
+  portionName: string;
+  extrasSummary: string;
+  deleteCount: number;
+  totalQuantity: number;
+  totalAmount: number;
+  averageRate: number;
+  deletedByList: string[];
+  reasons: string[];
+};
+
+type DeletedItemsApiResponse = {
+  rows: DeletedItemRow[];
+  summary: DeletedItemSummaryRow[];
+};
+
+export type GetDeletedItemsPayload = {
+  businessIds: string[];
+  from: number;
+  to: number;
+};
+
+export const useGetDeletedItems = () => {
+  const [deletedItems, setDeletedItems] = useState<DeletedItemRow[]>([]);
+  const [deletedItemsSummary, setDeletedItemsSummary] = useState<
+    DeletedItemSummaryRow[]
+  >([]);
+
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: GetDeletedItemsPayload) => {
+      // Adjust this path if your client name differs
+      const response = await apiRpc.report.deleted_items.$post({
+        json: payload,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch deleted items");
+      }
+
+      const json = (await response.json()) as {
+        err: boolean;
+        data: DeletedItemsApiResponse;
+        message?: string;
+      };
+
+      if (json.err) {
+        throw new Error(json.message || "Failed to fetch deleted items");
+      }
+
+      return json.data;
+    },
+    onSuccess: (data) => {
+      setDeletedItems(data.rows ?? []);
+      setDeletedItemsSummary(data.summary ?? []);
+    },
+  });
+
+  return {
+    isPending,
+    deletedItems,
+    deletedItemsSummary,
+    getDeletedItems: mutateAsync,
+  };
+};
+
+export const useDownloadDeletedItemsXlsx = () => {
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: GetDeletedItemsPayload) => {
+      const response = await apiRpc.report.deleted_items.download_xlsx.$post({
+        json: payload,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to download deleted items XLSX");
+      }
+
+      return response.blob();
+    },
+    onSuccess: (blob, variables) => {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      const fromStr = new Date(variables.from).toLocaleDateString("en-IN");
+      const toStr = new Date(variables.to).toLocaleDateString("en-IN");
+      const fileName = `Deleted Items Summary ${fromStr} to ${toStr}.xlsx`;
+
+      link.href = url;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    },
+    onError: (err) => {
+      console.error("Failed to download deleted items XLSX", err);
+    },
+  });
+
+  return {
+    isPending,
+    downloadDeletedItemsXlsx: mutateAsync,
   };
 };

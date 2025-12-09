@@ -4,6 +4,7 @@ import { Business } from "@hi/db-models";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { formatDateToIST } from "./dateFormater";
 import { autoFitColumns } from "./excelUtils";
+import type { BaseContext } from "./types";
 
 interface AddOnReport {
   businessId: string;
@@ -19,17 +20,6 @@ interface AddOnDetails {
   amount: number;
   totalSales: number;
 }
-
-type AnyPayment = any;
-
-type BaseContext = {
-  businessIds: string[];
-  from: number;
-  to: number;
-  allPayments: AnyPayment[];
-  bizNameMap: Record<string, string>;
-  kitchenNameMapByBiz: Record<string, Record<string, string>>;
-};
 
 const addKeyValueRow = (
   sheet: ExcelJS.Worksheet,

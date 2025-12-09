@@ -5,6 +5,7 @@ import discountRouter from "./discount";
 import itemRouter from "./item";
 import serviceChargeRouter from "./serviceCharge";
 import unifiedReportRouter from "./combineReport";
+import deletedItemRouter from "./deletedItem";
 
 const reportRouter = new Hono()
   .route("/item", itemRouter)
@@ -12,6 +13,7 @@ const reportRouter = new Hono()
   .route("/discount", discountRouter)
   .route("/add_on", addOnRouter)
   .route("/service_charge", serviceChargeRouter)
-  .route("/combine", unifiedReportRouter);
+  .route("/combine", unifiedReportRouter)
+  .route("/deleted_items", deletedItemRouter);
 
 export default reportRouter;

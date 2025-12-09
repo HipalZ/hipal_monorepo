@@ -1,36 +1,43 @@
-import DateRangePicker from '@/components/molecules/dateRangePicker/index.tsx';
-import MemoizedHeader from '@/components/molecules/header/index.tsx';
-import AddonReports from '@/components/reports/AddOnReports.tsx';
-import CategoryReports from '@/components/reports/CategoryReports.tsx';
-import MultiReportDownloadButton from '@/components/reports/CombinedReport';
-import DiscountReports from '@/components/reports/DiscountReport.tsx';
-import ItemReports from '@/components/reports/ItemReports.tsx';
-import ServiceChargeReports from '@/components/reports/ServiceChargeReports.tsx';
-import useReports, { type ReportsTypes } from '@/components/store/useReports.ts';
-import UniversalNav from '@/components/templates/menu/sideNavbaar/universelSidenav.tsx';
-import { cn } from '@/lib/utils.ts';
-import { useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import DateRangePicker from "@/components/molecules/dateRangePicker/index.tsx";
+import MemoizedHeader from "@/components/molecules/header/index.tsx";
+import AddonReports from "@/components/reports/AddOnReports.tsx";
+import CategoryReports from "@/components/reports/CategoryReports.tsx";
+import MultiReportDownloadButton from "@/components/reports/CombinedReport";
+import DeletedItemsReports from "@/components/reports/DeletedItemReport";
+import DiscountReports from "@/components/reports/DiscountReport.tsx";
+import ItemReports from "@/components/reports/ItemReports.tsx";
+import ServiceChargeReports from "@/components/reports/ServiceChargeReports.tsx";
+import useReports, {
+  type ReportsTypes,
+} from "@/components/store/useReports.ts";
+import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSidenav.tsx";
+import { cn } from "@/lib/utils.ts";
+import { useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 enum ReportType {
-  Category = 'category',
-  Item = 'item',
-  Discount = 'discount',
-  ServiceCharge = 'serviceCharge',
-  AddOn = 'addOn',
-  Combined = 'combined',
+  Combined = "combined",
+  Category = "category",
+  Item = "item",
+  Discount = "discount",
+  ServiceCharge = "serviceCharge",
+  AddOn = "addOn",
+  Deleted = "Deleted_Items",
 }
 
 const navItems = [
-  { text: 'Category' },
-  { text: 'Item' },
   {
-    text: 'AddOn',
+    text: "Combined",
   },
-  { text: 'Discount' },
-  { text: 'ServiceCharge' },
+  { text: "Category" },
+  { text: "Item" },
   {
-    text: 'Combined',
+    text: "AddOn",
+  },
+  { text: "Discount" },
+  { text: "ServiceCharge" },
+  {
+    text: "Deleted_Items",
   },
 ];
 
@@ -63,10 +70,10 @@ const Reports = () => {
           {navItems.map((item) => (
             <button
               className={cn(
-                'bg-white pb-3 pt-4',
+                "bg-white pb-3 pt-4",
                 reportPage?.toLowerCase() === item.text.toLowerCase()
-                  ? 'border-b-2 border-[#8162e6] text-lg font-semibold text-[#8162e6] transition-all'
-                  : '',
+                  ? "border-b-2 border-[#8162e6] text-lg font-semibold text-[#8162e6] transition-all"
+                  : "",
               )}
               key={item.text}
               type="button"
@@ -77,10 +84,19 @@ const Reports = () => {
           ))}
         </nav>
       </div>
-      <UniversalNav items={navItems} selectedNavItem={reportPage} changeNav={changeLayout} />
+      <UniversalNav
+        items={navItems}
+        selectedNavItem={reportPage}
+        changeNav={changeLayout}
+      />
       <section className="mt-[4rem] xl:mt-0">
         <DateRangePicker />
       </section>
+      {reportPage === ReportType.Combined && (
+        <div>
+          <MultiReportDownloadButton />
+        </div>
+      )}
       {reportPage === ReportType.Category && (
         <div>
           <CategoryReports />
@@ -106,9 +122,9 @@ const Reports = () => {
           <ServiceChargeReports />
         </div>
       )}
-      {reportPage === ReportType.Combined && (
+      {reportPage === ReportType.Deleted.toLowerCase() && (
         <div>
-          <MultiReportDownloadButton />
+          <DeletedItemsReports />
         </div>
       )}
     </main>

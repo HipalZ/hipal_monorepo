@@ -6,9 +6,13 @@ import {
   formatDateToIST,
   formatToIST,
 } from "../../utils/reportHelper/dateFormater";
-import aggregateBillItems from "../../utils/reportHelper/itemReport";
+import aggregateBillItems, {
+  buildItemSheet,
+} from "../../utils/reportHelper/itemReport";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { respond } from "../../utils/response";
+import { createReportWorkbook } from "../../utils/reportHelper/excelUtils";
+import type { BaseContext } from "../../utils/reportHelper/types";
 
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
@@ -99,7 +103,6 @@ const itemRouter = new Hono()
       }
       kitchenNameMapByBiz[bizId][k._id.toString()] = k.name;
     }
-
     // 4) Group payments by business
     const paymentsByBiz: Record<string, PaymentType[]> = {};
     for (const id of businessIds) paymentsByBiz[id] = [];
@@ -107,154 +110,36 @@ const itemRouter = new Hono()
       paymentsByBiz[p.businessId]?.push(p);
     }
 
-    const header = [
-      "Name",
-      "No.of Orders",
-      "Net Amount",
-      "Total Discount",
-      "Total Tax",
-      "Total Sales",
-    ].join(",");
+    const ctx: BaseContext = {
+      businessIds,
+      from,
+      to,
+      allPayments,
+      bizNameMap: nameMap,
+      kitchenNameMapByBiz,
+    };
+    const { workbook } = createReportWorkbook();
 
-    const csvLines: string[] = [];
+    //Item Report
+    await buildItemSheet(workbook, ctx);
 
-    // 5) For each business, build kitchen-wise CSV blocks
-    for (const biz of businessIds) {
-      const bizName = nameMap[biz] ?? "Unknown";
-      const payments = paymentsByBiz[biz] || [];
-      const kitchenNameMap = kitchenNameMapByBiz[biz] || {};
+    const fromIST = formatToIST(from);
+    const toIST = formatToIST(to);
+    const filename = `Item Reports ${fromIST} to ${toIST}.xlsx`;
 
-      // Aggregate per kitchen + item
-      type AggItem = {
-        itemName: string;
-        kitchenId: string;
-        itemCount: number;
-        amount: number;
-        discount: number;
-        tax: number;
-        totalSales: number;
-      };
+    const buffer = await workbook.xlsx.writeBuffer();
+    c.header(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; charset=utf-8",
+    );
+    c.header(
+      "Content-Disposition",
+      `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(
+        filename,
+      )}`,
+    );
 
-      const byKitchen: Record<string, AggItem[]> = {};
-      const overallTotals = {
-        itemCount: 0,
-        amount: 0,
-        discount: 0,
-        tax: 0,
-        totalSales: 0,
-      };
-
-      for (const payment of payments) {
-        for (const bi of payment.billItems || []) {
-          const itemName = bi.dish.name;
-          const dish = bi.dish;
-          const portion = bi.portion;
-          const extras = bi.extras || [];
-          const quantity = bi.quantity;
-          const discount = bi.discount || 0;
-
-          const unitPrice = portion ? portion.price : dish.price;
-          const kitchenId = dish.kitchenId;
-
-          const extrasTotal = extras.reduce(
-            (sum, e) => sum + (e.price || 0) * (e.quantity || 1),
-            0,
-          );
-
-          const lineAmountExclTax = (unitPrice + extrasTotal) * quantity;
-          const lineTax = lineAmountExclTax * (dish.gst / 100);
-
-          const key = `${kitchenId}::${itemName}`;
-
-          if (!byKitchen[kitchenId]) {
-            byKitchen[kitchenId] = [];
-          }
-
-          let agg = byKitchen[kitchenId].find((x) => x.itemName === itemName);
-          if (!agg) {
-            agg = {
-              itemName,
-              kitchenId,
-              itemCount: 0,
-              amount: 0,
-              discount: 0,
-              tax: 0,
-              totalSales: 0,
-            };
-            byKitchen[kitchenId].push(agg);
-          }
-
-          const qty = (bi as any).itemCount ?? (bi as any).quantity ?? 0;
-
-          agg.itemCount += qty;
-          agg.amount += bi.dish.price || 0;
-          agg.discount += bi.discount || 0;
-          agg.tax += Number(lineTax?.toFixed(2)) || 0;
-          agg.totalSales +=
-            Number((lineAmountExclTax + lineTax - discount).toFixed(2)) || 0;
-
-          overallTotals.itemCount += qty;
-          overallTotals.amount += Number(lineAmountExclTax?.toFixed(2));
-          overallTotals.discount += bi.discount || 0;
-          overallTotals.tax += Number(lineTax?.toFixed(2)) || 0;
-          overallTotals.totalSales +=
-            Number((lineAmountExclTax - discount + lineTax)?.toFixed(2)) || 0;
-        }
-      }
-
-      // Business-level header
-      csvLines.push(`BusinessId,${biz}`);
-      csvLines.push(`BusinessName,"${bizName.replace(/"/g, '""')}"`);
-      csvLines.push(`from,"${formatToIST(from, true)}" `);
-      csvLines.push(`to ,"${formatToIST(to, true)}"`);
-      csvLines.push(""); // blank line
-
-      const kitchenIds = Object.keys(byKitchen);
-
-      for (let i = 0; i < kitchenIds.length; i++) {
-        const kitchenId = kitchenIds[i];
-        const items = byKitchen[kitchenId];
-        if (!items || items.length === 0) continue;
-
-        const kitchenName = kitchenNameMap[kitchenId] ?? "Unknown Kitchen";
-
-        // Kitchen section header
-        csvLines.push(`Kitchen,"${kitchenName.replace(/"/g, '""')}"`);
-        csvLines.push(header);
-
-        for (const it of items) {
-          const cols = [
-            `"${it.itemName.replace(/"/g, '""')}"`,
-            it.itemCount,
-            it.amount,
-            it.discount,
-            it.tax,
-            it.totalSales,
-          ];
-          csvLines.push(cols.join(","));
-        }
-
-        // blank line between kitchens
-        csvLines.push("");
-      }
-
-      // extra blank line between businesses
-      csvLines.push("");
-      csvLines.push(
-        `Overall Summary,${overallTotals.itemCount},${overallTotals.amount},${overallTotals.discount},${overallTotals.tax},${overallTotals.totalSales}`,
-      );
-    }
-
-    const csv = csvLines.join("\r\n");
-    const fromIST = formatToIST(from, true).replace(/[:/ ]/g, "-");
-    const toIST = formatToIST(to, true).replace(/[:/ ]/g, "-");
-    const filename = `item-report_${businessIds.join(
-      "_",
-    )}_${fromIST}_${toIST}.csv`;
-
-    c.header("Content-Type", "text/csv; charset=utf-8");
-    c.header("Content-Disposition", `attachment; filename="${filename}"`);
-    return c.body(csv);
+    return c.body(buffer);
   });
 
 export default itemRouter;
