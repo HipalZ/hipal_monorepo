@@ -3,8 +3,6 @@ import { createHmac } from "node:crypto";
 import {
   BusinessPosConfig,
   BusinessSettings,
-  CouponClaim,
-  Couponz,
   DeviceToken,
   DuesUser,
   GroupAnalytic,
@@ -27,7 +25,6 @@ import {
   UpiMode,
   User,
   UserAnalytic,
-  UserCouponClaim,
   UserCouponGrabb,
   UserReward,
   UserRewardHistory,
@@ -482,6 +479,16 @@ const paymentsRouter = new Hono()
         active: true,
       });
 
+      const merchant = await BusinessSettings.findOne({
+        businessId,
+      })
+        .select("razorpayMerchantId razorpayKeyId businessId")
+        .lean();
+
+      if (!merchant) {
+        return respond(c, "Merchant not found", true, 404, {});
+      }
+
       if (businessPosConfig) {
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -523,7 +530,7 @@ const paymentsRouter = new Hono()
               currency: currency,
               userId: userId,
               tableName: isTableMerge?.parentTableId?.name || tableName,
-              merchantId: c.req.param().merchantId,
+              merchantId: merchant.razorpayMerchantId,
             },
           );
           if (!result) {
@@ -557,7 +564,7 @@ const paymentsRouter = new Hono()
 
             //@ts-ignore
             return runInTransaction(async (session: ClientSession) => {
-              const { merchantId } = c.req.param();
+              const merchantId = merchant.razorpayMerchantId as string;
               const uniqueOrderId = nanoid(15);
 
               const client = await razorpayWrapper.getClient(merchantId);
@@ -750,7 +757,7 @@ const paymentsRouter = new Hono()
 
             //@ts-ignore
             return runInTransaction(async (session: ClientSession) => {
-              const { merchantId } = c.req.param();
+              const merchantId = merchant.razorpayMerchantId as string;
               const uniqueOrderId = nanoid(15);
 
               const client = await razorpayWrapper.getClient(merchantId);
@@ -928,7 +935,7 @@ const paymentsRouter = new Hono()
 
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { merchantId } = c.req.param();
+        const merchantId = merchant.razorpayMerchantId as string;
         const uniqueOrderId = nanoid(15);
 
         const client = await razorpayWrapper.getClient(merchantId);
@@ -1624,11 +1631,7 @@ const paymentsRouter = new Hono()
     zValidator(
       "query",
       z.object({
-        userId: z.string().optional(),
-        couponId: z.string().optional(),
-        tableName: z.string().optional(),
-        businessId: z.string().optional(),
-        paidAmount: z.string().optional(),
+        businessId: z.string(),
       }),
     ),
 
@@ -1638,19 +1641,16 @@ const paymentsRouter = new Hono()
       const { merchantId } = c.req.param();
       const { userId, couponId, businessId, tableName, paidAmount } =
         c.req.query();
-      const merchantConfig = (await getMerchantConfig(
-        merchantId,
-      )) as MerchantConfig;
-      let RAZORPAY_SECRET = "";
 
-      if (!merchantConfig) {
-        const merchant = await BusinessSettings.findOne({
-          razorpayMerchantId: merchantId,
-        }).select("razorpayKeySecret");
-        RAZORPAY_SECRET = merchant?.razorpayKeySecret as string;
-      } else {
-        RAZORPAY_SECRET = merchantConfig.razorpayKeySecret;
+      const merchant = await BusinessSettings.findOne({
+        razorpayMerchantId: merchantId,
+      }).select("razorpayKeySecret");
+
+      if (!merchant) {
+        return respond(c, "Merchant not found", true, 404, {});
       }
+
+      const RAZORPAY_SECRET = merchant?.razorpayKeySecret as string;
 
       if (!RAZORPAY_SECRET)
         return respond(
@@ -1664,166 +1664,9 @@ const paymentsRouter = new Hono()
       const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
         response;
 
-      if (userId && couponId) {
-        let userClaim = await UserCouponClaim.findOne({ userId, couponId });
-        let couponClaim = await CouponClaim.findOne({ couponId });
-
-        const currentDate = Date.now();
-        const oneWeek = 7 * 24 * 60 * 60 * 1000; // One week in milliseconds
-        const oneMonth = 30 * 24 * 60 * 60 * 1000;
-
-        if (!userClaim) {
-          userClaim = await UserCouponClaim.create({
-            userId,
-            couponId,
-            date: currentDate,
-            weekelyLastResetDate: currentDate,
-            monthlyLastResetDate: currentDate,
-            weeklyLimit: 0,
-            monthlyLimit: 0,
-            overAllLimit: 0,
-          });
-        }
-
-        if (!couponClaim) {
-          couponClaim = await CouponClaim.create({
-            couponId,
-            date: currentDate,
-            weekelyLastResetDate: currentDate,
-            monthlyLastResetDate: currentDate,
-            weeklyLimit: 0,
-            monthlyLimit: 0,
-            overAllLimit: 0,
-          });
-        }
-
-        // Function to reset limits if necessary
-        const resetLimitsIfNecessary = (claim, type) => {
-          if (
-            type === "weekly" &&
-            currentDate - claim.weekelyLastResetDate >= oneWeek
-          ) {
-            claim.weeklyLimit = 0;
-            claim.weekelyLastResetDate = currentDate;
-          }
-          if (
-            type === "monthly" &&
-            currentDate - claim.monthlyLastResetDate >= oneMonth
-          ) {
-            claim.monthlyLimit = 0;
-            claim.monthlyLastResetDate = currentDate;
-          }
-        };
-
-        // Reset limits if necessary
-        resetLimitsIfNecessary(userClaim, "weekly");
-        resetLimitsIfNecessary(userClaim, "monthly");
-        resetLimitsIfNecessary(couponClaim, "weekly");
-        resetLimitsIfNecessary(couponClaim, "monthly");
-
-        // Function to update limits
-        const updateLimits = (claim: {
-          overAllLimit: number;
-          weeklyLimit: number;
-          monthlyLimit: number;
-        }) => {
-          claim.overAllLimit += 1;
-          claim.weeklyLimit += 1;
-          claim.monthlyLimit += 1;
-        };
-
-        // Update limits
-        updateLimits(userClaim);
-        updateLimits(couponClaim);
-
-        // Save the updated claims
-        await userClaim.save();
-        await couponClaim.save();
-        const couponz = await Couponz.findById(couponId).select(
-          "conditions.individualUserLimit conditions.expiryClaimLimit businessId",
-        );
-
-        if (!couponz) {
-          return c.json(
-            {
-              err: true,
-              message: "Coupon not found",
-              data: razorpay_order_id,
-            },
-            200,
-          );
-        }
-
-        const individualUserLimit = couponz?.conditions?.individualUserLimit;
-        const expiryClaimLimit = couponz?.conditions?.expiryClaimLimit;
-        const userClaimLimit =
-          individualUserLimit && "overAllLimit" in individualUserLimit
-            ? individualUserLimit.overAllLimit
-            : 0;
-        const couponClaimLimit =
-          expiryClaimLimit && "overAllLimit" in expiryClaimLimit
-            ? expiryClaimLimit.overAllLimit
-            : 0;
-
-        const couponOverAllLimit = (await CouponClaim.findOne({
-          couponId,
-        }).select("overAllLimit")) ?? { overAllLimit: 0 };
-        const userOverAllLimit = (await UserCouponClaim.findOne({
-          userId,
-          couponId,
-        }).select("overAllLimit")) ?? { overAllLimit: 0 };
-
-        if (userClaimLimit > 0) {
-          if (userOverAllLimit?.overAllLimit >= userClaimLimit) {
-            const expireAfterClaiming = await UserCouponGrabb.findOneAndUpdate(
-              {
-                userId,
-                couponId,
-              },
-              { $set: { isDeleted: true } },
-            );
-            if (!expireAfterClaiming) {
-              const createGrabb = await UserCouponGrabb.create({
-                userId,
-                couponId,
-                date: Date.now(),
-                isDeleted: true,
-                businessId: couponz?.businessId,
-                expiryDate: Date.now(),
-              });
-              if (!createGrabb) {
-                return c.json(
-                  {
-                    err: true,
-                    message: "Coupon not found",
-                    data: razorpay_order_id,
-                  },
-                  200,
-                );
-              }
-            }
-          }
-        }
-
-        if (couponClaimLimit > 0) {
-          if (couponOverAllLimit?.overAllLimit >= couponClaimLimit) {
-            await Couponz.findOneAndUpdate(
-              {
-                _id: couponId,
-              },
-              { $set: { isActive: false, isDeleted: true } },
-            );
-          }
-        }
-      }
-
       const signature = createHmac("sha256", RAZORPAY_SECRET)
         .update(`${razorpay_order_id}|${razorpay_payment_id}`)
         .digest("hex");
-
-      const registrationToken = await DeviceToken.find({
-        businessId: businessId,
-      });
 
       if (signature === razorpay_signature) {
         return c.json({
