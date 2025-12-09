@@ -4,7 +4,7 @@ RUN npm i -g bun@1.2.20
 WORKDIR /app
 
 # Copy root + workspace package.json files
-COPY bun.lock package.json tsconfig.json ./
+COPY bun.lockb package.json tsconfig.json ./
 COPY servers/server/package.json servers/server/
 COPY packages/instances/package.json packages/instances/
 COPY packages/db-models/package.json packages/db-models/
