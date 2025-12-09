@@ -1,4 +1,4 @@
-import WhatsAppChatBot from '@/components/templates/whatsappTemplates/flows';
+import WhatsAppChatBot from '@/components/templates/whatsappTemplates/chatbots/flows';
 
 const ChatBotId = () => {
   return <WhatsAppChatBot />;

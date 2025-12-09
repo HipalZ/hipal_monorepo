@@ -1007,6 +1007,7 @@ export async function advance(
       try {
         const sheet = node.sheet || {};
         const { spreadsheetId, sheetName, cells } = sheet;
+        console.log("google_sheet node:", sheetName, spreadsheetId, cells);
         if (!spreadsheetId || !sheetName || !Array.isArray(cells)) {
           setSession(userId, { currentNodeId: node.next || null });
           s = getSession(userId);
@@ -1014,7 +1015,7 @@ export async function advance(
         }
 
         const auth = new google.auth.GoogleAuth({
-          keyFile: path.join(__dirname, "../../../utils/testing.json"),
+          keyFile: path.join(__dirname, "../testing.json"),
           scopes: ["https://www.googleapis.com/auth/spreadsheets"],
         });
         const client = await auth.getClient();
@@ -1023,7 +1024,7 @@ export async function advance(
         const resolvedRow = cells.map((c: any) =>
           interpolate(c.value, s.variables, cfg, s.userName),
         );
-        await googleSheets.spreadsheets.values.append({
+        googleSheets.spreadsheets.values.append({
           spreadsheetId,
           range: sheetName,
           valueInputOption: "USER_ENTERED",

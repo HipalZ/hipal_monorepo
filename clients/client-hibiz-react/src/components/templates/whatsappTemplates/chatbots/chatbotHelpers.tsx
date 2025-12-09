@@ -1,11 +1,11 @@
 import { AskNode } from '@/components/templates/whatsappTemplates/chatbots/askNode';
 import { CondNode } from '@/components/templates/whatsappTemplates/chatbots/condNode';
+import GoogleSheetNode from '@/components/templates/whatsappTemplates/chatbots/googleSheet';
 import { InteractiveButtonNode } from '@/components/templates/whatsappTemplates/chatbots/interactiveButton';
 import { InteractiveListNode } from '@/components/templates/whatsappTemplates/chatbots/interactiveList';
 import { InteractiveReply } from '@/components/templates/whatsappTemplates/chatbots/interactiveReply';
 import { SendNode } from '@/components/templates/whatsappTemplates/chatbots/sendNode';
 import { TriggerNode } from '@/components/templates/whatsappTemplates/chatbots/triggerNode';
-import GoogleSheetNode from '@/components/templates/whatsappTemplates/googleSheet';
 import { BaseEdge, getBezierPath } from '@xyflow/react';
 import { FileSpreadsheet, GitBranch, HelpCircle, ListOrdered, MessageSquare, Share2, SquareCheck } from 'lucide-react';
 

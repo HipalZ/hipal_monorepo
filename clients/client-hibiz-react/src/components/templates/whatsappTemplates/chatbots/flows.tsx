@@ -40,7 +40,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, Keyboard, PanelLe
 import { useCallback, useEffect, useMemo, useState, type DragEvent, type MouseEvent } from 'react';
 import toast from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { buildFinalFromGraph } from './chatbots/chatbotHelpers';
+import { buildFinalFromGraph } from './chatbotHelpers';
 import type {
   CategoryHeaderProps,
   CategoryItem,
@@ -51,7 +51,7 @@ import type {
   JSONPanelProps,
   Position,
   SidebarProps,
-} from './chatbots/types';
+} from './types';
 
 const nid = (): string => `${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 

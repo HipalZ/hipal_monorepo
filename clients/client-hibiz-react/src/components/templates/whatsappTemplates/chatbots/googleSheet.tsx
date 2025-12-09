@@ -1,4 +1,5 @@
 import useBusinessData from '@/components/store/useBusinessData';
+import type { SendNodeProps } from '@/components/templates/whatsappTemplates/chatbots/types';
 import { VariableDropdown } from '@/components/templates/whatsappTemplates/chatbots/variableDropDown';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,55 +12,84 @@ import { useQuery } from '@tanstack/react-query';
 import { Handle, Position } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { MessageCircle, Plus, X } from 'lucide-react';
-import { lazy, useState } from 'react';
+import { lazy, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuid } from 'uuid';
-import type { SendNodeProps } from './chatbots/chatbotHelpers';
 
-const DeleteButton = lazy(() => import('./deleteButton'));
+const DeleteButton = lazy(() => import('../deleteButton'));
 
 export default function GoogleSheetNode({ data, selected }: SendNodeProps) {
+  const businessId = useBusinessData((s) => s?.outletInfo?.businessId);
+
   const [isAuthed, setIsAuthed] = useState(false);
+  const [sessionKey, setSessionKey] = useState(uuid());
+
   const [spreadsheetId, setSpreadsheetId] = useState('');
   const [selectedSpreadsheetName, setSelectedSpreadsheetName] = useState('');
   const [sheets, setSheets] = useState([]);
   const [sheetName, setSheetName] = useState('');
   const [cells, setCells] = useState([{ key: '', value: '' }]);
+
+  const pollRef = useRef<any>(null);
+  const pollAttempts = useRef(0);
+
   const { submitToSheet } = useSubmitGoogleSheet();
-  const businessId = useBusinessData((state) => state?.outletInfo?.businessId);
-  const [sessionKey, setSessionKey] = useState(uuid());
-  /* -------------------------------------------------------------------------- */
-  /* 🟢 GOOGLE LOGIN */
-  /* -------------------------------------------------------------------------- */
+
+  /* ----------------------------------------------------------------------------
+   * 🟢 LOGIN + CONTROLLED POLLING FOR STATUS
+   * -------------------------------------------------------------------------- */
   const handleLogin = async () => {
     try {
       const res = await apiRpc.google_sheets.auth.url.$get({
-        query: { businessId, sessionKey: sessionKey },
+        query: { businessId, sessionKey },
       });
+
       const { url } = await res.json();
       const popup = window.open(url, 'googleLogin', 'width=600,height=700');
 
-      const poll = setInterval(async () => {
+      // Clear any existing interval
+      if (pollRef.current) clearInterval(pollRef.current);
+      pollAttempts.current = 0;
+
+      pollRef.current = setInterval(async () => {
+        pollAttempts.current++;
+
         const statusRes = await apiRpc.google_sheets.status.$get({
-          query: { businessId, sessionKey: sessionKey },
+          query: { businessId, sessionKey },
         });
+
         const { loggedIn } = await statusRes.json();
 
+        // If success
         if (loggedIn) {
-          clearInterval(poll);
+          clearInterval(pollRef.current);
+          pollRef.current = null;
+
           popup?.close();
           setIsAuthed(true);
           refetch();
         }
-      }, 10000);
+
+        // If popup closed manually
+        if (popup?.closed) {
+          clearInterval(pollRef.current);
+          pollRef.current = null;
+        }
+
+        // Timeout after 60 seconds
+        if (pollAttempts.current > 30) {
+          clearInterval(pollRef.current);
+          pollRef.current = null;
+        }
+      }, 2000);
     } catch (err) {
       console.error('Login error:', err);
     }
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* 🟡 FETCH TABS INSIDE SPREADSHEET */
-  /* -------------------------------------------------------------------------- */
+  /* ----------------------------------------------------------------------------
+   * 🟡 FETCH SHEETS INSIDE SPREADSHEET
+   * -------------------------------------------------------------------------- */
   const fetchSheets = async (id: string) => {
     try {
       setSpreadsheetId(id);
@@ -73,20 +103,61 @@ export default function GoogleSheetNode({ data, selected }: SendNodeProps) {
 
       const json = await res.json();
       setSheets(json.data || []);
+
+      // 🟢 AFTER SHEETS API SUCCEEDS → RECHECK STATUS
+      const statusCheck = await apiRpc.google_sheets.status.$get({
+        query: { businessId, sessionKey },
+      });
+      const { loggedIn } = await statusCheck.json();
+      if (loggedIn) setIsAuthed(true);
     } catch (err) {
       console.error('Error fetching sheet tabs:', err);
     }
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* 🔵 ADD / REMOVE CELLS */
-  /* -------------------------------------------------------------------------- */
-  const handleAddCell = () => setCells([...cells, { key: '', value: '' }]);
-  const handleRemoveCell = (index: number) => setCells(cells.filter((_, i) => i !== index));
+  /* ----------------------------------------------------------------------------
+   * 🟤 FETCH USER SHEETS (TRIGGERED ONLY WHEN AUThed)
+   * -------------------------------------------------------------------------- */
+  const { data: spreadsheets = [], refetch } = useQuery({
+    queryKey: ['googleSheetsList'],
+    queryFn: async () => {
+      const res = await apiRpc.google_sheets.sheets.$get({
+        query: { businessId, sessionKey },
+      });
 
-  /* -------------------------------------------------------------------------- */
-  /* 🔴 SAVE GOOGLE SHEET DATA INTO NODE META */
-  /* -------------------------------------------------------------------------- */
+      const json = await res.json();
+
+      // 🟢 IF FETCH SUCCESS, RECHECK STATUS
+      const statusRes = await apiRpc.google_sheets.status.$get({
+        query: { businessId, sessionKey },
+      });
+      const { loggedIn } = await statusRes.json();
+      if (loggedIn) setIsAuthed(true);
+
+      return json.data || [];
+    },
+    enabled: isAuthed,
+    refetchOnWindowFocus: false,
+  });
+
+  /* ----------------------------------------------------------------------------
+   * 🔥 CLEANUP (Avoid infinite polling)
+   * -------------------------------------------------------------------------- */
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
+
+  /* ----------------------------------------------------------------------------
+   * 🔵 ADD CELL
+   * -------------------------------------------------------------------------- */
+  const handleAddCell = () => setCells([...cells, { key: '', value: '' }]);
+  const handleRemoveCell = (i: number) => setCells(cells.filter((_, index) => index !== i));
+
+  /* ----------------------------------------------------------------------------
+   * 🔴 SAVE TO NODE META + SHEET APPEND
+   * -------------------------------------------------------------------------- */
   const handleSave = async () => {
     try {
       if (!spreadsheetId || !sheetName) {
@@ -97,11 +168,7 @@ export default function GoogleSheetNode({ data, selected }: SendNodeProps) {
       data.onPatch({
         meta: {
           type: 'google_sheet',
-          sheet: {
-            spreadsheetId,
-            sheetName,
-            cells,
-          },
+          sheet: { spreadsheetId, sheetName, cells },
         },
       });
 
@@ -119,50 +186,33 @@ export default function GoogleSheetNode({ data, selected }: SendNodeProps) {
       await submitToSheet(payload);
       toast.success('Sheet updated successfully');
     } catch (err) {
-      console.error('Sheet submit error:', err);
+      console.error(err);
       toast.error('Failed to save');
     }
   };
 
-  /* -------------------------------------------------------------------------- */
-  /* 🟤 FETCH USER SHEETS */
-  /* -------------------------------------------------------------------------- */
-  const { data: spreadsheets = [], refetch } = useQuery({
-    queryKey: ['googleSheetsList'],
-    queryFn: async () => {
-      const res = await apiRpc.google_sheets.sheets.$get({
-        query: { businessId, sessionKey },
-      });
-      const response = await res.json();
-      return response.data || [];
-    },
-    enabled: isAuthed,
-    refetchOnWindowFocus: false,
-  });
-
+  /* ----------------------------------------------------------------------------
+   * RENDER UI
+   * -------------------------------------------------------------------------- */
   if (spreadsheets.length === 0 && isAuthed) {
     return (
       <div className="text-center">
-        <p>No Google Sheets found in your account.</p>
-        <p>Please create one and refresh.</p>
+        <p>No Google Sheets found.</p>
+        <p>Create one & refresh.</p>
       </div>
     );
   }
 
   return (
     <div className="relative">
-      {/* Incoming connection */}
       <Handle type="target" position={Position.Left} className="z-50 !h-5 !w-5 !border-4 !border-white !bg-gray-600 shadow-xl" />
 
       <DeleteButton data={data} />
 
       <Card className={cn('w-96 border-2 shadow-2xl transition-all', selected ? 'border-blue-500 ring-4 ring-blue-300/30' : 'border-gray-300')}>
-        {/* Header */}
-        <div className="rounded-t-lg bg-gradient-to-r from-green-600 to-emerald-600 p-5 text-white">
-          <div className="flex items-center gap-3">
-            <MessageCircle className="h-6 w-6" />
-            <h3 className="text-lg font-bold">Google Spreadsheet</h3>
-          </div>
+        <div className="flex items-center gap-3 rounded-t-lg bg-gradient-to-r from-green-600 to-emerald-600 p-5 text-white">
+          <MessageCircle className="h-6 w-6" />
+          <h3 className="text-lg font-bold">Google Spreadsheet</h3>
         </div>
 
         <CardContent className="space-y-5 p-4">
@@ -175,7 +225,7 @@ export default function GoogleSheetNode({ data, selected }: SendNodeProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Spreadsheet selector */}
+              {/* Spreadsheet */}
               <div>
                 <label className="text-xs font-medium text-gray-700">Spreadsheet</label>
                 <Select value={spreadsheetId} onValueChange={fetchSheets}>
@@ -183,7 +233,7 @@ export default function GoogleSheetNode({ data, selected }: SendNodeProps) {
                     <span>{selectedSpreadsheetName || 'Select Spreadsheet'}</span>
                   </SelectTrigger>
                   <SelectContent>
-                    {spreadsheets?.map((s) => (
+                    {spreadsheets.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.name}
                       </SelectItem>
@@ -192,7 +242,7 @@ export default function GoogleSheetNode({ data, selected }: SendNodeProps) {
                 </Select>
               </div>
 
-              {/* Sheet name dropdown */}
+              {/* Tabs */}
               {sheets.length > 0 && (
                 <div>
                   <label className="text-xs font-medium text-gray-700">Sheet Name</label>
@@ -211,26 +261,28 @@ export default function GoogleSheetNode({ data, selected }: SendNodeProps) {
                 </div>
               )}
 
-              {/* Cell mapping */}
+              {/* Cell Mapping */}
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-700">Add Cell Mapping</label>
+
                 {cells.map((cell, i) => (
-                  <div key={i?.toString()} className="flex items-center gap-2">
+                  <div key={i} className="flex items-center gap-2">
                     <Input
                       placeholder="A1"
                       value={cell.key}
                       onChange={(e) => {
-                        const c = [...cells];
-                        c[i].key = e.target.value;
-                        setCells(c);
+                        const copy = [...cells];
+                        copy[i].key = e.target.value;
+                        setCells(copy);
                       }}
                     />
+
                     <VariableDropdown
                       value={cell.value}
                       onChange={(v) => {
-                        const c = [...cells];
-                        c[i].value = v;
-                        setCells(c);
+                        const copy = [...cells];
+                        copy[i].value = v;
+                        setCells(copy);
                       }}
                       variables={data.variables || []}
                       flowParams={(data.variables || []).map((x) => `@${x}`)}
@@ -259,7 +311,6 @@ export default function GoogleSheetNode({ data, selected }: SendNodeProps) {
         </CardContent>
       </Card>
 
-      {/* OUTGOING connection handle (IMPORTANT) */}
       <Handle id="next" type="source" position={Position.Right} className="z-50 !h-[0.75rem] !w-[0.75rem] bg-gray-400" />
     </div>
   );

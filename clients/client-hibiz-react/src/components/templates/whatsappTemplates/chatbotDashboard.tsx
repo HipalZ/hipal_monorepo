@@ -32,7 +32,7 @@ function ChatbotDashboard() {
   const handleOpenChatbot = useCallback(() => {
     setOpenBot(true);
   }, [setOpenBot]);
-
+  console.log('chatbots', chatbots);
   const filtered = (chatbots || []).filter((bot: any) => bot.chatbotName.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const totalSessions = filtered.reduce((a, b) => a + (b.stats?.totalSessions || 0), 0);
@@ -99,84 +99,87 @@ function ChatbotDashboard() {
 
       {/* Chatbot Cards */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((bot: any) => (
-          <Card key={bot._id} className="group overflow-hidden rounded-xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-xl">
-            <CardHeader className="border-b border-gray-100 bg-white p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-amber-100 p-3">
-                    <Bot className="h-5 w-5 text-blue-600" />
+        {filtered.map((bot: any) => {
+          console.log('bot', bot?.status);
+          return (
+            <Card key={bot._id} className="group overflow-hidden rounded-xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-xl">
+              <CardHeader className="border-b border-gray-100 bg-white p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-amber-100 p-3">
+                      <Bot className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-semibold text-gray-900">{bot.chatbotName}</CardTitle>
+                      <CardDescription className="text-sm text-gray-500">Version {bot.version}</CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-lg font-semibold text-gray-900">{bot.chatbotName}</CardTitle>
-                    <CardDescription className="text-sm text-gray-500">Version {bot.version}</CardDescription>
-                  </div>
-                </div>
-                <Badge
-                  variant={bot.status ? 'default' : 'secondary'}
-                  className={bot.status ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}
-                >
-                  {bot.status ? 'Active' : 'Inactive'}
-                </Badge>
-                <Switch
-                  checked={bot.status === 'active'}
-                  onCheckedChange={(state) =>
-                    updateChatbotStatus({
-                      chatbotId: bot._id,
-                      businessId,
-                      status: state ? 'active' : 'inactive',
-                    })
-                  }
-                />
-
-                <Edit onClick={() => handleEditChatbot(bot)} className="cursor-pointer rounded-lg bg-purple-100 p-1 text-purple-800" />
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>Created: {formatDate(bot.createdAt)}</span>
-                  <span>Updated: {formatDate(bot.updatedAt)}</span>
-                </div>
-
-                <div className="space-y-2 rounded-lg bg-slate-50 p-4">
-                  <div className="flex justify-between text-sm">
-                    <span>Total Sessions</span>
-                    <span className="font-semibold">{bot?.stats?.totalSessions}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Completed</span>
-                    <span className="font-semibold text-green-600">{bot?.stats?.completedSessions}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Drop-offs</span>
-                    <span className="font-semibold text-red-600">{bot?.stats?.dropOffSessions}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-2 flex justify-between text-sm">
-                    <span>Completion Rate</span>
-                    <span className="font-semibold text-blue-600">{bot?.stats?.avgCompletionRate}%</span>
-                  </div>
-                  <Progress
-                    value={bot?.stats?.avgCompletionRate}
-                    className="h-2 bg-slate-200 [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600"
+                  <Badge
+                    variant={bot.status ? 'default' : 'secondary'}
+                    className={bot.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-200 text-gray-700'}
+                  >
+                    {bot.status}
+                  </Badge>
+                  <Switch
+                    checked={bot.status === 'active'}
+                    onCheckedChange={(state) =>
+                      updateChatbotStatus({
+                        chatbotId: bot._id,
+                        businessId,
+                        status: state ? 'active' : 'inactive',
+                      })
+                    }
                   />
-                </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3 w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
-                  onClick={() => setSelectedBot(bot)}
-                >
-                  <BarChart3 className="h-4 w-4" /> View Sessions
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  <Edit onClick={() => handleEditChatbot(bot)} className="cursor-pointer rounded-lg bg-purple-100 p-1 text-purple-800" />
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between text-sm text-gray-500">
+                    <span>Created: {formatDate(bot.createdAt)}</span>
+                    <span>Updated: {formatDate(bot.updatedAt)}</span>
+                  </div>
+
+                  <div className="space-y-2 rounded-lg bg-slate-50 p-4">
+                    <div className="flex justify-between text-sm">
+                      <span>Total Sessions</span>
+                      <span className="font-semibold">{bot?.stats?.totalSessions}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Completed</span>
+                      <span className="font-semibold text-green-600">{bot?.stats?.completedSessions}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Drop-offs</span>
+                      <span className="font-semibold text-red-600">{bot?.stats?.dropOffSessions}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-2 flex justify-between text-sm">
+                      <span>Completion Rate</span>
+                      <span className="font-semibold text-blue-600">{bot?.stats?.avgCompletionRate}%</span>
+                    </div>
+                    <Progress
+                      value={bot?.stats?.avgCompletionRate}
+                      className="h-2 bg-slate-200 [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600"
+                    />
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3 w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+                    onClick={() => setSelectedBot(bot)}
+                  >
+                    <BarChart3 className="h-4 w-4" /> View Sessions
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
       {/* Empty State */}
       {filtered.length === 0 && (

@@ -124,13 +124,12 @@ const googleSheetsRouter = new Hono()
   .get("/status", async (c) => {
     const businessId = c.req.query("businessId");
     const sessionKey = c.req.query("sessionKey");
-
+    console.log("/status called with:", { businessId, sessionKey });
     if (!businessId || !sessionKey) {
       return c.json({ loggedIn: false });
     }
-
+    console.log("triggering status check for:", { businessId, sessionKey });
     const doc = await getTokenRecord(businessId, sessionKey);
-    console.log("Status check, found doc:", doc);
     return c.json({ loggedIn: !!doc });
   })
 
@@ -139,10 +138,8 @@ const googleSheetsRouter = new Hono()
     try {
       const businessId = c.req.query("businessId");
       const sessionKey = c.req.query("sessionKey");
-
+      console.log("triggering sheets check for:", { businessId, sessionKey });
       const tokenDoc: any = await getTokenRecord(businessId, sessionKey);
-
-      console.log("tokenDoc", tokenDoc);
 
       if (!tokenDoc?.access_token && !tokenDoc?.refresh_token) {
         return c.json({ err: true, message: "No saved Google tokens" }, 401);
@@ -176,7 +173,10 @@ const googleSheetsRouter = new Hono()
     try {
       const businessId = c.req.query("businessId");
       const sessionKey = c.req.query("sessionKey");
-
+      console.log("triggering /sheets/:id/tabs check for:", {
+        businessId,
+        sessionKey,
+      });
       const tokenDoc = await getTokenRecord(businessId, sessionKey);
       console.log("tokenDoc", tokenDoc);
       if (!tokenDoc)
@@ -206,7 +206,10 @@ const googleSheetsRouter = new Hono()
     try {
       const { businessId, sessionKey, spreadsheetId, range, values } =
         await c.req.json();
-
+      console.log("triggering /submit", {
+        businessId,
+        sessionKey,
+      });
       const tokenDoc = await getTokenRecord(businessId, sessionKey);
       if (!tokenDoc) return c.json({ success: false, error: "Not logged in" });
 
@@ -220,7 +223,7 @@ const googleSheetsRouter = new Hono()
 
       const sheets = google.sheets({ version: "v4", auth: oauth2Client });
 
-      await sheets.spreadsheets.values.append({
+      sheets.spreadsheets.values.append({
         spreadsheetId,
         range: range || "Sheet1!A1",
         valueInputOption: "USER_ENTERED",
@@ -231,8 +234,5 @@ const googleSheetsRouter = new Hono()
     } catch (err: any) {
       return c.json({ success: false, error: err.message });
     }
-  })
-
-  .get("/ping", (c) => c.text("Google Sheets Router alive 🚀"));
-
+  });
 export default googleSheetsRouter;

@@ -13,7 +13,7 @@ import { TbSettingsAutomation } from 'react-icons/tb';
 
 const ChatbotDashboard = lazy(() => import('./chatbotDashboard'));
 const WhatsappChatbotSettings = lazy(() => import('./whatsappchatbotsettings'));
-const WhatsappChatBot = lazy(() => import('./flows'));
+const WhatsappChatBot = lazy(() => import('./chatbots/flows'));
 const LinkTemplatePopup = lazy(() => import('./linkTemplatePopup'));
 const WhatsappChats = lazy(() => import('./whatsappChats'));
 const CampaignAdvancedAnalytics = lazy(() => import('./campaignAdvancedAnalytics'));
