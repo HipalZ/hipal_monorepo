@@ -1,17 +1,25 @@
-import { useGetServiceChargeReportsCsv, useServiceChargeReports } from '@/hooks/useReportHook.ts';
-import { CreditCard, Download, IndianRupee, RefreshCw, TrendingUp } from 'lucide-react';
-import { memo } from 'react';
-import { useParams } from 'react-router-dom';
-import AdvancedBottomButton from '../atom/bottomButton/advancedBottomButton.tsx';
-import useReports from '../store/useReports.ts';
-import useTimings from '../store/useTimings.ts';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card.tsx';
-import EmptyStateInstructions from './categoryLayouts/EmptyStateInstructions.tsx';
-import LayoutToggleButtons from './LayoutToggleButtons.tsx';
-import ServiceChargeCardLayout from './serviceChargeLayouts/ServiceChargeCardLayout.tsx';
-import ServiceChargeCompactLayout from './serviceChargeLayouts/ServiceChargeCompactLayout.tsx';
-import { formatCurrency } from './serviceChargeLayouts/serviceChargeHelper.ts';
-import ServiceChargeTableLayout from './serviceChargeLayouts/ServiceChargeTableLayout.tsx';
+import {
+  useGetServiceChargeReportsCsv,
+  useServiceChargeReports,
+} from "@/hooks/useReportHook.ts";
+import {
+  CreditCard,
+  Download,
+  IndianRupee,
+  RefreshCw,
+  TrendingUp,
+} from "lucide-react";
+import { memo } from "react";
+import { useParams } from "react-router-dom";
+import AdvancedBottomButton from "../atom/bottomButton/advancedBottomButton.tsx";
+import useReports from "../store/useReports.ts";
+import useTimings from "../store/useTimings.ts";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.tsx";
+import EmptyStateInstructions from "./categoryLayouts/EmptyStateInstructions.tsx";
+import LayoutToggleButtons from "./LayoutToggleButtons.tsx";
+import ServiceChargeCompactLayout from "./serviceChargeLayouts/ServiceChargeCompactLayout.tsx";
+import { formatCurrency } from "./serviceChargeLayouts/serviceChargeHelper.ts";
+import ServiceChargeTableLayout from "./serviceChargeLayouts/ServiceChargeTableLayout.tsx";
 
 const MemoServiceChargeReports = () => {
   const businessId = useParams().businessId;
@@ -19,11 +27,17 @@ const MemoServiceChargeReports = () => {
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
   const serviceChargeReports = useReports((s) => s.serviceChargeReports);
   const { isPending, getServiceChargeReports } = useServiceChargeReports();
-  const { isPending: isPendingCsv, getServiceChargeReportsCsv } = useGetServiceChargeReportsCsv();
+  const { isPending: isPendingCsv, getServiceChargeReportsCsv } =
+    useGetServiceChargeReportsCsv();
   const layout = useReports((s) => s.layoutType);
 
   const hasReports = serviceChargeReports.length > 0;
-  const totalServiceCharge = hasReports ? serviceChargeReports.reduce((acc, report) => acc + report.serviceCharge, 0) : 0;
+  const totalServiceCharge = hasReports
+    ? serviceChargeReports.reduce(
+        (acc, report) => acc + report.serviceCharge,
+        0,
+      )
+    : 0;
 
   const getReports = () => {
     getServiceChargeReports({
@@ -56,7 +70,9 @@ const MemoServiceChargeReports = () => {
               {/* Summary Badge */}
               <div className="hidden items-center gap-2 rounded-lg border bg-green-50 px-3 py-1 md:flex">
                 <IndianRupee className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-semibold text-green-700">Total: {formatCurrency(totalServiceCharge)}</span>
+                <span className="text-sm font-semibold text-green-700">
+                  Total: {formatCurrency(totalServiceCharge)}
+                </span>
               </div>
               <LayoutToggleButtons />
             </div>
@@ -72,17 +88,29 @@ const MemoServiceChargeReports = () => {
                     <CreditCard className="h-5 w-5" />
                     Service Charge Summary
                   </div>
-                  <div className="text-muted-foreground text-sm">{serviceChargeReports.length} business(es)</div>
+                  <div className="text-muted-foreground text-sm">
+                    {serviceChargeReports.length} business(es)
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-2">
                 {serviceChargeReports.length === 0 ? (
-                  <p className="text-muted-foreground py-8 text-center">No service charge data available for the selected date range.</p>
+                  <p className="text-muted-foreground py-8 text-center">
+                    No service charge data available for the selected date
+                    range.
+                  </p>
                 ) : (
                   <>
-                    {layout === 'cards' && <ServiceChargeCardLayout reports={serviceChargeReports} />}
-                    {layout === 'table' && <ServiceChargeTableLayout reports={serviceChargeReports} />}
-                    {layout === 'compact' && <ServiceChargeCompactLayout reports={serviceChargeReports} />}
+                    {layout === "table" && (
+                      <ServiceChargeTableLayout
+                        reports={serviceChargeReports}
+                      />
+                    )}
+                    {layout === "compact" && (
+                      <ServiceChargeCompactLayout
+                        reports={serviceChargeReports}
+                      />
+                    )}
                   </>
                 )}
               </CardContent>
@@ -90,7 +118,9 @@ const MemoServiceChargeReports = () => {
           </div>
         )}
 
-        {!hasReports && !isPending && <EmptyStateInstructions text="Service Charge" />}
+        {!hasReports && !isPending && (
+          <EmptyStateInstructions text="Service Charge" />
+        )}
       </div>
 
       <AdvancedBottomButton
@@ -101,22 +131,32 @@ const MemoServiceChargeReports = () => {
           ...(hasReports
             ? [
                 {
-                  text: isPendingCsv ? 'Downloading...' : 'Download CSV',
+                  text: isPendingCsv ? "Downloading..." : "Download CSV",
                   onClick: downloadReports,
-                  className: 'w-full md:max-w-[12rem] !bg-purple-600',
+                  className: "w-full md:max-w-[12rem] !bg-purple-600",
                   disable: isPendingCsv,
                   isBackButton: false,
-                  icon: isPendingCsv ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />,
+                  icon: isPendingCsv ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  ),
                 },
               ]
             : []),
           {
-            text: isPending ? 'Generating...' : 'Generate Report',
+            text: isPending ? "Generating..." : "Generate Report",
             onClick: getReports,
-            className: hasReports ? 'w-full md:max-w-[14rem]' : 'w-full md:max-w-[24rem]',
+            className: hasReports
+              ? "w-full md:max-w-[14rem]"
+              : "w-full md:max-w-[24rem]",
             disable: isPending,
             isBackButton: false,
-            icon: isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />,
+            icon: isPending ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <TrendingUp className="h-4 w-4" />
+            ),
           },
         ]}
       />

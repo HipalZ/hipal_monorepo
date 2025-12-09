@@ -28,7 +28,12 @@ export type CategoryStep =
   | "EDIT_SUB_CATEGORY"
   | "LINK_DISH";
 export type categoryType = "MAIN_CATEGORY" | "SUB_CATEGORY" | "";
-export type Addon = "ADD_ON" | "ADD_CHOICE" | "LINK_DISHES" | "EDIT_ADDON";
+export type Addon =
+  | "ADD_ON"
+  | "ADD_CHOICE"
+  | "LINK_DISHES"
+  | "EDIT_ADDON"
+  | "BULK_UPLOAD";
 export type categorySubtypes =
   | ""
   | "LINK_MAIN_CATEGORY"

@@ -3,15 +3,13 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import {
-  type CategoryReport,
   buildCategoryReport,
+  buildCategorySheet,
 } from "../../utils/reportHelper/categoryReport";
-import {
-  formatDateToIST,
-  formatToIST,
-} from "../../utils/reportHelper/dateFormater";
+import { formatDateToIST } from "../../utils/reportHelper/dateFormater";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { respond } from "../../utils/response";
+import { createReportWorkbook } from "../../utils/reportHelper/excelUtils";
 
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
@@ -73,7 +71,7 @@ const categoryRouter = new Hono()
     );
   })
 
-  .post("/download_csv", zValidator("json", bodySchema), async (c) => {
+  .post("/download_xlsx", zValidator("json", bodySchema), async (c) => {
     const { businessIds, from, to } = await c.req.json();
 
     if (from > to) {
@@ -93,6 +91,7 @@ const categoryRouter = new Hono()
     const bizDocs = await Business.find({ _id: { $in: businessIds } })
       .lean()
       .select({ name: 1 });
+
     const nameMap: Record<string, string> = {};
     for (const b of bizDocs) {
       nameMap[b._id.toString()] = b.name;
@@ -104,54 +103,37 @@ const categoryRouter = new Hono()
       paymentsByBiz[p.businessId]?.push(p);
     }
 
-    const csvLines: string[] = [];
-    const header = [
-      "Category",
-      "No.of Orders",
-      "Total Items Orders",
-      "Net Amount",
-      "Total Discount",
-      "Total Tax",
-      "Total Sales",
-    ].join(",");
+    const { workbook } = createReportWorkbook(); // no default sheet; buildCategorySheet handles sheets
 
-    for (const biz of businessIds) {
-      const bizName = nameMap[biz] ?? "Unknown";
+    const ctx = {
+      businessIds,
+      from,
+      to,
+      allPayments,
+      bizNameMap: nameMap,
+      paymentsByBiz, // include if buildCategorySheet needs it
+    };
 
-      csvLines.push(`BusinessId,${biz}`);
-      csvLines.push(`BusinessName,"${bizName.replace(/"/g, '""')}"`);
+    await buildCategorySheet(workbook, ctx);
 
-      csvLines.push(header);
-      const categories: CategoryReport[] = await buildCategoryReport(
-        paymentsByBiz[biz],
-      );
-      for (const cat of categories) {
-        csvLines.push(
-          [
-            `"${cat.categoryName.replace(/"/g, '""')}"`,
-            cat.categoryCount,
-            cat.itemCount,
-            cat.totalAmount,
-            cat.totalDiscount,
-            cat.totalTax,
-            cat.totalSales,
-          ].join(","),
-        );
-      }
+    const fromIST = formatDateToIST(from);
+    const toIST = formatDateToIST(to);
+    const filename = `Category Reports ${fromIST} to ${toIST}.xlsx`;
 
-      csvLines.push("");
-    }
+    const buffer = await workbook.xlsx.writeBuffer();
 
-    const csv = csvLines.join("\r\n");
-    const fromIST = formatToIST(from, true).replace(/[:/ ]/g, "-");
-    const toIST = formatToIST(to, true).replace(/[:/ ]/g, "-");
-    const filename = `category-report_${businessIds.join(
-      "_",
-    )}_${fromIST}_${toIST}.csv`;
+    c.header(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; charset=utf-8",
+    );
+    c.header(
+      "Content-Disposition",
+      `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(
+        filename,
+      )}`,
+    );
 
-    c.header("Content-Type", "text/csv; charset=utf-8");
-    c.header("Content-Disposition", `attachment; filename="${filename}"`);
-    return c.body(csv);
+    return c.body(buffer);
   });
 
 export default categoryRouter;

@@ -77,7 +77,17 @@ const Header: React.FC<HeaderProps> = memo(
               {title}
             </span>
           </div>
-          <div className="absolute text-sm right-6">{rightButton}</div>
+          {rightButton ? (
+            <div
+              onClick={logoutUser}
+              onKeyDown={logoutUser}
+              className="absolute text-sm right-6"
+            >
+              {rightButton}
+            </div>
+          ) : (
+            <div />
+          )}
         </div>
         &nbsp;
         <center>{children}</center>

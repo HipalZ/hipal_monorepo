@@ -10,44 +10,24 @@ const MemoLinkItems = () => {
   const [tempIds, setTempIds] = useState<string[]>([]);
   const [removeIds, setRemoveIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const {
-    setSelectedCatIds,
-    dishStep,
-    selectedCatIds,
-    setDishStep,
-    recommendationIds,
-    setRecommendationIds,
-    setRemoveCategoryIds,
-    setRemoveRecommendationIds,
-    removeCategoryIds,
-    addOnToggle,
-    setAddOnToggle,
-    addOnId,
-    editingSubCat,
-    categoryStep,
-    setCategoryStep,
-  } = useMenuPageStore((s) => ({
-    setSelectedCatIds: s.setSelectedCatIds,
-    selectedCatIds: s.selectedCatIds,
-    dishStep: s.dishStep,
-    setDishStep: s.setDishStep,
-    recommendationIds: s.recommendationIds,
-    setRecommendationIds: s.setRecommendationIds,
-    setRemoveCategoryIds: s.setRemoveCategoryIds,
-    setRemoveAddOnIds: s.setRemoveAddOnIds,
-    setRemoveRecommendationIds: s.setRemoveRecommendationIds,
-    removeCategoryIds: s.removeCategoryIds,
-    addOnToggle: s.addOnToggle,
-    setAddOnToggle: s.setAddOnToggle,
-    addOnId: s.addOnId,
-    editingSubCat: s.editingSubCat,
-    categoryStep: s.categoryStep,
-    setCategoryStep: s.setCategoryStep,
-  }));
-
-  const { dishes } = useDishesStore((s) => ({
-    dishes: s.dishes,
-  }));
+  const setSelectedCatIds = useMenuPageStore((s) => s.setSelectedCatIds);
+  const dishStep = useMenuPageStore((s) => s.dishStep);
+  const selectedCatIds = useMenuPageStore((s) => s.selectedCatIds);
+  const setDishStep = useMenuPageStore((s) => s.setDishStep);
+  const recommendationIds = useMenuPageStore((s) => s.recommendationIds);
+  const setRecommendationIds = useMenuPageStore((s) => s.setRecommendationIds);
+  const setRemoveCategoryIds = useMenuPageStore((s) => s.setRemoveCategoryIds);
+  const setRemoveRecommendationIds = useMenuPageStore(
+    (s) => s.setRemoveRecommendationIds,
+  );
+  const removeCategoryIds = useMenuPageStore((s) => s.removeCategoryIds);
+  const addOnToggle = useMenuPageStore((s) => s.addOnToggle);
+  const setAddOnToggle = useMenuPageStore((s) => s.setAddOnToggle);
+  const addOnId = useMenuPageStore((s) => s.addOnId);
+  const editingSubCat = useMenuPageStore((s) => s.editingSubCat);
+  const categoryStep = useMenuPageStore((s) => s.categoryStep);
+  const setCategoryStep = useMenuPageStore((s) => s.setCategoryStep);
+  const dishes = useDishesStore((s) => s.dishes);
 
   useDishes();
 
