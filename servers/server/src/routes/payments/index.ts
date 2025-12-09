@@ -1656,7 +1656,7 @@ const paymentsRouter = new Hono()
     //@ts-ignore
 
     const { merchantId } = c.req.param();
-    const rawBody = await c.req.text();
+    const rawBody = await c.req.raw.text();
     const headers = c.req.header();
 
     const signature = headers["x-razorpay-signature"];
