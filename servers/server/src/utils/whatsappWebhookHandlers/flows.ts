@@ -5,6 +5,7 @@ import {
 } from "@hi/db-models";
 import path = require("node:path");
 import { google } from "googleapis";
+import type { ChatbotNodeLogType } from "@hi/db-models/src/models/whatsappChatbot/chatbotAnalytics";
 
 interface InteractiveParams {
   interactiveTitleOrId: string;
@@ -54,7 +55,6 @@ export async function processInteractiveReply({
       routeKey.toLowerCase() === interactiveTitleOrId?.toLowerCase()
     ) {
       targetNodeId = routeVal && routeVal.trim() !== "" ? routeVal : null;
-      console.log("Matched route:", routeKey, "→", targetNodeId);
       break;
     }
   }
@@ -224,6 +224,7 @@ export async function handleChatbotFlow({
 }) {
   const businessId = whatsAppBusinessConfigData?.businessId;
   if (!businessId) return null;
+  console.log("Handling chatbot flow for business:", businessId);
 
   const chatbotList = await getAllChatbotFlows(businessId);
   if (!chatbotList.length) return null;
@@ -658,14 +659,18 @@ async function sendInteractiveCTAUrl(
   await waSend(cfg, { to, type: "interactive", interactive });
 }
 
-async function exitNodeLog(nodeLog, nextNodeId, nodeStartTime) {
+async function exitNodeLog(
+  nodeLog: ChatbotNodeLogType | null,
+  nextNodeId: string,
+  nodeStartTime: number,
+) {
   if (!nodeLog) return;
 
   try {
     await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, {
-      exitedAt: new Date(),
+      exitedAt: Date.now(),
       durationMs: Date.now() - nodeStartTime,
-      nextNodeId: nextNodeId,
+      nextNodeId,
     });
   } catch (e) {
     console.error("NodeLog update failed:", e);
@@ -712,7 +717,7 @@ export async function advance(
           chatbotId: FLOW._id,
           nodeId: node.id,
           nodeType: node.type,
-          enteredAt: new Date(),
+          enteredAt: Date.now(),
         });
         console.log("created nodeLog:", nodeLog);
       }
@@ -778,7 +783,7 @@ export async function advance(
           { _id: s._id },
           {
             completed: true,
-            endTime: new Date(),
+            endTime: Date.now(),
             sessionDurationMs: Date.now() - new Date(s.startTime).getTime(),
             lastNodeId: node.id,
           },

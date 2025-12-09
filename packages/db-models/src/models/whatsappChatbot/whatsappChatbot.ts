@@ -176,8 +176,8 @@ export interface ChatbotSessionType {
   chatbotId: mongoose.Types.ObjectId;
   userId: string;
   variables?: Record<string, any>;
-  startTime?: Date;
-  endTime?: Date;
+  startTime?: number;
+  endTime?: number;
   completed?: boolean;
   lastNodeId?: string;
   totalMessages?: number;
@@ -194,8 +194,8 @@ const ChatbotSessionSchema = new Schema<ChatbotSessionType>(
     },
     userId: { type: String, required: true },
     variables: { type: Object, default: {} },
-    startTime: { type: Date, default: Date.now },
-    endTime: { type: Date },
+    startTime: { type: Number, default: Date.now() },
+    endTime: { type: Number, default: Date.now() },
     completed: { type: Boolean, default: false },
     lastNodeId: { type: String },
     totalMessages: { type: Number, default: 0 },

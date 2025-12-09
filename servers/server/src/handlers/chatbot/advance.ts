@@ -11,9 +11,8 @@ import {
   sendInteractiveCTAUrl,
 } from "./senders";
 
-import { AnyNode, LoadedFlow, SessionState } from "../types/chatbot";
-
 import { ChatbotNodeLogModel, ChatbotSessionModel } from "@hi/db-models";
+import type { AnyNode, LoadedFlow, SessionState } from "./types";
 
 export async function advance(
   FLOW: LoadedFlow["flow"],
@@ -54,7 +53,7 @@ export async function advance(
           chatbotId: FLOW._id,
           nodeId: node.id,
           nodeType: node.type,
-          enteredAt: new Date(),
+          enteredAt: Date.now(),
         });
       }
     } catch (err) {
@@ -295,7 +294,7 @@ async function exitLog(
   if (!nodeLog) return;
   try {
     await ChatbotNodeLogModel.findByIdAndUpdate(nodeLog._id, {
-      exitedAt: new Date(),
+      exitedAt: Date.now(),
       durationMs: Date.now() - startTime,
       nextNodeId,
     });

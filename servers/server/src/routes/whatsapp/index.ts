@@ -1782,7 +1782,6 @@ const whatsappRouter = new Hono()
           messages,
           contacts,
           whatsAppBusinessConfigData,
-          c,
         });
       }
 
