@@ -172,8 +172,6 @@ export default function GoogleSheetNode({ data, selected }: SendNodeProps) {
         },
       });
 
-      toast.success('Google Sheet config saved');
-
       const payload = {
         spreadsheetId,
         range: `${sheetName}!A1`,

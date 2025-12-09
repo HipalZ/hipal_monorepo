@@ -7,6 +7,8 @@ type GoogleSheetSubmitPayload = {
   spreadsheetId: string;
   range: string;
   cells: { key: string; value: string }[];
+  businessId: string;
+  sessionKey: string;
 };
 
 export const useSubmitGoogleSheet = () => {
@@ -15,11 +17,13 @@ export const useSubmitGoogleSheet = () => {
 
   const { isPending: submitLoading, mutateAsync: submitToSheet } = useMutation({
     mutationFn: async (payload: GoogleSheetSubmitPayload) => {
-      const { spreadsheetId, range, cells } = payload;
+      const { spreadsheetId, range, cells, businessId, sessionKey } = payload;
 
       const headerRow = cells.map((cell) => cell.key || "");
       const response = await apiRpc.google_sheets.submit.$post({
         json: {
+          businessId,
+          sessionKey,
           spreadsheetId,
           range: range || "Sheet1!A1",
           values: [headerRow],
@@ -27,7 +31,6 @@ export const useSubmitGoogleSheet = () => {
       });
 
       const result = await response.json();
-
       if (!response.ok || result?.success === false || result?.err === true) {
         throw new Error(
           result.error || result.message || "Failed to append to Google Sheet",
@@ -38,7 +41,7 @@ export const useSubmitGoogleSheet = () => {
     },
 
     onSuccess: (data) => {
-      alert("✅ Successfully added dynamic data to Google Sheet!");
+      toast.success("✅ Successfully added dynamic data to Google Sheet!");
       queryClient.invalidateQueries({ queryKey: ["googleSheetsList"] });
     },
 

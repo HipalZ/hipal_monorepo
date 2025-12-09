@@ -206,10 +206,6 @@ const googleSheetsRouter = new Hono()
     try {
       const { businessId, sessionKey, spreadsheetId, range, values } =
         await c.req.json();
-      console.log("triggering /submit", {
-        businessId,
-        sessionKey,
-      });
       const tokenDoc = await getTokenRecord(businessId, sessionKey);
       if (!tokenDoc) return c.json({ success: false, error: "Not logged in" });
 

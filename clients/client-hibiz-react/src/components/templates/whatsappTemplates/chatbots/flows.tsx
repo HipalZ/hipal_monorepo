@@ -378,9 +378,6 @@ function EditorShell(): JSX.Element {
         addNodeFromContext={addNodeFromContext}
         categories={categories}
       />
-
-      {/* OUTPUT JSON */}
-      <JSONPanel finalObject={finalObject} />
     </div>
   );
 }
@@ -409,7 +406,7 @@ function Sidebar({
       </div>
 
       {leftOpen && (
-        <div className="flex h-[90dvh] flex-col">
+        <div className="flex h-[95dvh] flex-col">
           <Card className="rounded-none border-b border-gray-100 bg-slate-50 shadow-none">
             <CardHeader className="p-4 pb-3">
               <div className="mb-3 flex items-center gap-2">
@@ -491,7 +488,7 @@ function FlowArea({
   categories,
 }: FlowAreaProps): JSX.Element {
   return (
-    <div className="relative h-[85dvh] flex-1">
+    <div className="relative h-[95dvh] flex-1">
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}
@@ -576,24 +573,6 @@ function CategoryHeader({ category }: CategoryHeaderProps): JSX.Element {
       <h4 className="font-semibold text-gray-700">{category.title}</h4>
       <span className="ml-2 text-xs text-gray-500">{category.items.length}</span>
     </div>
-  );
-}
-
-/* -------------------------------------------------------
-   JSON PANEL COMPONENT
-------------------------------------------------------- */
-function JSONPanel({ finalObject }: JSONPanelProps): JSX.Element {
-  return (
-    <Card className="h-full max-w-xs flex-shrink-0 overflow-y-auto rounded-none border-0 shadow-lg">
-      <CardHeader className="border-b p-3">
-        <CardTitle className="text-sm font-semibold">Output JSON</CardTitle>
-      </CardHeader>
-      <CardContent className="p-3">
-        <pre className="max-h-[85vh] overflow-auto rounded-lg bg-slate-900 p-3 font-mono text-xs text-slate-200">
-          {JSON.stringify(finalObject, null, 2)}
-        </pre>
-      </CardContent>
-    </Card>
   );
 }
 

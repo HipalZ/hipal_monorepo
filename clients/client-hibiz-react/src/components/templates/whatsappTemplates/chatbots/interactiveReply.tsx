@@ -305,7 +305,7 @@ export function InteractiveReply({ data, selected }) {
                     position={Position.Right}
                     id={btn.id}
                     style={{ right: '-10%' }}
-                    className="z-50 !h-6 !w-6 rounded-full !border-4 !border-white !bg-blue-600 shadow-xl transition-all hover:scale-110 hover:!bg-blue-700"
+                    className="z-50 !h-5 !w-5 rounded-full !border-4 !border-white !bg-blue-600 shadow-xl hover:!bg-blue-700"
                   />
 
                   <div className="space-y-3">
@@ -380,16 +380,13 @@ export function InteractiveReply({ data, selected }) {
 
                   <div className="space-y-3">
                     {(section.rows || []).map((row, ri) => (
-                      <div
-                        key={row.id}
-                        className="relative rounded-lg border border-gray-300 bg-white p-2 pr-7 transition-all hover:border-green-500"
-                      >
+                      <div key={row.id} className="relative rounded-lg border border-gray-300 bg-white p-2 pr-7 hover:border-green-500">
                         <Handle
                           type="source"
                           position={Position.Right}
                           id={row.id}
-                          style={{ right: '-10%' }}
-                          className="z-50 !h-6 !w-6 rounded-full !border-4 !border-white !bg-blue-600 shadow-xl hover:!bg-blue-700"
+                          style={{ right: '-20%' }}
+                          className="z-50 !h-5 !w-5 rounded-full !border-4 !border-white !bg-blue-600 shadow-xl hover:!bg-blue-700"
                         />
 
                         <div className="relative w-full">
