@@ -55,7 +55,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { enqueueRazorpayJob } from "../../queues/enqueue";
+// import { enqueueRazorpayJob } from "../../queues/enqueue";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { type KotOrderTypes, calculateBillTotals } from "../../utils/bill";
 import { getMerchantConfig } from "../../utils/cacheHelper";
@@ -1758,19 +1758,19 @@ const paymentsRouter = new Hono()
         return respond(c, "Webhook could not be queued", false, 200, {});
       }
 
-      enqueueRazorpayJob("razorpayPaymentHandler", {
-        date: Date.now(),
-        merchantId: merchantId,
-        razorpayEventId: razorpayEventId,
-        order_id: order_id,
-        id: id,
-        event: body.event,
-        status: "PENDING",
-        acquirer_data: acquirer_data,
-        error_description: error_description,
-        error_reason: error_reason,
-        mode: method,
-      });
+      // enqueueRazorpayJob("razorpayPaymentHandler", {
+      //   date: Date.now(),
+      //   merchantId: merchantId,
+      //   razorpayEventId: razorpayEventId,
+      //   order_id: order_id,
+      //   id: id,
+      //   event: body.event,
+      //   status: "PENDING",
+      //   acquirer_data: acquirer_data,
+      //   error_description: error_description,
+      //   error_reason: error_reason,
+      //   mode: method,
+      // });
     }
 
     return respond(c, "Webhook received successfully", false, 200, {});
