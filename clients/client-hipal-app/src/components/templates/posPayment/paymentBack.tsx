@@ -1,5 +1,5 @@
 import { useMerchantDetails } from "@/components/hooks/useMerchantSecret";
-import { useGetBill, useGetOrderId } from "@/components/hooks/usePayments";
+import { useGetOrderId } from "@/components/hooks/usePayments";
 import { useUserCoinz } from "@/components/hooks/useUserCoinz";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
@@ -14,7 +14,7 @@ import { memo, useCallback, useEffect } from "react";
 import { BiArrowBack } from "react-icons/bi";
 
 const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
-  useMerchantDetails();
+  useMerchantDetails(data?.outletInfo?.businessId);
   // useGetBill();
   useGetOrderId();
   useUserCoinz(data?.loyalty?.loyaltyId || "");
