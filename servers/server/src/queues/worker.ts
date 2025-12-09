@@ -7,7 +7,7 @@ import connectDB from "./dbConnection";
 import { handlers } from "./handlers";
 
 async function jobHandler(job: Job) {
-  console.log("📝 Job receiveds:", job.name);
+  console.log("📝 Job receivedss:", job.name);
 
   const queueHandlers = handlers[job.queueName as QueueName];
   const handler = queueHandlers?.[job.name as keyof typeof queueHandlers];
