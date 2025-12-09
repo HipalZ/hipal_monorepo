@@ -97,6 +97,7 @@ export const OrderSchema = z.object({
       message: "Variant ID must be a string",
     })
     .optional(),
+  _id: z.string().optional(),
 });
 
 export const jewelleryOrderSchema = z.object({
@@ -180,6 +181,7 @@ export const jewelleryOrderSchema = z.object({
     })
     .optional()
     .default("IN_PROGRESS"),
+  _id: z.string().optional(),
 });
 
 export type OrderType = z.infer<typeof OrderSchema>;

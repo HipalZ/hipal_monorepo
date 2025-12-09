@@ -6,7 +6,7 @@ import type {
   sendTemplateTypeValidator,
 } from "../../types/jobtypes";
 import { returnBodyComponents } from "../../utils/helper";
-import { enqueueWhatsAppJob } from "../../enqueue";
+// import { enqueueWhatsAppJob } from "../../enqueue";
 
 async function sendTemplate(job: Job) {
   const {
@@ -134,7 +134,8 @@ async function pushCustomerIntoQueue(job: Job) {
       userId: customer._id,
       category: category,
     };
-    await enqueueWhatsAppJob("sendTemplate", payload);
+    console.log("Enqueuing for ", customer?.phone?.toString());
+    // await enqueueWhatsAppJob("sendTemplate", payload);
   }
 }
 

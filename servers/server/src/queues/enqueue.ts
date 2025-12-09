@@ -1,6 +1,6 @@
 // src/queues/enqueue.ts
 import type { QUEUE_NAME } from "./constants/queueNames";
-import { billQueue, whatsappCampaignQueue } from "./queueFactory";
+import { billQueue, whatsappCampaignQueue,razorpayWebhookQueue } from "./queueFactory";
 import type { JobMap } from "./types/jobtypes";
 
 export async function enqueueBillJob<
@@ -21,4 +21,14 @@ export async function enqueueWhatsAppJob<
   opts: { delay?: number } = {},
 ) {
   return await whatsappCampaignQueue.add(type as string, data, opts);
+}
+
+export async function enqueueRazorpayJob<
+  T extends keyof JobMap[typeof QUEUE_NAME.RAZORPAY_WEBHOOK_QUEUE],
+>(
+  type: T,
+  data: JobMap[typeof QUEUE_NAME.RAZORPAY_WEBHOOK_QUEUE][T],
+  opts: { delay?: number } = {},
+) {
+  return await razorpayWebhookQueue.add(type as string, data, opts);
 }

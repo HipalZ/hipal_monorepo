@@ -64,8 +64,8 @@ import {
 } from "../../utils/whatsappWebhookHandlers/helper";
 import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
 import { handleChatbotFlow } from "../../utils/whatsappWebhookHandlers/flows";
-import { enqueueWhatsAppJob } from "../../queues/enqueue";
 import { exchangeCodeForToken } from "../../utils/instagram";
+// import { enqueueWhatsAppJob } from "../../queues/enqueue";
 interface AxiosError {
   response?: {
     status?: number;
@@ -206,9 +206,9 @@ const pushToQueue = async (
     category: template.category,
   };
 
-  await enqueueWhatsAppJob("pushCustomerIntoQueue", payload, {
-    delay: delay,
-  });
+  // await enqueueWhatsAppJob("pushCustomerIntoQueue", payload, {
+  //   delay: delay,
+  // });
 
   return true;
 };

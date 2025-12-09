@@ -26,3 +26,16 @@ export const whatsappCampaignQueue = new Queue(
     },
   },
 );
+
+// ----------------- RAZORPAY WEBHOOK QUEUE -----------------
+export const razorpayWebhookQueue = new Queue(
+  QUEUE_NAME.RAZORPAY_WEBHOOK_QUEUE,
+  {
+    connection: redis,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 3000 },
+      removeOnComplete: true,
+    },
+  },
+);

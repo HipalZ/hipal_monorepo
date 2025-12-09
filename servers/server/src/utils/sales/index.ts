@@ -74,6 +74,9 @@ export async function buildBillsExcelBuffer({
   let totalNpc = 0;
   let totalDuesGetBack = 0; // 💰 DUES_SETTLE non-complementary
 
+  // 🔹 NEW: net round-off for PAID (normal + DUES_SETTLE)
+  let totalRoundOff = 0;
+
   for (const payment of paidPayments as AnyPayment[]) {
     const {
       billValue = 0,
@@ -87,6 +90,8 @@ export async function buildBillsExcelBuffer({
       mode,
       settleType,
       couponDiscount = 0,
+      roundOffType,
+      roundOffAmount,
     } = payment;
 
     totalBillValue += billValue;
@@ -117,12 +122,26 @@ export async function buildBillsExcelBuffer({
     }
 
     if (mode === "npc") totalNpc += billValue;
+
+    // 🔹 NET ROUND-OFF (plus/minus) for paid bills
+    if (typeof roundOffAmount === "number" && roundOffAmount !== 0) {
+      if (roundOffType === 1) {
+        // plus
+        totalRoundOff += roundOffAmount;
+      } else if (roundOffType === 0) {
+        // minus
+        totalRoundOff -= roundOffAmount;
+      }
+    }
   }
 
   const totalOrdersCount = paidPayments.length;
   const allDiscounts = totalTotalDiscount;
   const discountWithNpcAndComp = totalComplementary + totalNpc + allDiscounts;
   const netSales = totalBillValue - discountWithNpcAndComp;
+
+  // 🔹 Total sales excluding net round-off (for reconciliation)
+  const totalSalesExclRoundOff = totalAmount - totalRoundOff;
 
   // ---------------- AGGREGATES FOR PENDING DUES ----------------
   let duesSubtotal = 0;
@@ -188,7 +207,17 @@ export async function buildBillsExcelBuffer({
   addSummaryRow("Service Charge", Number(totalServiceCharge.toFixed(2)));
   addSummaryRow("GST (CGST+SGST)", Number(totalTax.toFixed(2)));
   addSummaryRow("Tips", Number(totalTips.toFixed(2)));
+
+  // 🔹 Total Sales (includes round-off)
   addSummaryRow("Total Sales", Number(totalAmount.toFixed(2)));
+
+  // 🔹 NEW: Net round-off and sales excluding round-off
+  addSummaryRow("Net Round Off (Paid)", Number(totalRoundOff.toFixed(2)));
+  addSummaryRow(
+    "Total Sales (Excl. Round Off)",
+    Number(totalSalesExclRoundOff.toFixed(2)),
+  );
+
   addSummaryRow(
     "Net Sales (Subtotal - Discounts - NPC - Complimentary, excl. Tips)",
     Number(netSales.toFixed(2)),

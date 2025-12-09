@@ -1,110 +1,79 @@
-import { apiRpc } from "@hi/common";
-import { memo, useCallback } from "react";
-import { useMerchantDetails } from "@/hooks/merchantSecret";
-import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import toast from "react-hot-toast";
-import useBusinessData from "@/components/store/useBusinessData";
-import usePayment from "@/components/store/usePayment";
-import useWhatsapp, { Step } from "@/components/store/useWhatsapp";
-import { useState } from "react";
-import BottomButton from "@/components/atom/bottomButton";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { useErrorHandling } from "@/components/utils/errorHandling";
-import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
-import { useQueryClient } from "@tanstack/react-query";
+import BottomButton from '@/components/atom/bottomButton';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import useBusinessData from '@/components/store/useBusinessData';
+import { useOwnerLogin } from '@/components/store/useOwnerLogin';
+import usePayment from '@/components/store/usePayment';
+import useWhatsapp, { Step } from '@/components/store/useWhatsapp';
+import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
+import { useErrorHandling } from '@/components/utils/errorHandling';
+import { usePaltribeMerchantDetails } from '@/hooks/merchantSecret';
+import { apiRpc } from '@hi/common';
+import { useQueryClient } from '@tanstack/react-query';
+import { memo, useCallback, useState } from 'react';
+import toast from 'react-hot-toast';
 
 const pricingPlans = [
   {
-    id: "10",
-    name: "Wallet",
+    id: '10',
+    name: 'Wallet',
     price: 10,
     marketingPrice: 0.85,
     utilityPrice: 0.2,
     messages: 10,
     isPopular: false,
-    features: [
-      "Custom Templates",
-      "Analytics",
-      "Marketing Templates 1,170+ msgs Approx (or)",
-      "Utility Templates 5,000+ msgs Approx",
-    ],
+    features: ['Custom Templates', 'Analytics', 'Marketing Templates 1,170+ msgs Approx (or)', 'Utility Templates 5,000+ msgs Approx'],
   },
   {
-    id: "1000",
-    name: "Wallet",
+    id: '1000',
+    name: 'Wallet',
     price: 1000,
     marketingPrice: 0.85,
     utilityPrice: 0.2,
     messages: 1000,
     isPopular: false,
-    features: [
-      "Custom Templates",
-      "Analytics",
-      "Marketing Templates 1,170+ msgs Approx (or)",
-      "Utility Templates 5,000+ msgs Approx",
-    ],
+    features: ['Custom Templates', 'Analytics', 'Marketing Templates 1,170+ msgs Approx (or)', 'Utility Templates 5,000+ msgs Approx'],
   },
   {
-    id: "2500",
-    name: "Piggy Bank",
+    id: '2500',
+    name: 'Piggy Bank',
     price: 2500,
     marketingPrice: 0.85,
     utilityPrice: 0.2,
     messages: 2500,
     isPopular: false,
-    features: [
-      "Custom Templates",
-      "Advanced Analytics",
-      "Marketing Templates 2,900+ msgs Approx (or)",
-      "Utility Templates 12,500+ msgs Approx",
-    ],
+    features: ['Custom Templates', 'Advanced Analytics', 'Marketing Templates 2,900+ msgs Approx (or)', 'Utility Templates 12,500+ msgs Approx'],
   },
   {
-    id: "5000",
-    name: "Vault",
+    id: '5000',
+    name: 'Vault',
     price: 5000,
     marketingPrice: 0.85,
     utilityPrice: 0.2,
     messages: 5000,
     isPopular: true,
-    features: [
-      "Custom Templates",
-      "Advanced Analytics",
-      "Marketing Templates 5,500+ Approx (or)",
-      "Utility Templates 25,000+ msgs Approx",
-    ],
+    features: ['Custom Templates', 'Advanced Analytics', 'Marketing Templates 5,500+ Approx (or)', 'Utility Templates 25,000+ msgs Approx'],
   },
   {
-    id: "10000",
-    name: "Treasure Box",
+    id: '10000',
+    name: 'Treasure Box',
     price: 10000,
     marketingPrice: 0.85,
     utilityPrice: 0.2,
     messages: 10000,
     isPopular: false,
-    features: [
-      "Custom Templates",
-      "Advanced Analytics",
-      "Marketing Templates 11,760+ Approx (or)",
-      "Utility Templates 50,000+ msgs Approx",
-    ],
+    features: ['Custom Templates', 'Advanced Analytics', 'Marketing Templates 11,760+ Approx (or)', 'Utility Templates 50,000+ msgs Approx'],
   },
 ];
 const MemoWhatzappPayment = () => {
   const [selectedPlan, setSelectedPlan] = useState({
-    id: "2500",
-    name: "Piggy Bank",
+    id: '2500',
+    name: 'Piggy Bank',
     price: 2500,
     marketingPrice: 0.85,
     utilityPrice: 0.2,
     messages: 2500,
     isPopular: false,
-    features: [
-      "Custom Templates",
-      "Advanced Analytics",
-      "Marketing Templates 2,900+ msgs Approx (or)",
-      "Utility Templates 12,500+ msgs Approx",
-    ],
+    features: ['Custom Templates', 'Advanced Analytics', 'Marketing Templates 2,900+ msgs Approx (or)', 'Utility Templates 12,500+ msgs Approx'],
   });
   const queryClient = useQueryClient();
   const { setStep, merchantDetails, setShowError } = useWhatsapp((s) => ({
@@ -120,9 +89,8 @@ const MemoWhatzappPayment = () => {
     user: s.user,
   }));
   const { errorText } = useErrorHandling();
-  const { setRazorPayPaymentId, setRazorPayOrderId, setRazorPaySignature } =
-    usePayment();
-  useMerchantDetails();
+  const { setRazorPayPaymentId, setRazorPayOrderId, setRazorPaySignature } = usePayment();
+  usePaltribeMerchantDetails();
 
   const businessDetails = useBusinessData((s) => s.businessData);
 
@@ -133,13 +101,13 @@ const MemoWhatzappPayment = () => {
       return;
     }
     let isScriptLoaded = false;
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     document.body.appendChild(script);
     const timeoutId = setTimeout(() => {
       if (!isScriptLoaded) {
-        toast.error("Facing Internet Issue! Please try again.");
+        toast.error('Facing Internet Issue! Please try again.');
         setIsLoading(false);
         document.body.removeChild(script);
       }
@@ -151,9 +119,9 @@ const MemoWhatzappPayment = () => {
       const options = {
         key: merchantDetails.razorpayKeyId,
         amount: selectedPlan?.price,
-        currency: "INR",
+        currency: 'INR',
         name: businessDetails?.name,
-        description: "Transaction",
+        description: 'Transaction',
         image: businessDetails?.logo,
         order_id: orderId,
         handler: (response) => {
@@ -175,20 +143,20 @@ const MemoWhatzappPayment = () => {
         },
 
         notes: {
-          address: "Paltribe solutions",
+          address: 'Paltribe solutions',
           businessId: businessDetails?._id,
           total: selectedPlan?.price,
           billValue: selectedPlan?.price,
         },
         theme: {
-          color: "#3399cc",
+          color: '#3399cc',
         },
       };
 
       const rzp1 = new (window as any).Razorpay(options);
 
       // Add event listener to prevent back navigation
-      history.pushState(null, "", location.href); // Push initial state with an empty string for title
+      history.pushState(null, '', location.href); // Push initial state with an empty string for title
       window.onbeforeunload = (event) => {
         event.preventDefault();
         // Redirect to a specific URL
@@ -203,12 +171,12 @@ const MemoWhatzappPayment = () => {
       rzp1.open();
 
       // Remove the event listener when the user starts the payment process
-      document.addEventListener("rzp_payment_start", () => {
+      document.addEventListener('rzp_payment_start', () => {
         window.onbeforeunload = null;
         setIsLoading(false); // Set isLoading to false once payment starts
       });
 
-      rzp1.on("payment.failed", (response) => {
+      rzp1.on('payment.failed', (response) => {
         handlePaymentFailure(response);
         window.onbeforeunload = null;
         window.onpopstate = null; // Remove the event listener on payment failure
@@ -217,7 +185,7 @@ const MemoWhatzappPayment = () => {
     };
 
     script.onerror = () => {
-      toast.error("Failed to load Razorpay. Please try again later.");
+      toast.error('Failed to load Razorpay. Please try again later.');
       setIsLoading(false); // Set isLoading to false if script loading fails
     };
   };
@@ -227,9 +195,7 @@ const MemoWhatzappPayment = () => {
     async (response: any) => {
       setIsLoading(true);
 
-      const res = await apiRpc.whatsapp.whatsapp_valid_payment[
-        ":merchantId"
-      ].$post({
+      const res = await apiRpc.whatsapp.whatsapp_valid_payment[':merchantId'].$post({
         param: {
           merchantId: merchantDetails.razorpayMerchantId,
         },
@@ -243,16 +209,16 @@ const MemoWhatzappPayment = () => {
       await res.json();
 
       if (res.status === 200) {
-        toast.success("Payment successful");
-        setRazorPaySignature("");
-        setRazorPayOrderId("");
-        setRazorPayPaymentId("");
+        toast.success('Payment successful');
+        setRazorPaySignature('');
+        setRazorPayOrderId('');
+        setRazorPayPaymentId('');
         setIsLoading(false);
         setStep(Step.SETUP);
-        queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
+        queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
         return;
       }
-      toast.error("Payment failed");
+      toast.error('Payment failed');
     },
     [
       setIsLoading,
@@ -269,16 +235,14 @@ const MemoWhatzappPayment = () => {
   // create razorpay order generates order_id in response
   const createRazorPayOrder = useCallback(
     async (total: number): Promise<string> => {
-      const res = await apiRpc.whatsapp.create_whatsapp_order[
-        ":merchantId"
-      ].$post({
+      const res = await apiRpc.whatsapp.create_whatsapp_order[':merchantId'].$post({
         param: {
           merchantId: merchantDetails.razorpayMerchantId,
         },
         json: {
-          businessId: businessDetails?._id || "",
+          businessId: businessDetails?._id || '',
           total: total,
-          currency: "INR",
+          currency: 'INR',
           billValue: total,
           userId: user?._id,
         },
@@ -294,14 +258,7 @@ const MemoWhatzappPayment = () => {
       setRazorPayOrderId(orderId);
       return orderId;
     },
-    [
-      merchantDetails.razorpayMerchantId,
-      businessDetails?._id,
-      setIsLoading,
-      setRazorPayOrderId,
-      user,
-      errorText,
-    ],
+    [merchantDetails.razorpayMerchantId, businessDetails?._id, setIsLoading, setRazorPayOrderId, user, errorText],
   );
 
   // handle payment success
@@ -313,31 +270,20 @@ const MemoWhatzappPayment = () => {
       setRazorPayOrderId(response.razorpay_order_id);
       setRazorPayPaymentId(response.razorpay_payment_id);
     },
-    [
-      setRazorPaySignature,
-      setRazorPayOrderId,
-      setRazorPayPaymentId,
-      sendPaymentResponse,
-      setIsLoading,
-    ],
+    [setRazorPaySignature, setRazorPayOrderId, setRazorPayPaymentId, sendPaymentResponse, setIsLoading],
   );
 
   // handle payment failure
   const handlePaymentDismiss = useCallback(() => {
-    setRazorPaySignature("");
-    setRazorPayOrderId("");
-    setRazorPayPaymentId("");
+    setRazorPaySignature('');
+    setRazorPayOrderId('');
+    setRazorPayPaymentId('');
     setShowError(true);
-    toast.error("Payment failed");
+    toast.error('Payment failed');
     setTimeout(() => {
       setShowError(false);
     }, 2000);
-  }, [
-    setRazorPaySignature,
-    setRazorPayOrderId,
-    setRazorPayPaymentId,
-    setShowError,
-  ]);
+  }, [setRazorPaySignature, setRazorPayOrderId, setRazorPayPaymentId, setShowError]);
 
   const handlePaymentFailure = useCallback(
     (response: any) => {
@@ -354,120 +300,83 @@ const MemoWhatzappPayment = () => {
 
   return (
     <>
-      <section className="min-h-[90dvh] p-4 bg-gray-100 sm:px-6 lg:px-8">
+      <section className="min-h-[90dvh] bg-gray-100 p-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <h1 className="mb-2 text-4xl font-extrabold text-center text-gray-900">
-            WhatsApp Business Messaging Plans
-          </h1>
-          <p className="mb-8 text-lg text-center text-gray-600">
-            Choose the perfect plan for your business communication needs
-          </p>
+          <h1 className="mb-2 text-center text-4xl font-extrabold text-gray-900">WhatsApp Business Messaging Plans</h1>
+          <p className="mb-8 text-center text-lg text-gray-600">Choose the perfect plan for your business communication needs</p>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             {pricingPlans.map((plan) => (
               <div
                 key={plan.id}
                 onClick={() => setSelectedPlan(plan)}
-                onKeyDown={(e) => e.key === "Enter" && setSelectedPlan(plan)}
+                onKeyDown={(e) => e.key === 'Enter' && setSelectedPlan(plan)}
                 tabIndex={0}
                 role="button"
                 aria-pressed={selectedPlan?.id === plan.id}
-                className={`
-            relative h-full bg-white pb-24 rounded-xl shadow-lg overflow-hidden hover:scale-102 hover:shadow-xl
-            ${selectedPlan?.id === plan.id ? "ring-4 ring-green-500" : ""}
-            focus:outline-none focus:ring-4 focus:ring-green-300
-          `}
+                className={`hover:scale-102 relative h-full overflow-hidden rounded-xl bg-white pb-24 shadow-lg hover:shadow-xl ${selectedPlan?.id === plan.id ? 'ring-4 ring-green-500' : ''} focus:outline-none focus:ring-4 focus:ring-green-300`}
               >
                 {plan.isPopular && (
-                  <div className="absolute top-0 right-0 px-3 py-1 text-xs font-bold text-white bg-green-500 rounded-bl-lg">
-                    Most Popular
-                  </div>
+                  <div className="absolute right-0 top-0 rounded-bl-lg bg-green-500 px-3 py-1 text-xs font-bold text-white">Most Popular</div>
                 )}
-                <div className="p-6 space-y-6">
+                <div className="space-y-6 p-6">
                   <div className="space-y-2">
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {plan.name}
-                    </h2>
-                    <p className="text-5xl font-extrabold text-green-600">
-                      ₹{plan.price.toLocaleString("en-IN")}
-                    </p>
+                    <h2 className="text-2xl font-bold text-gray-900">{plan.name}</h2>
+                    <p className="text-5xl font-extrabold text-green-600">₹{plan.price.toLocaleString('en-IN')}</p>
                   </div>
                   <ul className="space-y-3 text-sm text-gray-600">
                     <li className="flex items-center">
                       <svg
-                        className="w-5 h-5 mr-2 text-green-500"
+                        className="mr-2 h-5 w-5 text-green-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
                       >
                         <title>Payment Message</title>
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       Up to {plan.messages.toLocaleString()} messages
                     </li>
                     <li className="flex items-center">
                       <svg
-                        className="w-5 h-5 mr-2 text-green-500"
+                        className="mr-2 h-5 w-5 text-green-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
                       >
                         <title>Marketing</title>
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       Marketing: ₹{plan.marketingPrice}/msg
                     </li>
                     <li className="flex items-center">
                       <svg
-                        className="w-5 h-5 mr-2 text-green-500"
+                        className="mr-2 h-5 w-5 text-green-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
                       >
                         <title>Utility</title>
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       Utility: ₹{plan.utilityPrice}/msg
                     </li>
                   </ul>
-                  <div className="pt-6 border-t border-gray-200">
+                  <div className="border-t border-gray-200 pt-6">
                     <ul className="space-y-3 text-sm text-gray-600">
                       {plan.features.map((feature, index) => (
-                        <li
-                          key={index?.toString()}
-                          className="flex items-start"
-                        >
+                        <li key={index?.toString()} className="flex items-start">
                           <svg
-                            className="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5"
+                            className="mr-2 mt-0.5 h-5 w-5 flex-shrink-0 text-green-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg"
                           >
                             <title>Features</title>
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                           {feature}
                         </li>
@@ -475,21 +384,17 @@ const MemoWhatzappPayment = () => {
                     </ul>
                   </div>
                 </div>
-                <div className="absolute bottom-0 w-full p-6 bg-gray-50">
+                <div className="absolute bottom-0 w-full bg-gray-50 p-6">
                   <button
                     type="button"
                     onClick={() => setSelectedPlan(plan)}
-                    className={`
-                w-full py-3 px-4 rounded-lg text-sm font-semibold
-                ${
-                  selectedPlan?.id === plan.id
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : "bg-white text-green-600 border-2 border-green-600 hover:bg-green-50"
-                }
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500
-              `}
+                    className={`w-full rounded-lg px-4 py-3 text-sm font-semibold ${
+                      selectedPlan?.id === plan.id
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'border-2 border-green-600 bg-white text-green-600 hover:bg-green-50'
+                    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2`}
                   >
-                    {selectedPlan?.id === plan.id ? "Selected" : "Select Plan"}
+                    {selectedPlan?.id === plan.id ? 'Selected' : 'Select Plan'}
                   </button>
                 </div>
               </div>
@@ -498,12 +403,7 @@ const MemoWhatzappPayment = () => {
         </div>
       </section>
       <div className="mt-12 text-center">
-        <BottomButton
-          fixed
-          buttons={[
-            { text: "Pay", onClick: handleCreateOrder, type: "button" },
-          ]}
-        />
+        <BottomButton fixed buttons={[{ text: 'Pay', onClick: handleCreateOrder, type: 'button' }]} />
       </div>
       {isLoading ? <LoadingSpinner /> : null}
     </>

@@ -110,6 +110,7 @@ export * from "./discount";
 export * from "./kotInvoiceNumber";
 export * from "./mergeTable";
 export * from "./qrs";
+export * from "./razorpayOrderTracker";
 export * from "./splitBill";
 export * from "./tableSessionCounter";
 export * from "./termsAndConditions";

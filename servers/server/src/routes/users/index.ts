@@ -2,6 +2,7 @@
 import {
   Business,
   DeviceToken,
+  LoyaltySettings,
   StaffPermission,
   StaffPermissionGroup,
   Subscriber,
@@ -1384,6 +1385,10 @@ const usersRouter = new Hono()
     async (c) => {
       const { userId, loyaltyId } = c.req.query();
 
+      const loyaltySettings = await LoyaltySettings.findOne({
+        loyaltyId: loyaltyId,
+      });
+
       const userExist = await User.findOne({
         _id: userId,
       });
@@ -1393,7 +1398,7 @@ const usersRouter = new Hono()
         });
       }
 
-      const userRewards = await UserReward.findOne({
+      let userRewards = await UserReward.findOne({
         userId,
         loyaltyId,
       }).populate("userId", {
@@ -1403,11 +1408,16 @@ const usersRouter = new Hono()
       });
 
       if (!userRewards) {
-        return c.json({
-          message: "User reward not found",
-          data: {},
-          err: true,
-        });
+        if (loyaltySettings) {
+          userRewards = await UserReward.create({
+            userId,
+            loyaltyId,
+            rewards: loyaltySettings.signUpBonus || 0,
+            password: Math.floor(Math.random() * 9000) + 10000,
+            scanCount: 1,
+            date: Date.now(),
+          });
+        }
       }
 
       return c.json({
