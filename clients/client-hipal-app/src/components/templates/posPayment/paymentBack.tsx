@@ -17,7 +17,7 @@ const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
   useMerchantDetails(data?.outletInfo?.businessId);
   // useGetBill();
   useGetOrderId();
-  useUserCoinz(data?.loyalty?.loyaltyId || "");
+  useUserCoinz(data?.loyalty?.loyaltyId || "",data?.outletInfo?.businessId);
   const pathName = usePathname();
   const { setShowCart } = useCart();
   const setBusinessData = _useAllBusiness((s) => s.setData);
