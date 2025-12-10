@@ -11,7 +11,6 @@ export enum Tabs {
   CAMPAIGNS = "campaigns",
   FLOWS = "flows",
   CHATS = "chats",
-  SETTINGS = "settings",
 }
 
 export interface Message {

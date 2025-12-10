@@ -9,10 +9,8 @@ import { ChevronLeft, ChevronRight, MessageCircle, Workflow } from 'lucide-react
 import { lazy, memo, useCallback, useState } from 'react';
 import { HiOutlineTemplate } from 'react-icons/hi';
 import { MdCampaign } from 'react-icons/md';
-import { TbSettingsAutomation } from 'react-icons/tb';
 
 const ChatbotDashboard = lazy(() => import('./chatbotDashboard'));
-const WhatsappChatbotSettings = lazy(() => import('./whatsappchatbotsettings'));
 const WhatsappChatBot = lazy(() => import('./chatbots/flows'));
 const LinkTemplatePopup = lazy(() => import('./linkTemplatePopup'));
 const WhatsappChats = lazy(() => import('./whatsappChats'));
@@ -65,8 +63,6 @@ const MemoWhatzappDashboard = () => {
         return <Workflow className="mr-2 h-5 w-5" />;
       case Tabs.CHATS:
         return <MessageCircle className="mr-2 h-5 w-5" />;
-      case Tabs.SETTINGS:
-        return <TbSettingsAutomation className="mr-2 h-5 w-5" />;
       default:
         return null;
     }
@@ -193,7 +189,6 @@ const MemoWhatzappDashboard = () => {
         {activeTab === Tabs.CHATS && <WhatsappChats />}
         {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}
         {activeTab === Tabs.CAMPAIGNS && openAnalytics && <CampaignAdvancedAnalytics />}
-        {activeTab === Tabs.SETTINGS && <WhatsappChatbotSettings />}
       </div>
 
       {/* Overlay popup */}

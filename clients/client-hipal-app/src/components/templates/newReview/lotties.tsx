@@ -1,11 +1,12 @@
+import dynamic from "next/dynamic";
 import { cn, reviewColors } from "@/components/utils/helpers";
-import Lottie from "lottie-react";
 import React, { memo, useCallback } from "react";
 import lottieAngry from "@/assets/lottie/lottie1.json";
 import lottieHappy from "@/assets/lottie/lottie2.json";
 import lottieNeutral from "@/assets/lottie/lottie3.json";
 import { useReview } from "@/components/store/useReview";
 
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 const MemoLotties = () => {
   const {
     selectedEmoji,

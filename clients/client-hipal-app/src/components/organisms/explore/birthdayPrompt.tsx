@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import { memo, useState } from "react";
 import { triggerConfettiBlast } from "@/components/utils/helpers";
 import { motion } from "framer-motion"
@@ -8,11 +9,11 @@ import { useLogin } from "@/components/store/useLogin";
 import { useMutation } from "@tanstack/react-query";
 import Baloons from "./birthday/baloons";
 import { months, useBirthdayApi, useValidateDate } from "@/components/utils/birthdayHelper";
-import Lottie from 'lottie-react'
 import lottieBirthday from "@/assets/lottie/birthday.json";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 function MemoBirthdayPrompt() {
     const userId = useLogin((s) => s.userDetails?._id);

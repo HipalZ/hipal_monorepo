@@ -1,13 +1,14 @@
+import dynamic from 'next/dynamic';
 import { memo, type RefObject } from "react";
 import { useParams } from "next/navigation";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import Image from "next/image";
 import Link from "next/link";
-import Lottie from "lottie-react";
 import lottieBirthday from "@/assets/lottie/birthday.json";
 import Stairs from "@/assets/backgroundStairs.png";
 import { useUserToken } from "@hi/common/src/useUserToken";
 
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 interface Props {
   ref: RefObject<HTMLDivElement>;
   isInView: boolean;
