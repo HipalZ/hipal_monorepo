@@ -18,6 +18,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 // Import new modal components
 import CopyLayoutModal from '@/components/menu-creation/copy-layout-modal';
+import { CategoryData } from '@/configs/test';
 import { useGetAllZones } from '@/hooks/useZone';
 
 // Lazy load step components for better performance
