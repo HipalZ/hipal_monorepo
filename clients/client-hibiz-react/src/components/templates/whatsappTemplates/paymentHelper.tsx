@@ -1,23 +1,21 @@
-import { apiRpc } from "@hi/common";
-import { useCallback } from "react";
-import { useCreateRegistration } from "@/hooks/useTemplates";
-import { useErrorHandling } from "@/components/utils/errorHandling";
-import { useMerchantDetails } from "@/hooks/merchantSecret";
-import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
-import toast from "react-hot-toast";
-import useBusinessData from "@/components/store/useBusinessData";
-import usePayment from "@/components/store/usePayment";
-import useWhatsapp from "@/components/store/useWhatsapp";
+import useBusinessData from '@/components/store/useBusinessData';
+import { useOwnerLogin } from '@/components/store/useOwnerLogin';
+import usePayment from '@/components/store/usePayment';
+import useWhatsapp from '@/components/store/useWhatsapp';
+import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
+import { useErrorHandling } from '@/components/utils/errorHandling';
+import { usePaltribeMerchantDetails } from '@/hooks/merchantSecret';
+import { useCreateRegistration } from '@/hooks/useTemplates';
+import { apiRpc } from '@hi/common';
+import { useCallback } from 'react';
+import toast from 'react-hot-toast';
 
 export const usePaymentHelpers = () => {
-  const { merchantDetails, setShowError, setPaymentSuccessFull } = useWhatsapp(
-    (s) => ({
-      merchantDetails: s.merchantDetails,
-      setShowError: s.setShowError,
-      setPaymentSuccessFull: s.setPaymentSuccessFull,
-    }),
-  );
+  const { merchantDetails, setShowError, setPaymentSuccessFull } = useWhatsapp((s) => ({
+    merchantDetails: s.merchantDetails,
+    setShowError: s.setShowError,
+    setPaymentSuccessFull: s.setPaymentSuccessFull,
+  }));
   const { wabaregistration } = useCreateRegistration();
   const { setIsLoading } = useWhatsappTempStore((s) => ({
     setIsLoading: s.setIsLoading,
@@ -26,9 +24,8 @@ export const usePaymentHelpers = () => {
     user: s.user,
   }));
   const { errorText } = useErrorHandling();
-  const { setRazorPayPaymentId, setRazorPayOrderId, setRazorPaySignature } =
-    usePayment();
-  useMerchantDetails();
+  const { setRazorPayPaymentId, setRazorPayOrderId, setRazorPaySignature } = usePayment();
+  usePaltribeMerchantDetails();
 
   const businessDetails = useBusinessData((s) => s.businessData);
 
@@ -39,13 +36,13 @@ export const usePaymentHelpers = () => {
       return;
     }
     let isScriptLoaded = false;
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     document.body.appendChild(script);
     const timeoutId = setTimeout(() => {
       if (!isScriptLoaded) {
-        toast.error("Facing Internet Issue! Please try again.");
+        toast.error('Facing Internet Issue! Please try again.');
         setIsLoading(false);
         document.body.removeChild(script);
       }
@@ -57,9 +54,9 @@ export const usePaymentHelpers = () => {
       const options = {
         key: merchantDetails.razorpayKeyId,
         amount: 3999,
-        currency: "INR",
+        currency: 'INR',
         name: businessDetails?.name,
-        description: "Transaction",
+        description: 'Transaction',
         image: businessDetails?.logo,
         order_id: orderId,
         handler: (response) => {
@@ -81,20 +78,20 @@ export const usePaymentHelpers = () => {
         },
 
         notes: {
-          address: "Paltribe solutions",
+          address: 'Paltribe solutions',
           businessId: businessDetails?._id,
           total: 3999,
           billValue: 3999,
         },
         theme: {
-          color: "#3399cc",
+          color: '#3399cc',
         },
       };
 
       const rzp1 = new (window as any).Razorpay(options);
 
       // Add event listener to prevent back navigation
-      history.pushState(null, "", location.href); // Push initial state with an empty string for title
+      history.pushState(null, '', location.href); // Push initial state with an empty string for title
       window.onbeforeunload = (event) => {
         event.preventDefault();
         // Redirect to a specific URL
@@ -109,12 +106,12 @@ export const usePaymentHelpers = () => {
       rzp1.open();
 
       // Remove the event listener when the user starts the payment process
-      document.addEventListener("rzp_payment_start", () => {
+      document.addEventListener('rzp_payment_start', () => {
         window.onbeforeunload = null;
         setIsLoading(false); // Set isLoading to false once payment starts
       });
 
-      rzp1.on("payment.failed", (response) => {
+      rzp1.on('payment.failed', (response) => {
         handlePaymentFailure(response);
         window.onbeforeunload = null;
         window.onpopstate = null; // Remove the event listener on payment failure
@@ -123,7 +120,7 @@ export const usePaymentHelpers = () => {
     };
 
     script.onerror = () => {
-      toast.error("Failed to load Razorpay. Please try again later.");
+      toast.error('Failed to load Razorpay. Please try again later.');
       setIsLoading(false); // Set isLoading to false if script loading fails
     };
   };
@@ -133,9 +130,7 @@ export const usePaymentHelpers = () => {
     async (response: any) => {
       setIsLoading(true);
 
-      const res = await apiRpc.whatsapp.whatsapp_valid_payment[
-        ":merchantId"
-      ].$post({
+      const res = await apiRpc.whatsapp.whatsapp_valid_payment[':merchantId'].$post({
         param: {
           merchantId: merchantDetails.razorpayMerchantId,
         },
@@ -149,16 +144,16 @@ export const usePaymentHelpers = () => {
       await res.json();
 
       if (res.status === 200) {
-        toast.success("Payment successful");
-        setRazorPaySignature("");
-        setRazorPayOrderId("");
-        setRazorPayPaymentId("");
+        toast.success('Payment successful');
+        setRazorPaySignature('');
+        setRazorPayOrderId('');
+        setRazorPayPaymentId('');
         setIsLoading(false);
         setPaymentSuccessFull(true);
         await wabaregistration();
         return;
       }
-      toast.error("Payment failed");
+      toast.error('Payment failed');
     },
     [
       setIsLoading,
@@ -175,16 +170,14 @@ export const usePaymentHelpers = () => {
   // create razorpay order generates order_id in response
   const createRazorPayOrder = useCallback(
     async (total: number): Promise<string> => {
-      const res = await apiRpc.whatsapp.create_whatsapp_order[
-        ":merchantId"
-      ].$post({
+      const res = await apiRpc.whatsapp.create_whatsapp_order[':merchantId'].$post({
         param: {
           merchantId: merchantDetails.razorpayMerchantId,
         },
         json: {
-          businessId: businessDetails?._id || "",
+          businessId: businessDetails?._id || '',
           total: total,
-          currency: "INR",
+          currency: 'INR',
           billValue: total,
           userId: user?._id,
         },
@@ -200,14 +193,7 @@ export const usePaymentHelpers = () => {
       setRazorPayOrderId(orderId);
       return orderId;
     },
-    [
-      merchantDetails.razorpayMerchantId,
-      businessDetails?._id,
-      setIsLoading,
-      setRazorPayOrderId,
-      user,
-      errorText,
-    ],
+    [merchantDetails.razorpayMerchantId, businessDetails?._id, setIsLoading, setRazorPayOrderId, user, errorText],
   );
 
   // handle payment success
@@ -219,31 +205,20 @@ export const usePaymentHelpers = () => {
       setRazorPayOrderId(response.razorpay_order_id);
       setRazorPayPaymentId(response.razorpay_payment_id);
     },
-    [
-      setRazorPaySignature,
-      setRazorPayOrderId,
-      setRazorPayPaymentId,
-      sendPaymentResponse,
-      setIsLoading,
-    ],
+    [setRazorPaySignature, setRazorPayOrderId, setRazorPayPaymentId, sendPaymentResponse, setIsLoading],
   );
 
   // handle payment failure
   const handlePaymentDismiss = useCallback(() => {
-    setRazorPaySignature("");
-    setRazorPayOrderId("");
-    setRazorPayPaymentId("");
+    setRazorPaySignature('');
+    setRazorPayOrderId('');
+    setRazorPayPaymentId('');
     setShowError(true);
-    toast.error("Payment failed");
+    toast.error('Payment failed');
     setTimeout(() => {
       setShowError(false);
     }, 2000);
-  }, [
-    setRazorPaySignature,
-    setRazorPayOrderId,
-    setRazorPayPaymentId,
-    setShowError,
-  ]);
+  }, [setRazorPaySignature, setRazorPayOrderId, setRazorPayPaymentId, setShowError]);
 
   const handlePaymentFailure = useCallback(
     (response: any) => {

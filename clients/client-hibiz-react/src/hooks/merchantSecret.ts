@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import useBusinessData from "@/components/store/useBusinessData";
 import useWhatsapp from "@/components/store/useWhatsapp";
 
-export const useMerchantDetails = () => {
+export const usePaltribeMerchantDetails = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
   const { setMerchantDetails } = useWhatsapp((s) => ({
     setMerchantDetails: s.setMerchantDetails,
