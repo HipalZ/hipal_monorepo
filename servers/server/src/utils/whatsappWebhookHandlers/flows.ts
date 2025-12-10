@@ -229,7 +229,7 @@ export async function handleChatbotFlow({
   const chatbotList = await getAllChatbotFlows(businessId);
   if (!chatbotList.length) return null;
   const from = messages?.from || contacts?.[0]?.wa_id || contacts?.[0]?.waId;
-
+  console.log("chatbotList", chatbotList);
   let session = getSession(from);
   const contactName = contacts?.profile?.name || session.userName || "Guest";
   setSession(from, { userName: contactName });
@@ -298,6 +298,7 @@ export async function handleChatbotFlow({
     matchedBot = chatbotList.find((bot) =>
       matchTriggerStart(bot.flow, from, messageInput),
     );
+    console.log("messageInput", messageInput, matchedBot);
   }
 
   if (!matchedBot) {
@@ -393,9 +394,12 @@ function interpolate(
     displayName: userName,
     phone: cfg?.waProfile?.phone || cfg?.phone || "",
   };
-
-  if (str === "displayName" || str === "{{displayName}}")
-    return (result = context[str]);
+  result = result.replace(/\{\{\s*(\w+)\s*\}\}/g, (match, key) => {
+    const value = context[key];
+    return value !== undefined && value !== null && value !== ""
+      ? String(value)
+      : match;
+  });
 
   // 2. Handle @variable (e.g. @name, @address)
   result = result.replace(/@(\w+)/g, (match, key) => {
@@ -1024,6 +1028,7 @@ export async function advance(
         const resolvedRow = cells.map((c: any) =>
           interpolate(c.value, s.variables, cfg, s.userName),
         );
+
         googleSheets.spreadsheets.values.append({
           spreadsheetId,
           range: sheetName,
@@ -1033,11 +1038,21 @@ export async function advance(
 
         await exitNodeLog(nodeLog, node.next, nodeStartTime);
 
-        setSession(userId, { currentNodeId: node.next || null });
+        // ✅ FIXED: clear waiting state before continuing
+        setSession(userId, {
+          currentNodeId: node.next || null,
+          waitingFor: null,
+          interactiveCtx: undefined,
+        });
+
         s = getSession(userId);
         continue;
-      } catch (err: any) {
-        setSession(userId, { currentNodeId: node.next || null });
+      } catch (err) {
+        setSession(userId, {
+          currentNodeId: node.next || null,
+          waitingFor: null,
+          interactiveCtx: undefined,
+        });
         s = getSession(userId);
         continue;
       }

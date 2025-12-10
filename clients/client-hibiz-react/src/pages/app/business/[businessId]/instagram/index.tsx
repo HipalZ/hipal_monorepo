@@ -12,7 +12,7 @@ const InstagramLoginModal = () => {
   const navigate = useNavigate();
 
   const appId = '646403858128150';
-  const redirectUri = 'https://0563dda5e50c.ngrok-free.app/whatsapp/auth/instagram/callback';
+  const redirectUri = 'https://73dce91d6fff.ngrok-free.app/whatsapp/auth/instagram/callback';
 
   // Handle the callback after Instagram redirects back
   useEffect(() => {
