@@ -2,8 +2,8 @@ import { processAskNodeReply, processInteractiveReply } from "./handlers";
 import { getSession, setSession } from "./session";
 import { advance } from "./advance";
 import { ChatbotSessionModel } from "@hi/db-models";
-import { getAllChatbotFlows } from "../pos/hipalz";
 import { respond } from "../../utils/response";
+import { getAllChatbotFlows } from "../../utils/whatsappWebhookHandlers/flows";
 
 export async function handleChatbotFlow({
   messages,

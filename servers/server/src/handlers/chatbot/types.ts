@@ -112,17 +112,6 @@ export type LoadedFlow = {
   lastLoaded: number;
 };
 
-// src/types/chatbot.ts
-
-export type BaseNode = {
-  id: string;
-  type: string;
-  next?: string;
-  trueNext?: string;
-  falseNext?: string;
-  routes?: Record<string, string>;
-};
-
 export type ConditionRow = {
   var: string;
   op: "exists" | "eq" | "ne" | "gt" | "lt" | "contains";
