@@ -1,31 +1,25 @@
-import BottomButton from "@/components/atom/bottomButton";
-import Background from "@/components/atom/feildBackground";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import useMenuPageStore, { dayIndex } from "@/components/store/useMenuStorage";
-import { storeImageAfterSave } from "@/components/utils/helper";
-import { useDeleteCategory, useUpdateCategory } from "@/hooks/useCategory";
-import { Switch } from "@headlessui/react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import BottomButton from '@/components/atom/bottomButton';
+import Background from '@/components/atom/feildBackground';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import useMenuPageStore, { dayIndex } from '@/components/store/useMenuStorage';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { storeImageAfterSave } from '@/components/utils/helper';
+import { useDeleteCategory, useUpdateCategory } from '@/hooks/useCategory';
+import { Switch } from '@headlessui/react';
+import { X } from 'lucide-react';
 
-import { memo, useCallback, type ChangeEvent } from "react";
-import { BiImageAdd } from "react-icons/bi";
-import LinkingCategoryComp from "./linkingCategoryComp";
-import { useParams } from "react-router-dom";
-import toast from "react-hot-toast";
+import { memo, useCallback, type ChangeEvent } from 'react';
+import toast from 'react-hot-toast';
+import { BiImageAdd } from 'react-icons/bi';
+import { useParams } from 'react-router-dom';
+import LinkingCategoryComp from './linkingCategoryComp';
 
 const MAX_WIDTH = 500;
 const MAX_HEIGHT = 500;
-const MIME_TYPE = "image/jpeg";
+const MIME_TYPE = 'image/jpeg';
 const QUALITY = 0.9;
 
 const MemoEditCategory = () => {
@@ -33,17 +27,13 @@ const MemoEditCategory = () => {
   const addTiming = useMenuPageStore((s) => s.addTiming);
   const updateTiming = useMenuPageStore((s) => s.updateTiming);
   const timings = useMenuPageStore((s) => s.timings);
-  const selectSingleParentCat = useMenuPageStore(
-    (s) => s.selectSingleParentCat,
-  );
+  const selectSingleParentCat = useMenuPageStore((s) => s.selectSingleParentCat);
   const setIsCatDelete = useMenuPageStore((s) => s.setIsCatDelete);
   const isCatDelete = useMenuPageStore((s) => s.isCatDelete);
   const isMenuManager = useMenuPageStore((s) => s.isMenuManager);
   const setIsLoading = useMenuPageStore((s) => s.setIsLoading);
   const isLoading = useMenuPageStore((s) => s.isLoading);
-  const removeRecommendationIds = useMenuPageStore(
-    (s) => s.removeRecommendationIds,
-  );
+  const removeRecommendationIds = useMenuPageStore((s) => s.removeRecommendationIds);
   const recommendationIds = useMenuPageStore((s) => s.recommendationIds);
   const idCheck = useMenuPageStore((s) => s.idCheck);
   const setCategoryName = useMenuPageStore((s) => s.setCategoryName);
@@ -56,6 +46,7 @@ const MemoEditCategory = () => {
   const visibility = useMenuPageStore((s) => s.visibility);
   const setVisibility = useMenuPageStore((s) => s.setVisibility);
   const categoryStep = useMenuPageStore((s) => s.categoryStep);
+  const selectIds = useMenuPageStore((s) => s.selectedIds);
 
   const { mutate, isPending } = useUpdateCategory();
   const { isPending: deletePending, mutate: deleteCat } = useDeleteCategory();
@@ -75,106 +66,93 @@ const MemoEditCategory = () => {
     }
   };
 
-  const compressImage = useCallback((file: File) => {
-    const blobURL = URL.createObjectURL(file);
-    const img = new Image();
-    img.src = blobURL;
-    img.onerror = () => {
-      URL.revokeObjectURL(img.src);
-    };
-    img.onload = () => {
-      URL.revokeObjectURL(img.src);
-      const [newWidth, newHeight] = calculateSize(img, MAX_WIDTH, MAX_HEIGHT);
-      const canvas = document.createElement("canvas");
-      canvas.width = newWidth;
-      canvas.height = newHeight;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(img, 0, 0, newWidth, newHeight);
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const compressedFile = new File([blob], file.name, {
-                type: MIME_TYPE,
-                lastModified: Date.now(),
-              });
-              setSelectedFile(compressedFile);
-              const reader = new FileReader();
-              reader.onload = () => {
-                if (reader.result) {
-                  setImagePreview(reader.result as string);
-                }
-              };
-              reader.readAsDataURL(compressedFile);
-            }
-          },
-          MIME_TYPE,
-          QUALITY,
-        );
-      }
-    };
-  }, []);
-
-  const calculateSize = useCallback(
-    (img: HTMLImageElement, maxWidth: number, maxHeight: number) => {
-      let width = img.width;
-      let height = img.height;
-
-      if (width > height) {
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
+  const compressImage = useCallback(
+    (file: File) => {
+      const blobURL = URL.createObjectURL(file);
+      const img = new Image();
+      img.src = blobURL;
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+      };
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        const [newWidth, newHeight] = calculateSize(img, MAX_WIDTH, MAX_HEIGHT);
+        const canvas = document.createElement('canvas');
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, newWidth, newHeight);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: MIME_TYPE,
+                  lastModified: Date.now(),
+                });
+                setSelectedFile(compressedFile);
+                const reader = new FileReader();
+                reader.onload = () => {
+                  if (reader.result) {
+                    setImagePreview(reader.result as string);
+                  }
+                };
+                reader.readAsDataURL(compressedFile);
+              }
+            },
+            MIME_TYPE,
+            QUALITY,
+          );
         }
-      } else {
-        if (height > maxHeight) {
-          width = Math.round((width * maxHeight) / height);
-          height = maxHeight;
-        }
-      }
-      return [width, height];
+      };
     },
-    [],
+    [setImagePreview, setSelectedFile],
   );
+
+  const calculateSize = useCallback((img: HTMLImageElement, maxWidth: number, maxHeight: number) => {
+    let width = img.width;
+    let height = img.height;
+
+    if (width > height) {
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+    } else {
+      if (height > maxHeight) {
+        width = Math.round((width * maxHeight) / height);
+        height = maxHeight;
+      }
+    }
+    return [width, height];
+  }, []);
 
   const handleRemoveImage = useCallback(() => {
     setImagePreview(null);
     setSelectedFile(null);
-    const inputElement = document.getElementById("cat") as HTMLInputElement;
+    const inputElement = document.getElementById('cat') as HTMLInputElement;
     if (inputElement) {
-      inputElement.value = "";
+      inputElement.value = '';
     }
-  }, [imagePreview]);
+  }, [setImagePreview, setSelectedFile]);
 
   const getRemovedIds = (prevIds: string[], newIds: string[]) => {
     return prevIds.filter((id) => !newIds.includes(id));
   };
 
   const handleSave = async () => {
-    let imageUrl = imagePreview || "";
+    let imageUrl = imagePreview || '';
     if (selectedFile) {
-      imageUrl = await storeImageAfterSave(
-        selectedFile,
-        imagePreview,
-        setIsLoading,
-      );
+      imageUrl = await storeImageAfterSave(selectedFile, imagePreview, setIsLoading);
     }
-    const removedCatIds = getRemovedIds(
-      idCheck,
-      categoryStep === "EDIT_MAIN_CATEGORY" ? selectIds : selectSingleParentCat,
-    );
-    const removeDishIds = getRemovedIds(
-      removeRecommendationIds,
-      recommendationIds,
-    );
+    const removedCatIds = getRemovedIds(idCheck, categoryStep === 'EDIT_MAIN_CATEGORY' ? selectIds : selectSingleParentCat);
+    const removeDishIds = getRemovedIds(removeRecommendationIds, recommendationIds);
 
     // sanitize timings -> keep only All-day if exists
-    const sanitizedTimings = hasAllDay
-      ? [timings.find((t) => t.day === -1)!]
-      : timings;
-
+    const sanitizedTimings = hasAllDay ? [timings.find((t) => t.day === -1)!] : timings;
     const commonPayload = {
       name: categoryName,
-      businessId: businessId.toString() || "",
+      businessId: businessId || '',
       menuId: menuId,
       coverImage: imageUrl,
       visibility: visibility,
@@ -183,7 +161,7 @@ const MemoEditCategory = () => {
     };
 
     const payload =
-      categoryStep === "EDIT_MAIN_CATEGORY"
+      categoryStep === 'EDIT_MAIN_CATEGORY'
         ? {
             ...commonPayload,
             subCategoryIds: selectIds,
@@ -196,7 +174,7 @@ const MemoEditCategory = () => {
             dishIds: recommendationIds,
             removeDishIds: removeDishIds,
           };
-    console.log("Payload to update category:", payload);
+    console.log('Payload to update category:', payload);
     mutate(payload);
   };
 
@@ -215,47 +193,31 @@ const MemoEditCategory = () => {
         <section className="flex-1">
           <h1 className="font-semibold opacity-50"> Category Image</h1>
           <Background>
-            <div className="flex justify-between gap-4 mx-4">
-              <div className="rounded-full w-[7rem] h-[7rem]">
+            <div className="mx-4 flex justify-between gap-4">
+              <div className="h-[7rem] w-[7rem] rounded-full">
                 {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-[7rem] h-[7rem] rounded-full object-cover"
-                  />
+                  <img src={imagePreview} alt="Preview" className="h-[7rem] w-[7rem] rounded-full object-cover" />
                 ) : (
                   <div
-                    className="flex items-center justify-center w-full h-full rounded-full"
+                    className="flex h-full w-full items-center justify-center rounded-full"
                     style={{
-                      background: "linear-gradient(45deg, #D9CCFF, #FCD6CF)",
+                      background: 'linear-gradient(45deg, #D9CCFF, #FCD6CF)',
                     }}
                   >
-                    <BiImageAdd
-                      className="text-gray-600 opacity-50"
-                      size={36}
-                    />
+                    <BiImageAdd className="text-gray-600 opacity-50" size={36} />
                   </div>
                 )}
               </div>
-              <div className="flex flex-col items-center justify-center w-1/2">
-                <input
-                  type="file"
-                  id="cat"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
+              <div className="flex w-1/2 flex-col items-center justify-center">
+                <input type="file" id="cat" className="hidden" onChange={handleImageChange} />
                 <button
                   type="button"
-                  className="w-full p-2 mb-2 text-white bg-black rounded-2xl"
-                  onClick={() => document.getElementById("cat")?.click()}
+                  className="mb-2 w-full rounded-2xl bg-black p-2 text-white"
+                  onClick={() => document.getElementById('cat')?.click()}
                 >
                   Add Image
                 </button>
-                <button
-                  type="button"
-                  className="w-full p-2 text-black bg-white border border-black rounded-2xl"
-                  onClick={handleRemoveImage}
-                >
+                <button type="button" className="w-full rounded-2xl border border-black bg-white p-2 text-black" onClick={handleRemoveImage}>
                   Remove
                 </button>
               </div>
@@ -277,7 +239,7 @@ const MemoEditCategory = () => {
                   value={categoryName}
                   maxLength={21}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
+                  className="w-full rounded-xl border border-black bg-white p-2 focus:border-[#8C63FF] focus:bg-white focus:ring-0"
                 />
               </Background>
             </article>
@@ -286,8 +248,8 @@ const MemoEditCategory = () => {
       </article>
 
       {/* Visibility */}
-      <section className="gap-4 mx-6 lg:flex">
-        <article className="flex justify-between px-4 py-3 my-4 bg-white rounded-full lg:flex-1 lg:mt-6">
+      <section className="mx-6 gap-4 lg:flex">
+        <article className="my-4 flex justify-between rounded-full bg-white px-4 py-3 lg:mt-6 lg:flex-1">
           <h1 className="font-semibold opacity-50">Category visibility</h1>
           <Switch
             checked={visibility}
@@ -304,28 +266,19 @@ const MemoEditCategory = () => {
         <h2 className="text-xl font-semibold text-gray-700">Schedule</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {timings.map((t, i) => (
-            <Card
-              key={i}
-              className="flex items-center p-4 space-x-4 shadow-none relative"
-            >
-              <CardHeader className="p-0 w-[3rem]">
-                <CardTitle className="text-sm font-medium">
-                  Slot {i + 1}
-                </CardTitle>
+            <Card key={i} className="relative flex items-center space-x-4 p-4 shadow-none">
+              <CardHeader className="w-[3rem] p-0">
+                <CardTitle className="text-sm font-medium">Slot {i + 1}</CardTitle>
               </CardHeader>
-              <CardContent className="p-0 flex-1 flex flex-wrap items-center gap-3">
+              <CardContent className="flex flex-1 flex-wrap items-center gap-3 p-0">
                 <Select
                   value={String(t.day)}
                   onValueChange={(val) => {
                     const day = Number(val);
 
                     // Block multiple All-day slots
-                    if (
-                      day === -1 &&
-                      (timings.length > 1 ||
-                        timings.some((s, idx) => idx !== i && s.day !== -1))
-                    ) {
-                      toast.error("‘All day’ can only be the single slot.");
+                    if (day === -1 && (timings.length > 1 || timings.some((s, idx) => idx !== i && s.day !== -1))) {
+                      toast.error('‘All day’ can only be the single slot.');
                       return;
                     }
 
@@ -350,12 +303,9 @@ const MemoEditCategory = () => {
 
                 <Input
                   type="time"
-                  value={`${String(Math.floor(t.start / 60)).padStart(
-                    2,
-                    "0",
-                  )}:${String(t.start % 60).padStart(2, "0")}`}
+                  value={`${String(Math.floor(t.start / 60)).padStart(2, '0')}:${String(t.start % 60).padStart(2, '0')}`}
                   onChange={(e) => {
-                    const [h, m] = e.target.value.split(":").map(Number);
+                    const [h, m] = e.target.value.split(':').map(Number);
                     updateTiming(i, { start: h * 60 + m });
                   }}
                   className="w-24"
@@ -364,24 +314,16 @@ const MemoEditCategory = () => {
 
                 <Input
                   type="time"
-                  value={`${String(Math.floor(t.end / 60)).padStart(
-                    2,
-                    "0",
-                  )}:${String(t.end % 60).padStart(2, "0")}`}
+                  value={`${String(Math.floor(t.end / 60)).padStart(2, '0')}:${String(t.end % 60).padStart(2, '0')}`}
                   onChange={(e) => {
-                    const [h, m] = e.target.value.split(":").map(Number);
+                    const [h, m] = e.target.value.split(':').map(Number);
                     updateTiming(i, { end: h * 60 + m });
                   }}
                   className="w-20"
                   disabled={t.day === -1}
                 />
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeTiming(i)}
-                  className="absolute bottom-0 right-0"
-                >
+                <Button variant="ghost" size="icon" onClick={() => removeTiming(i)} className="absolute bottom-0 right-0">
                   <X className="h-5 w-5 text-red-500" />
                 </Button>
               </CardContent>
@@ -393,7 +335,7 @@ const MemoEditCategory = () => {
           className="mt-2"
           onClick={() => addTiming({ day: 0, start: 0, end: 60 })}
           disabled={hasAllDay && timings.length >= 1}
-          title={hasAllDay ? "‘All day’ allows only one slot" : undefined}
+          title={hasAllDay ? '‘All day’ allows only one slot' : undefined}
         >
           + Add Slot
         </Button>
@@ -409,22 +351,20 @@ const MemoEditCategory = () => {
         <BottomButton
           buttons={[
             {
-              text: "Cancel",
+              text: 'Cancel',
               onClick: () => setIsCatDelete(false),
-              type: "button",
+              type: 'button',
             },
             {
-              text: "Confirm Delete",
+              text: 'Confirm Delete',
               onClick: () => deleteCat(catId),
-              type: "button",
+              type: 'button',
               delete: true,
             },
           ]}
         />
       ) : (
-        <BottomButton
-          buttons={[{ text: "Update", onClick: handleSave, type: "button" }]}
-        />
+        <BottomButton buttons={[{ text: 'Update', onClick: handleSave, type: 'button' }]} />
       )}
     </>
   );
