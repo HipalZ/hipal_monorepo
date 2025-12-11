@@ -75,6 +75,15 @@ const categoriesRouter = new Hono()
           posName: "HIPAL_Z",
         });
 
+        const alreadyExist = await Category.findOne({
+          name: requestData.name,
+          menuId: requestData.menuId,
+        });
+
+        if (alreadyExist) {
+          return respond(c, "Category already exist", true, 409, {});
+        }
+
         const creatingCategory = await Category.create(
           [
             {

@@ -377,6 +377,15 @@ const dishesRouter = new Hono()
           posName: "HIPAL_Z",
         });
 
+        const alreadyExist = await Dish.findOne({
+          name: dish.name,
+          menuId: dish.menuId,
+        });
+
+        if (alreadyExist) {
+          return respond(c, "Dish already exist", true, 409, {});
+        }
+
         const createDish = await Dish.create([{ ...dish, pos: !!hipalZPos }], {
           session,
         });
