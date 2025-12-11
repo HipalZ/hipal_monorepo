@@ -2,6 +2,7 @@ import useBusinessData from "@/components/store/useBusinessData";
 import { useError } from "@/components/store/useError";
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 type GoogleSheetSubmitPayload = {
   spreadsheetId: string;
@@ -82,20 +83,20 @@ export function useAllChatbots() {
   });
 }
 
-export const fetchChatbotAnalyticsSummary = async (chatbotId: string) => {
-  const response = await apiRpc.wa_chatbot_analytics[":chatbotId"].summary.$get(
-    {
-      param: {
-        chatbotId,
-      },
-    },
-  );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch chatbot analytics: ${response.status}`);
-  }
-  const result = await response.json();
-  return result.data || {};
-};
+// export const fetchChatbotAnalyticsSummary = async (chatbotId: string) => {
+//   const response = await apiRpc.wa_chatbot_analytics[":chatbotId"].summary.$get(
+//     {
+//       param: {
+//         chatbotId,
+//       },
+//     },
+//   );
+//   if (!response.ok) {
+//     throw new Error(`Failed to fetch chatbot analytics: ${response.status}`);
+//   }
+//   const result = await response.json();
+//   return result.data || {};
+// };
 
 export const fetchChatbotSessions = async (chatbotId: string) => {
   const response = await apiRpc.wa_chatbot_analytics[
@@ -112,13 +113,13 @@ export const fetchChatbotSessions = async (chatbotId: string) => {
   return result.data || {};
 };
 
-export function useChatbotAnalytics(chatbotId: string) {
-  return useQuery({
-    queryKey: ["chatbotAnalytics", chatbotId],
-    queryFn: () => fetchChatbotAnalyticsSummary(chatbotId),
-    enabled: !!chatbotId,
-  });
-}
+// export function useChatbotAnalytics(chatbotId: string) {
+//   return useQuery({
+//     queryKey: ["chatbotAnalytics", chatbotId],
+//     queryFn: () => fetchChatbotAnalyticsSummary(chatbotId),
+//     enabled: !!chatbotId,
+//   });
+// }
 
 export function useChatbotSessions(chatbotId: string) {
   return useQuery({

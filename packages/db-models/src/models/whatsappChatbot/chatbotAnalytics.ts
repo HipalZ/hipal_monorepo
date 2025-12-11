@@ -5,12 +5,13 @@ export interface ChatbotNodeLogType {
   chatbotId: Types.ObjectId;
   nodeId: string;
   nodeType: string;
-  enteredAt: Date;
-  exitedAt?: Date;
+  enteredAt: number;
+  exitedAt?: number;
   durationMs?: number;
   userResponse?: string;
   nextNodeId?: string;
   wasEnd?: boolean;
+  createdAt: Date;
 }
 
 const ChatbotNodeLogSchema = new Schema<ChatbotNodeLogType>(
@@ -33,6 +34,10 @@ const ChatbotNodeLogSchema = new Schema<ChatbotNodeLogType>(
     userResponse: { type: String },
     nextNodeId: { type: String },
     wasEnd: { type: Boolean, default: false },
+    createdAt: {
+      type: Date,
+      expires: 3600, // 1hr
+    },
   },
   { timestamps: true },
 );
