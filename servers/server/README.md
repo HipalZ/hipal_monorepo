@@ -20,3 +20,4 @@ open http://localhost:3000
 
 WABA ID templates
 Test
+expiry 1hour
