@@ -4,7 +4,6 @@ import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useUpdateBill } from "@/components/hooks/usePayments";
 import { useUserCoinz } from "@/components/hooks/useUserCoinz";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
@@ -32,10 +31,8 @@ const AvailableCoinz = () => {
   const billData = usePaymentStore((s) => s.billData);
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { addCoins, removeCoinz, removeCouponz } = useUpdateBill();
-   const  businessId  = useBusinessDetails((s) => s.businessDetails?.businessId);
-
   const { loyaltySetting } = useLoyaltyData();
-  useUserCoinz(loyaltySetting?.loyaltyId || "");
+  useUserCoinz(loyaltySetting?.loyaltyId || "", outletInfo.businessId || "");
   const addCoinsMutation = useMutation({ mutationFn: addCoins });
   const removeCoinsMutation = useMutation({ mutationFn: removeCoinz });
   const removeCouponMutation = useMutation({ mutationFn: removeCouponz });
@@ -155,7 +152,7 @@ const AvailableCoinz = () => {
     setAvailedCoupon({});
     toast.success("Coupon removed successfully");
        const payload ={
-      businessId: businessId,
+      businessId: outletInfo.businessId,
       tableName: tableName,
     }
     if (billData?.variantId) {

@@ -36,7 +36,7 @@ import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
 import { schedule } from "node-cron";
 import { z } from "zod";
-import { enqueueBillJob } from "../../queues/enqueue";
+// import { enqueueBillJob } from "../../queues/enqueue";
 import { cache } from "../../utils/cacheHelper";
 import { petpoojaPosConfig } from "../../utils/posConfig/petPooja";
 import { razorpayWrapper } from "../../utils/razorpay-wrapper";
@@ -2677,7 +2677,7 @@ const scriptRouter = new Hono()
     ),
 
     async (c) => {
-      await enqueueBillJob("requestOnly", { payload: { orderId: "123" } });
+      // await enqueueBillJob("requestOnly", { payload: { orderId: "123" } });
 
       return respond(c, "queue sent", false, 200, {});
     },

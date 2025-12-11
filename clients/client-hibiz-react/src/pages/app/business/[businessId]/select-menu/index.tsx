@@ -1,86 +1,43 @@
-import { memo, lazy, Suspense, useCallback, useMemo, useState } from "react";
-import {
-  FaArrowLeft,
-  FaPlus,
-  FaEdit,
-  FaClock,
-  FaCalendarAlt,
-  FaMapMarkerAlt,
-  FaLayerGroup,
-  FaThList,
-  FaCopy,
-} from "react-icons/fa";
-import { CategoryData } from "@/configs/test";
-import MemoizedHeader from "@/components/molecules/header";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import {
-  type Dish,
-  useMenuCreationStore,
-  type MenuLayout,
-} from "@/components/store/useMenuCreationStore";
-import NavigationButtons from "@/components/menu-creation/navigation-buttons";
-import { useNavigate, useParams } from "react-router-dom";
-import useBusinessData from "@/components/store/useBusinessData";
-import StepIndicatior from "@/components/hotel/HotelStaff/StepIndicatior";
-import {
-  type CreateMenuLayoutPayload,
-  useCreateMenuLayout,
-  useGetAllLayouts,
-  useUpdateMenuLayout,
-} from "@/hooks/useMenuLayout";
-import { Button } from "@/components/ui/button";
-import {
-  formatMinutesToTime,
-  getDayNames,
-  STEPS,
-} from "@/components/utils/helper";
-import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
-import toast from "react-hot-toast";
-import { cn } from "@/lib/utils";
-import { Boxes, ShieldCheck, ShieldMinus } from "lucide-react";
-import ZoneAvailabilitySummary from "@/components/menu-creation/zone-availability-summary";
+import AdvancedBottomButton from '@/components/atom/bottomButton/advancedBottomButton';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import StepIndicatior from '@/components/hotel/HotelStaff/StepIndicatior';
+import NavigationButtons from '@/components/menu-creation/navigation-buttons';
+import ZoneAvailabilitySummary from '@/components/menu-creation/zone-availability-summary';
+import MemoizedHeader from '@/components/molecules/header';
+import useBusinessData from '@/components/store/useBusinessData';
+import { type Dish, type MenuLayout, useMenuCreationStore } from '@/components/store/useMenuCreationStore';
+import { Button } from '@/components/ui/button';
+import { formatMinutesToTime, getDayNames, STEPS } from '@/components/utils/helper';
+import { type CreateMenuLayoutPayload, useCreateMenuLayout, useGetAllLayouts, useUpdateMenuLayout } from '@/hooks/useMenuLayout';
+import { cn } from '@/lib/utils';
+import { Boxes, ShieldCheck, ShieldMinus } from 'lucide-react';
+import { lazy, memo, Suspense, useCallback, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
+import { FaArrowLeft, FaCalendarAlt, FaClock, FaCopy, FaEdit, FaLayerGroup, FaMapMarkerAlt, FaPlus, FaThList } from 'react-icons/fa';
+import { useNavigate, useParams } from 'react-router-dom';
 
 // Import new modal components
-import CopyLayoutModal from "@/components/menu-creation/copy-layout-modal";
-import { useGetAllZones } from "@/hooks/useZone";
+import CopyLayoutModal from '@/components/menu-creation/copy-layout-modal';
+import { CategoryData } from '@/configs/test';
+import { useGetAllZones } from '@/hooks/useZone';
 
 // Lazy load step components for better performance
-const Step1MenuType = lazy(
-  () => import("@/components/menu-creation/step1-menu-type"),
-);
-const Step2CategoryLayout = lazy(
-  () => import("@/components/menu-creation/step2-category-layout"),
-);
-const Step3DishLayout = lazy(
-  () => import("@/components/menu-creation/step3-dish-layout"),
-);
-const Step4ColorSelection = lazy(
-  () => import("@/components/menu-creation/step4-color-selection"),
-);
-const Step5Summary = lazy(
-  () => import("@/components/menu-creation/step5-summary"),
-);
-const Step6ZoneSelection = lazy(
-  () => import("@/components/menu-creation/step6-zone-selection"),
-);
-const Step7DaySelection = lazy(
-  () => import("@/components/menu-creation/step7-day-selection"),
-);
-const Step8TimeSelection = lazy(
-  () => import("@/components/menu-creation/step8-time-selection"),
-);
+const Step1MenuType = lazy(() => import('@/components/menu-creation/step1-menu-type'));
+const Step2CategoryLayout = lazy(() => import('@/components/menu-creation/step2-category-layout'));
+const Step3DishLayout = lazy(() => import('@/components/menu-creation/step3-dish-layout'));
+const Step4ColorSelection = lazy(() => import('@/components/menu-creation/step4-color-selection'));
+const Step5Summary = lazy(() => import('@/components/menu-creation/step5-summary'));
+const Step6ZoneSelection = lazy(() => import('@/components/menu-creation/step6-zone-selection'));
+const Step7DaySelection = lazy(() => import('@/components/menu-creation/step7-day-selection'));
+const Step8TimeSelection = lazy(() => import('@/components/menu-creation/step8-time-selection'));
 
 const MemoSelectMenu = () => {
   const outletInfo = useBusinessData((s) => s.outletInfo);
   const { businessId } = useParams<{ businessId: string }>();
-  const { isLoading, allMenuLayouts, refetch } = useGetAllLayouts(
-    businessId as string,
-  );
+  const { isLoading, allMenuLayouts, refetch } = useGetAllLayouts(businessId as string);
   const { updatetingMenuLoader, updateMenuLayout } = useUpdateMenuLayout();
   const { createMenuLoader, createMenuLayout } = useCreateMenuLayout();
-  const { data: zones, isLoading: zonesLoading } = useGetAllZones(
-    businessId as string,
-  );
+  const { data: zones, isLoading: zonesLoading } = useGetAllZones(businessId as string);
 
   const {
     currentStep,
@@ -148,7 +105,7 @@ const MemoSelectMenu = () => {
         }
         refetch();
       } catch (error) {
-        console.error("Failed to save menu:", error);
+        console.error('Failed to save menu:', error);
       }
     },
     [createMenuLayout, editingMenuId, updateMenuLayout, refetch],
@@ -158,18 +115,10 @@ const MemoSelectMenu = () => {
     async (menuId: string | undefined, businessId: string) => {
       if (!menuId) return;
 
-      const currentMenuLayout = allMenuLayouts?.data?.find(
-        (menu) => menu._id === menuId,
-      );
+      const currentMenuLayout = allMenuLayouts?.data?.find((menu) => menu._id === menuId);
       if (!currentMenuLayout) return;
 
-      if (
-        confirm(
-          `Are you sure you want to ${
-            currentMenuLayout.isActive ? "deactivate" : "activate"
-          } this ${currentMenuLayout.name} layout?`,
-        )
-      ) {
+      if (confirm(`Are you sure you want to ${currentMenuLayout.isActive ? 'deactivate' : 'activate'} this ${currentMenuLayout.name} layout?`)) {
         await updateMenuLayout({
           menuId,
           isActive: !currentMenuLayout.isActive,
@@ -177,11 +126,7 @@ const MemoSelectMenu = () => {
         });
         // Refresh data after activation/deactivation
         refetch();
-        toast.success(
-          `Menu layout ${
-            currentMenuLayout.isActive ? "deactivated" : "activated"
-          } successfully`,
-        );
+        toast.success(`Menu layout ${currentMenuLayout.isActive ? 'deactivated' : 'activated'} successfully`);
       }
     },
     [allMenuLayouts?.data, updateMenuLayout, refetch],
@@ -199,9 +144,7 @@ const MemoSelectMenu = () => {
       if (stepId > currentStep) {
         for (let i = currentStep; i < stepId; i++) {
           if (!canProceed()) {
-            toast.error(
-              `Please complete step ${i} before proceeding to step ${stepId}`,
-            );
+            toast.error(`Please complete step ${i} before proceeding to step ${stepId}`);
             return;
           }
           setCurrentStep(i + 1);
@@ -227,9 +170,7 @@ const MemoSelectMenu = () => {
   const handleCopyLayoutSelect = useCallback(
     (layoutId: string) => {
       // Find the selected layout
-      const selectedLayout = allMenuLayouts?.data?.find(
-        (layout) => layout._id === layoutId,
-      );
+      const selectedLayout = allMenuLayouts?.data?.find((layout) => layout._id === layoutId);
       if (!selectedLayout) return;
 
       resetStore();
@@ -239,7 +180,7 @@ const MemoSelectMenu = () => {
 
       setMenuData({
         ...selectedLayout,
-        _id: "",
+        _id: '',
         name: `Copy of ${selectedLayout.name}`,
         zoneIds: [],
         days: [1, 2, 3, 4, 5, 6, 7],
@@ -248,15 +189,7 @@ const MemoSelectMenu = () => {
       setShowCreationFlow(true);
       setCurrentStep(5);
     },
-    [
-      allMenuLayouts?.data,
-      resetStore,
-      setCopyMenuLayoutId,
-      setCurrentStep,
-      setMenuData,
-      setShowCreationFlow,
-      setSourceMenuName,
-    ],
+    [allMenuLayouts?.data, resetStore, setCopyMenuLayoutId, setCurrentStep, setMenuData, setShowCreationFlow, setSourceMenuName],
   );
 
   const renderStep = useCallback(() => {
@@ -268,12 +201,7 @@ const MemoSelectMenu = () => {
       case 3:
         return <Step3DishLayout sampleDishes={sampleDishes} />;
       case 4:
-        return (
-          <Step4ColorSelection
-            sampleCategories={CategoryData}
-            sampleDishes={sampleDishes}
-          />
-        );
+        return <Step4ColorSelection sampleCategories={CategoryData} sampleDishes={sampleDishes} />;
       case 5:
         return <Step6ZoneSelection />;
       case 6:
@@ -309,24 +237,14 @@ const MemoSelectMenu = () => {
   if (showCreationFlow || !allMenuLayouts || allMenuLayouts.data.length === 0) {
     return (
       <main className="min-h-screen">
-        <div className="sticky top-0 !z-[1000] w-full linear_gradient_background">
-          <MemoizedHeader
-            title={
-              editingMenuId ? `Editing ${layoutName}` : "Create Menu Layout"
-            }
-            leftIcon={<FaArrowLeft />}
-            onBack={handleBack}
-          />
+        <div className="linear_gradient_background sticky top-0 !z-[1000] w-full">
+          <MemoizedHeader title={editingMenuId ? `Editing ${layoutName}` : 'Create Menu Layout'} leftIcon={<FaArrowLeft />} onBack={handleBack} />
         </div>
 
-        <div className="container max-w-4xl px-4 py-6 mx-auto">
-          <StepIndicatior
-            currentStep={currentStep}
-            steps={STEPS}
-            onStepClick={handleStepClick}
-          />
+        <div className="container mx-auto max-w-4xl px-4 py-6">
+          <StepIndicatior currentStep={currentStep} steps={STEPS} onStepClick={handleStepClick} />
 
-          <div className="mt-6 overflow-hidden bg-white border border-gray-100 rounded-lg shadow-sm">
+          <div className="mt-6 overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm">
             <Suspense
               fallback={
                 <div className="flex justify-center p-8">
@@ -350,43 +268,30 @@ const MemoSelectMenu = () => {
 
   return (
     <main className="min-h-screen pb-[10rem]">
-      <div className="sticky top-0 !z-[1000] w-full linear_gradient_background">
-        <MemoizedHeader
-          title="Menu Layouts"
-          leftIcon={<FaArrowLeft />}
-          onBack={handleBack}
-        />
+      <div className="linear_gradient_background sticky top-0 !z-[1000] w-full">
+        <MemoizedHeader title="Menu Layouts" leftIcon={<FaArrowLeft />} onBack={handleBack} />
       </div>
 
-      <CopyLayoutModal
-        isOpen={showCopyLayoutModal}
-        onClose={() => setShowCopyLayoutModal(false)}
-        onSelect={handleCopyLayoutSelect}
-      />
+      <CopyLayoutModal isOpen={showCopyLayoutModal} onClose={() => setShowCopyLayoutModal(false)} onSelect={handleCopyLayoutSelect} />
 
-      <div className="px-4 py-6 mx-auto">
-        {zones && allMenuLayouts?.data && (
-          <ZoneAvailabilitySummary
-            menuLayouts={allMenuLayouts.data}
-            zones={zones}
-          />
-        )}
+      <div className="mx-auto px-4 py-6">
+        {zones && allMenuLayouts?.data && <ZoneAvailabilitySummary menuLayouts={allMenuLayouts.data} zones={zones} />}
 
         <h2 className="pb-4 text-xl font-semibold">Your Menu Layouts</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {allMenuLayouts?.data?.map((layout) => {
             // Generate a gradient based on the layout's primary color or use a default
-            const primaryColor = layout?.primaryColor || "#ec4899";
+            const primaryColor = layout?.primaryColor || '#ec4899';
             const isActive = layout?.isActive;
 
             return (
               <div
                 key={layout._id}
                 className={cn(
-                  "relative overflow-hidden rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl",
-                  "border border-gray-100",
-                  "transform hover:-translate-y-1 cursor-pointer",
-                  !isActive && "opacity-75 grayscale",
+                  'relative overflow-hidden rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl',
+                  'border border-gray-100',
+                  'transform cursor-pointer hover:-translate-y-1',
+                  !isActive && 'opacity-75 grayscale',
                 )}
                 style={{
                   background: `linear-gradient(90deg, ${primaryColor}40, ${primaryColor}10)`,
@@ -394,56 +299,37 @@ const MemoSelectMenu = () => {
                 onClick={() => goToEditMenu(layout._id)}
               >
                 {/* Status indicator */}
-                <div className="absolute scale-125 top-4 right-4">
+                <div className="absolute right-4 top-4 scale-125">
                   <div
                     className={cn(
-                      "flex items-center px-2 py-1 text-xs font-medium rounded-full",
-                      isActive
-                        ? "bg-green-200 text-green-800"
-                        : "bg-gray-100 text-gray-800",
+                      'flex items-center rounded-full px-2 py-1 text-xs font-medium',
+                      isActive ? 'bg-green-200 text-green-800' : 'bg-gray-100 text-gray-800',
                     )}
                   >
-                    <span
-                      className={cn(
-                        "w-2 h-2 mr-1 rounded-full",
-                        isActive ? "bg-green-500" : "bg-gray-500",
-                      )}
-                    />
-                    {isActive ? "Active" : "Inactive"}
+                    <span className={cn('mr-1 h-2 w-2 rounded-full', isActive ? 'bg-green-500' : 'bg-gray-500')} />
+                    {isActive ? 'Active' : 'Inactive'}
                   </div>
                 </div>
 
                 <div className="p-6">
-                  <div className="flex items-start mb-4">
+                  <div className="mb-4 flex items-start">
                     {/* 3D Icon based on menu type */}
                     <div
-                      className="flex items-center justify-center w-12 h-12 mr-4 rounded-lg shadow-md"
+                      className="mr-4 flex h-12 w-12 items-center justify-center rounded-lg shadow-md"
                       style={{
                         background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}80)`,
-                        transform:
-                          "perspective(500px) rotateY(-15deg) rotateX(10deg)",
+                        transform: 'perspective(500px) rotateY(-15deg) rotateX(10deg)',
                         boxShadow: `0 10px 15px -3px ${primaryColor}20, 0 4px 6px -4px ${primaryColor}40`,
                       }}
                     >
-                      {layout?.menuType === 1 ? (
-                        <FaLayerGroup className="text-xl text-white" />
-                      ) : (
-                        <FaThList className="text-xl text-white" />
-                      )}
+                      {layout?.menuType === 1 ? <FaLayerGroup className="text-xl text-white" /> : <FaThList className="text-xl text-white" />}
                     </div>
 
                     <div className="flex-1">
-                      <h3
-                        className="text-xl font-bold"
-                        style={{ color: primaryColor }}
-                      >
-                        {layout?.name || "Unnamed Menu"}
+                      <h3 className="text-xl font-bold" style={{ color: primaryColor }}>
+                        {layout?.name || 'Unnamed Menu'}
                       </h3>
-                      <p className="text-sm font-semibold text-gray-600">
-                        {layout?.menuType === 1
-                          ? "Main → Sub → Dishes"
-                          : "Sub → Dishes"}
-                      </p>
+                      <p className="text-sm font-semibold text-gray-600">{layout?.menuType === 1 ? 'Main → Sub → Dishes' : 'Sub → Dishes'}</p>
                     </div>
                   </div>
 
@@ -451,12 +337,9 @@ const MemoSelectMenu = () => {
                     {layout?.zoneIds?.map((zoneId) => {
                       const zone = getZoneDetails(zoneId);
                       return (
-                        <div
-                          key={zoneId}
-                          className="flex items-center p-2 rounded-lg bg-gray-50"
-                        >
+                        <div key={zoneId} className="flex items-center rounded-lg bg-gray-50 p-2">
                           <div
-                            className="flex items-center justify-center w-8 h-8 mr-3 rounded-full"
+                            className="mr-3 flex h-8 w-8 items-center justify-center rounded-full"
                             style={{
                               background: `${primaryColor}20`,
                               color: primaryColor,
@@ -464,16 +347,14 @@ const MemoSelectMenu = () => {
                           >
                             <FaMapMarkerAlt />
                           </div>
-                          <span className="font-medium text-gray-700">
-                            {zone?.name || "Unknown zone"}
-                          </span>
+                          <span className="font-medium text-gray-700">{zone?.name || 'Unknown zone'}</span>
                         </div>
                       );
                     })}
 
-                    <div className="flex items-center p-2 rounded-lg bg-gray-50">
+                    <div className="flex items-center rounded-lg bg-gray-50 p-2">
                       <div
-                        className="flex items-center justify-center w-8 h-8 mr-3 rounded-full"
+                        className="mr-3 flex h-8 w-8 items-center justify-center rounded-full"
                         style={{
                           background: `${primaryColor}20`,
                           color: primaryColor,
@@ -481,16 +362,12 @@ const MemoSelectMenu = () => {
                       >
                         <FaCalendarAlt />
                       </div>
-                      <span className="font-medium text-gray-700">
-                        {layout?.days
-                          ? getDayNames(layout.days)
-                          : "No days selected"}
-                      </span>
+                      <span className="font-medium text-gray-700">{layout?.days ? getDayNames(layout.days) : 'No days selected'}</span>
                     </div>
 
-                    <div className="flex items-center p-2 rounded-lg bg-gray-50">
+                    <div className="flex items-center rounded-lg bg-gray-50 p-2">
                       <div
-                        className="flex items-center justify-center w-8 h-8 mr-3 rounded-full"
+                        className="mr-3 flex h-8 w-8 items-center justify-center rounded-full"
                         style={{
                           background: `${primaryColor}20`,
                           color: primaryColor,
@@ -499,17 +376,14 @@ const MemoSelectMenu = () => {
                         <FaClock />
                       </div>
                       <span className="font-medium text-gray-700">
-                        {layout?.startTime !== undefined &&
-                        layout?.endTime !== undefined
-                          ? `${formatMinutesToTime(
-                              layout.startTime,
-                            )} - ${formatMinutesToTime(layout.endTime)}`
-                          : "No time set"}
+                        {layout?.startTime !== undefined && layout?.endTime !== undefined
+                          ? `${formatMinutesToTime(layout.startTime)} - ${formatMinutesToTime(layout.endTime)}`
+                          : 'No time set'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-4 mt-6">
+                  <div className="mt-6 flex flex-wrap gap-4">
                     {!outletInfo?.isPosEnabled ? (
                       <Button
                         variant="default"
@@ -519,25 +393,20 @@ const MemoSelectMenu = () => {
                           goToEditMenu(layout._id);
                         }}
                       >
-                        <Boxes className="w-4 h-4 mr-2" />
+                        <Boxes className="mr-2 h-4 w-4" />
                         Go to Menu
                       </Button>
                     ) : null}
                     <Button
                       onClick={(e) => {
                         e.stopPropagation();
-                        layout?._id &&
-                          activeOrDeactive(layout._id, businessId as string);
+                        layout?._id && activeOrDeactive(layout._id, businessId as string);
                       }}
-                      variant={layout?.isActive ? "destructive" : "default"}
+                      variant={layout?.isActive ? 'destructive' : 'default'}
                       className="transition-transform hover:scale-105"
                     >
-                      {layout?.isActive ? (
-                        <ShieldMinus className="w-4 h-4 mr-2" />
-                      ) : (
-                        <ShieldCheck className="w-4 h-4 mr-2" />
-                      )}
-                      {layout?.isActive ? "Deactivate" : "Activate"}
+                      {layout?.isActive ? <ShieldMinus className="mr-2 h-4 w-4" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+                      {layout?.isActive ? 'Deactivate' : 'Activate'}
                     </Button>
                     <Button
                       onClick={(e) => {
@@ -563,17 +432,17 @@ const MemoSelectMenu = () => {
           maxWidth="30rem"
           buttons={[
             {
-              text: "Copy Existing Layout",
+              text: 'Copy Existing Layout',
               icon: <FaCopy />,
               onClick: () => setShowCopyLayoutModal(true),
-              className: "pl-3 rounded-md w-full",
+              className: 'pl-3 rounded-md w-full',
               disable: isLoading,
             },
             {
-              text: "Create New Menu Layout",
+              text: 'Create New Menu Layout',
               icon: <FaPlus />,
               onClick: handleCreateNew,
-              className: "pl-3 rounded-md w-full",
+              className: 'pl-3 rounded-md w-full',
               disable: isLoading,
             },
           ]}
@@ -585,17 +454,17 @@ const MemoSelectMenu = () => {
           maxWidth="30rem"
           buttons={[
             {
-              text: "Copy Existing Layout",
+              text: 'Copy Existing Layout',
               icon: <FaCopy />,
               onClick: () => setShowCopyLayoutModal(true),
-              className: "pl-3 rounded-md w-full",
+              className: 'pl-3 rounded-md w-full',
               disable: isLoading,
             },
             {
-              text: "Create New Menu Layout",
+              text: 'Create New Menu Layout',
               icon: <FaPlus />,
               onClick: handleCreateNew,
-              className: "pl-3 rounded-md w-full",
+              className: 'pl-3 rounded-md w-full',
               disable: isLoading,
             },
           ]}

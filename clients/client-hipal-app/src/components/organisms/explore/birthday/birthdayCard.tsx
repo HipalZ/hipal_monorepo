@@ -1,5 +1,5 @@
 "use client";
-import Lottie from "lottie-react";
+import dynamic from "next/dynamic";
 import { memo } from "react";
 import lottieBirthday from "@/assets/lottie/birthday.json";
 import Image from "next/image";
@@ -8,6 +8,7 @@ import Star from "@/assets/svg/Star.svg";
 import { useBirthday } from "@/components/store/useBirthday";
 import { useBirthdayConditions } from "@/components/utils/birthdayHelper";
 
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 const MemoBirthdayCard = () => {
   const { checkCardConditions } = useBirthdayConditions();
   const { setOpenModal } = useBirthday();

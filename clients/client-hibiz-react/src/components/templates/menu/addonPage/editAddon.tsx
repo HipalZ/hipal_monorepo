@@ -22,58 +22,38 @@ import { useParams } from "react-router-dom";
 const count = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 const MemoEditAddon = () => {
-  const {
-    availability,
-    visibility,
-    addOnName,
-    setAvailability,
-    setVisibility,
-    setAddOnName,
-    maxChoices,
-    minChoices,
-    setMaxChoices,
-    setMinChoices,
-    resetChoiceFields,
-    addOnToggle,
-    choices,
-    addOnId,
-    addOnChoice,
-    recommendationIds,
-    setAddOnToggle,
-    removeRecommendationIds,
-    isCatDelete,
-    setIsCatDelete,
-  } = useMenuPageStore((s) => ({
-    availability: s.availability,
-    visibility: s.visibility,
-    addOnName: s.addOnName,
-    minChoices: s.minChoices,
-    maxChoices: s.maxChoices,
-    setAvailability: s.setAvailability,
-    setVisibility: s.setVisibility,
-    setAddOnName: s.setAddOnName,
-    setMinChoices: s.setMinChoices,
-    setMaxChoices: s.setMaxChoices,
-    resetChoiceFields: s.resetChoiceFields,
-    addOnToggle: s.addOnToggle,
-    choices: s.choices,
-    addOnId: s.addOnId,
-    addOnChoice: s.addOnChoice,
-    recommendationIds: s.recommendationIds,
-    removeRecommendationIds: s.removeRecommendationIds,
-    setCategoryStep: s.setCategoryStep,
-    setAddOnToggle: s.setAddOnToggle,
-    isCatDelete: s.isCatDelete,
-    setIsCatDelete: s.setIsCatDelete,
-  }));
+  const availability = useMenuPageStore((s) => s.availability);
+  const visibility = useMenuPageStore((s) => s.visibility);
+  const addOnName = useMenuPageStore((s) => s.addOnName);
+  const setAvailability = useMenuPageStore((s) => s.setAvailability);
+  const setVisibility = useMenuPageStore((s) => s.setVisibility);
+  const setAddOnName = useMenuPageStore((s) => s.setAddOnName);
+  const maxChoices = useMenuPageStore((s) => s.maxChoices);
+  const minChoices = useMenuPageStore((s) => s.minChoices);
+  const setMaxChoices = useMenuPageStore((s) => s.setMaxChoices);
+  const setMinChoices = useMenuPageStore((s) => s.setMinChoices);
+  const resetChoiceFields = useMenuPageStore((s) => s.resetChoiceFields);
+  const addOnToggle = useMenuPageStore((s) => s.addOnToggle);
+  const setAddOnToggle = useMenuPageStore((s) => s.setAddOnToggle);
+  const addOnChoice = useMenuPageStore((s) => s.addOnChoice);
+  const choices = useMenuPageStore((s) => s.choices);
+  const addOnId = useMenuPageStore((s) => s.addOnId);
+  const recommendationIds = useMenuPageStore((s) => s.recommendationIds);
+  const removeRecommendationIds = useMenuPageStore(
+    (s) => s.removeRecommendationIds,
+  );
+  const [isCatDelete, setIsCatDelete] = useState<boolean>(false);
 
   const [maxValueError, setMaxValueError] = useState<boolean>(false);
 
-   const { businessId,menuId } = useParams<{ businessId?: string; menuId: string }>();
+  const { businessId, menuId } = useParams<{
+    businessId?: string;
+    menuId: string;
+  }>();
 
   const { isPending, mutate: updateAddon } = useUpdateAddon();
 
-  const {isPending:deletePending,mutate:deleteAddon} = useDeleteAddon();
+  const { isPending: deletePending, mutate: deleteAddon } = useDeleteAddon();
 
   const handleSetMinChoices = useCallback(
     (value: number) => {

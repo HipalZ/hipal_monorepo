@@ -90,9 +90,7 @@ export const headerSchemaForDocument = z
 export const headerSchema = z
   .object({
     type: z.string().min(3).max(100).default("HEADER"),
-    format: z
-      .enum(["TEXT", "IMAGE", "VIDEO", "DOCUMENT", "AUDIO"])
-      .default("TEXT"),
+    format: z.enum(["TEXT", "IMAGE", "VIDEO", "DOCUMENT"]),
   })
   .and(
     z.union([

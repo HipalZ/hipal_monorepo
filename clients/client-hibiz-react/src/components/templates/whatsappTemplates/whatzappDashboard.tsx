@@ -5,11 +5,13 @@ import useWhatsapp, { Step, TemplateSteps, TemplateType } from '@/components/sto
 import { Tabs, useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
 import { useFetchTemplates } from '@/hooks/useTemplates';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageCircle, Workflow } from 'lucide-react';
 import { lazy, memo, useCallback, useState } from 'react';
 import { HiOutlineTemplate } from 'react-icons/hi';
 import { MdCampaign } from 'react-icons/md';
 
+const ChatbotDashboard = lazy(() => import('./chatbotDashboard'));
+const WhatsappChatBot = lazy(() => import('./chatbots/flows'));
 const LinkTemplatePopup = lazy(() => import('./linkTemplatePopup'));
 const WhatsappChats = lazy(() => import('./whatsappChats'));
 const CampaignAdvancedAnalytics = lazy(() => import('./campaignAdvancedAnalytics'));
@@ -31,6 +33,8 @@ const MemoWhatzappDashboard = () => {
   const setFlowBuilderOpen = useWhatsappTempStore((s) => s.setFlowBuilderOpen);
   const [openLinkTemplatePopup, setOpenLinkTemplatePopup] = useState(false);
   const businessId = useBusinessData((s) => s.businessData?._id);
+  const openBot = useWhatsapp((s) => s.openBot);
+  const setOpenBot = useWhatsapp((s) => s.setOpenBot);
 
   const { getTemplates } = useFetchTemplates();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
@@ -55,10 +59,10 @@ const MemoWhatzappDashboard = () => {
         return <MdCampaign className="mr-2 h-5 w-5" />;
       case Tabs.TEMPLATES:
         return <HiOutlineTemplate className="mr-2 h-5 w-5" />;
-
+      case Tabs.FLOWS:
+        return <Workflow className="mr-2 h-5 w-5" />;
       case Tabs.CHATS:
         return <MessageCircle className="mr-2 h-5 w-5" />;
-
       default:
         return null;
     }
@@ -67,9 +71,10 @@ const MemoWhatzappDashboard = () => {
   const handleTabs = useCallback(
     (tab: Tabs) => {
       setActiveTab(tab);
+      setOpenBot(false);
       setFlowBuilderOpen(false);
     },
-    [setActiveTab, setFlowBuilderOpen],
+    [setActiveTab, setFlowBuilderOpen, setOpenBot],
   );
 
   const { isPending } = useQuery({
@@ -179,6 +184,8 @@ const MemoWhatzappDashboard = () => {
             </article>
           </section>
         )}
+        {activeTab === Tabs.FLOWS && !openBot && <ChatbotDashboard />}
+        {activeTab === Tabs.FLOWS && openBot && <WhatsappChatBot />}
         {activeTab === Tabs.CHATS && <WhatsappChats />}
         {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}
         {activeTab === Tabs.CAMPAIGNS && openAnalytics && <CampaignAdvancedAnalytics />}

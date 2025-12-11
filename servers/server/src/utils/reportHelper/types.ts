@@ -6,5 +6,5 @@ export type BaseContext = {
   to: number;
   allPayments: AnyPayment[];
   bizNameMap: Record<string, string>;
-  kitchenNameMapByBiz: Record<string, Record<string, string>>;
+  kitchenNameMapByBiz?: Record<string, Record<string, string>>;
 };

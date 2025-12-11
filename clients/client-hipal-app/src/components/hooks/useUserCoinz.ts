@@ -1,13 +1,11 @@
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
-import useBusinessDetails from "../store/useBusinessDetails";
 import { useLogin } from "../store/useLogin";
 import { usePaymentStore } from "../store/usePaymentStore";
 import type { UserData } from "../types/businessData";
 import { useCallback } from "react";
 
-export const useUserCoinz = (loyaltyId: string) => {
-  const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
+export const useUserCoinz = (loyaltyId: string, businessId: string) => {
   const { userDetails } = useLogin();
   const setUserLoginCoinz = useLogin((s) => s.setUserCoinZ);
   const setUserCoinz = usePaymentStore((s) => s.setUserCoinz);
@@ -37,9 +35,9 @@ export const useUserCoinz = (loyaltyId: string) => {
   ]);
 
   useQuery({
-    queryKey: ["getUserReward", userDetails?._id, loyaltyId],
+    queryKey: ["getUserReward", userDetails?._id, loyaltyId, businessId],
     queryFn: handleUserCoinz,
-    enabled: !!userDetails?._id && !!loyaltyId,
+    enabled: !!userDetails?._id && !!loyaltyId && !!businessId,
     staleTime: 1000 * 60,
   });
 };

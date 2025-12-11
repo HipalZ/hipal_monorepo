@@ -6,6 +6,7 @@ import bucketRouter from "./bucket";
 import businessRouter from "./businesses";
 import cartRouter from "./cart";
 import categoryRouter from "./categories";
+import chatbotAnalyticsRouter from "./chatbotAnalyticsRouter";
 import couponAnalytics from "./coupon-analytics";
 import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
@@ -25,7 +26,6 @@ import menuBannerRouter from "./menu-banner";
 import menuRouter from "./menu/menu";
 import npcRouter from "./npc";
 import passwordManagerRouter from "./passwordManager";
-import pathFinderRouter from "./pathFinder";
 import paymentsRouter from "./payments";
 import permissionRouter from "./permission";
 import posRouter from "./pos";
@@ -44,12 +44,15 @@ import surlRouter from "./surl";
 import tableRouter from "./table";
 import tagRouter from "./tags";
 import taxRouter from "./tax";
-import tokenRouter from "./token";
 import upiModeRouter from "./upimode";
 import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
+import whatsAppChatbotRouter from "./whatsappChatbot";
 import whatsAppFlowRouter from "./whatsappflow";
 import zonesAndTablesRouter from "./zonesAndTables";
+import googleSheetsRouter from "./googleSheets";
+import pathFinderRouter from "./pathFinder";
+import tokenRouter from "./token";
 
 //////
 const app = new Hono();
@@ -105,6 +108,9 @@ export const routes = app
   .route("/attendence", staffAttendenceRouter)
   .route("/sync_pos_menu_config", syncPosMenuConfigRouter)
   .route("/kds", kdsRouter)
+  .route("/wa_chatbot", whatsAppChatbotRouter)
+  .route("/google_sheets", googleSheetsRouter)
+  .route("/wa_chatbot_analytics", chatbotAnalyticsRouter)
   .route("/token", tokenRouter)
   .route("/path_finder", pathFinderRouter)
   .route("/salon_pos", salonPosRouter);

@@ -40,6 +40,7 @@ export const useAddOnList = () => {
     queryKey: ["getAllAddOn", businessId, menuId],
     queryFn: getAllAddOn,
     enabled: !!businessId && !!menuId,
+    staleTime: 5 * 60 * 1000,
   });
 
   return { addOns, isLoading };
@@ -47,11 +48,8 @@ export const useAddOnList = () => {
 
 export const useSaveAddOn = () => {
   const queryClient = useQueryClient();
-
-  const { setOpenMenu, resetStore } = useMenuPageStore((s) => ({
-    setOpenMenu: s.setOpenMenu,
-    resetStore: s.resetStore,
-  }));
+  const setOpenMenu = useMenuPageStore((s) => s.setOpenMenu);
+  const resetStore = useMenuPageStore((s) => s.resetStore);
 
   const handleApiResponse = useCallback((res) => {
     if (res.err) {

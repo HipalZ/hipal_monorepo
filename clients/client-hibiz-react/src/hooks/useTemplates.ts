@@ -34,41 +34,29 @@ export const useCreateTemplate = () => {
 
   const { mutateAsync: createTemplate } = useMutation({
     mutationFn: async (payload: WhatsAppTemplatePayload) => {
-      if (!businessId) throw new Error("Business ID is missing.");
-
+      if (!businessId) return null;
       const url =
         outLetType === "HOTEL"
           ? "hotel/whats_app/templates"
           : "whatsapp/template";
 
-      let res: Response | null = null;
+      const res = await apiRpc[url].$post({
+        json: {
+          ...payload,
+          businessId: businessId,
+        },
+      });
 
-      try {
-        res = await apiRpc[url].$post({
-          json: {
-            ...payload,
-            businessId: businessId,
-          },
-        });
-
-        if (!res) throw new Error("No response received from server.");
-
-        const data = await res.json();
-        if (!data) throw new Error("Failed to create template");
-
-        return { res, data };
-      } catch (error: any) {
-        throw new Error(error?.message || "Template creation failed");
-      }
+      const data = await res.json();
+      if (!data) throw new Error("Failed to create template");
+      return data;
     },
-
     onMutate: () => {
-      setIsLoading(true);
+      setIsLoading(true); // Set loading before mutation
     },
-
-    onSuccess: ({ data, res }) => {
+    onSuccess: (data) => {
       setIsLoading(false);
-      if (data?.err || res?.status === 400) {
+      if (data?.err || !data?.data) {
         setStep(Step.SETUP);
         setTemplateSteps(TemplateSteps.NONE);
         setShowSuccessPopup(false);
@@ -82,19 +70,13 @@ export const useCreateTemplate = () => {
       setTemplateStatus(data?.data?.status);
       setTemplateData(data?.data);
       setStep(Step.SETUP);
-      setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+      setTemplateSteps(TemplateSteps.NONE);
       queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
-
-    onError: (error: any) => {
+    onError: (error) => {
       setIsLoading(false);
-      setStep(Step.SETUP);
-      setTemplateSteps(TemplateSteps.NONE);
-      setShowSuccessPopup(false);
-
       toast.error(
-        error?.message ||
-          "An unexpected error occurred while creating the template.",
+        error.message || "An error occurred while creating the template.",
       );
     },
   });
@@ -328,8 +310,48 @@ export const useMediaUpload = () => {
     }
   };
 
+  const uploadMediaPassFile = async (
+    file: File | Blob,
+  ): Promise<{ url: string; handle: string }> => {
+    if (!file) throw new Error("No file provided for upload");
+    if (!businessId) throw new Error("Missing businessId");
+
+    try {
+      setIsUploading(true);
+      const imageId = crypto.randomUUID();
+      const storageFormData = new FormData();
+      storageFormData.append("fileData", file);
+      storageFormData.append("fileName", `${imageId}`);
+      storageFormData.append("bucketName", "assets");
+
+      const storageResponse = await axios.post(
+        "https://storage.test.hipalz.com/upload",
+        storageFormData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+
+      if (storageResponse.status !== 200 && storageResponse.status !== 201) {
+        throw new Error("Failed to upload to Hipalz storage");
+      }
+
+      const uploadedUrl = storageResponse.data.url;
+      setImageUrl(uploadedUrl);
+      setIsUploading(false);
+      return {
+        url: uploadedUrl,
+      };
+    } catch (error) {
+      setIsUploading(false);
+      console.error("Upload failed:", error);
+      throw error;
+    }
+  };
+
   return {
     uploadMedia,
+    uploadMediaPassFile,
     isUploading,
   };
 };
@@ -773,7 +795,13 @@ export const useTempAnalyticsById = () => {
         setLoadingTemplateId(null);
       }
     },
-    [businessId, setSingleTemplateAnalytics, setSelectedTemplate],
+    [
+      businessId,
+      setSingleTemplateAnalytics,
+      setLoadingTemplateId,
+      setSelectedTemplate,
+      setOpenAccordionId,
+    ],
   );
 
   return { getTemplateAnaylyticsById };

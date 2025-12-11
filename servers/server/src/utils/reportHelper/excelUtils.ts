@@ -1,6 +1,23 @@
 // src/utils/reportHelper/excelUtils.ts
+import * as ExcelJS from "exceljs";
 import type { Worksheet } from "exceljs";
 
+export type Workbook = ExcelJS.Workbook;
+
+/**
+ * Create a standard HiPalz report workbook.
+ *
+ * @param sheetName optional first sheet name
+ */
+export function createReportWorkbook(sheetName?: string) {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "HiPalz";
+  workbook.created = new Date();
+
+  const sheet = sheetName ? workbook.addWorksheet(sheetName) : undefined;
+
+  return { workbook, sheet };
+}
 export const addBoldHeaderRow = (
   sheet: Worksheet,
   headers: (string | number)[],

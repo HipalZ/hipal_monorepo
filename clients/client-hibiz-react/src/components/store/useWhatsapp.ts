@@ -289,6 +289,9 @@ interface whatsappTemplate {
 
   whatzappFormEnabled: boolean;
   setWhatzappFormEnabled: (value: boolean) => void;
+
+  openBot: boolean;
+  setOpenBot: (openBot: boolean) => void;
 }
 
 export const useWhatsapp = create(
@@ -655,6 +658,8 @@ export const useWhatsapp = create(
         whatzappFormEnabled: false,
         setWhatzappFormEnabled: (value: boolean) =>
           set({ whatzappFormEnabled: value }),
+        openBot: false,
+        setOpenBot: (openBot: boolean) => set({ openBot }),
       };
     },
     {

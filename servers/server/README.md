@@ -22,5 +22,4 @@ WABA template validator final temp
 NAWABS issue
 WABA ID templates
 Test
-Prod
-wa video
+expiry 1hour

@@ -1,17 +1,23 @@
-import Background from "@/components/atom/feildBackground";
-import useMenuPageStore, { Choice } from "@/components/store/useMenuStorage";
+import { memo, useState } from "react";
+import useMenuPageStore from "@/components/store/useMenuStorage";
 import {
   DishTypeEnum,
   type DishTypeEnumType,
 } from "@hi/db-models/src/validators";
-import { memo } from "react";
 import veg from "@/assets/dishTypes/veg.png";
 import nonVeg from "@/assets/dishTypes/non_veg.png";
 import egg from "@/assets/dishTypes/egg.png";
 import vegan from "@/assets/dishTypes/vegan.png";
 import { cn } from "@hi/common";
 import toast from "react-hot-toast";
-import BottomButton from "@/components/atom/bottomButton";
+
+// shadcn
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
+import { Plus, X } from "lucide-react";
 
 export const foodTypes = [
   { name: DishTypeEnum[0], icon: veg },
@@ -20,170 +26,315 @@ export const foodTypes = [
   { name: DishTypeEnum[3], icon: vegan },
 ];
 
+const MAX_CHOICES_COUNT = 50;
+
+// ---- Helper you can reuse everywhere ----
+export const getChoiceValidity = (choice: {
+  name?: string;
+  choiceDishType?: DishTypeEnumType[];
+}) => {
+  const hasName =
+    typeof choice.name === "string" && choice.name.trim().length > 0;
+  const hasTypes =
+    Array.isArray(choice.choiceDishType) && choice.choiceDishType.length > 0;
+
+  return {
+    isValid: hasName && hasTypes,
+    hasName,
+    hasTypes,
+  };
+};
+
 const MemoCreateChoice = () => {
-  const {
-    choiceName,
-    choicePrice,
-    dishTypes,
-    setChoiceName,
-    setChoicePrice,
-    setDishTypes,
-    choices,
-    addChoice,
-    resetChoiceFields,
-    maxChoices,
-    setAddOnToggle,
-    editChoiceId,
-    setEditChoiceId,
-    updateChoice,
-    addOnId,
-  } = useMenuPageStore((s) => ({
-    choiceName: s.choiceName,
-    choicePrice: s.choicePrice,
-    dishTypes: s.dishTypes,
-    setChoiceName: s.setChoiceName,
-    setChoicePrice: s.setChoicePrice,
-    setDishTypes: s.setDishTypes,
-    choices: s.choices,
-    addChoice: s.addChoice,
-    resetChoiceFields: s.resetChoiceFields,
-    maxChoices: s.maxChoices,
-    setAddOnToggle: s.setAddOnToggle,
-    editChoiceId: s.editChoiceId,
-    setEditChoiceId: s.setEditChoiceId,
-    updateChoice: s.updateChoice,
-    addOnId: s.addOnId,
-  }));
+  const choices = useMenuPageStore((s) => s.choices);
+  const addChoice = useMenuPageStore((s) => s.addChoice);
+  const updateChoice = useMenuPageStore((s) => s.updateChoice);
+  const deleteChoice = useMenuPageStore((s) => s.deleteChoice);
+  const maxChoices = useMenuPageStore((s) => s.maxChoices);
+  const setAddOnToggle = useMenuPageStore((s) => s.setAddOnToggle);
+  const addOnId = useMenuPageStore((s) => s.addOnId);
 
-  const toggleSelection = (type: DishTypeEnumType) => {
-    const isSelected = dishTypes.includes(type);
-    const newSelectedTypes = isSelected
-      ? dishTypes.filter((t) => t !== type)
-      : [...dishTypes, type];
+  // showErrors = true only after user clicks Done
+  const [showErrors, setShowErrors] = useState(false);
 
-    setDishTypes(newSelectedTypes);
+  // ---- helpers ----
+
+  const validateAllChoices = () => {
+    if (choices.length === 0) {
+      toast.error("Add at least one choice.");
+      return false;
+    }
+
+    const invalid = choices.find((c) => !getChoiceValidity(c).isValid);
+    if (invalid) {
+      toast.error("Please fill all required fields marked in red.");
+      return false;
+    }
+
+    return true;
   };
 
-  const handleSaveChoice = () => {
-    const isEdit = editChoiceId !== "";
-    const choiceExists = choices.find((c) => c.uuid === editChoiceId);
+  const handleChangeName = (uuid: string, name: string) => {
+    const target = choices.find((c) => c.uuid === uuid);
+    if (!target) return;
 
+    // avoid duplicate names (soft warning)
     const nameExists = choices.some(
-      (c) => c.name === choiceName && c.uuid !== editChoiceId,
+      (c) => c.uuid !== uuid && c.name === name.trim(),
     );
-
     if (nameExists) {
       toast.error("Choice name already exists");
-      return;
     }
 
-    if (choiceName === "" || dishTypes.length <= 0) {
-      console.log(choiceName, dishTypes.length);
-      toast.error("Please fill all the fields");
+    updateChoice({
+      ...target,
+      name,
+    });
+  };
+
+  const handleChangePrice = (uuid: string, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    const target = choices.find((c) => c.uuid === uuid);
+    if (!target) return;
+
+    updateChoice({
+      ...target,
+      price: value ? Number(value) : 0,
+    });
+  };
+
+  const handleToggleType = (uuid: string, type: DishTypeEnumType) => {
+    const target = choices.find((c) => c.uuid === uuid);
+    if (!target) return;
+
+    const currentTypes = Array.isArray(target.choiceDishType)
+      ? target.choiceDishType
+      : [];
+
+    const isSelected = currentTypes.includes(type);
+    const updatedTypes = isSelected
+      ? currentTypes.filter((t: DishTypeEnumType) => t !== type)
+      : [...currentTypes, type];
+
+    updateChoice({
+      ...target,
+      choiceDishType: updatedTypes,
+    });
+  };
+
+  const handleAddChoiceRow = () => {
+    if (choices.length >= MAX_CHOICES_COUNT) {
+      toast.error(`You can add up to ${MAX_CHOICES_COUNT} choices only.`);
       return;
     }
+    setShowErrors(false);
 
     const newChoice = {
-      uuid: isEdit && choiceExists ? choiceExists.uuid : crypto.randomUUID(),
-      name: choiceName,
-      price: choicePrice || 0,
+      uuid: crypto.randomUUID(),
+      name: "",
+      price: 0,
       description: "",
       visibility: true,
       availability: true,
       choiceMaxQuantity: maxChoices,
-      choiceDishType: dishTypes,
+      choiceDishType: [] as DishTypeEnumType[],
     };
 
-    if (isEdit) {
-      updateChoice(newChoice);
-      setEditChoiceId("");
-    } else {
-      addChoice(newChoice);
-    }
+    addChoice(newChoice);
+  };
+
+  const handleRemoveChoice = (uuid: string) => {
+    deleteChoice(uuid);
+  };
+
+  const handleDone = () => {
+    // From now on, show red errors for invalid fields
+    setShowErrors(true);
+
+    if (!validateAllChoices()) return;
+
     if (addOnId !== "") {
       setAddOnToggle("EDIT_ADDON");
     } else {
       setAddOnToggle("ADD_ON");
     }
-    resetChoiceFields();
   };
 
   return (
-    <>
-      {" "}
-      <section className="flex flex-col lg:flex-row">
-        <article className="flex-1 mx-6 lg:mt-6">
-          <label className="font-semibold opacity-50" htmlFor="name">
-            Choice Name*
-          </label>
-          <Background>
-            <input
-              type="text"
-              id="name"
-              placeholder="Enter choice Name"
-              value={choiceName}
-              maxLength={50}
-              onChange={(e) => setChoiceName(e.target.value)}
-              className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
-            />
-          </Background>
-        </article>
-        <article className="mx-6 lg:mt-6">
-          <label className="font-semibold opacity-50" htmlFor="type">
-            Dish Type*
-          </label>
-          <Background>
-            <p className="text-sm text-gray-500">Choose Minimum 1 type</p>
-            <section className="flex flex-wrap gap-2 mt-2">
-              {foodTypes?.map((type) => {
-                const isSelected = dishTypes.includes(type?.name);
-                return (
-                  <button
-                    type="button"
-                    onClick={() => toggleSelection(type?.name)}
-                    key={type?.name}
+    <div className="flex flex-col gap-4 px-4 pb-20 pt-4">
+      {/* Heading + subheading */}
+      <div>
+        <h1 className="text-xl font-bold">Choices</h1>
+        <p className="mt-1 text-sm font-bold opacity-80">
+          Add all choices for this add-on in one go. Example: Extra cheese,
+          Olives, Jalapeños.
+        </p>
+      </div>
+
+      {/* List of choice blocks */}
+      {choices.length === 0 ? (
+        <Card>
+          <CardContent className="py-6 text-sm text-muted-foreground">
+            No choices added yet. Click{" "}
+            <span className="font-semibold">“Add choice”</span> to start.
+          </CardContent>
+        </Card>
+      ) : (
+        choices.map((choice, index) => {
+          const { hasName, hasTypes } = getChoiceValidity(choice);
+
+          const nameError = showErrors && !hasName;
+          const typeError = showErrors && !hasTypes;
+
+          return (
+            <Card key={choice.uuid}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-bold">
+                  Choice {index + 1}
+                </CardTitle>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 p-0"
+                  onClick={() => handleRemoveChoice(choice.uuid)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Name */}
+                <div className="space-y-1">
+                  <Label
+                    className={cn("font-semibold", nameError && "text-red-500")}
+                  >
+                    Choice name*
+                  </Label>
+                  <Input
+                    placeholder="Eg: Extra cheese"
+                    value={choice.name}
+                    maxLength={50}
+                    onChange={(e) =>
+                      handleChangeName(choice.uuid, e.target.value)
+                    }
                     className={cn(
-                      "capitalize flex justify-between items-center px-4 py-2 rounded-full gap-1 border border-[#CACACA]",
-                      `${isSelected ? "bg-blue-200" : ""}`,
+                      nameError &&
+                        "border-red-500 focus-visible:ring-red-500 focus-visible:ring-1",
+                    )}
+                  />
+                  {nameError && (
+                    <p className="text-xs text-red-500">
+                      Name is required for this choice.
+                    </p>
+                  )}
+                </div>
+
+                {/* Dish type */}
+                <div className="space-y-1">
+                  <Label
+                    className={cn("font-semibold", typeError && "text-red-500")}
+                  >
+                    Dish type*
+                  </Label>
+                  <div
+                    className={cn(
+                      "flex flex-wrap gap-2 mt-1 rounded-xl p-1",
+                      typeError && "ring-1 ring-red-500",
                     )}
                   >
-                    <img src={type?.icon} loading="lazy" alt={type?.name} />
-                    <p>{type?.name.replace(/_/g, " ").toLowerCase()}</p>
-                  </button>
-                );
-              })}
-            </section>
-          </Background>
-        </article>
-      </section>
-      <article className="mx-6 mt-4 lg:mt-6">
-        <label className="font-semibold opacity-50" htmlFor="name">
-          Additional Price
-        </label>
-        <Background>
-          <input
-            type="tel"
-            id="name"
-            placeholder="Enter choice Price"
-            maxLength={10}
-            value={choicePrice}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*$/.test(value)) {
-                setChoicePrice(Number(value));
-              }
-            }}
-            inputMode="numeric"
-            pattern="[0-9]*"
-            className="w-full p-2 bg-white border border-black rounded-xl focus:no-outline focus:right-0 focus:border-black focus:bg-white"
-          />
-        </Background>
-      </article>
-      <BottomButton
-        buttons={[{ text: "Save", onClick: handleSaveChoice, type: "button" }]}
+                    {foodTypes.map((type) => {
+                      const isSelected =
+                        Array.isArray(choice.choiceDishType) &&
+                        choice.choiceDishType.includes(type.name);
+                      return (
+                        <button
+                          type="button"
+                          key={type.name}
+                          onClick={() =>
+                            handleToggleType(choice.uuid, type.name)
+                          }
+                          className={cn(
+                            "capitalize flex items-center gap-1 rounded-full border px-3 py-1 text-xs",
+                            isSelected
+                              ? "bg-primary/10 border-primary"
+                              : "border-[#CACACA] bg-white",
+                          )}
+                        >
+                          <img
+                            src={type.icon}
+                            loading="lazy"
+                            alt={type.name}
+                            className="h-4 w-4"
+                          />
+                          <span>
+                            {type.name.replace(/_/g, " ").toLowerCase()}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {typeError && (
+                    <p className="text-xs text-red-500">
+                      Select at least one type.
+                    </p>
+                  )}
+                </div>
+
+                {/* Additional price */}
+                <div className="space-y-1">
+                  <Label className="font-semibold">
+                    Additional price (optional)
+                  </Label>
+                  <Input
+                    type="tel"
+                    placeholder="Eg: 20"
+                    maxLength={10}
+                    value={
+                      !choice.price || choice.price === 0
+                        ? ""
+                        : String(choice.price)
+                    }
+                    onChange={(e) =>
+                      handleChangePrice(choice.uuid, e.target.value)
+                    }
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })
+      )}
+
+      {/* Add choice button */}
+      <div className="flex justify-start">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleAddChoiceRow}
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          Add choice
+        </Button>
+      </div>
+
+      {/* Done button at bottom */}
+      <AdvancedBottomButton
+        fixed={true}
+        maxWidth="30rem"
+        buttons={[
+          {
+            text: "Done",
+            onClick: handleDone,
+            disable: choices.length === 0,
+          },
+        ]}
       />
-    </>
+    </div>
   );
 };
+
 const CreateChoice = memo(MemoCreateChoice);
 export default CreateChoice;

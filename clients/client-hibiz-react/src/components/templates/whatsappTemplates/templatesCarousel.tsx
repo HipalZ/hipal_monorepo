@@ -38,8 +38,8 @@ const MemoTemplatesCarousel = () => {
     switch (format) {
       case 'TEXT':
         return (
-          <div className="flex h-full flex-col items-center justify-center bg-gray-100 text-gray-500">
-            <span className="text-sm">{template?.components?.[0]?.text || 'Sample Text Header'}</span>
+          <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 p-3 text-slate-800 drop-shadow-sm">
+            <span className="text-center text-sm font-medium">{template?.components?.[0]?.text || 'Text Header'}</span>
           </div>
         );
 
@@ -79,9 +79,9 @@ const MemoTemplatesCarousel = () => {
 
       default:
         return (
-          <div className="flex h-full flex-col items-center justify-center bg-gray-100 text-gray-500">
-            <BiText className="mb-1 h-6 w-6" />
-            <span className="text-sm">No Preview Available</span>
+          <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 p-3 text-slate-700 drop-shadow-sm">
+            <BiText className="mb-2 h-7 w-7 text-slate-700" />
+            <span className="text-sm font-semibold">No Preview Available</span>
           </div>
         );
     }
