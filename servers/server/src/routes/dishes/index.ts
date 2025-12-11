@@ -534,6 +534,13 @@ const dishesRouter = new Hono()
         });
 
         for (const dish of dishes) {
+          const alreadyExist = await Dish.findOne({
+            name: dish.name,
+            menuId: dish.menuId,
+          });
+          if (alreadyExist) {
+            continue;
+          }
           const createDish = await Dish.create(
             [{ ...dish, pos: !!hipalZPos }],
             { session },
