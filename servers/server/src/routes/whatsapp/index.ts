@@ -1778,6 +1778,8 @@ const whatsappRouter = new Hono()
           messages?.id,
           messages?.text?.body,
         );
+      }
+      if (messages !== undefined) {
         await handleChatbotFlow({
           messages,
           contacts,
