@@ -32,7 +32,6 @@ function ChatbotDashboard() {
   const handleOpenChatbot = useCallback(() => {
     setOpenBot(true);
   }, [setOpenBot]);
-  console.log('chatbots', chatbots);
   const filtered = (chatbots || []).filter((bot: any) => bot.chatbotName.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const totalSessions = filtered.reduce((a, b) => a + (b.stats?.totalSessions || 0), 0);
@@ -221,7 +220,6 @@ function StatCard({ title, value, icon, trendIcon }: any) {
 
 function ChatbotSessionsModal({ bot, onClose }: any) {
   const { data: sessions, isLoading } = useChatbotSessions(bot._id);
-  console.log('sessions', sessions);
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-3xl">

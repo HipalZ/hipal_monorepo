@@ -105,14 +105,22 @@ function EditorShell(): JSX.Element {
     setVariables(chatbot.variables || []);
 
     // Convert nodes
-    const flowNodes = [...convertTriggersToNodes(chatbot.triggers || []), ...convertDbNodesToFlow(chatbot.nodes || [])];
+    const flowNodes = [
+      ...convertTriggersToNodes(chatbot.triggers),
+      ...convertDbNodesToFlow(chatbot.nodes, {
+        patchNode,
+        removeNode,
+        variables,
+        updateGlobalVariables,
+      }),
+    ];
 
     // Convert edges
     const flowEdges = [...convertTriggerEdges(chatbot.triggers || []), ...convertDbEdges(chatbot.nodes || [])];
 
     setRfNodes(flowNodes);
     setRfEdges(flowEdges);
-  }, [chatbot]);
+  }, [chatbot, variables]);
 
   /* -------------------------------------------------------
      GLOBAL HELPERS
@@ -330,6 +338,7 @@ function EditorShell(): JSX.Element {
   );
 
   const handleSaveFlow = async () => {
+    if (chatbotName === '') return toast.error('Please Enter Chatbot Name');
     if (chatbotId) {
       await updateChatbot({ chatbotId, payload: finalObject });
     } else {
