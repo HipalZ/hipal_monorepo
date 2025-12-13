@@ -232,9 +232,9 @@ const pushToQueue = async (
     category: template.category,
   };
 
-  // await enqueueWhatsAppJob("pushCustomerIntoQueue", payload, {
-  //   delay: delay,
-  // });
+  await enqueueWhatsAppJob("pushCustomerIntoQueue", payload, {
+    delay: delay,
+  });
 
   return true;
 };
