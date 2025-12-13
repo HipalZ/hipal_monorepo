@@ -1,4 +1,3 @@
-import { createHmac } from "node:crypto";
 import {
   BusinessPosConfig,
   BusinessSettings,
@@ -48,12 +47,18 @@ import { endOfDay, startOfDay } from "date-fns";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
+import { createHmac } from "node:crypto";
 import { z } from "zod";
 import {
   ClientRoles,
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { enqueueRazorpayJob } from "../../queues/enqueue";
+import {
+  generateBillInvoice,
+  generateSplitBillInvoice,
+} from "../../services/bill";
 // import { enqueueRazorpayJob } from "../../queues/enqueue";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { type KotOrderTypes, calculateBillTotals } from "../../utils/bill";
@@ -466,16 +471,23 @@ const paymentsRouter = new Hono()
         businessId: businessId,
         childTableIds: tInfo._id.toString(),
       }).populate("parentTableId");
-
-      const tableSession = await UserSession.findOne({
+      const tab = await UserSession.findOne({
         businessId,
         tableName: isTableMerge?.parentTableId?.name || tableName,
       });
-
       const businessPosConfig = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
         active: true,
+      });
+
+      if (businessPosConfig && businessPosConfig.posName === "PETPOOJA") {
+        await generateBillInvoice(tab?.tableName, businessId, true);
+      }
+
+      const tableSession = await UserSession.findOne({
+        businessId,
+        tableName: isTableMerge?.parentTableId?.name || tableName,
       });
 
       const merchant = await BusinessSettings.findOne({
@@ -552,6 +564,8 @@ const paymentsRouter = new Hono()
               {},
             );
           }
+
+          await generateSplitBillInvoice(variantId, businessId, true);
 
           if (tableSession.variantsCounts > 1) {
             const splitBillTableSession =
@@ -1058,6 +1072,21 @@ const paymentsRouter = new Hono()
         childTableIds: tInfo._id.toString(),
       }).populate("parentTableId");
 
+      const tab = await UserSession.findOne({
+        businessId,
+        tableName: isTableMerge?.parentTableId?.name || tableName,
+      });
+
+      const businessPosConfig = await BusinessPosConfig.findOne({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
+      if (businessPosConfig && businessPosConfig.posName === "PETPOOJA") {
+        await generateBillInvoice(tab?.tableName, businessId, true);
+      }
+
       const tableSession = await UserSession.findOne({
         tableName: isTableMerge?.parentTableId?.name || tableName,
         businessId,
@@ -1078,12 +1107,6 @@ const paymentsRouter = new Hono()
           400,
           {},
         );
-
-      const businessPosConfig = await BusinessPosConfig.findOne({
-        businessId,
-        isDeleted: false,
-        active: true,
-      });
 
       if (businessPosConfig) {
         if (!tableSession) {
@@ -1150,6 +1173,8 @@ const paymentsRouter = new Hono()
               {},
             );
           }
+
+          await generateSplitBillInvoice(variantId, businessId, true);
 
           if (tableSession.variantsCounts > 1) {
             const splitBillTableSessionData =
@@ -1757,19 +1782,19 @@ const paymentsRouter = new Hono()
         return respond(c, "Webhook could not be queued", false, 200, {});
       }
 
-      // enqueueRazorpayJob("razorpayPaymentHandler", {
-      //   date: Date.now(),
-      //   merchantId: merchantId,
-      //   razorpayEventId: razorpayEventId,
-      //   order_id: order_id,
-      //   id: id,
-      //   event: body.event,
-      //   status: "PENDING",
-      //   acquirer_data: acquirer_data,
-      //   error_description: error_description,
-      //   error_reason: error_reason,
-      //   mode: method,
-      // });
+      enqueueRazorpayJob("razorpayPaymentHandler", {
+        date: Date.now(),
+        merchantId: merchantId,
+        razorpayEventId: razorpayEventId,
+        order_id: order_id,
+        id: id,
+        event: body.event,
+        status: "PENDING",
+        acquirer_data: acquirer_data,
+        error_description: error_description,
+        error_reason: error_reason,
+        mode: method,
+      });
     }
 
     return respond(c, "Webhook received successfully", false, 200, {});
@@ -2252,6 +2277,16 @@ const paymentsRouter = new Hono()
                 const originBillIsSplit =
                   await checkOriginBillIsSplit(tableSession);
                 if (originBillIsSplit) {
+                  if (!order?.variantId) {
+                    return respond(
+                      c,
+                      "variantId is required for split bill",
+                      true,
+                      400,
+                      {},
+                    );
+                  }
+
                   const splitBillTableSessionData =
                     await SplitBillTableSession.findById(order.variantId);
                   if (!splitBillTableSessionData) {

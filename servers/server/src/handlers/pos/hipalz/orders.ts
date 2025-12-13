@@ -25,6 +25,10 @@ import {
   removeCoins,
 } from "../../../routes/payments";
 import { generateTenDigitCode } from "../../../routes/pos";
+import {
+  generateBillInvoice,
+  generateSplitBillInvoice,
+} from "../../../services/bill";
 import { checkOriginBillIsSplit } from "../../../services/splitBill";
 import { razorpayWrapper } from "../../../utils/razorpay-wrapper";
 
@@ -57,6 +61,8 @@ async function hipalzPosOfflineOrderHandler(payload: {
       userId,
       tableName,
     } = payload;
+
+    await generateBillInvoice(tableName, businessId, true);
     const tableSession = await UserSession.findOne({
       tableName,
       businessId,
@@ -87,6 +93,8 @@ async function hipalzPosOfflineOrderHandler(payload: {
         if (!variantId) {
           throw new Error("variantId is required for split bill");
         }
+
+        await generateSplitBillInvoice(variantId, businessId, true);
 
         if (tableSession.variantsCounts > 1) {
           const splitBillTableSessionData =
@@ -328,6 +336,8 @@ async function hipalzPosOnlineOrderHandler(payload: {
       merchantId,
     } = payload;
 
+    await generateBillInvoice(tableName, businessId, true);
+
     const tableSession = await UserSession.findOne({
       businessId,
       tableName,
@@ -350,6 +360,8 @@ async function hipalzPosOnlineOrderHandler(payload: {
         if (!variantId) {
           throw new Error("variantId is required for split bill");
         }
+
+        await generateSplitBillInvoice(variantId, businessId, true);
 
         if (tableSession.variantsCounts > 1) {
           const splitBillTableSession =
@@ -577,6 +589,10 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
               const originBillIsSplit =
                 await checkOriginBillIsSplit(tableSession);
               if (originBillIsSplit) {
+                if (!order.variantId) {
+                  throw new Error("variantId is required for split bill");
+                }
+
                 const splitBillTableSessionData =
                   await SplitBillTableSession.findById(order.variantId);
                 if (!splitBillTableSessionData) {
@@ -1393,6 +1409,9 @@ async function hipalzPosNormalSettleHandler(payload: {
       }
 
       const table = await Table.findById(tableId);
+      if (!table) throw new Error("Table not found");
+
+      await generateBillInvoice(table?.name, table?.businessId, true);
       const tableSession = await UserSession.findOne({
         businessId: table?.businessId,
         tableName: table?.name,
@@ -1420,6 +1439,8 @@ async function hipalzPosNormalSettleHandler(payload: {
         if (!variantId) {
           throw new Error("variantId is required for split bill");
         }
+
+        await generateSplitBillInvoice(variantId, table?.businessId, true);
 
         const splitTableSessionData =
           await SplitBillTableSession.findById(variantId);

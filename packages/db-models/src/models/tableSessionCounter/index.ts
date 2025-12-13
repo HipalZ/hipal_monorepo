@@ -13,6 +13,10 @@ const tableSessionCounterSchema = new mongoose.Schema<TableSessionCounterType>({
     type: String,
     required: true,
   },
+  isMergeAfterSplit: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const TableSessionCounter: Model<TableSessionCounterType> =

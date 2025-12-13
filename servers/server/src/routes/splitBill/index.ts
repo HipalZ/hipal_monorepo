@@ -1,6 +1,6 @@
 import {
+  MergeAndSplitBillInvoiceCounter,
   SplitBillTableSession,
-  TableSessionCounter,
   UserSession,
 } from "@hi/db-models";
 import {
@@ -10,7 +10,6 @@ import {
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { nanoid } from "nanoid";
 import { z } from "zod";
 import {
   checkOfflinePaymentRequest,
@@ -91,15 +90,10 @@ const splitBillRouter = new Hono()
             portionPercentage,
           );
 
-           
-          
-
-
           const updateBill = splitBillWithPortionAndPercentage(
             fetchOriginalTableSession,
             portionPercentage,
             i + 1,
-            
           );
 
           const updatedObject = {
@@ -314,9 +308,27 @@ const splitBillRouter = new Hono()
             $set: {
               isSplit: false,
               variantsCounts: 0,
+              isSplitAndMerge: true,
             },
           },
         );
+
+        const splitBills = await SplitBillTableSession.find({
+          originTableSessionId: tableSession?._id,
+        });
+
+        for (const splitBill of splitBills) {
+          if (splitBill?.billInvoice > 0) {
+            await MergeAndSplitBillInvoiceCounter.findOneAndUpdate(
+              {
+                businessId,
+                billInvoice: splitBill.billInvoice,
+              },
+              {},
+              { upsert: true },
+            );
+          }
+        }
 
         await SplitBillTableSession.deleteMany(
           {
