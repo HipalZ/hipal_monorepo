@@ -16,7 +16,6 @@ import {
   Pos,
   SplitBillTableSession,
   Table,
-  TableSessionCounter,
   Tax,
   UnsettleTable,
   User,
@@ -32,6 +31,10 @@ import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
+import {
+  generateBillInvoice,
+  generateSplitBillInvoice,
+} from "../../services/bill";
 import {
   applyCoinToVariantBill,
   applyCouponToVariantBill,
@@ -273,20 +276,6 @@ const posRouter = new Hono()
           return respond(c, 'Table session not found', true, 404, {});
         }
 
-        await TableSessionCounter.findOneAndUpdate(
-          {
-            businessId,
-            tableSessionId: tableSession._id.toString(),
-          },
-          {},
-
-          { upsert: true },
-        );
-
-        const sessionCount = await TableSessionCounter.countDocuments({
-          businessId,
-        });
-
         if (tableSession.isSplit) {
           if (tableSession.splitType === 'ITEM') {
             const splitBillVariants = await returnSplitBillVariantsForItemWise(
@@ -379,9 +368,7 @@ const posRouter = new Hono()
             items: cartItems,
             billPrintCount: tableSession.billPrintCount + 1,
             totalGst: Number(totalGst?.toFixed(2)),
-            ...(tableSession.billInvoice === 0 && {
-              billInvoice: sessionCount,
-            }),
+
             serviceChargePercentage:
               tableSession.serviceChargePercentage || serviceCharge?.value || 0,
 
@@ -1981,6 +1968,13 @@ const posRouter = new Hono()
           businessId,
         });
 
+        const billInvoice = await generateBillInvoice(
+          tableName,
+          businessId,
+          false,
+        );
+        console.log("billinvoice", billInvoice);
+
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
@@ -2011,6 +2005,8 @@ const posRouter = new Hono()
           if (!variantId) {
             return respond(c, 'variantId is required for split bill', true, 400, {});
           }
+
+          await generateSplitBillInvoice(variantId, businessId, false);
 
           const variant = await SplitBillTableSession.findById(
             variantId,

@@ -69,6 +69,7 @@ export const userSessionSchema = z.object({
   billingUserId: ObjectIdSchema.optional(),
   roundOffType: z.coerce.number().optional().default(0),
   roundOffAmount: z.coerce.number().optional().default(0),
+  isSplitAndMerge: z.boolean().optional().default(false),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;

@@ -4,6 +4,7 @@ import {
   BusinessPosConfig,
   DuesUser,
   KotOrder,
+  MergeAndSplitBillInvoiceCounter,
   MergeTable,
   NpcUser,
   Order,
@@ -13,7 +14,6 @@ import {
   QrBill,
   SplitBillTableSession,
   Table,
-  TableSessionCounter,
   UnsettleTable,
   UpiMode,
   User,
@@ -31,6 +31,10 @@ import { Hono } from "hono";
 import type { ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import {
+  generateBillInvoice,
+  generateSplitBillInvoice,
+} from "../../services/bill";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { executePosHandler } from "../../utils/executePoshandlers.ts";
 import { calculateCartBill } from "../../utils/helper";
@@ -374,6 +378,8 @@ const tableRouter = new Hono()
           return respond(c, 'Bill already settled', true, 409, {});
         }
 
+        await generateBillInvoice(table?.name, table?.businessId, true);
+
         const tableSession = await UserSession.findOne({
           businessId: table?.businessId,
           tableName: table?.name,
@@ -385,8 +391,6 @@ const tableRouter = new Hono()
 
         const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
 
-        console.log('norold', tableSession.billInvoice);
-
         const npcUser = await NpcUser.findById(npcUserId);
 
         if (originBillIsSplit) {
@@ -394,7 +398,10 @@ const tableRouter = new Hono()
             return respond(c, 'variantId is required for split bill', true, 400, {});
           }
 
-          const splitTableSessionData = await SplitBillTableSession.findById(variantId);
+          await generateSplitBillInvoice(variantId, table?.businessId, true);
+
+          const splitTableSessionData =
+            await SplitBillTableSession.findById(variantId);
           if (!splitTableSessionData) {
             return respond(c, 'Split table session not found', true, 404, {});
           }
@@ -1309,25 +1316,26 @@ const tableRouter = new Hono()
         let totalBillCount = 0;
         let totalItemCount = 0;
 
-        const destSession = await UserSession.findOneAndUpdate(
-          {
-            businessId: destTable.businessId,
-            tableName: destTable.name,
-          },
-          {
-            billInvoice: 0,
-          },
-        ).session(session);
+        const destSession = await UserSession.findOne({
+          businessId: destTable.businessId,
+          tableName: destTable.name,
+        }).session(session);
 
         for (const srcTable of sourceTables) {
           const srcSession = await UserSession.findOne({
             businessId: srcTable.businessId,
             tableName: srcTable.name,
           }).session(session);
-          await TableSessionCounter.deleteOne({
-            businessId: srcTable.businessId,
-            tableSessionId: srcSession?._id?.toString(),
-          });
+          if (srcSession && srcSession?.billInvoice > 0) {
+            await MergeAndSplitBillInvoiceCounter.findOneAndUpdate(
+              {
+                businessId: srcTable.businessId,
+                billInvoice: srcSession.billInvoice,
+              },
+              {},
+              { upsert: true },
+            );
+          }
 
           if (srcSession && checkOriginBillIsSplit(srcSession)) throw new Error(`Bill already split for table ${srcTable.name}`);
 
@@ -1477,11 +1485,6 @@ const tableRouter = new Hono()
           parentTableId: toTableId,
           childTableIds: fromTableIds,
         }).save({ session });
-
-        await TableSessionCounter.deleteOne({
-          businessId: destTable.businessId,
-          tableSessionId: { $in: tableSessionIds },
-        });
 
         return respond(c, "Tables merged successfully", false, 200, {});
       });

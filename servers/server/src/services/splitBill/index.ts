@@ -178,7 +178,6 @@ const returnSplitBillVariants = async (
         totalGst: Number(totalGst?.toFixed(2)),
         serviceChargePercentage:
           variant.serviceChargePercentage || serviceCharge?.value || 0,
-        billInvoice: billInvoice,
         roundOffType: type,
         roundOffAmount: value,
       },
@@ -322,7 +321,6 @@ const returnSplitBillVariantsForItemWise = async (
         totalGst: Number(totalGst?.toFixed(2)),
         serviceChargePercentage:
           variant.serviceChargePercentage || serviceCharge?.value || 0,
-        billInvoice: billInvoice,
         roundOffType: type,
         roundOffAmount: value,
       },
