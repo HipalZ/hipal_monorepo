@@ -34,37 +34,27 @@ import {
 import { runInTransaction } from '@hi/utils';
 import { createHmac } from 'node:crypto';
 
-import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
-import { Hono } from "hono";
-import type { ClientSession } from "mongoose";
-import { nanoid } from "nanoid";
-import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
-import { z } from "zod";
-import {
-  ClientRoles,
-  requireAuthorization,
-} from "../../../middleware/authorization";
-import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { getMerchantConfig } from "../../utils/cacheHelper";
-import { getFutureSeconds } from "../../utils/dateAndTime";
-import {
-  type MerchantConfig,
-  razorpayWrapper,
-} from "../../utils/razorpay-wrapper";
-import { respond } from "../../utils/response";
-import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
-import { qrHandlers } from "../../utils/whatsappWebhookHandlers/allQrHandler";
-import { whatsAppCampaignHandler } from "../../utils/whatsappWebhookHandlers/campaign";
-import { whatsAppChatHandler } from "../../utils/whatsappWebhookHandlers/chatHandler";
-import {
-  identifyQrTypeFromMessage,
-  whatsAppEventData,
-  whatsAppUserAndTextMessage,
-} from "../../utils/whatsappWebhookHandlers/helper";
-import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
-import { handleChatbotFlow } from "../../utils/whatsappWebhookHandlers/flows";
-import { exchangeCodeForToken } from "../../utils/instagram";
+import { zValidator } from '@hono/zod-validator';
+import axios from 'axios';
+import { Hono } from 'hono';
+import type { ClientSession } from 'mongoose';
+import { nanoid } from 'nanoid';
+import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
+import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
+import { authTokenValidator } from '../../../middleware/tokenValidator';
+import { getMerchantConfig } from '../../utils/cacheHelper';
+import { getFutureSeconds } from '../../utils/dateAndTime';
+import { exchangeCodeForToken } from '../../utils/instagram';
+import { type MerchantConfig, razorpayWrapper } from '../../utils/razorpay-wrapper';
+import { respond } from '../../utils/response';
+import whatsAppApiBaseUrl from '../../utils/whatsAppApiBaseUrl/apiPaths';
+import { qrHandlers } from '../../utils/whatsappWebhookHandlers/allQrHandler';
+import { whatsAppCampaignHandler } from '../../utils/whatsappWebhookHandlers/campaign';
+import { whatsAppChatHandler } from '../../utils/whatsappWebhookHandlers/chatHandler';
+import { handleChatbotFlow } from '../../utils/whatsappWebhookHandlers/flows';
+import { identifyQrTypeFromMessage, whatsAppEventData, whatsAppUserAndTextMessage } from '../../utils/whatsappWebhookHandlers/helper';
+import { whatsAppBlockUserHandler } from '../../utils/whatsappWebhookHandlers/whatsappBlockUser';
 // import { enqueueWhatsAppJob } from "../../queues/enqueue";
 interface AxiosError {
   response?: {
@@ -1673,19 +1663,10 @@ const whatsappRouter = new Hono()
       if (!body?.object) {
         return c.json({ message: 'ignored', err: false }, 200);
       }
-      const { messages, contacts, statuses, whatsAppBusinessConfigData } =
-        await whatsAppEventData(body);
+      const { messages, contacts, statuses, whatsAppBusinessConfigData } = await whatsAppEventData(body);
 
-      if (
-        messages &&
-        messages?.text?.body?.length > 1 &&
-        whatsAppBusinessConfigData
-      ) {
-        const { userData, userInput } = await whatsAppUserAndTextMessage(
-          contacts,
-          messages,
-          whatsAppBusinessConfigData,
-        );
+      if (messages && messages?.text?.body?.length > 1 && whatsAppBusinessConfigData) {
+        const { userData, userInput } = await whatsAppUserAndTextMessage(contacts, messages, whatsAppBusinessConfigData);
 
         const qrType = identifyQrTypeFromMessage(userInput);
 
@@ -1694,26 +1675,20 @@ const whatsappRouter = new Hono()
             qrType.value,
             userData.phone,
             userData._id.toString(),
-            userData.name || "Guest",
+            userData.name || 'Guest',
             whatsAppBusinessConfigData,
           );
-          return respond(c, "qrHandlers", false, 200, {});
+          return respond(c, 'qrHandlers', false, 200, {});
         }
         if (whatsAppBusinessConfigData.chat) {
-          await whatsAppChatHandler(
-            messages?.text?.body,
-            userData._id.toString(),
-            whatsAppBusinessConfigData,
-          );
+          await whatsAppChatHandler(messages?.text?.body, userData._id.toString(), whatsAppBusinessConfigData);
         }
 
-        await whatsAppBlockUserHandler(
-          whatsAppBusinessConfigData,
-          userData?.phone,
-          userData._id.toString(),
-          messages?.id,
-          messages?.text?.body,
-        );
+        await whatsAppBlockUserHandler(whatsAppBusinessConfigData, userData?.phone, userData._id.toString(), messages?.id, messages?.text?.body);
+      }
+
+      if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
+        await whatsAppCampaignHandler(whatsAppBusinessConfigData, statuses);
       }
       if (messages !== undefined) {
         await handleChatbotFlow({
@@ -1723,11 +1698,7 @@ const whatsappRouter = new Hono()
         });
       }
 
-      if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
-        await whatsAppCampaignHandler(whatsAppBusinessConfigData, statuses);
-      }
-
-      return respond(c, "event received", false, 200, {});
+      return respond(c, 'event received', false, 200, {});
     },
   )
 
