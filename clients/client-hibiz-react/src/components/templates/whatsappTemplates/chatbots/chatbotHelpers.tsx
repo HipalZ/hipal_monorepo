@@ -238,17 +238,30 @@ export const categories = [
   },
 ];
 
-export function convertDbNodesToFlow(nodes: any[]) {
+export function convertDbNodesToFlow(
+  nodes: any[],
+  helpers: {
+    patchNode: (id: string, patch: any) => void;
+    removeNode: (id: string) => void;
+    variables: string[];
+    updateGlobalVariables: (v: string[]) => void;
+  },
+) {
   return nodes.map((n, index) => ({
     id: n.id,
     type: n.type,
     position: {
       x: n.x ?? 250,
-      y: n.y ?? index * 180, // Auto spacing
+      y: n.y ?? index * 180,
     },
     data: {
       ...n,
-      meta: n,
+      meta: { ...n }, // clone, don’t reference
+      variables: helpers.variables,
+      onPatch: (patch) => helpers.patchNode(n.id, patch),
+      patch: (patch) => helpers.patchNode(n.id, patch),
+      remove: () => helpers.removeNode(n.id),
+      onVariableAdd: helpers.updateGlobalVariables,
     },
   }));
 }
@@ -261,8 +274,11 @@ export function convertDbEdges(nodes: any[], triggers: any[] = []): Edge[] {
     style: { stroke: '#6366f1', strokeWidth: 3 },
   };
 
-  nodes.forEach((n) => {
-    // 1️⃣ Plain "next" edges
+  /* -------------------------------
+     1️⃣ Node → Node edges
+  -------------------------------- */
+  for (const n of nodes) {
+    // Plain "next" edge
     if (n.next) {
       edges.push({
         id: `e-${n.id}-${n.next}`,
@@ -273,7 +289,7 @@ export function convertDbEdges(nodes: any[], triggers: any[] = []): Edge[] {
       });
     }
 
-    // ⭐ 2️⃣ Condition edges: trueNext / falseNext
+    // Condition edges
     if (n.trueNext) {
       edges.push({
         id: `e-${n.id}-${n.trueNext}-true`,
@@ -296,10 +312,10 @@ export function convertDbEdges(nodes: any[], triggers: any[] = []): Edge[] {
       });
     }
 
-    // 3️⃣ Interactive routes (buttons / lists)
+    // Interactive routes (buttons / lists)
     const routes = n.routes || {};
-    Object.entries(routes).forEach(([handleId, targetId]) => {
-      if (!targetId) return;
+    for (const [handleId, targetId] of Object.entries(routes)) {
+      if (!targetId) continue;
 
       const kind = handleId === 'true' ? 'cond:true' : handleId === 'false' ? 'cond:false' : handleId === 'start' ? 'trigger:start' : 'normal';
 
@@ -311,14 +327,17 @@ export function convertDbEdges(nodes: any[], triggers: any[] = []): Edge[] {
         data: { kind },
         ...baseEdgeStyle,
       });
-    });
-  });
+    }
+  }
 
-  // 4️⃣ Triggers
-  triggers.forEach((t) => {
-    if (!t.start) return;
+  /* -------------------------------
+     2️⃣ Trigger → Start edges
+  -------------------------------- */
+  for (const t of triggers) {
+    if (!t.start) continue;
 
     const triggerNodeId = t.id || `trigger_${t.start}`;
+
     edges.push({
       id: `e-${triggerNodeId}-${t.start}`,
       source: triggerNodeId,
@@ -327,7 +346,7 @@ export function convertDbEdges(nodes: any[], triggers: any[] = []): Edge[] {
       data: { kind: 'trigger:start' },
       ...baseEdgeStyle,
     });
-  });
+  }
 
   return edges;
 }

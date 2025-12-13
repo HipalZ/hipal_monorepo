@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useError } from "../store/useError";
 import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
+import useWhatsapp from "@/components/store/useWhatsapp";
 
 export function cleanPayload(obj: any): any {
   if (Array.isArray(obj)) {
@@ -49,6 +50,7 @@ export function cleanPayload(obj: any): any {
 export const useChatBot = () => {
   const { setError, setOpenErrorModal } = useError();
   const queryClient = useQueryClient();
+  const setOpenBot = useWhatsapp((s) => s.setOpenBot);
 
   /* ---------------------------------------------------------
      CREATE CHATBOT
@@ -69,6 +71,7 @@ export const useChatBot = () => {
       }
       if (data.status === 200 || data.status === 201) {
         toast.success("Chatbot Successfully Created");
+        setOpenBot(false);
         queryClient.invalidateQueries({ queryKey: ["allChatbots"] });
       }
     },
@@ -104,6 +107,7 @@ export const useChatBot = () => {
       }
       if (data.status === 200) {
         toast.success("Chatbot Updated Successfully");
+        setOpenBot(false);
         queryClient.invalidateQueries({ queryKey: ["allChatbots"] });
       }
     },
