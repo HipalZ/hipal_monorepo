@@ -43,6 +43,7 @@ import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
 import { z } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
+import { enqueueWhatsAppJob } from '../../queues/enqueue';
 import { getMerchantConfig } from '../../utils/cacheHelper';
 import { getFutureSeconds } from '../../utils/dateAndTime';
 import { exchangeCodeForToken } from '../../utils/instagram';
@@ -232,7 +233,7 @@ const pushToQueue = async (
     category: template.category,
   };
 
-  await enqueueWhatsAppJob("pushCustomerIntoQueue", payload, {
+  await enqueueWhatsAppJob('pushCustomerIntoQueue', payload, {
     delay: delay,
   });
 
