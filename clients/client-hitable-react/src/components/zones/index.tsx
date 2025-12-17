@@ -1,3 +1,8 @@
+import { type FC, memo, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
+import { IndianRupee } from 'lucide-react';
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
 import { useGetBillWithTableName } from "@/components/hooks/useBill";
 import { useKotPrintingStatus } from "@/components/hooks/useCheckKotStatus";
@@ -100,6 +105,9 @@ const MemoZones = () => {
     queryKey: ["tables", businessId],
     queryFn: () => fetchTables(businessId || ""),
     enabled: !!businessId,
+    refetchInterval: 1000 * 30,
+    refetchOnWindowFocus: false,
+    // staleTime: 1000 * 15,
   });
 
   const filteredTables = useMemo(() => {
