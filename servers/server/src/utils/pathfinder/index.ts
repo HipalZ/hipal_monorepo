@@ -69,9 +69,9 @@ const transformToIntegraFormat = async (payments) => {
           const { totalGst } = calculateBillTotalsForBillItems([item]);
           const itemTax = totalGst;
           const itemNet = 0;
-          const itemCat = await gategoryNameFromId(
-            item?.dish.categoryIds?.[0] ?? "",
-          );
+          const itemCat = item?.dish?.categoryIds?.[0]
+            ? await gategoryNameFromId(item.dish.categoryIds[0])
+            : "Unknown";
 
           return {
             REC_TYPE: "G111",
