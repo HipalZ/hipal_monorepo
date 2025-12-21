@@ -411,30 +411,22 @@ function generateUniqueID() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
-function calculateCartBill(cart: unknown) {
+function calculateCartBill(cart: any[] = []): number {
   let totalBill = 0;
 
-  cart.forEach((item: unknown) => {
-    // Base dish price
-    let dishPrice = item.dish.price * item.quantity || 1;
+  for (const item of cart) {
+    const basePrice = item.portion?.price ?? item.dish.price;
 
-    // Portion price if applicable
-    let portionPrice = item?.portion ? item.portion.price * item.quantity : 0;
+    let extrasTotal = 0;
+    for (const ex of item.extras ?? []) {
+      extrasTotal += ex.price * ex.quantity;
+    }
 
-    // Extras price
-    let extrasPrice = item.extras.reduce(
-      (sum, extra) => sum + extra.price * extra.quantity,
-      0,
-    );
+    const lineTotal = (basePrice + extrasTotal) * item.quantity;
+    totalBill += lineTotal;
+  }
 
-    // Calculate total for the item
-    let itemTotal = (item?.portion ? portionPrice : dishPrice) + extrasPrice;
-
-    // Add to total bill
-    totalBill += itemTotal;
-  });
-
-  return totalBill || 0;
+  return totalBill;
 }
 
 function transformItemsToSimpleArray(itemsData) {
