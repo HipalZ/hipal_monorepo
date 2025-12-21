@@ -17,14 +17,15 @@ const gategoryNameFromId = async (id: string) => {
   return gategoryData?.name ?? "Unknown";
 };
 
-export function dateToTimestamp(dateStr: string) {
-  // dateStr expected format: "DD-MM-YYYY"
+export function startOfDayTimestamp(dateStr: string): number {
   const [day, month, year] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day, 0, 0, 0, 0).getTime();
+}
 
-  // JS Date months are 0-indexed → so we subtract 1 from month
-  const date = new Date(year, month - 1, day);
-
-  return date.getTime(); // timestamp in milliseconds
+// 23:59:59.999
+export function endOfDayTimestamp(dateStr: string): number {
+  const [day, month, year] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
 }
 
 const formatTime = (d) => {

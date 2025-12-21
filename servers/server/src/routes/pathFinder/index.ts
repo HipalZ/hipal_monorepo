@@ -4,7 +4,8 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import {
-  dateToTimestamp,
+  endOfDayTimestamp,
+  startOfDayTimestamp,
   transformToIntegraFormat,
 } from "../../utils/pathfinder";
 import { respond } from "../../utils/response";
@@ -23,10 +24,10 @@ const pathFinderRouter = new Hono().get(
   async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
-      const { businessId, from, to , pageNumber} = c.req.query();
+      const { businessId, from, to, pageNumber } = c.req.query();
 
-      const fromDate = dateToTimestamp(from);
-      const toDate = dateToTimestamp(to);
+      const fromDate = startOfDayTimestamp(from);
+      const toDate = endOfDayTimestamp(to);
       const page = Number(pageNumber) || 1;
       const pageSize = 40; // You can adjust the page size as needed
       const skip = (page - 1) * pageSize;
@@ -37,7 +38,10 @@ const pathFinderRouter = new Hono().get(
           $gte: fromDate,
           $lte: toDate,
         },
-      }).sort({ billInvoice: 1 }).skip(skip).limit(pageSize);
+      })
+        .sort({ billInvoice: 1 })
+        .skip(skip)
+        .limit(pageSize);
 
       const data = await transformToIntegraFormat(payments);
 
