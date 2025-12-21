@@ -423,7 +423,7 @@ function calculateCartBill(cart: unknown) {
 
     // Extras price
     let extrasPrice = item.extras.reduce(
-      (sum, extra) => sum + extra.price * extra.quantity || 1,
+      (sum, extra) => sum + extra.price * extra.quantity,
       0,
     );
 
@@ -434,7 +434,7 @@ function calculateCartBill(cart: unknown) {
     totalBill += itemTotal;
   });
 
-  return totalBill;
+  return totalBill || 0;
 }
 
 function transformItemsToSimpleArray(itemsData) {
