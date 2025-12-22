@@ -1,22 +1,22 @@
 import { apiRpc } from "@hi/common";
-import type { IBillData } from "../types/hiClientzData.ts";
-import { useError } from "../store/useError.ts";
 import {
+  type QueryObserverResult,
+  type UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  type UseQueryResult,
-  type QueryObserverResult,
 } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router-dom";
-import { useOrderStore } from "../store/useOrderData.ts";
-import { useHiClientZ } from "../store/useHiClientzData.ts";
 import toast from "react-hot-toast";
-import type {
-  SplitBillPayload,
-  ItemWiseSplitPayload,
-} from "../types/split.types.ts";
+import { useNavigate, useParams } from "react-router-dom";
+import { useError } from "../store/useError.ts";
+import { useHiClientZ } from "../store/useHiClientzData.ts";
+import { useOrderStore } from "../store/useOrderData.ts";
 import type { ApiResponse } from "../types/api.types.ts";
+import type { IBillData } from "../types/hiClientzData.ts";
+import type {
+  ItemWiseSplitPayload,
+  SplitBillPayload,
+} from "../types/split.types.ts";
 
 type BillResponse = IBillData | IBillData[] | undefined;
 
@@ -48,11 +48,12 @@ export const useGetBill = (): UseGetBillResult => {
         generatedBy: userData.name,
       },
     });
+    console.log("response", response);
 
     if (response.status === 401 || response.status === 403) {
       setOpenErrorModal(true);
       setError("You are not authorized to perform this action");
-      return undefined;
+      return {};
     }
 
     if (response.status === 400 || response.status === 404) {
@@ -60,7 +61,7 @@ export const useGetBill = (): UseGetBillResult => {
       if (isBillSplit) {
         navigate(`/${businessId}/alerts`);
       }
-      return undefined;
+      return {};
     }
 
     const res = await response.json();

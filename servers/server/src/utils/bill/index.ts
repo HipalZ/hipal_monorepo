@@ -122,7 +122,7 @@ function calculateBillTotals(kots: KotOrderTypes[]): {
 
         // Line total for this item
         const lineTotal = (basePrice + extrasTotal) * item.quantity;
-        totalDishTotal += lineTotal;
+        totalDishTotal += Number(lineTotal?.toFixed(2));
 
         // Determine GST percentage (prefer gst field)
         const gstPercent = item.dish.gst || 0;

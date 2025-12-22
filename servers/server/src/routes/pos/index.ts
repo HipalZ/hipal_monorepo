@@ -38,6 +38,7 @@ import {
   generateBillInvoice,
   generateSplitBillInvoice,
 } from "../../services/bill";
+import calculateSubtotal from "../../services/calculateSubtotal";
 import {
   applyCoinToVariantBill,
   applyCouponToVariantBill,
@@ -69,7 +70,7 @@ import {
 } from "../../utils/bill";
 import type { Item } from "../../utils/billTypes";
 import { executePosHandler } from "../../utils/executePoshandlers.ts";
-import { calculateCartBill, convertToPetpoojaCart } from "../../utils/helper";
+import { convertToPetpoojaCart } from "../../utils/helper";
 import { sendBillPrintEvent, sendKOTPrintEvent } from "../../utils/kot";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 import { respond } from "../../utils/response";
@@ -194,21 +195,18 @@ const saveOrder = async (
     null,
     session,
   );
-  const totalBill = calculateCartBill(internalCart);
+  const calSubTotal = await calculateSubtotal(tableName, businessId, session);
   await Table.findOneAndUpdate(
     {
       businessId: businessId,
       name: tableName,
     },
     {
-      $inc: {
-        totalItemCount: internalCart.length,
-        currentTableAmount: totalBill,
-      },
       $set: {
         status: "ACTIVE",
         hiCode: hiCode,
         date: Date.now(),
+        currentTableAmount: calSubTotal,
       },
     },
     {
@@ -416,6 +414,16 @@ const posRouter = new Hono()
         if (!tableSession) {
           throw new Error("Table session not found");
         }
+
+        await Table.updateOne(
+          { name: tableSession.tableName, businessId: tableSession.businessId },
+          {
+            $set: {
+              currentTableAmount: totalDishTotal,
+            },
+          },
+          { session },
+        );
 
         return c.json(
           {
@@ -1185,21 +1193,22 @@ const posRouter = new Hono()
             null,
             session,
           );
-          const totalBill = calculateCartBill(internalCart);
+          const calSubTotal = await calculateSubtotal(
+            tableInfo.name,
+            businessId,
+            session,
+          );
           await Table.findOneAndUpdate(
             {
               businessId: businessId,
               name: tableInfo.name,
             },
             {
-              $inc: {
-                totalItemCount: internalCart.length,
-                currentTableAmount: totalBill,
-              },
               $set: {
                 status: "ACTIVE",
                 hiCode: hiCode,
                 date: Date.now(),
+                currentTableAmount: calSubTotal,
               },
             },
             {
@@ -1239,22 +1248,24 @@ const posRouter = new Hono()
           tableInfo?.editedBy?.toString(),
           session,
         );
-        const totalBill = calculateCartBill(internalCart);
+        const calSubTotal = await calculateSubtotal(
+          tableInfo.name,
+          businessId,
+          session,
+        );
+
         await Table.findOneAndUpdate(
           {
             businessId: businessId,
             name: tableInfo.name,
           },
           {
-            $inc: {
-              totalItemCount: internalCart.length,
-              currentTableAmount: totalBill,
-            },
             $set: {
               status: "ACTIVE",
               date: Date.now(),
               edited: false,
               editedBy: null,
+              currentTableAmount: calSubTotal,
             },
           },
           {
