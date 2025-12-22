@@ -1,13 +1,11 @@
-import { Payment } from "@hi/db-models";
+import { OutLetInfo, Payment } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import {
-  endOfDayTimestamp,
-  startOfDayTimestamp,
-  transformToIntegraFormat,
-} from "../../utils/pathfinder";
+
+import { getBillingRange } from "../../utils/businessBillingTime";
+import { transformToIntegraFormat } from "../../utils/pathfinder";
 import { respond } from "../../utils/response";
 
 const pathFinderRouter = new Hono().get(
@@ -26,8 +24,17 @@ const pathFinderRouter = new Hono().get(
     return runInTransaction(async (session) => {
       const { businessId, from, to, pageNumber } = c.req.query();
 
-      const fromDate = startOfDayTimestamp(from);
-      const toDate = endOfDayTimestamp(to);
+      const outLetInfo = await OutLetInfo.findOne({
+        businessId,
+      });
+
+      const { fromTs, toTs } = getBillingRange(
+        from,
+        to,
+        outLetInfo?.startBillTime,
+      );
+      console.log("startTimestamp", fromTs);
+      console.log("endTimestamp", toTs);
       const page = Number(pageNumber) || 1;
       const pageSize = 40; // You can adjust the page size as needed
       const skip = (page - 1) * pageSize;
@@ -35,8 +42,8 @@ const pathFinderRouter = new Hono().get(
       const payments = await Payment.find({
         businessId,
         date: {
-          $gte: fromDate,
-          $lte: toDate,
+          $gte: fromTs,
+          $lte: toTs,
         },
       })
         .sort({ billInvoice: 1 })
