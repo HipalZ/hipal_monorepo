@@ -1,22 +1,22 @@
-import { OutLetInfo, Payment } from "@hi/db-models";
-import { runInTransaction } from "@hi/utils";
-import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
-import { z } from "zod";
+import { OutLetInfo, Payment } from '@hi/db-models';
+import { runInTransaction } from '@hi/utils';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import { z } from 'zod';
 
-import { getBillingRange } from "../../utils/businessBillingTime";
-import { transformToIntegraFormat } from "../../utils/pathfinder";
-import { respond } from "../../utils/response";
+import { getBillingRange } from '../../utils/businessBillingTime';
+import { transformToIntegraFormat } from '../../utils/pathfinder';
+import { respond } from '../../utils/response';
 
 const pathFinderRouter = new Hono().get(
-  "/txns",
+  '/txns',
   zValidator(
-    "query",
+    'query',
     z.object({
       businessId: z.string().min(1).max(24),
       from: z.string().min(1).max(50),
       to: z.string().min(1).max(50),
-      pageNumber: z.string().optional().default("1"),
+      pageNumber: z.string().optional().default('1'),
     }),
   ),
   async (c) => {
@@ -28,15 +28,11 @@ const pathFinderRouter = new Hono().get(
         businessId,
       });
 
-      const { fromTs, toTs } = getBillingRange(
-        from,
-        to,
-        outLetInfo?.startBillTime,
-      );
-      console.log("startTimestamp", fromTs);
-      console.log("endTimestamp", toTs);
+      const { fromTs, toTs } = getBillingRange(from, to, outLetInfo?.startBillTime);
+      console.log('startTimestamp', fromTs);
+      console.log('endTimestamp', toTs);
       const page = Number(pageNumber) || 1;
-      const pageSize = 100; // You can adjust the page size as needed
+      const pageSize = 150; // You can adjust the page size as needed
       const skip = (page - 1) * pageSize;
 
       const payments = await Payment.find({
@@ -52,7 +48,7 @@ const pathFinderRouter = new Hono().get(
 
       const data = await transformToIntegraFormat(payments);
 
-      return respond(c, "fetched successfully", false, 200, data);
+      return respond(c, 'fetched successfully', false, 200, data);
     });
   },
 );
