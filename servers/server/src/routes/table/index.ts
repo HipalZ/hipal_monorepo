@@ -35,9 +35,9 @@ import {
   generateBillInvoice,
   generateSplitBillInvoice,
 } from "../../services/bill";
+import calculateSubtotal from "../../services/calculateSubtotal";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { executePosHandler } from "../../utils/executePoshandlers.ts";
-import { calculateCartBill } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
 import { respond } from '../../utils/response';
@@ -1371,8 +1371,13 @@ const tableRouter = new Hono()
             );
 
             for (const kot of kotOrders) {
-              totalBillCount += calculateCartBill(kot.cart || []);
-              totalItemCount += kot.cart?.length || 0;
+              const calSubTotal = await calculateSubtotal(
+                kot.tableName || "",
+                kot.businessId,
+                session,
+              );
+
+              totalBillCount += calSubTotal;
             }
           }
 
@@ -1473,8 +1478,8 @@ const tableRouter = new Hono()
               mergedBy: staff._id,
               mergeTableIds: fromTableIds,
               userIds: userIds,
-              currentTableAmount: totalBillCount + (destTable.currentTableAmount || 0),
-              totalItemCount: totalItemCount + (destTable.totalItemCount || 0),
+              currentTableAmount:
+                totalBillCount + (destTable.currentTableAmount || 0),
             },
             { session },
           );
@@ -1880,9 +1885,6 @@ const tableRouter = new Hono()
 
             const { _id, ...newKotOrderData } = kotOrder.toObject();
 
-            const calculateBillDishIds = removedItems.filter((item) => !item.dish.isDeleted);
-            const totalBill = calculateCartBill(calculateBillDishIds);
-
             await KotOrder.create(
               [
                 {
@@ -1931,28 +1933,30 @@ const tableRouter = new Hono()
               );
             }
 
-            await Table.findByIdAndUpdate(
-              fromTableId,
-              {
-                $inc: {
-                  currentTableAmount: -totalBill,
-                  totalItemCount: -removedItems.length,
-                },
-              },
-              { session },
+            const calSubTotalSourceTable = await calculateSubtotal(
+              sourceTable.name,
+              sourceTable.businessId,
+              session,
             );
+            const calSubTotalDestTable = await calculateSubtotal(
+              destinationTable.name,
+              destinationTable.businessId,
+              session,
+            );
+            await Table.findByIdAndUpdate(sourceTable._id, {
+              $set: {
+                currentTableAmount: calSubTotalSourceTable,
+              },
+            });
 
             await Table.findByIdAndUpdate(
               toTableId,
               {
-                $inc: {
-                  currentTableAmount: totalBill,
-                  totalItemCount: removedItems.length,
-                },
                 hiCode: destinationTableSession?.hiCode || hiCode,
                 status: 'ACTIVE',
                 isTransfer: true,
-                transferType: 'ITEM',
+                transferType: "ITEM",
+                currentTableAmount: calSubTotalDestTable,
               },
               { session },
             );

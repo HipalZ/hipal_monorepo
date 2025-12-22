@@ -35,6 +35,7 @@ import {
   generateBillInvoice,
   generateSplitBillInvoice,
 } from "../../services/bill";
+import calculateSubtotal from "../../services/calculateSubtotal";
 import {
   applyCoinToVariantBill,
   applyCouponToVariantBill,
@@ -63,14 +64,14 @@ import {
   groupItemsByGST,
   updateSplitTableSession,
   updateTableSession,
-} from '../../utils/bill';
-import type { Item } from '../../utils/billTypes';
-import { executePosHandler } from '../../utils/executePoshandlers.ts';
-import { calculateCartBill, convertToPetpoojaCart } from '../../utils/helper';
-import { sendBillPrintEvent, sendKOTPrintEvent } from '../../utils/kot';
-import { posApiPaths } from '../../utils/posConfig/petPooja';
-import { respond } from '../../utils/response';
-const admin = require('firebase-admin');
+} from "../../utils/bill";
+import type { Item } from "../../utils/billTypes";
+import { executePosHandler } from "../../utils/executePoshandlers.ts";
+import { convertToPetpoojaCart } from "../../utils/helper";
+import { sendBillPrintEvent, sendKOTPrintEvent } from "../../utils/kot";
+import { posApiPaths } from "../../utils/posConfig/petPooja";
+import { respond } from "../../utils/response";
+const admin = require("firebase-admin");
 export const generateTenDigitCode = (): string => {
   const min = 1000000000; // Minimum 10-digit number
   const max = 9999999999; // Maximum 10-digit number
@@ -174,22 +175,31 @@ const saveOrder = async (
   hiCode: string,
   session: ClientSession,
 ) => {
-  const resData = await saveKotOrder(tableName, businessId, customerName, customerPhone, internalCart, userId, true, tableId, false, null, session);
-  const totalBill = calculateCartBill(internalCart);
+  const resData = await saveKotOrder(
+    tableName,
+    businessId,
+    customerName,
+    customerPhone,
+    internalCart,
+    userId,
+    true,
+    tableId,
+    false,
+    null,
+    session,
+  );
+  const calSubTotal = await calculateSubtotal(tableName, businessId, session);
   await Table.findOneAndUpdate(
     {
       businessId: businessId,
       name: tableName,
     },
     {
-      $inc: {
-        totalItemCount: internalCart.length,
-        currentTableAmount: totalBill,
-      },
       $set: {
         status: 'ACTIVE',
         hiCode: hiCode,
         date: Date.now(),
+        currentTableAmount: calSubTotal,
       },
     },
     {
@@ -380,6 +390,16 @@ const posRouter = new Hono()
         if (!tableSession) {
           return respond(c, 'Table session not found', true, 404, {});
         }
+
+        await Table.updateOne(
+          { name: tableSession.tableName, businessId: tableSession.businessId },
+          {
+            $set: {
+              currentTableAmount: totalDishTotal,
+            },
+          },
+          { session },
+        );
 
         return c.json(
           {
@@ -1113,21 +1133,22 @@ const posRouter = new Hono()
             null,
             session,
           );
-          const totalBill = calculateCartBill(internalCart);
+          const calSubTotal = await calculateSubtotal(
+            tableInfo.name,
+            businessId,
+            session,
+          );
           await Table.findOneAndUpdate(
             {
               businessId: businessId,
               name: tableInfo.name,
             },
             {
-              $inc: {
-                totalItemCount: internalCart.length,
-                currentTableAmount: totalBill,
-              },
               $set: {
                 status: 'ACTIVE',
                 hiCode: hiCode,
                 date: Date.now(),
+                currentTableAmount: calSubTotal,
               },
             },
             {
@@ -1167,22 +1188,24 @@ const posRouter = new Hono()
           tableInfo?.editedBy?.toString(),
           session,
         );
-        const totalBill = calculateCartBill(internalCart);
+        const calSubTotal = await calculateSubtotal(
+          tableInfo.name,
+          businessId,
+          session,
+        );
+
         await Table.findOneAndUpdate(
           {
             businessId: businessId,
             name: tableInfo.name,
           },
           {
-            $inc: {
-              totalItemCount: internalCart.length,
-              currentTableAmount: totalBill,
-            },
             $set: {
               status: 'ACTIVE',
               date: Date.now(),
               edited: false,
               editedBy: null,
+              currentTableAmount: calSubTotal,
             },
           },
           {

@@ -1,18 +1,23 @@
 import { BusinessPosConfig, Kitchen, KotOrder, PasswordManager, PaymentAlert, Table, User, UserAnalytic, UserSession } from '@hi/db-models';
 import type { UserSessionSchemaType } from '@hi/db-models/src/validators';
 
-import { kotOrderAcceptSchema } from '@hi/db-models/src/validators';
-import { runInTransaction } from '@hi/utils';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-import { nanoid } from 'nanoid';
-import { z } from 'zod';
-import { checkOriginBillIsSplit } from '../../services/splitBill';
-import { pushToken } from '../../services/token';
-import { calculateCartBill } from '../../utils/helper';
-import { convertToHipalzCart, deleteKOTPrintEvent, sendKOTPrintEvent, sendReKOTPrintEvent } from '../../utils/kot';
-import { respond } from '../../utils/response';
-import { generateTenDigitCode, saveKotOrder } from '../pos';
+import { kotOrderAcceptSchema } from "@hi/db-models/src/validators";
+import { runInTransaction } from "@hi/utils";
+import { zValidator } from "@hono/zod-validator";
+import { Hono } from "hono";
+import { nanoid } from "nanoid";
+import { z } from "zod";
+import calculateSubtotal from "../../services/calculateSubtotal";
+import { checkOriginBillIsSplit } from "../../services/splitBill";
+import { pushToken } from "../../services/token";
+import {
+  convertToHipalzCart,
+  deleteKOTPrintEvent,
+  sendKOTPrintEvent,
+  sendReKOTPrintEvent,
+} from "../../utils/kot";
+import { respond } from "../../utils/response";
+import { generateTenDigitCode, saveKotOrder } from "../pos";
 
 const kotRouter = new Hono()
   .get(
@@ -304,20 +309,21 @@ const kotRouter = new Hono()
             null,
             session,
           );
-          const totalBill = calculateCartBill(internalCart);
+          const calSubTotal = await calculateSubtotal(
+            tableName,
+            businessId,
+            session,
+          );
           await Table.findOneAndUpdate(
             {
               businessId: businessId,
               name: tableName,
             },
             {
-              $inc: {
-                totalItemCount: internalCart.length,
-                currentTableAmount: totalBill,
-              },
               $set: {
                 status: 'ACTIVE',
                 hiCode: hiCode,
+                currentTableAmount: calSubTotal,
                 date: Date.now(),
               },
             },
@@ -365,22 +371,23 @@ const kotRouter = new Hono()
           tableInfo?.editedBy?.toString(),
           session,
         );
-        const totalBill = calculateCartBill(internalCart);
+        const calSubTotal = await calculateSubtotal(
+          tableName,
+          businessId,
+          session,
+        );
         await Table.findOneAndUpdate(
           {
             businessId: businessId,
             name: tableName,
           },
           {
-            $inc: {
-              totalItemCount: internalCart.length,
-              currentTableAmount: totalBill,
-            },
             $set: {
               status: 'ACTIVE',
               date: Date.now(),
               edited: false,
               editedBy: null,
+              currentTableAmount: calSubTotal,
             },
           },
           {
@@ -619,10 +626,15 @@ const kotRouter = new Hono()
             await KotOrder.updateOne({ _id: kotId }, { $push: { cart: { $each: deletedItems } } }, { session });
           }
 
-          const deletedTotal = calculateCartBill(deletedItems);
+          const calSubTotal = await calculateSubtotal(
+            tableSession.tableName,
+            tableSession.businessId,
+            session,
+          );
+          console.log("calSubTotal", calSubTotal);
           await Table.updateOne(
             { businessId: kotDoc.businessId, name: kotDoc.tableName },
-            { $inc: { currentTableAmount: -deletedTotal } },
+            { $set: { currentTableAmount: calSubTotal } },
             { session },
           );
 
@@ -736,7 +748,11 @@ const kotRouter = new Hono()
           kot.acceptedBy = performBy;
           await kot.save();
 
-          const totalBill = calculateCartBill(kot.cart);
+          const calSubTotal = await calculateSubtotal(
+            kot?.tableName || "",
+            kot.businessId,
+            session,
+          );
 
           await Table.findOneAndUpdate(
             {
@@ -744,13 +760,10 @@ const kotRouter = new Hono()
               name: kot.tableName,
             },
             {
-              $inc: {
-                totalItemCount: kot.cart.length,
-                currentTableAmount: totalBill,
-              },
               $set: {
                 status: 'ACTIVE',
                 date: Date.now(),
+                currentTableAmount: calSubTotal,
               },
             },
             {

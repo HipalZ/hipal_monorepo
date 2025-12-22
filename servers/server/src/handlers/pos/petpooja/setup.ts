@@ -523,12 +523,6 @@ async function petPoojaPosSyncMenuHandler(payload: {
 
       tableSyncCount += 1;
 
-      await BusinessPosConfig.findOneAndUpdate(
-        { businessId },
-        { $set: { defaultTableName: tableDoc.name } },
-        { session },
-      );
-
       // make sure zone has reference
       await Zone.findOneAndUpdate(
         { zoneId: zoneIdToLink },
