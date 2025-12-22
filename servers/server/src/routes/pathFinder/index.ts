@@ -36,7 +36,7 @@ const pathFinderRouter = new Hono().get(
       console.log("startTimestamp", fromTs);
       console.log("endTimestamp", toTs);
       const page = Number(pageNumber) || 1;
-      const pageSize = 40; // You can adjust the page size as needed
+      const pageSize = 100; // You can adjust the page size as needed
       const skip = (page - 1) * pageSize;
 
       const payments = await Payment.find({
