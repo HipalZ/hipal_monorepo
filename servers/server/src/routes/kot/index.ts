@@ -1,23 +1,18 @@
 import { BusinessPosConfig, Kitchen, KotOrder, PasswordManager, PaymentAlert, Table, User, UserAnalytic, UserSession } from '@hi/db-models';
 import type { UserSessionSchemaType } from '@hi/db-models/src/validators';
 
-import { kotOrderAcceptSchema } from "@hi/db-models/src/validators";
-import { runInTransaction } from "@hi/utils";
-import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
-import { nanoid } from "nanoid";
-import { z } from "zod";
-import calculateSubtotal from "../../services/calculateSubtotal";
-import { checkOriginBillIsSplit } from "../../services/splitBill";
-import { pushToken } from "../../services/token";
-import {
-  convertToHipalzCart,
-  deleteKOTPrintEvent,
-  sendKOTPrintEvent,
-  sendReKOTPrintEvent,
-} from "../../utils/kot";
-import { respond } from "../../utils/response";
-import { generateTenDigitCode, saveKotOrder } from "../pos";
+import { kotOrderAcceptSchema } from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import { nanoid } from 'nanoid';
+import { z } from 'zod';
+import calculateSubtotal from '../../services/calculateSubtotal';
+import { checkOriginBillIsSplit } from '../../services/splitBill';
+import { pushToken } from '../../services/token';
+import { convertToHipalzCart, deleteKOTPrintEvent, sendKOTPrintEvent, sendReKOTPrintEvent } from '../../utils/kot';
+import { respond } from '../../utils/response';
+import { generateTenDigitCode, saveKotOrder } from '../pos';
 
 const kotRouter = new Hono()
   .get(
@@ -196,7 +191,7 @@ const kotRouter = new Hono()
         tableName: z.string().min(1).max(100),
         businessId: z.string().min(24).max(24),
         itemName: z.string().min(1).max(100),
-        itemPrice: z.number().min(1).max(2000).positive(),
+        itemPrice: z.number().positive(),
         itemQuantity: z.number().min(1).max(100),
         kitchenId: z.string().min(24).max(24).optional(),
       }),
@@ -204,15 +199,7 @@ const kotRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const {
-          staffId,
-          tableName,
-          businessId,
-          itemName,
-          itemPrice,
-          itemQuantity,
-          kitchenId = null,
-        } = await c.req.json();
+        const { staffId, tableName, businessId, itemName, itemPrice, itemQuantity, kitchenId = null } = await c.req.json();
         const tableInfo = await Table.findOne({
           businessId: businessId,
           name: tableName,
@@ -309,11 +296,7 @@ const kotRouter = new Hono()
             null,
             session,
           );
-          const calSubTotal = await calculateSubtotal(
-            tableName,
-            businessId,
-            session,
-          );
+          const calSubTotal = await calculateSubtotal(tableName, businessId, session);
           await Table.findOneAndUpdate(
             {
               businessId: businessId,
@@ -371,11 +354,7 @@ const kotRouter = new Hono()
           tableInfo?.editedBy?.toString(),
           session,
         );
-        const calSubTotal = await calculateSubtotal(
-          tableName,
-          businessId,
-          session,
-        );
+        const calSubTotal = await calculateSubtotal(tableName, businessId, session);
         await Table.findOneAndUpdate(
           {
             businessId: businessId,
@@ -529,13 +508,7 @@ const kotRouter = new Hono()
 
         if (tableSession) {
           if (tableSession.isDiscountApplied) {
-            return respond(
-              c,
-              "Discount already applied for this table please remove it first",
-              true,
-              400,
-              {},
-            );
+            return respond(c, 'Discount already applied for this table please remove it first', true, 400, {});
           }
         }
 
@@ -626,12 +599,8 @@ const kotRouter = new Hono()
             await KotOrder.updateOne({ _id: kotId }, { $push: { cart: { $each: deletedItems } } }, { session });
           }
 
-          const calSubTotal = await calculateSubtotal(
-            tableSession.tableName,
-            tableSession.businessId,
-            session,
-          );
-          console.log("calSubTotal", calSubTotal);
+          const calSubTotal = await calculateSubtotal(tableSession.tableName, tableSession.businessId, session);
+          console.log('calSubTotal', calSubTotal);
           await Table.updateOne(
             { businessId: kotDoc.businessId, name: kotDoc.tableName },
             { $set: { currentTableAmount: calSubTotal } },
@@ -725,13 +694,7 @@ const kotRouter = new Hono()
 
           if (tableSession) {
             if (tableSession.isDiscountApplied) {
-              return respond(
-                c,
-                "Discount already applied for this table please remove it first",
-                true,
-                400,
-                {},
-              );
+              return respond(c, 'Discount already applied for this table please remove it first', true, 400, {});
             }
           }
           const orderAlreadyExist = await PaymentAlert.findOne({
@@ -748,11 +711,7 @@ const kotRouter = new Hono()
           kot.acceptedBy = performBy;
           await kot.save();
 
-          const calSubTotal = await calculateSubtotal(
-            kot?.tableName || "",
-            kot.businessId,
-            session,
-          );
+          const calSubTotal = await calculateSubtotal(kot?.tableName || '', kot.businessId, session);
 
           await Table.findOneAndUpdate(
             {
