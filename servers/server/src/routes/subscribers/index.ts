@@ -335,27 +335,94 @@ const subsCriberRouter = new Hono()
         businessId: z.string({ message: "businessId is required" }),
       }),
     ),
+    zValidator(
+      "query",
+      z.object({
+        page: z.string().optional().default("1"),
+        limit: z.string().optional().default("20"),
+      }),
+    ),
 
     async (c) => {
       const { businessId } = c.req.param();
-      const subscribers = await Subscriber.find({
+      const { page, limit } = c.req.query();
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const skip = (pageNum - 1) * limitNum;
+
+      const activeQuery = {
         isDeleted: false,
         businessId,
-      })
-        .sort({ whatsappMsgUnseenCount: -1 })
-        .select("userId businessId -_id whatsappMsgUnseenCount")
-        .populate({
-          path: "userId",
-          select: "phone name",
-        });
+        whatsappMsgUnseenCount: { $gt: 0 },
+        userId: { $ne: null },
+      };
+
+      const inactiveQuery = {
+        isDeleted: false,
+        businessId,
+        whatsappMsgUnseenCount: 0,
+        userId: { $ne: null },
+      };
+
+      const totalActive = await Subscriber.countDocuments(activeQuery);
+      const totalInactive = await Subscriber.countDocuments(inactiveQuery);
+      const totalSubscribers = totalActive + totalInactive;
+
+      let subscribers = [];
+
+      if (pageNum === 1) {
+        // Page 1: Fetch ALL active + limit number of inactive
+        const activeSubscribers = await Subscriber.find(activeQuery)
+          .sort({ whatsappMsgUnseenCount: -1 })
+          .select("userId businessId whatsappMsgUnseenCount lastUserMessageAt")
+          .populate({
+            path: "userId",
+            select: "phone name",
+          });
+
+        const inactiveSubscribers = await Subscriber.find(inactiveQuery)
+          .sort({ updatedAt: -1 }) // Sort inactive by recent activity/update if possible, else default
+          .select("userId businessId whatsappMsgUnseenCount lastUserMessageAt")
+          .populate({
+            path: "userId",
+            select: "phone name",
+          })
+          .limit(limitNum);
+
+        subscribers = [...activeSubscribers, ...inactiveSubscribers];
+      } else {
+        // Page > 1: Fetch only inactive, utilizing skip logic relative to inactive list
+        // Note: Page 1 took "limit" count of inactive.
+        // So for Page 2, we skip "limit" (which was page 1's share of inactive).
+        // skip = (2-1)*limit = limit. Correct.
+        subscribers = await Subscriber.find(inactiveQuery)
+          .sort({ updatedAt: -1 })
+          .select("userId businessId whatsappMsgUnseenCount lastUserMessageAt")
+          .populate({
+            path: "userId",
+            select: "phone name",
+          })
+          .skip(skip)
+          .limit(limitNum);
+      }
+
       const validSubscribers = subscribers.filter(
         (subscriber) => subscriber.userId !== null,
       );
+
       return c.json(
         {
           message: "Subscribers fetched successfully",
           err: false,
           data: validSubscribers,
+          pagination: {
+            currentPage: pageNum,
+            // Calculate total pages based on Inactive count, treating Active as page 1 bonus? 
+            // Better: Just total / limit approximation for scrollbar.
+            totalPages: Math.ceil(totalSubscribers / limitNum),
+            totalSubscribers,
+            hasMore: validSubscribers.length > 0 && (skip + limitNum < totalInactive || pageNum === 1),
+          },
         },
         200,
       );

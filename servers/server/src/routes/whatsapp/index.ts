@@ -81,9 +81,8 @@ interface AxiosError {
 const getCampaignName = (templateName: string): string => {
   const now = new Date();
   const istTime = new Date(now.getTime() + 330 * 60 * 1000); // IST is UTC+5:30
-  const formattedDate = `${istTime.getUTCDate()}-${
-    istTime.getUTCMonth() + 1
-  }_${istTime.getUTCHours()}:${istTime.getUTCMinutes()}`;
+  const formattedDate = `${istTime.getUTCDate()}-${istTime.getUTCMonth() + 1
+    }_${istTime.getUTCHours()}:${istTime.getUTCMinutes()}`;
   return `${templateName}_${formattedDate}`;
 };
 
@@ -1184,8 +1183,7 @@ const whatsappRouter = new Hono()
         const ninetyDaysAgoTimestamp = currentTimestamp - 60 * 24 * 60 * 60;
 
         const getWhatAppTemplate = await axios.get(
-          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${
-            whatsAppConfigData.whatsAppAccountId
+          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${whatsAppConfigData.whatsAppAccountId
           }/template_analytics?start=${ninetyDaysAgoTimestamp}&end=${currentTimestamp}&granularity=daily&metric_types=clicked,delivered,read,sent,cost&template_ids=${[
             templateById?.templateId,
           ]}&limit=5000`,
@@ -2016,21 +2014,46 @@ const whatsappRouter = new Hono()
 
     async (c) => {
       const body = await c.req.json();
-      const { text, phoneNumber, businessId, isOwner, userId, ownerId } = body;
+      const {
+        text,
+        phoneNumber,
+        businessId,
+        isOwner,
+        userId,
+        ownerId,
+        type = "text",
+        mediaUrl,
+        caption,
+        filename,
+      } = body;
       const config = await WhatsAppBusinessConfig.findOne({
         businessId,
       });
 
+      let payload: any = {
+        messaging_product: "whatsapp",
+        to: phoneNumber?.toString(),
+        type: type,
+      };
+
+      if (type === "text") {
+        payload.text = { body: text };
+      } else if (type === "image") {
+        payload.image = { link: mediaUrl, caption: caption || text };
+      } else if (type === "video") {
+        payload.video = { link: mediaUrl, caption: caption || text };
+      } else if (type === "document") {
+        payload.document = {
+          link: mediaUrl,
+          caption: caption || text,
+          filename: filename,
+        };
+      }
+
       await axios({
         method: "POST",
         url: `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages?access_token=${config?.token}`,
-        data: {
-          messaging_product: "whatsapp",
-          to: phoneNumber?.toString(),
-          text: {
-            body: text,
-          },
-        },
+        data: payload,
         headers: {
           "Content-Type": "application/json",
         },
@@ -2040,9 +2063,13 @@ const whatsappRouter = new Hono()
         businessId,
         date: Date.now(),
         message: text,
+        mediaUrl,
+        type,
         isOwner: true,
         userId: userId,
         ownerId: ownerId,
+        caption,
+        filename,
       });
       if (!saveOwnerChat) {
         return c.json({
@@ -2063,42 +2090,72 @@ const whatsappRouter = new Hono()
   .get(
     "/user-messages/:userId/:ownerId/:businessId",
 
+    zValidator(
+      "query",
+      z.object({
+        page: z.string().optional().default("1"),
+        limit: z.string().optional().default("20"),
+      }),
+    ),
+
     async (c) => {
       const { userId, ownerId, businessId } = c.req.param();
+      const { page, limit } = c.req.query();
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const skip = (pageNum - 1) * limitNum;
 
-      const userChats = await WhatsAppChat.find({
+      const totalMessages = await WhatsAppChat.countDocuments({
         userId,
         businessId,
         isDeleted: false,
       });
 
-      await WhatsAppChat.updateMany(
-        {
-          userId,
-          businessId,
-          seen: false,
-        },
-        {
-          $set: {
-            seen: true,
-          },
-        },
-      );
+      const userChats = await WhatsAppChat.find({
+        userId,
+        businessId,
+        isDeleted: false,
+      })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum);
 
-      await Subscriber.findOneAndUpdate(
-        {
-          userId: userId,
-          businessId,
-        },
-        {
-          whatsappMsgUnseenCount: 0,
-        },
-      );
+      // Only mark as seen if it's the first page (latest messages)
+      if (pageNum === 1) {
+        await WhatsAppChat.updateMany(
+          {
+            userId,
+            businessId,
+            seen: false,
+          },
+          {
+            $set: {
+              seen: true,
+            },
+          },
+        );
+
+        await Subscriber.findOneAndUpdate(
+          {
+            userId: userId,
+            businessId,
+          },
+          {
+            whatsappMsgUnseenCount: 0,
+          },
+        );
+      }
 
       return c.json({
         message: "Messages found",
         err: false,
-        data: userChats,
+        data: userChats, // Returns newest first
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(totalMessages / limitNum),
+          totalMessages,
+          hasMore: skip + limitNum < totalMessages,
+        },
       });
     },
   )

@@ -35,6 +35,7 @@ async function whatsAppChatHandler(
       },
       {
         $inc: { whatsappMsgUnseenCount: 1 },
+        $set: { lastUserMessageAt: Date.now() },
       },
       { new: true },
     );

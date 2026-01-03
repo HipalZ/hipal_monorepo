@@ -16,7 +16,7 @@ import type {
   WhatsAppTemplatePayload,
 } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -481,13 +481,15 @@ export const useSendWhatsappMessage = () => {
       const response = await res.json();
       return response;
     },
-    onSuccess: (response) => {
+    onSuccess: (response, variables) => {
       if (response.err) {
         toast.error(response?.message || "Failed to send message");
       } else {
         toast.success("Message sent successfully");
       }
-      // queryClient.invalidateQueries({ queryKey: ["fetchUserChats"] });
+      queryClient.invalidateQueries({
+        queryKey: ["fetchUserChatsInfinite", variables.userId]
+      });
       queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
     },
     onError: (error) => {
@@ -540,29 +542,65 @@ export const useFetchAllUsers = () => {
   return { fetchAllUserMessages };
 };
 
-export const useFetchUserChats = () => {
-  const { setUserChat, selectedUser } = useWhatsappTempStore((s) => ({
-    setUserChat: s.setUserChat,
+export const useFetchSubscribersInfinite = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  return useInfiniteQuery({
+    queryKey: ["fetchSubscribersInfinite", businessId],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await apiRpc.subscribers.all[":businessId"].$get({
+        param: { businessId },
+        query: {
+          page: pageParam.toString(),
+          limit: "20",
+        },
+      });
+      const data = await response.json();
+      return data;
+    },
+    getNextPageParam: (lastPage: any) => {
+      const { currentPage, totalPages } = lastPage.pagination;
+      return currentPage < totalPages ? currentPage + 1 : undefined;
+    },
+    initialPageParam: 1,
+    enabled: !!businessId,
+  });
+};
+
+export const useFetchUserChatsInfinite = () => {
+  const { selectedUser } = useWhatsappTempStore((s) => ({
     selectedUser: s.selectedUser,
   }));
-  const ownerId = useOwnerLogin((s) => s.user?._id);
   const businessId = useBusinessData((s) => s.businessData?._id);
-  const fetchUserChats = async () => {
-    const response = await apiRpc.whatsapp["user-messages"][":userId"][
-      ":ownerId"
-    ][":businessId"].$get({
-      param: {
-        userId: selectedUser?._id?.toString(),
-        ownerId,
-        businessId,
-      },
-    });
-    const userMessages = await response.json();
-    setUserChat(userMessages?.data);
-    return userMessages;
-  };
+  const ownerId = useOwnerLogin((s) => s.user?._id);
 
-  return { fetchUserChats };
+  return useInfiniteQuery({
+    queryKey: ["fetchUserChatsInfinite", selectedUser?._id],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await apiRpc.whatsapp["user-messages"][":userId"][
+        ":ownerId"
+      ][":businessId"].$get({
+        param: {
+          userId: selectedUser?._id?.toString(),
+          ownerId,
+          businessId,
+        },
+        query: {
+          page: pageParam.toString(),
+          limit: "20",
+        },
+      });
+      const data = await response.json();
+      return data;
+    },
+    getNextPageParam: (lastPage: any) => {
+      const { currentPage, totalPages } = lastPage.pagination;
+      return currentPage < totalPages ? currentPage + 1 : undefined;
+    },
+    initialPageParam: 1,
+    enabled: !!selectedUser?._id,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
+  });
 };
 
 export const useSearchUserByPhone = () => {

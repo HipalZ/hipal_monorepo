@@ -25,6 +25,7 @@ export interface UserId {
   _id: string;
   name: string;
   phone: string;
+  lastUserMessageAt?: number;
 }
 
 export interface Subscriber {
