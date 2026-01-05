@@ -23,14 +23,11 @@ import { Separator } from "@/components/ui/separator";
 import { FailedKotListModal } from "@/components/zones/FailedKotListModal";
 import { cn } from "@/lib/utils";
 import { apiRpc } from "@hi/common";
-import { useQuery } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, IndianRupee, Printer } from "lucide-react";
-import { memo, useMemo, useState } from "react";
+import { AlertTriangle,  Printer } from "lucide-react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { BiRupee } from "react-icons/bi";
 import { MdPerson, MdTableBar } from "react-icons/md";
-import { useNavigate, useParams } from "react-router-dom";
 
 const MemoZones = () => {
   const params = useParams();

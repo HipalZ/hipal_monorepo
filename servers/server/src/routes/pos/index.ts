@@ -39,6 +39,7 @@ import {
   generateSplitBillInvoice,
 } from "../../services/bill";
 import calculateSubtotal from "../../services/calculateSubtotal";
+import assignKitchenToDish from "../../services/dishZoneKitchen";
 import {
   applyCoinToVariantBill,
   applyCouponToVariantBill,
@@ -1217,12 +1218,18 @@ const posRouter = new Hono()
             },
           );
 
+          const cart = await assignKitchenToDish(
+            tableInfo?.zoneId || "",
+            businessId,
+            internalCart,
+          );
+
           sendKOTPrintEvent({
             tableName: tableInfo.name,
             businessId,
             customerName: user.name as string,
             customerPhone: user.phone as string,
-            cart: internalCart,
+            cart: cart,
             acceptedBy: user.name as string,
             kotId: res?.kotId?.toString() ?? "",
             date: Date.now(),
@@ -1273,13 +1280,17 @@ const posRouter = new Hono()
             session,
           },
         );
-
+        const cart = await assignKitchenToDish(
+          tableInfo?.zoneId || "",
+          businessId,
+          internalCart,
+        );
         sendKOTPrintEvent({
           tableName: tableInfo.name,
           businessId,
           customerName: user.name as string,
           customerPhone: user.phone as string,
-          cart: internalCart,
+          cart: cart,
           acceptedBy: user.name as string,
           kotId: res?.kotId?.toString() ?? "",
           date: Date.now(),

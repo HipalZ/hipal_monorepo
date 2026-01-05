@@ -18,6 +18,7 @@ import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import calculateSubtotal from "../../services/calculateSubtotal";
+import assignKitchenToDish from "../../services/dishZoneKitchen";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { pushToken } from "../../services/token";
 import {
@@ -477,13 +478,23 @@ const kotRouter = new Hono()
         }
 
         const captainInfo = await User.findById(kot.acceptedBy);
+        const tableInfo = await Table.findOne({
+          businessId: kot.businessId,
+          name: kot.tableName,
+        });
+
+        const cart = await assignKitchenToDish(
+          tableInfo?.zoneId || "",
+          kot.businessId,
+          kot.cart,
+        );
 
         sendReKOTPrintEvent({
           tableName: kot?.tableName ?? "",
-          businessId: kot.businessId._id.toString(),
+          businessId: kot.businessId?._id?.toString() || "",
           customerName: kot.name || captainInfo?.name || "",
           customerPhone: kot.phone,
-          cart: kot.cart,
+          cart: cart,
           acceptedBy: captainInfo?.name || kot.name || "",
           kotId: kot.id.toString(),
           date: Date.now(),
@@ -552,6 +563,11 @@ const kotRouter = new Hono()
           tableName: kotDocs[0].tableName,
           businessId: kotDocs[0].businessId,
         })) as UserSessionSchemaType;
+
+        const tableInfo = await Table.findOne({
+          businessId: kotDocs[0].businessId,
+          name: tableSession.tableName,
+        }).session(session);
 
         const billAlreadySplit = checkOriginBillIsSplit(tableSession);
         if (billAlreadySplit) {
@@ -708,13 +724,18 @@ const kotRouter = new Hono()
           const captain = await User.findById(kotDoc.acceptedBy).session(
             session,
           );
+          const cart = await assignKitchenToDish(
+            tableInfo?.zoneId || "",
+            tableInfo?.businessId || "",
+            deletedItems.map((it) => ({ ...it, quantity: it.quantity })),
+          );
 
           deleteKOTPrintEvent({
             tableName: kotDoc.tableName,
             businessId: kotDoc.businessId,
             customerName: kotDoc.name,
             customerPhone: kotDoc.phone,
-            cart: deletedItems.map((it) => ({ ...it, quantity: it.quantity })),
+            cart: cart,
             deletedBy: user.name,
             acceptedBy: captain?.name || user.name,
             kotId: nanoid(10),
