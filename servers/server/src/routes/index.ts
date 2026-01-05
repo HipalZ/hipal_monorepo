@@ -53,6 +53,7 @@ import zonesAndTablesRouter from "./zonesAndTables";
 import googleSheetsRouter from "./googleSheets";
 import pathFinderRouter from "./pathFinder";
 import tokenRouter from "./token";
+import dishZoneKitchenRouter from "./dishZoneKitchen";
 
 ////
 const app = new Hono();
@@ -113,6 +114,7 @@ export const routes = app
   .route("/wa_chatbot_analytics", chatbotAnalyticsRouter)
   .route("/token", tokenRouter)
   .route("/path_finder", pathFinderRouter)
-  .route("/salon_pos", salonPosRouter);
+  .route("/salon_pos", salonPosRouter)
+  .route("/dish_zone_kitchen", dishZoneKitchenRouter)
 
 export type AppType = typeof routes;

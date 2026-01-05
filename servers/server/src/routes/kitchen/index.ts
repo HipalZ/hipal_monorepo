@@ -94,13 +94,7 @@ const kitchenRouter = new Hono()
         );
       }
 
-      if (menu.serviceType === "BASE") {
-        await addInTempMenuChanges(
-          "kitchen",
-          kitchen._id.toString(),
-          menu.businessId,
-        );
-      }
+     
 
       await Dish.updateMany(
         { _id: { $in: dishIds } },

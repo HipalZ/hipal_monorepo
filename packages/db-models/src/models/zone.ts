@@ -61,6 +61,12 @@ const zoneSchema = new mongoose.Schema<ZoneType>(
       required: false,
       default: false,
     },
+    kitchenIds: {
+      type: [ObjectId],
+      required: false,
+      ref: "Kitchen",
+      default: [],
+    },
   },
   {
     timestamps: true,

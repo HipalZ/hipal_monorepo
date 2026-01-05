@@ -23,6 +23,7 @@ export const zoneChema = z.object({
   couponIds: z.array(ObjectIdSchema).optional(),
   tableIds: z.array(ObjectIdSchema).optional(),
   pos: z.boolean().default(false).optional(),
+  kitchenIds: z.array(ObjectIdSchema).optional(),
 });
 
 export const updateZoneChema = z.object({
@@ -35,13 +36,12 @@ export const updateZoneChema = z.object({
     })
     .max(100, {
       message: "name must be atmost 100 characters long",
-    }),
+    }).optional(),
   staffIds: z.array(ObjectIdSchema).optional(),
   visibility: z.boolean().default(true),
-  taxes: z.number().min(1).max(100).optional(),
-  couponIds: z.array(ObjectIdSchema).optional(),
-  zoneId: z.string().min(3).max(100).optional(),
-  pos: z.boolean().default(false).optional(),
+  zoneId: z.string().min(3).max(100),
+  kitchenIds: z.array(ObjectIdSchema).optional(),
+  businessId: ObjectIdSchema,
 });
 
 export type ZoneType = z.infer<typeof zoneChema>;

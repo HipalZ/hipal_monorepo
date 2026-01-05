@@ -107,6 +107,7 @@ export * from "./zone";
 export * from "./attendence";
 export * from "./billInvoiceNumber";
 export * from "./discount";
+export * from "./dishZoneKitchen";
 export * from "./kotInvoiceNumber";
 export * from "./mergeAndSplitBillInvoiceCounter";
 export * from "./mergeTable";
