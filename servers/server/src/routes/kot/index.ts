@@ -1,4 +1,15 @@
-import { BusinessPosConfig, Kitchen, KotOrder, PasswordManager, PaymentAlert, Table, User, UserAnalytic, UserSession } from '@hi/db-models';
+import {
+  BusinessPosConfig,
+  Kitchen,
+  KotOrder,
+  MergeTable,
+  PasswordManager,
+  PaymentAlert,
+  Table,
+  User,
+  UserAnalytic,
+  UserSession,
+} from '@hi/db-models';
 import type { UserSessionSchemaType } from '@hi/db-models/src/validators';
 
 import { kotOrderAcceptSchema } from '@hi/db-models/src/validators';
@@ -501,6 +512,11 @@ const kotRouter = new Hono()
           businessId: kotDocs[0].businessId,
         })) as UserSessionSchemaType;
 
+        const tableInfo = await Table.findOne({
+          businessId: kotDocs[0].businessId,
+          name: tableSession.tableName,
+        }).session(session);
+
         const billAlreadySplit = checkOriginBillIsSplit(tableSession);
         if (billAlreadySplit) {
           return respond(c, 'Bill already split you cannot delete the KOT', true, 400, {});
@@ -600,7 +616,7 @@ const kotRouter = new Hono()
           }
 
           const calSubTotal = await calculateSubtotal(tableSession.tableName, tableSession.businessId, session);
-          console.log('calSubTotal', calSubTotal);
+
           await Table.updateOne(
             { businessId: kotDoc.businessId, name: kotDoc.tableName },
             { $set: { currentTableAmount: calSubTotal } },
@@ -617,6 +633,58 @@ const kotRouter = new Hono()
             { session },
           );
           const captain = await User.findById(kotDoc.acceptedBy).session(session);
+
+          const tableData = await Table.findOne({
+            businessId: tableInfo?.businessId,
+            name: tableInfo?.name,
+          }).session(session);
+
+          if (tableData?.currentTableAmount === 0 && tableSession.billInvoice === 0) {
+            await KotOrder.updateMany(
+              {
+                tableName: tableData?.name,
+                settled: false,
+                businessId: tableData?.businessId,
+              },
+              { $set: { settled: true } },
+              { session },
+            );
+            const tableInfo = await Table.findByIdAndUpdate(
+              tableData?._id,
+              {
+                status: 'EMPTY',
+                capacity: 0,
+                hiCode: '',
+                currentTableAmount: 0,
+                totalItemCount: 0,
+                userIds: [],
+                isTransfer: false,
+                edited: false,
+                isMerge: false,
+                mergeTableIds: [],
+                mergedBy: null,
+                isBillGenerated: false,
+              },
+              { session },
+            );
+
+            await UserSession.deleteOne(
+              {
+                businessId: tableData?.businessId,
+                tableName: tableData?.name,
+              },
+              { session },
+            );
+
+            await MergeTable.deleteOne(
+              {
+                parentTableId: tableInfo?._id,
+              },
+              {
+                session,
+              },
+            );
+          }
 
           deleteKOTPrintEvent({
             tableName: kotDoc.tableName,
