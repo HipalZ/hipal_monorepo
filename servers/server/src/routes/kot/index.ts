@@ -2,6 +2,7 @@ import {
   BusinessPosConfig,
   Kitchen,
   KotOrder,
+  MergeTable,
   PasswordManager,
   PaymentAlert,
   Table,
@@ -705,7 +706,7 @@ const kotRouter = new Hono()
             tableSession.businessId,
             session,
           );
-          console.log("calSubTotal", calSubTotal);
+
           await Table.updateOne(
             { businessId: kotDoc.businessId, name: kotDoc.tableName },
             { $set: { currentTableAmount: calSubTotal } },
@@ -729,6 +730,61 @@ const kotRouter = new Hono()
             tableInfo?.businessId || "",
             deletedItems.map((it) => ({ ...it, quantity: it.quantity })),
           );
+
+          const tableData = await Table.findOne({
+            businessId: tableInfo?.businessId,
+            name: tableInfo?.name,
+          }).session(session);
+
+          if (
+            tableData?.currentTableAmount === 0 &&
+            tableSession.billInvoice === 0
+          ) {
+            await KotOrder.updateMany(
+              {
+                tableName: tableData?.name,
+                settled: false,
+                businessId: tableData?.businessId,
+              },
+              { $set: { settled: true } },
+              { session },
+            );
+            const tableInfo = await Table.findByIdAndUpdate(
+              tableData?._id,
+              {
+                status: "EMPTY",
+                capacity: 0,
+                hiCode: "",
+                currentTableAmount: 0,
+                totalItemCount: 0,
+                userIds: [],
+                isTransfer: false,
+                edited: false,
+                isMerge: false,
+                mergeTableIds: [],
+                mergedBy: null,
+                isBillGenerated: false,
+              },
+              { session },
+            );
+
+            await UserSession.deleteOne(
+              {
+                businessId: tableData?.businessId,
+                tableName: tableData?.name,
+              },
+              { session },
+            );
+
+            await MergeTable.deleteOne(
+              {
+                parentTableId: tableInfo?._id,
+              },
+              {
+                session,
+              },
+            );
+          }
 
           deleteKOTPrintEvent({
             tableName: kotDoc.tableName,
