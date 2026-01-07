@@ -180,18 +180,20 @@ const dishZoneKitchenRouter = new Hono()
     },
   )
   .get(
-    "/dishes",
+    "/dishes/:businessId/:zoneId",
     zValidator(
-      "query",
+      "param",
       z.object({
         zoneId: z.string(),
+        businessId: z.string(),
       }),
     ),
     async (c) => {
-      const { zoneId } = c.req.query();
+      const { zoneId, businessId } = c.req.param();
 
       const dishZoneKitchens = await DishZoneKitchen.find({
         zoneId,
+        businessId,
       })
         .populate("dishId", "name")
         .populate("kitchenId", "name")
