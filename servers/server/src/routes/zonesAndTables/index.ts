@@ -159,9 +159,7 @@ const zonesAndTablesRouter = new Hono()
             staffIds,
             visibility,
             tableIds,
-          },
-          $addToSet: {
-            kitchenIds: { $each: kitchenIds },
+            kitchenIds,
           },
         },
         { session, new: true },
