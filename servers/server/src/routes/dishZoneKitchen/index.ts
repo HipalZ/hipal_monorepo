@@ -27,30 +27,22 @@ const dishZoneKitchenRouter = new Hono()
 
         const dishIds = Array.from(
           new Set(
-            dishZoneKitches.map(
-              (item: DishZoneKitchenType) => item.dishId,
-            ),
+            dishZoneKitches.map((item: DishZoneKitchenType) => item.dishId),
           ),
         );
         const kitchenIds = Array.from(
           new Set(
-            dishZoneKitches.map(
-              (item: DishZoneKitchenType) => item.kitchenId,
-            ),
+            dishZoneKitches.map((item: DishZoneKitchenType) => item.kitchenId),
           ),
         );
         const zoneIds = Array.from(
           new Set(
-            dishZoneKitches.map(
-              (item: DishZoneKitchenType) => item.zoneId,
-            ),
+            dishZoneKitches.map((item: DishZoneKitchenType) => item.zoneId),
           ),
         );
         const businessIds = Array.from(
           new Set(
-            dishZoneKitches.map(
-              (item: DishZoneKitchenType) => item.businessId,
-            ),
+            dishZoneKitches.map((item: DishZoneKitchenType) => item.businessId),
           ),
         );
 
@@ -101,23 +93,21 @@ const dishZoneKitchenRouter = new Hono()
           }
         }
 
-        const bulkOps = dishZoneKitches.map(
-          (item: DishZoneKitchenType) => ({
-            updateOne: {
-              filter: {
-                dishId: item.dishId,
-                zoneId: item.zoneId,
-              },
-              update: {
-                $set: {
-                  kitchenId: item.kitchenId,
-                  businessId: item.businessId,
-                },
-              },
-              upsert: true,
+        const bulkOps = dishZoneKitches.map((item: DishZoneKitchenType) => ({
+          updateOne: {
+            filter: {
+              dishId: item.dishId,
+              zoneId: item.zoneId,
             },
-          }),
-        );
+            update: {
+              $set: {
+                kitchenId: item.kitchenId,
+                businessId: item.businessId,
+              },
+            },
+            upsert: true,
+          },
+        }));
 
         await DishZoneKitchen.bulkWrite(bulkOps, { session });
 
@@ -170,6 +160,37 @@ const dishZoneKitchenRouter = new Hono()
 
       const dishZoneKitchens = await DishZoneKitchen.find({
         dishId,
+        zoneId,
+      })
+        .populate("dishId", "name")
+        .populate("kitchenId", "name")
+        .populate("zoneId", "name")
+        .lean();
+
+      const formattedData = dishZoneKitchens.map((item: any) => ({
+        dishId: item.dishId?._id || item.dishId,
+        dishName: item.dishId?.name || "",
+        kitchenId: item.kitchenId?._id || item.kitchenId,
+        kitchenName: item.kitchenId?.name || "",
+        zoneId: item.zoneId?._id || item.zoneId,
+        zoneName: item.zoneId?.name || "",
+      }));
+
+      return respond(c, "Fetched successfully", false, 200, formattedData);
+    },
+  )
+  .get(
+    "/dishes",
+    zValidator(
+      "query",
+      z.object({
+        zoneId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { zoneId } = c.req.query();
+
+      const dishZoneKitchens = await DishZoneKitchen.find({
         zoneId,
       })
         .populate("dishId", "name")
