@@ -1820,6 +1820,7 @@ const scriptRouter = new Hono()
             visitCount: 0,
             totalSpend: 0,
             avgSpend: 0,
+            dateOfJoining: Date.now(),
           });
           await userAnalytics.save();
         }

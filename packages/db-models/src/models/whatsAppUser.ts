@@ -23,7 +23,7 @@ const whatsAppChatSchema = new mongoose.Schema<WhatsAppChatType>({
   },
   message: {
     type: String,
-    required: true,
+    required: false,
   },
   userId: {
     type: ObjectId,
@@ -39,6 +39,23 @@ const whatsAppChatSchema = new mongoose.Schema<WhatsAppChatType>({
   seen: {
     type: Boolean,
     default: false,
+  },
+  type: {
+    type: String,
+    enum: ["text", "image", "video", "document"],
+    default: "text",
+  },
+  mediaUrl: {
+    type: String,
+    required: false,
+  },
+  caption: {
+    type: String,
+    required: false,
+  },
+  filename: {
+    type: String,
+    required: false,
   },
   createdAt: {
     type: Date,

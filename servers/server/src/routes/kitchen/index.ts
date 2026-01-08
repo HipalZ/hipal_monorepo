@@ -94,14 +94,6 @@ const kitchenRouter = new Hono()
         );
       }
 
-      if (menu.serviceType === "BASE") {
-        await addInTempMenuChanges(
-          "kitchen",
-          kitchen._id.toString(),
-          menu.businessId,
-        );
-      }
-
       await Dish.updateMany(
         { _id: { $in: dishIds } },
         { $set: { kitchenId: kitchen._id } },
@@ -156,7 +148,7 @@ const kitchenRouter = new Hono()
         const kitchens = await Kitchen.find({ businessId })
           .session(session)
           .lean()
-          .select("name description staffIds dishIds");
+          .select("name description staffIds dishIds menuId");
 
         return respond(c, "fetched successfully", false, 200, kitchens);
       });
@@ -424,7 +416,7 @@ const kitchenRouter = new Hono()
         );
       }
 
-      if (removeDishIds.length > 1) {
+      if (removeDishIds.length > 0) {
         await Dish.updateMany(
           { _id: { $in: removeDishIds } },
           { kitchenId: null },

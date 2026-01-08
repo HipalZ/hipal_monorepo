@@ -1,0 +1,174 @@
+/**
+ * Brutalist Design System Styles
+ * 
+ * Hard shadows, bold borders, zero radius, pure black text.
+ */
+
+/* Brutalist Color Variables */
+:root {
+  --brutal-yellow: #FFEB3B;
+  --brutal-gray: #F3F4F6;
+  --brutal-white: #FFFFFF;
+  --brutal-black: #000000;
+  --brutal-red: #FF4444;
+  --brutal-green: #00C853;
+}
+
+/* Import Brutalist Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap');
+
+/* Brutalist Utilities */
+.brutal-card {
+  background: var(--brutal-white);
+  border: 3px solid var(--brutal-black);
+  border-radius: 0;
+  box-shadow: 4px 4px 0px 0px var(--brutal-black);
+  transition: box-shadow 0.1s ease, transform 0.1s ease;
+}
+
+.brutal-card:hover {
+  box-shadow: 2px 2px 0px 0px var(--brutal-black);
+  transform: translate(2px, 2px);
+}
+
+.brutal-card:active {
+  box-shadow: 0px 0px 0px 0px var(--brutal-black);
+  transform: translate(4px, 4px);
+}
+
+.brutal-button {
+  background: var(--brutal-white);
+  border: 3px solid var(--brutal-black);
+  border-radius: 0;
+  color: var(--brutal-black);
+  box-shadow: 4px 4px 0px 0px var(--brutal-black);
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: box-shadow 0.1s ease, transform 0.1s ease;
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+}
+
+.brutal-button:hover {
+  box-shadow: 2px 2px 0px 0px var(--brutal-black);
+  transform: translate(2px, 2px);
+  background: var(--brutal-yellow);
+}
+
+.brutal-button:active {
+  box-shadow: 0px 0px 0px 0px var(--brutal-black);
+  transform: translate(4px, 4px);
+}
+
+.brutal-button-primary {
+  background: var(--brutal-yellow);
+  border: 3px solid var(--brutal-black);
+  border-radius: 0;
+  color: var(--brutal-black);
+  box-shadow: 4px 4px 0px 0px var(--brutal-black);
+  font-weight: 900;
+  text-transform: uppercase;
+  transition: box-shadow 0.1s ease, transform 0.1s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.brutal-button-primary:hover {
+  box-shadow: 2px 2px 0px 0px var(--brutal-black);
+  transform: translate(2px, 2px);
+}
+
+.brutal-button-primary:active {
+  box-shadow: 0px 0px 0px 0px var(--brutal-black);
+  transform: translate(4px, 4px);
+}
+
+.brutal-input {
+  background: var(--brutal-white);
+  border: 3px solid var(--brutal-black);
+  border-radius: 0;
+  box-shadow: 4px 4px 0px 0px var(--brutal-black);
+  color: var(--brutal-black);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  transition: box-shadow 0.1s ease, transform 0.1s ease;
+}
+
+.brutal-input:focus {
+  outline: none;
+  box-shadow: 2px 2px 0px 0px var(--brutal-black);
+  transform: translate(2px, 2px);
+}
+
+.brutal-heading {
+  font-family: 'Archivo Black', 'Inter', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--brutal-black);
+  letter-spacing: 0.05em;
+}
+
+.brutal-data {
+  font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+  color: var(--brutal-black);
+  font-weight: 500;
+}
+
+.brutal-body {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: var(--brutal-black);
+}
+
+.brutal-sidebar {
+  background: var(--brutal-white);
+  border-right: 3px solid var(--brutal-black);
+  border-radius: 0;
+}
+
+.brutal-icon {
+  stroke-width: 2.5px;
+  color: var(--brutal-black);
+}
+
+.brutal-table-header {
+  background: var(--brutal-black);
+  color: var(--brutal-white);
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-bottom: 3px solid var(--brutal-black);
+}
+
+.brutal-table-row {
+  border-bottom: 2px solid var(--brutal-black);
+  transition: background 0.1s ease;
+}
+
+.brutal-table-row:hover {
+  background: var(--brutal-yellow);
+}
+
+.brutal-badge {
+  background: var(--brutal-white);
+  border: 2px solid var(--brutal-black);
+  border-radius: 0;
+  color: var(--brutal-black);
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+}
+
+.brutal-badge-yellow {
+  background: var(--brutal-yellow);
+  border: 2px solid var(--brutal-black);
+  border-radius: 0;
+  color: var(--brutal-black);
+}
+
+.brutal-active {
+  background: var(--brutal-yellow);
+  border: 3px solid var(--brutal-black);
+  font-weight: 900;
+}

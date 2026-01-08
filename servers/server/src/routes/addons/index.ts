@@ -1,4 +1,4 @@
-import { AddOn, BusinessPosConfig, Dish, Menu } from '@hi/db-models';
+import { AddOn, BusinessPosConfig, Dish } from '@hi/db-models';
 import { type AddOnType, AddOnsAttrs, updateAddOnSchema } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import { zValidator } from '@hono/zod-validator';
@@ -46,7 +46,7 @@ const addonRouter = new Hono()
         });
 
         if (alreadyExist) {
-          return respond(c, "Addon already exist", true, 409, {});
+          return respond(c, 'Addon already exist', true, 409, {});
         }
 
         const addon = await AddOn.create({ ...requestData, pos: !!hipalZPos });
@@ -183,40 +183,29 @@ const addonRouter = new Hono()
       return respond(c, 'success', false, 200, addon);
     },
   )
+
   .get(
     '/',
-
     zValidator(
       'query',
       z.object({
         businessId: z.string(),
         menu: z.string().optional(),
-        menuId: z.string(),
+        menuId: z.string().optional(),
       }),
     ),
 
     async (c) => {
       const { businessId, menu, menuId } = c.req.query();
 
-      if (menu) {
-        const query = {
-          businessId,
-          isDeleted: false,
-          menuId: menuId,
-          active: true,
-        };
-
-        const addon = await AddOn.find(query).select('_id name choices availability visibility ');
-        return respond(c, 'success', false, 200, addon);
-      }
       const query = {
         businessId,
         isDeleted: false,
-        menuId: menuId,
         active: true,
+        ...(menuId && { menuId }),
       };
 
-      const addon = await AddOn.find(query);
+      const addon = menu ? await AddOn.find(query).select('_id name choices availability visibility createdAt updatedAt') : await AddOn.find(query);
 
       return respond(c, 'success', false, 200, addon);
     },

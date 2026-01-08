@@ -46,7 +46,6 @@ import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { enqueueWhatsAppJob } from '../../queues/enqueue';
 import { getMerchantConfig } from '../../utils/cacheHelper';
 import { getFutureSeconds } from '../../utils/dateAndTime';
-import { exchangeCodeForToken } from '../../utils/instagram';
 import { type MerchantConfig, razorpayWrapper } from '../../utils/razorpay-wrapper';
 import { respond } from '../../utils/response';
 import whatsAppApiBaseUrl from '../../utils/whatsAppApiBaseUrl/apiPaths';
@@ -1923,10 +1922,30 @@ const whatsappRouter = new Hono()
 
     async (c) => {
       const body = await c.req.json();
-      const { text, phoneNumber, businessId, isOwner, userId, ownerId } = body;
+      const { text, phoneNumber, businessId, isOwner, userId, ownerId, type = 'text', mediaUrl, caption, filename } = body;
       const config = await WhatsAppBusinessConfig.findOne({
         businessId,
       });
+
+      let payload: any = {
+        messaging_product: 'whatsapp',
+        to: phoneNumber?.toString(),
+        type: type,
+      };
+
+      if (type === 'text') {
+        payload.text = { body: text };
+      } else if (type === 'image') {
+        payload.image = { link: mediaUrl, caption: caption || text };
+      } else if (type === 'video') {
+        payload.video = { link: mediaUrl, caption: caption || text };
+      } else if (type === 'document') {
+        payload.document = {
+          link: mediaUrl,
+          caption: caption || text,
+          filename: filename,
+        };
+      }
 
       await axios({
         method: 'POST',
@@ -1947,9 +1966,13 @@ const whatsappRouter = new Hono()
         businessId,
         date: Date.now(),
         message: text,
+        mediaUrl,
+        type,
         isOwner: true,
         userId: userId,
         ownerId: ownerId,
+        caption,
+        filename,
       });
       if (!saveOwnerChat) {
         return c.json({
@@ -1970,42 +1993,72 @@ const whatsappRouter = new Hono()
   .get(
     '/user-messages/:userId/:ownerId/:businessId',
 
+    zValidator(
+      'query',
+      z.object({
+        page: z.string().optional().default('1'),
+        limit: z.string().optional().default('20'),
+      }),
+    ),
+
     async (c) => {
       const { userId, ownerId, businessId } = c.req.param();
+      const { page, limit } = c.req.query();
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const skip = (pageNum - 1) * limitNum;
 
-      const userChats = await WhatsAppChat.find({
+      const totalMessages = await WhatsAppChat.countDocuments({
         userId,
         businessId,
         isDeleted: false,
       });
 
-      await WhatsAppChat.updateMany(
-        {
-          userId,
-          businessId,
-          seen: false,
-        },
-        {
-          $set: {
-            seen: true,
-          },
-        },
-      );
+      const userChats = await WhatsAppChat.find({
+        userId,
+        businessId,
+        isDeleted: false,
+      })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum);
 
-      await Subscriber.findOneAndUpdate(
-        {
-          userId: userId,
-          businessId,
-        },
-        {
-          whatsappMsgUnseenCount: 0,
-        },
-      );
+      // Only mark as seen if it's the first page (latest messages)
+      if (pageNum === 1) {
+        await WhatsAppChat.updateMany(
+          {
+            userId,
+            businessId,
+            seen: false,
+          },
+          {
+            $set: {
+              seen: true,
+            },
+          },
+        );
+
+        await Subscriber.findOneAndUpdate(
+          {
+            userId: userId,
+            businessId,
+          },
+          {
+            whatsappMsgUnseenCount: 0,
+          },
+        );
+      }
 
       return c.json({
         message: 'Messages found',
         err: false,
-        data: userChats,
+        data: userChats, // Returns newest first
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(totalMessages / limitNum),
+          totalMessages,
+          hasMore: skip + limitNum < totalMessages,
+        },
       });
     },
   )

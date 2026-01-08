@@ -89,6 +89,7 @@ export * from "./zone";
 export * from "./attendence";
 export * from "./billInvoiceNumber";
 export * from "./discount";
+export * from "./dishZoneKitchen";
 export * from "./dues";
 export * from "./jewellery";
 export * from "./kotInvoiceNumber";

@@ -1,5 +1,5 @@
 // books.ts
-import { AddOn, BusinessPosConfig, Category, Dish, Kitchen, Menu, PosDishConfig, UniquelyYours } from '@hi/db-models';
+import { AddOn, BusinessPosConfig, Category, Dish, Kitchen, PosDishConfig, UniquelyYours } from '@hi/db-models';
 import { dishSchema, uniquelyYoursSchema, updateDishSchema } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import { zValidator } from '@hono/zod-validator';
@@ -14,7 +14,6 @@ import { respond } from '../../utils/response';
 const dishesRouter = new Hono()
   .get(
     '/',
-
     zValidator(
       'query',
       z.object({
@@ -420,10 +419,7 @@ const dishesRouter = new Hono()
           if (alreadyExist) {
             continue;
           }
-          const createDish = await Dish.create(
-            [{ ...dish, pos: !!hipalZPos }],
-            { session },
-          );
+          const createDish = await Dish.create([{ ...dish, pos: !!hipalZPos }], { session });
           if (!createDish) {
             return c.json({ err: true, message: 'Error in creating', data: {} }, 400);
           }

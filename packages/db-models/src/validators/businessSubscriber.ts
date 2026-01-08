@@ -16,6 +16,7 @@ export const businessSubscriberValidator = z.object({
     })
     .optional(),
   whatsappMsgUnseenCount: z.number().default(0).optional(),
+  lastUserMessageAt: z.number().default(0).optional(),
 });
 
 export type BusinessSubscriber = z.infer<typeof businessSubscriberValidator>;

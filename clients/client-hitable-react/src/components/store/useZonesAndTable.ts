@@ -42,15 +42,9 @@ export interface TableData {
   _id: string;
 }
 
-export type FilterType = "all" | "active" | "inactive";
-
 interface ZonesAndTablesState {
   zones: Zone[];
   tables: TableData[];
-  activeFilter: FilterType;
-  searchQuery: string;
-  setActiveFilter: (filter: FilterType) => void;
-  setSearchQuery: (query: string) => void;
   setZones: (zones: Zone[]) => void;
   setTables: (tables: TableData[]) => void;
 
@@ -61,10 +55,6 @@ interface ZonesAndTablesState {
 export const useZonesAndTablesStore = create<ZonesAndTablesState>((set) => ({
   zones: [],
   tables: [],
-  activeFilter: "all",
-  searchQuery: "",
-  setActiveFilter: (filter: FilterType) => set({ activeFilter: filter }),
-  setSearchQuery: (query: string) => set({ searchQuery: query }),
   setZones: (zones: Zone[]) => set({ zones }),
   setTables: (tables: TableData[]) => set({ tables }),
 

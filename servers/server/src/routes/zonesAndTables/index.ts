@@ -1,6 +1,7 @@
 import {
   Business,
   BusinessPosConfig,
+  Kitchen,
   Table,
   UrlModel,
   Zone,
@@ -106,11 +107,9 @@ const zonesAndTablesRouter = new Hono()
         name,
         staffIds = [],
         visibility,
-        taxes,
-        couponIds = [],
         tableIds = [],
-        _id,
         zoneId,
+        kitchenIds = [],
       } = await c.req.json();
 
       const isHavePos = await BusinessPosConfig.findOne({
@@ -126,24 +125,6 @@ const zonesAndTablesRouter = new Hono()
         return c.json(
           {
             message: "pos is enabled for this business you can't update zone",
-            err: true,
-          },
-          409,
-        );
-      }
-
-      const alreadyExists = await Zone.findOne({
-        businessId,
-        name,
-        _id: {
-          $ne: _id,
-        },
-      });
-
-      if (alreadyExists) {
-        return c.json(
-          {
-            message: "Zone with this name already exists",
             err: true,
           },
           409,
@@ -169,16 +150,17 @@ const zonesAndTablesRouter = new Hono()
 
       const updatedZone = await Zone.findOneAndUpdate(
         {
-          _id: _id,
+          _id: zoneId,
           businessId,
         },
         {
-          name,
-          staffIds,
-          visibility,
-          tableIds,
-          taxes,
-          couponIds,
+          $set: {
+            name,
+            staffIds,
+            visibility,
+            tableIds,
+            kitchenIds,
+          },
         },
         { session, new: true },
       );
@@ -191,7 +173,7 @@ const zonesAndTablesRouter = new Hono()
         {
           message: "Zone update successfully",
           err: false,
-          data: {},
+          data: updatedZone,
         },
         200,
       );
@@ -266,7 +248,7 @@ const zonesAndTablesRouter = new Hono()
       const rangePattern = /^(.*?)(\d+)-(\d+)$/;
       const match = name.match(rangePattern);
 
-      let tableNames = [];
+      const tableNames = [];
 
       if (match) {
         const baseName = match[1];
@@ -612,6 +594,40 @@ const zonesAndTablesRouter = new Hono()
           data: zones,
         },
         200,
+      );
+    },
+  )
+
+  .get(
+    "/zones/kitchen/:zoneId",
+    zValidator(
+      "param",
+      z.object({
+        zoneId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      const { zoneId } = c.req.param();
+      const zone = await Zone.findOne({
+        _id: zoneId,
+        isDeleted: false,
+      });
+      if (!zone) {
+        return respond(c, "Zone not found", true, 404, {});
+      }
+
+      const kitchenIds = zone.kitchenIds;
+
+      const kitchens = await Kitchen.find({
+        _id: { $in: kitchenIds },
+      }).select("_id name");
+
+      return respond(
+        c,
+        "Zone kitchen fetched successfully",
+        false,
+        200,
+        kitchens,
       );
     },
   )

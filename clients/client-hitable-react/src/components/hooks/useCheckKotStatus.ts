@@ -66,7 +66,7 @@ export const useKotPrintingStatus = (
 
       return data;
     },
-    refetchInterval: 5000, // poll every 5 seconds
+    refetchInterval: 30_000, // poll every 30 seconds
   });
 
   const {

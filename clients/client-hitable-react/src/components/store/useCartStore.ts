@@ -178,7 +178,9 @@ export const useCartStore = create(
         set({ cart: [] });
       },
       addToCart: (newItem) => {
-        const itemId = generateCartItemId(
+        // If item already has an ID (e.g., from repeat KOT with instructions),
+        // preserve it. Otherwise generate one.
+        const itemId = newItem.id || generateCartItemId(
           newItem.dish._id,
           newItem.portion?._id || null,
           newItem.extras.map((e) => ({ id: e.id, quantity: e.quantity })),

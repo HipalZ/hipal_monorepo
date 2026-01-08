@@ -29,6 +29,10 @@ const businessSubscriberSchema = new mongoose.Schema<BusinessSubscriber>(
       type: Number,
       default: 0,
     },
+    lastUserMessageAt: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

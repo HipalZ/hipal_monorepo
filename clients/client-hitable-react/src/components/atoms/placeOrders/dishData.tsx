@@ -33,7 +33,7 @@ const MemoCompactDishGrid = ({ selectedCategory }: CompactDishGridProps) => {
         if (isHidden) overlayLabel = 'Not Visible';
         else if (isUnavailable) overlayLabel = 'Not Available';
 
-        const showAddButton = !overlayLabel && hasKitchen && isPlaceOrderAllowed;
+        const showAddButton = !overlayLabel && isPlaceOrderAllowed;
 
         return (
           <motion.div

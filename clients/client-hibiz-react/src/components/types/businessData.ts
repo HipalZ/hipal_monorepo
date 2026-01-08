@@ -1087,12 +1087,18 @@ export interface IWalletHistory {
 }
 
 export interface IUserMessage {
-  _id: string;
+  _id?: string;
   businessId: string;
   userId: string;
   text: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  type?: "text" | "image" | "video" | "document";
+  mediaUrl?: string;
+  caption?: string;
+  filename?: string;
+  ownerId: string;
+  phoneNumber: string;
 }
 
 export interface IWhatsAppMessage {
@@ -1104,6 +1110,10 @@ export interface IWhatsAppMessage {
   message: string;
   userId: string;
   ownerId: string;
+  type?: "text" | "image" | "video" | "document";
+  mediaUrl?: string;
+  caption?: string;
+  filename?: string;
 }
 
 export interface IListPos {

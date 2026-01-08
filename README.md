@@ -1,81 +1,67 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
-//hi
-## Getting Started//////////////
+# HiPal Monorepo
 
 /////////////
 
-# testinig
+## Project Structure
 
 ///
 First, run the development server:
 
-````bash/
-npm run dev
-# or
-yarn dev
-# or
-pnpm devs
-```////
-ss
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Getting Started
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.s
+### Prerequisites
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+- Node.js (LTS version recommended)
+- Bun (used as the package manager/runner)
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-s
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+### Installation
 
-## Learn More
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   ```
+2. Install dependencies (from the root or specific package):
+   ```bash
+   bun install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+### Running the Applications
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**HiBiz Client (POS):**
+```bash
+cd clients/client-hibiz-react
+bun run dev
+```
+Runs on `http://localhost:3001` (or similar, check console output).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+**HiTable Client:**
+```bash
+cd clients/client-hitable-react
+bun run dev
+```
 
-## Deploy on Vercel
+**Server:**
+```bash
+cd servers/server
+bun run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Recent Features & Updates
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+### Kitchen Form UI Redesign
+- **Split-Pane Layout**: The "Create/Edit Kitchen" form has been improved with a 2-column layout. 
+    - **Left Panel**: Kitchen Details (Name, Description).
+    - **Right Panel**: Embedded Dish Selection.
+- **Bulk Dish Selection**: Users can now select all dishes in a category with a single click in the `DishSelectionPanel`.
+- **Improved UX**: Fixed scrolling issues and optimized the selection flow for better usability with large menus.
 
-```sh
-DO_API_TOKEN="dop_v1_8168740023d5b1d220ca141db4e658f9afe5f5ae5b6e61ccebc731ddd2ecc4e4"
+### Offline-First Architecture
+- **Menu Management**: Full offline capabilities for creating and editing menus, categories, and dishes. Changes are synced when online.
+- **Data Persistence**: Uses IndexedDB for reliable local storage of business data.
 
-kubectl create secret generic "digitalocean-dns" \
-  --namespace hipalz \
-  --from-literal=access-token="$DO_API_TOKEN"
+## Technologies Used
 
-secret/digitalocean-dns created
-
-Test
-sss
-`
-````
-
-solved revi
-
-search resolved bug
-
-color solved
-
-changes ui
-
-routes changed from r to customlink
-
-home icon change and bookmark back button remove
-//
-
-hipal-app test
-payment
-again
-popo
-loaders payment
-loaders payment
-create order offline toast
-optimized code
-
-hipal-app z-index
+- **Frontend**: React, TypeScript, Vite, TailwindCSS, Shadcn UI
+- **State Management**: Zustand, TanStack Query
+- **Local Database**: Dexie (IndexedDB wrapper)
+- **Icons**: Lucide React

@@ -19,6 +19,7 @@ import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 import calculateSubtotal from '../../services/calculateSubtotal';
+import assignKitchenToDish from '../../services/dishZoneKitchen';
 import { checkOriginBillIsSplit } from '../../services/splitBill';
 import { pushToken } from '../../services/token';
 import { convertToHipalzCart, deleteKOTPrintEvent, sendKOTPrintEvent, sendReKOTPrintEvent } from '../../utils/kot';
@@ -437,13 +438,19 @@ const kotRouter = new Hono()
         }
 
         const captainInfo = await User.findById(kot.acceptedBy);
+        const tableInfo = await Table.findOne({
+          businessId: kot.businessId,
+          name: kot.tableName,
+        });
+
+        const cart = await assignKitchenToDish(tableInfo?.zoneId || '', kot.businessId, kot.cart);
 
         sendReKOTPrintEvent({
           tableName: kot?.tableName ?? '',
-          businessId: kot.businessId._id.toString(),
+          businessId: kot.businessId?._id?.toString() || '',
           customerName: kot.name || captainInfo?.name || '',
           customerPhone: kot.phone,
-          cart: kot.cart,
+          cart: cart,
           acceptedBy: captainInfo?.name || kot.name || '',
           kotId: kot.id.toString(),
           date: Date.now(),
@@ -633,6 +640,11 @@ const kotRouter = new Hono()
             { session },
           );
           const captain = await User.findById(kotDoc.acceptedBy).session(session);
+          const cart = await assignKitchenToDish(
+            tableInfo?.zoneId || '',
+            tableInfo?.businessId || '',
+            deletedItems.map((it) => ({ ...it, quantity: it.quantity })),
+          );
 
           const tableData = await Table.findOne({
             businessId: tableInfo?.businessId,
@@ -691,7 +703,7 @@ const kotRouter = new Hono()
             businessId: kotDoc.businessId,
             customerName: kotDoc.name,
             customerPhone: kotDoc.phone,
-            cart: deletedItems.map((it) => ({ ...it, quantity: it.quantity })),
+            cart: cart,
             deletedBy: user.name,
             acceptedBy: captain?.name || user.name,
             kotId: nanoid(10),
@@ -765,6 +777,11 @@ const kotRouter = new Hono()
               return respond(c, 'Discount already applied for this table please remove it first', true, 400, {});
             }
           }
+
+          const tableInfo = await Table.findOne({
+            businessId: kot.businessId,
+            name: kot.tableName,
+          });
           const orderAlreadyExist = await PaymentAlert.findOne({
             businessId: kot.businessId,
             tableName: kot.tableName,
@@ -802,12 +819,14 @@ const kotRouter = new Hono()
           const userInfo = await User.findById(kot.userId);
           const captainInfo = await User.findById(performBy);
 
+          const cart = await assignKitchenToDish(tableInfo?.zoneId || '', tableSession?.businessId || '', kot.cart);
+
           sendKOTPrintEvent({
             tableName: tableSession?.tableName as string,
             businessId: tableSession?.businessId as string,
             customerName: userInfo?.name as string,
             customerPhone: userInfo?.phone as string,
-            cart: kot.cart,
+            cart: cart,
             acceptedBy: captainInfo?.name as string,
             kotId: kot._id.toString(),
             date: Date.now(),

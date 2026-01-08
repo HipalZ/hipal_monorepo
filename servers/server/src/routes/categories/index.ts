@@ -55,7 +55,7 @@ const categoriesRouter = new Hono()
         });
 
         if (alreadyExist) {
-          return respond(c, "Category already exist", true, 409, {});
+          return respond(c, 'Category already exist', true, 409, {});
         }
 
         const creatingCategory = await Category.create(
@@ -294,7 +294,7 @@ const categoriesRouter = new Hono()
         };
 
         const existingCategories = await Category.find(query).select(
-          '_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage',
+          '_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage createdAt updatedAt',
         );
 
         // const existingCategoriesWithTiming =
@@ -348,7 +348,7 @@ const categoriesRouter = new Hono()
 
         const existingCategories = await Category.find(query)
           .sort({ sequence: 1 })
-          .select('_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence businessId');
+          .select('_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence createdAt updatedAt');
 
         return respond(c, 'fetched successfully', false, 200, existingCategories);
       }
@@ -443,7 +443,9 @@ const categoriesRouter = new Hono()
         };
 
         const existingCategories = await Category.find(query)
-          .select('_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId timings')
+          .select(
+            '_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId timings createdAt updatedAt',
+          )
           .sort({ sequence: 1 });
 
         return respond(c, 'fetched successfully', false, 200, existingCategories);

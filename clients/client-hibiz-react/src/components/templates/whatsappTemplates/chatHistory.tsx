@@ -1,27 +1,69 @@
 import whatzAppDoodle from '@/assets/whatzapp/whatsappdoodle.jpg';
 import { useOwnerLogin } from '@/components/store/useOwnerLogin';
 import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
-import { useDeleteChats, useFetchUserChats } from '@/hooks/useTemplates';
-import { useQuery } from '@tanstack/react-query';
-import { memo, useCallback } from 'react';
-import { BiArrowBack, BiCheck, BiTrash } from 'react-icons/bi';
+import type { IWhatsAppMessage } from '@/components/types/businessData';
+import { useDeleteChats, useFetchUserChatsInfinite } from '@/hooks/useTemplates';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  BiArrowBack,
+  BiCheckDouble,
+  BiDownload,
+  BiFile,
+  BiTrash,
+} from 'react-icons/bi';
 import { RxAvatar } from 'react-icons/rx';
 
 const MemoChatHistory = ({ isPending }: { isPending: boolean }) => {
   const ownerId = useOwnerLogin((s) => s.user?._id);
-  const { fetchUserChats } = useFetchUserChats();
+  const { 
+    data, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage, 
+    isLoading: isChatsLoading 
+  } = useFetchUserChatsInfinite();
 
-  const { selectedUser, userChat, isMobileListView, setIsMobileListView } = useWhatsappTempStore((s) => ({
-    selectedUser: s.selectedUser,
-    userChat: s.userChat,
-    isMobileListView: s.isMobileListView,
-    setIsMobileListView: s.setIsMobileListView,
-  }));
+  const selectedUser = useWhatsappTempStore((s) => s.selectedUser);
+  // userChat removed as we use infinite query data locally
+  const isMobileListView = useWhatsappTempStore((s) => s.isMobileListView);
+  const setIsMobileListView = useWhatsappTempStore((s) => s.setIsMobileListView);
+
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [hasNextPage, fetchNextPage]);
+
+  const visibleMessages = useMemo(() => {
+    if (!data?.pages) return [];
+    // Flatten pages
+    return data.pages.flatMap((page: any) => page.data);
+  }, [data]);
+
   const { mutate: deleteChats } = useDeleteChats();
 
   const handleDeleteUserChat = useCallback(
     (userId: string) => {
-      deleteChats({ userId, ownerId });
+      if (confirm('Are you sure you want to delete this chat?')) {
+        deleteChats({ userId, ownerId });
+      }
     },
     [deleteChats, ownerId],
   );
@@ -51,58 +93,164 @@ const MemoChatHistory = ({ isPending }: { isPending: boolean }) => {
     setIsMobileListView(!isMobileListView);
   }, [isMobileListView, setIsMobileListView]);
 
-  const { isLoading: isChatsLoading } = useQuery({
-    queryKey: ['fetchUserChats', selectedUser?._id],
-    queryFn: fetchUserChats,
-    enabled: !!selectedUser,
-    refetchInterval: 5000,
-  });
+
+  const renderMessageContent = (chat: IWhatsAppMessage) => {
+    switch (chat.type) {
+      case 'image':
+        return (
+          <div className="mb-1">
+            <img
+              src={chat.mediaUrl}
+              alt="Shared image"
+              className="max-h-[300px] w-full rounded-lg object-cover"
+              loading="lazy"
+            />
+          </div>
+        );
+      case 'video':
+        return (
+          <div className="mb-1">
+            <video
+              src={chat.mediaUrl}
+              controls
+              className="max-h-[300px] w-full rounded-lg"
+            />
+          </div>
+        );
+      case 'document':
+        return (
+          <a
+            href={chat.mediaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mb-2 flex items-center gap-3 rounded-lg bg-black/5 p-3 hover:bg-black/10 transition-colors"
+          >
+            <div className="rounded bg-red-100 p-2 text-red-500">
+              <BiFile size={24} />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <p className="truncate text-sm font-medium">
+                {chat.filename || 'Document'}
+              </p>
+              <p className="text-xs text-gray-500 uppercase">
+                {chat.mediaUrl?.split('.').pop()}
+              </p>
+            </div>
+            <BiDownload size={20} className="text-gray-500" />
+          </a>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <section
-      className="flex-1 overflow-y-auto"
+      className="flex flex-1 flex-col overflow-hidden bg-[#efe7dd]"
       role="log"
       aria-label="Message list"
       style={{
         backgroundImage: `url(${whatzAppDoodle})`,
+        backgroundBlendMode: 'overlay',
       }}
     >
-      <nav className="sticky top-0 flex h-[4rem] items-center justify-between gap-4 bg-gray-200 p-2">
-        <section className="flex items-center gap-4 overflow-hidden rounded-full">
-          <button type="button" className="bg-gray-200 p-2 text-gray-600 md:hidden" onClick={toggleMobileView}>
-            <BiArrowBack size={24} />
-          </button>
-          <RxAvatar size={60} />
-          <article className="w-full">
-            <h1>{selectedUser ? selectedUser.name : 'Select a User'}</h1>
-            <p>{selectedUser?.phone}</p>
-          </article>
-        </section>
-        <div className="justify-end">
+      {/* Header */}
+      <nav className="sticky top-0 z-10 flex h-[60px] items-center justify-between bg-[#f0f2f5] px-4 py-2 shadow-sm">
+        <section className="flex items-center gap-3 overflow-hidden">
           <button
             type="button"
-            onClick={() => selectedUser?._id && handleDeleteUserChat(selectedUser._id)}
-            className="rounded-full bg-red-100 p-2 hover:bg-red-200"
+            className="mr-1 text-[#54656f] md:hidden"
+            onClick={toggleMobileView}
           >
-            <BiTrash className="text-red-700" size={24} />
+            <BiArrowBack size={24} />
+          </button>
+          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
+            <RxAvatar className="h-full w-full text-gray-400" />
+          </div>
+          <article className="flex flex-col justify-center">
+            <h1 className="truncate text-base font-medium text-[#111b21]">
+              {selectedUser ? selectedUser.name : 'Select a User'}
+            </h1>
+            <p className="truncate text-xs text-[#667781]">
+              {selectedUser?.phone || 'Tap here for contact info'}
+            </p>
+          </article>
+        </section>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() =>
+              selectedUser?._id && handleDeleteUserChat(selectedUser._id)
+            }
+            className="rounded-full p-2 text-[#54656f] hover:bg-gray-200 transition-colors"
+            title="Delete Chat"
+          >
+            <BiTrash size={20} />
           </button>
         </div>
       </nav>
 
-      <div className="space-y-4 p-4">
-        {userChat
-          ? userChat?.map((chat, index) => (
-              <article key={chat?._id} className={`flex ${chat?.isOwner ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[70%] rounded-lg p-3 ${chat?.isOwner ? 'bg-green-500 text-white' : 'bg-white text-gray-900'}`}>
-                  <p>{isPending && index === userChat.length - 1 ? 'Sending ...' : chat?.message}</p>
-                  <div className={`mt-1 flex items-center gap-1 text-xs ${chat?.isOwner ? 'text-green-100' : 'text-gray-500'}`}>
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col-reverse">
+        {visibleMessages && visibleMessages.length > 0 ? (
+          visibleMessages.map((chat, index) => (
+            <article
+              key={chat?._id || index}
+              className={`flex w-full mb-2 ${chat?.isOwner ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`flex max-w-[85%] flex-col rounded-lg p-2 shadow-sm md:max-w-[65%] ${
+                  chat?.isOwner
+                    ? 'rounded-tr-none bg-[#d9fdd3]'
+                    : 'rounded-tl-none bg-white'
+                }`}
+              >
+                {/* Render Media Content */}
+                {renderMessageContent(chat)}
+
+                {/* Message Text & Metadata */}
+                <div className="relative flex flex-wrap items-end gap-2">
+                  <p className="min-w-[60px] whitespace-pre-wrap break-words text-sm text-[#111b21] pb-1">
+                    {(chat?.type === 'document' ||
+                      chat?.type === 'image' ||
+                      chat?.type === 'video') &&
+                    chat.caption
+                      ? chat.caption
+                      : chat?.message}
+                    {isPending && index === 0 && '...'} 
+                  </p>
+                  
+                  <div className="ml-auto flex items-center gap-1 text-[11px] text-[#667781]">
                     <time>{formatMessageDate(chat?.date)}</time>
-                    {chat?.isOwner && <BiCheck className="inline h-4 w-4" />}
+                    {chat?.isOwner && (
+                      <BiCheckDouble className="text-[#53bdeb]" size={16} />
+                    )}
                   </div>
                 </div>
-              </article>
-            ))
-          : isChatsLoading && <p>Loading...</p>}
+              </div>
+            </article>
+          ))
+        ) : isChatsLoading ? (
+           <div className="flex h-full items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#00a884] border-t-transparent"></div>
+           </div>
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-[#8696a0]">
+            <p className="bg-[#fff5c4] rounded-lg px-3 py-1 shadow-sm">
+             Send a message to start chatting
+            </p>
+          </div>
+        )}
+
+        {/* Sentinel for infinite scroll trigger - placed at end of DOM list (visual top in flex-col-reverse) */}
+        <div ref={observerTarget} className="h-1 w-full" />
+        
+        {/* Loading spinner at the top (which is end of list in flex-col-reverse) */}
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+             <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00a884] border-t-transparent"></div>
+          </div>
+        )}
       </div>
     </section>
   );
