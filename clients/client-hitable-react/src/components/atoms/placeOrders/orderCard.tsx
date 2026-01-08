@@ -12,11 +12,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { GripVertical } from 'lucide-react';
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { GripVertical, RotateCcw } from 'lucide-react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { BiSync } from 'react-icons/bi';
 import { MdPerson, MdRestaurantMenu } from 'react-icons/md';
 import { useParams } from 'react-router-dom';
+import RepeatKotModal from './RepeatKotModal';
 
 interface CompactOrderCardProps {
   order: OrderData;
@@ -25,8 +26,8 @@ interface CompactOrderCardProps {
 const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
   const { tableId } = useParams();
   const { isPending, mutateAsync } = useReprintKot();
-
   const captain = useHiClientZ((s) => s.captainData);
+  const [showRepeatKotModal, setShowRepeatKotModal] = useState(false);
 
   const { setPriority, isPrioritizing } = useKotPriority({
     invalidateKeys: tableId ? [['getTableOrders', tableId]] : undefined,
@@ -154,6 +155,20 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                     <MdRestaurantMenu className="h-4 w-4" />
                   )}
                   {isPrioritizing ? 'Updating…' : 'Mark Priority'}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => {
+                    const hasItems = (order?.cart || []).filter((item) => !item.isDeleted).length > 0;
+                    if (hasItems) {
+                      setShowRepeatKotModal(true);
+                    }
+                  }}
+                  disabled={(order?.cart || []).filter((item) => !item.isDeleted).length === 0}
+                  className="flex cursor-pointer items-center gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Repeat KOT
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -294,6 +309,9 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Repeat KOT Modal */}
+      <RepeatKotModal show={showRepeatKotModal} onClose={() => setShowRepeatKotModal(false)} order={order} />
     </motion.div>
   );
 };

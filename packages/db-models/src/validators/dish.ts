@@ -197,6 +197,8 @@ export const dishSchema = z.object({
   vat: z.coerce.number().positive().optional(),
   discount: z.coerce.number().min(0).max(100).optional(),
   timings: z.array(timingSchema).optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
 });
 
 export const serviceChema = z.object({

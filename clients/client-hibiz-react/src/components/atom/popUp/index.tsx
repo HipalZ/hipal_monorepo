@@ -1,65 +1,52 @@
-import { Button } from "@/components/ui/button"
-import { cn } from "@/components/utils/helper"
-import { Dialog } from "@headlessui/react"
-import { AnimatePresence, motion } from "framer-motion"
-import { memo, type ReactNode, type SyntheticEvent } from "react"
-import { HiX } from "react-icons/hi"
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogOverlay } from '@/components/ui/dialog';
+import { cn } from '@/components/utils/helper';
+import type { ReactNode } from 'react';
+import { HiX } from 'react-icons/hi';
 
 interface PopUpProps {
-  children: ReactNode
-  show: boolean
-  onClose: () => void
-  hide?: boolean
-  width?: string
-  height?: string
-  rightTopBack?: boolean
+  children: ReactNode;
+  show: boolean;
+  onClose: () => void;
+  hide?: boolean;
+  width?: string;
+  height?: string;
+  rightTopBack?: boolean;
 }
 
-function MemoizedPopUp({ children, show, onClose, hide, width, height, rightTopBack }: PopUpProps) {
-  const stopClosing = (e: SyntheticEvent) => {
-    if (hide) {
-      return onClose()
-    }
-    e.preventDefault()
-  }
-
+export default function PopUp({ children, show, onClose, hide, width, height, rightTopBack }: PopUpProps) {
   return (
-    <AnimatePresence>
-      {show && (
-        <Dialog open={show} as="div" className="fixed inset-0 z-50" onClose={stopClosing}>
-          <div className="fixed inset-0 flex px-0 lg:px-6 items-end justify-center bg-black lg:items-center bg-opacity-50 backdrop-blur-sm lg:pt-[2rem]">
-            <motion.div
-              initial={{ y: "100%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "100%", opacity: 0 }}
-              transition={{ duration: 0.6, ease: "easeInOut" }}
-              className={cn(
-                "bg-base-100 shadow-md relative",
-                width ? width : "w-full max-w-[69rem]",
-                height ? height : "h-auto",
-                !hide ? "rounded-t-[1.5rem] lg:rounded-2xl" : "lg:rounded-2xl",
-              )}
-            >
-              {!hide && !rightTopBack && (
-                <div className="absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce -top-8 left-1/2">
-                  <HiX className="p-2 text-4xl text-black bg-white rounded-full cursor-pointer" onClick={onClose} />
-                </div>
-              )}
-              {rightTopBack && (
-                <Button className="absolute z-50 w-8 h-8 rounded-full top-2 right-2" onClick={onClose}>
-                  <HiX className="text-2xl cursor-pointer "/>
-                </Button>
-              )}
-              {children}
-            </motion.div>
+    // ✅ do NOT close from onOpenChange
+    <Dialog open={show} onOpenChange={() => {}}>
+      <DialogOverlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
+
+      <DialogContent
+        className={cn(
+          'bg-base-100 fixed z-50 shadow-md',
+          width ? width : 'w-full max-w-[69rem]',
+          height ? height : 'h-auto',
+          !hide ? 'rounded-t-[1.5rem] lg:rounded-2xl' : 'lg:rounded-2xl',
+        )}
+        // ✅ block all outside interactions (backdrop click)
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        // ✅ optional: also block ESC close
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
+        {!hide && !rightTopBack && (
+          <div className="absolute -top-8 left-1/2 z-50 -translate-x-1/2">
+            <HiX className="cursor-pointer rounded-full bg-white p-2 text-4xl text-black" onClick={onClose} />
           </div>
-        </Dialog>
-      )}
-    </AnimatePresence>
-  )
+        )}
+
+        {rightTopBack && (
+          <Button className="absolute right-2 top-2 z-50 h-8 w-8 rounded-full" onClick={onClose} type="button">
+            <HiX className="text-2xl" />
+          </Button>
+        )}
+
+        {children}
+      </DialogContent>
+    </Dialog>
+  );
 }
-
-const PopUp = memo(MemoizedPopUp)
-
-export default PopUp
-

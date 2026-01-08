@@ -29,7 +29,6 @@ import { respond } from "../../utils/response";
 const dishesRouter = new Hono()
   .get(
     "/",
-
     zValidator(
       "query",
       z.object({
@@ -92,6 +91,7 @@ const dishesRouter = new Hono()
       return respond(c, "Fetched successfully", false, 200, existingDishes);
     },
   )
+  
 
   .put(
     "/:id",

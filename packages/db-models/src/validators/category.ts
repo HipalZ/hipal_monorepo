@@ -86,6 +86,8 @@ export const categorySchema = z.object({
   pos: z.boolean().default(false).optional(),
   active: z.boolean().default(true).optional(),
   timings: z.array(timingSchema).optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
 });
 
 export const catalogueSchema = z.object({

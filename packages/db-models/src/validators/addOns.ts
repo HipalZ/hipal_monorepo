@@ -68,6 +68,8 @@ export const AddOnsAttrs = z.object({
   posAddOnId: z.string().min(3).max(100).optional(),
   pos: z.boolean().default(false).optional(),
   active: z.boolean().default(true).optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
 });
 
 const UpdateChoices = z.object({

@@ -382,7 +382,7 @@ const categoriesRouter = new Hono()
         };
 
         const existingCategories = await Category.find(query).select(
-          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
+          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage createdAt updatedAt",
         );
 
         // const existingCategoriesWithTiming =
@@ -444,7 +444,7 @@ const categoriesRouter = new Hono()
         const existingCategories = await Category.find(query)
           .sort({ sequence: 1 })
           .select(
-            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence",
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence createdAt updatedAt",
           );
 
         return respond(
@@ -553,7 +553,7 @@ const categoriesRouter = new Hono()
 
         const existingCategories = await Category.find(query)
           .select(
-            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId timings",
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId timings createdAt updatedAt",
           )
           .sort({ sequence: 1 });
 
