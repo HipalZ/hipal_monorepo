@@ -18,7 +18,7 @@ export const useMenuBootstrap = (businessId: string) => {
     if (!businessId) throw new Error("Business ID is required");
 
     try {
-      const [dishesRes, categoriesRes, addonsRes, menusRes, kitchensRes, zonesRes] =
+      const [dishesRes, categoriesRes, addonsRes, menusRes, kitchensRes, zonesRes, dishZoneKitchenRes] =
         await Promise.all([
           apiRpc.dishes.$get({ query: { businessId } }),
           apiRpc.categories.$get({ query: { businessId } }),
@@ -30,9 +30,12 @@ export const useMenuBootstrap = (businessId: string) => {
           apiRpc.zones_and_tables.zones[':businessId'].$get({
             param: { businessId },
           }).catch(() => ({ json: async () => ({ data: [], err: false, message: "" }) })), // Graceful fallback
+          apiRpc.dish_zone_kitchen['business'][':businessId'].$get({
+            param: { businessId },
+          }).catch(() => ({ json: async () => ({ data: [], err: false, message: "" }) })), // Graceful fallback
         ]);
 
-      const [dishesData, categoriesData, addonsData, menusData, kitchensData, zonesData] =
+      const [dishesData, categoriesData, addonsData, menusData, kitchensData, zonesData, dishZoneKitchenData] =
         await Promise.all([
           dishesRes.json(),
           categoriesRes.json(),
@@ -40,6 +43,7 @@ export const useMenuBootstrap = (businessId: string) => {
           menusRes.json(),
           kitchensRes.json(),
           zonesRes.json(),
+          dishZoneKitchenRes.json(),
         ]);
 
       const dishes = (dishesData.data || []).map((d: any) => ({
@@ -67,6 +71,22 @@ export const useMenuBootstrap = (businessId: string) => {
         visibility: z.visibility !== false,
       }));
 
+      // Process DishZoneKitchen mappings from server
+      // CRITICAL: These are first-class entities that MUST be bootstrapped
+      // If mappings don't exist locally, UI MUST show zero dishes (expected behavior)
+      const dishZoneKitchenMappings = (dishZoneKitchenData.data || []).map((m: any) => {
+        const key = `${m.dishId}_${m.zoneId}`;
+        return {
+          key,
+          businessId: m.businessId,
+          dishId: m.dishId,
+          zoneId: m.zoneId,
+          kitchenId: m.kitchenId,
+          createdAtLocal: m.createdAt ? new Date(m.createdAt).getTime() : Date.now(),
+          updatedAtLocal: m.updatedAt ? new Date(m.updatedAt).getTime() : Date.now(),
+        };
+      });
+
       await db.transaction(
         "rw",
         db.dishes,
@@ -75,7 +95,9 @@ export const useMenuBootstrap = (businessId: string) => {
         db.menus,
         db.kitchens,
         db.zones,
+        db.dishZoneKitchen,
         async () => {
+          // Clear all tables for this business (transactional)
           await Promise.all([
             db.dishes.clear(),
             db.categories.clear(),
@@ -83,8 +105,10 @@ export const useMenuBootstrap = (businessId: string) => {
             db.menus.clear(),
             db.kitchens.clear(),
             ZonesRepository.clear(businessId),
+            DishZoneKitchenRepository.clear(businessId), // Clear DishZoneKitchen mappings
           ]);
 
+          // BulkPut all data (transactional)
           await Promise.all([
             dishes.length ? db.dishes.bulkPut(dishes) : Promise.resolve(),
             categories.length
@@ -94,6 +118,9 @@ export const useMenuBootstrap = (businessId: string) => {
             menus.length ? db.menus.bulkPut(menus) : Promise.resolve(),
             kitchens.length ? db.kitchens.bulkPut(kitchens) : Promise.resolve(),
             zones.length ? ZonesRepository.upsertZones(zones) : Promise.resolve(),
+            dishZoneKitchenMappings.length
+              ? db.dishZoneKitchen.bulkPut(dishZoneKitchenMappings)
+              : Promise.resolve(),
           ]);
         },
       );
@@ -101,7 +128,7 @@ export const useMenuBootstrap = (businessId: string) => {
       setLastPulledAt(Date.now());
       toast.success("Menu data loaded successfully");
 
-      return { dishes, categories, addons, menus, kitchens, zones };
+      return { dishes, categories, addons, menus, kitchens, zones, dishZoneKitchenMappings };
     } catch (error) {
       toast.error("Failed to load menu data");
       throw error;

@@ -3,6 +3,7 @@ import type {
   BusinessCategoryReport,
   BusinessDiscountReport,
   BusinessItemReport,
+  BusinessDishTypeReport,
   ServiceChargeReport,
 } from "@/hooks/useReportHook.ts";
 import { create } from "zustand";
@@ -10,6 +11,7 @@ import { create } from "zustand";
 export type ReportsTypes =
   | "category"
   | "item"
+  | "dishType"
   | "discount"
   | "serviceCharge"
   | "combined"
@@ -35,6 +37,9 @@ interface ReportsState {
 
   serviceChargeReports: ServiceChargeReport[];
   setServiceChargeReports: (reports: ServiceChargeReport[]) => void;
+
+  dishTypeReports: BusinessDishTypeReport[];
+  setDishTypeReports: (reports: BusinessDishTypeReport[]) => void;
 
   layoutType: LayoutType;
   setLayoutType: (layoutType: LayoutType) => void;
@@ -63,6 +68,10 @@ const useReports = create<ReportsState>((set) => ({
   serviceChargeReports: [],
   setServiceChargeReports: (reports: ServiceChargeReport[]) =>
     set({ serviceChargeReports: reports }),
+
+  dishTypeReports: [],
+  setDishTypeReports: (reports: BusinessDishTypeReport[]) =>
+    set({ dishTypeReports: reports }),
 
   layoutType: "table",
   setLayoutType: (layoutType: LayoutType) => set({ layoutType }),

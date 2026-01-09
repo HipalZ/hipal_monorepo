@@ -3,18 +3,22 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import * as ExcelJS from "exceljs";
 
-import { Payment, Business, Kitchen } from "@hi/db-models";
+import { Payment, Business, Kitchen, DishZoneKitchen, Table } from "@hi/db-models";
 import { formatDateToIST } from "../../utils/reportHelper/dateFormater";
 
 import { buildNetAndSalesSheets } from "../../utils/reportHelper/salesReport";
 import { buildCategorySheet } from "../../utils/reportHelper/categoryReport";
-import { buildItemSheet } from "../../utils/reportHelper/itemReport";
+import {
+  buildItemSheet,
+  type DishZoneKitchenMapping,
+} from "../../utils/reportHelper/itemReport";
 import { buildAddOnSheet } from "../../utils/reportHelper/addOnReport";
 import { buildDiscountSheet } from "../../utils/reportHelper/discountReport";
 import { buildServiceChargeSheet } from "../../utils/reportHelper/serviceChargeReport";
 import type { BaseContext, AnyPayment } from "../../utils/reportHelper/types";
 import { buildConsolidatedSheet } from "../../utils/reportHelper/cansolidateReport";
 import { buildOpenItemSaleSheet } from "../../utils/reportHelper/buildOpenItemSaleSheet";
+import { buildDishTypeSheetFromContext } from "../../utils/reportHelper/itemTypeReport";
 
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
@@ -66,6 +70,66 @@ const unifiedExcelRouter = new Hono().post(
       kitchenNameMapByBiz[bizId][k._id.toString()] = k.name;
     }
 
+    // 🔹 Fetch DishZoneKitchen mappings for item report (kitchen routing)
+    const dishZoneKitchenMappings = (await DishZoneKitchen.find({
+      businessId: { $in: businessIds },
+    })
+      .lean()
+      .select({
+        dishId: 1,
+        zoneId: 1,
+        kitchenId: 1,
+        businessId: 1,
+      })) as DishZoneKitchenMapping[];
+
+    // 🔹 Build table name to zoneId lookup map
+    const tableNames = Array.from(
+      new Set(
+        allPayments.map((p) => (p as any).tableName).filter(Boolean),
+      ),
+    );
+    const tables = await Table.find({
+      businessId: { $in: businessIds },
+      name: { $in: tableNames },
+    })
+      .lean()
+      .select({ name: 1, businessId: 1, zoneId: 1, internalZoneId: 1 });
+
+    const tableToZoneMap: Record<string, Record<string, string>> = {};
+    for (const table of tables) {
+      const bizId = table.businessId.toString();
+      if (!tableToZoneMap[bizId]) {
+        tableToZoneMap[bizId] = {};
+      }
+      const zoneId =
+        table.internalZoneId?.toString() || table.zoneId?.toString() || null;
+      if (zoneId && table.name) {
+        tableToZoneMap[bizId][table.name] = zoneId;
+      }
+    }
+
+    // Helper to get zoneId from payment
+    const getZoneIdForExcel = (payment: AnyPayment): string | null => {
+      const p = payment as AnyPayment & {
+        zoneId?: string | { toString(): string };
+        table?: { zoneId?: string | { toString(): string } };
+        tableName?: string;
+      };
+      if (p.zoneId) {
+        return typeof p.zoneId === "string" ? p.zoneId : p.zoneId.toString();
+      }
+      if (p.table?.zoneId) {
+        return typeof p.table.zoneId === "string"
+          ? p.table.zoneId
+          : p.table.zoneId.toString();
+      }
+      const bizId =
+        typeof (payment as any).businessId === "string"
+          ? (payment as any).businessId
+          : (payment as any).businessId.toString();
+      return tableToZoneMap[bizId]?.[p.tableName || ""] || null;
+    };
+
     const ctx: BaseContext = {
       businessIds,
       from,
@@ -88,8 +152,16 @@ const unifiedExcelRouter = new Hono().post(
     // 2) Category Report
     await buildCategorySheet(workbook, ctx);
 
-    // 3) Item Report
-    await buildItemSheet(workbook, ctx);
+    // 3) Item Report (with DishZoneKitchen mappings for correct kitchen routing)
+    await buildItemSheet(
+      workbook,
+      ctx,
+      dishZoneKitchenMappings,
+      getZoneIdForExcel,
+    );
+
+    // 3.5) Item Type Report (VEG/NON_VEG/etc.)
+    buildDishTypeSheetFromContext(workbook, ctx);
 
     // 4) AddOn Report
     await buildAddOnSheet(workbook, ctx);

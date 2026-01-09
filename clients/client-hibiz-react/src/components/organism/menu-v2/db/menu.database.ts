@@ -38,10 +38,11 @@ export class MenuDatabase extends Dexie {
   constructor() {
     super("HipalMenuDB");
 
+    // v7: Added kitchenId index to dishZoneKitchen for efficient kitchen-based queries
     // v6: Added zones and dishZoneKitchen tables for kitchen routing
     // v5: Simplified schema - removed redundant mapping tables and overrides
     // Filtering is done directly by menuId on entities (dishes.menuId, categories.menuId, etc.)
-    this.version(7).stores({
+    this.version(8).stores({
       dishes: "_id, businessId, menuId, kitchenId, name, nameKey",
       categories: "_id, businessId, menuId, parentId, name, nameKey",
       addons: "_id, businessId, menuId, name, nameKey",
@@ -49,7 +50,7 @@ export class MenuDatabase extends Dexie {
       kitchens: " _id, businessId, menuId, name", // Added kitchens table with menuId
       zones: "_id, businessId, name, [businessId+_id], active",
       dishZoneKitchen:
-        "key, businessId, [businessId+zoneId], [businessId+dishId], [dishId+zoneId]",
+        "key, businessId, kitchenId, [businessId+zoneId], [businessId+dishId], [businessId+kitchenId], [dishId+zoneId]",
       draftOps: "++id, businessId, createdAt",
       pendingImages:
         "++id, dishId, businessId, [dishId+imageIndex], [businessId+dishId]",
