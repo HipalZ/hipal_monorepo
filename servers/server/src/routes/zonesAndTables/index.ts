@@ -452,6 +452,9 @@ const zonesAndTablesRouter = new Hono()
         },
       });
 
+      const businessInfo =
+        await Business.findById(businessId).select("customLink");
+
       if (alreadyExists) {
         return c.json(
           {
@@ -482,7 +485,7 @@ const zonesAndTablesRouter = new Hono()
         },
         {
           $set: {
-            longUrl: `https://hipal-test.hipalz.com/${businessId}/explore?tableName=${name}`,
+            longUrl: `https://hipal-test.hipalz.com/${businessInfo?.customLink}/explore?tableName=${name}`,
           },
         },
         { session },
