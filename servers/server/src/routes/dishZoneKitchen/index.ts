@@ -12,6 +12,44 @@ import z from "zod";
 import { respond } from "../../utils/response";
 //
 const dishZoneKitchenRouter = new Hono()
+  .get(
+    "/business/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string().min(1),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      // Fetch all DishZoneKitchen mappings for this business
+      const dishZoneKitchens = await DishZoneKitchen.find({
+        businessId,
+      })
+        .lean()
+        .select({
+          dishId: 1,
+          zoneId: 1,
+          kitchenId: 1,
+          businessId: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        });
+
+      // Format response to match client-side structure
+      const formattedData = dishZoneKitchens.map((item: any) => ({
+        dishId: item.dishId?.toString() || item.dishId,
+        zoneId: item.zoneId?.toString() || item.zoneId,
+        kitchenId: item.kitchenId?.toString() || item.kitchenId,
+        businessId: item.businessId?.toString() || item.businessId,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      }));
+
+      return respond(c, "Fetched successfully", false, 200, formattedData);
+    },
+  )
   .post(
     "/",
     zValidator(

@@ -116,7 +116,7 @@ async function petPoojaPosSetupHandler(payload: {
     }
 
     for (const area of areas) {
-      defaultZone = await Zone.findOneAndUpdate(
+      await Zone.findOneAndUpdate(
         { zoneId: area.restaurantareaid },
         {
           businessId,
@@ -137,6 +137,11 @@ async function petPoojaPosSetupHandler(payload: {
       const zoneIdToLink =
         areas.length === 0 ? defaultZone?.zoneId : table.restaurantareaid;
 
+      const zone = await Zone.findOne({
+        businessId,
+        zoneId: zoneIdToLink,
+      }).session(session);
+
       const tableDoc = await Table.findOneAndUpdate(
         { tableId: table.id },
         {
@@ -146,7 +151,7 @@ async function petPoojaPosSetupHandler(payload: {
           active: table.active === "1",
           rank: table.rank,
           tableId: table.id,
-          internalZoneId: defaultZone?._id,
+          internalZoneId: zone?._id || defaultZone?._id,
           pos: true,
         },
         { upsert: true, new: true, session },
@@ -485,7 +490,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
     }
 
     for (const area of areas) {
-      defaultZone = await Zone.findOneAndUpdate(
+      await Zone.findOneAndUpdate(
         { zoneId: area.restaurantareaid },
         {
           businessId,
@@ -506,6 +511,11 @@ async function petPoojaPosSyncMenuHandler(payload: {
       const zoneIdToLink =
         areas.length === 0 ? defaultZone?.zoneId : table.restaurantareaid;
 
+      const zone = await Zone.findOne({
+        businessId,
+        zoneId: zoneIdToLink,
+      }).session(session);
+
       const tableDoc = await Table.findOneAndUpdate(
         { tableId: table.id },
         {
@@ -515,7 +525,7 @@ async function petPoojaPosSyncMenuHandler(payload: {
           active: table.active === "1",
           rank: table.rank,
           tableId: table.id,
-          internalZoneId: defaultZone?._id,
+          internalZoneId: zone?._id || defaultZone?._id,
           pos: true,
         },
         { upsert: true, new: true, session },

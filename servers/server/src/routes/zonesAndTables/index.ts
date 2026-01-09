@@ -1,44 +1,24 @@
-import {
-  Business,
-  BusinessPosConfig,
-  Kitchen,
-  Table,
-  UrlModel,
-  Zone,
-} from "@hi/db-models";
-import {
-  createTableSchema,
-  updateTableSchema,
-  updateZoneChema,
-  zoneChema,
-} from "@hi/db-models/src/validators";
-import { runInTransaction } from "@hi/utils";
-import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
-import { nanoid } from "nanoid";
-import { z } from "zod";
-import { respond } from "../../utils/response";
+import { Business, BusinessPosConfig, Kitchen, Table, UrlModel, Zone } from '@hi/db-models';
+import { createTableSchema, updateTableSchema, updateZoneChema, zoneChema } from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import { nanoid } from 'nanoid';
+import { z } from 'zod';
+import { respond } from '../../utils/response';
 //
 const zonesAndTablesRouter = new Hono()
-  .post("/zone", zValidator("json", zoneChema), async (c) => {
+  .post('/zone', zValidator('json', zoneChema), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
-      const {
-        businessId,
-        name,
-        staffIds = [],
-        visibility,
-        taxes,
-        couponIds = [],
-        tableIds = [],
-      } = await c.req.json();
+      const { businessId, name, staffIds = [], visibility, taxes, couponIds = [], tableIds = [] } = await c.req.json();
 
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
         active: true,
         posName: {
-          $ne: "HIPAL_Z",
+          $ne: 'HIPAL_Z',
         },
       });
 
@@ -55,7 +35,7 @@ const zonesAndTablesRouter = new Hono()
         businessId: businessId,
         isDeleted: false,
         active: true,
-        posName: "HIPAL_Z",
+        posName: 'HIPAL_Z',
       });
 
       const alreadyExists = await Zone.findOne({
@@ -67,7 +47,7 @@ const zonesAndTablesRouter = new Hono()
       if (alreadyExists) {
         return c.json(
           {
-            message: "Zone with this name already exists",
+            message: 'Zone with this name already exists',
             err: true,
           },
           409,
@@ -90,7 +70,7 @@ const zonesAndTablesRouter = new Hono()
 
       return c.json(
         {
-          message: "Zone created successfully",
+          message: 'Zone created successfully',
           err: false,
           data: {},
         },
@@ -99,25 +79,17 @@ const zonesAndTablesRouter = new Hono()
     });
   })
 
-  .put("/zone", zValidator("json", updateZoneChema), async (c) => {
+  .put('/zone', zValidator('json', updateZoneChema), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
-      const {
-        businessId,
-        name,
-        staffIds = [],
-        visibility,
-        tableIds = [],
-        zoneId,
-        kitchenIds = [],
-      } = await c.req.json();
+      const { businessId, name, staffIds = [], visibility, tableIds = [], zoneId, kitchenIds = [] } = await c.req.json();
 
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
         active: true,
         posName: {
-          $ne: "HIPAL_Z",
+          $ne: 'HIPAL_Z',
         },
       });
 
@@ -133,15 +105,14 @@ const zonesAndTablesRouter = new Hono()
 
       const findActiveTable = await Table.findOne({
         internalZoneId: zoneId,
-        status: "ACTIVE",
+        status: 'ACTIVE',
         businessId,
       });
 
       if (findActiveTable) {
         return c.json(
           {
-            message:
-              "you can't update this zone because this zone has active tables",
+            message: "you can't update this zone because this zone has active tables",
             err: true,
           },
           409,
@@ -166,12 +137,12 @@ const zonesAndTablesRouter = new Hono()
       );
 
       if (!updatedZone) {
-        throw new Error("Zone not found");
+        throw new Error('Zone not found');
       }
 
       return c.json(
         {
-          message: "Zone update successfully",
+          message: 'Zone update successfully',
           err: false,
           data: updatedZone,
         },
@@ -180,19 +151,11 @@ const zonesAndTablesRouter = new Hono()
     });
   })
 
-  .post("/table", zValidator("json", createTableSchema), async (c) => {
+  .post('/table', zValidator('json', createTableSchema), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
-      const {
-        businessId,
-        name,
-        staffIds = [],
-        visibility,
-        capacity,
-        internalZoneId,
-      } = await c.req.json();
-      const businessInfo =
-        await Business.findById(businessId).select("customLink");
+      const { businessId, name, staffIds = [], visibility, capacity, internalZoneId } = await c.req.json();
+      const businessInfo = await Business.findById(businessId).select('customLink');
       //TODO: change the url to the actual url
       const uniqueOrderId = nanoid(5);
 
@@ -201,7 +164,7 @@ const zonesAndTablesRouter = new Hono()
         isDeleted: false,
         active: true,
         posName: {
-          $ne: "HIPAL_Z",
+          $ne: 'HIPAL_Z',
         },
       });
 
@@ -219,13 +182,13 @@ const zonesAndTablesRouter = new Hono()
         businessId: businessId,
         isDeleted: false,
         active: true,
-        posName: "HIPAL_Z",
+        posName: 'HIPAL_Z',
       });
 
       const zoneData = await Zone.findById(internalZoneId);
 
       if (!zoneData) {
-        return respond(c, "Zone not found", true, 404, {});
+        return respond(c, 'Zone not found', true, 404, {});
       }
 
       const alreadyExists = await Table.findOne({
@@ -237,7 +200,7 @@ const zonesAndTablesRouter = new Hono()
       if (alreadyExists) {
         return c.json(
           {
-            message: "Table with this name already exists",
+            message: 'Table with this name already exists',
             err: true,
           },
           409,
@@ -326,7 +289,7 @@ const zonesAndTablesRouter = new Hono()
         if (createdTables.length === 0) {
           return c.json(
             {
-              message: "No new tables were created because they already exist",
+              message: 'No new tables were created because they already exist',
               err: true,
               data: {},
             },
@@ -336,7 +299,7 @@ const zonesAndTablesRouter = new Hono()
 
         return c.json(
           {
-            message: "Tables created successfully",
+            message: 'Tables created successfully',
             err: false,
             data: createdTables,
           },
@@ -390,7 +353,7 @@ const zonesAndTablesRouter = new Hono()
 
       return c.json(
         {
-          message: "table created successfully",
+          message: 'table created successfully',
           err: false,
           data: {},
         },
@@ -399,25 +362,17 @@ const zonesAndTablesRouter = new Hono()
     });
   })
 
-  .put("/table", zValidator("json", updateTableSchema), async (c) => {
+  .put('/table', zValidator('json', updateTableSchema), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
-      const {
-        businessId,
-        name,
-        staffIds = [],
-        visibility,
-        capacity,
-        internalZoneId,
-        tableId,
-      } = await c.req.json();
+      const { businessId, name, staffIds = [], visibility, capacity, internalZoneId, tableId } = await c.req.json();
 
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
         active: true,
         posName: {
-          $ne: "HIPAL_Z",
+          $ne: 'HIPAL_Z',
         },
       });
 
@@ -433,7 +388,7 @@ const zonesAndTablesRouter = new Hono()
 
       const tableAlreadyActive = await Table.findById(tableId);
 
-      if (tableAlreadyActive?.status === "ACTIVE") {
+      if (tableAlreadyActive?.status === 'ACTIVE') {
         return c.json(
           {
             message: "you can't update this table because this table is active",
@@ -452,10 +407,12 @@ const zonesAndTablesRouter = new Hono()
         },
       });
 
+      const businessInfo = await Business.findById(businessId).select('customLink');
+
       if (alreadyExists) {
         return c.json(
           {
-            message: "Table with this name already exists",
+            message: 'Table with this name already exists',
             err: true,
           },
           409,
@@ -465,13 +422,11 @@ const zonesAndTablesRouter = new Hono()
       if (!visibility) {
         const table = await Table.findById(tableId);
         if (!table) {
-          throw new Error("Table not found");
+          throw new Error('Table not found');
         }
 
-        if (table.status !== "EMPTY") {
-          throw new Error(
-            "you can't hide this table because this table is not empty",
-          );
+        if (table.status !== 'EMPTY') {
+          throw new Error("you can't hide this table because this table is not empty");
         }
       }
 
@@ -482,7 +437,7 @@ const zonesAndTablesRouter = new Hono()
         },
         {
           $set: {
-            longUrl: `https://hipalz.com/${businessId}/explore?tableName=${name}`,
+            longUrl: `https://hipalz.com/${businessInfo?.customLink}/explore?tableName=${name}`,
           },
         },
         { session },
@@ -504,7 +459,7 @@ const zonesAndTablesRouter = new Hono()
       );
 
       if (!updatedTable) {
-        throw new Error("Table not found");
+        throw new Error('Table not found');
       }
 
       await Zone.updateOne(
@@ -522,7 +477,7 @@ const zonesAndTablesRouter = new Hono()
 
       return c.json(
         {
-          message: "table updated successfully",
+          message: 'table updated successfully',
           err: false,
           data: {},
         },
@@ -531,9 +486,9 @@ const zonesAndTablesRouter = new Hono()
     });
   })
   .get(
-    "/tables/:businessId",
+    '/tables/:businessId',
     zValidator(
-      "param",
+      'param',
       z.object({
         businessId: z.string().min(1).max(500),
       }),
@@ -556,7 +511,7 @@ const zonesAndTablesRouter = new Hono()
       });
       return c.json(
         {
-          message: "Tables fetched successfully",
+          message: 'Tables fetched successfully',
           err: false,
           data: tables,
         },
@@ -565,9 +520,9 @@ const zonesAndTablesRouter = new Hono()
     },
   )
   .get(
-    "/zones/:businessId",
+    '/zones/:businessId',
     zValidator(
-      "param",
+      'param',
       z.object({
         businessId: z.string().min(1).max(500),
       }),
@@ -589,7 +544,7 @@ const zonesAndTablesRouter = new Hono()
       });
       return c.json(
         {
-          message: "zones fetched successfully",
+          message: 'zones fetched successfully',
           err: false,
           data: zones,
         },
@@ -599,9 +554,9 @@ const zonesAndTablesRouter = new Hono()
   )
 
   .get(
-    "/zones/kitchen/:zoneId",
+    '/zones/kitchen/:zoneId',
     zValidator(
-      "param",
+      'param',
       z.object({
         zoneId: z.string().min(24).max(24),
       }),
@@ -613,29 +568,23 @@ const zonesAndTablesRouter = new Hono()
         isDeleted: false,
       });
       if (!zone) {
-        return respond(c, "Zone not found", true, 404, {});
+        return respond(c, 'Zone not found', true, 404, {});
       }
 
       const kitchenIds = zone.kitchenIds;
 
       const kitchens = await Kitchen.find({
         _id: { $in: kitchenIds },
-      }).select("_id name");
+      }).select('_id name');
 
-      return respond(
-        c,
-        "Zone kitchen fetched successfully",
-        false,
-        200,
-        kitchens,
-      );
+      return respond(c, 'Zone kitchen fetched successfully', false, 200, kitchens);
     },
   )
 
   .get(
-    "/fetch_active_tables/:businessId",
+    '/fetch_active_tables/:businessId',
     zValidator(
-      "param",
+      'param',
       z.object({
         businessId: z.string().min(1).max(500),
       }),
@@ -666,7 +615,7 @@ const zonesAndTablesRouter = new Hono()
           const tables = await Table.find({
             businessId,
             zoneId: zone.zoneId,
-            status: "ACTIVE",
+            status: 'ACTIVE',
             active: true,
           });
 
@@ -688,7 +637,7 @@ const zonesAndTablesRouter = new Hono()
 
       return c.json(
         {
-          message: "Active tables fetched successfully",
+          message: 'Active tables fetched successfully',
           err: false,
           data: {
             totalTableAmount,

@@ -709,3 +709,131 @@ export const useDownloadDeletedItemsXlsx = () => {
     downloadDeletedItemsXlsx: mutateAsync,
   };
 };
+
+// Dish Type Report (VEG/NON_VEG/etc.)
+interface GetReportsPayload {
+  from: string;
+  to: string;
+  businessIds: string[];
+}
+
+export interface DishTypeReport {
+  type: string;              // VEG, NON_VEG, EGG, JAIN, etc.
+  itemCount: number;         // total quantity sold
+  grossAmount: number;       // before discount + tax
+  discount: number;
+  tax: number;
+  netSales: number;          // final revenue
+}
+
+export interface BusinessDishTypeReport {
+  businessId: string;
+  businessName: string;
+  from: string;
+  to: string;
+  dishTypes: DishTypeReport[];
+}
+
+export const useDishTypeReports = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const setDishTypeReports = useReports((s) => s.setDishTypeReports);
+  const { handleEnvelope } = useApiErrorHandler();
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      // Convert string timestamps to numbers for API
+      const response = await apiRpc.report.item["dish-type"].$post({
+        json: {
+          businessIds: payload.businessIds,
+          from: Number(payload.from),
+          to: Number(payload.to),
+        },
+      });
+      const dishTypeData = await handleEnvelope(response);
+      if (!dishTypeData || !Array.isArray(dishTypeData)) {
+        throw new Error("Invalid data format received");
+      }
+      setDishTypeReports((dishTypeData as BusinessDishTypeReport[]) || []);
+      const totalTypes = dishTypeData.reduce(
+        (acc, business) => acc + business.dishTypes.length,
+        0,
+      );
+      toast.success(
+        `Report generated successfully! Found ${totalTypes} dish type${totalTypes !== 1 ? 's' : ''}.`,
+      );
+      return response;
+    },
+
+    onError: (error) => {
+      console.error("Report generation error:", error);
+      setOpenErrorModal(true);
+      setError("Failed to fetch reports. Please try again.");
+      toast.error("Failed to fetch reports. Please try again.");
+    },
+  });
+
+  return {
+    isPending,
+    getDishTypeReports: mutateAsync,
+    clearReportData: () => setDishTypeReports([]),
+    resetError: reset,
+  };
+};
+
+export const useGetDishTypeReportsCsv = () => {
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      // Use the dedicated dish type download endpoint
+      const response = await apiRpc.report.item["download_csv_dish_type"].$post({
+        json: {
+          businessIds: payload.businessIds,
+          from: Number(payload.from),
+          to: Number(payload.to),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.blob();
+    },
+    onSuccess: async (blob, variables) => {
+      try {
+        if (!blob || blob.size === 0) {
+          throw new Error("Empty file received");
+        }
+
+        const url = window.URL.createObjectURL(new Blob([blob]));
+        const link = document.createElement("a");
+        const fromStr = formatDateToIST(Number(variables.from));
+        const toStr = formatDateToIST(Number(variables.to));
+        const fileName = `Dish Type Reports ${fromStr} to ${toStr}.xlsx`;
+
+        link.href = url;
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
+        window.URL.revokeObjectURL(url);
+
+        toast.success(`File "${fileName}" downloaded successfully!`);
+      } catch (downloadError) {
+        console.error("Download error:", downloadError);
+        toast.error("Failed to download file");
+      }
+    },
+    onError: (error) => {
+      console.error("CSV generation error:", error);
+      toast.error("Failed to generate file. Please try again.");
+    },
+  });
+
+  return {
+    isPending,
+    getDishTypeReportsCsv: mutateAsync,
+    resetError: reset,
+  };
+};

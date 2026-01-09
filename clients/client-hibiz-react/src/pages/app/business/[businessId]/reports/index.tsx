@@ -1,43 +1,44 @@
-import DateRangePicker from "@/components/molecules/dateRangePicker/index.tsx";
-import MemoizedHeader from "@/components/molecules/header/index.tsx";
-import AddonReports from "@/components/reports/AddOnReports.tsx";
-import CategoryReports from "@/components/reports/CategoryReports.tsx";
-import MultiReportDownloadButton from "@/components/reports/CombinedReport";
-import DeletedItemsReports from "@/components/reports/DeletedItemReport";
-import DiscountReports from "@/components/reports/DiscountReport.tsx";
-import ItemReports from "@/components/reports/ItemReports.tsx";
-import ServiceChargeReports from "@/components/reports/ServiceChargeReports.tsx";
-import useReports, {
-  type ReportsTypes,
-} from "@/components/store/useReports.ts";
-import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSidenav.tsx";
-import { cn } from "@/lib/utils.ts";
-import { useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import DateRangePicker from '@/components/molecules/dateRangePicker/index.tsx';
+import MemoizedHeader from '@/components/molecules/header/index.tsx';
+import AddonReports from '@/components/reports/AddOnReports.tsx';
+import CategoryReports from '@/components/reports/CategoryReports.tsx';
+import MultiReportDownloadButton from '@/components/reports/CombinedReport';
+import DeletedItemsReports from '@/components/reports/DeletedItemReport';
+import DiscountReports from '@/components/reports/DiscountReport.tsx';
+import DishTypeReports from '@/components/reports/DishTypeReports.tsx';
+import ItemReports from '@/components/reports/ItemReports.tsx';
+import ServiceChargeReports from '@/components/reports/ServiceChargeReports.tsx';
+import useReports, { type ReportsTypes } from '@/components/store/useReports.ts';
+import UniversalNav from '@/components/templates/menu/sideNavbaar/universelSidenav.tsx';
+import { cn } from '@/lib/utils.ts';
+import { useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 enum ReportType {
-  Combined = "combined",
-  Category = "category",
-  Item = "item",
-  Discount = "discount",
-  ServiceCharge = "serviceCharge",
-  AddOn = "addOn",
-  Deleted = "Deleted_Items",
+  Combined = 'combined',
+  Category = 'category',
+  Item = 'item',
+  DishType = 'dishType',
+  Discount = 'discount',
+  ServiceCharge = 'serviceCharge',
+  AddOn = 'addOn',
+  Deleted = 'Deleted_Items',
 }
 
 const navItems = [
   {
-    text: "Combined",
+    text: 'Combined',
   },
-  { text: "Category" },
-  { text: "Item" },
+  { text: 'Category' },
+  { text: 'Item' },
+  { text: 'DishType' },
   {
-    text: "AddOn",
+    text: 'AddOn',
   },
-  { text: "Discount" },
-  { text: "ServiceCharge" },
+  { text: 'Discount' },
+  { text: 'ServiceCharge' },
   {
-    text: "Deleted_Items",
+    text: 'Deleted_Items',
   },
 ];
 
@@ -57,7 +58,7 @@ const Reports = () => {
 
   const handleBack = useCallback(() => {
     return navigate(`/app/business/${businessId}`);
-  }, []);
+  }, [navigate, businessId]);
 
   return (
     <main>
@@ -70,10 +71,10 @@ const Reports = () => {
           {navItems.map((item) => (
             <button
               className={cn(
-                "bg-white pb-3 pt-4",
+                'bg-white pb-3 pt-4',
                 reportPage?.toLowerCase() === item.text.toLowerCase()
-                  ? "border-b-2 border-[#8162e6] text-lg font-semibold text-[#8162e6] transition-all"
-                  : "",
+                  ? 'border-b-2 border-[#8162e6] text-lg font-semibold text-[#8162e6] transition-all'
+                  : '',
               )}
               key={item.text}
               type="button"
@@ -84,11 +85,7 @@ const Reports = () => {
           ))}
         </nav>
       </div>
-      <UniversalNav
-        items={navItems}
-        selectedNavItem={reportPage}
-        changeNav={changeLayout}
-      />
+      <UniversalNav items={navItems} selectedNavItem={reportPage} changeNav={changeLayout} />
       <section className="mt-[4rem] xl:mt-0">
         <DateRangePicker />
       </section>
@@ -105,6 +102,11 @@ const Reports = () => {
       {reportPage === ReportType.Item && (
         <div>
           <ItemReports />
+        </div>
+      )}
+      {reportPage === ReportType.DishType.toLowerCase() && (
+        <div>
+          <DishTypeReports />
         </div>
       )}
       {reportPage === ReportType.AddOn.toLowerCase() && (

@@ -2724,6 +2724,87 @@ const scriptRouter = new Hono()
 
       return respond(c, "All hotel staff levels added", false, 200, {});
     },
+  )
+
+  .post(
+    "/chnage_table_name",
+    zValidator(
+      "json",
+      z.object({
+        tableId: z.string().min(24).max(24),
+        name: z.string().min(1).max(100),
+      }),
+    ),
+
+    async (c) => {
+      const { tableId, name } = await c.req.json();
+
+      const table = await Table.findById(tableId);
+
+      if (!table) {
+        return respond(c, "Table not found", true, 404, {});
+      }
+
+      const isHasShortUrl = table.tableLink;
+
+      if (!isHasShortUrl) {
+        return respond(c, "Short url not found", true, 404, {});
+      }
+
+      if (table.status === "ACTIVE") {
+        return respond(c, "Table is active", true, 404, {});
+      }
+
+      const shortUrlDoc = await UrlModel.findOne({
+        shortUrl: table.tableLink,
+      });
+
+      if (!shortUrlDoc) {
+        return respond(c, "Short url not found", true, 404, {});
+      }
+
+      const posConfig = await BusinessPosConfig.findOne({
+        businessId: table.businessId,
+      });
+
+      if (!posConfig) {
+        return respond(c, "Pos not found", true, 404, {});
+      }
+
+      if (posConfig.posName !== "HIPAL_Z") {
+        return respond(c, "Pos is not hipal_z", true, 404, {});
+      }
+
+      const businessInfo = await Business.findById(table.businessId);
+
+      const updateLongUrl = `https://hipal-test.hipalz.com/${businessInfo?.customLink}/explore?tableName=${name}`;
+
+      await UrlModel.updateOne(
+        {
+          shortUrl: table.tableLink,
+        },
+        {
+          $set: {
+            longUrl: updateLongUrl,
+          },
+        },
+        { new: true },
+      );
+
+      await Table.updateOne(
+        {
+          _id: tableId,
+        },
+        {
+          $set: {
+            name,
+          },
+        },
+        { new: true },
+      );
+
+      return respond(c, "Table name updated successfully", false, 200, {});
+    },
   );
 
 export default scriptRouter;
