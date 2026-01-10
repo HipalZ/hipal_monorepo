@@ -274,6 +274,7 @@ interface OpenItemPayload {
   itemPrice: number;
   itemQuantity: number;
   kitchenId: string;
+  gst?: number;
 }
 
 export const convertToHipalzCart = ({
@@ -281,6 +282,7 @@ export const convertToHipalzCart = ({
   itemPrice,
   itemQuantity,
   kitchenId,
+  gst = 5,
 }: OpenItemPayload) => {
   const cart = [
     {
@@ -297,7 +299,7 @@ export const convertToHipalzCart = ({
         kitchenId,
         visibility: true,
         active: true,
-        gst: 5,
+        gst: gst,
       },
       portion: null,
       extras: [],

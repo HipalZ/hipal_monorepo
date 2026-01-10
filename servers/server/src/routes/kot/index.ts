@@ -209,7 +209,7 @@ const kotRouter = new Hono()
   .post(
     "/open_item",
     // ubacMiddleware("temp_item"),
-    zValidator(
+      zValidator(
       "json",
       z.object({
         staffId: z.string().min(24).max(24),
@@ -219,6 +219,7 @@ const kotRouter = new Hono()
         itemPrice: z.number().min(1).max(2000).positive(),
         itemQuantity: z.number().min(1).max(100),
         kitchenId: z.string().min(24).max(24).optional(),
+        gst: z.number().min(0).max(100).optional(),
       }),
     ),
     async (c) => {
@@ -232,6 +233,7 @@ const kotRouter = new Hono()
           itemPrice,
           itemQuantity,
           kitchenId = null,
+          gst,
         } = await c.req.json();
         const tableInfo = await Table.findOne({
           businessId: businessId,
@@ -326,6 +328,7 @@ const kotRouter = new Hono()
             itemPrice,
             itemQuantity,
             kitchenId: kitchenInfo?._id.toString(),
+            gst: gst ?? 5,
           });
 
           const res = await saveKotOrder(
@@ -388,6 +391,7 @@ const kotRouter = new Hono()
           itemPrice,
           itemQuantity,
           kitchenId: kitchenId || kitchenInfo?._id.toString(),
+          gst: gst ?? 5,
         });
 
         const res = await saveKotOrder(
