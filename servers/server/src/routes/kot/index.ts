@@ -209,7 +209,7 @@ const kotRouter = new Hono()
   .post(
     "/open_item",
     // ubacMiddleware("temp_item"),
-      zValidator(
+    zValidator(
       "json",
       z.object({
         staffId: z.string().min(24).max(24),
