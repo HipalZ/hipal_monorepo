@@ -282,7 +282,7 @@ export const convertToHipalzCart = ({
   itemPrice,
   itemQuantity,
   kitchenId,
-  gst = 5,
+  gst,
 }: OpenItemPayload) => {
   const cart = [
     {
@@ -299,7 +299,7 @@ export const convertToHipalzCart = ({
         kitchenId,
         visibility: true,
         active: true,
-        gst: gst,
+        gst: gst || 5,
       },
       portion: null,
       extras: [],
