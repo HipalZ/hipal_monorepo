@@ -2805,6 +2805,176 @@ const scriptRouter = new Hono()
 
       return respond(c, "Table name updated successfully", false, 200, {});
     },
+  )
+
+  .post(
+    "/update_category",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = await c.req.json();
+
+      // 🔁 category mapping
+      const filter = [
+        {
+          categoryId: "694d1032c4453b79c47b22b2",
+          updatedCatId: "694b995b9d1b91c79b8065af",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22dc",
+          updatedCatId: "694b9b86f2d842b73b92635a",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22ee",
+          updatedCatId: "694b9d30f2d842b73b927e2d",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22eb",
+          updatedCatId: "694b9cf7f2d842b73b927b19",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22af",
+          updatedCatId: "694b9918f2d842b73b923300",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22e8",
+          updatedCatId: "694b9ccbf2d842b73b9278bc",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22b8",
+          updatedCatId: "694b99b4f2d842b73b9241bc",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22f1",
+          updatedCatId: "694b9d57f2d842b73b927eab",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b2300",
+          updatedCatId: "694ba99ef2d842b73b933c9f",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22ac",
+          updatedCatId: "694b98f69d1b91c79b80613a",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b2315",
+          updatedCatId: "694bacbb9d1b91c79b819fc4",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22cd",
+          updatedCatId: "694b9abff2d842b73b9256be",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b230c",
+          updatedCatId: "694bac5cf2d842b73b9366f3",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22bb",
+          updatedCatId: "694b99db9d1b91c79b807349",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22c7",
+          updatedCatId: "694b9a629d1b91c79b807db0",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22a9",
+          updatedCatId: "694b98c89d1b91c79b805f59",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b2312",
+          updatedCatId: "694bac9b9d1b91c79b819cc0",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b2309",
+          updatedCatId: "694bac189d1b91c79b8194a5",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22be",
+          updatedCatId: "694b99f3f2d842b73b92499d",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22fd",
+          updatedCatId: "694b9e539d1b91c79b80c76b",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22e5",
+          updatedCatId: "694b9c9b9d1b91c79b80a4ea",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22c1",
+          updatedCatId: "694b9a08f2d842b73b924b0f",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22f4",
+          updatedCatId: "694b9d8f9d1b91c79b80b519",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b22b5",
+          updatedCatId: "694b99899d1b91c79b806a16",
+        },
+        {
+          categoryId: "694d1032c4453b79c47b2306",
+          updatedCatId: "694babe49d1b91c79b8190b8",
+        },
+        {
+          categoryId: "695289083e6497eee032a2c9",
+          updatedCatId: "695288b9c4453b79c4d2480a",
+        },
+      ];
+
+      // 🔥 build lookup map
+      const categoryMap = Object.fromEntries(
+        filter.map((f) => [f.categoryId, f.updatedCatId]),
+      );
+
+      const payments = await Payment.find({
+        businessId,
+        isDeleted: false,
+      });
+
+      let updatedBills = 0;
+      let updatedItems = 0;
+
+      for (const payment of payments) {
+        let billUpdated = false;
+
+        payment.billItems?.forEach((item) => {
+          const catIds = item?.dish?.categoryIds;
+          if (!Array.isArray(catIds)) return;
+
+          item.dish.categoryIds = catIds.map((catId) => {
+            if (categoryMap[catId]) {
+              updatedItems++;
+              billUpdated = true;
+              return categoryMap[catId];
+            }
+            return catId;
+          });
+        });
+
+        if (billUpdated) {
+          await Payment.updateOne(
+            { _id: payment._id },
+            { $set: { billItems: payment.billItems } },
+          );
+          updatedBills++;
+        }
+      }
+
+      return c.json({
+        success: true,
+        message: "Category IDs updated successfully",
+        stats: {
+          totalBillsScanned: payments.length,
+          billsUpdated: updatedBills,
+          categoryReplacements: updatedItems,
+        },
+      });
+    },
   );
 
 export default scriptRouter;
