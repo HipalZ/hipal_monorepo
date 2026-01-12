@@ -7,6 +7,7 @@ import DeletedItemsReports from '@/components/reports/DeletedItemReport';
 import DiscountReports from '@/components/reports/DiscountReport.tsx';
 import DishTypeReports from '@/components/reports/DishTypeReports.tsx';
 import ItemReports from '@/components/reports/ItemReports.tsx';
+import ItemVariantReports from '@/components/reports/ItemVariantReports.tsx';
 import ServiceChargeReports from '@/components/reports/ServiceChargeReports.tsx';
 import useReports, { type ReportsTypes } from '@/components/store/useReports.ts';
 import UniversalNav from '@/components/templates/menu/sideNavbaar/universelSidenav.tsx';
@@ -18,6 +19,7 @@ enum ReportType {
   Combined = 'combined',
   Category = 'category',
   Item = 'item',
+  ItemVariant = 'item_variant',
   DishType = 'dishType',
   Discount = 'discount',
   ServiceCharge = 'serviceCharge',
@@ -31,6 +33,7 @@ const navItems = [
   },
   { text: 'Category' },
   { text: 'Item' },
+  { text: 'Item_Variant' },
   { text: 'DishType' },
   {
     text: 'AddOn',
@@ -102,6 +105,11 @@ const Reports = () => {
       {reportPage === ReportType.Item && (
         <div>
           <ItemReports />
+        </div>
+      )}
+      {reportPage === ReportType.ItemVariant.toLowerCase() && (
+        <div>
+          <ItemVariantReports />
         </div>
       )}
       {reportPage === ReportType.DishType.toLowerCase() && (

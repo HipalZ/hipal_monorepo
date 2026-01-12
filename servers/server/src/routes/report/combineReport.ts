@@ -3,7 +3,13 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import * as ExcelJS from "exceljs";
 
-import { Payment, Business, Kitchen, DishZoneKitchen, Table } from "@hi/db-models";
+import {
+  Payment,
+  Business,
+  Kitchen,
+  DishZoneKitchen,
+  Table,
+} from "@hi/db-models";
 import { formatDateToIST } from "../../utils/reportHelper/dateFormater";
 
 import { buildNetAndSalesSheets } from "../../utils/reportHelper/salesReport";
@@ -19,6 +25,7 @@ import type { BaseContext, AnyPayment } from "../../utils/reportHelper/types";
 import { buildConsolidatedSheet } from "../../utils/reportHelper/cansolidateReport";
 import { buildOpenItemSaleSheet } from "../../utils/reportHelper/buildOpenItemSaleSheet";
 import { buildDishTypeSheetFromContext } from "../../utils/reportHelper/itemTypeReport";
+import { buildItemVariantSheetFromContext } from "../../utils/reportHelper/itemVariantReport";
 
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
@@ -84,9 +91,7 @@ const unifiedExcelRouter = new Hono().post(
 
     // 🔹 Build table name to zoneId lookup map
     const tableNames = Array.from(
-      new Set(
-        allPayments.map((p) => (p as any).tableName).filter(Boolean),
-      ),
+      new Set(allPayments.map((p) => (p as any).tableName).filter(Boolean)),
     );
     const tables = await Table.find({
       businessId: { $in: businessIds },
@@ -144,36 +149,84 @@ const unifiedExcelRouter = new Hono().post(
     workbook.creator = "HiPalz";
     workbook.created = new Date();
 
-    await buildConsolidatedSheet(workbook, ctx);
+    // Track successful and failed reports
+    const reportStatus: {
+      succeeded: string[];
+      failed: Array<{ name: string; error: string }>;
+    } = {
+      succeeded: [],
+      failed: [],
+    };
+
+    // Helper function to safely execute report builders
+    const safeBuildReport = async (
+      reportName: string,
+      buildFn: () => Promise<void> | void,
+    ) => {
+      try {
+        await Promise.resolve(buildFn());
+        reportStatus.succeeded.push(reportName);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        console.error(`❌ Failed to build ${reportName}:`, errorMessage);
+        reportStatus.failed.push({ name: reportName, error: errorMessage });
+      }
+    };
+
+    // Build all reports with error handling
+    await safeBuildReport("Consolidated Sheet", () =>
+      buildConsolidatedSheet(workbook, ctx),
+    );
 
     // 1) Net Sales + Sales Report
-    await buildNetAndSalesSheets(workbook, ctx);
+    await safeBuildReport("Net Sales + Sales Report", () =>
+      buildNetAndSalesSheets(workbook, ctx),
+    );
 
     // 2) Category Report
-    await buildCategorySheet(workbook, ctx);
+    await safeBuildReport("Category Report", () =>
+      buildCategorySheet(workbook, ctx),
+    );
 
     // 3) Item Report (with DishZoneKitchen mappings for correct kitchen routing)
-    await buildItemSheet(
-      workbook,
-      ctx,
-      dishZoneKitchenMappings,
-      getZoneIdForExcel,
+    await safeBuildReport("Item Report", () =>
+      buildItemSheet(workbook, ctx, dishZoneKitchenMappings, getZoneIdForExcel),
     );
 
     // 3.5) Item Type Report (VEG/NON_VEG/etc.)
-    buildDishTypeSheetFromContext(workbook, ctx);
+    await safeBuildReport("Item Type Report", () =>
+      buildDishTypeSheetFromContext(workbook, ctx),
+    );
+
+    // 3.6) Item Variant Report (Item-wise Portion Sales)
+    await safeBuildReport("Item Variant Report", () =>
+      buildItemVariantSheetFromContext(workbook, ctx),
+    );
 
     // 4) AddOn Report
-    await buildAddOnSheet(workbook, ctx);
+    await safeBuildReport("AddOn Report", () => buildAddOnSheet(workbook, ctx));
 
     // 5) Discount Report
-    await buildDiscountSheet(workbook, ctx);
+    await safeBuildReport("Discount Report", () =>
+      buildDiscountSheet(workbook, ctx),
+    );
 
     // 6) Service Charge Report
-    await buildServiceChargeSheet(workbook, ctx);
+    await safeBuildReport("Service Charge Report", () =>
+      buildServiceChargeSheet(workbook, ctx),
+    );
 
-    //7) open item sale report
-    await buildOpenItemSaleSheet(workbook, ctx);
+    // 7) Open Item Sale Report
+    await safeBuildReport("Open Item Sale Report", () =>
+      buildOpenItemSaleSheet(workbook, ctx),
+    );
+
+    // Log report status
+    if (reportStatus.failed.length > 0) {
+      console.warn("⚠️ Some reports failed to build:", reportStatus.failed);
+    }
+    console.log("✅ Successfully built reports:", reportStatus.succeeded);
 
     // 🔚 Final write & response
     const fromIST = formatDateToIST(from);

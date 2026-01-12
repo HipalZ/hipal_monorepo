@@ -204,11 +204,12 @@ function DishLinkModalComponent({
     <PopUp
       hide
       height="h-[100dvh] lg:h-[90dvh]"
+      width="w-full max-w-[69rem]"
       onClose={onClose}
       show={isOpen}
       rightTopBack
     >
-      <div className="bg-white mx-auto h-full flex flex-col p-4">
+      <div className="bg-white mx-auto h-full flex flex-col p-4 h-[80dvh] overflow-y-auto w-full">
         <div className=" border-b pb-2">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             Link Dishes to Kitchen
@@ -256,7 +257,7 @@ function DishLinkModalComponent({
                 <p className="text-gray-500">No dishes found.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                 {Object.entries(groupedDishes).map(
                   ([categoryName, dishesInGroup]) => {
                     const isExpanded = expandedCategories.has(categoryName);

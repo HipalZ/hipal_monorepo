@@ -60,6 +60,7 @@ export async function buildCategoryReport(
 
   const nameById = categories.reduce<Record<string, string>>((m, c) => {
     m[c._id.toString()] = c.name;
+    console.log(c.name, c._id.toString());
     return m;
   }, {});
 

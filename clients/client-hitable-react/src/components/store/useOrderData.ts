@@ -68,8 +68,11 @@ interface OrderState {
   openDues: boolean;
   setOpenDues: (open: boolean) => void;
 
-  selectedItems: string[];
-  setSelectedItems: (items: string[]) => void;
+  selectedItems: Array<{ itemId: string; quantity: number }>;
+  setSelectedItems: (
+    items: Array<{ itemId: string; quantity: number }>,
+  ) => void;
+  updateSelectedItemQuantity: (itemId: string, quantity: number) => void;
   toggleSelectedItem: (itemId: string) => void;
 
   orderDataStore: OrderData[];
@@ -167,12 +170,28 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   selectedItems: [],
   setSelectedItems: (items) => set({ selectedItems: items }),
-  toggleSelectedItem: (itemId) =>
+  updateSelectedItemQuantity: (itemId, quantity) =>
     set((state) => ({
-      selectedItems: state.selectedItems.includes(itemId)
-        ? state.selectedItems.filter((id) => id !== itemId)
-        : [...state.selectedItems, itemId],
+      selectedItems: state.selectedItems.map((item) =>
+        item.itemId === itemId ? { ...item, quantity } : item,
+      ),
     })),
+  toggleSelectedItem: (itemId) =>
+    set((state) => {
+      const exists = state.selectedItems.find((item) => item.itemId === itemId);
+      if (exists) {
+        return {
+          selectedItems: state.selectedItems.filter(
+            (item) => item.itemId !== itemId,
+          ),
+        };
+      }
+      // When adding, we need to get the quantity from orderDataStore
+      // For now, default to 1, will be updated in component
+      return {
+        selectedItems: [...state.selectedItems, { itemId, quantity: 1 }],
+      };
+    }),
 
   transferTable: "",
   setTransferTable: (table) => set({ transferTable: table }),
