@@ -1851,7 +1851,7 @@ const tableRouter = new Hono()
           transferType,
           fromTableId,
           toTableId,
-          itemIds = [],
+          itemData = [],
         } = (await c.req.json()) as SwitchTableType;
 
         const sourceTable = await Table.findById(fromTableId);
@@ -2014,44 +2014,73 @@ const tableRouter = new Hono()
         }
 
         if (transferType === "ITEM") {
+          const itemMap = new Map<string, number>(
+            itemData.map((i) => [i.itemId.toString(), i.quantity]),
+          );
+
           const kotOrders = await KotOrder.find({
-            cart: { $elemMatch: { _id: { $in: itemIds } } },
             settled: false,
             accepted: true,
             tableName: sourceTable.name,
-          });
+            "cart._id": { $in: itemData.map((i) => i.itemId) },
+          }).session(session);
 
-          if (kotOrders.length === 0) {
+          if (!kotOrders.length) {
             return respond(c, "No items found in the KotOrder", true, 400, {});
           }
 
           const destinationTableSession = await UserSession.findOne({
             tableName: destinationTable.name,
             businessId,
-          });
+          }).session(session);
 
           for (const kotOrder of kotOrders) {
-            const removedItems = kotOrder.cart.filter((item) =>
-              itemIds.includes(item._id.toString()),
-            );
+            const transferItems = [];
+            const updatedCart = [];
 
-            kotOrder.cart = kotOrder.cart.filter(
-              (item) => !itemIds.includes(item._id.toString()),
-            );
+            for (const cartItem of kotOrder.cart) {
+              const transferQty = itemMap.get(cartItem._id.toString());
 
-            if (kotOrder.cart.length === 0) {
-              await KotOrder.deleteOne({ _id: kotOrder._id }, { session });
+              if (!transferQty) {
+                updatedCart.push(cartItem);
+                continue;
+              }
+
+              if (cartItem.quantity < transferQty) {
+                return respond(c, "Insufficient quantity", true, 400, {});
+              }
+
+              const remainingQty = cartItem.quantity - transferQty;
+
+              transferItems.push({
+                ...cartItem,
+                quantity: transferQty,
+              });
+
+              if (remainingQty > 0) {
+                updatedCart.push({
+                  ...cartItem,
+                  quantity: remainingQty,
+                });
+              }
+            }
+
+            if (updatedCart.length === 0) {
+              await KotOrder.deleteOne({ _id: kotOrder._id }).session(session);
             } else {
+              kotOrder.cart = updatedCart;
               await kotOrder.save({ session });
             }
 
-            const { _id, ...newKotOrderData } = kotOrder.toObject();
+            const { _id, cart, ...baseKotData } = kotOrder.toObject
+              ? kotOrder.toObject()
+              : kotOrder;
 
             await KotOrder.create(
               [
                 {
-                  ...newKotOrderData,
-                  cart: removedItems,
+                  ...baseKotData,
+                  cart: transferItems,
                   tableName: destinationTable.name,
                   tableId: destinationTable._id,
                   transferd: true,
@@ -2064,72 +2093,68 @@ const tableRouter = new Hono()
               ],
               { session },
             );
+          }
 
-            let hiCode = "";
-            if (
-              !destinationTableSession ||
-              destinationTable.status === "EMPTY"
-            ) {
-              hiCode = Math.floor(1000 + Math.random() * 9000).toString();
-              const tenDigitCode = generateTenDigitCode();
+          let hiCode = destinationTableSession?.hiCode;
 
-              await UserSession.findOneAndUpdate(
-                { businessId, tableName: destinationTable.name },
-                {
-                  $setOnInsert: {
-                    customerName: tableSession?.customerName || "Guest",
-                    hiCode,
-                    pin: tenDigitCode,
-                    date: Date.now(),
-                  },
-                  $set: {
-                    transferTableFrom: sourceTable._id,
-                    transferTableTo: destinationTable._id,
-                    isTransfer: true,
-                    transferBy,
-                    transferType: "ITEM",
-                  },
-                },
-                {
-                  upsert: true,
-                  session,
-                  new: true,
-                },
-              );
-            }
+          if (!destinationTableSession || destinationTable.status === "EMPTY") {
+            hiCode = Math.floor(1000 + Math.random() * 9000).toString();
+            const tenDigitCode = generateTenDigitCode();
 
-            const calSubTotalSourceTable = await calculateSubtotal(
-              sourceTable.name,
-              sourceTable.businessId,
-              session,
-            );
-            const calSubTotalDestTable = await calculateSubtotal(
-              destinationTable.name,
-              destinationTable.businessId,
-              session,
-            );
-            await Table.findByIdAndUpdate(sourceTable._id, {
-              $set: {
-                currentTableAmount: calSubTotalSourceTable,
-              },
-            });
-
-            await Table.findByIdAndUpdate(
-              toTableId,
+            await UserSession.findOneAndUpdate(
+              { businessId, tableName: destinationTable.name },
               {
-                hiCode: destinationTableSession?.hiCode || hiCode,
-                status: "ACTIVE",
-                isTransfer: true,
-                transferType: "ITEM",
-                currentTableAmount: calSubTotalDestTable,
+                $setOnInsert: {
+                  customerName: tableSession?.customerName || "Guest",
+                  hiCode,
+                  pin: tenDigitCode,
+                  date: Date.now(),
+                },
+                $set: {
+                  transferTableFrom: sourceTable._id,
+                  transferTableTo: destinationTable._id,
+                  isTransfer: true,
+                  transferBy,
+                  transferType: "ITEM",
+                },
               },
-              { session },
+              { upsert: true, session },
             );
           }
 
+          const sourceTotal = await calculateSubtotal(
+            sourceTable.name,
+            sourceTable.businessId,
+            session,
+          );
+
+          const destTotal = await calculateSubtotal(
+            destinationTable.name,
+            destinationTable.businessId,
+            session,
+          );
+
+          await Table.findByIdAndUpdate(
+            sourceTable._id,
+            { $set: { currentTableAmount: sourceTotal } },
+            { session },
+          );
+
+          await Table.findByIdAndUpdate(
+            toTableId,
+            {
+              hiCode,
+              status: "ACTIVE",
+              isTransfer: true,
+              transferType: "ITEM",
+              currentTableAmount: destTotal,
+            },
+            { session },
+          );
+
           return c.json(
             {
-              message: "Items transferred successfully",
+              message: "success",
               err: false,
               data: {},
             },
