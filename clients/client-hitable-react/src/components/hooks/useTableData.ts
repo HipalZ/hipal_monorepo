@@ -16,7 +16,10 @@ export interface ITransferPayload {
   transferType: "TABLE" | "ITEM";
   fromTableId: string;
   toTableId: string;
-  itemIds?: string[];
+  itemData?: Array<{
+    itemId: string;
+    quantity: number; // positive integer, never zero, not greater than current quantity
+  }>;
 }
 
 type UseTableDataOptions = {
@@ -91,6 +94,7 @@ export const useTableTransfer = (businessId: string) => {
     selectedItems,
     setSelectedItems,
     transferTable,
+    orderDataStore,
   } = useOrderStore();
   const captainData = useHiClientZ((s) => s.captainData);
 
@@ -141,13 +145,45 @@ export const useTableTransfer = (businessId: string) => {
       await mutateAsync(payload);
     }
     if (transferTable === "ITEM" && toTable && selectedTable) {
+      // selectedItems is now Array<{itemId: string, quantity: number}>
+      // Validate quantities are positive
+      const invalidItems = selectedItems.filter((item) => item.quantity <= 0);
+      if (invalidItems.length > 0) {
+        return toast.error("Invalid quantity for selected items");
+      }
+
+      // Validate quantities don't exceed available quantities
+      for (const selectedItem of selectedItems) {
+        const cartItem = orderDataStore
+          .flatMap((order) => order.cart)
+          .find((item) => item._id === selectedItem.itemId);
+
+        if (!cartItem) {
+          return toast.error(`Item ${selectedItem.itemId} not found in order`);
+        }
+
+        if (selectedItem.quantity > cartItem.quantity) {
+          return toast.error(
+            `Quantity for ${
+              cartItem.dish?.name || "item"
+            } exceeds available quantity`,
+          );
+        }
+      }
+
+      // Build itemData array from selectedItems
+      const itemData = selectedItems.map((item) => ({
+        itemId: item.itemId,
+        quantity: item.quantity,
+      }));
+
       const payload: ITransferPayload = {
         businessId: businessId,
         transferBy: captainData._id || "",
         transferType: transferTable?.toUpperCase() as "ITEM",
         fromTableId: selectedTable._id,
         toTableId: toTable?._id || "",
-        itemIds: selectedItems,
+        itemData: itemData,
       };
       await mutateAsync(payload);
     }
@@ -280,7 +316,7 @@ export const useCustomerLogin = () => {
 
   const { mutateAsync: sendOtp } = useMutation({
     mutationFn: customerLogin,
-    onError: (err: any) => toast.error(err.message || "Failed to send OTP"),
+    onError: (err: Error) => toast.error(err.message || "Failed to send OTP"),
   });
 
   const { mutateAsync: verifyOtp } = useMutation({

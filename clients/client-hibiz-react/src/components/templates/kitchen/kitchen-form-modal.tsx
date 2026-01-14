@@ -24,8 +24,8 @@ import {
 import { toast } from "react-hot-toast";
 import { ArrowLeft, ArrowRight, CheckCircle, ChefHat } from "lucide-react";
 import PopUp from "@/components/atom/popUp";
-import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton.tsx";
 import { useParams } from "react-router-dom";
+import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
 
 // Lazy load step components
 const StepIndicator = lazy(() => import("./steps/step-indicator"));
@@ -233,7 +233,8 @@ export default function KitchenFormModal({
 
   return (
     <PopUp
-      height="h-[100dvh] xl:h-[80dvh]"
+
+      height="h-[100dvh] xl:h-[90dvh]"
       onClose={onClose}
       show={isOpen}
       rightTopBack
@@ -302,13 +303,13 @@ export default function KitchenFormModal({
         </CardContent>
 
         <div className="px-8 pb-8">
+        </div>
+      </Card>
           <AdvancedBottomButton
             fixed={true}
             maxWidth="30rem"
             buttons={navigationButtons}
           />
-        </div>
-      </Card>
     </PopUp>
   );
 }

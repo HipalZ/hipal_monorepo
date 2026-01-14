@@ -18,27 +18,20 @@ import {
   UpiMode,
   User,
   UserSession,
-} from "@hi/db-models";
-import {
-  type SwitchTableType,
-  normalSettleSchema,
-  switchTableschema,
-} from "@hi/db-models/src/validators";
-import { runInTransaction } from "@hi/utils";
-import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
-import { Hono } from "hono";
-import type { ClientSession } from "mongodb";
-import { nanoid } from "nanoid";
-import { z } from "zod";
-import {
-  generateBillInvoice,
-  generateSplitBillInvoice,
-} from "../../services/bill";
-import calculateSubtotal from "../../services/calculateSubtotal";
-import { checkOriginBillIsSplit } from "../../services/splitBill";
-import { executePosHandler } from "../../utils/executePoshandlers.ts";
-import { posApiPaths } from "../../utils/posConfig/petPooja";
+} from '@hi/db-models';
+import { type SwitchTableType, normalSettleSchema, switchTableschema } from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { zValidator } from '@hono/zod-validator';
+import axios from 'axios';
+import { Hono } from 'hono';
+import type { ClientSession } from 'mongodb';
+import { nanoid } from 'nanoid';
+import { z } from 'zod';
+import { generateBillInvoice, generateSplitBillInvoice } from '../../services/bill';
+import calculateSubtotal from '../../services/calculateSubtotal';
+import { checkOriginBillIsSplit } from '../../services/splitBill';
+import { executePosHandler } from '../../utils/executePoshandlers.ts';
+import { posApiPaths } from '../../utils/posConfig/petPooja';
 // import { queueClient } from "../../utils/queue/queueClient";
 import { respond } from '../../utils/response';
 import { generateTenDigitCode } from '../pos';
@@ -271,7 +264,7 @@ const tableRouter = new Hono()
     },
   )
   .put(
-    "/update_guest",
+    '/update_guest',
     // ubacMiddleware("add_pax"),
     zValidator(
       'json',
@@ -317,9 +310,9 @@ const tableRouter = new Hono()
   )
 
   .post(
-    "/normal_settle",
+    '/normal_settle',
     // ubacMiddleware("normal_settle"),
-    zValidator("json", normalSettleSchema),
+    zValidator('json', normalSettleSchema),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
@@ -400,8 +393,7 @@ const tableRouter = new Hono()
 
           await generateSplitBillInvoice(variantId, table?.businessId, true);
 
-          const splitTableSessionData =
-            await SplitBillTableSession.findById(variantId);
+          const splitTableSessionData = await SplitBillTableSession.findById(variantId);
           if (!splitTableSessionData) {
             return respond(c, 'Split table session not found', true, 404, {});
           }
@@ -432,9 +424,7 @@ const tableRouter = new Hono()
                   userId:
                     paymentMode?.name === 'npc'
                       ? npcUser?.userId
-                      : splitTableSessionData.billingUserId ||
-                        splitTableSessionData?.customerIds?.[0] ||
-                        captainId,
+                      : splitTableSessionData.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                   claimedCoins: splitTableSessionData?.claimedCoins || 0,
                   tableName: table?.name,
                   tips: splitTableSessionData?.tips || 0,
@@ -485,8 +475,7 @@ const tableRouter = new Hono()
                   isSplitBillVariant: true,
                   billInvoice: splitTableSessionData?.billInvoice,
                   paxCount: tableSession?.paxCount || 0,
-                  serviceChargePercentage:
-                    splitTableSessionData?.serviceChargePercentage || 0,
+                  serviceChargePercentage: splitTableSessionData?.serviceChargePercentage || 0,
                   roundOffType: splitTableSessionData?.roundOffType || 0,
                   roundOffAmount: splitTableSessionData?.roundOffAmount || 0,
                 },
@@ -592,9 +581,7 @@ const tableRouter = new Hono()
                   userId:
                     paymentMode?.name === 'npc'
                       ? npcUser?.userId
-                      : splitTableSessionData.billingUserId ||
-                        splitTableSessionData?.customerIds?.[0] ||
-                        captainId,
+                      : splitTableSessionData.billingUserId || splitTableSessionData?.customerIds?.[0] || captainId,
                   claimedCoins: splitTableSessionData?.claimedCoins || 0,
                   tableName: table?.name,
                   tips: splitTableSessionData?.tips || 0,
@@ -645,8 +632,7 @@ const tableRouter = new Hono()
                   isSplitBillVariant: true,
                   billInvoice: splitTableSessionData?.billInvoice,
                   paxCount: tableSession?.paxCount || 0,
-                  serviceChargePercentage:
-                    tableSession?.serviceChargePercentage || 0,
+                  serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
                   roundOffType: tableSession?.roundOffType || 0,
                   roundOffAmount: tableSession?.roundOffAmount || 0,
                 },
@@ -911,12 +897,7 @@ const tableRouter = new Hono()
               total: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : tableSession?.total || 0,
               currency: 'INR',
               receipt: uniqueOrderId,
-              userId:
-                paymentMode?.name === "npc"
-                  ? npcUser?.userId
-                  : tableSession.billingUserId ||
-                    tableSession?.customerIds?.[0] ||
-                    captainId,
+              userId: paymentMode?.name === 'npc' ? npcUser?.userId : tableSession.billingUserId || tableSession?.customerIds?.[0] || captainId,
               claimedCoins: tableSession?.claimedCoins || 0,
               tableName: table?.name,
               tips: tableSession?.tips || 0,
@@ -976,8 +957,7 @@ const tableRouter = new Hono()
               pin: tableSession?.pin,
               billInvoice: tableSession?.billInvoice || 0,
               paxCount: tableSession?.paxCount || 0,
-              serviceChargePercentage:
-                tableSession?.serviceChargePercentage || 0,
+              serviceChargePercentage: tableSession?.serviceChargePercentage || 0,
               roundOffType: tableSession?.roundOffType || 0,
               roundOffAmount: tableSession?.roundOffAmount || 0,
             },
@@ -1266,7 +1246,7 @@ const tableRouter = new Hono()
     },
   )
   .post(
-    "/merge",
+    '/merge',
     // ubacMiddleware("merge_table"),
     zValidator(
       'json',
@@ -1371,11 +1351,7 @@ const tableRouter = new Hono()
             );
 
             for (const kot of kotOrders) {
-              const calSubTotal = await calculateSubtotal(
-                kot.tableName || "",
-                kot.businessId,
-                session,
-              );
+              const calSubTotal = await calculateSubtotal(kot.tableName || '', kot.businessId, session);
 
               totalBillCount += calSubTotal;
             }
@@ -1478,8 +1454,7 @@ const tableRouter = new Hono()
               mergedBy: staff._id,
               mergeTableIds: fromTableIds,
               userIds: userIds,
-              currentTableAmount:
-                totalBillCount + (destTable.currentTableAmount || 0),
+              currentTableAmount: totalBillCount + (destTable.currentTableAmount || 0),
             },
             { session },
           );
@@ -1491,7 +1466,7 @@ const tableRouter = new Hono()
           childTableIds: fromTableIds,
         }).save({ session });
 
-        return respond(c, "Tables merged successfully", false, 200, {});
+        return respond(c, 'Tables merged successfully', false, 200, {});
       });
     },
   )
@@ -1542,7 +1517,7 @@ const tableRouter = new Hono()
     },
   )
   .post(
-    "/e_bill",
+    '/e_bill',
     // ubacMiddleware("e_bill"),
     zValidator(
       'json',
@@ -1702,14 +1677,14 @@ const tableRouter = new Hono()
   )
 
   .post(
-    "/transfer_table",
+    '/transfer_table',
     // ubacMiddleware("transfer_item_or_table"),
 
     zValidator('json', switchTableschema),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, transferBy, transferType, fromTableId, toTableId, itemIds = [] } = (await c.req.json()) as SwitchTableType;
+        const { businessId, transferBy, transferType, fromTableId, toTableId, itemData = [] } = (await c.req.json()) as SwitchTableType;
 
         const sourceTable = await Table.findById(fromTableId);
         const destinationTable = await Table.findById(toTableId);
@@ -1742,14 +1717,8 @@ const tableRouter = new Hono()
           businessId,
         });
 
-        if (!tableSession || sourceTable.status === "EMPTY") {
-          return respond(
-            c,
-            `No active session found for table ${sourceTable.name}`,
-            true,
-            400,
-            {},
-          );
+        if (!tableSession || sourceTable.status === 'EMPTY') {
+          return respond(c, `No active session found for table ${sourceTable.name}`, true, 400, {});
         }
 
         const billAlreadySplit = checkOriginBillIsSplit(tableSession);
@@ -1760,17 +1729,11 @@ const tableRouter = new Hono()
         if (destTableSession) {
           const billAlreadySplit = checkOriginBillIsSplit(destTableSession);
           if (billAlreadySplit) {
-            return respond(
-              c,
-              "Bill already split you cannot transfer the table and items",
-              true,
-              400,
-              {},
-            );
+            return respond(c, 'Bill already split you cannot transfer the table and items', true, 400, {});
           }
         }
 
-        if (transferType === "TABLE") {
+        if (transferType === 'TABLE') {
           await KotOrder.updateMany(
             {
               tableName: sourceTable.name,
@@ -1803,7 +1766,7 @@ const tableRouter = new Hono()
                 transferTableTo: destinationTable._id,
                 isTransfer: true,
                 transferBy,
-                transferType: "TABLE",
+                transferType: 'TABLE',
                 billInvoice: tableSession.billInvoice,
               },
             },
@@ -1856,40 +1819,69 @@ const tableRouter = new Hono()
         }
 
         if (transferType === 'ITEM') {
+          const itemMap = new Map<string, number>(itemData.map((i) => [i.itemId.toString(), i.quantity]));
+
           const kotOrders = await KotOrder.find({
-            cart: { $elemMatch: { _id: { $in: itemIds } } },
             settled: false,
             accepted: true,
             tableName: sourceTable.name,
-          });
+            'cart._id': { $in: itemData.map((i) => i.itemId) },
+          }).session(session);
 
-          if (kotOrders.length === 0) {
+          if (!kotOrders.length) {
             return respond(c, 'No items found in the KotOrder', true, 400, {});
           }
 
           const destinationTableSession = await UserSession.findOne({
             tableName: destinationTable.name,
             businessId,
-          });
+          }).session(session);
 
           for (const kotOrder of kotOrders) {
-            const removedItems = kotOrder.cart.filter((item) => itemIds.includes(item._id.toString()));
+            const transferItems = [];
+            const updatedCart = [];
 
-            kotOrder.cart = kotOrder.cart.filter((item) => !itemIds.includes(item._id.toString()));
+            for (const cartItem of kotOrder.cart) {
+              const transferQty = itemMap.get(cartItem._id.toString());
 
-            if (kotOrder.cart.length === 0) {
-              await KotOrder.deleteOne({ _id: kotOrder._id }, { session });
+              if (!transferQty) {
+                updatedCart.push(cartItem);
+                continue;
+              }
+
+              if (cartItem.quantity < transferQty) {
+                return respond(c, 'Insufficient quantity', true, 400, {});
+              }
+
+              const remainingQty = cartItem.quantity - transferQty;
+
+              transferItems.push({
+                ...cartItem,
+                quantity: transferQty,
+              });
+
+              if (remainingQty > 0) {
+                updatedCart.push({
+                  ...cartItem,
+                  quantity: remainingQty,
+                });
+              }
+            }
+
+            if (updatedCart.length === 0) {
+              await KotOrder.deleteOne({ _id: kotOrder._id }).session(session);
             } else {
+              kotOrder.cart = updatedCart;
               await kotOrder.save({ session });
             }
 
-            const { _id, ...newKotOrderData } = kotOrder.toObject();
+            const { _id, cart, ...baseKotData } = kotOrder.toObject ? kotOrder.toObject() : kotOrder;
 
             await KotOrder.create(
               [
                 {
-                  ...newKotOrderData,
-                  cart: removedItems,
+                  ...baseKotData,
+                  cart: transferItems,
                   tableName: destinationTable.name,
                   tableId: destinationTable._id,
                   transferd: true,
@@ -1902,69 +1894,56 @@ const tableRouter = new Hono()
               ],
               { session },
             );
+          }
 
-            let hiCode = '';
-            if (!destinationTableSession || destinationTable.status === 'EMPTY') {
-              hiCode = Math.floor(1000 + Math.random() * 9000).toString();
-              const tenDigitCode = generateTenDigitCode();
+          let hiCode = destinationTableSession?.hiCode;
 
-              await UserSession.findOneAndUpdate(
-                { businessId, tableName: destinationTable.name },
-                {
-                  $setOnInsert: {
-                    customerName: tableSession?.customerName || 'Guest',
-                    hiCode,
-                    pin: tenDigitCode,
-                    date: Date.now(),
-                  },
-                  $set: {
-                    transferTableFrom: sourceTable._id,
-                    transferTableTo: destinationTable._id,
-                    isTransfer: true,
-                    transferBy,
-                    transferType: 'ITEM',
-                  },
-                },
-                {
-                  upsert: true,
-                  session,
-                  new: true,
-                },
-              );
-            }
+          if (!destinationTableSession || destinationTable.status === 'EMPTY') {
+            hiCode = Math.floor(1000 + Math.random() * 9000).toString();
+            const tenDigitCode = generateTenDigitCode();
 
-            const calSubTotalSourceTable = await calculateSubtotal(
-              sourceTable.name,
-              sourceTable.businessId,
-              session,
-            );
-            const calSubTotalDestTable = await calculateSubtotal(
-              destinationTable.name,
-              destinationTable.businessId,
-              session,
-            );
-            await Table.findByIdAndUpdate(sourceTable._id, {
-              $set: {
-                currentTableAmount: calSubTotalSourceTable,
-              },
-            });
-
-            await Table.findByIdAndUpdate(
-              toTableId,
+            await UserSession.findOneAndUpdate(
+              { businessId, tableName: destinationTable.name },
               {
-                hiCode: destinationTableSession?.hiCode || hiCode,
-                status: 'ACTIVE',
-                isTransfer: true,
-                transferType: "ITEM",
-                currentTableAmount: calSubTotalDestTable,
+                $setOnInsert: {
+                  customerName: tableSession?.customerName || 'Guest',
+                  hiCode,
+                  pin: tenDigitCode,
+                  date: Date.now(),
+                },
+                $set: {
+                  transferTableFrom: sourceTable._id,
+                  transferTableTo: destinationTable._id,
+                  isTransfer: true,
+                  transferBy,
+                  transferType: 'ITEM',
+                },
               },
-              { session },
+              { upsert: true, session },
             );
           }
 
+          const sourceTotal = await calculateSubtotal(sourceTable.name, sourceTable.businessId, session);
+
+          const destTotal = await calculateSubtotal(destinationTable.name, destinationTable.businessId, session);
+
+          await Table.findByIdAndUpdate(sourceTable._id, { $set: { currentTableAmount: sourceTotal } }, { session });
+
+          await Table.findByIdAndUpdate(
+            toTableId,
+            {
+              hiCode,
+              status: 'ACTIVE',
+              isTransfer: true,
+              transferType: 'ITEM',
+              currentTableAmount: destTotal,
+            },
+            { session },
+          );
+
           return c.json(
             {
-              message: 'Items transferred successfully',
+              message: 'success',
               err: false,
               data: {},
             },

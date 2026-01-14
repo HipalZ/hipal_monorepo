@@ -734,6 +734,26 @@ export interface BusinessDishTypeReport {
   dishTypes: DishTypeReport[];
 }
 
+export interface ItemVariantReport {
+  itemName: string;
+  dishId: string;
+  portionName: string;
+  portionId: string | null;
+  itemCount: number;
+  grossAmount: number;
+  discount: number;
+  tax: number;
+  netSales: number;
+}
+
+export interface BusinessItemVariantReport {
+  businessId: string;
+  businessName: string;
+  from: string;
+  to: string;
+  itemVariants: ItemVariantReport[];
+}
+
 export const useDishTypeReports = () => {
   const { setError, setOpenErrorModal } = useError();
   const setDishTypeReports = useReports((s) => s.setDishTypeReports);
@@ -834,6 +854,107 @@ export const useGetDishTypeReportsCsv = () => {
   return {
     isPending,
     getDishTypeReportsCsv: mutateAsync,
+    resetError: reset,
+  };
+};
+
+export const useItemVariantReports = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const setItemVariantReports = useReports((s) => s.setItemVariantReports);
+  const { handleEnvelope } = useApiErrorHandler();
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.item_variant.$post({
+        json: {
+          businessIds: payload.businessIds,
+          from: Number(payload.from),
+          to: Number(payload.to),
+        },
+      });
+      const itemVariantData = await handleEnvelope(response);
+      if (!itemVariantData || !Array.isArray(itemVariantData)) {
+        throw new Error("Invalid data format received");
+      }
+      setItemVariantReports((itemVariantData as BusinessItemVariantReport[]) || []);
+      const totalVariants = itemVariantData.reduce(
+        (acc, business) => acc + business.itemVariants.length,
+        0,
+      );
+      toast.success(
+        `Report generated successfully! Found ${totalVariants} item variant${totalVariants !== 1 ? 's' : ''}.`,
+      );
+      return response;
+    },
+    onError: (error) => {
+      console.error("Report generation error:", error);
+      setOpenErrorModal(true);
+      setError("Failed to fetch reports. Please try again.");
+      toast.error("Failed to fetch reports. Please try again.");
+    },
+  });
+
+  return {
+    isPending,
+    getItemVariantReports: mutateAsync,
+    clearReportData: () => setItemVariantReports([]),
+    resetError: reset,
+  };
+};
+
+export const useGetItemVariantReportsCsv = () => {
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.item_variant.download_xlsx.$post({
+        json: {
+          businessIds: payload.businessIds,
+          from: Number(payload.from),
+          to: Number(payload.to),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.blob();
+    },
+    onSuccess: async (blob, variables) => {
+      try {
+        if (!blob || blob.size === 0) {
+          throw new Error("Empty file received");
+        }
+
+        const url = window.URL.createObjectURL(new Blob([blob]));
+        const link = document.createElement("a");
+        const fromStr = formatDateToIST(Number(variables.from));
+        const toStr = formatDateToIST(Number(variables.to));
+        const fileName = `Item Variant Reports ${fromStr} to ${toStr}.xlsx`;
+
+        link.href = url;
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
+        window.URL.revokeObjectURL(url);
+
+        toast.success(`File "${fileName}" downloaded successfully!`);
+      } catch (downloadError) {
+        console.error("Download error:", downloadError);
+        toast.error("Failed to download file");
+      }
+    },
+    onError: (error) => {
+      console.error("CSV generation error:", error);
+      toast.error("Failed to generate file. Please try again.");
+    },
+  });
+
+  return {
+    isPending,
+    getItemVariantReportsCsv: mutateAsync,
     resetError: reset,
   };
 };

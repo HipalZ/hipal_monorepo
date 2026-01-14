@@ -11,6 +11,8 @@ export type CreateTempItemPayload = {
   itemName: string;
   itemPrice: number;
   itemQuantity: number;
+  kitchenId?: string;
+  gst?: number;
 };
 
 export function useCreateTempItem(opts?: {

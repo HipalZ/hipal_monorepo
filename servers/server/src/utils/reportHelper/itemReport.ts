@@ -430,6 +430,7 @@ export function aggregateBillItems(
   getZoneIdFromPayment?: (payment: Payment) => string | null,
 ): AggregatedItem[] {
   // Build lookup map ONCE before any loops (no DB calls inside loops)
+  // console.log("sankla", payments);
   const dishZoneKitchenMap = dishZoneKitchenMappings
     ? buildDishZoneKitchenMap(dishZoneKitchenMappings)
     : ({} as Record<DZKKey, string>);
@@ -502,9 +503,9 @@ export function aggregateBillItems(
             discount: 0,
             tax: 0,
             totalSales: 0,
-            dishId, // Required: Part of key
-            zoneId: zoneIdStr, // Required: Part of key
-            kitchenId, // Required: Part of key
+            dishId,
+            zoneId: zoneIdStr,
+            kitchenId,
           };
         }
 
@@ -516,9 +517,6 @@ export function aggregateBillItems(
         grp.totalSales += Number(
           (lineAmountExclTax - discount + lineTax)?.toFixed(2),
         );
-
-        // NOTE: zoneId and kitchenId are now part of the key, so they never change
-        // No overwriting needed - each unique (dish, zone, kitchen) combination gets its own entry
       }
       return acc;
     },

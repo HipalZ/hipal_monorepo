@@ -7,9 +7,20 @@ export const switchTableschema = z
     businessId: z.string().min(1).max(200),
     transferType: z.enum(["TABLE", "ITEM", "KOT"]),
     transferBy: z.string().min(1).max(200),
+
     kotIds: z.array(z.string().max(500)).optional(),
-    itemIds: z.array(z.string().max(500)).optional(),
+
+    itemData: z
+      .array(
+        z.object({
+          itemId: z.string().max(500),
+          quantity: z.number().int().positive(), // ✅ quantity must be >= 1
+        }),
+      )
+      .optional(),
   })
+
+  // ✅ KOT validation
   .refine(
     (data) => {
       if (data.transferType === "KOT") {
@@ -18,32 +29,37 @@ export const switchTableschema = z
       return true;
     },
     {
-      message: "Please provide kotIds when switchType is KOT",
-      path: ["kotIds"], // Path to the field that needs to be validated
+      message: "Please provide kotIds when transferType is KOT",
+      path: ["kotIds"],
     },
   )
+
+  // ✅ TABLE validation
   .refine(
     (data) => {
       if (data.transferType === "TABLE") {
-        return data.fromTableId && data.toTableId;
+        return !!data.fromTableId && !!data.toTableId;
       }
       return true;
     },
     {
       message:
-        "Please provide fromTableId and toTableId when switchType is TABLE",
-      path: ["fromTableId", "toTableId"], // Path to the fields that need to be validated
+        "Please provide fromTableId and toTableId when transferType is TABLE",
+      path: ["fromTableId", "toTableId"],
     },
   )
+
+  // ✅ ITEM validation (FIXED)
   .refine(
     (data) => {
       if (data.transferType === "ITEM") {
-        return data.itemIds && data.itemIds.length > 0;
+        return data.itemData && data.itemData.length > 0;
       }
       return true;
     },
     {
-      message: "Please provide itemIds when switchType is ITEM", // Error message
+      message: "Please provide itemData when transferType is ITEM",
+      path: ["itemData"],
     },
   );
 
