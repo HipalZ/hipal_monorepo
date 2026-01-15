@@ -1,4 +1,5 @@
 import axios from "axios";
+import mongoose from "mongoose";
 import { nanoid } from "nanoid";
 const wsUrl = "https://ws.test.hipalz.com";
 interface KOTPayload {
@@ -300,6 +301,7 @@ export const convertToHipalzCart = ({
         visibility: true,
         active: true,
         gst: gst || 5,
+        _id: new mongoose.Types.ObjectId(),
       },
       portion: null,
       extras: [],
