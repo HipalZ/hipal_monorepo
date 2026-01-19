@@ -1,13 +1,13 @@
-import { useGetDishTypeReportsCsv, useDishTypeReports, type BusinessDishTypeReport } from '@/hooks/useReportHook';
+import { useDishTypeReports, useGetDishTypeReportsCsv, type BusinessDishTypeReport } from '@/hooks/useReportHook';
 import { Download, RefreshCw, TrendingUp, UtensilsCrossed } from 'lucide-react';
 import { memo, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import AdvancedBottomButton from '../atom/bottomButton/advancedBottomButton';
+import FoodType from '../atom/FoodType';
 import useReports from '../store/useReports';
 import useTimings from '../store/useTimings';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import EmptyStateInstructions from './categoryLayouts/EmptyStateInstructions';
-import FoodType from '../atom/FoodType';
 
 const MemoDishTypeReports = () => {
   const params = useParams();
@@ -20,9 +20,7 @@ const MemoDishTypeReports = () => {
   const { isPending: isPendingCsv, getDishTypeReportsCsv } = useGetDishTypeReportsCsv();
 
   const hasReports = dishTypeReports.length > 0;
-  const hasDishTypes =
-    hasReports &&
-    dishTypeReports.some((business) => business.dishTypes.length > 0);
+  const hasDishTypes = hasReports && dishTypeReports.some((business) => business.dishTypes.length > 0);
 
   // Calculate totals across all businesses
   const totals = useMemo(() => {
@@ -101,35 +99,27 @@ const MemoDishTypeReports = () => {
             <Card>
               <CardContent className="p-4">
                 <div className="text-muted-foreground text-xs font-medium uppercase">Gross Amount</div>
-                <div className="mt-1 text-2xl font-bold">
-                  ₹{totals.grossAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                </div>
+                <div className="mt-1 text-2xl font-bold">₹{totals.grossAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
               </CardContent>
             </Card>
-            <Card>
+            {/* <Card>
               <CardContent className="p-4">
                 <div className="text-muted-foreground text-xs font-medium uppercase">Discount</div>
-                <div className="mt-1 text-2xl font-bold text-red-600">
-                  ₹{totals.discount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                </div>
+                <div className="mt-1 text-2xl font-bold text-red-600">₹{totals.discount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
                 <div className="text-muted-foreground text-xs font-medium uppercase">Tax</div>
-                <div className="mt-1 text-2xl font-bold">
-                  ₹{totals.tax.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                </div>
+                <div className="mt-1 text-2xl font-bold">₹{totals.tax.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
                 <div className="text-muted-foreground text-xs font-medium uppercase">Net Sales</div>
-                <div className="mt-1 text-2xl font-bold text-green-600">
-                  ₹{totals.netSales.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                </div>
+                <div className="mt-1 text-2xl font-bold text-green-600">₹{totals.netSales.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         )}
 
@@ -151,9 +141,7 @@ const MemoDishTypeReports = () => {
                 </CardHeader>
                 <CardContent className="border-none !p-0 shadow-none">
                   {business.dishTypes.length === 0 ? (
-                    <p className="text-muted-foreground py-8 text-center">
-                      No dish type data available for the selected date range.
-                    </p>
+                    <p className="text-muted-foreground py-8 text-center">No dish type data available for the selected date range.</p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full border-collapse">
@@ -162,24 +150,18 @@ const MemoDishTypeReports = () => {
                             <th className="p-3 text-left text-sm font-semibold text-gray-700">Type</th>
                             <th className="p-3 text-right text-sm font-semibold text-gray-700">Quantity</th>
                             <th className="p-3 text-right text-sm font-semibold text-gray-700">Gross Amount</th>
-                            <th className="p-3 text-right text-sm font-semibold text-gray-700">Discount</th>
-                            <th className="p-3 text-right text-sm font-semibold text-gray-700">Tax</th>
-                            <th className="p-3 text-right text-sm font-semibold text-gray-700">Net Sales</th>
+                            {/* <th className="p-3 text-right text-sm font-semibold text-gray-700">Discount</th> */}
+                            {/* <th className="p-3 text-right text-sm font-semibold text-gray-700">Tax</th> */}
+                            {/* <th className="p-3 text-right text-sm font-semibold text-gray-700">Net Sales</th> */}
                             <th className="p-3 text-right text-sm font-semibold text-gray-700">% of Total</th>
                           </tr>
                         </thead>
                         <tbody>
                           {business.dishTypes.map((dishType, index) => {
-                            const percentage =
-                              totals.netSales > 0
-                                ? ((dishType.netSales / totals.netSales) * 100).toFixed(1)
-                                : '0.0';
+                            const percentage = totals.netSales > 0 ? ((dishType.netSales / totals.netSales) * 100).toFixed(1) : '0.0';
 
                             return (
-                              <tr
-                                key={`${business.businessId}-${dishType.type}-${index}`}
-                                className="border-b border-gray-100 hover:bg-gray-50"
-                              >
+                              <tr key={`${business.businessId}-${dishType.type}-${index}`} className="border-b border-gray-100 hover:bg-gray-50">
                                 <td className="p-3">
                                   <div className="flex items-center gap-2">
                                     <FoodType types={[dishType.type as 'VEG' | 'EGG' | 'NON_VEG' | 'VEGAN' | 'OTHER' | 'ALCOHOL' | 'NON_ALCOHOL']} />
@@ -187,18 +169,14 @@ const MemoDishTypeReports = () => {
                                   </div>
                                 </td>
                                 <td className="p-3 text-right">{dishType.itemCount.toLocaleString()}</td>
-                                <td className="p-3 text-right">
-                                  ₹{dishType.grossAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                                </td>
-                                <td className="p-3 text-right text-red-600">
+                                <td className="p-3 text-right">₹{dishType.grossAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                {/* <td className="p-3 text-right text-red-600">
                                   ₹{dishType.discount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                 </td>
-                                <td className="p-3 text-right">
-                                  ₹{dishType.tax.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                                </td>
-                                <td className="p-3 text-right font-semibold text-green-600">
+                                <td className="p-3 text-right">₹{dishType.tax.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td> */}
+                                {/* <td className="p-3 text-right font-semibold text-green-600">
                                   ₹{dishType.netSales.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                                </td>
+                                </td> */}
                                 <td className="p-3 text-right text-sm text-gray-600">{percentage}%</td>
                               </tr>
                             );

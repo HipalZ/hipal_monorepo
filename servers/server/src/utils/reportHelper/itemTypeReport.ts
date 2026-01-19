@@ -1,46 +1,44 @@
 /**
  * Item Type Report (VEG/NON_VEG/EGG/etc. Aggregation)
- * 
+ *
  * Aggregates sales by dish type (VEG, NON_VEG, EGG, JAIN, etc.)
  * Handles multi-type dishes correctly (counts fully in each type)
  */
 
-import type { Payment, BillItem } from "./itemType";
 import type { Workbook } from "exceljs";
-import { addBoldHeaderRow, autoFitColumns, addKeyValueRow } from "./excelUtils";
 import { formatToIST } from "./dateFormater";
+import { addBoldHeaderRow, addKeyValueRow, autoFitColumns } from "./excelUtils";
+import type { Payment } from "./itemType";
 import type { BaseContext } from "./types";
 
 export interface DishTypeAggregate {
-  type: string;              // VEG, NON_VEG, EGG, JAIN, etc.
-  itemCount: number;         // total quantity sold
-  grossAmount: number;       // before discount + tax
+  type: string; // VEG, NON_VEG, EGG, JAIN, etc.
+  itemCount: number; // total quantity sold
+  grossAmount: number; // before discount + tax
   discount: number;
   tax: number;
-  netSales: number;          // final revenue
+  netSales: number; // final revenue
 }
 
 /**
  * Aggregate sales by dish type
- * 
+ *
  * CRITICAL: Multi-type dishes (e.g., ["VEG","JAIN"]) are counted fully in each type
  * This means a single sale contributes 100% to both VEG and JAIN totals
- * 
+ *
  * Handles:
  * - Portions (portion price overrides dish price)
  * - Extras/addons (added to base price)
  * - Discounts (applied after tax calculation)
  * - Multi-type dishes (counted in all types)
  */
-export function aggregateByDishType(
-  payments: Payment[],
-): DishTypeAggregate[] {
+export function aggregateByDishType(payments: Payment[]): DishTypeAggregate[] {
   const map: Record<string, DishTypeAggregate> = {};
 
   for (const payment of payments) {
     for (const item of payment.billItems || []) {
       const { dish, portion, extras = [], quantity, discount = 0 } = item;
-      
+
       // Skip if no dish or no dish types
       // dish.dishTypes is an array: ["VEG"], ["NON_VEG"], ["VEG","JAIN"], etc.
       if (!dish || !dish.dishTypes || dish.dishTypes.length === 0) continue;
@@ -53,7 +51,7 @@ export function aggregateByDishType(
       );
 
       const lineAmountExclTax = (unitPrice + extrasTotal) * quantity;
-      const lineTax = ((lineAmountExclTax * (dish.gst || 0)) / 100);
+      const lineTax = (lineAmountExclTax * (dish.gst || 0)) / 100;
       const net = lineAmountExclTax + lineTax - discount;
 
       // Multi-type dishes: count fully in each type
@@ -74,8 +72,8 @@ export function aggregateByDishType(
         map[type].itemCount += quantity;
         map[type].grossAmount += Number(lineAmountExclTax.toFixed(2));
         map[type].discount += discount;
-        map[type].tax += Number(lineTax.toFixed(2));
-        map[type].netSales += Number(net.toFixed(2));
+        // map[type].tax += Number(lineTax.toFixed(2));
+        // map[type].netSales += Number(net.toFixed(2));
       }
     }
   }
@@ -99,10 +97,10 @@ export function buildDishTypeSheet(
   addBoldHeaderRow(sheet, [
     "Item Type",
     "Quantity Sold",
-    "Gross Amount",
     "Discount",
-    "Tax",
-    "Net Sales",
+    "Gross Amount",
+    // "Tax",
+    // "Net Sales",
   ]);
 
   // Data rows
@@ -110,10 +108,10 @@ export function buildDishTypeSheet(
     sheet.addRow([
       row.type,
       row.itemCount,
-      row.grossAmount,
       row.discount,
-      row.tax,
-      row.netSales,
+      row.grossAmount,
+      // row.tax,
+      // row.netSales,
     ]);
   }
 
@@ -121,17 +119,17 @@ export function buildDishTypeSheet(
   const totals = aggregates.reduce(
     (acc, row) => ({
       itemCount: acc.itemCount + row.itemCount,
-      grossAmount: acc.grossAmount + row.grossAmount,
       discount: acc.discount + row.discount,
-      tax: acc.tax + row.tax,
-      netSales: acc.netSales + row.netSales,
+      grossAmount: acc.grossAmount + row.grossAmount,
+      // tax: acc.tax + row.tax,
+      // netSales: acc.netSales + row.netSales,
     }),
     {
       itemCount: 0,
-      grossAmount: 0,
       discount: 0,
-      tax: 0,
-      netSales: 0,
+      grossAmount: 0,
+      // tax: 0,
+      // netSales: 0,
     },
   );
 
@@ -139,10 +137,10 @@ export function buildDishTypeSheet(
   const summaryRow = sheet.addRow([
     "TOTAL",
     totals.itemCount,
-    totals.grossAmount,
     totals.discount,
-    totals.tax,
-    totals.netSales,
+    totals.grossAmount,
+    // totals.tax,
+    // totals.netSales,
   ]);
 
   // Make summary row bold
@@ -166,10 +164,10 @@ export function buildDishTypeSheetFromContext(
   ctx: BaseContext,
 ): void {
   const { allPayments, from, to } = ctx;
-  
+
   // Aggregate by dish type across all businesses
   const aggregates = aggregateByDishType(allPayments);
-  
+
   // Build sheet
   buildDishTypeSheet(workbook, aggregates, from, to);
 }
