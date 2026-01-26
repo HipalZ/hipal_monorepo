@@ -79,7 +79,7 @@ const MemoTemplatesCarousel = () => {
 
       default:
         return (
-          <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 p-3 text-slate-700 drop-shadow-sm">
+          <div className="flex h-full flex-col items-center justify-center bg-gray-100 p-3 text-slate-700 drop-shadow-sm">
             <BiText className="mb-2 h-7 w-7 text-slate-700" />
             <span className="text-sm font-semibold">No Preview Available</span>
           </div>
@@ -102,11 +102,14 @@ const MemoTemplatesCarousel = () => {
               aria-label={`Select ${template.name} template`}
             >
               <article className="relative h-[170px] w-full">
-                {/* Status badge */}
+                {/* 1. Media Preview Rendered First (Background Layer) */}
+                {renderMediaPreview(template)}
+
+                {/* 2. Status Badge Rendered Second (Natural Top Layer) */}
                 <div className="absolute left-0 right-0 top-0 px-2 py-1">
                   <span
                     className={cn(
-                      'rounded-full px-2 py-1 text-xs font-semibold text-white',
+                      'rounded-full px-2 py-1 text-xs font-semibold text-white shadow-sm',
                       template?.status === 'APPROVED' ? 'bg-green-500' : 'bg-red-500',
                     )}
                   >
@@ -114,10 +117,7 @@ const MemoTemplatesCarousel = () => {
                   </span>
                 </div>
 
-                {/* Media Preview */}
-                {renderMediaPreview(template)}
-
-                {/* Footer overlay */}
+                {/* 3. Footer Rendered Last (Topmost Layer) */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
                   <h3 className="truncate text-sm font-semibold text-white">{template.name}</h3>
                 </div>

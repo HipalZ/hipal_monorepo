@@ -50,7 +50,8 @@ const MemoContent = () => {
   const setVariableOptions = useWhatsapp((s) => s.setVariableOptions);
   const updateBodySequenceVariable = useWhatsapp((s) => s.updateBodySequenceVariable);
   const updateDisplayBodySequenceVariable = useWhatsapp((s) => s.updateDisplayBodySequenceVariable);
-  const { addTemplateName, handleBodyTextChange } = useAddTemplate();
+  const footerText = useWhatsapp((s) => s.footerText);
+  const { addTemplateName, handleBodyTextChange, handleFooterInput } = useAddTemplate();
 
   const handleAddVariable = useCallback(() => {
     addVariable();
@@ -219,6 +220,16 @@ const MemoContent = () => {
         </div>
       </div>
       <CouponContent />
+      <div className="relative">
+        <input
+          maxLength={60}
+          placeholder="Write your message content here"
+          value={footerText}
+          onChange={handleFooterInput}
+          className="w-full rounded-md border border-gray-300 px-3 py-2"
+        />
+        <small className="absolute bottom-2 right-3 text-gray-500">{footerText?.length || 0}/60</small>
+      </div>
     </section>
   );
 };

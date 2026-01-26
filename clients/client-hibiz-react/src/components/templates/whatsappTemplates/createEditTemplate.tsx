@@ -48,12 +48,8 @@ const MemoCreateEditTemplate = () => {
 
             {templateSteps === TemplateSteps.CREATE_EDIT && (
               <div className="space-y-6">
-                <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                  <Content />
-                </div>
-                <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                  <CallOfAction />
-                </div>
+                <Content />
+                <CallOfAction />
               </div>
             )}
 

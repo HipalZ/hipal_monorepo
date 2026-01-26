@@ -2,12 +2,20 @@ import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
 import { FILTER_OPTIONS, getStatusStyle } from '@/components/utils/helper';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { CloudDownload, Filter } from 'lucide-react';
-import { lazy, memo, useCallback, useMemo } from 'react';
+import { lazy, memo, useCallback, useMemo, useState } from 'react';
+import { BiHide, BiShow } from 'react-icons/bi';
 import { CgClose } from 'react-icons/cg';
 
 const PhoneBottomButtons = lazy(() => import('./phoneBottomButtons'));
 const ExportOptions = lazy(() => import('./exportOptions'));
 const ITEMS_PER_PAGE = 40;
+
+const maskPhoneNumber = (phone: string) => {
+  if (!phone) return '';
+  const visibleDigits = 4;
+  if (phone.length <= visibleDigits) return phone;
+  return '*'.repeat(phone.length - visibleDigits) + phone.slice(-visibleDigits);
+};
 
 const MemoPhoneNumbersTable = () => {
   const {
@@ -37,6 +45,7 @@ const MemoPhoneNumbersTable = () => {
     clearSelectedPhones: s.clearSelectedPhones,
     addMultiplePhones: s.addMultiplePhones,
   }));
+  const [isMasked, setIsMasked] = useState(true);
   const isAllSelected = useMemo(
     () => campaignsData?.campaignAnalytics?.length > 0 && campaignsData.campaignAnalytics.every((item) => selectedPhones.includes(item.phone)),
     [campaignsData.campaignAnalytics, selectedPhones],
@@ -151,14 +160,22 @@ const MemoPhoneNumbersTable = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-base font-medium tracking-wider text-black">
-                    PHONE NUMBER
+                  <th scope="col" className="flex items-center px-6 py-3 text-left text-base font-medium tracking-wider text-black">
+                    Phone Number
+                    <button
+                      type="button"
+                      onClick={() => setIsMasked(!isMasked)}
+                      className="pl-2 focus:outline-none"
+                      title={isMasked ? 'Show numbers' : 'Hide numbers'}
+                    >
+                      {isMasked ? <BiShow size={20} className="text-blue-700" /> : <BiHide size={20} className="text-red-700" />}
+                    </button>
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-base font-medium tracking-wider text-black">
-                    DATA
+                    Data
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-base font-medium tracking-wider text-black">
-                    STATUS
+                    Status
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-base font-medium tracking-wider text-black">
                     <input
@@ -167,7 +184,7 @@ const MemoPhoneNumbersTable = () => {
                       onChange={handleSelectAll}
                       className="form-checkbox mr-1 inline-block h-4 w-4 rounded-sm text-blue-600"
                     />{' '}
-                    SELECT (ALL)
+                    Select (All)
                   </th>
                 </tr>
               </thead>
@@ -175,7 +192,9 @@ const MemoPhoneNumbersTable = () => {
                 {currentData.map((item) => (
                   <tr key={item._id} className="transition-colors hover:bg-gray-50">
                     <td className="whitespace-nowrap px-6 py-4">
-                      <div className="text-base font-medium text-gray-900">{item?.userId?.phone || item?.phone}</div>
+                      <div className="text-base font-medium text-gray-900">
+                        {isMasked ? maskPhoneNumber(item?.userId?.phone || item?.phone) : item?.userId?.phone || item?.phone}
+                      </div>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
                       <div className="text-base text-gray-900">{item?.userId?.name || item?.name}</div>

@@ -16,7 +16,12 @@ import type {
   WhatsAppTemplatePayload,
 } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -225,11 +230,7 @@ export const useServiceNames = () => {
     return response?.data || [];
   };
 
-  const {
-    data: serviceNames = [],
-    isLoading,
-    error,
-  } = useQuery({
+  const { data: serviceNames = [] } = useQuery({
     queryKey: ["serviceNames", businessId],
     queryFn: getServiceNames,
     enabled: !!businessId,
@@ -263,7 +264,6 @@ export const useMediaUpload = () => {
       });
 
       const response = await res.json();
-      console.log("responseala ahe", response);
 
       // Step 1: Start upload session
       // TODO: CALL API TO APPiD TOKEN
@@ -488,7 +488,7 @@ export const useSendWhatsappMessage = () => {
         toast.success("Message sent successfully");
       }
       queryClient.invalidateQueries({
-        queryKey: ["fetchUserChatsInfinite", variables.userId]
+        queryKey: ["fetchUserChatsInfinite", variables.userId],
       });
       queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
     },

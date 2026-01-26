@@ -81,8 +81,9 @@ interface AxiosError {
 const getCampaignName = (templateName: string): string => {
   const now = new Date();
   const istTime = new Date(now.getTime() + 330 * 60 * 1000); // IST is UTC+5:30
-  const formattedDate = `${istTime.getUTCDate()}-${istTime.getUTCMonth() + 1
-    }_${istTime.getUTCHours()}:${istTime.getUTCMinutes()}`;
+  const formattedDate = `${istTime.getUTCDate()}-${
+    istTime.getUTCMonth() + 1
+  }_${istTime.getUTCHours()}:${istTime.getUTCMinutes()}`;
   return `${templateName}_${formattedDate}`;
 };
 
@@ -267,31 +268,28 @@ const whatsappRouter = new Hono()
           );
         }
 
-        const getWhatAppTemplate = await WhatAppTemplate.find({
-          businessId,
-          isDeleted: false,
-        })
-          .select("templateId")
-          .limit(30);
+        const wabaId = whatsAppConfigData.whatsAppAccountId;
 
-        const templateIds = getWhatAppTemplate.map(
-          (template) => template.templateId,
-        );
-
-        const templatesArray = [];
-
-        for (const templateId of templateIds) {
-          const getWhatAppTemplate = await axios.get(
-            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${templateId}`,
+        if (!wabaId) {
+          return c.json(
             {
-              headers: {
-                Authorization: `Bearer ${whatsAppConfigData.token}`,
-              },
+              message: "WhatsApp Business Account ID missing in config",
+              err: true,
+              data: {},
             },
+            400,
           );
-
-          templatesArray.push(getWhatAppTemplate.data);
         }
+
+        const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${wabaId}/message_templates`;
+
+        const getWhatAppTemplate = await axios.get(url, {
+          headers: {
+            Authorization: `Bearer ${whatsAppConfigData.token}`,
+          },
+        });
+
+        const templatesArray = getWhatAppTemplate.data.data;
 
         return c.json(
           {
@@ -346,6 +344,7 @@ const whatsappRouter = new Hono()
 
         const templateNameAlreadyExist = await WhatAppTemplate.findOne({
           templateName: requestData.name,
+          businessId: requestData.businessId,
         }).select("templateName");
 
         if (templateNameAlreadyExist) {
@@ -1183,7 +1182,8 @@ const whatsappRouter = new Hono()
         const ninetyDaysAgoTimestamp = currentTimestamp - 60 * 24 * 60 * 60;
 
         const getWhatAppTemplate = await axios.get(
-          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${whatsAppConfigData.whatsAppAccountId
+          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${
+            whatsAppConfigData.whatsAppAccountId
           }/template_analytics?start=${ninetyDaysAgoTimestamp}&end=${currentTimestamp}&granularity=daily&metric_types=clicked,delivered,read,sent,cost&template_ids=${[
             templateById?.templateId,
           ]}&limit=5000`,
@@ -1737,12 +1737,7 @@ const whatsappRouter = new Hono()
       }
       const { messages, contacts, statuses, whatsAppBusinessConfigData } =
         await whatsAppEventData(body);
-
-      if (
-        messages &&
-        messages?.text?.body?.length > 1 &&
-        whatsAppBusinessConfigData
-      ) {
+      if (messages && whatsAppBusinessConfigData) {
         const { userData, userInput } = await whatsAppUserAndTextMessage(
           contacts,
           messages,
@@ -1762,20 +1757,54 @@ const whatsappRouter = new Hono()
           return respond(c, "qrHandlers", false, 200, {});
         }
         if (whatsAppBusinessConfigData.chat) {
+          const msgType = messages?.type;
+
+          const messagePayload = {
+            type: msgType, // 'text', 'image', 'video', 'document'
+            body: "", // The main text content
+            mediaUrl: "",
+            mediaId: "",
+            caption: "",
+            filename: "",
+          };
+
+          // Extract data based on type
+          if (msgType === "text") {
+            messagePayload.body = messages?.text?.body || "";
+          } else if (msgType === "image") {
+            messagePayload.mediaUrl = messages?.image?.url || "";
+            messagePayload.mediaId = messages?.image?.id || "";
+            messagePayload.caption = messages?.image?.caption || "";
+            messagePayload.body = messages?.image?.caption || "";
+          } else if (msgType === "video") {
+            messagePayload.mediaUrl = messages?.video?.url || "";
+            messagePayload.mediaId = messages?.video?.id || "";
+            messagePayload.caption = messages?.video?.caption || "";
+            messagePayload.body = messages?.video?.caption || "";
+          } else if (msgType === "document") {
+            messagePayload.mediaUrl = messages?.document?.url || "";
+            messagePayload.mediaId = messages?.document?.id || "";
+            messagePayload.caption = messages?.document?.caption || "";
+            messagePayload.filename = messages?.document?.filename || "";
+            messagePayload.body = messages?.document?.caption || "";
+          }
+
+          // Pass the structured object to the handler
           await whatsAppChatHandler(
-            messages?.text?.body,
+            messagePayload,
             userData._id.toString(),
             whatsAppBusinessConfigData,
           );
         }
-
-        await whatsAppBlockUserHandler(
-          whatsAppBusinessConfigData,
-          userData?.phone,
-          userData._id.toString(),
-          messages?.id,
-          messages?.text?.body,
-        );
+        if (messages?.text?.body?.length > 1) {
+          await whatsAppBlockUserHandler(
+            whatsAppBusinessConfigData,
+            userData?.phone,
+            userData._id.toString(),
+            messages?.id,
+            messages?.text?.body,
+          );
+        }
       }
       if (messages !== undefined) {
         await handleChatbotFlow({

@@ -1,6 +1,6 @@
 import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
 import { useFetchSubscribersInfinite, useSearchUserByPhone } from '@/hooks/useTemplates';
-import { useEffect, useCallback, useMemo, useState, useRef, memo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BiSearch } from 'react-icons/bi';
 import { RxAvatar } from 'react-icons/rx';
 
@@ -10,14 +10,8 @@ const MemoChatsList = () => {
   const setSelectedUser = useWhatsappTempStore((s) => s.setSelectedUser);
   const selectedUser = useWhatsappTempStore((s) => s.selectedUser);
   const setIsMobileListView = useWhatsappTempStore((s) => s.setIsMobileListView);
-  
-  const { 
-    data,
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage, 
-    isLoading 
-  } = useFetchSubscribersInfinite();
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useFetchSubscribersInfinite();
 
   const { searchUserByPhone } = useSearchUserByPhone();
   const [searchNumber, setSearchNumber] = useState('');
@@ -27,19 +21,19 @@ const MemoChatsList = () => {
     if (data?.pages) {
       const allUsers = data.pages.flatMap((page: any) => page.data);
       setUsers(allUsers);
-      
+
       // Update selectedUser if it exists in the new data to reflect changes (like lastUserMessageAt)
       if (selectedUser) {
-         const updatedUser = allUsers.find((u: any) => u.userId._id === selectedUser._id);
-         if (updatedUser && updatedUser.lastUserMessageAt !== selectedUser.lastUserMessageAt) {
-            setSelectedUser({
-              ...updatedUser.userId,
-              lastUserMessageAt: updatedUser.lastUserMessageAt
-            });
-         }
+        const updatedUser = allUsers.find((u: any) => u.userId._id === selectedUser._id);
+        if (updatedUser && updatedUser.lastUserMessageAt !== selectedUser.lastUserMessageAt) {
+          setSelectedUser({
+            ...updatedUser.userId,
+            lastUserMessageAt: updatedUser.lastUserMessageAt,
+          });
+        }
       }
     }
-  }, [data, setUsers, selectedUser]); 
+  }, [data, setUsers, selectedUser, setSelectedUser]);
 
   const observerTarget = useRef(null);
 
@@ -50,7 +44,7 @@ const MemoChatsList = () => {
           fetchNextPage();
         }
       },
-      { threshold: 1.0 }
+      { threshold: 1.0 },
     );
 
     if (observerTarget.current) {
@@ -86,9 +80,7 @@ const MemoChatsList = () => {
           if (res?.data) {
             const foundUser = res.data;
             // Ensure we handle potential undefined userId structure in existing list safely
-            const isUserInList = users.some(
-              (u) => u?.userId?._id === foundUser?.userId?._id
-            );
+            const isUserInList = users.some((u) => u?.userId?._id === foundUser?.userId?._id);
 
             if (!isUserInList) {
               setUsers([foundUser, ...users]);
@@ -106,24 +98,24 @@ const MemoChatsList = () => {
     if (searchNumber.length === 10) {
       return users.filter((user) => user?.userId?.phone === searchNumber);
     }
-    return users; 
+    return users;
   }, [searchNumber, users]);
 
   return (
-    <aside className="border-r border-gray-200 bg-white md:flex md:w-[380px] md:flex-col h-full w-full">
+    <aside className="h-full w-full border-r border-gray-200 bg-white md:flex md:w-[380px] md:flex-col">
       <header className="flex h-[60px] flex-shrink-0 items-center justify-between border-b border-gray-100 bg-white px-4 py-2">
         <h1 className="text-xl font-bold text-[#111b21]">Chats</h1>
       </header>
 
       <div className="mx-3 my-2 flex-shrink-0">
-        <div className="relative flex items-center rounded-lg bg-[#f0f2f5] px-3 py-1.5 focus-within:bg-white focus-within:shadow-sm focus-within:ring-1 focus-within:ring-[#00a884] transition-all">
+        <div className="relative flex items-center rounded-lg bg-[#f0f2f5] px-3 py-1.5 transition-all focus-within:bg-white focus-within:shadow-sm focus-within:ring-1 focus-within:ring-[#00a884]">
           <BiSearch className="mr-3 h-5 w-5 text-[#54656f] transition-colors focus-within:text-[#00a884]" />
           <input
             type="search"
             value={searchNumber}
             maxLength={10}
             onChange={handleSearchChange}
-            className="focus:outline-none focus:ring-0 focus:border-none border-none rounded-lg w-full bg-transparent text-sm text-[#3b4a54] placeholder-[#54656f] outline-none"
+            className="w-full rounded-lg border-none bg-transparent text-sm text-[#3b4a54] placeholder-[#54656f] outline-none focus:border-none focus:outline-none focus:ring-0"
             placeholder="Search phone number"
           />
         </div>
@@ -146,14 +138,12 @@ const MemoChatsList = () => {
                 </div>
               </div>
               <div className="flex min-w-0 flex-1 flex-col justify-center">
-                <div className="flex justify-between items-baseline mb-0.5">
-                  <h3 className="truncate text-[16px] font-medium text-[#111b21]">
-                    {user?.userId?.name || 'Unknown User'}
-                  </h3>
+                <div className="mb-0.5 flex items-baseline justify-between">
+                  <h3 className="truncate text-[16px] font-medium text-[#111b21]">{user?.userId?.name || 'Unknown User'}</h3>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <p className="truncate text-sm text-[#667781] group-hover:text-[#3b4a54]">
-                    {user?.userId?.phone}
+                    {user?.userId?.phone ? `******${user.userId.phone.slice(-4)}` : ''}
                   </p>
                   {user?.whatsappMsgUnseenCount > 0 && (
                     <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#25d366] px-1.5 text-xs font-bold text-white shadow-sm">
@@ -166,22 +156,20 @@ const MemoChatsList = () => {
           ))
         ) : isLoading ? (
           <div className="flex flex-col items-center justify-center py-10 opacity-60">
-             <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00a884] border-t-transparent"></div>
-             <p className="mt-2 text-sm text-gray-500">Loading chats...</p>
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00a884] border-t-transparent" />
+            <p className="mt-2 text-sm text-gray-500">Loading chats...</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-gray-500">
+          <div className="flex flex-col items-center justify-center px-4 py-12 text-center text-gray-500">
             <p className="text-sm">No active chats found.</p>
-            <p className="text-xs mt-1">Start a conversation by searching.</p>
+            <p className="mt-1 text-xs">Start a conversation by searching.</p>
           </div>
         )}
-        
+
         {/* Loader for infinite scroll */}
         {filteredUsers && filteredUsers.length > 0 && (
-          <div ref={observerTarget} className="h-4 w-full flex items-center justify-center py-4">
-             {isFetchingNextPage && (
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00a884] border-t-transparent"></div>
-             )}
+          <div ref={observerTarget} className="flex h-4 w-full items-center justify-center py-4">
+            {isFetchingNextPage && <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00a884] border-t-transparent" />}
           </div>
         )}
       </nav>

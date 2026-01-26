@@ -85,9 +85,10 @@ export const useWhatzappCroppedImg = () => {
 };
 
 export const useAddTemplate = () => {
-  const { setTemplateName, setBodyText } = useWhatsapp((s) => ({
+  const { setTemplateName, setBodyText, setFooterText } = useWhatsapp((s) => ({
     setTemplateName: s.setTemplateName,
     setBodyText: s.setBodyText,
+    setFooterText: s.setFooterText,
   }));
 
   const addTemplateName = useCallback(
@@ -109,7 +110,14 @@ export const useAddTemplate = () => {
     [setBodyText],
   );
 
-  return { addTemplateName, handleBodyTextChange };
+  const handleFooterInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFooterText(e.target.value.trimStart());
+    },
+    [setFooterText],
+  );
+
+  return { addTemplateName, handleBodyTextChange, handleFooterInput };
 };
 
 export const normalizeAndMapKeys = (obj: any, keyMap: { [key: string]: string }) => {
@@ -195,11 +203,6 @@ function parseDobToTimestamp(dob: string | number): number | undefined {
 
 export const useBulkUploadContacts = () => {
   const queryClient = useQueryClient();
-
-  const { walletBalance, templateType } = useWhatsapp((s) => ({
-    walletBalance: s.walletBalance,
-    templateType: s.templateType,
-  }));
 
   const { setUploadedFileName, setBulkCustomers } = useMessageRecipientsStore((s) => ({
     setUploadedFileName: s.setUploadedFileName,

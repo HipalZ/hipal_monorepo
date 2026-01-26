@@ -215,7 +215,7 @@ export const useWhatsappTempStore = create<ITempStore>((set) => ({
   isLoading: false,
   setIsLoading: (value: boolean) => set({ isLoading: value }),
 
-  activeTab: Tabs.FLOWS,
+  activeTab: Tabs.TEMPLATES,
   setActiveTab: (activeTab: Tabs) => set({ activeTab }),
 
   allTemplates: [],
