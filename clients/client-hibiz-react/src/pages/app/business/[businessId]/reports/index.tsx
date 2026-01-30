@@ -2,6 +2,7 @@ import DateRangePicker from '@/components/molecules/dateRangePicker/index.tsx';
 import MemoizedHeader from '@/components/molecules/header/index.tsx';
 import AddonReports from '@/components/reports/AddOnReports.tsx';
 import CategoryReports from '@/components/reports/CategoryReports.tsx';
+import ParentCategoryReports from '@/components/reports/ParentCategoryReports.tsx';
 import MultiReportDownloadButton from '@/components/reports/CombinedReport';
 import DeletedItemsReports from '@/components/reports/DeletedItemReport';
 import DiscountReports from '@/components/reports/DiscountReport.tsx';
@@ -18,6 +19,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 enum ReportType {
   Combined = 'combined',
   Category = 'category',
+  ParentCategory = 'parentCategory',
   Item = 'item',
   ItemVariant = 'item_variant',
   DishType = 'dishType',
@@ -28,22 +30,19 @@ enum ReportType {
 }
 
 const navItems = [
-  {
-    text: 'Combined',
-  },
+  { text: 'Combined' },
   { text: 'Category' },
+  { text: 'Parent Category' },
   { text: 'Item' },
   { text: 'Item_Variant' },
   { text: 'DishType' },
-  {
-    text: 'AddOn',
-  },
+  { text: 'AddOn' },
   { text: 'Discount' },
   { text: 'ServiceCharge' },
-  {
-    text: 'Deleted_Items',
-  },
+  { text: 'Deleted_Items' },
 ];
+
+const normalizeNavKey = (s: string) => s.toLowerCase().replace(/\s+/g, '');
 
 const Reports = () => {
   const businessId = useParams().businessId;
@@ -53,7 +52,21 @@ const Reports = () => {
 
   const changeLayout = useCallback(
     (text: string) => {
-      const correctedText = text.toLowerCase() as ReportsTypes;
+      const key = normalizeNavKey(text);
+      const correctedText: ReportsTypes =
+        key === 'parentcategory'
+          ? 'parentCategory'
+          : key === 'item_variant'
+            ? 'itemVariant'
+            : key === 'dishtype'
+              ? 'dishType'
+              : key === 'servicecharge'
+                ? 'serviceCharge'
+                : key === 'addon'
+                  ? 'addOn'
+                  : key === 'deleted_items'
+                    ? 'deleted_items'
+                    : (text.toLowerCase() as ReportsTypes);
       setReportPage(correctedText);
     },
     [setReportPage],
@@ -75,7 +88,7 @@ const Reports = () => {
             <button
               className={cn(
                 'bg-white pb-3 pt-4',
-                reportPage?.toLowerCase() === item.text.toLowerCase()
+                normalizeNavKey(reportPage ?? '') === normalizeNavKey(item.text)
                   ? 'border-b-2 border-[#8162e6] text-lg font-semibold text-[#8162e6] transition-all'
                   : '',
               )}
@@ -100,6 +113,11 @@ const Reports = () => {
       {reportPage === ReportType.Category && (
         <div>
           <CategoryReports />
+        </div>
+      )}
+      {reportPage === ReportType.ParentCategory && (
+        <div>
+          <ParentCategoryReports />
         </div>
       )}
       {reportPage === ReportType.Item && (

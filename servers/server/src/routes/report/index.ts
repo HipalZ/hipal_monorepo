@@ -7,11 +7,13 @@ import itemVariantRouter from "./itemVariant";
 import serviceChargeRouter from "./serviceCharge";
 import unifiedReportRouter from "./combineReport";
 import deletedItemRouter from "./deletedItem";
+import parentCategoryRouter from "./parentCategory";
 
 const reportRouter = new Hono()
   .route("/item", itemRouter)
   .route("/item_variant", itemVariantRouter)
   .route("/category", categoryRouter)
+  .route("/parent_category", parentCategoryRouter)
   .route("/discount", discountRouter)
   .route("/add_on", addOnRouter)
   .route("/service_charge", serviceChargeRouter)

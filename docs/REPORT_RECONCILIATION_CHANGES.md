@@ -122,6 +122,32 @@ Item report routes and sheet builders use `filterPaymentsForItemReports()` so DU
 
 ---
 
+## 11. Parent Category Report
+
+**Purpose:** Aggregate revenue by parent category (Item → Child Category → Parent Category). One row per parent; optional child breakdown. Fully reconcilable with Item, Category, and Sales reports.
+
+**Canonical rules:**
+- All money calculated at item level via `calculateFinalItemTotals` only; no duplicate math.
+- Item → Child Category (dish.categoryIds[0]) → Parent Category (category.parentCategoryIds[0] or self if top-level).
+- Parent categories never calculate directly from dishes.
+- Exclude `settleType === "DUES_SETTLE"` (same as Item/Category: `filterPaymentsForItemReports`).
+- Complementary & NPC handled by calculator (100% discount).
+
+**Implementation:**
+- **Step 1:** Fetch categories for business(es); build `parentCategoryMap` (id → name, parentCategoryIds) and `childToParentMap` (childId → single parentId; top-level = self; unknown = "uncategorized").
+- **Step 2:** Fetch payments (same filter as Item/Category); `filterPaymentsForItemReports`.
+- **Step 3:** For each payment, `calculateFinalItemTotals(billItems, payment)`; each item has childCategoryId = dish.categoryIds[0].
+- **Step 4:** Aggregate into childCategoryTotals; then roll up into parentCategoryTotals using childToParentMap (each child counts in exactly one parent).
+- **Step 5:** Return one row per parent with optional `children` breakdown; `sumItemFinalAmount`, `sumParentFinalAmount`, `validationPassed`, `validationMessage`.
+
+**Validation:**
+- Assert: Σ(parentCategory.finalAmount) ≈ Σ(item.finalAmount) within round-off (1.01). Log `[Parent Category Report] Reconciliation failed: ...` if not.
+- Per-payment: if `!result.reconciled`, log paymentId and diff (same as Sales report).
+
+**Route:** `POST /report/parent_category` with `{ businessIds, from, to, includeChildBreakdown? }`. Response: grouped by business with `parentCategories`, `childCategoryTotals`, `sumItemFinalAmount`, `sumParentFinalAmount`, `validationPassed`, `validationMessage`.
+
+---
+
 ## 9. Running Tests
 
 From `servers/server`:

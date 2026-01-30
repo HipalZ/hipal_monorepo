@@ -5,12 +5,14 @@ import type {
   BusinessItemReport,
   BusinessDishTypeReport,
   BusinessItemVariantReport,
+  BusinessParentCategoryReport,
   ServiceChargeReport,
 } from "@/hooks/useReportHook.ts";
 import { create } from "zustand";
 
 export type ReportsTypes =
   | "category"
+  | "parentCategory"
   | "item"
   | "itemVariant"
   | "dishType"
@@ -27,6 +29,9 @@ interface ReportsState {
 
   categoryReports: BusinessCategoryReport[];
   setCategoryReports: (categoryReports: BusinessCategoryReport[]) => void;
+
+  parentCategoryReports: BusinessParentCategoryReport[];
+  setParentCategoryReports: (reports: BusinessParentCategoryReport[]) => void;
 
   itemReports: BusinessItemReport[];
   setItemReports: (reports: BusinessItemReport[]) => void;
@@ -57,6 +62,10 @@ const useReports = create<ReportsState>((set) => ({
   categoryReports: [],
   setCategoryReports: (categoryReports: BusinessCategoryReport[]) =>
     set({ categoryReports }),
+
+  parentCategoryReports: [],
+  setParentCategoryReports: (parentCategoryReports: BusinessParentCategoryReport[]) =>
+    set({ parentCategoryReports }),
 
   itemReports: [],
   setItemReports: (reports: BusinessItemReport[]) =>

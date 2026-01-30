@@ -26,6 +26,7 @@ import { buildConsolidatedSheet } from "../../utils/reportHelper/cansolidateRepo
 import { buildOpenItemSaleSheet } from "../../utils/reportHelper/buildOpenItemSaleSheet";
 import { buildDishTypeSheetFromContext } from "../../utils/reportHelper/itemTypeReport";
 import { buildItemVariantSheetFromContext } from "../../utils/reportHelper/itemVariantReport";
+import { buildParentCategorySheet } from "../../utils/reportHelper/parentCategoryReport";
 
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
@@ -187,6 +188,11 @@ const unifiedExcelRouter = new Hono().post(
     // 2) Category Report
     await safeBuildReport("Category Report", () =>
       buildCategorySheet(workbook, ctx),
+    );
+
+    // 2.5) Parent Category Report
+    await safeBuildReport("Parent Category Report", () =>
+      buildParentCategorySheet(workbook, ctx),
     );
 
     // 3) Item Report (with DishZoneKitchen mappings for correct kitchen routing)
