@@ -45,7 +45,7 @@ const MemoCategoryCardLayout = ({ business }: CategoryCardLayoutProps) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <IndianRupee className="w-4 h-4" />
-                Total Amount
+                Gross Amount
               </div>
               <span className="font-semibold text-green-600">
                 {formatCurrency(category.totalAmount)}
@@ -74,9 +74,10 @@ const MemoCategoryCardLayout = ({ business }: CategoryCardLayoutProps) => {
                 <span className="text-sm font-medium">Net Revenue</span>
                 <span className="font-bold text-lg">
                   {formatCurrency(
-                    category.totalAmount -
-                      category.totalDiscount +
-                      category.totalTax,
+                    category.totalSales ??
+                      category.totalAmount -
+                        category.totalDiscount +
+                        category.totalTax,
                   )}
                 </span>
               </div>

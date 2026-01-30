@@ -6,6 +6,7 @@ import { buildAddOnReport } from "../../utils/reportHelper/addOnReport";
 import { formatToIST } from "../../utils/reportHelper/dateFormater";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { respond } from "../../utils/response";
+import { filterPaymentsForItemReports } from "../../utils/reportHelper/itemFinancialCalculator";
 
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
@@ -31,7 +32,8 @@ const addOnRouter = new Hono()
       "billItems.extras": { $exists: true, $ne: [] },
     })) as PaymentType[];
 
-    const report = await buildAddOnReport(allPayments, businessIds, from, to);
+    const itemPayments = filterPaymentsForItemReports(allPayments);
+    const report = await buildAddOnReport(itemPayments, businessIds, from, to);
 
     return respond(c, "Add-on report fetched successfully", false, 200, report);
   })
@@ -53,7 +55,8 @@ const addOnRouter = new Hono()
       "billItems.extras": { $exists: true, $ne: [] },
     })) as PaymentType[];
 
-    const report = await buildAddOnReport(allPayments, businessIds, from, to);
+    const itemPayments = filterPaymentsForItemReports(allPayments);
+    const report = await buildAddOnReport(itemPayments, businessIds, from, to);
 
     const header = ["Name", "No.of Orders", "Net Amount", "Total Sales"].join(
       ",",

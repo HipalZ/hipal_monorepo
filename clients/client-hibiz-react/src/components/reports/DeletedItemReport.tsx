@@ -14,12 +14,11 @@ import {
   useGetDeletedItems,
 } from "@/hooks/useReportHook.ts";
 import DeletedItemsGroupedLayout from "@/components/reports/DeletedItemLayouts/DeletedItemTableLayout.tsx";
+import { formatDateToIST } from "@/components/utils/helper";
 
 const formatDateRange = (from?: number, to?: number) => {
   if (!from || !to) return "";
-  const fromStr = new Date(from).toLocaleString();
-  const toStr = new Date(to).toLocaleString();
-  return `${fromStr} ~ ${toStr}`;
+  return `${formatDateToIST(from)} ~ ${formatDateToIST(to)}`;
 };
 
 const MemoDeletedItemsReports = () => {

@@ -17,9 +17,16 @@ export interface CategoryReport {
   categoryId: string;
   categoryName: string;
   categoryCount: number;
+  itemCount?: number;
+  /** Gross amount (before discount) */
   totalAmount: number;
   totalDiscount: number;
+  gst?: number;
+  serviceCharge?: number;
+  /** Total tax (GST + service charge) */
   totalTax: number;
+  /** Final total (reconciles with Sales) — use for Net Revenue */
+  totalSales?: number;
 }
 
 export interface BusinessCategoryReport {
@@ -95,9 +102,17 @@ export interface ItemReport {
   itemName: string;
   itemCount: number;
   quantity: number;
+  /** Net amount (after discount, before tax) */
   amount: number;
   discount: number;
+  /** GST only */
+  gst?: number;
+  /** Allocated service charge */
+  serviceCharge?: number;
+  /** Total tax (GST + service charge) */
   tax: number;
+  /** Final total (net + GST + service charge) — use for Net Revenue to reconcile with Sales */
+  totalSales?: number;
 }
 
 export interface BusinessItemReport {
@@ -741,9 +756,11 @@ interface GetReportsPayload {
 export interface DishTypeReport {
   type: string;              // VEG, NON_VEG, EGG, JAIN, etc.
   itemCount: number;         // total quantity sold
-  grossAmount: number;       // before discount + tax
+  grossAmount: number;      // before discount
   discount: number;
-  tax: number;
+  gst: number;               // GST only
+  serviceCharge: number;     // allocated service charge
+  tax: number;               // total tax (GST + service charge)
   netSales: number;          // final revenue
 }
 

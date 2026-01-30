@@ -80,7 +80,12 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
     }
 
     const enriched = business.items.map((item) => {
-      const netRevenue = calculateNetRevenue(item.amount, item.discount, item.tax);
+      const netRevenue = calculateNetRevenue(
+        item.amount,
+        item.discount,
+        item.tax,
+        item.totalSales,
+      );
       return { ...item, netRevenue };
     });
 
@@ -245,7 +250,7 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
         <div className="hidden border-b p-6 print:block">
           <h1 className="text-center text-2xl font-bold">Item Report</h1>
           <p className="text-muted-foreground mt-2 text-center">Business: {business.businessName || 'N/A'}</p>
-          <p className="text-muted-foreground text-center">Generated on: {new Date().toLocaleDateString()}</p>
+          <p className="text-muted-foreground text-center">Generated on: {new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}</p>
         </div>
 
         {itemsByKitchen.map((kitchen) => (
@@ -290,7 +295,7 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
                     <TableCell className="text-right font-semibold text-orange-600 print:text-black">{formatCurrency(item.discount)}</TableCell>
                     <TableCell className="text-right font-semibold text-blue-600 print:text-black">{formatCurrency(item.tax)}</TableCell>
                     <TableCell className="text-right text-lg font-bold print:text-black">
-                      {formatCurrency(calculateNetRevenue(item.amount, item.discount, item.tax))}
+                      {formatCurrency(calculateNetRevenue(item.amount, item.discount, item.tax, item.totalSales))}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -305,7 +310,7 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
             <span>Total Items: {business.items.length}</span>
             <span>
               Total Revenue:{' '}
-              {formatCurrency(business.items.reduce((sum, item) => sum + calculateNetRevenue(item.amount, item.discount, item.tax), 0))}
+              {formatCurrency(business.items.reduce((sum, item) => sum + calculateNetRevenue(item.amount, item.discount, item.tax, item.totalSales), 0))}
             </span>
           </div>
         </div>

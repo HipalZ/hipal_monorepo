@@ -1,8 +1,7 @@
 /**
  * Item Variant Report (Item-wise Portion Sales)
  *
- * Aggregates sales by item (dish) and portion to show which portions
- * of each item are sold the most.
+ * Aggregates sales by item (dish) and portion using canonical itemFinancialCalculator.
  */
 
 import type { Payment, BillItem } from "./itemType";
@@ -10,17 +9,24 @@ import type { Workbook } from "exceljs";
 import { addBoldHeaderRow, autoFitColumns, addKeyValueRow } from "./excelUtils";
 import { formatToIST } from "./dateFormater";
 import type { BaseContext } from "./types";
+import {
+  calculateFinalItemTotals,
+  filterPaymentsForItemReports,
+} from "./itemFinancialCalculator";
 
 export interface ItemVariantAggregate {
-  itemName: string; // Dish name
-  dishId: string; // Dish ID for uniqueness
-  portionName: string; // Portion name or "Default" if no portion
-  portionId: string | null; // Portion ID or null
-  itemCount: number; // Total quantity sold for this item-portion combination
-  grossAmount: number; // Before discount + tax
+  itemName: string;
+  dishId: string;
+  portionName: string;
+  portionId: string | null;
+  itemCount: number;
+  grossAmount: number;
   discount: number;
+  gst: number;
+  serviceCharge: number;
+  /** All taxes: GST + service charge */
   tax: number;
-  netSales: number; // Final revenue
+  netSales: number;
 }
 
 /**
@@ -79,86 +85,56 @@ function parseItemId(itemId: string): {
 export function aggregateByItemVariant(
   payments: Payment[],
 ): ItemVariantAggregate[] {
-  // Map key: `${dishId}_${portionId || 'default'}`
   const map: Record<string, ItemVariantAggregate> = {};
 
   for (const payment of payments) {
-    for (const item of payment.billItems || []) {
-      const { dish, portion, extras = [], quantity, discount = 0, id } = item;
+    const billItems = payment.billItems || [];
+    if (billItems.length === 0) continue;
 
-      // Skip if no dish or dish._id
+    const result = calculateFinalItemTotals(billItems, payment);
+
+    for (let i = 0; i < billItems.length; i++) {
+      const item = billItems[i];
+      const b = result.items[i];
+      const { dish, portion, id } = item;
+
       if (!dish || dish._id === null || dish._id === undefined) continue;
 
-      // Get dish ID - safely convert to string
       let dishId: string;
       try {
-        if (typeof dish._id === "string") {
-          dishId = dish._id;
-        } else if (
-          dish._id &&
-          typeof (dish._id as { toString?: () => string }).toString ===
-            "function"
-        ) {
-          dishId = (dish._id as { toString(): string }).toString();
-        } else {
-          dishId = String(dish._id);
-        }
-      } catch (error) {
-        // Skip this item if we can't get a valid dish ID
-        console.warn("Failed to parse dish._id:", dish._id, error);
+        dishId =
+          typeof dish._id === "string"
+            ? dish._id
+            : (dish._id as { toString(): string }).toString();
+      } catch {
         continue;
       }
 
-      // Parse item.id to determine portion
-      // ID format: `${dishId}_${portionId || "no_portion"}_${sortedExtras || "no_extras"}`
       let portionId: string | null = null;
       let portionName = "Default";
 
       if (id) {
         const parsed = parseItemId(id);
-        // Use parsed portionId if available, otherwise fallback to portion object
         if (parsed.portionId) {
           portionId = parsed.portionId;
-          // Try to get portion name from portion object if available, otherwise use ID
           portionName = portion?.name || `Portion ${portionId.substring(0, 8)}`;
-        } else {
-          // No portion in ID, check if portion object exists as fallback
-          if (portion?._id) {
-            portionId =
-              typeof portion._id === "string"
-                ? portion._id
-                : (portion._id as { toString(): string }).toString();
-            portionName = portion.name || "Default";
-          } else {
-            portionId = null;
-            portionName = "Default";
-          }
+        } else if (portion?._id) {
+          portionId =
+            typeof portion._id === "string"
+              ? portion._id
+              : (portion._id as { toString(): string }).toString();
+          portionName = portion.name || "Default";
         }
-      } else {
-        // Fallback: use portion object if ID parsing fails
-        portionId = portion?._id
-          ? typeof portion._id === "string"
+      } else if (portion?._id) {
+        portionId =
+          typeof portion._id === "string"
             ? portion._id
-            : (portion._id as { toString(): string }).toString()
-          : null;
-        portionName = portion?.name || "Default";
+            : (portion._id as { toString(): string }).toString();
+        portionName = portion.name || "Default";
       }
 
-      // Create unique key for this item-portion combination
       const key = `${dishId}_${portionId || "default"}`;
 
-      // Calculate line amount
-      const unitPrice = portion ? portion.price : dish.price;
-      const extrasTotal = extras.reduce(
-        (sum, e) => sum + (e.price || 0) * (e.quantity || 1),
-        0,
-      );
-
-      const lineAmountExclTax = (unitPrice + extrasTotal) * quantity;
-      const lineTax = (lineAmountExclTax * (dish.gst || 0)) / 100;
-      const net = lineAmountExclTax + lineTax - discount;
-
-      // Initialize or update aggregate
       if (!map[key]) {
         map[key] = {
           itemName: dish.name || "Unknown Item",
@@ -168,20 +144,23 @@ export function aggregateByItemVariant(
           itemCount: 0,
           grossAmount: 0,
           discount: 0,
+          gst: 0,
+          serviceCharge: 0,
           tax: 0,
           netSales: 0,
         };
       }
 
-      map[key].itemCount += quantity;
-      map[key].grossAmount += Number(lineAmountExclTax.toFixed(2));
-      map[key].discount += discount;
-      map[key].tax += Number(lineTax.toFixed(2));
-      map[key].netSales += Number(net.toFixed(2));
+      map[key].itemCount += b.quantity;
+      map[key].grossAmount += b.grossItemValue;
+      map[key].discount += b.itemDiscount;
+      map[key].gst += b.itemGST;
+      map[key].serviceCharge += b.itemServiceCharge;
+      map[key].tax += b.totalTax;
+      map[key].netSales += b.finalItemTotal;
     }
   }
 
-  // Sort by item name, then by netSales descending
   return Object.values(map).sort((a, b) => {
     if (a.itemName !== b.itemName) {
       return a.itemName.localeCompare(b.itemName);
@@ -201,18 +180,18 @@ export function buildItemVariantSheet(
 ): void {
   const sheet = workbook.addWorksheet("Item Variant Report");
 
-  // Header row
   addBoldHeaderRow(sheet, [
     "Item Name",
     "Portion",
     "Quantity Sold",
     "Gross Amount",
     "Discount",
-    "Tax",
+    "GST",
+    "Service Charge",
+    "Total Tax",
     "Net Sales",
   ]);
 
-  // Data rows
   for (const row of aggregates) {
     sheet.addRow([
       row.itemName,
@@ -220,17 +199,20 @@ export function buildItemVariantSheet(
       row.itemCount,
       row.grossAmount,
       row.discount,
+      row.gst,
+      row.serviceCharge,
       row.tax,
       row.netSales,
     ]);
   }
 
-  // Add summary row
   const totals = aggregates.reduce(
     (acc, row) => ({
       itemCount: acc.itemCount + row.itemCount,
       grossAmount: acc.grossAmount + row.grossAmount,
       discount: acc.discount + row.discount,
+      gst: acc.gst + row.gst,
+      serviceCharge: acc.serviceCharge + row.serviceCharge,
       tax: acc.tax + row.tax,
       netSales: acc.netSales + row.netSales,
     }),
@@ -238,6 +220,8 @@ export function buildItemVariantSheet(
       itemCount: 0,
       grossAmount: 0,
       discount: 0,
+      gst: 0,
+      serviceCharge: 0,
       tax: 0,
       netSales: 0,
     },
@@ -250,12 +234,13 @@ export function buildItemVariantSheet(
     totals.itemCount,
     totals.grossAmount,
     totals.discount,
+    totals.gst,
+    totals.serviceCharge,
     totals.tax,
     totals.netSales,
   ]);
 
-  // Make summary row bold
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 1; i <= 9; i++) {
     summaryRow.getCell(i).font = { bold: true };
   }
 
@@ -275,10 +260,7 @@ export function buildItemVariantSheetFromContext(
   ctx: BaseContext,
 ): void {
   const { allPayments, from, to } = ctx;
-
-  // Aggregate by item and portion across all businesses
-  const aggregates = aggregateByItemVariant(allPayments);
-
-  // Build sheet
+  const itemPayments = filterPaymentsForItemReports(allPayments);
+  const aggregates = aggregateByItemVariant(itemPayments);
   buildItemVariantSheet(workbook, aggregates, from, to);
 }

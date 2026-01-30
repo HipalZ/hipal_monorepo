@@ -1,7 +1,7 @@
 import type { BusinessItemReport, ItemReport } from "@/hooks/useReportHook.ts";
 import { Card } from "@/components/ui/card.tsx";
 import { Package2 } from "lucide-react";
-import { formatCurrency, formatNumber } from "./itemHelper.ts";
+import { calculateNetRevenue, formatCurrency, formatNumber } from "./itemHelper.ts";
 import { memo } from "react";
 
 interface ItemCompactLayoutProps {
@@ -49,7 +49,7 @@ const MemoItemCompactLayout = ({ business }: ItemCompactLayoutProps) => {
               <div className="text-center w-[7rem]">
                 <p className="text-muted-foreground">Net Revenue</p>
                 <p className="font-bold text-lg">
-                  {formatCurrency(item.amount - item.discount + item.tax)}
+                  {formatCurrency(calculateNetRevenue(item.amount, item.discount, item.tax, item.totalSales))}
                 </p>
               </div>
             </div>

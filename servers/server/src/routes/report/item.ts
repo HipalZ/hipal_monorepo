@@ -22,6 +22,7 @@ import { createReportWorkbook } from "../../utils/reportHelper/excelUtils";
 import type { BaseContext } from "../../utils/reportHelper/types";
 import { aggregateByDishType } from "../../utils/reportHelper/itemTypeReport";
 import { buildDishTypeSheet } from "../../utils/reportHelper/itemTypeReport";
+import { filterPaymentsForItemReports } from "../../utils/reportHelper/itemFinancialCalculator";
 
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
@@ -47,6 +48,9 @@ const itemRouter = new Hono()
       "billItems.0": { $exists: true },
     })) as PaymentType[];
 
+    // Item reports: exclude DUES_SETTLE (already counted when dues was created)
+    const itemPayments = filterPaymentsForItemReports(allPayments);
+
     // Fetch DishZoneKitchen mappings for all businesses (ONCE, outside loops)
     // This replaces the deprecated dish.kitchenId approach
     const dishZoneKitchenMappings = (await DishZoneKitchen.find({
@@ -60,9 +64,8 @@ const itemRouter = new Hono()
         businessId: 1,
       })) as DishZoneKitchenMapping[];
 
-    // Build table name to zoneId lookup map (for deriving zoneId from payment.tableName)
     const tableNames = Array.from(
-      new Set(allPayments.map((p) => p.tableName).filter(Boolean)),
+      new Set(itemPayments.map((p) => p.tableName).filter(Boolean)),
     );
     const tables = await Table.find({
       businessId: { $in: businessIds },
@@ -118,7 +121,7 @@ const itemRouter = new Hono()
 
     const paymentsByBiz: Record<string, PaymentType[]> = {};
     for (const id of businessIds) paymentsByBiz[id] = [];
-    for (const p of allPayments) {
+    for (const p of itemPayments) {
       paymentsByBiz[p.businessId]?.push(p);
     }
 
@@ -130,7 +133,6 @@ const itemRouter = new Hono()
       from: fromIST,
       to: toIST,
       businessName: nameMap[biz] ?? "Unknown",
-      // Pass mappings and zoneId resolver to aggregation function
       items: aggregateBillItems(
         paymentsByBiz[biz],
         dishZoneKitchenMappings,
@@ -158,7 +160,8 @@ const itemRouter = new Hono()
       "billItems.0": { $exists: true },
     })) as PaymentType[];
 
-    // Fetch business names for response
+    const itemPayments = filterPaymentsForItemReports(allPayments);
+
     const bizDocs = await Business.find({ _id: { $in: businessIds } })
       .lean()
       .select({ name: 1 });
@@ -168,14 +171,8 @@ const itemRouter = new Hono()
     const fromIST = formatDateToIST(from);
     const toIST = formatDateToIST(to);
 
-    // Aggregate by dish type across all businesses
-    // Returns flat array of DishTypeAggregate (sorted by netSales descending)
-    const aggregates = aggregateByDishType(allPayments);
-
-    // Return grouped by business for consistency with other endpoints
     const grouped = businessIds.map((biz) => {
-      // Filter payments for this business
-      const businessPayments = allPayments.filter(
+      const businessPayments = itemPayments.filter(
         (p) =>
           (typeof p.businessId === "string"
             ? p.businessId
@@ -212,7 +209,6 @@ const itemRouter = new Hono()
       );
     }
 
-    // 1) Fetch payments for given businesses + date range
     const allPayments = (await Payment.find({
       businessId: { $in: businessIds },
       isDeleted: false,
@@ -220,8 +216,8 @@ const itemRouter = new Hono()
       "billItems.0": { $exists: true },
     })) as PaymentType[];
 
-    // 2) Fetch DishZoneKitchen mappings for all businesses (ONCE, outside loops)
-    // This replaces the deprecated dish.kitchenId approach
+    const itemPayments = filterPaymentsForItemReports(allPayments);
+
     const dishZoneKitchenMappings = (await DishZoneKitchen.find({
       businessId: { $in: businessIds },
     })
@@ -233,9 +229,8 @@ const itemRouter = new Hono()
         businessId: 1,
       })) as DishZoneKitchenMapping[];
 
-    // 3) Build table name to zoneId lookup map (for deriving zoneId from payment.tableName)
     const tableNames = Array.from(
-      new Set(allPayments.map((p) => p.tableName).filter(Boolean)),
+      new Set(itemPayments.map((p) => p.tableName).filter(Boolean)),
     );
     const tables = await Table.find({
       businessId: { $in: businessIds },
@@ -280,10 +275,9 @@ const itemRouter = new Hono()
       kitchenNameMapByBiz[bizId][k._id.toString()] = k.name;
     }
 
-    // 6) Group payments by business
     const paymentsByBiz: Record<string, PaymentType[]> = {};
     for (const id of businessIds) paymentsByBiz[id] = [];
-    for (const p of allPayments) {
+    for (const p of itemPayments) {
       paymentsByBiz[p.businessId]?.push(p);
     }
 
@@ -291,7 +285,7 @@ const itemRouter = new Hono()
       businessIds,
       from,
       to,
-      allPayments,
+      allPayments: itemPayments,
       bizNameMap: nameMap,
       kitchenNameMapByBiz,
     };
@@ -327,8 +321,7 @@ const itemRouter = new Hono()
       getZoneIdForExcel,
     );
 
-    // Item Type Report (VEG/NON_VEG/etc.)
-    const dishTypeAggregates = aggregateByDishType(allPayments);
+    const dishTypeAggregates = aggregateByDishType(itemPayments);
     buildDishTypeSheet(workbook, dishTypeAggregates, from, to);
 
     const fromIST = formatToIST(from);
@@ -362,7 +355,6 @@ const itemRouter = new Hono()
         );
       }
 
-      // 1) Fetch payments for given businesses + date range
       const allPayments = (await Payment.find({
         businessId: { $in: businessIds },
         isDeleted: false,
@@ -370,7 +362,8 @@ const itemRouter = new Hono()
         "billItems.0": { $exists: true },
       })) as PaymentType[];
 
-      // 2) Fetch business names
+      const itemPayments = filterPaymentsForItemReports(allPayments);
+
       const bizDocs = await Business.find({ _id: { $in: businessIds } })
         .lean()
         .select({ name: 1 });
@@ -378,8 +371,7 @@ const itemRouter = new Hono()
       const nameMap: Record<string, string> = {};
       for (const b of bizDocs) nameMap[b._id.toString()] = b.name;
 
-      // 3) Aggregate by dish type
-      const dishTypeAggregates = aggregateByDishType(allPayments);
+      const dishTypeAggregates = aggregateByDishType(itemPayments);
 
       // 4) Create workbook with dish type sheet
       const { workbook } = createReportWorkbook();

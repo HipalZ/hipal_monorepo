@@ -2,6 +2,8 @@
 import type * as ExcelJS from "exceljs";
 import type { BaseContext } from "./types";
 import { addBoldHeaderRow, autoFitColumns } from "./excelUtils";
+import { formatToIST } from "./dateFormater";
+import { calculateFinalItemTotals } from "./itemFinancialCalculator";
 
 type AnyPayment = any;
 
@@ -205,7 +207,7 @@ export async function buildNetAndSalesSheets(
 
       const row: SalesRow = {
         "Bill Invoice": billInvoice,
-        Date: new Date(date).toLocaleString(),
+        Date: formatToIST(date, true),
         "User Name": userId?.name ?? "",
         "User Phone": userId?.phone ?? "",
         "Table Name": tableName || "",
@@ -233,6 +235,20 @@ export async function buildNetAndSalesSheets(
         duesSettlementRows.push(row);
       } else {
         normalPaidRows.push(row);
+      }
+    }
+
+    // Reconciliation: Σ(itemFinalTotals) ≈ payment.total (± round-off)
+    for (const payment of paidPayments as AnyPayment[]) {
+      const billItems = payment.billItems ?? [];
+      if (billItems.length === 0) continue;
+      const result = calculateFinalItemTotals(billItems, payment);
+      if (!result.reconciled) {
+        const p = payment as { _id?: { toString?: () => string }; id?: string };
+        const paymentId = p._id?.toString?.() ?? p.id ?? "unknown";
+        console.warn(
+          `[Report reconciliation] Payment ${paymentId}: sum(itemFinalTotals)=${result.sumFinalItemTotal} vs payment.total=${result.paymentTotal} diff=${result.reconciliationDiff}`,
+        );
       }
     }
 
@@ -299,7 +315,7 @@ export async function buildNetAndSalesSheets(
 
       duesRows.push({
         "Bill Invoice": billInvoice,
-        Date: new Date(date).toLocaleString(),
+        Date: formatToIST(date, true),
         "User Name": userId?.name ?? "",
         "User Phone": userId?.phone ?? "",
         "Table Name": tableName || "",
@@ -322,8 +338,8 @@ export async function buildNetAndSalesSheets(
       });
     }
 
-    const fromStr = new Date(from).toLocaleString();
-    const toStr = new Date(to).toLocaleString();
+    const fromStr = formatToIST(from, true);
+    const toStr = formatToIST(to, true);
 
     // =======================
     // NET SALES SHEET

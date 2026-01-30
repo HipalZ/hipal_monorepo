@@ -1,10 +1,15 @@
 import type * as ExcelJS from "exceljs";
 import type { Workbook } from "exceljs";
 import { Business } from "@hi/db-models";
-import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
+import type { Payment as PaymentType } from "./itemType";
 import { formatDateToIST } from "./dateFormater";
 import { autoFitColumns } from "./excelUtils";
 import type { BaseContext } from "./types";
+import {
+  calculateGrossItem,
+  calculateFinalItemTotals,
+  filterPaymentsForItemReports,
+} from "./itemFinancialCalculator";
 
 interface AddOnReport {
   businessId: string;
@@ -62,50 +67,54 @@ export async function buildAddOnReport(
     paymentsByBiz[p.businessId]?.push(p);
   }
 
-  // Process the data for each business
   const report = businessIds.map((biz) => {
     const addOnMap: Record<
       string,
-      {
-        addOnCount: number;
-        amount: number;
-        totalSales: number;
-      }
+      { addOnCount: number; amount: number; totalSales: number }
     > = {};
 
-    // Process each payment and its bill items to gather add-on information
     for (const payment of paymentsByBiz[biz]) {
-      for (const billItem of payment.billItems) {
-        if (billItem.extras) {
-          for (const extra of billItem.extras) {
-            const addOnName = extra.name;
+      const billItems = payment.billItems || [];
+      if (billItems.length === 0) continue;
 
-            // Initialize or update the add-on data for each extra
-            if (!addOnMap[addOnName]) {
-              addOnMap[addOnName] = {
-                addOnCount: 0,
-                amount: 0,
-                totalSales: 0,
-              };
-            }
+      const result = calculateFinalItemTotals(billItems, payment);
 
-            const addOn = addOnMap[addOnName];
-            addOn.addOnCount += 1;
-            const extraAmount = (extra.price || 0) * (extra.quantity || 1);
-            addOn.amount += extraAmount;
-            addOn.totalSales += extraAmount; // This accumulates the total sales for each add-on
+      for (let idx = 0; idx < billItems.length; idx++) {
+        const billItem = billItems[idx];
+        const extras = billItem.extras || [];
+        if (extras.length === 0) continue;
+
+        const lineGross = calculateGrossItem(billItem);
+        const finalItemTotal = result.items[idx].finalItemTotal;
+
+        for (const extra of extras) {
+          const addOnName = extra.name ?? "Unknown";
+          const extraAmount = (extra.price || 0) * (extra.quantity || 1);
+
+          if (!addOnMap[addOnName]) {
+            addOnMap[addOnName] = {
+              addOnCount: 0,
+              amount: 0,
+              totalSales: 0,
+            };
+          }
+
+          addOnMap[addOnName].addOnCount += 1;
+          addOnMap[addOnName].amount += extraAmount;
+          if (lineGross > 0) {
+            addOnMap[addOnName].totalSales +=
+              (extraAmount / lineGross) * finalItemTotal;
           }
         }
       }
     }
 
-    // Convert the map to an array of AddOnDetails
     const addOns = Object.entries(addOnMap).map(
       ([addOnName, { addOnCount, amount, totalSales }]) => ({
         addOnName,
         addOnCount,
-        amount,
-        totalSales: Number(totalSales.toFixed(2)) * addOnCount,
+        amount: Number(amount.toFixed(2)),
+        totalSales: Number(totalSales.toFixed(2)),
       }),
     );
 
@@ -133,7 +142,8 @@ export async function buildAddOnSheet(workbook: Workbook, ctx: BaseContext) {
 
   const sheet = workbook.addWorksheet("AddOn Report");
 
-  const addOnPayments = allPayments.filter((p) =>
+  const itemPayments = filterPaymentsForItemReports(allPayments);
+  const addOnPayments = itemPayments.filter((p) =>
     (p.billItems || []).some(
       (bi: any) =>
         bi.extras && Array.isArray(bi.extras) && bi.extras.length > 0,

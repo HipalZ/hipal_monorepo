@@ -70,8 +70,10 @@ const MemoCategoryTableLayout = ({ business }: CategoryCardLayoutProps) => {
       };
     }
 
+    // Net Revenue = totalSales (final including GST + service charge) so it reconciles with Sales Total
     const enriched = business.categories.map((c) => {
-      const netRevenue = (c.totalAmount || 0) - (c.totalDiscount || 0) + (c.totalTax || 0);
+      const netRevenue =
+        c.totalSales ?? (c.totalAmount || 0) - (c.totalDiscount || 0) + (c.totalTax || 0);
       return { ...c, netRevenue };
     });
 
@@ -80,7 +82,7 @@ const MemoCategoryTableLayout = ({ business }: CategoryCardLayoutProps) => {
         acc.amount += c.totalAmount || 0;
         acc.discount += c.totalDiscount || 0;
         acc.tax += c.totalTax || 0;
-        acc.net += c.netRevenue || 0;
+        acc.net += c.totalSales ?? c.netRevenue ?? 0;
         return acc;
       },
       { amount: 0, discount: 0, tax: 0, net: 0 },
@@ -129,7 +131,7 @@ const MemoCategoryTableLayout = ({ business }: CategoryCardLayoutProps) => {
             <Table>
               <TableBody>
                 <TableRow>
-                  <TableCell className="text-muted-foreground w-1/2 font-medium">Total Amount</TableCell>
+                  <TableCell className="text-muted-foreground w-1/2 font-medium">Gross Amount</TableCell>
                   <TableCell className="text-right font-semibold">{formatCurrency(totals.amount)}</TableCell>
                 </TableRow>
 
@@ -218,7 +220,7 @@ const MemoCategoryTableLayout = ({ business }: CategoryCardLayoutProps) => {
         <div className="hidden border-b p-6 print:block">
           <h1 className="text-center text-2xl font-bold">Category Report</h1>
           <p className="text-muted-foreground mt-2 text-center">Business: {business.businessName || 'N/A'}</p>
-          <p className="text-muted-foreground text-center">Generated on: {new Date().toLocaleDateString()}</p>
+          <p className="text-muted-foreground text-center">Generated on: {new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}</p>
         </div>
 
         <Table>
@@ -226,7 +228,7 @@ const MemoCategoryTableLayout = ({ business }: CategoryCardLayoutProps) => {
             <TableRow>
               <TableHead className="font-semibold">Category Name</TableHead>
               <TableHead className="text-center font-semibold">Items Count</TableHead>
-              <TableHead className="text-right font-semibold">Total Amount</TableHead>
+              <TableHead className="text-right font-semibold">Gross Amount</TableHead>
               <TableHead className="text-right font-semibold">Discount</TableHead>
               <TableHead className="text-right font-semibold">Tax</TableHead>
               <TableHead className="text-right font-semibold">Net Revenue</TableHead>
@@ -248,7 +250,7 @@ const MemoCategoryTableLayout = ({ business }: CategoryCardLayoutProps) => {
                 <TableCell className="text-right font-semibold text-orange-600">{formatCurrency(category.totalDiscount)}</TableCell>
                 <TableCell className="text-right font-semibold text-blue-600">{formatCurrency(category.totalTax)}</TableCell>
                 <TableCell className="text-right text-lg font-bold">
-                  {formatCurrency(category.totalAmount - category.totalDiscount + category.totalTax)}
+                  {formatCurrency(category.totalSales ?? category.totalAmount - category.totalDiscount + category.totalTax)}
                 </TableCell>
               </TableRow>
             ))}

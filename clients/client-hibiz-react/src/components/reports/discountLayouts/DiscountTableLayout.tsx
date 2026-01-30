@@ -53,7 +53,7 @@ const MemoDiscountTableLayout = ({ business }: DiscountTableLayoutProps) => {
             Business: {business.businessName || "N/A"}
           </p>
           <p className="text-center text-muted-foreground">
-            Generated on: {new Date().toLocaleDateString()}
+            Generated on: {new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}
           </p>
         </div>
         <Table>

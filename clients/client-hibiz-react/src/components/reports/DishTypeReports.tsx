@@ -22,13 +22,16 @@ const MemoDishTypeReports = () => {
   const hasReports = dishTypeReports.length > 0;
   const hasDishTypes = hasReports && dishTypeReports.some((business) => business.dishTypes.length > 0);
 
-  // Calculate totals across all businesses
+  // Calculate totals across all businesses (Net Amount = Gross - Discount)
   const totals = useMemo(() => {
     if (!hasDishTypes) {
       return {
         itemCount: 0,
         grossAmount: 0,
         discount: 0,
+        netAmount: 0,
+        gst: 0,
+        serviceCharge: 0,
         tax: 0,
         netSales: 0,
       };
@@ -41,21 +44,26 @@ const MemoDishTypeReports = () => {
             itemCount: sum.itemCount + type.itemCount,
             grossAmount: sum.grossAmount + type.grossAmount,
             discount: sum.discount + type.discount,
+            gst: sum.gst + type.gst,
+            serviceCharge: sum.serviceCharge + type.serviceCharge,
             tax: sum.tax + type.tax,
             netSales: sum.netSales + type.netSales,
           }),
-          { itemCount: 0, grossAmount: 0, discount: 0, tax: 0, netSales: 0 },
+          { itemCount: 0, grossAmount: 0, discount: 0, gst: 0, serviceCharge: 0, tax: 0, netSales: 0 },
         );
-
+        const netAmount = businessTotals.grossAmount - businessTotals.discount;
         return {
           itemCount: acc.itemCount + businessTotals.itemCount,
           grossAmount: acc.grossAmount + businessTotals.grossAmount,
           discount: acc.discount + businessTotals.discount,
+          netAmount: acc.netAmount + netAmount,
+          gst: acc.gst + businessTotals.gst,
+          serviceCharge: acc.serviceCharge + businessTotals.serviceCharge,
           tax: acc.tax + businessTotals.tax,
           netSales: acc.netSales + businessTotals.netSales,
         };
       },
-      { itemCount: 0, grossAmount: 0, discount: 0, tax: 0, netSales: 0 },
+      { itemCount: 0, grossAmount: 0, discount: 0, netAmount: 0, gst: 0, serviceCharge: 0, tax: 0, netSales: 0 },
     );
   }, [dishTypeReports, hasDishTypes]);
 
@@ -89,7 +97,7 @@ const MemoDishTypeReports = () => {
 
         {/* Summary Cards */}
         {hasDishTypes && (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-6">
             <Card>
               <CardContent className="p-4">
                 <div className="text-muted-foreground text-xs font-medium uppercase">Total Quantity</div>
@@ -102,7 +110,7 @@ const MemoDishTypeReports = () => {
                 <div className="mt-1 text-2xl font-bold">₹{totals.grossAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
               </CardContent>
             </Card>
-            {/* <Card>
+            <Card>
               <CardContent className="p-4">
                 <div className="text-muted-foreground text-xs font-medium uppercase">Discount</div>
                 <div className="mt-1 text-2xl font-bold text-red-600">₹{totals.discount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
@@ -110,7 +118,25 @@ const MemoDishTypeReports = () => {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-muted-foreground text-xs font-medium uppercase">Tax</div>
+                <div className="text-muted-foreground text-xs font-medium uppercase">Net Amount</div>
+                <div className="mt-1 text-2xl font-bold">₹{totals.netAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-muted-foreground text-xs font-medium uppercase">GST</div>
+                <div className="mt-1 text-2xl font-bold">₹{totals.gst.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-muted-foreground text-xs font-medium uppercase">Service Charge</div>
+                <div className="mt-1 text-2xl font-bold">₹{totals.serviceCharge.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-muted-foreground text-xs font-medium uppercase">Total Tax</div>
                 <div className="mt-1 text-2xl font-bold">₹{totals.tax.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
               </CardContent>
             </Card>
@@ -119,7 +145,7 @@ const MemoDishTypeReports = () => {
                 <div className="text-muted-foreground text-xs font-medium uppercase">Net Sales</div>
                 <div className="mt-1 text-2xl font-bold text-green-600">₹{totals.netSales.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
               </CardContent>
-            </Card> */}
+            </Card>
           </div>
         )}
 
@@ -150,14 +176,18 @@ const MemoDishTypeReports = () => {
                             <th className="p-3 text-left text-sm font-semibold text-gray-700">Type</th>
                             <th className="p-3 text-right text-sm font-semibold text-gray-700">Quantity</th>
                             <th className="p-3 text-right text-sm font-semibold text-gray-700">Gross Amount</th>
-                            {/* <th className="p-3 text-right text-sm font-semibold text-gray-700">Discount</th> */}
-                            {/* <th className="p-3 text-right text-sm font-semibold text-gray-700">Tax</th> */}
-                            {/* <th className="p-3 text-right text-sm font-semibold text-gray-700">Net Sales</th> */}
+                            <th className="p-3 text-right text-sm font-semibold text-gray-700">Discount</th>
+                            <th className="p-3 text-right text-sm font-semibold text-gray-700">Net Amount</th>
+                            <th className="p-3 text-right text-sm font-semibold text-gray-700">GST</th>
+                            <th className="p-3 text-right text-sm font-semibold text-gray-700">Service Charge</th>
+                            <th className="p-3 text-right text-sm font-semibold text-gray-700">Total Tax</th>
+                            <th className="p-3 text-right text-sm font-semibold text-gray-700">Net Sales</th>
                             <th className="p-3 text-right text-sm font-semibold text-gray-700">% of Total</th>
                           </tr>
                         </thead>
                         <tbody>
                           {business.dishTypes.map((dishType, index) => {
+                            const netAmount = dishType.grossAmount - dishType.discount;
                             const percentage = totals.netSales > 0 ? ((dishType.netSales / totals.netSales) * 100).toFixed(1) : '0.0';
 
                             return (
@@ -170,13 +200,16 @@ const MemoDishTypeReports = () => {
                                 </td>
                                 <td className="p-3 text-right">{dishType.itemCount.toLocaleString()}</td>
                                 <td className="p-3 text-right">₹{dishType.grossAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
-                                {/* <td className="p-3 text-right text-red-600">
+                                <td className="p-3 text-right text-red-600">
                                   ₹{dishType.discount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                 </td>
-                                <td className="p-3 text-right">₹{dishType.tax.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td> */}
-                                {/* <td className="p-3 text-right font-semibold text-green-600">
+                                <td className="p-3 text-right">₹{netAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td className="p-3 text-right">₹{dishType.gst.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td className="p-3 text-right">₹{dishType.serviceCharge.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td className="p-3 text-right">₹{dishType.tax.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td className="p-3 text-right font-semibold text-green-600">
                                   ₹{dishType.netSales.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                                </td> */}
+                                </td>
                                 <td className="p-3 text-right text-sm text-gray-600">{percentage}%</td>
                               </tr>
                             );

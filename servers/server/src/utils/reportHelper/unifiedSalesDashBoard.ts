@@ -36,8 +36,9 @@ export type SegmentRewards = {
   coinsGiven: number; // earnCoins
 };
 
+/** Tax/charges per segment. Aligned with itemFinancialCalculator: tax = GST, kept separate from serviceCharge. */
 export type SegmentCharges = {
-  tax: number;
+  tax: number; // GST
   serviceCharge: number;
   tip: number;
 };
@@ -54,7 +55,7 @@ export type SegmentTotals = {
   realisedRevenueExclRoundOff: number;
 
   netAfterDiscountBeforeCharges: number; // grossSubtotal - discounts.total
-  netAfterDiscountAndCharges: number; // above + tax + svc + tip
+  netAfterDiscountAndCharges: number; // above + tax (GST) + serviceCharge + tip + roundOffNet
 
   // Round-off metrics (for this segment only)
   roundOffPlus: number; // sum of (+) rounds (type 1)
@@ -370,8 +371,8 @@ function aggregateSegment(payments: PaymentDoc[]): SegmentAggregate {
     totals.netAfterDiscountBeforeCharges +
     charges.tax +
     charges.serviceCharge +
+    charges.tip +
     totals.roundOffNet;
-  charges.tip;
 
   // Revenue excluding round-off for this segment
   totals.realisedRevenueExclRoundOff =

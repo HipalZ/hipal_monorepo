@@ -10,6 +10,7 @@ import { formatDateToIST } from "../../utils/reportHelper/dateFormater";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { respond } from "../../utils/response";
 import { createReportWorkbook } from "../../utils/reportHelper/excelUtils";
+import { filterPaymentsForItemReports } from "../../utils/reportHelper/itemFinancialCalculator";
 
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
@@ -36,6 +37,8 @@ const categoryRouter = new Hono()
       "billItems.0": { $exists: true },
     })) as PaymentType[];
 
+    const itemPayments = filterPaymentsForItemReports(allPayments);
+
     const bizDocs = await Business.find({ _id: { $in: businessIds } })
       .lean()
       .select({ name: 1 });
@@ -46,7 +49,7 @@ const categoryRouter = new Hono()
 
     const paymentsByBiz: Record<string, PaymentType[]> = {};
     for (const id of businessIds) paymentsByBiz[id] = [];
-    for (const p of allPayments) {
+    for (const p of itemPayments) {
       paymentsByBiz[p.businessId]?.push(p);
     }
 
@@ -88,6 +91,8 @@ const categoryRouter = new Hono()
       "billItems.0": { $exists: true },
     })) as PaymentType[];
 
+    const itemPayments = filterPaymentsForItemReports(allPayments);
+
     const bizDocs = await Business.find({ _id: { $in: businessIds } })
       .lean()
       .select({ name: 1 });
@@ -99,19 +104,19 @@ const categoryRouter = new Hono()
 
     const paymentsByBiz: Record<string, PaymentType[]> = {};
     for (const id of businessIds) paymentsByBiz[id] = [];
-    for (const p of allPayments) {
+    for (const p of itemPayments) {
       paymentsByBiz[p.businessId]?.push(p);
     }
 
-    const { workbook } = createReportWorkbook(); // no default sheet; buildCategorySheet handles sheets
+    const { workbook } = createReportWorkbook();
 
     const ctx = {
       businessIds,
       from,
       to,
-      allPayments,
+      allPayments: itemPayments,
       bizNameMap: nameMap,
-      paymentsByBiz, // include if buildCategorySheet needs it
+      paymentsByBiz,
     };
 
     await buildCategorySheet(workbook, ctx);

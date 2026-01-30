@@ -2,6 +2,7 @@
 import type * as ExcelJS from "exceljs";
 import type { BaseContext } from "./types";
 import { buildCategoryReport } from "./categoryReport";
+import { formatDateToIST } from "./dateFormater";
 import { autoFitColumns } from "./excelUtils";
 
 type AnyPayment = any;
@@ -161,8 +162,8 @@ export async function buildConsolidatedSheet(
     const paidOrdersCount = paidPayments.length;
     const duesOrdersCount = duesPayments.length;
 
-    const fromDateStr = new Date(from).toLocaleDateString();
-    const toDateStr = new Date(to).toLocaleDateString();
+    const fromDateStr = formatDateToIST(from);
+    const toDateStr = formatDateToIST(to);
 
     // ==========================================================
     // 1) HEADER BLOCK
