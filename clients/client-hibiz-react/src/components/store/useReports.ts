@@ -19,7 +19,8 @@ export type ReportsTypes =
   | "discount"
   | "serviceCharge"
   | "combined"
-  | "addOn";
+  | "addOn"
+  | "deleted_items";
 
 export type LayoutType = "table" | "compact";
 

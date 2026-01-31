@@ -2,13 +2,13 @@ import DateRangePicker from '@/components/molecules/dateRangePicker/index.tsx';
 import MemoizedHeader from '@/components/molecules/header/index.tsx';
 import AddonReports from '@/components/reports/AddOnReports.tsx';
 import CategoryReports from '@/components/reports/CategoryReports.tsx';
-import ParentCategoryReports from '@/components/reports/ParentCategoryReports.tsx';
 import MultiReportDownloadButton from '@/components/reports/CombinedReport';
 import DeletedItemsReports from '@/components/reports/DeletedItemReport';
 import DiscountReports from '@/components/reports/DiscountReport.tsx';
 import DishTypeReports from '@/components/reports/DishTypeReports.tsx';
 import ItemReports from '@/components/reports/ItemReports.tsx';
 import ItemVariantReports from '@/components/reports/ItemVariantReports.tsx';
+import ParentCategoryReports from '@/components/reports/ParentCategoryReports.tsx';
 import ServiceChargeReports from '@/components/reports/ServiceChargeReports.tsx';
 import useReports, { type ReportsTypes } from '@/components/store/useReports.ts';
 import UniversalNav from '@/components/templates/menu/sideNavbaar/universelSidenav.tsx';
@@ -21,12 +21,12 @@ enum ReportType {
   Category = 'category',
   ParentCategory = 'parentCategory',
   Item = 'item',
-  ItemVariant = 'item_variant',
+  ItemVariant = 'itemVariant',
   DishType = 'dishType',
   Discount = 'discount',
   ServiceCharge = 'serviceCharge',
   AddOn = 'addOn',
-  Deleted = 'Deleted_Items',
+  Deleted = 'deleted_items',
 }
 
 const navItems = [
@@ -34,15 +34,28 @@ const navItems = [
   { text: 'Category' },
   { text: 'Parent Category' },
   { text: 'Item' },
-  { text: 'Item_Variant' },
-  { text: 'DishType' },
-  { text: 'AddOn' },
+  { text: 'Item Variant' },
+  { text: 'Dish Type' },
+  { text: 'Add On' },
   { text: 'Discount' },
-  { text: 'ServiceCharge' },
-  { text: 'Deleted_Items' },
+  { text: 'Service Charge' },
+  { text: 'Deleted Items' },
 ];
 
 const normalizeNavKey = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+
+const navKeyToReportType: Record<string, ReportsTypes> = {
+  combined: ReportType.Combined,
+  category: ReportType.Category,
+  parentcategory: ReportType.ParentCategory,
+  item: ReportType.Item,
+  itemvariant: ReportType.ItemVariant,
+  dishtype: ReportType.DishType,
+  discount: ReportType.Discount,
+  servicecharge: ReportType.ServiceCharge,
+  addon: ReportType.AddOn,
+  deleteditems: ReportType.Deleted,
+};
 
 const Reports = () => {
   const businessId = useParams().businessId;
@@ -53,24 +66,14 @@ const Reports = () => {
   const changeLayout = useCallback(
     (text: string) => {
       const key = normalizeNavKey(text);
-      const correctedText: ReportsTypes =
-        key === 'parentcategory'
-          ? 'parentCategory'
-          : key === 'item_variant'
-            ? 'itemVariant'
-            : key === 'dishtype'
-              ? 'dishType'
-              : key === 'servicecharge'
-                ? 'serviceCharge'
-                : key === 'addon'
-                  ? 'addOn'
-                  : key === 'deleted_items'
-                    ? 'deleted_items'
-                    : (text.toLowerCase() as ReportsTypes);
-      setReportPage(correctedText);
+      const reportType = navKeyToReportType[key] ?? (key as ReportsTypes);
+      setReportPage(reportType);
     },
     [setReportPage],
   );
+
+  const selectedNavLabel =
+    navItems.find((item) => navKeyToReportType[normalizeNavKey(item.text)] === reportPage)?.text ?? reportPage ?? '';
 
   const handleBack = useCallback(() => {
     return navigate(`/app/business/${businessId}`);
@@ -101,7 +104,7 @@ const Reports = () => {
           ))}
         </nav>
       </div>
-      <UniversalNav items={navItems} selectedNavItem={reportPage} changeNav={changeLayout} />
+      <UniversalNav items={navItems} selectedNavItem={selectedNavLabel} changeNav={changeLayout} />
       <section className="mt-[4rem] xl:mt-0">
         <DateRangePicker />
       </section>
@@ -125,17 +128,17 @@ const Reports = () => {
           <ItemReports />
         </div>
       )}
-      {reportPage === ReportType.ItemVariant.toLowerCase() && (
+      {reportPage === ReportType.ItemVariant && (
         <div>
           <ItemVariantReports />
         </div>
       )}
-      {reportPage === ReportType.DishType.toLowerCase() && (
+      {reportPage === ReportType.DishType && (
         <div>
           <DishTypeReports />
         </div>
       )}
-      {reportPage === ReportType.AddOn.toLowerCase() && (
+      {reportPage === ReportType.AddOn && (
         <div>
           <AddonReports />
         </div>
@@ -145,12 +148,12 @@ const Reports = () => {
           <DiscountReports />
         </div>
       )}
-      {reportPage === ReportType.ServiceCharge.toLowerCase() && (
+      {reportPage === ReportType.ServiceCharge && (
         <div>
           <ServiceChargeReports />
         </div>
       )}
-      {reportPage === ReportType.Deleted.toLowerCase() && (
+      {reportPage === ReportType.Deleted && (
         <div>
           <DeletedItemsReports />
         </div>
