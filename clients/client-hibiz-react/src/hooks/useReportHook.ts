@@ -17,15 +17,48 @@ export interface CategoryReport {
   categoryId: string;
   categoryName: string;
   categoryCount: number;
+  itemCount?: number;
+  /** Gross amount (before discount) */
   totalAmount: number;
   totalDiscount: number;
+  gst?: number;
+  serviceCharge?: number;
+  /** Total tax (GST + service charge) */
   totalTax: number;
+  /** Final total (reconciles with Sales) — use for Net Revenue */
+  totalSales?: number;
 }
 
 export interface BusinessCategoryReport {
   businessId: string;
   businessName: string;
   categories: CategoryReport[];
+}
+
+export interface ParentCategoryReportRow {
+  parentCategoryId: string;
+  parentCategoryName: string;
+  itemCount: number;
+  grossAmount: number;
+  discount: number;
+  gst: number;
+  serviceCharge: number;
+  totalTax: number;
+  finalAmount: number;
+  children?: { categoryName: string; finalAmount: number; itemCount: number }[];
+}
+
+export interface BusinessParentCategoryReport {
+  businessId: string;
+  businessName: string;
+  from: string;
+  to: string;
+  parentCategories: ParentCategoryReportRow[];
+  childCategoryTotals?: unknown[];
+  sumItemFinalAmount: number;
+  sumParentFinalAmount: number;
+  validationPassed: boolean;
+  validationMessage?: string;
 }
 
 export const useCategoryReports = () => {
@@ -84,6 +117,66 @@ export const useGetReportsXlsx = () => {
   return { isPending, getReportsXlsx: mutateAsync };
 };
 
+export const useParentCategoryReports = () => {
+  const setParentCategoryReports = useReports((s) => s.setParentCategoryReports);
+  const { handleEnvelope } = useApiErrorHandler();
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: GetReportsPayload & { includeChildBreakdown?: boolean }) => {
+      const response = await apiRpc.report.parent_category.$post({
+        json: {
+          businessIds: payload.businessIds,
+          from: Number(payload.from),
+          to: Number(payload.to),
+          includeChildBreakdown: payload.includeChildBreakdown ?? true,
+        },
+      });
+      const data = await handleEnvelope(response);
+      setParentCategoryReports((data as BusinessParentCategoryReport[]) || []);
+      return response;
+    },
+    onError: () => {
+      toast.error("Failed to fetch parent category reports");
+    },
+  });
+  return {
+    isPending,
+    getParentCategoryReports: mutateAsync,
+    clearReportData: () => setParentCategoryReports([]),
+  };
+};
+
+export const useGetParentCategoryReportsXlsx = () => {
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.parent_category.download_xlsx.$post({
+        json: {
+          businessIds: payload.businessIds,
+          from: Number(payload.from),
+          to: Number(payload.to),
+        },
+      });
+      return response.blob();
+    },
+    onSuccess: async (blob, variables) => {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const fromStr = formatDate(Number(variables.from));
+      const toStr = formatDate(Number(variables.to));
+      const fileName = `Parent Category Reports ${fromStr} to ${toStr}.xlsx`;
+      link.href = url;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    },
+    onError: () => {
+      toast.error("Failed to download parent category report");
+    },
+  });
+  return { isPending, getParentCategoryReportsXlsx: mutateAsync };
+};
+
 interface GetReportsPayload {
   from: string;
   to: string;
@@ -95,9 +188,17 @@ export interface ItemReport {
   itemName: string;
   itemCount: number;
   quantity: number;
+  /** Net amount (after discount, before tax) */
   amount: number;
   discount: number;
+  /** GST only */
+  gst?: number;
+  /** Allocated service charge */
+  serviceCharge?: number;
+  /** Total tax (GST + service charge) */
   tax: number;
+  /** Final total (net + GST + service charge) — use for Net Revenue to reconcile with Sales */
+  totalSales?: number;
 }
 
 export interface BusinessItemReport {
@@ -720,9 +821,11 @@ interface GetReportsPayload {
 export interface DishTypeReport {
   type: string;              // VEG, NON_VEG, EGG, JAIN, etc.
   itemCount: number;         // total quantity sold
-  grossAmount: number;       // before discount + tax
+  grossAmount: number;      // before discount
   discount: number;
-  tax: number;
+  gst: number;               // GST only
+  serviceCharge: number;     // allocated service charge
+  tax: number;               // total tax (GST + service charge)
   netSales: number;          // final revenue
 }
 

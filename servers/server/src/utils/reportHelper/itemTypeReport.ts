@@ -2,7 +2,7 @@
  * Item Type Report (VEG/NON_VEG/EGG/etc. Aggregation)
  *
  * Aggregates sales by dish type (VEG, NON_VEG, EGG, JAIN, etc.)
- * Handles multi-type dishes correctly (counts fully in each type)
+ * Uses canonical itemFinancialCalculator; multi-type dishes counted fully in each type.
  */
 
 import type { Workbook } from "exceljs";
@@ -10,14 +10,23 @@ import { formatToIST } from "./dateFormater";
 import { addBoldHeaderRow, addKeyValueRow, autoFitColumns } from "./excelUtils";
 import type { Payment } from "./itemType";
 import type { BaseContext } from "./types";
+import {
+  calculateFinalItemTotals,
+  filterPaymentsForItemReports,
+} from "./itemFinancialCalculator";
 
 export interface DishTypeAggregate {
-  type: string; // VEG, NON_VEG, EGG, JAIN, etc.
-  itemCount: number; // total quantity sold
-  grossAmount: number; // before discount + tax
+  type: string;
+  itemCount: number;
+  grossAmount: number;
   discount: number;
+  /** GST only (per-dish: 0%, 5%, 18%, etc.) */
+  gst: number;
+  /** Allocated service charge */
+  serviceCharge: number;
+  /** All taxes: GST + service charge */
   tax: number;
-  netSales: number; // final revenue
+  netSales: number;
 }
 
 /**
@@ -36,26 +45,18 @@ export function aggregateByDishType(payments: Payment[]): DishTypeAggregate[] {
   const map: Record<string, DishTypeAggregate> = {};
 
   for (const payment of payments) {
-    for (const item of payment.billItems || []) {
-      const { dish, portion, extras = [], quantity, discount = 0 } = item;
+    const billItems = payment.billItems || [];
+    if (billItems.length === 0) continue;
 
-      // Skip if no dish or no dish types
-      // dish.dishTypes is an array: ["VEG"], ["NON_VEG"], ["VEG","JAIN"], etc.
+    const result = calculateFinalItemTotals(billItems, payment);
+
+    for (let i = 0; i < billItems.length; i++) {
+      const item = billItems[i];
+      const b = result.items[i];
+      const dish = item.dish;
+
       if (!dish || !dish.dishTypes || dish.dishTypes.length === 0) continue;
 
-      // Calculate line amount
-      const unitPrice = portion ? portion.price : dish.price;
-      const extrasTotal = extras.reduce(
-        (sum, e) => sum + (e.price || 0) * (e.quantity || 1),
-        0,
-      );
-
-      const lineAmountExclTax = (unitPrice + extrasTotal) * quantity;
-      const lineTax = (lineAmountExclTax * (dish.gst || 0)) / 100;
-      const net = lineAmountExclTax + lineTax - discount;
-
-      // Multi-type dishes: count fully in each type
-      // Example: ["VEG","JAIN"] → contributes fully to both VEG and JAIN
       for (const type of dish.dishTypes) {
         if (!map[type]) {
           map[type] = {
@@ -63,22 +64,23 @@ export function aggregateByDishType(payments: Payment[]): DishTypeAggregate[] {
             itemCount: 0,
             grossAmount: 0,
             discount: 0,
+            gst: 0,
+            serviceCharge: 0,
             tax: 0,
             netSales: 0,
           };
         }
-
-        // Add fully to each type (not split)
-        map[type].itemCount += quantity;
-        map[type].grossAmount += Number(lineAmountExclTax.toFixed(2));
-        map[type].discount += discount;
-        // map[type].tax += Number(lineTax.toFixed(2));
-        // map[type].netSales += Number(net.toFixed(2));
+        map[type].itemCount += b.quantity;
+        map[type].grossAmount += b.grossItemValue;
+        map[type].discount += b.itemDiscount;
+        map[type].gst += b.itemGST;
+        map[type].serviceCharge += b.itemServiceCharge;
+        map[type].tax += b.totalTax;
+        map[type].netSales += b.finalItemTotal;
       }
     }
   }
 
-  // Sort by netSales descending
   return Object.values(map).sort((a, b) => b.netSales - a.netSales);
 }
 
@@ -93,58 +95,70 @@ export function buildDishTypeSheet(
 ): void {
   const sheet = workbook.addWorksheet("Item Type Report");
 
-  // Header row
   addBoldHeaderRow(sheet, [
-    "Item Type",
+    "Type",
     "Quantity Sold",
-    "Discount",
     "Gross Amount",
-    // "Tax",
-    // "Net Sales",
+    "Discount",
+    "Net Amount",
+    "GST",
+    "Service Charge",
+    "Total Tax",
+    "Net Sales",
   ]);
 
-  // Data rows
   for (const row of aggregates) {
+    const netAmount = row.grossAmount - row.discount;
     sheet.addRow([
       row.type,
       row.itemCount,
-      row.discount,
       row.grossAmount,
-      // row.tax,
-      // row.netSales,
+      row.discount,
+      netAmount,
+      row.gst,
+      row.serviceCharge,
+      row.tax,
+      row.netSales,
     ]);
   }
 
-  // Add summary row
   const totals = aggregates.reduce(
     (acc, row) => ({
       itemCount: acc.itemCount + row.itemCount,
-      discount: acc.discount + row.discount,
       grossAmount: acc.grossAmount + row.grossAmount,
-      // tax: acc.tax + row.tax,
-      // netSales: acc.netSales + row.netSales,
+      discount: acc.discount + row.discount,
+      gst: acc.gst + row.gst,
+      serviceCharge: acc.serviceCharge + row.serviceCharge,
+      tax: acc.tax + row.tax,
+      netSales: acc.netSales + row.netSales,
     }),
     {
       itemCount: 0,
-      discount: 0,
       grossAmount: 0,
-      // tax: 0,
-      // netSales: 0,
+      discount: 0,
+      gst: 0,
+      serviceCharge: 0,
+      tax: 0,
+      netSales: 0,
     },
   );
+
+  const totalNetAmount = totals.grossAmount - totals.discount;
 
   sheet.addRow([]);
   const summaryRow = sheet.addRow([
     "TOTAL",
     totals.itemCount,
-    totals.discount,
     totals.grossAmount,
-    // totals.tax,
-    // totals.netSales,
+    totals.discount,
+    totalNetAmount,
+    totals.gst,
+    totals.serviceCharge,
+    totals.tax,
+    totals.netSales,
   ]);
 
-  // Make summary row bold
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 9; i++) {
     summaryRow.getCell(i).font = { bold: true };
   }
 
@@ -164,10 +178,7 @@ export function buildDishTypeSheetFromContext(
   ctx: BaseContext,
 ): void {
   const { allPayments, from, to } = ctx;
-
-  // Aggregate by dish type across all businesses
-  const aggregates = aggregateByDishType(allPayments);
-
-  // Build sheet
+  const itemPayments = filterPaymentsForItemReports(allPayments);
+  const aggregates = aggregateByDishType(itemPayments);
   buildDishTypeSheet(workbook, aggregates, from, to);
 }

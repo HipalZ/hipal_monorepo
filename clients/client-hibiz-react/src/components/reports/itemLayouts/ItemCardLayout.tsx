@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card.tsx";
 import { IndianRupee, Percent, Receipt, Package2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge.tsx";
-import { formatCurrency, formatNumber } from "./itemHelper.ts";
+import { calculateNetRevenue, formatCurrency, formatNumber } from "./itemHelper.ts";
 
 interface ItemCardLayoutProps {
   business: BusinessItemReport;
@@ -71,7 +71,7 @@ const MemoItemCardLayout = ({ business }: ItemCardLayoutProps) => {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Net Revenue</span>
                 <span className="font-bold text-lg">
-                  {formatCurrency(item.amount - item.discount + item.tax)}
+                  {formatCurrency(calculateNetRevenue(item.amount, item.discount, item.tax, item.totalSales))}
                 </span>
               </div>
             </div>

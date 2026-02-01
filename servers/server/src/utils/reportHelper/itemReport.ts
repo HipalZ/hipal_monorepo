@@ -1,8 +1,12 @@
 import type { BillItem, Payment } from "./itemType";
-import { formatToIST } from "../../utils/reportHelper/dateFormater";
+import { formatToIST } from "./dateFormater";
 import type { Workbook } from "exceljs";
 import type { BaseContext } from "./types";
 import { addBoldHeaderRow, addKeyValueRow, autoFitColumns } from "./excelUtils";
+import {
+  calculateFinalItemTotals,
+  filterPaymentsForItemReports,
+} from "./itemFinancialCalculator";
 
 /**
  * DishZoneKitchen mapping interface
@@ -19,14 +23,19 @@ export interface AggregatedItem {
   categoryId: string | null;
   itemName: string;
   itemCount: number;
-  amount: number;
+  grossAmount: number;
+  amount: number; // net item value (pre-tax)
   discount: number;
+  /** GST only (per-dish: 0%, 5%, 18%, etc.) */
+  gst: number;
+  /** Allocated service charge */
+  serviceCharge: number;
+  /** All taxes: GST + service charge */
   tax: number;
-  // quantity: number;
   totalSales: number;
-  dishId: string; // Required: Part of aggregation key
-  zoneId: string; // Required: Part of aggregation key (not optional)
-  kitchenId: string; // Required: Part of aggregation key (not optional)
+  dishId: string;
+  zoneId: string;
+  kitchenId: string;
 }
 
 /**
@@ -91,8 +100,9 @@ export async function buildItemSheet(
 
   const sheet = workbook.addWorksheet("Item Report");
 
-  const itemEligiblePayments = allPayments.filter(
-    (p) => p.billItems && p.billItems.length > 0,
+  // Item reports: exclude DUES_SETTLE; only payments with billItems
+  const itemEligiblePayments = filterPaymentsForItemReports(
+    allPayments,
   ) as Payment[];
 
   const paymentsByBiz: Record<string, Payment[]> = {};
@@ -109,8 +119,11 @@ export async function buildItemSheet(
   const header = [
     "Name",
     "No.of Orders",
+    "Gross Amount",
     "Net Amount",
     "Total Discount",
+    "GST",
+    "Service Charge",
     "Total Tax",
     "Total Sales",
   ];
@@ -121,36 +134,42 @@ export async function buildItemSheet(
     const kitchenNameMap = kitchenNameMapByBiz?.[biz] || {};
 
     type AggItem = {
-      dishId: string; // Required: Part of aggregation key
+      dishId: string;
       itemName: string;
-      zoneId: string; // Required: Part of aggregation key
-      kitchenId: string; // Required: Part of aggregation key
+      zoneId: string;
+      kitchenId: string;
       itemCount: number;
+      grossAmount: number;
       amount: number;
       discount: number;
-      tax: number;
+      gst: number;
+      serviceCharge: number;
+      tax: number; // GST + service charge
       totalSales: number;
     };
 
-    // NEW STRUCTURE: Group by Zone → Kitchen → Item
-    // This replaces the old byKitchen[kitchenId] structure
     const byZoneKitchen: Record<string, Record<string, AggItem[]>> = {};
     const overallTotals = {
       itemCount: 0,
+      grossAmount: 0,
       amount: 0,
       discount: 0,
+      gst: 0,
+      serviceCharge: 0,
       tax: 0,
       totalSales: 0,
     };
 
     for (const payment of payments) {
-      // Get zoneId from payment (derived from table → zone)
-      // Use provided function or fallback to default logic
+      const billItems = payment.billItems || [];
+      if (billItems.length === 0) continue;
+
+      const result = calculateFinalItemTotals(billItems, payment);
+
       let zoneId: string | null = null;
       if (getZoneIdFromPayment) {
         zoneId = getZoneIdFromPayment(payment);
       } else {
-        // Default fallback logic (Payment type may not have zoneId/table, cast if needed)
         const p = payment as Payment & {
           zoneId?: string | { toString(): string };
           table?: { zoneId?: string | { toString(): string } };
@@ -167,38 +186,22 @@ export async function buildItemSheet(
       }
       const zoneIdStr = zoneId || "UNASSIGNED_ZONE";
 
-      for (const bi of payment.billItems || []) {
-        const itemName = bi.dish.name;
+      for (let i = 0; i < billItems.length; i++) {
+        const bi = billItems[i];
+        const b = result.items[i];
+        const itemName = bi.dish?.name ?? "";
         const dish = bi.dish;
-        const portion = bi.portion;
-        const extras = bi.extras || [];
-        const quantity = bi.quantity;
-        const discount = bi.discount || 0;
-
-        const unitPrice = portion ? portion.price : dish.price;
-        // CRITICAL FIX: Extract dishId first (used in multiple places)
         const dishId =
           typeof dish._id === "string"
             ? dish._id
             : (dish._id as { toString(): string }).toString();
 
-        // RESOLVE KITCHEN VIA MAPPING: Never use dish.kitchenId again
         const kitchenId = resolveKitchenId(
           dishId,
           zoneIdStr !== "UNASSIGNED_ZONE" ? zoneIdStr : null,
           dishZoneKitchenMap,
         );
 
-        const extrasTotal = extras.reduce(
-          (sum: number, e: { price?: number; quantity?: number }) =>
-            sum + (e.price || 0) * (e.quantity || 1),
-          0,
-        );
-
-        const lineAmountExclTax = (unitPrice + extrasTotal) * quantity;
-        const lineTax = (lineAmountExclTax * (dish.gst || 0)) / 100;
-
-        // Initialize zone → kitchen structure
         if (!byZoneKitchen[zoneIdStr]) {
           byZoneKitchen[zoneIdStr] = {};
         }
@@ -206,47 +209,46 @@ export async function buildItemSheet(
           byZoneKitchen[zoneIdStr][kitchenId] = [];
         }
 
-        // CRITICAL FIX: Find or create aggregated item (keyed by dishId, not just itemName)
-        // Same dish name could appear in different categories, so we need dishId
-        // Aggregation key is implicitly dishId + zoneId + kitchenId via the nested structure
         let agg = byZoneKitchen[zoneIdStr][kitchenId].find(
           (x) => x.dishId === dishId,
         );
         if (!agg) {
           agg = {
-            dishId, // Required: Part of aggregation key
+            dishId,
             itemName,
             zoneId: zoneIdStr,
             kitchenId,
             itemCount: 0,
+            grossAmount: 0,
             amount: 0,
             discount: 0,
+            gst: 0,
+            serviceCharge: 0,
             tax: 0,
             totalSales: 0,
           };
           byZoneKitchen[zoneIdStr][kitchenId].push(agg);
         }
 
-        const qty =
-          (bi as BillItem & { itemCount?: number }).itemCount ??
-          bi.quantity ??
-          0;
+        const qty = b.quantity;
 
-        // FIXED: Use lineAmountExclTax instead of bi.dish.price
-        // All math logic preserved exactly as before
         agg.itemCount += qty;
-        agg.amount += Number(lineAmountExclTax?.toFixed(2)) || 0; // FIXED: was bi.dish.price
-        agg.discount += discount;
-        agg.tax += Number(lineTax?.toFixed(2)) || 0;
-        agg.totalSales +=
-          Number((lineAmountExclTax + lineTax - discount).toFixed(2)) || 0;
+        agg.grossAmount += b.grossItemValue;
+        agg.amount += b.netItemValue;
+        agg.discount += b.itemDiscount;
+        agg.gst += b.itemGST;
+        agg.serviceCharge += b.itemServiceCharge;
+        agg.tax += b.totalTax;
+        agg.totalSales += b.finalItemTotal;
 
         overallTotals.itemCount += qty;
-        overallTotals.amount += Number(lineAmountExclTax?.toFixed(2));
-        overallTotals.discount += discount;
-        overallTotals.tax += Number(lineTax?.toFixed(2)) || 0;
-        overallTotals.totalSales +=
-          Number((lineAmountExclTax - discount + lineTax)?.toFixed(2)) || 0;
+        overallTotals.grossAmount += b.grossItemValue;
+        overallTotals.amount += b.netItemValue;
+        overallTotals.discount += b.itemDiscount;
+        overallTotals.gst += b.itemGST;
+        overallTotals.serviceCharge += b.itemServiceCharge;
+        overallTotals.tax += b.totalTax;
+        overallTotals.totalSales += b.finalItemTotal;
       }
     }
 
@@ -321,9 +323,12 @@ export async function buildItemSheet(
     addKeyValueRow(sheet, "BusinessId", biz);
     addKeyValueRow(sheet, "BusinessName", bizName);
     addKeyValueRow(sheet, "Total Quantity", overallTotals.itemCount);
-    addKeyValueRow(sheet, "Total Amount", overallTotals.amount);
+    addKeyValueRow(sheet, "Gross Amount", overallTotals.grossAmount);
+    addKeyValueRow(sheet, "Net Amount", overallTotals.amount);
     addKeyValueRow(sheet, "Total Discount", overallTotals.discount);
-    addKeyValueRow(sheet, "Total Tax", overallTotals.tax);
+    addKeyValueRow(sheet, "GST", overallTotals.gst);
+    addKeyValueRow(sheet, "Service Charge", overallTotals.serviceCharge);
+    addKeyValueRow(sheet, "Total Tax (GST + Service Charge)", overallTotals.tax);
     addKeyValueRow(sheet, "Net Revenue", overallTotals.totalSales);
 
     if (topItem) {
@@ -392,8 +397,11 @@ export async function buildItemSheet(
           sheet.addRow([
             it.itemName,
             it.itemCount,
+            it.grossAmount,
             it.amount,
             it.discount,
+            it.gst,
+            it.serviceCharge,
             it.tax,
             it.totalSales,
           ]);
@@ -406,8 +414,11 @@ export async function buildItemSheet(
     sheet.addRow([
       "Overall Summary",
       overallTotals.itemCount,
+      overallTotals.grossAmount,
       overallTotals.amount,
       overallTotals.discount,
+      overallTotals.gst,
+      overallTotals.serviceCharge,
       overallTotals.tax,
       overallTotals.totalSales,
     ]);
@@ -430,7 +441,6 @@ export function aggregateBillItems(
   getZoneIdFromPayment?: (payment: Payment) => string | null,
 ): AggregatedItem[] {
   // Build lookup map ONCE before any loops (no DB calls inside loops)
-  // console.log("sankla", payments);
   const dishZoneKitchenMap = dishZoneKitchenMappings
     ? buildDishZoneKitchenMap(dishZoneKitchenMappings)
     : ({} as Record<DZKKey, string>);
@@ -456,16 +466,19 @@ export function aggregateBillItems(
     return null;
   };
 
-  // CRITICAL FIX: Aggregate by dishId + zoneId + kitchenId (not just dishId)
-  // This ensures we don't lose sales data when same dish is sold in different zones/kitchens
   const groups = payments.reduce<Record<string, AggregatedItem>>(
     (acc, payment) => {
+      const billItems = payment.billItems || [];
+      if (billItems.length === 0) return acc;
+
+      const result = calculateFinalItemTotals(billItems, payment);
       const zoneId = getZoneId(payment);
-      // Use "UNASSIGNED" if zoneId is missing (must be string, not null)
       const zoneIdStr = zoneId || "UNASSIGNED";
 
-      for (const item of payment.billItems || []) {
-        const { dish, portion, extras = [], quantity, discount = 0 } = item;
+      for (let i = 0; i < billItems.length; i++) {
+        const item = billItems[i];
+        const b = result.items[i];
+        const dish = item.dish;
         if (!dish || !dish._id) continue;
 
         const dishId =
@@ -473,34 +486,24 @@ export function aggregateBillItems(
             ? dish._id
             : (dish._id as { toString(): string }).toString();
 
-        // RESOLVE KITCHEN VIA MAPPING: Never use dish.kitchenId
         const kitchenId = resolveKitchenId(
           dishId,
           zoneIdStr !== "UNASSIGNED" ? zoneIdStr : null,
           dishZoneKitchenMap,
         );
 
-        // CRITICAL: Aggregation key must include dishId + zoneId + kitchenId
-        // This prevents data loss when same dish appears in different zones/kitchens
         const key = `${dishId}_${zoneIdStr}_${kitchenId}`;
-
-        const unitPrice = portion ? portion.price : dish.price;
-
-        const extrasTotal = extras.reduce(
-          (sum, e) => sum + (e.price || 0) * (e.quantity || 1),
-          0,
-        );
-
-        const lineAmountExclTax = (unitPrice + extrasTotal) * quantity;
-        const lineTax = (lineAmountExclTax * (dish.gst || 0)) / 100;
 
         if (!acc[key]) {
           acc[key] = {
             categoryId: dish.categoryIds?.[0] || null,
-            itemName: dish.name,
+            itemName: dish.name ?? "",
             itemCount: 0,
+            grossAmount: 0,
             amount: 0,
             discount: 0,
+            gst: 0,
+            serviceCharge: 0,
             tax: 0,
             totalSales: 0,
             dishId,
@@ -510,13 +513,14 @@ export function aggregateBillItems(
         }
 
         const grp = acc[key];
-        grp.itemCount += quantity;
-        grp.discount += discount;
-        grp.tax += Number(lineTax?.toFixed(2));
-        grp.amount += Number(lineAmountExclTax?.toFixed(2));
-        grp.totalSales += Number(
-          (lineAmountExclTax - discount + lineTax)?.toFixed(2),
-        );
+        grp.itemCount += b.quantity;
+        grp.grossAmount += b.grossItemValue;
+        grp.amount += b.netItemValue;
+        grp.discount += b.itemDiscount;
+        grp.gst += b.itemGST;
+        grp.serviceCharge += b.itemServiceCharge;
+        grp.tax += b.totalTax;
+        grp.totalSales += b.finalItemTotal;
       }
       return acc;
     },

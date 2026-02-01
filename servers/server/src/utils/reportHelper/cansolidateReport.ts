@@ -2,6 +2,9 @@
 import type * as ExcelJS from "exceljs";
 import type { BaseContext } from "./types";
 import { buildCategoryReport } from "./categoryReport";
+import { buildParentCategoryReport } from "./parentCategoryReport";
+import { filterPaymentsForItemReports } from "./itemFinancialCalculator";
+import { formatDateToIST } from "./dateFormater";
 import { autoFitColumns } from "./excelUtils";
 
 type AnyPayment = any;
@@ -161,8 +164,8 @@ export async function buildConsolidatedSheet(
     const paidOrdersCount = paidPayments.length;
     const duesOrdersCount = duesPayments.length;
 
-    const fromDateStr = new Date(from).toLocaleDateString();
-    const toDateStr = new Date(to).toLocaleDateString();
+    const fromDateStr = formatDateToIST(from);
+    const toDateStr = formatDateToIST(to);
 
     // ==========================================================
     // 1) HEADER BLOCK
@@ -182,7 +185,59 @@ export async function buildConsolidatedSheet(
     addEmptyRow();
 
     // ==========================================================
-    // 2) CATEGORY TABLE (only paid: normal + dues-settle)
+    // 2.0) PARENT CATEGORY TABLE (item-eligible payments only)
+    // ==========================================================
+    addSectionTitle("Parent Category");
+
+    const itemEligiblePaid = filterPaymentsForItemReports(
+      paidPayments as any[],
+    );
+    const parentResult = await buildParentCategoryReport(
+      itemEligiblePaid,
+      [biz],
+      {
+        includeChildBreakdown: false,
+      },
+    );
+
+    const parentHeaderRow = sheet.getRow(currentRow);
+    const parentHeaders = [
+      "Parent Category",
+      "Sub Total",
+      "Discount",
+      "Net Amount",
+      "Tax",
+      "Gross Amount",
+    ];
+    for (let i = 0; i < parentHeaders.length; i++) {
+      const cell = parentHeaderRow.getCell(i + 1);
+      cell.value = parentHeaders[i];
+      cell.style = tableHeaderStyle;
+    }
+    currentRow += 1;
+
+    for (const parent of parentResult.parentCategories) {
+      const row = sheet.getRow(currentRow);
+      const subTotal = parent.grossAmount || 0;
+      const discountAmt = parent.discount || 0;
+      const netAmt = subTotal - discountAmt;
+      const taxAmt = parent.totalTax || 0;
+      const grossAmt = parent.finalAmount || 0;
+
+      row.getCell(1).value = parent.parentCategoryName;
+      row.getCell(2).value = Number(subTotal.toFixed(2));
+      row.getCell(3).value = Number(discountAmt.toFixed(2));
+      row.getCell(4).value = Number(netAmt.toFixed(2));
+      row.getCell(5).value = Number(taxAmt.toFixed(2));
+      row.getCell(6).value = Number(grossAmt.toFixed(2));
+
+      currentRow += 1;
+    }
+
+    addEmptyRow();
+
+    // ==========================================================
+    // 2.1) CATEGORY TABLE (only paid: normal + dues-settle)
     // ==========================================================
     addSectionTitle("Category");
 

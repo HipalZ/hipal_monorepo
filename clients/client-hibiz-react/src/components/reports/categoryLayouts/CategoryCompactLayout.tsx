@@ -24,7 +24,7 @@ const MemoCategoryCompactLayout = ({ business }: CategoryCompactLayoutProps) => 
               </div>
               <div className="flex items-center gap-6 text-sm">
                 <div className="text-center w-[4rem]">
-                  <p className="text-muted-foreground">Amount</p>
+                  <p className="text-muted-foreground">Gross</p>
                   <p className="font-semibold text-green-600">
                     {formatCurrency(category.totalAmount)}
                   </p>
@@ -45,9 +45,10 @@ const MemoCategoryCompactLayout = ({ business }: CategoryCompactLayoutProps) => 
                   <p className="text-muted-foreground">Net Revenue</p>
                   <p className="font-bold text-lg">
                     {formatCurrency(
-                      category.totalAmount -
-                        category.totalDiscount +
-                        category.totalTax,
+                      category.totalSales ??
+                        category.totalAmount -
+                          category.totalDiscount +
+                          category.totalTax,
                     )}
                   </p>
                 </div>

@@ -1,10 +1,11 @@
 // utils/reportHelper/categoryReport.ts
 import type { Workbook } from "exceljs";
 import { Category } from "@hi/db-models";
-import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
+import type { Payment as PaymentType } from "./itemType";
 import { type AggregatedItem, aggregateBillItems } from "./itemReport";
 import type { BaseContext } from "./types";
 import { addBoldHeaderRow, addKeyValueRow, autoFitColumns } from "./excelUtils";
+import { filterPaymentsForItemReports } from "./itemFinancialCalculator";
 
 export interface CategoryReport {
   categoryId: string;
@@ -13,7 +14,9 @@ export interface CategoryReport {
   itemCount: number;
   totalAmount: number;
   totalDiscount: number;
-  totalTax: number;
+  gst: number;
+  serviceCharge: number;
+  totalTax: number; // GST + service charge
   totalSales: number;
 }
 
@@ -21,6 +24,8 @@ type CatGroup = {
   categoryCount: number;
   totalAmount: number;
   totalDiscount: number;
+  gst: number;
+  serviceCharge: number;
   totalTax: number;
   itemCount: number;
   totalSales: number;
@@ -39,6 +44,8 @@ export async function buildCategoryReport(
         itemCount: 0,
         totalAmount: 0,
         totalDiscount: 0,
+        gst: 0,
+        serviceCharge: 0,
         totalTax: 0,
         totalSales: 0,
       };
@@ -46,10 +53,12 @@ export async function buildCategoryReport(
     const grp = acc[catId];
     grp.categoryCount += it.itemCount;
     grp.itemCount += it.itemCount;
-    grp.totalAmount += it.amount;
+    grp.totalAmount += it.grossAmount;
     grp.totalDiscount += it.discount;
+    grp.gst += it.gst;
+    grp.serviceCharge += it.serviceCharge;
     grp.totalTax += it.tax;
-    grp.totalSales += it.amount - it.discount + it.tax;
+    grp.totalSales += it.totalSales;
     return acc;
   }, {});
 
@@ -60,7 +69,6 @@ export async function buildCategoryReport(
 
   const nameById = categories.reduce<Record<string, string>>((m, c) => {
     m[c._id.toString()] = c.name;
-    console.log(c.name, c._id.toString());
     return m;
   }, {});
 
@@ -72,6 +80,8 @@ export async function buildCategoryReport(
       totalAmount: grp.totalAmount,
       totalDiscount: grp.totalDiscount,
       itemCount: grp.itemCount,
+      gst: Number(grp.gst.toFixed(2)),
+      serviceCharge: Number(grp.serviceCharge.toFixed(2)),
       totalTax: Number(grp.totalTax.toFixed(2)),
       totalSales: Number(grp.totalSales.toFixed(2)),
     }))
@@ -87,8 +97,8 @@ export async function buildCategorySheet(workbook: Workbook, ctx: BaseContext) {
 
   const sheet = workbook.addWorksheet("Category Report");
 
-  const categoryEligiblePayments = allPayments.filter(
-    (p) => p.billItems && p.billItems.length > 0,
+  const categoryEligiblePayments = filterPaymentsForItemReports(
+    allPayments,
   ) as PaymentType[];
 
   const paymentsByBiz: Record<string, PaymentType[]> = {};
@@ -106,8 +116,10 @@ export async function buildCategorySheet(workbook: Workbook, ctx: BaseContext) {
     "Category",
     "No.of Orders",
     "Total Items Orders",
-    "Net Amount",
+    "Gross Amount",
     "Total Discount",
+    "GST",
+    "Service Charge",
     "Total Tax",
     "Total Sales",
   ];
@@ -117,32 +129,25 @@ export async function buildCategorySheet(workbook: Workbook, ctx: BaseContext) {
 
     const categories = (await buildCategoryReport(
       paymentsByBiz[biz] || [],
-    )) as Array<{
-      categoryName: string;
-      categoryCount: number;
-      itemCount: number;
-      totalAmount: number;
-      totalDiscount: number;
-      totalTax: number;
-      totalSales: number;
-    }>;
+    )) as CategoryReport[];
 
-    const enriched = [];
-    for (const c of categories) {
-      const netRevenue =
-        (c.totalAmount || 0) - (c.totalDiscount || 0) + (c.totalTax || 0);
-      enriched.push({ ...c, netRevenue });
-    }
+    // Net Revenue = totalSales (final including GST + service charge) so it reconciles with Sales Total
+    const enriched = categories.map((c) => ({
+      ...c,
+      netRevenue: c.totalSales ?? (c.totalAmount || 0) - (c.totalDiscount || 0) + (c.totalTax || 0),
+    }));
 
     const totals = enriched.reduce(
       (acc, c) => {
         acc.amount += c.totalAmount || 0;
         acc.discount += c.totalDiscount || 0;
+        acc.gst += c.gst || 0;
+        acc.serviceCharge += c.serviceCharge || 0;
         acc.tax += c.totalTax || 0;
-        acc.net += c.netRevenue || 0;
+        acc.net += c.totalSales ?? c.netRevenue ?? 0;
         return acc;
       },
-      { amount: 0, discount: 0, tax: 0, net: 0 },
+      { amount: 0, discount: 0, gst: 0, serviceCharge: 0, tax: 0, net: 0 },
     );
 
     let topCategory =
@@ -167,9 +172,11 @@ export async function buildCategorySheet(workbook: Workbook, ctx: BaseContext) {
     sheet.addRow([]);
     addKeyValueRow(sheet, "BusinessId", biz);
     addKeyValueRow(sheet, "BusinessName", bizName);
-    addKeyValueRow(sheet, "Total Amount", totals.amount);
+    addKeyValueRow(sheet, "Gross Amount", totals.amount);
     addKeyValueRow(sheet, "Total Discount", totals.discount);
-    addKeyValueRow(sheet, "Total Tax", totals.tax);
+    addKeyValueRow(sheet, "GST", totals.gst);
+    addKeyValueRow(sheet, "Service Charge", totals.serviceCharge);
+    addKeyValueRow(sheet, "Total Tax (GST + Service Charge)", totals.tax);
     addKeyValueRow(sheet, "Net Revenue", totals.net);
 
     if (topCategory) {
@@ -200,6 +207,8 @@ export async function buildCategorySheet(workbook: Workbook, ctx: BaseContext) {
         cat.itemCount,
         cat.totalAmount,
         cat.totalDiscount,
+        cat.gst,
+        cat.serviceCharge,
         cat.totalTax,
         cat.totalSales,
       ]);

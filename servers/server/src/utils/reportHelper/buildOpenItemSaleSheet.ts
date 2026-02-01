@@ -2,18 +2,24 @@
 import type { Workbook } from "exceljs";
 import type { BaseContext } from "./types";
 import { addBoldHeaderRow, addKeyValueRow, autoFitColumns } from "./excelUtils";
-import { formatToIST } from "../../utils/reportHelper/dateFormater";
+import { formatToIST } from "./dateFormater";
 import type { Payment, BillItem } from "./itemType";
+import {
+  calculateFinalItemTotals,
+  filterPaymentsForItemReports,
+} from "./itemFinancialCalculator";
 
 type AnyPayment = any;
 
 type OpenItemAgg = {
   itemName: string;
   totalQty: number;
-  netAmount: number; // excl. tax
+  netAmount: number;
   totalDiscount: number;
-  totalTax: number;
-  netRevenue: number; // incl. tax, after discount
+  gst: number;
+  serviceCharge: number;
+  totalTax: number; // GST + service charge
+  netRevenue: number;
 };
 
 export async function buildOpenItemSaleSheet(
@@ -24,9 +30,8 @@ export async function buildOpenItemSaleSheet(
 
   const sheet = workbook.addWorksheet("Open Item Sale");
 
-  // Only payments that actually have billItems
-  const itemEligiblePayments = allPayments.filter(
-    (p: AnyPayment) => Array.isArray(p.billItems) && p.billItems.length > 0,
+  const itemEligiblePayments = filterPaymentsForItemReports(
+    allPayments,
   ) as Payment[];
 
   // Group payments by business
@@ -43,6 +48,8 @@ export async function buildOpenItemSaleSheet(
     "Total Quantity",
     "Net Amount (Excl. Tax)",
     "Total Discount",
+    "GST",
+    "Service Charge",
     "Total Tax",
     "Net Revenue (Incl. Tax)",
   ];
@@ -60,40 +67,26 @@ export async function buildOpenItemSaleSheet(
       totalQty: 0,
       netAmount: 0,
       totalDiscount: 0,
+      gst: 0,
+      serviceCharge: 0,
       totalTax: 0,
       netRevenue: 0,
     };
 
     for (const payment of payments as AnyPayment[]) {
-      for (const bi of (payment.billItems || []) as BillItem[]) {
-        // ✅ Only consider open items
-        const isOpenItem = (bi as any).isOpenItem === true;
-        if (!isOpenItem) continue;
+      const billItems = (payment.billItems || []) as BillItem[];
+      if (billItems.length === 0) continue;
+
+      const result = calculateFinalItemTotals(billItems, payment);
+
+      for (let i = 0; i < billItems.length; i++) {
+        const bi = billItems[i];
+        if ((bi as any).isOpenItem !== true) continue;
 
         const dish = bi.dish;
         if (!dish) continue;
 
-        const portion = bi.portion;
-        const extras = bi.extras || [];
-        const quantity = bi.quantity || 0;
-        const discount = bi.discount || 0;
-
-        if (!quantity) continue;
-
-        const unitPrice = portion ? portion.price : dish.price || 0;
-
-        const extrasTotal = extras.reduce(
-          (sum: number, e: any) => sum + (e.price || 0) * (e.quantity || 1),
-          0,
-        );
-
-        const lineAmountExclTax = (unitPrice + extrasTotal) * quantity;
-        const lineTax = lineAmountExclTax * ((dish.gst || 0) / 100);
-
-        const lineNetAmount = lineAmountExclTax; // excl. tax
-        const lineTotalDiscount = discount; // item-level discount
-        const lineNetRevenue = lineAmountExclTax - discount + lineTax; // incl. tax, after discount
-
+        const b = result.items[i];
         const itemName = dish.name || "Open Item";
 
         if (!aggByItem[itemName]) {
@@ -102,23 +95,29 @@ export async function buildOpenItemSaleSheet(
             totalQty: 0,
             netAmount: 0,
             totalDiscount: 0,
+            gst: 0,
+            serviceCharge: 0,
             totalTax: 0,
             netRevenue: 0,
           };
         }
 
         const agg = aggByItem[itemName];
-        agg.totalQty += quantity;
-        agg.netAmount += Number(lineNetAmount.toFixed(2));
-        agg.totalDiscount += Number(lineTotalDiscount.toFixed(2));
-        agg.totalTax += Number(lineTax.toFixed(2));
-        agg.netRevenue += Number(lineNetRevenue.toFixed(2));
+        agg.totalQty += b.quantity;
+        agg.netAmount += b.grossItemValue;
+        agg.totalDiscount += b.itemDiscount;
+        agg.gst += b.itemGST;
+        agg.serviceCharge += b.itemServiceCharge;
+        agg.totalTax += b.totalTax;
+        agg.netRevenue += b.finalItemTotal;
 
-        overallTotals.totalQty += quantity;
-        overallTotals.netAmount += Number(lineNetAmount.toFixed(2));
-        overallTotals.totalDiscount += Number(lineTotalDiscount.toFixed(2));
-        overallTotals.totalTax += Number(lineTax.toFixed(2));
-        overallTotals.netRevenue += Number(lineNetRevenue.toFixed(2));
+        overallTotals.totalQty += b.quantity;
+        overallTotals.netAmount += b.grossItemValue;
+        overallTotals.totalDiscount += b.itemDiscount;
+        overallTotals.gst += b.itemGST;
+        overallTotals.serviceCharge += b.itemServiceCharge;
+        overallTotals.totalTax += b.totalTax;
+        overallTotals.netRevenue += b.finalItemTotal;
       }
     }
 
@@ -140,6 +139,8 @@ export async function buildOpenItemSaleSheet(
       overallTotals.totalQty,
       overallTotals.netAmount,
       overallTotals.totalDiscount,
+      overallTotals.gst,
+      overallTotals.serviceCharge,
       overallTotals.totalTax,
       overallTotals.netRevenue,
     ]);
@@ -159,6 +160,8 @@ export async function buildOpenItemSaleSheet(
         it.totalQty,
         Number(it.netAmount.toFixed(2)),
         Number(it.totalDiscount.toFixed(2)),
+        Number(it.gst.toFixed(2)),
+        Number(it.serviceCharge.toFixed(2)),
         Number(it.totalTax.toFixed(2)),
         Number(it.netRevenue.toFixed(2)),
       ]);

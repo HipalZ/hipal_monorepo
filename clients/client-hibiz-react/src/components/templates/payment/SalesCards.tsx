@@ -25,6 +25,7 @@ const MemoSalesCards = ({ data, openModel }: SalesCardsProps) => {
     const d = new Date(Number(raw));
     if (Number.isNaN(d.getTime())) return '';
     return d.toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
       day: '2-digit',
       month: 'short',
       year: '2-digit',
