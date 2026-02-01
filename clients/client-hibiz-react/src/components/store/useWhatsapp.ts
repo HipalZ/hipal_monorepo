@@ -426,10 +426,10 @@ export const useWhatsapp = create(
         setPhoneNumber: (phoneNumber: string) => set({ phoneNumber }),
 
         secondWebsiteUrl: "",
-        setSecondWebsiteUrl: (websiteUrl: string) => set({ websiteUrl }),
+        setSecondWebsiteUrl: (url) => set({ secondWebsiteUrl: url }),
 
         secondPhoneNumber: "",
-        setSecondPhoneNumber: (phoneNumber: string) => set({ phoneNumber }),
+        setSecondPhoneNumber: (phone) => set({ secondPhoneNumber: phone }),
 
         secondButtonText: "",
         setSecondButtonText: (secondButtonText: string) =>

@@ -12,13 +12,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { memo, useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
 
+const TAX_RATE = 0.18;
+
 const pricingPlans = [
   {
     id: '10',
     name: 'Wallet',
     price: 10,
-    marketingPrice: 0.85,
-    utilityPrice: 0.2,
+    marketingPrice: 0.84,
+    utilityPrice: 0.19,
     messages: 10,
     isPopular: false,
     features: ['Custom Templates', 'Analytics', 'Marketing Templates 1,170+ msgs Approx (or)', 'Utility Templates 5,000+ msgs Approx'],
@@ -27,8 +29,8 @@ const pricingPlans = [
     id: '1000',
     name: 'Wallet',
     price: 1000,
-    marketingPrice: 0.85,
-    utilityPrice: 0.2,
+    marketingPrice: 0.84,
+    utilityPrice: 0.19,
     messages: 1000,
     isPopular: false,
     features: ['Custom Templates', 'Analytics', 'Marketing Templates 1,170+ msgs Approx (or)', 'Utility Templates 5,000+ msgs Approx'],
@@ -37,8 +39,8 @@ const pricingPlans = [
     id: '2500',
     name: 'Piggy Bank',
     price: 2500,
-    marketingPrice: 0.85,
-    utilityPrice: 0.2,
+    marketingPrice: 0.84,
+    utilityPrice: 0.19,
     messages: 2500,
     isPopular: false,
     features: ['Custom Templates', 'Advanced Analytics', 'Marketing Templates 2,900+ msgs Approx (or)', 'Utility Templates 12,500+ msgs Approx'],
@@ -47,8 +49,8 @@ const pricingPlans = [
     id: '5000',
     name: 'Vault',
     price: 5000,
-    marketingPrice: 0.85,
-    utilityPrice: 0.2,
+    marketingPrice: 0.84,
+    utilityPrice: 0.19,
     messages: 5000,
     isPopular: true,
     features: ['Custom Templates', 'Advanced Analytics', 'Marketing Templates 5,500+ Approx (or)', 'Utility Templates 25,000+ msgs Approx'],
@@ -57,24 +59,17 @@ const pricingPlans = [
     id: '10000',
     name: 'Treasure Box',
     price: 10000,
-    marketingPrice: 0.85,
-    utilityPrice: 0.2,
+    marketingPrice: 0.84,
+    utilityPrice: 0.19,
     messages: 10000,
     isPopular: false,
     features: ['Custom Templates', 'Advanced Analytics', 'Marketing Templates 11,760+ Approx (or)', 'Utility Templates 50,000+ msgs Approx'],
   },
 ];
+
 const MemoWhatzappPayment = () => {
-  const [selectedPlan, setSelectedPlan] = useState({
-    id: '2500',
-    name: 'Piggy Bank',
-    price: 2500,
-    marketingPrice: 0.85,
-    utilityPrice: 0.2,
-    messages: 2500,
-    isPopular: false,
-    features: ['Custom Templates', 'Advanced Analytics', 'Marketing Templates 2,900+ msgs Approx (or)', 'Utility Templates 12,500+ msgs Approx'],
-  });
+  const [selectedPlan, setSelectedPlan] = useState(pricingPlans[2]);
+
   const queryClient = useQueryClient();
   const { setStep, merchantDetails, setShowError } = useWhatsapp((s) => ({
     setStep: s.setStep,
@@ -94,12 +89,21 @@ const MemoWhatzappPayment = () => {
 
   const businessDetails = useBusinessData((s) => s.businessData);
 
+  // Helper to calculate total with tax
+  const calculateTotal = (price: number) => {
+    return Math.round(price + price * TAX_RATE);
+  };
+
   // after getting the order id from the backend, we will create the razorpay options
   const creatingRazorPayOptions = async (orderId: string) => {
     if (!orderId) {
-      setIsLoading(false); // Ensure isLoading is turned off if there's no orderId
+      setIsLoading(false);
       return;
     }
+
+    // Calculate the total amount (Base + Tax)
+    const finalAmount = calculateTotal(selectedPlan?.price || 0);
+
     let isScriptLoaded = false;
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -118,13 +122,13 @@ const MemoWhatzappPayment = () => {
       clearTimeout(timeoutId);
       const options = {
         key: merchantDetails.razorpayKeyId,
-        amount: selectedPlan?.price,
+        amount: finalAmount, // Updated to use Total Amount
         currency: 'INR',
         name: businessDetails?.name,
         description: 'Transaction',
         image: businessDetails?.logo,
         order_id: orderId,
-        handler: (response) => {
+        handler: (response: any) => {
           handlePaymentSuccess(response);
           window.onpopstate = null;
         },
@@ -136,17 +140,18 @@ const MemoWhatzappPayment = () => {
           handleback: false,
           ondismiss: () => {
             handlePaymentDismiss();
-            window.onbeforeunload = null; // Remove the event listener on dismiss
+            window.onbeforeunload = null;
             window.onpopstate = null;
-            setIsLoading(false); // Set isLoading to false after dismiss
+            setIsLoading(false);
           },
         },
 
         notes: {
           address: 'Paltribe solutions',
           businessId: businessDetails?._id,
-          total: selectedPlan?.price,
-          billValue: selectedPlan?.price,
+          total: finalAmount, // Updated Total
+          billValue: finalAmount, // Updated Bill Value
+          tax: finalAmount - (selectedPlan?.price || 0), // Optional: Add tax breakdown to notes
         },
         theme: {
           color: '#3399cc',
@@ -156,37 +161,34 @@ const MemoWhatzappPayment = () => {
       const rzp1 = new (window as any).Razorpay(options);
 
       // Add event listener to prevent back navigation
-      history.pushState(null, '', location.href); // Push initial state with an empty string for title
+      history.pushState(null, '', location.href);
       window.onbeforeunload = (event) => {
         event.preventDefault();
-        // Redirect to a specific URL
         window.location.href = `/app/business/${businessDetails?._id}/whatzapp`;
       };
       window.onpopstate = (event) => {
         event.preventDefault();
-        // Redirect to a specific URL
         window.location.href = `/app/business/${businessDetails?._id}/whatzapp`;
       };
 
       rzp1.open();
 
-      // Remove the event listener when the user starts the payment process
       document.addEventListener('rzp_payment_start', () => {
         window.onbeforeunload = null;
-        setIsLoading(false); // Set isLoading to false once payment starts
+        setIsLoading(false);
       });
 
-      rzp1.on('payment.failed', (response) => {
+      rzp1.on('payment.failed', (response: any) => {
         handlePaymentFailure(response);
         window.onbeforeunload = null;
-        window.onpopstate = null; // Remove the event listener on payment failure
-        setIsLoading(false); // Set isLoading to false on payment failure
+        window.onpopstate = null;
+        setIsLoading(false);
       });
     };
 
     script.onerror = () => {
       toast.error('Failed to load Razorpay. Please try again later.');
-      setIsLoading(false); // Set isLoading to false if script loading fails
+      setIsLoading(false);
     };
   };
 
@@ -293,7 +295,9 @@ const MemoWhatzappPayment = () => {
   );
 
   const handleCreateOrder = async () => {
-    const orderId = await createRazorPayOrder(selectedPlan?.price);
+    // Calculate total with tax before creating order
+    const finalAmount = calculateTotal(selectedPlan?.price || 0);
+    const orderId = await createRazorPayOrder(finalAmount);
     setIsLoading(true);
     await creatingRazorPayOptions(orderId);
   };
@@ -305,105 +309,111 @@ const MemoWhatzappPayment = () => {
           <h1 className="mb-2 text-center text-4xl font-extrabold text-gray-900">WhatsApp Business Messaging Plans</h1>
           <p className="mb-8 text-center text-lg text-gray-600">Choose the perfect plan for your business communication needs</p>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {pricingPlans.map((plan) => (
-              <div
-                key={plan.id}
-                onClick={() => setSelectedPlan(plan)}
-                onKeyDown={(e) => e.key === 'Enter' && setSelectedPlan(plan)}
-                tabIndex={0}
-                role="button"
-                aria-pressed={selectedPlan?.id === plan.id}
-                className={`hover:scale-102 relative h-full overflow-hidden rounded-xl bg-white pb-24 shadow-lg hover:shadow-xl ${selectedPlan?.id === plan.id ? 'ring-4 ring-green-500' : ''} focus:outline-none focus:ring-4 focus:ring-green-300`}
-              >
-                {plan.isPopular && (
-                  <div className="absolute right-0 top-0 rounded-bl-lg bg-green-500 px-3 py-1 text-xs font-bold text-white">Most Popular</div>
-                )}
-                <div className="space-y-6 p-6">
-                  <div className="space-y-2">
-                    <h2 className="text-2xl font-bold text-gray-900">{plan.name}</h2>
-                    <p className="text-5xl font-extrabold text-green-600">₹{plan.price.toLocaleString('en-IN')}</p>
-                  </div>
-                  <ul className="space-y-3 text-sm text-gray-600">
-                    <li className="flex items-center">
-                      <svg
-                        className="mr-2 h-5 w-5 text-green-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <title>Payment Message</title>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Up to {plan.messages.toLocaleString()} messages
-                    </li>
-                    <li className="flex items-center">
-                      <svg
-                        className="mr-2 h-5 w-5 text-green-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <title>Marketing</title>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Marketing: ₹{plan.marketingPrice}/msg
-                    </li>
-                    <li className="flex items-center">
-                      <svg
-                        className="mr-2 h-5 w-5 text-green-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <title>Utility</title>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Utility: ₹{plan.utilityPrice}/msg
-                    </li>
-                  </ul>
-                  <div className="border-t border-gray-200 pt-6">
+            {pricingPlans.map((plan) => {
+              // UI Logic: Calculate amounts for display
+              const taxAmount = plan.price * TAX_RATE;
+              const totalAmount = plan.price + taxAmount;
+
+              return (
+                <div
+                  key={plan.id}
+                  onClick={() => setSelectedPlan(plan)}
+                  onKeyDown={(e) => e.key === 'Enter' && setSelectedPlan(plan)}
+                  tabIndex={0}
+                  role="button"
+                  aria-pressed={selectedPlan?.id === plan.id}
+                  className={`hover:scale-102 relative h-full overflow-hidden rounded-xl bg-white pb-24 shadow-lg hover:shadow-xl ${selectedPlan?.id === plan.id ? 'ring-4 ring-green-500' : ''} focus:outline-none focus:ring-4 focus:ring-green-300`}
+                >
+                  {plan.isPopular && (
+                    <div className="absolute right-0 top-0 rounded-bl-lg bg-green-500 px-3 py-1 text-xs font-bold text-white">Most Popular</div>
+                  )}
+                  <div className="space-y-6 p-6">
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-bold text-gray-900">{plan.name}</h2>
+
+                      {/* MODIFIED: Display Price Breakdown */}
+                      <div className="flex flex-col">
+                        <div className="flex items-baseline gap-1">
+                          <p className="text-4xl font-extrabold text-gray-900">₹{plan.price.toLocaleString('en-IN')}</p>
+                          <span className="text-sm text-gray-500">+ 18% GST</span>
+                        </div>
+                        <p className="text-sm font-semibold text-green-600">Total Payable: ₹{totalAmount.toLocaleString('en-IN')}</p>
+                      </div>
+                      {/* End of Modification */}
+                    </div>
                     <ul className="space-y-3 text-sm text-gray-600">
-                      {plan.features.map((feature, index) => (
-                        <li key={index?.toString()} className="flex items-start">
-                          <svg
-                            className="mr-2 mt-0.5 h-5 w-5 flex-shrink-0 text-green-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <title>Features</title>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          {feature}
-                        </li>
-                      ))}
+                      <li className="flex items-center">
+                        <svg
+                          className="mr-2 h-5 w-5 text-green-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <title>Marketing</title>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Marketing: ₹{plan.marketingPrice}/msg
+                      </li>
+                      <li className="flex items-center">
+                        <svg
+                          className="mr-2 h-5 w-5 text-green-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <title>Utility</title>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Utility: ₹{plan.utilityPrice}/msg
+                      </li>
                     </ul>
+                    <div className="border-t border-gray-200 pt-6">
+                      <ul className="space-y-3 text-sm text-gray-600">
+                        {plan.features.map((feature, index) => (
+                          <li key={index?.toString()} className="flex items-start">
+                            <svg
+                              className="mr-2 mt-0.5 h-5 w-5 flex-shrink-0 text-green-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <title>Features</title>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 w-full bg-gray-50 p-6">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPlan(plan)}
+                      className={`w-full rounded-lg px-4 py-3 text-sm font-semibold ${
+                        selectedPlan?.id === plan.id
+                          ? 'bg-green-600 text-white hover:bg-green-700'
+                          : 'border-2 border-green-600 bg-white text-green-600 hover:bg-green-50'
+                      } focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2`}
+                    >
+                      {selectedPlan?.id === plan.id ? 'Selected' : 'Select Plan'}
+                    </button>
                   </div>
                 </div>
-                <div className="absolute bottom-0 w-full bg-gray-50 p-6">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedPlan(plan)}
-                    className={`w-full rounded-lg px-4 py-3 text-sm font-semibold ${
-                      selectedPlan?.id === plan.id
-                        ? 'bg-green-600 text-white hover:bg-green-700'
-                        : 'border-2 border-green-600 bg-white text-green-600 hover:bg-green-50'
-                    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2`}
-                  >
-                    {selectedPlan?.id === plan.id ? 'Selected' : 'Select Plan'}
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
       <div className="mt-12 text-center">
-        <BottomButton fixed buttons={[{ text: 'Pay', onClick: handleCreateOrder, type: 'button' }]} />
+        {/* Helper text for final confirmation */}
+        <p className="mb-2 text-sm text-gray-500">
+          Total Amount to Pay: <strong>₹{calculateTotal(selectedPlan?.price || 0).toLocaleString('en-IN')}</strong> (Inc. GST)
+        </p>
+        <BottomButton fixed buttons={[{ text: 'Pay Now', onClick: handleCreateOrder, type: 'button' }]} />
       </div>
       {isLoading ? <LoadingSpinner /> : null}
     </>

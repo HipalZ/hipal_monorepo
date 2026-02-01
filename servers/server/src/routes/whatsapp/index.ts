@@ -292,26 +292,28 @@ const whatsappRouter = new Hono()
           );
         }
 
-        const getWhatAppTemplate = await WhatAppTemplate.find({
-          businessId,
-          isDeleted: false,
-        })
-          .select('templateId')
-          .limit(30);
+        const wabaId = whatsAppConfigData.whatsAppAccountId;
 
-        const templateIds = getWhatAppTemplate.map((template) => template.templateId);
-
-        const templatesArray = [];
-
-        for (const templateId of templateIds) {
-          const getWhatAppTemplate = await axios.get(`${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${templateId}`, {
-            headers: {
-              Authorization: `Bearer ${whatsAppConfigData.token}`,
+        if (!wabaId) {
+          return c.json(
+            {
+              message: 'WhatsApp Business Account ID missing in config',
+              err: true,
+              data: {},
             },
-          });
-
-          templatesArray.push(getWhatAppTemplate.data);
+            400,
+          );
         }
+
+        const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${wabaId}/message_templates`;
+
+        const getWhatAppTemplate = await axios.get(url, {
+          headers: {
+            Authorization: `Bearer ${whatsAppConfigData.token}`,
+          },
+        });
+
+        const templatesArray = getWhatAppTemplate.data.data;
 
         return c.json(
           {
@@ -357,6 +359,7 @@ const whatsappRouter = new Hono()
 
       const templateNameAlreadyExist = await WhatAppTemplate.findOne({
         templateName: requestData.name,
+        businessId: requestData.businessId,
       }).select('templateName');
 
       if (templateNameAlreadyExist) {
@@ -1664,8 +1667,7 @@ const whatsappRouter = new Hono()
         return c.json({ message: 'ignored', err: false }, 200);
       }
       const { messages, contacts, statuses, whatsAppBusinessConfigData } = await whatsAppEventData(body);
-
-      if (messages && messages?.text?.body?.length > 1 && whatsAppBusinessConfigData) {
+      if (messages && whatsAppBusinessConfigData) {
         const { userData, userInput } = await whatsAppUserAndTextMessage(contacts, messages, whatsAppBusinessConfigData);
 
         const qrType = identifyQrTypeFromMessage(userInput);
@@ -1681,14 +1683,44 @@ const whatsappRouter = new Hono()
           return respond(c, 'qrHandlers', false, 200, {});
         }
         if (whatsAppBusinessConfigData.chat) {
-          await whatsAppChatHandler(messages?.text?.body, userData._id.toString(), whatsAppBusinessConfigData);
+          const msgType = messages?.type;
+
+          const messagePayload = {
+            type: msgType, // 'text', 'image', 'video', 'document'
+            body: '', // The main text content
+            mediaUrl: '',
+            mediaId: '',
+            caption: '',
+            filename: '',
+          };
+
+          // Extract data based on type
+          if (msgType === 'text') {
+            messagePayload.body = messages?.text?.body || '';
+          } else if (msgType === 'image') {
+            messagePayload.mediaUrl = messages?.image?.url || '';
+            messagePayload.mediaId = messages?.image?.id || '';
+            messagePayload.caption = messages?.image?.caption || '';
+            messagePayload.body = messages?.image?.caption || '';
+          } else if (msgType === 'video') {
+            messagePayload.mediaUrl = messages?.video?.url || '';
+            messagePayload.mediaId = messages?.video?.id || '';
+            messagePayload.caption = messages?.video?.caption || '';
+            messagePayload.body = messages?.video?.caption || '';
+          } else if (msgType === 'document') {
+            messagePayload.mediaUrl = messages?.document?.url || '';
+            messagePayload.mediaId = messages?.document?.id || '';
+            messagePayload.caption = messages?.document?.caption || '';
+            messagePayload.filename = messages?.document?.filename || '';
+            messagePayload.body = messages?.document?.caption || '';
+          }
+
+          // Pass the structured object to the handler
+          await whatsAppChatHandler(messagePayload, userData._id.toString(), whatsAppBusinessConfigData);
         }
-
-        await whatsAppBlockUserHandler(whatsAppBusinessConfigData, userData?.phone, userData._id.toString(), messages?.id, messages?.text?.body);
-      }
-
-      if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
-        await whatsAppCampaignHandler(whatsAppBusinessConfigData, statuses);
+        if (messages?.text?.body?.length > 1) {
+          await whatsAppBlockUserHandler(whatsAppBusinessConfigData, userData?.phone, userData._id.toString(), messages?.id, messages?.text?.body);
+        }
       }
       if (messages !== undefined) {
         await handleChatbotFlow({
@@ -1696,6 +1728,10 @@ const whatsappRouter = new Hono()
           contacts,
           whatsAppBusinessConfigData,
         });
+      }
+
+      if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
+        await whatsAppCampaignHandler(whatsAppBusinessConfigData, statuses);
       }
 
       return respond(c, 'event received', false, 200, {});
