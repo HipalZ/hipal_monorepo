@@ -1,6 +1,6 @@
 import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
 import { useFetchSubscribersInfinite, useSearchUserByPhone } from '@/hooks/useTemplates';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { BiSearch } from 'react-icons/bi';
 import { RxAvatar } from 'react-icons/rx';
 
@@ -34,29 +34,6 @@ const MemoChatsList = () => {
       }
     }
   }, [data, setUsers, selectedUser, setSelectedUser]);
-
-  const observerTarget = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 1.0 },
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => {
-      if (observerTarget.current) {
-        observer.unobserve(observerTarget.current);
-      }
-    };
-  }, [hasNextPage, fetchNextPage]);
 
   const handleUserClick = useCallback(
     (user) => {
@@ -166,10 +143,39 @@ const MemoChatsList = () => {
           </div>
         )}
 
-        {/* Loader for infinite scroll */}
-        {filteredUsers && filteredUsers.length > 0 && (
-          <div ref={observerTarget} className="flex h-4 w-full items-center justify-center py-4">
-            {isFetchingNextPage && <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00a884] border-t-transparent" />}
+        {/* Load More with Fade Effect */}
+        {hasNextPage && filteredUsers && filteredUsers.length > 0 && (
+          <div className="relative">
+            {/* Gradient fade overlay */}
+            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white via-white/80 to-transparent" />
+            
+            {/* Load More Button */}
+            <div className="relative flex w-full items-center justify-center pb-4 pt-2">
+              <button
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="group flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Load more contacts"
+              >
+                {isFetchingNextPage ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#00a884] border-t-transparent" />
+                ) : (
+                  <svg
+                    className="h-5 w-5 text-[#54656f] transition-colors group-hover:text-[#00a884]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         )}
       </nav>
