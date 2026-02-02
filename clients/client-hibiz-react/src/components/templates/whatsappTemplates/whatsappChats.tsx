@@ -119,7 +119,7 @@ const MemoWhatsappChats = () => {
   return (
     <section className="relative flex h-[85dvh] rounded-lg bg-gray-100 shadow-lg">
       {/* Sidebar */}
-      <div className={`md:flex md:w-[360px] ${isMobileListView ? 'flex w-full' : 'hidden'}`}>
+      <div className={`md:flex ${isMobileListView ? 'flex w-full' : 'hidden'}`}>
         <ChatsList />
       </div>
 

@@ -102,7 +102,7 @@ const MemoChatsList = () => {
   }, [searchNumber, users]);
 
   return (
-    <aside className="h-full w-full border-r border-gray-200 bg-white md:flex md:w-[380px] md:flex-col">
+    <aside className="h-full w-full border-r border-gray-200 bg-white md:flex md:flex-col">
       <header className="flex h-[60px] flex-shrink-0 items-center justify-between border-b border-gray-100 bg-white px-4 py-2">
         <h1 className="text-xl font-bold text-[#111b21]">Chats</h1>
       </header>
