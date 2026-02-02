@@ -1986,13 +1986,7 @@ const whatsappRouter = new Hono()
       await axios({
         method: 'POST',
         url: `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages?access_token=${config?.token}`,
-        data: {
-          messaging_product: 'whatsapp',
-          to: phoneNumber?.toString(),
-          text: {
-            body: text,
-          },
-        },
+        data: payload,
         headers: {
           'Content-Type': 'application/json',
         },
