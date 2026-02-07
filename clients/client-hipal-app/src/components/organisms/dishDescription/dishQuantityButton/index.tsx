@@ -305,7 +305,7 @@ const MemoDishQuantityButton = ({
                   border: `1px solid ${primaryColor}20`,
                 }}
               >
-                Add
+                {outletInfo?.placeOrderButton ? "Add" : "View"}
               </button>
             </motion.div>
           )}
