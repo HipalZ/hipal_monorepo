@@ -1,7 +1,14 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,14 +26,27 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@api/*": ["./src/api/*"],
-      "@app/*": ["./src/app/*"],
-      "@asset/*": ["./src/asset/*"],
-      "@component/*": ["./src/component/*"],
-      "@config/*": ["./src/config/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@api/*": [
+        "./src/api/*"
+      ],
+      "@app/*": [
+        "./src/app/*"
+      ],
+      "@asset/*": [
+        "./src/asset/*"
+      ],
+      "@component/*": [
+        "./src/component/*"
+      ],
+      "@config/*": [
+        "./src/config/*"
+      ]
     },
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "noEmit": true
   },
   "include": [
     "next-env.d.ts",
@@ -37,5 +57,7 @@
     "./dist/types/**/*.ts",
     "tailwind.config.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

@@ -4,11 +4,12 @@
 
 const nextConfig = {
   reactStrictMode: false,
-  cacheMaxMemorySize: 0,
+  cacheMaxMemorySize: 0, // need to remove this resolve memory leaks.
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
+    deviceSizes: [360, 390, 414, 828],
     remotePatterns: [
       {
         protocol: "https",
@@ -75,10 +76,10 @@ const nextConfig = {
         source: "/:all*(svg|jpg|png|webp|woff|woff2|ttf|otf|eot|map|txt|xml)",
         locale: false,
         headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=86400",
-          },
+        {
+          key: 'Cache-Control',
+          value: 'public, max-age=31536000, immutable',
+        }
         ],
       },
       {
