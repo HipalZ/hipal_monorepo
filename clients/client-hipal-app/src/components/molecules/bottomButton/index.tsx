@@ -208,12 +208,14 @@ export default function BottomButton({
           />
 
           {tableName ? (
-            <MenuItem
-              icon={MdAccountBalanceWallet}
-              label="Pay Bill"
-              onClick={openModal}
-              isSelected={false}
-            />
+            outletInfo?.placeOrderButton !== false ? (
+              <MenuItem
+                icon={MdAccountBalanceWallet}
+                label="Pay Bill"
+                onClick={openModal}
+                isSelected={false}
+              />
+            ) : null 
           ) : (
             <MenuItem
               icon={LuScanLine}
@@ -222,7 +224,6 @@ export default function BottomButton({
               isSelected={false}
             />
           )}
-
           {!showBack && (
             <MenuItem
               icon={MdMenuBook}

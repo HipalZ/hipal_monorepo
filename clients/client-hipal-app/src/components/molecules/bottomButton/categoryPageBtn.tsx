@@ -181,16 +181,16 @@ const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
               <motion.div
                 variants={itemVariants}
                 style={{ borderColor: primaryColor }}
+                onClick={openSearchModal}
                 className={cn(
                   tableName?.length === 0
                     ? "w-full "
-                    : "gap-1 flex items-center",
+                    : "gap-1 flex-1 items-center",
                   "border border-[#B0B0B0] p-2 rounded-md",
                 )}
               >
                 <motion.button
                   type="button"
-                  onClick={openSearchModal}
                   className={cn(
                     tableName?.length === 0
                       ? "w-full flex justify-center items-center"
@@ -200,7 +200,7 @@ const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <FiSearch size={24} />{" "}
+                  <FiSearch size={24} />{outletInfo?.placeOrderButton ? " " : "Search Dishes" }
                   <span className="text-base">
                     {tableName?.length === 0 ? "Search" : ""}
                   </span>
@@ -235,7 +235,7 @@ const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
               </motion.div>
 
               {/* TimeBadge */}
-              {tableName?.length > 0 && (
+              {tableName?.length > 0 && outletInfo?.placeOrderButton && (
                 <motion.div variants={itemVariants}>
                   <TimeBadge onClick={promptHiCode} />
                 </motion.div>
