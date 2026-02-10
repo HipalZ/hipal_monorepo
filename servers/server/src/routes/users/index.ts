@@ -34,6 +34,7 @@ import { setCookie } from "hono/cookie";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { respond } from "../../utils/response";
+import { monadHelperFunction } from "../../utils/monad";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -1251,6 +1252,15 @@ const usersRouter = new Hono()
             userCount: 1,
             date: Date.now(),
           });
+        //TODO monad integration
+        await monadHelperFunction({
+          businessId:businessId,
+          userId:userId,
+          orderId:"0",
+          claimedCoinz:0,
+          subTotal:0,
+          signUpBonus,
+        })
         } else {
           await Subscriber.findOneAndUpdate(
             {

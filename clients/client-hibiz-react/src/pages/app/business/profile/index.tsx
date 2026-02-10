@@ -93,9 +93,11 @@ const MemoizedProfile = () => {
       response_type: "code", // Required for system user access token
       override_default_response_type: true,
       extras: {
-        setup: {},
+        sessionInfoVersion: "3",
+        setup: {
+          skip_payment_step: true,
+        },
         featureType: "",
-        sessionInfoVersion: "2",
       },
     });
   };

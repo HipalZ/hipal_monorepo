@@ -79,6 +79,7 @@ import { buildUnifiedDashboardCore } from "../../utils/reportHelper/unifiedSales
 import { respond } from "../../utils/response";
 import { buildBillsExcelBuffer } from "../../utils/sales";
 import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
+import { monadHelperFunction, triggerBlockchain } from "../../utils/monad";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -1655,6 +1656,7 @@ const paymentsRouter = new Hono()
       "query",
       z.object({
         businessId: z.string(),
+        netCoinz:z.bigint()
       }),
     ),
 
@@ -1662,7 +1664,7 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json();
       const { response } = requestData;
       const { merchantId } = c.req.param();
-      const { userId, couponId, businessId, tableName, paidAmount } =
+      const { userId, couponId, businessId, tableName, paidAmount, netCoinz } =
         c.req.query();
 
       const merchant = await BusinessSettings.findOne({
@@ -1692,6 +1694,13 @@ const paymentsRouter = new Hono()
         .digest("hex");
 
       if (signature === razorpay_signature) {
+        // TODO monad integration
+        await triggerBlockchain(
+          businessId,
+          userId,
+          BigInt(netCoinz),
+          razorpay_order_id,
+        );
         return c.json({
           err: false,
           message: "Payment is valid",
@@ -2182,7 +2191,7 @@ const paymentsRouter = new Hono()
         duesUserId,
         npcUserId,
       } = requestData;
-
+      console.log('requestData',requestData)
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const alert = await PaymentAlert.findOne(
@@ -2206,6 +2215,7 @@ const paymentsRouter = new Hono()
             { isAccepted: true, comment, waiterName },
             { new: true, session },
           );
+          console.log('triggered order 1')
           return c.json({
             message: "Order accepted successfully",
             err: false,
@@ -2261,7 +2271,7 @@ const paymentsRouter = new Hono()
                   if (!result) {
                     throw new Error("Failed to process POS offline order");
                   }
-
+                      console.log('triggered order 2')
                   if (result) {
                     return respond(
                       c,
@@ -2523,7 +2533,7 @@ const paymentsRouter = new Hono()
                       { isAccepted: true, comment, waiterName },
                       { new: true, session },
                     );
-
+                    console.log('triggered order 3')
                     return c.json({
                       message: "Order accepted successfully",
                       err: false,
@@ -2937,6 +2947,7 @@ const paymentsRouter = new Hono()
                       );
                     }
                   }
+                  console.log('triggered order 4')
                   return c.json({
                     message: "Order accepted successfully",
                     err: false,
@@ -3280,6 +3291,14 @@ const paymentsRouter = new Hono()
                   },
                 );
               }
+              // TODO monad integration
+              await monadHelperFunction({
+                businessId:order.businessId,
+                userId:order.userId,
+                orderId:order.order_id,
+                claimedCoinz:order.claimedCoins,
+                subTotal:order.billValue
+              })
             }
 
             const updateAlert = await PaymentAlert.findByIdAndUpdate(
@@ -3287,7 +3306,7 @@ const paymentsRouter = new Hono()
               { isAccepted: true, comment, waiterName },
               { new: true, session },
             );
-
+            console.log('triggered order 5')
             return c.json({
               message: "Order accepted successfully",
               err: false,

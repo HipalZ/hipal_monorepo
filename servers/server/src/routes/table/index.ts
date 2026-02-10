@@ -42,7 +42,9 @@ import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
 import { respond } from "../../utils/response";
 import { generateTenDigitCode } from "../pos";
-//
+import { monadHelperFunction } from "../../utils/monad";
+import { calculatedCashbackCoins } from "../payments";
+
 const tableRouter = new Hono()
   .get(
     "/all/:businessId",
@@ -332,11 +334,11 @@ const tableRouter = new Hono()
           npcUserId,
           variantId,
         } = await c.req.json();
-
         const table = await Table.findById(tableId);
-
+        console.log('table',table)
+        console.log('captainId',captainId)
         const captain = await User.findById(captainId);
-
+        console.log('captain',captain)
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
           isDeleted: false,
@@ -352,7 +354,6 @@ const tableRouter = new Hono()
         }
 
         if (pos.posName === "HIPAL_Z") {
-          console.log("jk");
           const result = await executePosHandler(pos.posName, "normal_settle", {
             tableId: table._id,
             captainId: captain._id,
@@ -392,7 +393,7 @@ const tableRouter = new Hono()
           businessId: table?.businessId,
           tableName: table?.name,
         });
-
+        console.log('tableSession',tableSession)
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
@@ -1004,6 +1005,31 @@ const tableRouter = new Hono()
           ],
           { session },
         );
+        // TODO when normal settle cashback is implemented we can activate this line
+      //   const payingUser = await User.findById(saveOrder[0].userId).session(session);
+      //   const isCaptainAtThisBusiness = payingUser?.customRole?.some(cr => 
+      //   cr.businessId.toString() === saveOrder[0].businessId.toString() && 
+      //   cr.role === "CAPTAIN" || "MANAGER" || "CO_OWNER"
+      // );
+      // if (!isCaptainAtThisBusiness) {
+      //   let cashBack = await calculatedCashbackCoins(
+      //     saveOrder[0].businessId.toString(),
+      //     Number(saveOrder[0].billValue),
+      //     Number(saveOrder[0].claimedCoins),
+      //     Number(saveOrder[0].couponDiscount),
+      //     Number(saveOrder[0].discount),
+      //   );
+      //   await monadHelperFunction({
+      //     businessId: saveOrder[0].businessId,
+      //     userId: saveOrder[0].userId,
+      //     orderId: saveOrder[0].order_id,
+      //     claimedCoinz: saveOrder[0].claimedCoins,
+      //     subTotal: saveOrder[0].billValue
+      //   });
+      //   console.log(`Success: Monad credit sent to customer ${saveOrder[0].userId}`);
+      // } else {
+      //   console.log(`Skipped: User ${saveOrder[0].userId} is a Captain at business ${saveOrder[0].businessId}`);
+      // }
 
         const payload = {
           app_key: pos.accessKey,

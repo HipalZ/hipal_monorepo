@@ -110,6 +110,11 @@ export const usePayments = () => {
   // payment response
   const sendPaymentResponse = useCallback(
     async (response: any) => {
+      console.log("claimedCoins", claimedCoins);
+      let coinsObtained = Math.round(
+        finalAmountForReward * (loyaltySetting?.setCashBackPercentage / 100),
+      );
+      const netCoinz = -claimedCoins + coinsObtained;
       setIsLoading(true);
       const res = await apiRpc.payments.validPayment[":merchantId"].$post({
         param: {
@@ -124,6 +129,7 @@ export const usePayments = () => {
           paidAmount: finalAmount?.toString(),
           tableName: tableName,
           businessId: businessId,
+          netCoinz,
         },
       });
       if (res.status === 401) {
@@ -131,8 +137,6 @@ export const usePayments = () => {
       }
       const data = await res.json();
       const orderId = data?.data as string;
-      const coinsObtained =
-        finalAmount * (loyaltySetting?.setCashBackPercentage / 100);
       const existingCoins = claimedCoins ? userCoinz - claimedCoins : userCoinz;
       let finalReward = 0;
       if (
