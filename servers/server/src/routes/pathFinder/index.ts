@@ -41,6 +41,7 @@ const pathFinderRouter = new Hono().get(
           $gte: fromTs,
           $lte: toTs,
         },
+        mode: { $ne: 'dues' },
       })
         .sort({ billInvoice: 1 })
         .skip(skip)
