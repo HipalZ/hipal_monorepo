@@ -42,10 +42,12 @@ const pathFinderRouter = new Hono().get(
       const payments = await Payment.find({
         businessId,
         date: {
-          $gte: fromTs,
-          $lte: toTs,
+          $gte: new Date(fromTs),
+          $lte: new Date(toTs),
         },
+        mode: { $ne: "dues" },
       })
+
         .sort({ billInvoice: 1 })
         .skip(skip)
         .limit(pageSize);
