@@ -32,12 +32,12 @@ const AvailableCoinz = () => {
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { addCoins, removeCoinz, removeCouponz } = useUpdateBill();
   const { loyaltySetting } = useLoyaltyData();
-  // console.log('outletInfo',outletInfo)
-  // console.log('loyaltySetting',loyaltySetting)
-  useUserCoinz(
-  loyaltySetting?.loyaltyId ?? "",
-  outletInfo?.businessId ?? ""
-);
+
+  const loyaltyId = loyaltySetting?.loyaltyId;
+  const businessId = outletInfo?.businessId;
+
+  useUserCoinz(loyaltyId ?? "", businessId ?? "");
+
 
   const addCoinsMutation = useMutation({ mutationFn: addCoins });
   const removeCoinsMutation = useMutation({ mutationFn: removeCoinz });
