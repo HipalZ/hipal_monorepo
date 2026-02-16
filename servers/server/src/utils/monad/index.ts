@@ -15,7 +15,12 @@ const ABI = [
 ];
 const CONTRACT = new ethers.Contract(CONTRACT_ADDRESS, ABI, WALLET);
 
-export async function triggerBlockchain(bizId:string, userId:string, netCoinz:bigint, orderId:string) {
+export async function triggerBlockchain(
+  bizId: string,
+  userId: string,
+  netCoinz: bigint,
+  orderId: string,
+) {
   console.log("triggered block chain", bizId, userId, netCoinz, orderId);
   try {
     const method = CONTRACT.getFunction("settleOrder");
@@ -26,30 +31,39 @@ export async function triggerBlockchain(bizId:string, userId:string, netCoinz:bi
   }
 }
 
-type data ={
-    businessId:string,
-    userId:string,
-    orderId:string,
-    claimedCoinz:number,
-    subTotal:number,
-    signUpBonus?:number
-}
-export const monadHelperFunction = async (data:data) => {
-  console.log('data',data)
-  const {businessId, orderId, userId, claimedCoinz, subTotal, signUpBonus} = data
-    const existingLoyalty = await LoyaltySettings.findOne({
-      businessId,
-    }).select("setCashBackPercentage").lean()
-    if (!existingLoyalty) {
-        console.log('No loyalty settings found for this business');
-        return;
-    }
-    const cashbackPer = existingLoyalty.setCashBackPercentage || 0;
-    const cashbackCoinz = Math.floor((subTotal * cashbackPer) / 100);
-    let netCoinz = - claimedCoinz + cashbackCoinz
-    if (signUpBonus && signUpBonus > 0){
-      netCoinz = signUpBonus
-    }
-    console.log('netCoinz',netCoinz)
-    await triggerBlockchain(businessId.toString(), userId.toString(), BigInt(netCoinz), orderId)
+type data = {
+  businessId: string;
+  userId: string;
+  orderId: string;
+  claimedCoinz: number;
+  subTotal: number;
+  signUpBonus?: number;
+};
+export const monadHelperFunction = async (data: data) => {
+  console.log("data", data);
+  const { businessId, orderId, userId, claimedCoinz, subTotal, signUpBonus } =
+    data;
+  const existingLoyalty = await LoyaltySettings.findOne({
+    businessId,
+  })
+    .select("setCashBackPercentage")
+    .lean();
+  if (!existingLoyalty) {
+    console.log("No loyalty settings found for this business");
+    return;
+  }
+  const cashbackPer = existingLoyalty.setCashBackPercentage || 0;
+  const taxableAmount = Math.max(0, subTotal - claimedCoinz);
+  const cashbackCoinz = Math.floor((taxableAmount * cashbackPer) / 100);
+  let netCoinz = -claimedCoinz + cashbackCoinz;
+  if (signUpBonus && signUpBonus > 0) {
+    netCoinz = signUpBonus;
+  }
+  console.log("netCoinz", netCoinz);
+  await triggerBlockchain(
+    businessId.toString(),
+    userId.toString(),
+    BigInt(netCoinz),
+    orderId,
+  );
 };
