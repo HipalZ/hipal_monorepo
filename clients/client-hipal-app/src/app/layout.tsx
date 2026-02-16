@@ -65,8 +65,43 @@ const ErrorPopupComponent = dynamic(
 );
 
 export const metadata: Metadata = {
-  title: "Hipal App",
-  description: "Menu Application for Businesses",
+  title: {
+    default: "Hipal App - Menu Application for Businesses",
+    template: "%s | Hipal App",
+  },
+  description: "Menu Application for Businesses - Transform your business with HipalZ's digital menu solution. Improve customer engagement, streamline operations, and enhance your business presence.",
+  keywords: [
+    "digital menu",
+    "business menu app",
+    "restaurant menu",
+    "HipalZ",
+    "Hipal App",
+    "menu application",
+    "customer engagement",
+    "business solutions",
+  ],
+  authors: [{ name: "Paltribe Solutions PVT Ltd" }],
+  creator: "HipalZ",
+  publisher: "Paltribe Solutions PVT Ltd",
+  
+  // Open Graph metadata for social sharing
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://hipalz.com",
+    siteName: "Hipal App",
+    title: "Hipal App - Menu Application for Businesses",
+    description: "Menu Application for Businesses - Transform your business with HipalZ's digital menu solution. Improve customer engagement, streamline operations, and enhance your business presence.",
+    images: [
+      {
+        url: "/android-chrome-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "Hipal App Logo",
+      },
+    ],
+  },
+
   icons: {
     icon: [
       {
@@ -103,6 +138,13 @@ export const metadata: Metadata = {
         type: "image/png",
         sizes: "512x512",
         url: "/android-chrome-512x512.png",
+      },
+    ],
+    apple: [
+      {
+        url: "/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
       },
     ],
   },
