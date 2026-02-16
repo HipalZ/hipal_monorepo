@@ -2,7 +2,7 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useCouponz } from "@/components/store/useCouponz";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { calculateReward } from "@/components/utils/helpers";
+import { calculateHelperReward } from "@/components/utils/helpers";
 import React, { memo, useMemo } from "react";
 
 const MemoCashbackMessage = () => {
@@ -50,7 +50,7 @@ const MemoCashbackMessage = () => {
       claimedCoins > 0 ||
       (claimedCoins > 0 && claimCouponz === 0)
     ) {
-      return calculateReward(
+      return calculateHelperReward(
         existingCoins,
         coinsObtained,
         loyaltySetting?.rewardLimit,

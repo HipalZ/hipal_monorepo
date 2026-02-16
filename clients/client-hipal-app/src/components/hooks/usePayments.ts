@@ -28,7 +28,7 @@ import type { BillData, OptionalPropsData } from "../types/businessData";
 import {
   type PageStates,
   calculateFinalBill,
-  calculateReward,
+  calculateHelperReward,
 } from "../utils/helpers";
 
 export const usePayments = () => {
@@ -147,7 +147,7 @@ export const usePayments = () => {
       ) {
         finalReward =
           billData?.subTotal * (loyaltySetting?.setCashBackPercentage / 100);
-        finalReward = calculateReward(
+        finalReward = calculateHelperReward(
           existingCoins,
           coinsObtained,
           loyaltySetting?.rewardLimit,
@@ -157,7 +157,7 @@ export const usePayments = () => {
         claimedCoins > 0 ||
         (claimedCoins === 0 && claimCouponz === 0)
       ) {
-        finalReward = calculateReward(
+        finalReward = calculateHelperReward(
           existingCoins,
           coinsObtained,
           loyaltySetting?.rewardLimit,
@@ -502,7 +502,7 @@ export const usePayments = () => {
         const existingCoins = claimedCoins
           ? userCoinz - claimedCoins
           : userCoinz;
-        finalReward = calculateReward(
+        finalReward = calculateHelperReward(
           existingCoins,
           coinsObtained,
           loyaltySetting?.rewardLimit,

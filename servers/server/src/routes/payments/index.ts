@@ -129,29 +129,41 @@ export const calculateDiscount = async (
   const estimatedSubTotal =
     billValue / (1 + gstPercentage + serviceChargePercentage);
 
-  const discount = Math.round(
-    Math.abs(
-      finalBillValue / (1 + gstPercentage + serviceChargePercentage) -
-        estimatedSubTotal,
-    ),
-  );
+  const discount = Math.abs(
+    finalBillValue / (1 + gstPercentage + serviceChargePercentage) -
+      estimatedSubTotal,
+  ).toFixed(2);
 
   return discount;
 };
 
-export const calculateReward = async (
+export const calculatePayReward = async (
   exist: number,
   reward: number,
   limit: number,
-  session: ClientSession,
 ) => {
-  const total = exist + reward;
-  const sum = Math.min(total, limit);
-  const finalReward = Math.round(Math.abs(sum - exist));
-  return { finalReward, curentBalance: sum };
-};
+  // 1. Convert to Integers (Cents) to eliminate floating-point ghosts
+  const existCents = Math.round(exist * 100);
+  const rewardCents = Math.round(reward * 100);
+  const limitCents = Math.round(limit * 100);
 
-//
+  // 2. Perform math safely with whole numbers
+  const totalCents = existCents + rewardCents;
+  const currentBalanceCents = Math.min(totalCents, limitCents);
+
+  // Use Math.abs on the cents to ensure we get a positive difference
+  const finalRewardCents = Math.abs(currentBalanceCents - existCents);
+
+  // 3. Convert back to Numbers (Floats) for Web2 Database compatibility
+  // parseFloat + toFixed ensures we return a Number, not a String
+  const finalReward = Number.parseFloat((finalRewardCents / 100).toFixed(2));
+  const curentBalance = Number.parseFloat(
+    (currentBalanceCents / 100).toFixed(2),
+  );
+
+  console.log("func 2 - Final Reward:", finalReward);
+  return { finalReward, curentBalance };
+};
 
 export const addRewardHistory = async (
   status: string,
@@ -258,7 +270,7 @@ export const addCoins = async (
     isActive: true,
   });
   if (existingUser && existingLoyalty) {
-    const coinsCalculated = await calculateReward(
+    const coinsCalculated = await calculatePayReward(
       existingUser.rewards,
       coins,
       existingLoyalty?.rewardLimit as number,
@@ -309,10 +321,9 @@ export const calculatedCashbackCoins = async (
   const subTotal = billValue - claimedCoins - couponDiscount - discount;
   const coinsToBeAdded =
     (LoyaltySetting.setCashBackPercentage / 100) * subTotal;
-  if (coinsToBeAdded < 0) {
-    return 0;
-  }
-  return Math.round(coinsToBeAdded);
+  if (coinsToBeAdded < 0) return 0;
+
+  return Math.round(coinsToBeAdded * 100) / 100;
 };
 
 const totalSubscribers = async (businessId: string) => {
@@ -1656,7 +1667,7 @@ const paymentsRouter = new Hono()
       "query",
       z.object({
         businessId: z.string(),
-        netCoinz:z.bigint()
+        netCoinz: z.bigint(),
       }),
     ),
 
@@ -1698,7 +1709,7 @@ const paymentsRouter = new Hono()
         await triggerBlockchain(
           businessId,
           userId,
-          BigInt(netCoinz),
+          Number.parseFloat(netCoinz),
           razorpay_order_id,
         );
         return c.json({
@@ -1887,7 +1898,7 @@ const paymentsRouter = new Hono()
               isActive: true,
             }).select("rewardLimit");
 
-            const coinsCalculated = await calculateReward(
+            const coinsCalculated = await calculatePayReward(
               existingUser.rewards,
               claimCoins,
               existingLoyalty?.rewardLimit as number,
@@ -2191,7 +2202,7 @@ const paymentsRouter = new Hono()
         duesUserId,
         npcUserId,
       } = requestData;
-      console.log('requestData',requestData)
+      console.log("requestData", requestData);
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const alert = await PaymentAlert.findOne(
@@ -2215,7 +2226,7 @@ const paymentsRouter = new Hono()
             { isAccepted: true, comment, waiterName },
             { new: true, session },
           );
-          console.log('triggered order 1')
+          console.log("triggered order 1");
           return c.json({
             message: "Order accepted successfully",
             err: false,
@@ -2271,7 +2282,7 @@ const paymentsRouter = new Hono()
                   if (!result) {
                     throw new Error("Failed to process POS offline order");
                   }
-                      console.log('triggered order 2')
+                  console.log("triggered order 2");
                   if (result) {
                     return respond(
                       c,
@@ -2533,7 +2544,15 @@ const paymentsRouter = new Hono()
                       { isAccepted: true, comment, waiterName },
                       { new: true, session },
                     );
-                    console.log('triggered order 3')
+                    console.log("triggered order 3");
+                    // TODO monad integration
+                    await monadHelperFunction({
+                      businessId: order.businessId,
+                      userId: order.userId,
+                      orderId: order.order_id,
+                      claimedCoinz: order.claimedCoins,
+                      subTotal: order.billValue - (order.couponDiscount || 0),
+                    });
                     return c.json({
                       message: "Order accepted successfully",
                       err: false,
@@ -2768,9 +2787,17 @@ const paymentsRouter = new Hono()
                         { isAccepted: true, comment, waiterName },
                         { new: true, session },
                       );
+                      // TODO monad integration
+                      await monadHelperFunction({
+                        businessId: order.businessId,
+                        userId: order.userId,
+                        orderId: order.order_id,
+                        claimedCoinz: order.claimedCoins,
+                        subTotal: order.billValue - (order.couponDiscount || 0),
+                      });
                     }
                   }
-
+                  // dont place monad here
                   if (tableSession?.variantsCounts === 1) {
                     if (isHavePos) {
                       const payload = {
@@ -2947,7 +2974,7 @@ const paymentsRouter = new Hono()
                       );
                     }
                   }
-                  console.log('triggered order 4')
+                  console.log("triggered order 4");
                   return c.json({
                     message: "Order accepted successfully",
                     err: false,
@@ -3293,12 +3320,12 @@ const paymentsRouter = new Hono()
               }
               // TODO monad integration
               await monadHelperFunction({
-                businessId:order.businessId,
-                userId:order.userId,
-                orderId:order.order_id,
-                claimedCoinz:order.claimedCoins,
-                subTotal:order.billValue
-              })
+                businessId: order.businessId,
+                userId: order.userId,
+                orderId: order.order_id,
+                claimedCoinz: order.claimedCoins,
+                subTotal: order.billValue - (order.couponDiscount || 0),
+              });
             }
 
             const updateAlert = await PaymentAlert.findByIdAndUpdate(
@@ -3306,7 +3333,7 @@ const paymentsRouter = new Hono()
               { isAccepted: true, comment, waiterName },
               { new: true, session },
             );
-            console.log('triggered order 5')
+            console.log("triggered order 5");
             return c.json({
               message: "Order accepted successfully",
               err: false,

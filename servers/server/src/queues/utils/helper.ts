@@ -163,18 +163,36 @@ export const calculateDiscount = async (
   return discount;
 };
 
-export const calculateReward = async (
+export const calculateReward = (
   exist: number,
   reward: number,
   limit: number,
 ) => {
-  const total = exist + reward;
-  const sum = Math.min(total, limit);
-  const finalReward = Math.round(Math.abs(sum - exist));
-  return { finalReward, curentBalance: sum };
-};
+  console.log("📥 Inputs -> exist:", exist, "reward:", reward, "limit:", limit);
 
-//
+  // 1. Convert to Cents (Integers) immediately to kill decimal errors
+  const existCents = Math.round(exist * 100);
+  const rewardCents = Math.round(reward * 100);
+  const limitCents = Math.round(limit * 100);
+
+  // 2. Perform math in whole numbers
+  const totalCents = existCents + rewardCents;
+  const sumCents = Math.min(totalCents, limitCents);
+  const finalRewardCents = sumCents - existCents;
+
+  // 3. Convert back to Floats for the response
+  const finalReward = Number.parseFloat((finalRewardCents / 100).toFixed(2));
+  const curentBalance = Number.parseFloat((sumCents / 100).toFixed(2));
+
+  console.log(
+    "📤 Outputs -> finalReward:",
+    finalReward,
+    "curentBalance:",
+    curentBalance,
+  );
+
+  return { finalReward, curentBalance };
+};
 
 export const addRewardHistory = async (
   status: string,

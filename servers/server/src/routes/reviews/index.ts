@@ -154,15 +154,26 @@ const couponCreated = async (
   return { couponCreated: createCoupon[0], link: createShortUrl?.[0].shortUrl };
 };
 
-const calculateReward = async (
+export const calculateReward = async (
   exist: number,
   reward: number,
   limit: number,
 ) => {
-  const total = exist + reward;
-  const sum = Math.min(total, limit);
-  const finalReward = Math.round(Math.abs(sum - exist));
-  return { finalReward, curentBalance: sum };
+  // 1. Convert everything to Cents (Integers)
+  const existCents = Math.round(exist * 100);
+  const rewardCents = Math.round(reward * 100);
+  const limitCents = Math.round(limit * 100);
+
+  // 2. Perform math with zero floating-point risk
+  const totalCents = existCents + rewardCents;
+  const sumCents = Math.min(totalCents, limitCents);
+  const finalRewardCents = Math.abs(sumCents - existCents);
+
+  // 3. Convert back to Decimals for Web2 Database (toFixed(2) equivalent)
+  return {
+    finalReward: Number.parseFloat((finalRewardCents / 100).toFixed(2)),
+    curentBalance: Number.parseFloat((sumCents / 100).toFixed(2)),
+  };
 };
 
 const reviewRouter = new Hono()
