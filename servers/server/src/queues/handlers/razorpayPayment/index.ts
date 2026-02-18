@@ -27,7 +27,7 @@ import { checkOriginBillIsSplit } from "../../services";
 import type { RazorpayPaymentHandlerTypeValidator } from "../../types/jobtypes";
 import {
   addCoins,
-  calculatedCashbackCoins,
+  splitCalcCashbackCoins,
   removeCoins,
 } from "../../utils/helper";
 
@@ -1224,7 +1224,7 @@ const CommonPaymentHandler = async (getOrder: OrderType) => {
       );
     }
 
-    let cashBack = await calculatedCashbackCoins(
+    let cashBack = await splitCalcCashbackCoins(
       getOrder?.businessId.toString(),
       getOrder?.billValue || 0,
       getOrder.claimedCoins,

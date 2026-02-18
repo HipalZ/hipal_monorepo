@@ -155,19 +155,15 @@ export const calculateHelperReward = (
 ) => {
   console.log("📥 Inputs -> exist:", exist, "reward:", reward, "limit:", limit);
 
-  // 1. Convert to Cents (Integers) immediately to kill decimal errors
-  const existCents = Math.round(exist * 100);
-  const rewardCents = Math.round(reward * 100);
-  const limitCents = Math.round(limit * 100);
+  // 1. Math first with raw values
+  const total = (exist || 0) + (reward || 0);
+  const sumRaw = Math.min(total, limit || 0);
+  const finalRewardRaw = sumRaw - (exist || 0);
 
-  // 2. Perform math in whole numbers
-  const totalCents = existCents + rewardCents;
-  const sumCents = Math.min(totalCents, limitCents);
-  const finalRewardCents = sumCents - existCents;
-
-  // 3. Convert back to Floats for the response
-  const finalReward = Number.parseFloat((finalRewardCents / 100).toFixed(2));
-  const curentBalance = Number.parseFloat((sumCents / 100).toFixed(2));
+  // 2. Round to whole numbers at the end
+  // (>= .5 rounds up, < .5 rounds down)
+  const finalReward = Math.round(finalRewardRaw);
+  const curentBalance = Math.round(sumRaw);
 
   console.log(
     "📤 Outputs -> finalReward:",

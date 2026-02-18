@@ -634,7 +634,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
                     if (existingLoyalty?.loyaltyId && order.userId.toString()) {
                       console.log("cashBack", cashBack);
                       finalCashBack = await addCoins(
-                        cashBack,
+                        Math.round(cashBack),
                         order.userId.toString(),
                         order._id.toString(),
                         order.tableName || "",
@@ -857,7 +857,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
 
                     if (existingLoyalty?.loyaltyId && order.userId.toString()) {
                       finalCashBack = await addCoins(
-                        cashBack,
+                        Math.round(cashBack),
                         order.userId.toString(),
                         order._id.toString(),
                         order.tableName || "",
@@ -1143,7 +1143,7 @@ async function hipalzPosOfflineOrderAcceptHandler(payload: {
 
               if (existingLoyalty?.loyaltyId) {
                 finalCashBack = await addCoins(
-                  cashBack,
+                  Math.round(cashBack),
                   order.userId.toString(),
                   order._id.toString(),
                   order.tableName || "",

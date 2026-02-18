@@ -1,7 +1,7 @@
-import { LoyaltySettings } from "@hi/db-models";
+import { LoyaltySettings, Order } from "@hi/db-models";
 import { ethers } from "ethers";
 
-// 1. CONFIG: Use Env Vars (Don't hardcode keys!)
+// 1. CONFIG
 const RPC_URL = process.env.MONAD_RPC_URL || "https://testnet-rpc.monad.xyz/";
 const CONTRACT_ADDRESS = "0x531fa2c7825Be8dFdD7a423610990EE32B6B82e8";
 const PRIVATE_KEY =
@@ -21,12 +21,12 @@ const ABI = [
 const CONTRACT = new ethers.Contract(CONTRACT_ADDRESS, ABI, WALLET);
 
 // ==========================================
-// 2. QUEUE SYSTEM (Prevents Nonce Errors)
+// 2. QUEUE SYSTEM
 // ==========================================
 type TxJob = {
   bizId: string;
   userId: string;
-  netCoinz: number; // Float (e.g. 12.26)
+  netCoinz: number;
   orderId: string;
 };
 
@@ -37,10 +37,9 @@ let localNonce: number | null = null;
 export async function triggerBlockchain(
   bizId: string,
   userId: string,
-  netCoinz: number, // Changed to number to accept floats
+  netCoinz: number,
   orderId: string,
 ) {
-  // Push float value to queue
   TX_QUEUE.push({ bizId, userId, netCoinz, orderId });
   console.log(`📥 [Monad] Queued Order ${orderId} (Pos: ${TX_QUEUE.length})`);
 
@@ -53,7 +52,6 @@ async function processQueue() {
   if (isProcessingQueue) return;
   isProcessingQueue = true;
 
-  // Sync Nonce if missing
   if (localNonce === null) {
     try {
       localNonce = await PROVIDER.getTransactionCount(
@@ -76,22 +74,22 @@ async function processQueue() {
     try {
       console.log(`⚙️ [Monad] Processing ${orderId} | Points: ${netCoinz}`);
 
-      // const pointsInWei = ethers.parseUnits(netCoinz.toFixed(2), 2);
-      const pointsInWei = BigInt(netCoinz);
+      const safeBizId = bizId.toString();
+      const safeUserId = userId.toString();
+
+      const pointsInWei = ethers.parseUnits(netCoinz.toFixed(2), 2);
 
       const method = CONTRACT.getFunction("settleOrder");
 
-      // Send Transaction
-      const tx = await method(bizId, userId, pointsInWei, orderId, {
+      const tx = await method(safeBizId, safeUserId, pointsInWei, orderId, {
         nonce: localNonce,
       });
 
       console.log(`   ✅ Sent: ${tx.hash}`);
 
-      TX_QUEUE.shift(); // Remove job
-      localNonce++; // Increment nonce
+      TX_QUEUE.shift();
+      localNonce++;
 
-      // Wait for confirmation (Optional: removing this makes it faster but riskier)
       await tx.wait();
     } catch (e: any) {
       console.error(`   ❌ [Monad] Error on ${orderId}:`, e.message);
@@ -103,7 +101,6 @@ async function processQueue() {
           "pending",
         );
       } else {
-        // Fatal error (e.g. revert), discard job to unblock queue
         TX_QUEUE.shift();
       }
     }
@@ -116,50 +113,56 @@ async function processQueue() {
 // 3. HELPER FUNCTION
 // ==========================================
 type MonadData = {
-  businessId: string;
-  userId: string;
+  businessId: string | any; // Allow 'any' to accept ObjectId without TS error
+  userId: string | any;
   orderId: string;
   claimedCoinz: number;
-  subTotal: number;
   signUpBonus?: number;
+  earnedCoinz?: number;
+};
+
+// Helper to read balance
+const getBlockchainBalance = async (userId: string): Promise<number> => {
+  try {
+    const rawBalance = await CONTRACT.pointsBalance(userId.toString());
+    return Number.parseFloat(ethers.formatUnits(rawBalance, 2));
+  } catch (e) {
+    console.error("⚠️ Failed to fetch balance, assuming 0:", e);
+    return 0;
+  }
 };
 
 export const monadHelperFunction = async (data: MonadData) => {
-  const { businessId, orderId, userId, claimedCoinz, subTotal, signUpBonus } =
+  let { businessId, orderId, userId, claimedCoinz, earnedCoinz, signUpBonus } =
     data;
 
-  // 1. Fetch Loyalty Settings
+  businessId = businessId.toString();
+  userId = userId.toString();
+
   const loyalty = await LoyaltySettings.findOne({ businessId })
     .select("setCashBackPercentage")
     .lean();
 
   if (!loyalty) {
-    console.error(
-      `[Monad] No loyalty settings found for business: ${businessId}`,
-    );
+    console.error(`[Monad] No loyalty settings for: ${businessId}`);
     return;
   }
 
-  const cashbackPer = loyalty.setCashBackPercentage || 0;
-  const subTotalInCents = Math.round(subTotal * 100);
-  const claimedInCents = Math.round(claimedCoinz * 100);
-  // 2. Calculate earned cashback in cents
-  const taxableCents = Math.max(0, subTotalInCents - claimedInCents);
-  const earnedCents = Math.round((taxableCents * cashbackPer) / 100);
+  let netChangeRaw = -claimedCoinz + (earnedCoinz || 0) + (signUpBonus || 0);
 
-  // 3. Net Change in Cents
-  let netCentsChange = -claimedInCents + earnedCents;
-  if (signUpBonus) netCentsChange += Math.round(signUpBonus * 100);
+  // 2. Smart Rounding (Safety check against blockchain state)
+  const currentBalance = await getBlockchainBalance(userId);
+  const targetBalance = Math.round(currentBalance + netChangeRaw);
+  const finalAdjustment = targetBalance - currentBalance;
 
-  console.log(
-    `[Monad] Order: ${orderId} | Net: ${netCentsChange} (Spent: ${claimedCoinz})`,
+  console.log(`[Monad] Syncing: ${userId} | Adjustment: ${finalAdjustment}`);
+
+  // 3. Update the Order record with the integer
+  await Order.findOneAndUpdate(
+    { order_id: orderId },
+    { $set: { net_points: finalAdjustment, status: "PAID" } },
   );
 
-  // 5. Trigger Blockchain (Pass the FLOAT, conversion happens in queue)
-  triggerBlockchain(
-    businessId.toString(),
-    userId.toString(),
-    netCentsChange,
-    orderId,
-  );
+  // E. Trigger Blockchain
+  triggerBlockchain(businessId, userId, finalAdjustment, orderId);
 };

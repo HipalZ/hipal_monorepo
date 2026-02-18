@@ -154,26 +154,30 @@ const couponCreated = async (
   return { couponCreated: createCoupon[0], link: createShortUrl?.[0].shortUrl };
 };
 
-export const calculateReward = async (
+export const calculateReward = (
   exist: number,
   reward: number,
   limit: number,
 ) => {
-  // 1. Convert everything to Cents (Integers)
-  const existCents = Math.round(exist * 100);
-  const rewardCents = Math.round(reward * 100);
-  const limitCents = Math.round(limit * 100);
+  console.log("📥 Inputs -> exist:", exist, "reward:", reward, "limit:", limit);
 
-  // 2. Perform math with zero floating-point risk
-  const totalCents = existCents + rewardCents;
-  const sumCents = Math.min(totalCents, limitCents);
-  const finalRewardCents = Math.abs(sumCents - existCents);
+  const total = (exist || 0) + (reward || 0);
+  const cappedBalance = Math.min(total, limit || 0);
+  const rawFinalReward = Math.abs(cappedBalance - (exist || 0));
 
-  // 3. Convert back to Decimals for Web2 Database (toFixed(2) equivalent)
-  return {
-    finalReward: Number.parseFloat((finalRewardCents / 100).toFixed(2)),
-    curentBalance: Number.parseFloat((sumCents / 100).toFixed(2)),
-  };
+  // 2. Apply your "0.5 Rule" (Math.round) only at the end
+  // 14.3 -> 14 | 14.5 -> 15 | 14.6 -> 15
+  const finalReward = Math.round(rawFinalReward);
+  const curentBalance = Math.round(cappedBalance);
+
+  console.log(
+    "📤 Outputs -> finalReward:",
+    finalReward,
+    "curentBalance:",
+    curentBalance,
+  );
+
+  return { finalReward, curentBalance };
 };
 
 const reviewRouter = new Hono()
@@ -521,7 +525,7 @@ const reviewRouter = new Hono()
         coins,
         loyaltySetting?.rewardLimit || 4999,
       );
-
+      console.log("review reward", reward);
       await UserReward.findOneAndUpdate(
         { userId, loyaltyId },
         {
@@ -622,7 +626,7 @@ const reviewRouter = new Hono()
             coins,
             loyaltySetting?.rewardLimit || 4999,
           );
-
+          console.log("rev2 reward", reward);
           // send whatsapp message
           const token =
             "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
