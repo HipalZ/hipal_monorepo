@@ -377,22 +377,6 @@ const posRouter = new Hono()
           throw new Error('Table session not found');
         }
 
-<<<<<<< HEAD
-        console.log('totalDishTotal', totalDishTotal);
-        console.log('tableSession.tableName', tableSession?.tableName);
-
-        await Table.updateOne(
-          { name: tableSession.tableName, businessId: tableSession.businessId },
-          {
-            $set: {
-              currentTableAmount: totalDishTotal,
-            },
-          },
-          { session },
-        );
-
-=======
->>>>>>> 07bc0a32b (fix: table amount)
         return c.json(
           {
             message: 'Data fetched successfully',
