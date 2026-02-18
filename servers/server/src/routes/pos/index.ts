@@ -303,13 +303,19 @@ const posRouter = new Hono()
 
         const cartItems = kotOrders.flatMap((order) => order.cart.filter((item) => !item.isDeleted)) as Item[];
 
+        const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
+        await Table.updateOne(
+          { name: tableSession.tableName, businessId: tableSession.businessId },
+          {
+            $set: {
+              currentTableAmount: totalDishTotal,
+            },
+          },
+          { session },
+        );
         if (cartItems.length === 0) {
           return respond(c, 'No items in the cart', true, 400, {});
         }
-
-        console.log('cartItems', cartItems);
-
-        const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
 
         const billItems = groupItemsByGST(cartItems);
 
@@ -371,6 +377,7 @@ const posRouter = new Hono()
           throw new Error('Table session not found');
         }
 
+<<<<<<< HEAD
         console.log('totalDishTotal', totalDishTotal);
         console.log('tableSession.tableName', tableSession?.tableName);
 
@@ -384,6 +391,8 @@ const posRouter = new Hono()
           { session },
         );
 
+=======
+>>>>>>> 07bc0a32b (fix: table amount)
         return c.json(
           {
             message: 'Data fetched successfully',
