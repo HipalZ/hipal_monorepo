@@ -307,6 +307,8 @@ const posRouter = new Hono()
           return respond(c, 'No items in the cart', true, 400, {});
         }
 
+        console.log('cartItems', cartItems);
+
         const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
 
         const billItems = groupItemsByGST(cartItems);
@@ -368,6 +370,9 @@ const posRouter = new Hono()
         if (!tableSession) {
           throw new Error('Table session not found');
         }
+
+        console.log('totalDishTotal', totalDishTotal);
+        console.log('tableSession.tableName', tableSession?.tableName);
 
         await Table.updateOne(
           { name: tableSession.tableName, businessId: tableSession.businessId },
