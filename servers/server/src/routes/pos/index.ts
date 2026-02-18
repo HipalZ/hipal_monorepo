@@ -327,11 +327,19 @@ const posRouter = new Hono()
           order.cart.filter((item) => !item.isDeleted),
         ) as Item[];
 
+        const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
+        await Table.updateOne(
+          { name: tableSession.tableName, businessId: tableSession.businessId },
+          {
+            $set: {
+              currentTableAmount: totalDishTotal,
+            },
+          },
+          { session },
+        );
         if (cartItems.length === 0) {
           return respond(c, "No items in the cart", true, 400, {});
         }
-
-        const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
 
         const billItems = groupItemsByGST(cartItems);
 
@@ -415,16 +423,6 @@ const posRouter = new Hono()
         if (!tableSession) {
           throw new Error("Table session not found");
         }
-
-        await Table.updateOne(
-          { name: tableSession.tableName, businessId: tableSession.businessId },
-          {
-            $set: {
-              currentTableAmount: totalDishTotal,
-            },
-          },
-          { session },
-        );
 
         return c.json(
           {
