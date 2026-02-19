@@ -24,6 +24,7 @@ import {
   UrlModel,
   User,
   UserAnalytic,
+  UserReward,
   WhatsAppBusinessConfig,
   WhatsAppWABA,
   Zone,
@@ -2700,6 +2701,50 @@ const scriptRouter = new Hono()
         },
       });
     },
-  );
+  )
+  .get("/get_all_users_data", async (c) => {
+    try {
+      const pageNumber = Number(c.req.query("pageNumber")) || 1;
+      const limit = Number(c.req.query("limit")) || 50;
+      const businessId = c.req.query("businessId");
+
+      if (!businessId) {
+        return c.json({ message: "businessId is required", err: true }, 400);
+      }
+      const subscribers = await Subscriber.find({ businessId })
+        .skip((pageNumber - 1) * limit)
+        .limit(limit)
+        .lean();
+
+      // 3. Correlate with UserRewards
+      const combinedData = await Promise.all(
+        subscribers.map(async (sub) => {
+          const rewardEntry = await UserReward.findOne({
+            userId: sub.userId,
+            loyaltyId: businessId,
+          }).lean();
+
+          return {
+            userId: sub.userId,
+            businessId: sub.businessId,
+            rewards: rewardEntry ? rewardEntry.rewards : 0,
+          };
+        }),
+      );
+
+      return c.json(
+        {
+          message: "Users data fetched successfully",
+          err: false,
+          page: pageNumber,
+          limit: limit,
+          data: combinedData,
+        },
+        200,
+      );
+    } catch (e) {
+      return c.json({ message: e.message, err: true }, 500);
+    }
+  });
 
 export default scriptRouter;

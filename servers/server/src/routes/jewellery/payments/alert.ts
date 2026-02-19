@@ -108,7 +108,7 @@ const alertRouter = new Hono()
                 }
 
                 finalCashBack = await creditUserCoins(
-                  cashBack,
+                  Math.round(cashBack),
                   order.userId.toString(),
                   order._id.toString(),
                   order.businessId.toString(),

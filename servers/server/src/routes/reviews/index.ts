@@ -10,18 +10,18 @@ import {
   UrlModel,
   User,
   UserReward,
-} from "@hi/db-models";
-import { runInTransaction } from "@hi/utils";
-import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
+} from '@hi/db-models';
+import { runInTransaction } from '@hi/utils';
+import { zValidator } from '@hono/zod-validator';
+import axios from 'axios';
 // books.ts
-import { Hono } from "hono";
-import type { ClientSession } from "mongoose";
-import { nanoid } from "nanoid";
-import { schedule } from "node-cron";
-import { z } from "zod";
-import { respond } from "../../utils/response";
-import { createAndScheduleCoupon } from "../couponz";
+import { Hono } from 'hono';
+import type { ClientSession } from 'mongoose';
+import { nanoid } from 'nanoid';
+import { schedule } from 'node-cron';
+import { z } from 'zod';
+import { respond } from '../../utils/response';
+import { createAndScheduleCoupon } from '../couponz';
 
 interface StaffReview {
   name: string;
@@ -41,16 +41,16 @@ const couponCreated = async (
   session: ClientSession,
 ) => {
   const obj = {
-    name: "Special Offer",
-    type: "FIX",
+    name: 'Special Offer',
+    type: 'FIX',
     businessId: businessId,
     config: {
       value: value,
-      discountType: "AMOUNT",
+      discountType: 'AMOUNT',
       upto: value,
     },
     isActive: true,
-    bgColour: "#9267EC",
+    bgColour: '#9267EC',
     isPublish: true,
     isDeleted: false,
     cashbackAvailable: true,
@@ -63,7 +63,7 @@ const couponCreated = async (
         overAllLimit: 1,
       },
       availability: {
-        when: "allthetime",
+        when: 'allthetime',
         customDays: [],
         startTime: 0,
         endTime: 24,
@@ -78,12 +78,12 @@ const couponCreated = async (
       couponEndDate: couponEndDate,
       tc: [
         `This coupon is created by ${businessName}  and has the final say in case of any disputes.`,
-        "This is an Assigned coupon, hence transferring it to anyone else is not acceptable.",
+        'This is an Assigned coupon, hence transferring it to anyone else is not acceptable.',
         'This coupon works on bill value above "₹0" only.',
-        "All the time",
-        "This coupon works 24 hrs a day.",
-        "This coupon is applicable only on dine-in.",
-        "Hipalz has no role to play on issues, charges, refunds and other things related to this.",
+        'All the time',
+        'This coupon works 24 hrs a day.',
+        'This coupon is applicable only on dine-in.',
+        'Hipalz has no role to play on issues, charges, refunds and other things related to this.',
       ],
     },
   };
@@ -106,9 +106,9 @@ const couponCreated = async (
   });
 
   const channelId = await CouponChannel.findOne({
-    name: "default",
+    name: 'default',
     businessId: createCoupon[0].businessId,
-  }).select("_id");
+  }).select('_id');
   // Generate short URL
   const longUrl = `https://api.hipalz.com/coupon-analytics/social/${createCoupon[0].businessId}/${createCoupon[0]._id}/${channelId?._id}`;
   const uniqueOrderId = nanoid(6);
@@ -154,26 +154,32 @@ const couponCreated = async (
   return { couponCreated: createCoupon[0], link: createShortUrl?.[0].shortUrl };
 };
 
-const calculateReward = async (
-  exist: number,
-  reward: number,
-  limit: number,
-) => {
-  const total = exist + reward;
-  const sum = Math.min(total, limit);
-  const finalReward = Math.round(Math.abs(sum - exist));
-  return { finalReward, curentBalance: sum };
+export const calculateReward = (exist: number, reward: number, limit: number) => {
+  console.log('📥 Inputs -> exist:', exist, 'reward:', reward, 'limit:', limit);
+
+  const total = (exist || 0) + (reward || 0);
+  const cappedBalance = Math.min(total, limit || 0);
+  const rawFinalReward = Math.abs(cappedBalance - (exist || 0));
+
+  // 2. Apply your "0.5 Rule" (Math.round) only at the end
+  // 14.3 -> 14 | 14.5 -> 15 | 14.6 -> 15
+  const finalReward = Math.round(rawFinalReward);
+  const curentBalance = Math.round(cappedBalance);
+
+  console.log('📤 Outputs -> finalReward:', finalReward, 'curentBalance:', curentBalance);
+
+  return { finalReward, curentBalance };
 };
 
 const reviewRouter = new Hono()
   .get(
-    "/googleReviews",
+    '/googleReviews',
     zValidator(
-      "query",
+      'query',
       z.object({
         placeId: z
           .string({
-            message: "placeId is required",
+            message: 'placeId is required',
           })
           .min(1)
           .max(100),
@@ -185,8 +191,7 @@ const reviewRouter = new Hono()
     async (c) => {
       const { placeId, businessId, userId } = c.req.query();
 
-      const GOOGLE_API_KEY =
-        process.env.GOOGLE_API_KEY || "AIzaSyCwLRn4hzSvhztHSz8fBLWawijGtKCXcuY";
+      const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'AIzaSyCwLRn4hzSvhztHSz8fBLWawijGtKCXcuY';
 
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews&key=${GOOGLE_API_KEY}`,
@@ -226,15 +231,15 @@ const reviewRouter = new Hono()
         businessId: businessId,
       });
 
-      return respond(c, "reviews fetched successfully", false, 200, {
+      return respond(c, 'reviews fetched successfully', false, 200, {
         reviews: existingReviews,
       });
     },
   )
   .put(
-    "/update-google-review",
+    '/update-google-review',
     zValidator(
-      "json",
+      'json',
       z.object({
         userId: z.string().min(1).max(100),
         loyaltyId: z.string().min(1).max(100),
@@ -251,7 +256,7 @@ const reviewRouter = new Hono()
       });
 
       if (reviewAlreadyExist) {
-        return respond(c, "Google review already exist", true, 409, {});
+        return respond(c, 'Google review already exist', true, 409, {});
       }
 
       const userRewards = await UserReward.findOneAndUpdate(
@@ -263,10 +268,10 @@ const reviewRouter = new Hono()
       );
 
       if (!userRewards) {
-        return respond(c, "User not found", true, 404, {});
+        return respond(c, 'User not found', true, 404, {});
       }
 
-      const nawabId = "683dd65e510e94e87194bbf5";
+      const nawabId = '683dd65e510e94e87194bbf5';
       let cashBack = 25;
 
       if (loyaltyId === nawabId) {
@@ -282,22 +287,16 @@ const reviewRouter = new Hono()
         );
       }
 
-      return respond(
-        c,
-        "Google review count updated successfully",
-        false,
-        200,
-        {
-          googleReviewCount: userRewards.googleReviewCount,
-        },
-      );
+      return respond(c, 'Google review count updated successfully', false, 200, {
+        googleReviewCount: userRewards.googleReviewCount,
+      });
     },
   )
 
   .get(
-    "/staffReviews",
+    '/staffReviews',
     zValidator(
-      "query",
+      'query',
       z.object({
         businessId: z.string().min(1).max(100),
         from: z.string().optional(),
@@ -329,8 +328,8 @@ const reviewRouter = new Hono()
         date: { $gte: new Date(fromTimestamp), $lte: new Date(toTimestamp) },
         staffs: { $exists: true, $ne: [] },
       }).populate({
-        path: "staffs",
-        select: "name",
+        path: 'staffs',
+        select: 'name',
       });
 
       interface ReviewObj {
@@ -349,30 +348,29 @@ const reviewRouter = new Hono()
               5: 0,
             };
           }
-          reviewObj[staff._id][review.reviewRating] =
-            (reviewObj[staff._id][review.reviewRating] || 0) + 1;
+          reviewObj[staff._id][review.reviewRating] = (reviewObj[staff._id][review.reviewRating] || 0) + 1;
         }
       }
 
       let res = Object.values(reviewObj);
 
-      if (best === "true") {
+      if (best === 'true') {
         res = res.filter((staff) => staff[5] > 0 && staff[1] === 0);
       }
 
-      if (worst === "true") {
+      if (worst === 'true') {
         res = res.filter((staff) => staff[1] > 0 && staff[5] === 0);
       }
 
-      return respond(c, "reviews fetched successfully", false, 200, {
+      return respond(c, 'reviews fetched successfully', false, 200, {
         res,
       });
     },
   )
   .get(
-    "/",
+    '/',
     zValidator(
-      "query",
+      'query',
       z.object({
         businessId: z.string().min(1).max(100),
         from: z.string().optional(),
@@ -405,31 +403,29 @@ const reviewRouter = new Hono()
         date: { $gte: new Date(fromTimestamp), $lte: new Date(toTimestamp) },
       })
         .populate({
-          path: "staffs",
-          select: "name phone",
+          path: 'staffs',
+          select: 'name phone',
         })
         .populate({
-          path: "order_id",
-          select: "total",
+          path: 'order_id',
+          select: 'total',
         })
         .populate({
-          path: "userId",
-          select: "name phone",
+          path: 'userId',
+          select: 'name phone',
         })
         .skip(skip)
         .limit(PAGE_SIZE)
-        .select(
-          "userId reviewRating description staffs date order_id seen foodTaste ambience hygiene service",
-        );
-      return respond(c, "reviews fetched successfully", false, 200, {
+        .select('userId reviewRating description staffs date order_id seen foodTaste ambience hygiene service');
+      return respond(c, 'reviews fetched successfully', false, 200, {
         reviews,
       });
     },
   )
   .get(
-    "/:reviewId",
+    '/:reviewId',
     zValidator(
-      "param",
+      'param',
       z.object({
         reviewId: z.string().min(1).max(100),
       }),
@@ -439,37 +435,37 @@ const reviewRouter = new Hono()
       const { reviewId } = c.req.param();
       const review = await Reviews.findById(reviewId)
         .populate({
-          path: "staffs",
-          select: "name phone",
+          path: 'staffs',
+          select: 'name phone',
         })
         .populate({
-          path: "order_id",
-          select: "total",
+          path: 'order_id',
+          select: 'total',
         })
         .populate({
-          path: "userId",
-          select: "name phone",
+          path: 'userId',
+          select: 'name phone',
         })
 
-        .select("userId reviewRating description staffs date order_id");
+        .select('userId reviewRating description staffs date order_id');
 
       if (!review) {
-        return respond(c, "Review not found", true, 404, {});
+        return respond(c, 'Review not found', true, 404, {});
       }
 
       await Reviews.findByIdAndUpdate(reviewId, {
         seen: true,
       });
 
-      return respond(c, "reviews fetched successfully", false, 200, {
+      return respond(c, 'reviews fetched successfully', false, 200, {
         review,
       });
     },
   )
   .post(
-    "/addCoins",
+    '/addCoins',
     zValidator(
-      "json",
+      'json',
       z.object({
         userId: z.string().min(1).max(100),
         loyaltyId: z.string().min(1).max(100),
@@ -490,33 +486,29 @@ const reviewRouter = new Hono()
       });
 
       if (!loyaltyUser) {
-        return respond(c, "User not found", true, 404, {});
+        return respond(c, 'User not found', true, 404, {});
       }
 
       const loyaltySetting = await LoyaltySettings.findOne({
         businessId,
         isActive: true,
-      }).select("rewardLimit");
+      }).select('rewardLimit');
 
       if (!loyaltySetting) {
-        return respond(c, "Loyalty setting not found", true, 404, {});
+        return respond(c, 'Loyalty setting not found', true, 404, {});
       }
 
       const existingUserReward = await UserReward.findOne({
         userId,
         loyaltyId,
         password,
-      }).select("rewards");
+      }).select('rewards');
 
       if (!existingUserReward) {
-        return respond(c, "User not found", true, 404, {});
+        return respond(c, 'User not found', true, 404, {});
       }
 
-      const reward = await calculateReward(
-        existingUserReward?.rewards,
-        coins,
-        loyaltySetting?.rewardLimit || 4999,
-      );
+      const reward = await calculateReward(existingUserReward?.rewards, coins, loyaltySetting?.rewardLimit || 4999);
 
       await UserReward.findOneAndUpdate(
         { userId, loyaltyId },
@@ -525,30 +517,30 @@ const reviewRouter = new Hono()
         },
       );
 
-      return respond(c, "Coins added successfully", false, 200, {});
+      return respond(c, 'Coins added successfully', false, 200, {});
     },
   )
   .post(
-    "/sendMessage",
+    '/sendMessage',
     zValidator(
-      "json",
+      'json',
       z.object({
         userId: z.string().min(1).max(100),
         loyaltyId: z.string().optional(),
         coins: z.coerce
           .number({
-            message: "coins is required",
+            message: 'coins is required',
           })
           .optional(),
         password: z.coerce
           .number({
-            message: "password is required",
+            message: 'password is required',
           })
           .optional(),
         businessId: z.string().min(1).max(100),
         value: z.coerce
           .number({
-            message: "value is required",
+            message: 'value is required',
           })
           .optional(),
         couponStartDate: z.number().optional(),
@@ -564,24 +556,11 @@ const reviewRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session) => {
         const requestData = await c.req.json();
-        const {
-          userId,
-          loyaltyId,
-          coins,
-          password,
-          businessId,
-          value,
-          couponStartDate,
-          couponEndDate,
-          businessName,
-          customLink,
-          message,
-        } = requestData;
+        const { userId, loyaltyId, coins, password, businessId, value, couponStartDate, couponEndDate, businessName, customLink, message } =
+          requestData;
 
         const user = await User.findById(userId);
-        const placeUrl = await OutLetInfo.findOne({ businessId }).select(
-          "placeUrl",
-        );
+        const placeUrl = await OutLetInfo.findOne({ businessId }).select('placeUrl');
         if (loyaltyId) {
           //add coins
           const loyaltyUser = await UserReward.findOne({
@@ -591,49 +570,45 @@ const reviewRouter = new Hono()
           });
 
           if (!loyaltyUser) {
-            return respond(c, "User not found", true, 404, {});
+            return respond(c, 'User not found', true, 404, {});
           }
 
           const loyaltySetting = await LoyaltySettings.findOne({
             businessId,
             isActive: true,
-          }).select("rewardLimit");
+          }).select('rewardLimit');
 
           if (!loyaltySetting) {
-            return respond(c, "Loyalty setting not found", true, 404, {});
+            return respond(c, 'Loyalty setting not found', true, 404, {});
           }
 
           const existingUserReward = await UserReward.findOne({
             userId,
             loyaltyId,
             password,
-          }).select("rewards");
+          }).select('rewards');
 
           if (!existingUserReward) {
-            return respond(c, "User not found", true, 404, {});
+            return respond(c, 'User not found', true, 404, {});
           }
 
-          const reward = await calculateReward(
-            existingUserReward?.rewards,
-            coins,
-            loyaltySetting?.rewardLimit || 4999,
-          );
-
+          const reward = await calculateReward(existingUserReward?.rewards, coins, loyaltySetting?.rewardLimit || 4999);
+          console.log('rev2 reward', reward);
           // send whatsapp message
           const token =
-            "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
+            'EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD';
           const body = `${message}.\nhttps://hipalz.com/${customLink}/explore?tableName=review`;
           const whatappConfig = {
-            method: "post",
-            url: "https://graph.facebook.com/v21.0/365941956611521/messages",
+            method: 'post',
+            url: 'https://graph.facebook.com/v21.0/365941956611521/messages',
 
             headers: { Authorization: `Bearer ${token}` },
 
             data: {
-              messaging_product: "whatsapp",
-              recipient_type: "individual",
+              messaging_product: 'whatsapp',
+              recipient_type: 'individual',
               to: `${user?.phone}`,
-              type: "text",
+              type: 'text',
               text: {
                 body: body,
               },
@@ -651,35 +626,27 @@ const reviewRouter = new Hono()
               },
               session,
             );
-            return respond(c, "Coins added successfully", false, 200, {});
+            return respond(c, 'Coins added successfully', false, 200, {});
           }
 
-          return respond(c, "Failed to send message", true, 400, {});
+          return respond(c, 'Failed to send message', true, 400, {});
         }
         //create coupon
         if (!loyaltyId) {
-          const createCoupon = await couponCreated(
-            businessId,
-            userId,
-            value,
-            couponStartDate,
-            couponEndDate,
-            businessName,
-            session,
-          );
+          const createCoupon = await couponCreated(businessId, userId, value, couponStartDate, couponEndDate, businessName, session);
           const token =
-            "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
+            'EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD';
 
           const body = `${message}\n\nHere your coupon link ${createCoupon.link}`;
           const whatappConfig = {
-            method: "post",
-            url: "https://graph.facebook.com/v21.0/365941956611521/messages",
+            method: 'post',
+            url: 'https://graph.facebook.com/v21.0/365941956611521/messages',
             headers: { Authorization: `Bearer ${token}` },
             data: {
-              messaging_product: "whatsapp",
-              recipient_type: "individual",
+              messaging_product: 'whatsapp',
+              recipient_type: 'individual',
               to: `${user?.phone}`,
-              type: "text",
+              type: 'text',
               text: {
                 body: body,
               },
@@ -689,31 +656,25 @@ const reviewRouter = new Hono()
           const res = await axios(whatappConfig);
 
           if (res.status === 200) {
-            return respond(
-              c,
-              "coupon created and send to what app successfully",
-              false,
-              200,
-              {},
-            );
+            return respond(c, 'coupon created and send to what app successfully', false, 200, {});
           }
 
-          return respond(c, "Failed to send message", true, 400, {});
+          return respond(c, 'Failed to send message', true, 400, {});
         }
 
         const token =
-          "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
+          'EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD';
 
         const body = `${message}.\n\n Please review us on google ${placeUrl?.placeUrl}`;
         const whatappConfig = {
-          method: "post",
-          url: "https://graph.facebook.com/v21.0/365941956611521/messages",
+          method: 'post',
+          url: 'https://graph.facebook.com/v21.0/365941956611521/messages',
           headers: { Authorization: `Bearer ${token}` },
           data: {
-            messaging_product: "whatsapp",
-            recipient_type: "individual",
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
             to: `${user?.phone}`,
-            type: "text",
+            type: 'text',
             text: {
               body: body,
             },
@@ -722,23 +683,17 @@ const reviewRouter = new Hono()
 
         const res = await axios(whatappConfig);
         if (res.status === 200) {
-          return respond(
-            c,
-            "coupon created and send to what app successfully",
-            false,
-            200,
-            {},
-          );
+          return respond(c, 'coupon created and send to what app successfully', false, 200, {});
         }
 
-        return respond(c, "Failed to send message", true, 400, {});
+        return respond(c, 'Failed to send message', true, 400, {});
       });
     },
   )
   .post(
-    "/createExtendCoupon",
+    '/createExtendCoupon',
     zValidator(
-      "json",
+      'json',
       z.object({
         userId: z.string().min(1).max(100),
         businessId: z.string().min(1).max(100),
@@ -764,33 +719,23 @@ const reviewRouter = new Hono()
           businessName,
         } = requestData;
 
-        const user = await User.findById(userId).select("name phone");
-        const placeUrl = await OutLetInfo.findOne({ businessId }).select(
-          "placeUrl",
-        );
+        const user = await User.findById(userId).select('name phone');
+        const placeUrl = await OutLetInfo.findOne({ businessId }).select('placeUrl');
 
-        const createCoupon = await couponCreated(
-          businessId,
-          userId,
-          value,
-          couponStartDate,
-          couponEndDate,
-          businessName,
-          session,
-        );
+        const createCoupon = await couponCreated(businessId, userId, value, couponStartDate, couponEndDate, businessName, session);
         const token =
-          "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
+          'EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD';
 
         const body = `Hi ${user?.name},\nWe are so glad that you loved our service. We work really hard to make sure that we make your every visit special.\nMake sure to use our loyalty program to grab exclusive rewards on every billing..\nWe would love for you to share your experience on Google & win more coinz. It really helps us! \nhere your coupon link ${createCoupon.link}  \nreview us on google ${placeUrl?.placeUrl}`;
         const whatappConfig = {
-          method: "post",
-          url: "https://graph.facebook.com/v21.0/365941956611521/messages",
+          method: 'post',
+          url: 'https://graph.facebook.com/v21.0/365941956611521/messages',
           headers: { Authorization: `Bearer ${token}` },
           data: {
-            messaging_product: "whatsapp",
-            recipient_type: "individual",
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
             to: `${user?.phone}`,
-            type: "text",
+            type: 'text',
             text: {
               body: body,
             },
@@ -798,18 +743,18 @@ const reviewRouter = new Hono()
         };
 
         await axios(whatappConfig);
-        return respond(c, " successfully", false, 200, {});
+        return respond(c, ' successfully', false, 200, {});
       });
     },
   )
   .post(
-    "/googleRatings",
+    '/googleRatings',
     zValidator(
-      "json",
+      'json',
       z.object({
         placeId: z
           .string({
-            message: "placeId is required",
+            message: 'placeId is required',
           })
           .min(1)
           .max(100),
@@ -820,8 +765,7 @@ const reviewRouter = new Hono()
     async (c) => {
       const { placeId, businessId } = await c.req.json();
 
-      const GOOGLE_API_KEY =
-        process.env.GOOGLE_API_KEY || "AIzaSyCwLRn4hzSvhztHSz8fBLWawijGtKCXcuY";
+      const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'AIzaSyCwLRn4hzSvhztHSz8fBLWawijGtKCXcuY';
 
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=rating&key=${GOOGLE_API_KEY}`,
@@ -835,7 +779,7 @@ const reviewRouter = new Hono()
         },
       );
 
-      return respond(c, "rating fetched successfully", false, 200, {});
+      return respond(c, 'rating fetched successfully', false, 200, {});
     },
   );
 

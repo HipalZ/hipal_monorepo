@@ -28,7 +28,7 @@ import type { BillData, OptionalPropsData } from "../types/businessData";
 import {
   type PageStates,
   calculateFinalBill,
-  calculateReward,
+  calculateHelperReward,
 } from "../utils/helpers";
 
 export const usePayments = () => {
@@ -110,6 +110,12 @@ export const usePayments = () => {
   // payment response
   const sendPaymentResponse = useCallback(
     async (response: any) => {
+      console.log("claimedCoins", claimedCoins);
+      let coinsObtained = 
+        (finalAmountForReward * (loyaltySetting?.setCashBackPercentage / 100));
+        console.log("coinsObtained", coinsObtained)
+      const netCoinz = -claimedCoins + coinsObtained;
+      console.log('netCoinz',netCoinz)
       setIsLoading(true);
       const res = await apiRpc.payments.validPayment[":merchantId"].$post({
         param: {
@@ -124,6 +130,7 @@ export const usePayments = () => {
           paidAmount: finalAmount?.toString(),
           tableName: tableName,
           businessId: businessId,
+          netCoinz:netCoinz.toString(),
         },
       });
       if (res.status === 401) {
@@ -131,8 +138,6 @@ export const usePayments = () => {
       }
       const data = await res.json();
       const orderId = data?.data as string;
-      const coinsObtained =
-        finalAmount * (loyaltySetting?.setCashBackPercentage / 100);
       const existingCoins = claimedCoins ? userCoinz - claimedCoins : userCoinz;
       let finalReward = 0;
       if (
@@ -143,7 +148,7 @@ export const usePayments = () => {
       ) {
         finalReward =
           billData?.subTotal * (loyaltySetting?.setCashBackPercentage / 100);
-        finalReward = calculateReward(
+        finalReward = calculateHelperReward(
           existingCoins,
           coinsObtained,
           loyaltySetting?.rewardLimit,
@@ -153,7 +158,7 @@ export const usePayments = () => {
         claimedCoins > 0 ||
         (claimedCoins === 0 && claimCouponz === 0)
       ) {
-        finalReward = calculateReward(
+        finalReward = calculateHelperReward(
           existingCoins,
           coinsObtained,
           loyaltySetting?.rewardLimit,
@@ -498,7 +503,7 @@ export const usePayments = () => {
         const existingCoins = claimedCoins
           ? userCoinz - claimedCoins
           : userCoinz;
-        finalReward = calculateReward(
+        finalReward = calculateHelperReward(
           existingCoins,
           coinsObtained,
           loyaltySetting?.rewardLimit,

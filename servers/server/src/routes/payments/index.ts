@@ -52,7 +52,8 @@ import { executePosHandler } from '../../utils/executePoshandlers.ts';
 import { convertToPetpoojaCart } from '../../utils/helper';
 import { posApiPaths } from '../../utils/posConfig/petPooja';
 // import { queueClient } from "../../utils/queue/queueClient";
-import { razorpayWrapper } from '../../utils/razorpay-wrapper';
+import { monadHelperFunction, triggerBlockchain } from '../../utils/monad';
+import { type MerchantConfig, razorpayWrapper } from '../../utils/razorpay-wrapper';
 import { buildUnifiedDashboardCore } from '../../utils/reportHelper/unifiedSalesDashBoard';
 import { respond } from '../../utils/response';
 import { buildBillsExcelBuffer } from '../../utils/sales';
@@ -98,19 +99,25 @@ export const calculateDiscount = async (businessId: string, totalBill: number, a
 
   const estimatedSubTotal = billValue / (1 + gstPercentage + serviceChargePercentage);
 
-  const discount = Math.round(Math.abs(finalBillValue / (1 + gstPercentage + serviceChargePercentage) - estimatedSubTotal));
+  const discount = Math.abs(finalBillValue / (1 + gstPercentage + serviceChargePercentage) - estimatedSubTotal).toFixed(2);
 
   return discount;
 };
 
-export const calculateReward = async (exist: number, reward: number, limit: number, session: ClientSession) => {
-  const total = exist + reward;
-  const sum = Math.min(total, limit);
-  const finalReward = Math.round(Math.abs(sum - exist));
-  return { finalReward, curentBalance: sum };
-};
+export const calculatePayReward = (exist: number, reward: number, limit: number) => {
+  // 1. RAW Arithmetic only
+  const total = (exist || 0) + (reward || 0);
+  const cappedBalance = Math.min(total, limit || 0);
 
-//
+  // Return the RAW decimal difference
+  const rawFinalReward = Math.abs(cappedBalance - (exist || 0));
+
+  // DO NOT Math.round here
+  return {
+    finalReward: rawFinalReward,
+    curentBalance: cappedBalance,
+  };
+};
 
 export const addRewardHistory = async (
   status: string,
@@ -175,14 +182,9 @@ export const removeCoins = async (
   session: ClientSession,
 ) => {
   const existingUser = await UserReward.findOne({ userId, loyaltyId });
+
   if (existingUser && existingUser.rewards >= claimedCoins) {
-    const updatedReward = await UserReward.findOneAndUpdate(
-      { userId, loyaltyId },
-      {
-        $inc: { rewards: -claimedCoins },
-      },
-      { new: true, session },
-    );
+    const updatedReward = await UserReward.findOneAndUpdate({ userId, loyaltyId }, { $inc: { rewards: -claimedCoins } }, { new: true, session });
 
     await removeRewardHistory('MINUS', tableName, loyaltyId, order_id, userId, claimedCoins, session);
 
@@ -197,33 +199,26 @@ export const addCoins = async (
   order_id: string,
   tableName: string,
   businessId: string,
-
   loyaltyId: string,
-
   session: ClientSession,
 ) => {
   const existingUser = await UserReward.findOne({ userId, loyaltyId });
-
   const existingLoyalty = await LoyaltySettings.findOne({
-    businessId: businessId,
+    businessId,
     isActive: true,
   });
-  if (existingUser && existingLoyalty) {
-    const coinsCalculated = await calculateReward(existingUser.rewards, coins, existingLoyalty?.rewardLimit as number, session);
 
-    await UserReward.findOneAndUpdate(
-      { userId, loyaltyId },
-      {
-        $inc: { rewards: coinsCalculated.finalReward },
-      },
-      { new: true, session },
-    );
+  if (existingUser && existingLoyalty) {
+    // 1. Get the RAW decimal from the helper
+    const coinsCalculated = calculatePayReward(existingUser.rewards || 0, coins, existingLoyalty.rewardLimit as number);
+
+    await UserReward.findOneAndUpdate({ userId, loyaltyId }, { $inc: { rewards: coinsCalculated.finalReward } }, { new: true, session });
 
     if (coinsCalculated.finalReward > 0) {
       await addRewardHistory('PLUS', tableName, loyaltyId, order_id, userId, coinsCalculated.finalReward, session);
     }
 
-    return coinsCalculated.finalReward || 0;
+    return coinsCalculated.finalReward;
   }
   return 0;
 };
@@ -240,16 +235,16 @@ export const calculatedCashbackCoins = async (
     isActive: true,
   }).select('rewardLimit setCashBackPercentage');
 
-  if (!LoyaltySetting) {
-    console.error('LoyaltySetting not found or setReward is not a number');
-    return 0; // Or handle this case as appropriate for your application
-  }
-  const subTotal = billValue - claimedCoins - couponDiscount - discount;
-  const coinsToBeAdded = (LoyaltySetting.setCashBackPercentage / 100) * subTotal;
-  if (coinsToBeAdded < 0) {
-    return 0;
-  }
-  return Math.round(coinsToBeAdded);
+  if (!LoyaltySetting) return 0;
+
+  // 1. Calculate the subtotal (The amount actually paid)
+  // Adding (|| 0) protects against undefined values causing NaN
+  const subTotal = (billValue || 0) - (claimedCoins || 0) - (couponDiscount || 0) - (discount || 0);
+
+  // 2. Arithmetic first: Calculate reward with raw decimals
+  const rawCoins = (LoyaltySetting.setCashBackPercentage / 100) * subTotal;
+
+  return rawCoins < 0 ? 0 : rawCoins;
 };
 
 const totalSubscribers = async (businessId: string) => {
@@ -1439,6 +1434,7 @@ const paymentsRouter = new Hono()
       'query',
       z.object({
         businessId: z.string(),
+        netCoinz: z.bigint(),
       }),
     ),
 
@@ -1446,7 +1442,7 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json();
       const { response } = requestData;
       const { merchantId } = c.req.param();
-      const { userId, couponId, businessId, tableName, paidAmount } = c.req.query();
+      const { userId, couponId, businessId, tableName, paidAmount, netCoinz } = c.req.query();
 
       const merchant = await BusinessSettings.findOne({
         razorpayMerchantId: merchantId,
@@ -1465,6 +1461,8 @@ const paymentsRouter = new Hono()
       const signature = createHmac('sha256', RAZORPAY_SECRET).update(`${razorpay_order_id}|${razorpay_payment_id}`).digest('hex');
 
       if (signature === razorpay_signature) {
+        // TODO monad integration
+        await triggerBlockchain(businessId, userId, Math.round(Number(netCoinz)), razorpay_order_id);
         return c.json({
           err: false,
           message: 'Payment is valid',
@@ -1639,7 +1637,7 @@ const paymentsRouter = new Hono()
   //             isActive: true,
   //           }).select("rewardLimit");
 
-  //           const coinsCalculated = await calculateReward(
+  //           const coinsCalculated = await calculatePayReward(
   //             existingUser.rewards,
   //             claimCoins,
   //             existingLoyalty?.rewardLimit as number,
@@ -1958,7 +1956,7 @@ const paymentsRouter = new Hono()
         duesUserId,
         npcUserId,
       } = requestData;
-
+      console.log('requestData', requestData);
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const alert = await PaymentAlert.findOne({ _id: alertId, isAccepted: false }, null, { session }).select(
@@ -1976,6 +1974,7 @@ const paymentsRouter = new Hono()
 
         if (alert.alertType !== 'OFFLINE') {
           const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment, waiterName }, { new: true, session });
+          console.log('triggered order 1');
           return c.json({
             message: 'Order accepted successfully',
             err: false,
@@ -1998,6 +1997,7 @@ const paymentsRouter = new Hono()
             }
 
             if (order) {
+              let roundedClaimedCoins = Math.round(Number(order.claimedCoins) || 0);
               const isHavePos = await BusinessPosConfig.findOne({
                 businessId: order.businessId,
                 isDeleted: false,
@@ -2027,7 +2027,7 @@ const paymentsRouter = new Hono()
                   if (!result) {
                     throw new Error('Failed to process POS offline order');
                   }
-
+                  console.log('triggered order 2');
                   if (result) {
                     return respond(c, 'Order accepted successfully', false, 200, result);
                   }
@@ -2050,14 +2050,14 @@ const paymentsRouter = new Hono()
                       let cashBack = await calculatedCashbackCoins(
                         order.businessId.toString(),
                         Number(order.billValue),
-                        Number(order.claimedCoins),
+                        roundedClaimedCoins,
                         Number(order.couponDiscount),
                         Number(order.discount),
                       );
-
-                      if (existingLoyalty?.loyaltyId && order.claimedCoins > 0 && order.userId.toString()) {
+                      console.log('cashBack order 3', cashBack);
+                      if (existingLoyalty?.loyaltyId && roundedClaimedCoins > 0 && order.userId.toString()) {
                         await removeCoins(
-                          Number(order?.claimedCoins),
+                          roundedClaimedCoins,
                           order.tableName,
                           existingLoyalty?.loyaltyId?.toString() || '',
                           order._id.toString(),
@@ -2071,7 +2071,7 @@ const paymentsRouter = new Hono()
 
                       if (existingLoyalty?.loyaltyId && order.userId.toString()) {
                         finalCashBack = await addCoins(
-                          cashBack,
+                          Math.round(cashBack),
                           order.userId.toString(),
                           order._id.toString(),
                           order.tableName || '',
@@ -2079,6 +2079,7 @@ const paymentsRouter = new Hono()
                           existingLoyalty?.loyaltyId.toString() || '',
                           session,
                         );
+                        console.log('finalCashBack order 3', finalCashBack);
                         if (order.cashbackAvailable === false) {
                           cashBack = 0;
                         }
@@ -2109,7 +2110,7 @@ const paymentsRouter = new Hono()
                           status: 'SUCCESS',
                           paymentMode: settleModes.length > 1 ? 'split' : paymentMode?.name,
                           userId: paymentMode?.name === 'npc' ? npcUser?.userId : order?.userId,
-                          claimedCoins: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : order?.claimedCoins,
+                          claimedCoins: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : roundedClaimedCoins,
                           billValue: order?.billValue,
                           tips: order?.tips,
                           tableName: order?.tableName,
@@ -2221,13 +2222,22 @@ const paymentsRouter = new Hono()
                     );
 
                     await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment, waiterName }, { new: true, session });
-
+                    console.log('triggered order 3');
+                    // TODO monad integration
+                    await monadHelperFunction({
+                      businessId: order.businessId,
+                      userId: order.userId,
+                      orderId: order.order_id,
+                      claimedCoinz: roundedClaimedCoins,
+                      earnedCoinz: finalCashBack,
+                    });
                     return c.json({
                       message: 'Order accepted successfully',
                       err: false,
                       data: {},
                     });
                   }
+
                   if (tableSession.variantsCounts === 1) {
                     const npcUser = await NpcUser.findById(npcUserId);
 
@@ -2236,14 +2246,14 @@ const paymentsRouter = new Hono()
                       let cashBack = await calculatedCashbackCoins(
                         order.businessId.toString(),
                         Number(order.billValue),
-                        Number(order.claimedCoins),
+                        roundedClaimedCoins,
                         Number(order.couponDiscount),
                         Number(order.discount),
                       );
-
-                      if (existingLoyalty?.loyaltyId && order.claimedCoins > 0 && order.userId.toString()) {
+                      console.log('cashBack order 4', cashBack);
+                      if (existingLoyalty?.loyaltyId && roundedClaimedCoins > 0 && order.userId.toString()) {
                         await removeCoins(
-                          Number(order?.claimedCoins),
+                          roundedClaimedCoins,
                           order.tableName,
                           existingLoyalty?.loyaltyId?.toString() || '',
                           order._id.toString(),
@@ -2257,7 +2267,7 @@ const paymentsRouter = new Hono()
 
                       if (existingLoyalty?.loyaltyId && order.userId.toString()) {
                         finalCashBack = await addCoins(
-                          cashBack,
+                          Math.round(cashBack),
                           order.userId.toString(),
                           order._id.toString(),
                           order.tableName || '',
@@ -2265,6 +2275,7 @@ const paymentsRouter = new Hono()
                           existingLoyalty?.loyaltyId.toString() || '',
                           session,
                         );
+                        console.log('finalCashBack order 4', finalCashBack);
                         if (order.cashbackAvailable === false) {
                           cashBack = 0;
                         }
@@ -2295,7 +2306,7 @@ const paymentsRouter = new Hono()
                             status: 'SUCCESS',
                             paymentMode: settleModes.length > 1 ? 'split' : paymentMode?.name,
                             userId: paymentMode?.name === 'npc' ? npcUser?.userId : order?.userId,
-                            claimedCoins: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : order?.claimedCoins,
+                            claimedCoins: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : roundedClaimedCoins,
                             billValue: order?.billValue,
                             tips: order?.tips,
                             tableName: order?.tableName,
@@ -2407,9 +2418,17 @@ const paymentsRouter = new Hono()
                       );
 
                       await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment, waiterName }, { new: true, session });
+                      // TODO monad integration
+                      await monadHelperFunction({
+                        businessId: order.businessId,
+                        userId: order.userId,
+                        orderId: order.order_id,
+                        claimedCoinz: roundedClaimedCoins,
+                        earnedCoinz: finalCashBack,
+                      });
                     }
                   }
-
+                  // dont place monad here
                   if (tableSession?.variantsCounts === 1) {
                     if (isHavePos) {
                       const payload = {
@@ -2565,6 +2584,7 @@ const paymentsRouter = new Hono()
                       );
                     }
                   }
+                  console.log('triggered order 4');
                   return c.json({
                     message: 'Order accepted successfully',
                     err: false,
@@ -2577,14 +2597,14 @@ const paymentsRouter = new Hono()
                 let cashBack = await calculatedCashbackCoins(
                   order.businessId.toString(),
                   Number(order.billValue),
-                  Number(order.claimedCoins),
+                  roundedClaimedCoins,
                   Number(order.couponDiscount),
                   Number(order.discount),
                 );
 
-                if (existingLoyalty?.loyaltyId && order.claimedCoins > 0) {
+                if (existingLoyalty?.loyaltyId && roundedClaimedCoins > 0) {
                   await removeCoins(
-                    Number(order?.claimedCoins),
+                    roundedClaimedCoins,
                     order.tableName,
                     existingLoyalty?.loyaltyId?.toString() || '',
                     order._id.toString(),
@@ -2598,7 +2618,7 @@ const paymentsRouter = new Hono()
 
                 if (existingLoyalty?.loyaltyId) {
                   finalCashBack = await addCoins(
-                    cashBack,
+                    Math.round(cashBack),
                     order.userId.toString(),
                     order._id.toString(),
                     order.tableName || '',
@@ -2638,7 +2658,7 @@ const paymentsRouter = new Hono()
                     status: 'SUCCESS',
                     paymentMode: settleModes.length > 1 ? 'split' : paymentMode?.name,
                     userId: paymentMode?.name === 'npc' ? npcUser?.userId : order?.userId,
-                    claimedCoins: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : order?.claimedCoins,
+                    claimedCoins: paymentMode?.name === 'npc' || paymentMode?.name === 'complementary' ? 0 : roundedClaimedCoins,
                     billValue: order?.billValue,
                     tips: order?.tips,
                     tableName: order?.tableName,
@@ -2873,10 +2893,18 @@ const paymentsRouter = new Hono()
                   },
                 );
               }
+              // TODO monad integration
+              await monadHelperFunction({
+                businessId: order.businessId,
+                userId: order.userId,
+                orderId: order.order_id,
+                claimedCoinz: roundedClaimedCoins,
+                earnedCoinz: finalCashBack,
+              });
             }
 
             const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment, waiterName }, { new: true, session });
-
+            console.log('triggered order 5');
             return c.json({
               message: 'Order accepted successfully',
               err: false,

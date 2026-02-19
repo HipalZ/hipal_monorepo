@@ -337,7 +337,6 @@ const tableRouter = new Hono()
         }
 
         if (pos.posName === 'HIPAL_Z') {
-          console.log('jk');
           const result = await executePosHandler(pos.posName, 'normal_settle', {
             tableId: table._id,
             captainId: captain._id,
@@ -913,6 +912,7 @@ const tableRouter = new Hono()
           ],
           { session },
         );
+        // TODO when normal settle cashback is implemented we can activate this line
 
         const payload = {
           app_key: pos.accessKey,

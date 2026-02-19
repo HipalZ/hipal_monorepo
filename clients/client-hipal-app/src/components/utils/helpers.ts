@@ -148,17 +148,31 @@ export const formatDate = (timestamp: number): string => {
   return `${day} ${month} ${year}`;
 };
 
-export const calculateReward = (
+export const calculateHelperReward = (
   exist: number,
   reward: number,
   limit: number,
 ) => {
-  console.log("exist", exist, "reward", reward, "limit", limit);
-  let total = exist + reward;
+  console.log("📥 Inputs -> exist:", exist, "reward:", reward, "limit:", limit);
 
-  const sum = Math.min(total, limit);
-  const finalReward = Math.round(sum - exist);
-  return { finalReward, curentBalance: sum };
+  // 1. Math first with raw values
+  const total = (exist || 0) + (reward || 0);
+  const sumRaw = Math.min(total, limit || 0);
+  const finalRewardRaw = sumRaw - (exist || 0);
+
+  // 2. Round to whole numbers at the end
+  // (>= .5 rounds up, < .5 rounds down)
+  const finalReward = Math.round(finalRewardRaw);
+  const curentBalance = Math.round(sumRaw);
+
+  console.log(
+    "📤 Outputs -> finalReward:",
+    finalReward,
+    "curentBalance:",
+    curentBalance,
+  );
+
+  return { finalReward, curentBalance };
 };
 
 interface InputObject {

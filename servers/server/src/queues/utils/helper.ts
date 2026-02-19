@@ -163,18 +163,31 @@ export const calculateDiscount = async (
   return discount;
 };
 
-export const calculateReward = async (
+export const calculateReward = (
   exist: number,
   reward: number,
   limit: number,
 ) => {
-  const total = exist + reward;
-  const sum = Math.min(total, limit);
-  const finalReward = Math.round(Math.abs(sum - exist));
-  return { finalReward, curentBalance: sum };
-};
+  console.log("📥 Inputs -> exist:", exist, "reward:", reward, "limit:", limit);
 
-//
+  const total = (exist || 0) + (reward || 0);
+  const cappedBalance = Math.min(total, limit || 0);
+  const rawFinalReward = Math.abs(cappedBalance - (exist || 0));
+
+  // 2. Apply your "0.5 Rule" (Math.round) only at the end
+  // 14.3 -> 14 | 14.5 -> 15 | 14.6 -> 15
+  const finalReward = Math.round(rawFinalReward);
+  const curentBalance = Math.round(cappedBalance);
+
+  console.log(
+    "📤 Outputs -> finalReward:",
+    finalReward,
+    "curentBalance:",
+    curentBalance,
+  );
+
+  return { finalReward, curentBalance };
+};
 
 export const addRewardHistory = async (
   status: string,
@@ -267,7 +280,7 @@ export const addCoins = async (
       coins,
       existingLoyalty?.rewardLimit as number,
     );
-
+    console.log("coinsCalculated", coinsCalculated);
     await UserReward.findOneAndUpdate(
       { userId, loyaltyId },
       {
@@ -292,7 +305,7 @@ export const addCoins = async (
   return 0;
 };
 
-export const calculatedCashbackCoins = async (
+export const splitCalcCashbackCoins = async (
   businessId: string,
   billValue: number,
   claimedCoins: number,
@@ -301,14 +314,24 @@ export const calculatedCashbackCoins = async (
   LoyaltySetting: LoyaltyType,
 ) => {
   if (!LoyaltySetting) {
-    console.error("LoyaltySetting not found or setReward is not a number");
-    return 0; // Or handle this case as appropriate for your application
-  }
-  const subTotal = billValue - claimedCoins - couponDiscount - discount;
-  const coinsToBeAdded =
-    (LoyaltySetting.setCashBackPercentage / 100) * subTotal;
-  if (coinsToBeAdded < 0) {
+    console.error("LoyaltySetting not found");
     return 0;
   }
-  return Math.round(coinsToBeAdded) || 0;
+
+  const subTotal =
+    (billValue || 0) -
+    (claimedCoins || 0) -
+    (couponDiscount || 0) -
+    (discount || 0);
+
+  const rawCoins = (LoyaltySetting.setCashBackPercentage / 100) * subTotal;
+
+  if (rawCoins < 0) return 0;
+
+  // This snaps the final result to the nearest whole integer
+  const finalReward = Math.round(rawCoins);
+
+  console.log("Split Calculation Reward (Final):", finalReward);
+
+  return finalReward || 0;
 };
