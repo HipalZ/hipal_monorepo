@@ -1434,7 +1434,7 @@ const paymentsRouter = new Hono()
       'query',
       z.object({
         businessId: z.string(),
-        netCoinz: z.bigint(),
+        netCoinz: z.string(),
       }),
     ),
 
