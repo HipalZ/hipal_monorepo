@@ -34,7 +34,7 @@ let isProcessingQueue = false;
 let localNonce: number | null = null;
 
 export async function triggerBlockchain(bizId: string, userId: string, netCoinz: number, orderId: string) {
-  if (bizId !== '66a7fcb5d1afb0385308ba63') return null;
+  if (bizId.toString() !== '66a7fcb5d1afb0385308ba63') return null;
 
   TX_QUEUE.push({ bizId, userId, netCoinz, orderId });
   console.log(`📥 [Monad] Queued Order ${orderId} (Pos: ${TX_QUEUE.length})`);
@@ -124,7 +124,7 @@ const getBlockchainBalance = async (userId: string): Promise<number> => {
 
 export const monadHelperFunction = async (data: MonadData) => {
   let { businessId, orderId, userId, claimedCoinz, earnedCoinz, signUpBonus } = data;
-  if (businessId !== '66a7fcb5d1afb0385308ba63') return null;
+  if (businessId.toString() !== '66a7fcb5d1afb0385308ba63') return null;
   businessId = businessId.toString();
   userId = userId.toString();
 
