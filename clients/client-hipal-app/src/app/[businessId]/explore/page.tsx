@@ -68,7 +68,7 @@ const BirthdayCard = dynamic(
     loading: () => <SkeletonLoader height={200} />,
   },
 );
-const PageName = dynamic(() => import("@/components/molecules/pageName"), {
+const FooterTerms = dynamic(() => import("@/components/molecules/footerTerms"), {
   loading: () => <SkeletonLoader height={50} />,
 });
 
@@ -240,7 +240,7 @@ export default async function Explore({
             socialMediaLinks={data?.business?.socialMediaLinks}
             footerDescription={data?.business?.footerDescription}
           />
-          <PageName />
+          <FooterTerms />
         </div>
         <BottomButton selected={"home"} />
       </main>

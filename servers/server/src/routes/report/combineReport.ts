@@ -27,6 +27,7 @@ import { buildOpenItemSaleSheet } from "../../utils/reportHelper/buildOpenItemSa
 import { buildDishTypeSheetFromContext } from "../../utils/reportHelper/itemTypeReport";
 import { buildItemVariantSheetFromContext } from "../../utils/reportHelper/itemVariantReport";
 import { buildParentCategorySheet } from "../../utils/reportHelper/parentCategoryReport";
+import { buildDeletedItemsSheet } from "../../utils/reportHelper/deletedItemReport";
 
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
@@ -226,6 +227,10 @@ const unifiedExcelRouter = new Hono().post(
     // 7) Open Item Sale Report
     await safeBuildReport("Open Item Sale Report", () =>
       buildOpenItemSaleSheet(workbook, ctx),
+    );
+
+    await safeBuildReport("Delete Items report", () =>
+      buildDeletedItemsSheet(workbook, ctx),
     );
 
     // Log report status

@@ -103,6 +103,10 @@ const BannerLayouts = dynamic(
   { loading: () => <SkeletonLoader height={200} /> },
 );
 
+const FooterTerms = dynamic(() => import("@/components/molecules/footerTerms"), {
+  loading: () => <SkeletonLoader height={50} />,
+});
+
 const ServiceBottomButton = dynamic(
   () => import("@/components/molecules/bottomButton/ServiceButton"),
   { loading: () => <SkeletonLoader height={200} /> },
@@ -197,6 +201,7 @@ const Services = async ({
           />
           <ServiceBottomButton />
         </div>
+        <FooterTerms />
       </main>
     </Suspense>
   );
