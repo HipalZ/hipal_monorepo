@@ -1,4 +1,4 @@
-import { LoyaltySettings, Order } from "@hi/db-models";
+import { LoyaltySettings, Order, OutLetInfo } from "@hi/db-models";
 import { ethers } from "ethers";
 
 // 1. CONFIG
@@ -40,6 +40,11 @@ export async function triggerBlockchain(
   netCoinz: number,
   orderId: string,
 ) {
+  const outlet = await OutLetInfo.findOne({
+    bizId,
+  });
+  console.log("web3Ledger", outlet?.web3Ledger);
+  if (!outlet?.web3Ledger) return;
   TX_QUEUE.push({ bizId, userId, netCoinz, orderId });
   console.log(`📥 [Monad] Queued Order ${orderId} (Pos: ${TX_QUEUE.length})`);
 
@@ -135,7 +140,11 @@ const getBlockchainBalance = async (userId: string): Promise<number> => {
 export const monadHelperFunction = async (data: MonadData) => {
   let { businessId, orderId, userId, claimedCoinz, earnedCoinz, signUpBonus } =
     data;
-
+  const outlet = await OutLetInfo.findOne({
+    businessId,
+  });
+  console.log("web3Ledger", outlet?.web3Ledger);
+  if (!outlet?.web3Ledger) return;
   businessId = businessId.toString();
   userId = userId.toString();
 
