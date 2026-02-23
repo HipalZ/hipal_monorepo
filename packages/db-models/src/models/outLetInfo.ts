@@ -321,6 +321,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Boolean,
     default: false,
   },
+  web3Ledger: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 //middlewares

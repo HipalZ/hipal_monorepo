@@ -479,7 +479,7 @@ const businessesRouter = new Hono()
     },
   )
   .put(
-    "outletInfo/update/:businessId",
+    "/outletInfo/update/:businessId",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
