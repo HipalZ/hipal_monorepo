@@ -72,8 +72,7 @@ const Reports = () => {
     [setReportPage],
   );
 
-  const selectedNavLabel =
-    navItems.find((item) => navKeyToReportType[normalizeNavKey(item.text)] === reportPage)?.text ?? reportPage ?? '';
+  const selectedNavLabel = navItems.find((item) => navKeyToReportType[normalizeNavKey(item.text)] === reportPage)?.text ?? reportPage ?? '';
 
   const handleBack = useCallback(() => {
     return navigate(`/app/business/${businessId}`);
@@ -86,13 +85,13 @@ const Reports = () => {
           <MemoizedHeader title="Item Analytics" onBack={handleBack} />
         </article>
 
-        <nav className="hide-scrollbar mobile-only absolute flex w-full flex-nowrap space-x-4 overflow-auto text-nowrap px-4 text-sm">
+        <nav className="hide-scrollbar mobile-only absolute inset-0 flex flex-col overflow-y-auto px-4 text-sm">
           {navItems.map((item) => (
             <button
               className={cn(
-                'bg-white pb-3 pt-4',
+                'w-full bg-white py-4 text-left', // Changed pb/pt to py for consistency
                 normalizeNavKey(reportPage ?? '') === normalizeNavKey(item.text)
-                  ? 'border-b-2 border-[#8162e6] text-lg font-semibold text-[#8162e6] transition-all'
+                  ? 'border-l-4 border-[#8162e6] text-lg font-semibold text-[#8162e6]' // Switched to border-l for vertical lists
                   : '',
               )}
               key={item.text}
