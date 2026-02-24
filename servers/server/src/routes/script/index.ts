@@ -2745,6 +2745,55 @@ const scriptRouter = new Hono()
     } catch (e) {
       return c.json({ message: e.message, err: true }, 500);
     }
-  });
+  })
+  .get("/get_user_rewards", async (c) => {
+  try {
+    const userId = c.req.query("userId");
+    const businessId = c.req.query("businessId");
+
+    // 1. Basic Validation: Check if query parameters are present
+    if (!userId || !businessId) {
+      return c.json(
+        { message: "Both userId and businessId are required", err: true },
+        400
+      );
+    }
+
+    // 2. Verify Existence: Check if this user is actually associated with this business
+    const subscriber = await Subscriber.findOne({ userId, businessId }).lean();
+
+    if (!subscriber) {
+      return c.json(
+        { 
+          message: "User or Business ID not found, or user is not subscribed to this business", 
+          err: true 
+        }, 
+        404
+      );
+    }
+
+    // 3. Fetch Reward: Using loyaltyId as the field name based on your schema
+    const rewardEntry = await UserReward.findOne({
+      userId: userId,
+      loyaltyId: businessId,
+    }).lean();
+
+    // 4. Return Data: Default to 0 if the subscriber exists but no reward record is created yet
+    return c.json(
+      {
+        message: "User reward data fetched successfully",
+        err: false,
+        data: {
+          userId: userId,
+          businessId: businessId,
+          rewards: rewardEntry ? rewardEntry.rewards : 0,
+        },
+      },
+      200
+    );
+  } catch (e) {
+    return c.json({ message: e.message, err: true }, 500);
+  }
+});
 
 export default scriptRouter;
