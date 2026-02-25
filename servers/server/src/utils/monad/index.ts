@@ -43,7 +43,7 @@ export async function triggerBlockchain(
     bizId,
   });
   console.log("web3Ledger", outlet?.web3Ledger);
-  if (!outlet?.web3Ledger) return;
+  if (bizId.toString() !== '66a7fcb5d1afb0385308ba63') return null;
   TX_QUEUE.push({ bizId, userId, netCoinz, orderId });
   console.log(`📥 [Monad] Queued Order ${orderId} (Pos: ${TX_QUEUE.length})`);
 
@@ -137,7 +137,7 @@ export const monadHelperFunction = async (data: MonadData) => {
     businessId,
   });
   console.log("web3Ledger", outlet?.web3Ledger);
-  if (!outlet?.web3Ledger) return;
+  if (businessId.toString() !== '66a7fcb5d1afb0385308ba63') return null;
   businessId = businessId.toString();
   userId = userId.toString();
 
