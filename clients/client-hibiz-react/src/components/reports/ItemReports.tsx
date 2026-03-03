@@ -36,12 +36,12 @@ const MemoItemReports = () => {
       return itemReports;
     }
 
-    const query = searchQuery.toLowerCase().trim();
+    const query = searchQuery?.toLowerCase().trim();
 
     return itemReports
       .map((business: BusinessItemReport) => ({
         ...business,
-        items: business.items.filter((item) => item.itemName.toLowerCase().includes(query) || item.categoryId.toLowerCase().includes(query)),
+        items: business?.items?.filter((item) => item?.itemName?.toLowerCase().includes(query) || item?.categoryId?.toLowerCase().includes(query)),
       }))
       .filter((business) => business.items.length > 0);
   }, [itemReports, searchQuery]);

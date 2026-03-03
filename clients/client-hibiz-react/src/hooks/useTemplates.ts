@@ -249,7 +249,7 @@ export const useMediaUpload = () => {
 
   const [isUploading, setIsUploading] = useState(false);
 
-  const uploadMedia = async (): Promise<{ url: string; handle: string }> => {
+  const uploadMedia = async (): Promise<{ handle: string }> => {
     try {
       if (!imageFiles) {
         throw new Error("No image files to upload");
@@ -312,7 +312,7 @@ export const useMediaUpload = () => {
 
   const uploadMediaPassFile = async (
     file: File | Blob,
-  ): Promise<{ url: string; handle: string }> => {
+  ): Promise<{ url: string }> => {
     if (!file) throw new Error("No file provided for upload");
     if (!businessId) throw new Error("Missing businessId");
 
