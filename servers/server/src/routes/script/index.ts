@@ -2702,61 +2702,26 @@ const scriptRouter = new Hono()
       });
     },
   )
-  .get('/get_all_users_data', async (c) => {
+  .get("/get_all_users_data", async (c) => {
     try {
-      const pageNumber = Number(c.req.query('pageNumber')) || 1;
-      const limit = Number(c.req.query('limit')) || 50;
-      const businessId = c.req.query('businessId');
-      let loyaltyId = c.req.query('loyaltyId');
+      const pageNumber = Number(c.req.query("pageNumber")) || 1;
+      const limit = Number(c.req.query("limit")) || 50;
+      const businessId = c.req.query("businessId");
 
-      if (!businessId && !loyaltyId) {
-        return c.json({ message: 'businessId or loyaltyId is required', err: true }, 400);
+      if (!businessId) {
+        return c.json({ message: "businessId is required", err: true }, 400);
       }
+      const subscribers = await Subscriber.find({ businessId })
+        .skip((pageNumber - 1) * limit)
+        .limit(limit)
+        .lean();
 
-      if (!loyaltyId && businessId) {
-        const loyaltySetting = await LoyaltySettings.findOne({ businessId }).lean();
-        loyaltyId = loyaltySetting?.loyaltyId?.toString();
-      }
-
-      if (!loyaltyId) {
-        return c.json({ message: 'Loyalty ID not found for this business', err: true }, 404);
-      }
-
-      // 1. Find all businesses sharing this loyaltyId to aggregate subscribers
-      const loyaltySettings = await LoyaltySettings.find({ loyaltyId }).select('businessId').lean();
-      const businessIds = loyaltySettings.map((ls) => ls.businessId);
-
-      // 2. Fetch unique subscribers across the loyalty program to avoid duplicates
-      const subscribersData = await Subscriber.aggregate([
-        {
-          $match: {
-            businessId: { $in: businessIds },
-            isDeleted: false,
-          },
-        },
-        {
-          $group: {
-            _id: '$userId',
-            businessId: { $first: '$businessId' }, // Keep one businessId for context
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            userId: '$_id',
-            businessId: 1,
-          },
-        },
-        { $skip: (pageNumber - 1) * limit },
-        { $limit: limit },
-      ]);
-
-      // 3. Correlate with UserRewards using the common loyaltyId
+      // 3. Correlate with UserRewards
       const combinedData = await Promise.all(
-        subscribersData.map(async (sub) => {
+        subscribers.map(async (sub) => {
           const rewardEntry = await UserReward.findOne({
             userId: sub.userId,
-            loyaltyId: loyaltyId,
+            loyaltyId: businessId,
           }).lean();
 
           return {
@@ -2769,7 +2734,7 @@ const scriptRouter = new Hono()
 
       return c.json(
         {
-          message: 'Users data fetched successfully',
+          message: "Users data fetched successfully",
           err: false,
           page: pageNumber,
           limit: limit,
@@ -2777,74 +2742,57 @@ const scriptRouter = new Hono()
         },
         200,
       );
-    } catch (e: unknown) {
-      return c.json({ message: (e as Error).message, err: true }, 500);
+    } catch (e) {
+      return c.json({ message: e.message, err: true }, 500);
     }
   })
-  .get('/get_user_rewards', async (c) => {
-    try {
-      const userId = c.req.query('userId');
-      const businessId = c.req.query('businessId');
-      let loyaltyId = c.req.query('loyaltyId');
+  .get("/get_user_rewards", async (c) => {
+  try {
+    const userId = c.req.query("userId");
+    const businessId = c.req.query("businessId");
 
-      // 1. Basic Validation: Check if query parameters are present
-      if (!userId || (!businessId && !loyaltyId)) {
-        return c.json({ message: 'userId and (businessId or loyaltyId) are required', err: true }, 400);
-      }
-
-      // 2. Resolve loyaltyId if only businessId is provided
-      if (!loyaltyId && businessId) {
-        const loyaltySetting = await LoyaltySettings.findOne({ businessId }).lean();
-        loyaltyId = loyaltySetting?.loyaltyId?.toString();
-      }
-
-      if (!loyaltyId) {
-        return c.json({ message: 'Loyalty ID not found', err: true }, 404);
-      }
-
-      // 3. Verify Existence: Check if this user is associated with ANY business in this loyalty program
-      const loyaltySettings = await LoyaltySettings.find({ loyaltyId }).select('businessId').lean();
-      const businessIds = loyaltySettings.map((ls) => ls.businessId);
-
-      const subscriber = await Subscriber.findOne({
-        userId,
-        businessId: { $in: businessIds },
-        isDeleted: false,
-      }).lean();
-
-      if (!subscriber) {
-        return c.json(
-          {
-            message: 'User is not subscribed to this loyalty program',
-            err: true,
-          },
-          404,
-        );
-      }
-
-      // 4. Fetch Reward: Using the shared loyaltyId
-      const rewardEntry = await UserReward.findOne({
-        userId: userId,
-        loyaltyId: loyaltyId,
-      }).lean();
-
-      // 5. Return Data: Default to 0 if the subscriber exists but no reward record is created yet
+    // 1. Basic Validation: Check if query parameters are present
+    if (!userId || !businessId) {
       return c.json(
-        {
-          message: 'User reward data fetched successfully',
-          err: false,
-          data: {
-            userId: userId,
-            businessId: subscriber.businessId,
-            rewards: rewardEntry ? rewardEntry.rewards : 0,
-            loyaltyId: loyaltyId,
-          },
-        },
-        200,
+        { message: "Both userId and businessId are required", err: true },
+        400
       );
-    } catch (e: unknown) {
-      return c.json({ message: (e as Error).message, err: true }, 500);
     }
-  });
 
+    // 2. Verify Existence: Check if this user is actually associated with this business
+    const subscriber = await Subscriber.findOne({ userId, businessId }).lean();
+
+    if (!subscriber) {
+      return c.json(
+        { 
+          message: "User or Business ID not found, or user is not subscribed to this business", 
+          err: true 
+        }, 
+        404
+      );
+    }
+
+    // 3. Fetch Reward: Using loyaltyId as the field name based on your schema
+    const rewardEntry = await UserReward.findOne({
+      userId: userId,
+      loyaltyId: businessId,
+    }).lean();
+
+    // 4. Return Data: Default to 0 if the subscriber exists but no reward record is created yet
+    return c.json(
+      {
+        message: "User reward data fetched successfully",
+        err: false,
+        data: {
+          userId: userId,
+          businessId: businessId,
+          rewards: rewardEntry ? rewardEntry.rewards : 0,
+        },
+      },
+      200
+    );
+  } catch (e) {
+    return c.json({ message: e.message, err: true }, 500);
+  }
+});
 export default scriptRouter;

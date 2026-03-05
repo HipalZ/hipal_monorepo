@@ -197,7 +197,7 @@ const MemoizedCartItemHotel = ({ cartItem, hide }: CartItemProp) => {
       ) : (
         <EmptyCart />
       )}
-      {/* <InstructionPopup /> */}
+      <InstructionPopup />
     </>
   );
 };

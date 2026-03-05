@@ -1,8 +1,5 @@
 "use client";
-import {
-  type IService,
-  useGetServiceCategories,
-} from "@/components/hooks/useServicesHotel";
+import { useGetServiceCategories } from "@/components/hooks/useServicesHotel";
 import ServiceCategoryCard from "./ServiceCategoryCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import bell from "@/assets/hotel/bell.png";
@@ -13,12 +10,11 @@ import maintainance from "@/assets/hotel/maintainace_new.png";
 import frontoffice from "@/assets/hotel/Front_Office.png";
 import type { IMenuLayout } from "@/components/types/businessData";
 import { HomeIcon, MessageCircle, Search } from "lucide-react";
-import { TbHeartPlus } from "react-icons/tb";
 import { Button } from "@/components/ui/button";
 import { useHotelTemp } from "@/components/store/useHotelTemp";
 import SearchModal from "./SearchModal";
-import { useCallback, useMemo, useState } from "react";
-import { toast } from "react-toastify";
+import { useCallback, useState, useMemo } from "react";
+
 interface ServiceCategoriesSectionProps {
   businessId: string;
   menuId: IMenuLayout;
@@ -30,19 +26,54 @@ export default function ServiceCategoriesSection({
   menuId,
   room,
 }: ServiceCategoriesSectionProps) {
-  const { categoriesLoading, categoriesData } =
-    useGetServiceCategories(businessId);
+  const { categoriesLoading, categoriesData } = useGetServiceCategories(businessId);
   const isOpenChat = useHotelTemp((s) => s.isOpenChat);
   const setIsOpenChat = useHotelTemp((s) => s.setIsOpenChat);
   const [showSearchModal, setShowSearchModal] = useState(false);
 
-  const handleOpenSearch = useCallback(() => {
-    setShowSearchModal(true);
-  }, []);
+  // Memoize static configuration objects to prevent unnecessary re-renders
+  const config = useMemo(() => ({
+    categoryImages: {
+      FOOD: foodDome,
+      HOUSE_KEEPING: housekeeping,
+      FRONT_OFFICE: frontoffice,
+      OTHERS: maintainance,
+    },
+    categoryDescriptions: {
+      FOOD: "Order Delicious Food",
+      FRONT_OFFICE: "24*7 Support",
+      HOUSE_KEEPING: "cleaning services",
+      OTHERS: "Repairs & fixes",
+    },
+    nameMap: {
+      FOOD: "ORDER_FOOD",
+      MAINTENANCE: "MAINTAINANCE",
+    } as Record<string, string>,
+    primaryKeys: ["ORDER_FOOD", "HOUSE_KEEPING", "MAINTAINANCE", "FRONT_OFFICE"],
+  }), []);
 
-  const handleCloseSearch = useCallback(() => {
-    setShowSearchModal(false);
-  }, []);
+  // Stable callbacks for UI actions
+  const handleOpenSearch = useCallback(() => setShowSearchModal(true), []);
+  const handleCloseSearch = useCallback(() => setShowSearchModal(false), []);
+  
+  const toggleChat = useCallback(() => {
+    setIsOpenChat(!isOpenChat);
+  }, [isOpenChat, setIsOpenChat]);
+
+  // Memoize the data transformation and filtering
+  const { primary, others } = useMemo(() => {
+    if (!categoriesData) return { primary: [], others: [] };
+
+    const transformed = categoriesData.map((cat) => ({
+      ...cat,
+      name: config.nameMap[cat.name] || cat.name,
+    }));
+
+    return {
+      primary: transformed.filter((cat) => config.primaryKeys.includes(cat.name)),
+      others: transformed.filter((cat) => !config.primaryKeys.includes(cat.name)),
+    };
+  }, [categoriesData, config]);
 
   if (categoriesLoading) {
     return (
@@ -57,41 +88,10 @@ export default function ServiceCategoriesSection({
     );
   }
 
-  if (!categoriesData || categoriesData.length === 0) {
-    return null;
-  }
-
-  const categoryImages = {
-    FOOD: foodDome,
-    HOUSE_KEEPING: housekeeping,
-    FRONT_OFFICE: frontoffice,
-    OTHERS: maintainance,
-  };
-
-  const categoryDescriptions = {
-    FOOD: "Order Delicious Food",
-    FRONT_OFFICE: "24*7 Support",
-    HOUSE_KEEPING: "cleaning services",
-    OTHERS: "Repairs & fixes",
-  };
-
-  const primaryCategories = [
-    "ORDER_FOOD",
-    "HOUSE_KEEPING",
-    "MAINTAINANCE",
-    "FRONT_OFFICE",
-  ];
-
-  // Separate the categories
-  const primary = categoriesData.filter((cat) =>
-    primaryCategories.includes(cat.name),
-  );
-  const others = categoriesData.filter(
-    (cat) => !primaryCategories.includes(cat.name),
-  );
+  if (!categoriesData || categoriesData.length === 0) return null;
 
   return (
-    <div className="relative ">
+    <div className="relative">
       <div className="flex items-center justify-between mb-4 mr-2">
         <section>
           <span className="poppins-regular flex gap-1 items-center text-gray-400 text-[0.9rem]">
@@ -103,21 +103,17 @@ export default function ServiceCategoriesSection({
           </span>
         </section>
         <div className="flex items-center gap-2">
-          {/* Search Button */}
           <Button
             onClick={handleOpenSearch}
             size="icon"
-            aria-label="Search services"
-            className="relative transition-colors rounded-full text-base-100 "
+            className="relative transition-colors rounded-full text-base-100"
           >
             <Search size={18} />
           </Button>
 
-          {/* Chat Button */}
           <Button
-            onClick={() => setIsOpenChat(!isOpenChat)}
+            onClick={toggleChat}
             size="icon"
-            aria-label="Chat with us"
             className="relative transition-colors rounded-full bg-green-700 text-white"
           >
             <MessageCircle />
@@ -125,16 +121,12 @@ export default function ServiceCategoriesSection({
               className="absolute top-0 right-0 w-2 h-2 rounded-full bg-green-700"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 20,
-                delay: 0.2,
-              }}
+              transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
             />
           </Button>
         </div>
       </div>
+
       <section className="flex justify-center">
         <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-4 mt-2 w-full">
           {primary.map((category) => (
@@ -142,14 +134,8 @@ export default function ServiceCategoriesSection({
               <ServiceCategoryCard
                 category={{
                   ...category,
-                  image:
-                    categoryImages[
-                      category.name as keyof typeof categoryImages
-                    ] || bell,
-                  description:
-                    categoryDescriptions[
-                      category.name as keyof typeof categoryDescriptions
-                    ] || "",
+                  image: config.categoryImages[category.name as keyof typeof config.categoryImages] || bell,
+                  description: config.categoryDescriptions[category.name as keyof typeof config.categoryDescriptions] || "",
                 }}
                 businessId={businessId}
                 menuId={menuId}
@@ -165,7 +151,7 @@ export default function ServiceCategoriesSection({
                   name: "MAINTAINANCE",
                   serviceIds: others.flatMap((c) => c.serviceIds),
                   image: maintainance,
-                  description: categoryDescriptions.OTHERS,
+                  description: config.categoryDescriptions.OTHERS,
                 }}
                 businessId={businessId}
               />
@@ -173,14 +159,13 @@ export default function ServiceCategoriesSection({
           )}
         </div>
       </section>
-      {categoriesData && (
-        <SearchModal
-          show={showSearchModal}
-          onClose={handleCloseSearch}
-          businessId={businessId}
-          categories={categoriesData}
-        />
-      )}
+
+      <SearchModal
+        show={showSearchModal}
+        onClose={handleCloseSearch}
+        businessId={businessId}
+        categories={categoriesData}
+      />
     </div>
   );
 }
