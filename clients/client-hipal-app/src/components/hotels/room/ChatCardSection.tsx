@@ -121,9 +121,9 @@ const ChatCardSection = ({
     setIsOpenChat(!isOpenChat);
   };
 
-  useEffect(() => {
-    updateTheme(themeData);
-  }, [themeData]);
+  // useEffect(() => {
+  //   updateTheme(themeData);
+  // }, [themeData]);
 
   const handleSelectService = (service: QuickService) => {
     console.log("Selected service:", service);
@@ -238,15 +238,15 @@ const ChatCardSection = ({
                 <Image
                   src={serviceImage || "/placeholder.svg"}
                   alt={service.name}
-                  width={40}
-                  height={40}
+                  width={96}
+                  height={96}
                   className="w-full h-full absolute -bottom-4 object-cover"
                 />
                 <div className="relative z-10">
                   <h4
                     className={cn(
-                      "text-xs uppercase leading-3 pt-2 px-1 h-[4.5rem] text-center !font-semibold text-gray-500 poppins-regular",
-                      service.isCheckout && "text-[0.625rem] text-primary",
+                      "text-[0.625rem] uppercase leading-3 pt-1 px-1 h-[4.5rem] text-center !font-semibold text-gray-500 poppins-regular",
+                      service.isCheckout && "text-primary",
                     )}
                   >
                     {service.name}
