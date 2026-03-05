@@ -76,7 +76,7 @@ export default function ServiceCategoriesSection({
   };
 
   const primaryCategories = [
-    "FOOD",
+    "ORDER_FOOD",
     "HOUSE_KEEPING",
     "MAINTAINANCE",
     "FRONT_OFFICE",
