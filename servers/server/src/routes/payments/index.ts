@@ -1443,7 +1443,10 @@ const paymentsRouter = new Hono()
       const { response } = requestData;
       const { merchantId } = c.req.param();
       const { userId, couponId, businessId, tableName, paidAmount, netCoinz } = c.req.query();
-
+      const existingLoyalty = await LoyaltySettings.findOne({
+        businessId: businessId,
+        isActive: true,
+      }).select('loyaltyId');
       const merchant = await BusinessSettings.findOne({
         razorpayMerchantId: merchantId,
       }).select('razorpayKeySecret');
@@ -1460,9 +1463,9 @@ const paymentsRouter = new Hono()
 
       const signature = createHmac('sha256', RAZORPAY_SECRET).update(`${razorpay_order_id}|${razorpay_payment_id}`).digest('hex');
 
-      if (signature === razorpay_signature) {
+      if (signature === razorpay_signature && existingLoyalty?.loyaltyId) {
         // TODO monad integration
-        await triggerBlockchain(businessId, userId, Math.round(Number(netCoinz)), razorpay_order_id);
+        await triggerBlockchain(businessId, existingLoyalty?.loyaltyId, userId, Math.round(Number(netCoinz)), razorpay_order_id);
         return c.json({
           err: false,
           message: 'Payment is valid',
@@ -2224,13 +2227,16 @@ const paymentsRouter = new Hono()
                     await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment, waiterName }, { new: true, session });
                     console.log('triggered order 3');
                     // TODO monad integration
-                    await monadHelperFunction({
-                      businessId: order.businessId,
-                      userId: order.userId,
-                      orderId: order.order_id,
-                      claimedCoinz: roundedClaimedCoins,
-                      earnedCoinz: finalCashBack,
-                    });
+                    if (existingLoyalty?.loyaltyId) {
+                      await monadHelperFunction({
+                        businessId: order.businessId,
+                        loyaltyId: existingLoyalty.loyaltyId,
+                        userId: order.userId,
+                        orderId: order.order_id,
+                        claimedCoinz: roundedClaimedCoins,
+                        earnedCoinz: finalCashBack,
+                      });
+                    }
                     return c.json({
                       message: 'Order accepted successfully',
                       err: false,
@@ -2418,14 +2424,16 @@ const paymentsRouter = new Hono()
                       );
 
                       await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment, waiterName }, { new: true, session });
-                      // TODO monad integration
-                      await monadHelperFunction({
-                        businessId: order.businessId,
-                        userId: order.userId,
-                        orderId: order.order_id,
-                        claimedCoinz: roundedClaimedCoins,
-                        earnedCoinz: finalCashBack,
-                      });
+                      if (existingLoyalty?.loyaltyId) {
+                        // TODO monad integration
+                        await monadHelperFunction({
+                          businessId: order.businessId,
+                          userId: order.userId,
+                          orderId: order.order_id,
+                          claimedCoinz: roundedClaimedCoins,
+                          earnedCoinz: finalCashBack,
+                        });
+                      }
                     }
                   }
                   // dont place monad here
@@ -2896,6 +2904,7 @@ const paymentsRouter = new Hono()
               // TODO monad integration
               await monadHelperFunction({
                 businessId: order.businessId,
+                loyaltyId: existingLoyalty?.loyaltyId,
                 userId: order.userId,
                 orderId: order.order_id,
                 claimedCoinz: roundedClaimedCoins,

@@ -278,7 +278,9 @@ export default function ServiceCategoryCard({
 
   // Render category name with proper formatting
   const formatCategoryName = (name: string) => {
-    return name.replace(/[^a-zA-Z0-9 ]/g, " ").toLowerCase();
+    if (!name) return "";
+    const spaced = name.replace(/_/g, ' ').toLowerCase();
+    return spaced.charAt(0).toUpperCase() + spaced.slice(1);
   };
 
   const dynamicHeightAndWidth = useMemo(() => {
@@ -348,7 +350,7 @@ export default function ServiceCategoryCard({
             <BottomPopUp hide show={servicePopup} onClose={closeServicePopup}>
               <div className="p-4 relative max-h-[90dvh] overflow-auto hide-scrollbar">
                 <h2 className="mb-4 text-xl font-bold text-primary">
-                  {category.name} Services
+                  {formatCategoryName(category.name)} Services
                 </h2>
 
                 {/* Selected Services Counter */}
