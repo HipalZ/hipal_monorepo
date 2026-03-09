@@ -2702,14 +2702,14 @@ const scriptRouter = new Hono()
       });
     },
   )
-  .get("/get_all_users_data", async (c) => {
+  .get('/get_all_users_data', async (c) => {
     try {
-      const pageNumber = Number(c.req.query("pageNumber")) || 1;
-      const limit = Number(c.req.query("limit")) || 50;
-      const businessId = c.req.query("businessId");
+      const pageNumber = Number(c.req.query('pageNumber')) || 1;
+      const limit = Number(c.req.query('limit')) || 50;
+      const businessId = c.req.query('businessId');
 
       if (!businessId) {
-        return c.json({ message: "businessId is required", err: true }, 400);
+        return c.json({ message: 'businessId is required', err: true }, 400);
       }
 
       const skip = (pageNumber - 1) * limit;
@@ -2717,12 +2717,13 @@ const scriptRouter = new Hono()
       const loyaltyUsers = await UserReward.find({
         loyaltyId: businessId,
       })
+        .populate('userId', 'name phone')
         .skip(skip)
         .limit(limit);
 
       return c.json(
         {
-          message: "Users data fetched successfully",
+          message: 'Users data fetched successfully',
           err: false,
           page: pageNumber,
           limit: limit,
@@ -2731,20 +2732,17 @@ const scriptRouter = new Hono()
         200,
       );
     } catch (e) {
-      console.log("e");
+      console.log('e');
     }
   })
-  .get("/get_user_rewards", async (c) => {
+  .get('/get_user_rewards', async (c) => {
     try {
-      const userId = c.req.query("userId");
-      const businessId = c.req.query("businessId");
+      const userId = c.req.query('userId');
+      const businessId = c.req.query('businessId');
 
       // 1. Basic Validation: Check if query parameters are present
       if (!userId || !businessId) {
-        return c.json(
-          { message: "Both userId and businessId are required", err: true },
-          400,
-        );
+        return c.json({ message: 'Both userId and businessId are required', err: true }, 400);
       }
 
       // 2. Verify Existence: Check if this user is actually associated with this business
@@ -2756,8 +2754,7 @@ const scriptRouter = new Hono()
       if (!subscriber) {
         return c.json(
           {
-            message:
-              "User or Business ID not found, or user is not subscribed to this business",
+            message: 'User or Business ID not found, or user is not subscribed to this business',
             err: true,
           },
           404,
@@ -2773,7 +2770,7 @@ const scriptRouter = new Hono()
       // 4. Return Data: Default to 0 if the subscriber exists but no reward record is created yet
       return c.json(
         {
-          message: "User reward data fetched successfully",
+          message: 'User reward data fetched successfully',
           err: false,
           data: {
             userId: userId,
