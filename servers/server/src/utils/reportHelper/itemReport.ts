@@ -186,15 +186,22 @@ export async function buildItemSheet(
       }
       const zoneIdStr = zoneId || "UNASSIGNED_ZONE";
 
+      const DELETED_DISH_LABEL = "Not found or deleted dish";
+      const DELETED_DISH_ID = "deleted";
+
       for (let i = 0; i < billItems.length; i++) {
         const bi = billItems[i];
         const b = result.items[i];
-        const itemName = bi.dish?.name ?? "";
         const dish = bi.dish;
-        const dishId =
-          typeof dish._id === "string"
-            ? dish._id
-            : (dish._id as { toString(): string }).toString();
+        const isDeletedOrMissing = !dish || dish._id == null || dish._id === undefined;
+        const itemName = isDeletedOrMissing
+          ? DELETED_DISH_LABEL
+          : (dish.name ?? DELETED_DISH_LABEL);
+        const dishId = isDeletedOrMissing
+          ? DELETED_DISH_ID
+          : typeof dish!._id === "string"
+            ? dish!._id
+            : (dish!._id as { toString(): string }).toString();
 
         const kitchenId = resolveKitchenId(
           dishId,
@@ -475,16 +482,23 @@ export function aggregateBillItems(
       const zoneId = getZoneId(payment);
       const zoneIdStr = zoneId || "UNASSIGNED";
 
+      const DELETED_DISH_LABEL = "Not found or deleted dish";
+      const DELETED_DISH_ID = "deleted";
+
       for (let i = 0; i < billItems.length; i++) {
         const item = billItems[i];
         const b = result.items[i];
         const dish = item.dish;
-        if (!dish || !dish._id) continue;
-
-        const dishId =
-          typeof dish._id === "string"
-            ? dish._id
-            : (dish._id as { toString(): string }).toString();
+        const isDeletedOrMissing = !dish || dish._id == null || dish._id === undefined;
+        const dishId = isDeletedOrMissing
+          ? DELETED_DISH_ID
+          : typeof dish!._id === "string"
+            ? dish!._id
+            : (dish!._id as { toString(): string }).toString();
+        const itemName = isDeletedOrMissing
+          ? DELETED_DISH_LABEL
+          : (dish!.name ?? DELETED_DISH_LABEL);
+        const categoryId = isDeletedOrMissing ? null : (dish!.categoryIds?.[0] ?? null);
 
         const kitchenId = resolveKitchenId(
           dishId,
@@ -496,8 +510,8 @@ export function aggregateBillItems(
 
         if (!acc[key]) {
           acc[key] = {
-            categoryId: dish.categoryIds?.[0] || null,
-            itemName: dish.name ?? "",
+            categoryId,
+            itemName,
             itemCount: 0,
             grossAmount: 0,
             amount: 0,
