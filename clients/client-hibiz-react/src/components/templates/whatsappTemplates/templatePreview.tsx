@@ -21,23 +21,59 @@ const MemoTemplatePreview = () => {
   const secondButtonEnable = useWhatsapp((s) => s.secondButtonEnable);
   const firstActionType = useWhatsapp((s)=>s.firstActionType)
   const secondActionType = useWhatsapp((s)=>s.secondActionType)
-  const renderBodyText = () => {
-    if (typeof bodyText !== 'string') {
-      return <p className="text-red-500">{bodyText}</p>;
-    }
+  const parseWhatsappFormatting = (text: string) => {
+    const parts: React.ReactNode[] = [];
+    let key = 0;
 
-    return bodyText.split(/(\{\{\d+\}\})/).map((part: string, index: number) => {
-      const match = part.match(/\{\{(\d+)\}\}/);
-      if (match) {
-        const varIndex = Number.parseInt(match[1]) - 1;
-        return (
-          <span key={index.toString()} className="break-words text-blue-600">
-            {displayBodyVariableSequence[varIndex] || part}
+    const regex = /(\*[^*]+\*|_[^_]+_|~[^~]+~|`[^`]+`)/g;
+    const segments = text.split(regex);
+
+    for (const segment of segments) {
+      if (!segment) continue;
+
+      if (/^\*[^*]+\*$/.test(segment)) {
+        parts.push(
+          <strong key={key++} className="font-semibold">
+            {segment.slice(1, -1)}
+          </strong>
+        );
+      } else if (/^_[^_]+_$/.test(segment)) {
+        parts.push(
+          <em key={key++} className="italic">
+            {segment.slice(1, -1)}
+          </em>
+        );
+      } else if (/^~[^~]+~$/.test(segment)) {
+        parts.push(
+          <span key={key++} className="line-through">
+            {segment.slice(1, -1)}
           </span>
         );
+      } else if (/^`[^`]+`$/.test(segment)) {
+        parts.push(
+          <code key={key++} className="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm">
+            {segment.slice(1, -1)}
+          </code>
+        );
+      } else {
+        parts.push(segment);
       }
-      return part;
+    }
+
+    return parts;
+  };
+
+  const renderBodyText = () => {
+    if (typeof bodyText !== 'string') {
+      return <p className="text-red-500">{String(bodyText)}</p>;
+    }
+
+    const textWithVariables = bodyText.replace(/\{\{(\d+)\}\}/g, (_, num) => {
+      const varIndex = Number.parseInt(num) - 1;
+      return displayBodyVariableSequence[varIndex] || `{{${num}}}`;
     });
+
+    return parseWhatsappFormatting(textWithVariables);
   };
 
   return (
