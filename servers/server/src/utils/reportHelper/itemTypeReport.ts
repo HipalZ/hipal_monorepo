@@ -54,6 +54,31 @@ export function aggregateByDishType(payments: Payment[]): DishTypeAggregate[] {
       const item = billItems[i];
       const b = result.items[i];
       const dish = item.dish;
+      const isOpenItem = Boolean(item.isOpenItem);
+
+      if (isOpenItem) {
+        const type = "Open Item";
+        if (!map[type]) {
+          map[type] = {
+            type,
+            itemCount: 0,
+            grossAmount: 0,
+            discount: 0,
+            gst: 0,
+            serviceCharge: 0,
+            tax: 0,
+            netSales: 0,
+          };
+        }
+        map[type].itemCount += b.quantity;
+        map[type].grossAmount += b.grossItemValue;
+        map[type].discount += b.itemDiscount;
+        map[type].gst += b.itemGST;
+        map[type].serviceCharge += b.itemServiceCharge;
+        map[type].tax += b.totalTax;
+        map[type].netSales += b.finalItemTotal;
+        continue;
+      }
 
       if (!dish || !dish.dishTypes || dish.dishTypes.length === 0) continue;
 

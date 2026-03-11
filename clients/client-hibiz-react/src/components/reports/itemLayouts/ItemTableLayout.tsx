@@ -53,7 +53,8 @@ const highlightText = (text: string, query: string | undefined): ReactNode => {
 const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTableLayoutProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const { totals, topItem, lowestItem, kitchenSummary, topKitchen, itemsByKitchen } = useMemo(() => {
+  const { totals, topItem, lowestItem, kitchenSummary, topKitchen, itemsByKitchen, enriched } = useMemo(() => {
+    const emptyEnriched: (ItemReport & { netRevenue: number })[] = [];
     if (!business.items || business.items.length === 0) {
       return {
         totals: { qty: 0, amount: 0, discount: 0, tax: 0, net: 0 },
@@ -76,16 +77,12 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
           kitchenName: string;
           items: (ItemReport & { netRevenue: number })[];
         }[],
+        enriched: emptyEnriched,
       };
     }
 
     const enriched = business.items.map((item) => {
-      const netRevenue = calculateNetRevenue(
-        item.amount,
-        item.discount,
-        item.tax,
-        item.totalSales,
-      );
+      const netRevenue = calculateNetRevenue(item.amount, item.discount, item.tax, item.totalSales);
       return { ...item, netRevenue };
     });
 
@@ -123,8 +120,8 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
     > = {};
 
     for (const it of enriched) {
-      const kid = (it as any).kitchenId || 'unknown';
-      const name = kitchenData.find((k) => k._id === kid)?.name || 'Unknown Kitchen';
+      const kid = it.kitchenId ?? 'unknown';
+      const name = it.kitchenName ?? kitchenData.find((k) => k._id === kid)?.name ?? 'Unknown Kitchen';
 
       if (!kitchenMap[kid]) {
         kitchenMap[kid] = {
@@ -160,7 +157,7 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
       }
     }
 
-    return { totals, topItem: top, lowestItem: low, kitchenSummary, topKitchen, itemsByKitchen };
+    return { totals, topItem: top, lowestItem: low, kitchenSummary, topKitchen, itemsByKitchen, enriched };
   }, [business.items, kitchenData]);
 
   return (
@@ -192,7 +189,7 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
                 <TableCell className="text-right font-semibold">
                   <div className="flex flex-col items-end gap-0.5">
                     <span className="truncate">{topItem.itemName}</span>
-                    <span className="text-muted-foreground text-[11px]">{formatCurrency((topItem as any).netRevenue as number)}</span>
+                    <span className="text-muted-foreground text-[11px]">{formatCurrency(topItem?.netRevenue ?? 0)}</span>
                   </div>
                 </TableCell>
               </TableRow>
@@ -204,7 +201,7 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
                 <TableCell className="text-right font-semibold">
                   <div className="flex flex-col items-end gap-0.5">
                     <span className="truncate">{lowestItem.itemName}</span>
-                    <span className="text-muted-foreground text-[11px]">{formatCurrency((lowestItem as any).netRevenue as number)}</span>
+                    <span className="text-muted-foreground text-[11px]">{formatCurrency(lowestItem?.netRevenue ?? 0)}</span>
                   </div>
                 </TableCell>
               </TableRow>
@@ -213,8 +210,8 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
         </Table>
       </div>
 
-      {/* Kitchen-wise summary */}
-      {kitchenSummary.length > 0 && (
+      {/* Kitchen-wise summary (only when report is kitchen-wise and we have kitchen data) */}
+      {business.reportMode === 'kitchen' && kitchenSummary.length > 0 && (
         <div className="w-full max-w-xl rounded-md border text-xs md:text-sm">
           <Table>
             <TableHeader>
@@ -244,25 +241,114 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
         </div>
       )}
 
-      {/* Printable / detailed content grouped by kitchen */}
+      {/* Printable / detailed content: zone-wise (single table) or kitchen-wise (grouped) */}
       <div ref={contentRef} className="rounded-md border">
         {/* Print Header - Only visible when printing */}
         <div className="hidden border-b p-6 print:block">
           <h1 className="text-center text-2xl font-bold">Item Report</h1>
           <p className="text-muted-foreground mt-2 text-center">Business: {business.businessName || 'N/A'}</p>
-          <p className="text-muted-foreground text-center">Generated on: {new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}</p>
+          <p className="text-muted-foreground text-center">
+            Generated on: {new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}
+          </p>
         </div>
 
-        {itemsByKitchen.map((kitchen) => (
-          <div key={kitchen.kitchenId} className="border-t first:border-t-0">
-            {/* Kitchen header row */}
-            <div className="bg-muted/60 flex items-center justify-between px-4 py-2">
-              <span className="text-sm font-semibold">Kitchen: {kitchen.kitchenName}</span>
-              <span className="text-muted-foreground text-xs">
-                {kitchen.items.length} item{kitchen.items.length !== 1 ? 's' : ''}
-              </span>
+        {business.reportMode === 'zone' ? (
+          <div className="border-t first:border-t-0">
+            <div className="bg-muted/60 px-4 py-2">
+              <span className="text-sm font-semibold">By area (zone-wise)</span>
             </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="font-semibold">Item Name</TableHead>
+                  <TableHead className="text-center font-semibold">Quantity</TableHead>
+                  <TableHead className="font-semibold">Area(s)</TableHead>
+                  <TableHead className="text-right font-semibold">Amount</TableHead>
+                  <TableHead className="text-right font-semibold">Discount</TableHead>
+                  <TableHead className="text-right font-semibold">Tax</TableHead>
+                  <TableHead className="text-right font-semibold">Net Revenue</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {enriched.map((item, index) => (
+                  <TableRow key={`${item.categoryId}-${item.itemName}-${index}-zone`} className="hover:bg-muted/50 print:hover:bg-transparent">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <Package2 className="text-muted-foreground h-4 w-4" />
+                        <span className="max-w-[200px] truncate">{highlightText(item.itemName, searchQuery)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className="print:border-gray-400">
+                        {formatNumber(item.itemCount)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">{item.zoneNames && item.zoneNames.length > 0 ? item.zoneNames.join(', ') : '—'}</TableCell>
+                    <TableCell className="text-right font-semibold text-green-600 print:text-black">{formatCurrency(item.amount)}</TableCell>
+                    <TableCell className="text-right font-semibold text-orange-600 print:text-black">{formatCurrency(item.discount)}</TableCell>
+                    <TableCell className="text-right font-semibold text-blue-600 print:text-black">{formatCurrency(item.tax)}</TableCell>
+                    <TableCell className="text-right text-lg font-bold print:text-black">
+                      {formatCurrency(calculateNetRevenue(item.amount, item.discount, item.tax, item.totalSales))}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : business.reportMode === 'kitchen' ? (
+          itemsByKitchen.map((kitchen) => (
+            <div key={kitchen.kitchenId} className="border-t first:border-t-0">
+              {/* Kitchen header row */}
+              <div className="bg-muted/60 flex items-center justify-between px-4 py-2">
+                <span className="text-sm font-semibold">Kitchen: {kitchen.kitchenName}</span>
+                <span className="text-muted-foreground text-xs">
+                  {kitchen.items.length} item{kitchen.items.length !== 1 ? 's' : ''}
+                </span>
+              </div>
 
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-semibold">Item Name</TableHead>
+                    <TableHead className="text-center font-semibold">Quantity</TableHead>
+                    <TableHead className="text-right font-semibold">Amount</TableHead>
+                    <TableHead className="text-right font-semibold">Discount</TableHead>
+                    <TableHead className="text-right font-semibold">Tax</TableHead>
+                    <TableHead className="text-right font-semibold">Net Revenue</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {kitchen.items.map((item, index) => (
+                    <TableRow
+                      key={`${item.categoryId}-${item.itemName}-${index}-${kitchen.kitchenId}`}
+                      className="hover:bg-muted/50 print:hover:bg-transparent"
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <Package2 className="text-muted-foreground h-4 w-4" />
+                          <span className="max-w-[200px] truncate">{highlightText(item.itemName, searchQuery)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="print:border-gray-400">
+                          {formatNumber(item.itemCount)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold text-green-600 print:text-black">{formatCurrency(item.amount)}</TableCell>
+                      <TableCell className="text-right font-semibold text-orange-600 print:text-black">{formatCurrency(item.discount)}</TableCell>
+                      <TableCell className="text-right font-semibold text-blue-600 print:text-black">{formatCurrency(item.tax)}</TableCell>
+                      <TableCell className="text-right text-lg font-bold print:text-black">
+                        {formatCurrency(calculateNetRevenue(item.amount, item.discount, item.tax, item.totalSales))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ))
+        ) : (
+          /* Simple item report (no zone/kitchen): single table */
+          <div className="border-t first:border-t-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -275,11 +361,8 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {kitchen.items.map((item, index) => (
-                  <TableRow
-                    key={`${item.categoryId}-${item.itemName}-${index}-${kitchen.kitchenId}`}
-                    className="hover:bg-muted/50 print:hover:bg-transparent"
-                  >
+                {enriched.map((item, index) => (
+                  <TableRow key={`${item.categoryId}-${item.itemName}-${index}`} className="hover:bg-muted/50 print:hover:bg-transparent">
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <Package2 className="text-muted-foreground h-4 w-4" />
@@ -295,14 +378,14 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
                     <TableCell className="text-right font-semibold text-orange-600 print:text-black">{formatCurrency(item.discount)}</TableCell>
                     <TableCell className="text-right font-semibold text-blue-600 print:text-black">{formatCurrency(item.tax)}</TableCell>
                     <TableCell className="text-right text-lg font-bold print:text-black">
-                      {formatCurrency(calculateNetRevenue(item.amount, item.discount, item.tax, item.totalSales))}
+                      {formatCurrency(item.netRevenue ?? calculateNetRevenue(item.amount, item.discount, item.tax, item.totalSales))}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
-        ))}
+        )}
 
         {/* Print Footer - Only visible when printing */}
         <div className="hidden border-t p-6 print:block">
@@ -310,7 +393,9 @@ const MemoItemTableLayout = ({ business, searchQuery, kitchenData = [] }: ItemTa
             <span>Total Items: {business.items.length}</span>
             <span>
               Total Revenue:{' '}
-              {formatCurrency(business.items.reduce((sum, item) => sum + calculateNetRevenue(item.amount, item.discount, item.tax, item.totalSales), 0))}
+              {formatCurrency(
+                business.items.reduce((sum, item) => sum + calculateNetRevenue(item.amount, item.discount, item.tax, item.totalSales), 0),
+              )}
             </span>
           </div>
         </div>

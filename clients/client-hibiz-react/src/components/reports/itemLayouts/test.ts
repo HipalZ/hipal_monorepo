@@ -1,0 +1,340 @@
+import { Hono } from "hono";
+import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
+import * as ExcelJS from "exceljs";
+
+import {
+  Payment,
+  Business,
+  Kitchen,
+  DishZoneKitchen,
+  Table,
+  Zone,
+} from "@hi/db-models";
+import { formatDateToIST } from "../../utils/reportHelper/dateFormater";
+
+import { buildNetAndSalesSheets } from "../../utils/reportHelper/salesReport";
+import { buildCategorySheet } from "../../utils/reportHelper/categoryReport";
+import {
+  buildItemSheet,
+  type DishZoneKitchenMapping,
+} from "../../utils/reportHelper/itemReport";
+import { buildAddOnSheet } from "../../utils/reportHelper/addOnReport";
+import { buildDiscountSheet } from "../../utils/reportHelper/discountReport";
+import { buildServiceChargeSheet } from "../../utils/reportHelper/serviceChargeReport";
+import type { BaseContext, AnyPayment } from "../../utils/reportHelper/types";
+import { filterPaymentsForItemReports } from "../../utils/reportHelper/itemFinancialCalculator";
+import { buildConsolidatedSheet } from "../../utils/reportHelper/cansolidateReport";
+import { buildOpenItemSaleSheet } from "../../utils/reportHelper/buildOpenItemSaleSheet";
+import { buildDishTypeSheetFromContext } from "../../utils/reportHelper/itemTypeReport";
+import { buildItemVariantSheetFromContext } from "../../utils/reportHelper/itemVariantReport";
+import { buildParentCategorySheet } from "../../utils/reportHelper/parentCategoryReport";
+import { buildDeletedItemsSheet } from "../../utils/reportHelper/deletedItemReport";
+import {
+  buildItemBySectionGroupedFromContext,
+  buildItemBySectionSheet,
+} from "../../utils/reportHelper/itemBySectionReport";
+
+const bodySchema = z.object({
+  businessIds: z.array(z.string()).min(1),
+  from: z.number(),
+  to: z.number(),
+});
+
+const unifiedExcelRouter = new Hono().post(
+  "/",
+  zValidator("json", bodySchema),
+  async (c) => {
+    const { businessIds, from, to } = await c.req.json();
+
+    if (from > to) {
+      return c.json(
+        { err: true, data: null, message: "`from` must be ≤ `to`" },
+        400,
+      );
+    }
+
+    // 🔹 Base payments: populate billItems.dish so item/section/dish-type reports have dish details
+    const allPayments = (await Payment.find({
+      businessId: { $in: businessIds },
+      isDeleted: false,
+      date: { $gte: from, $lte: to },
+    })
+      .populate({ path: "userId", select: "name phone" })
+      .populate({ path: "billItems.dish" })
+      .lean()) as AnyPayment[];
+
+    // Same as item report & item-by-section: use item-eligible payments for all item/section sheets
+    const itemPayments = filterPaymentsForItemReports(allPayments);
+
+    // 🔹 Business names
+    const bizDocs = await Business.find({ _id: { $in: businessIds } })
+      .lean()
+      .select({ name: 1 });
+
+    const bizNameMap: Record<string, string> = {};
+    for (const b of bizDocs) {
+      bizNameMap[b._id.toString()] = b.name;
+    }
+
+    // 🔹 Kitchens (for item/kitchen reports)
+    const kitchenDocs = await Kitchen.find({
+      businessId: { $in: businessIds },
+    })
+      .lean()
+      .select({ name: 1, businessId: 1 });
+
+    const kitchenNameMapByBiz: Record<string, Record<string, string>> = {};
+    for (const k of kitchenDocs) {
+      const bizId = k.businessId.toString();
+      if (!kitchenNameMapByBiz[bizId]) kitchenNameMapByBiz[bizId] = {};
+      kitchenNameMapByBiz[bizId][k._id.toString()] = k.name;
+    }
+
+    // 🔹 Fetch DishZoneKitchen mappings for item report (kitchen routing)
+    const dishZoneKitchenMappings = (await DishZoneKitchen.find({
+      businessId: { $in: businessIds },
+    })
+      .lean()
+      .select({
+        dishId: 1,
+        zoneId: 1,
+        kitchenId: 1,
+        businessId: 1,
+      })) as DishZoneKitchenMapping[];
+
+    // 🔹 Build table name to zoneId lookup map
+    const tableNames = Array.from(
+      new Set(
+        allPayments
+          .map((p) => (p as AnyPayment & { tableName?: string }).tableName)
+          .filter(Boolean),
+      ),
+    );
+    const tables = await Table.find({
+      businessId: { $in: businessIds },
+      name: { $in: tableNames },
+    })
+      .lean()
+      .select({ name: 1, businessId: 1, zoneId: 1, internalZoneId: 1 });
+
+    const tableToZoneMap: Record<string, Record<string, string>> = {};
+    for (const table of tables) {
+      const bizId = table.businessId.toString();
+      if (!tableToZoneMap[bizId]) {
+        tableToZoneMap[bizId] = {};
+      }
+      const zoneId =
+        table.internalZoneId?.toString() || table.zoneId?.toString() || null;
+      if (zoneId && table.name) {
+        tableToZoneMap[bizId][table.name] = zoneId;
+      }
+    }
+
+    // Helper to get zoneId from payment
+    const getZoneIdForExcel = (payment: AnyPayment): string | null => {
+      const p = payment as AnyPayment & {
+        zoneId?: string | { toString(): string };
+        table?: { zoneId?: string | { toString(): string } };
+        tableName?: string;
+      };
+      if (p.zoneId) {
+        return typeof p.zoneId === "string" ? p.zoneId : p.zoneId.toString();
+      }
+      if (p.table?.zoneId) {
+        return typeof p.table.zoneId === "string"
+          ? p.table.zoneId
+          : p.table.zoneId.toString();
+      }
+      const bizId =
+        typeof (payment as AnyPayment).businessId === "string"
+          ? (payment as AnyPayment).businessId
+          : (payment as AnyPayment).businessId.toString();
+      return tableToZoneMap[bizId]?.[p.tableName || ""] || null;
+    };
+
+    // Zone names for Item by Areas (section-wise) sheet
+    const zoneIds = new Set<string>();
+    for (const bizId of Object.keys(tableToZoneMap)) {
+      for (const zid of Object.values(tableToZoneMap[bizId])) {
+        zoneIds.add(zid);
+      }
+    }
+    for (const m of dishZoneKitchenMappings) {
+      const zid =
+        typeof m.zoneId === "string" ? m.zoneId : m.zoneId?.toString?.();
+      if (zid) zoneIds.add(zid);
+    }
+    const zoneDocs =
+      zoneIds.size > 0
+        ? await Zone.find({ _id: { $in: Array.from(zoneIds) } })
+            .lean()
+            .select({ name: 1 })
+        : [];
+    const zoneIdToName: Record<string, string> = {};
+    for (const z of zoneDocs) {
+      zoneIdToName[z._id.toString()] = z.name ?? z._id.toString();
+    }
+    for (const id of zoneIds) {
+      if (!zoneIdToName[id]) zoneIdToName[id] = id;
+    }
+
+    const kitchenIdToName: Record<string, string> = {};
+    for (const bizId of Object.keys(kitchenNameMapByBiz)) {
+      for (const [kid, name] of Object.entries(kitchenNameMapByBiz[bizId])) {
+        if (!kitchenIdToName[kid]) kitchenIdToName[kid] = name;
+      }
+    }
+
+    const ctx: BaseContext = {
+      businessIds,
+      from,
+      to,
+      allPayments,
+      bizNameMap,
+      kitchenNameMapByBiz,
+    };
+
+    // Context for item-related sheets (same set as standalone item report & item by section)
+    const ctxItem: BaseContext = {
+      ...ctx,
+      allPayments: itemPayments,
+    };
+
+    // 📗 ExcelJS workbook
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "HiPalz";
+    workbook.created = new Date();
+
+    // Track successful and failed reports
+    const reportStatus: {
+      succeeded: string[];
+      failed: Array<{ name: string; error: string }>;
+    } = {
+      succeeded: [],
+      failed: [],
+    };
+
+    // Helper function to safely execute report builders
+    const safeBuildReport = async (
+      reportName: string,
+      buildFn: () => Promise<void> | void,
+    ) => {
+      try {
+        await Promise.resolve(buildFn());
+        reportStatus.succeeded.push(reportName);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        console.error(`❌ Failed to build ${reportName}:`, errorMessage);
+        reportStatus.failed.push({ name: reportName, error: errorMessage });
+      }
+    };
+
+    // Build all reports with error handling
+    await safeBuildReport("Consolidated Sheet", () =>
+      buildConsolidatedSheet(workbook, ctx),
+    );
+
+    // 1) Net Sales + Sales Report
+    await safeBuildReport("Net Sales + Sales Report", () =>
+      buildNetAndSalesSheets(workbook, ctx),
+    );
+
+    // 2) Category Report
+    await safeBuildReport("Category Report", () =>
+      buildCategorySheet(workbook, ctx),
+    );
+
+    // 2.5) Parent Category Report
+    await safeBuildReport("Parent Category Report", () =>
+      buildParentCategorySheet(workbook, ctx),
+    );
+
+    // 3) Item Report (same as standalone: item-eligible payments, zone/kitchen routing)
+    await safeBuildReport("Item Report", () =>
+      buildItemSheet(
+        workbook,
+        ctxItem,
+        dishZoneKitchenMappings,
+        getZoneIdForExcel,
+      ),
+    );
+
+    // 3.5) Item Type Report (VEG/NON_VEG/etc. – same as standalone dish type report)
+    await safeBuildReport("Item Type Report", () =>
+      buildDishTypeSheetFromContext(workbook, ctxItem),
+    );
+
+    // 3.6) Item Variant Report (Item-wise Portion Sales – same as standalone)
+    await safeBuildReport("Item Variant Report", () =>
+      buildItemVariantSheetFromContext(workbook, ctxItem),
+    );
+
+    // 3.7) Item by Areas (section-wise: zone or kitchen – same as standalone item by section report)
+    await safeBuildReport("Item by Areas", () => {
+      const grouped = buildItemBySectionGroupedFromContext(
+        itemPayments,
+        businessIds,
+        from,
+        to,
+        bizNameMap,
+        tableToZoneMap,
+        zoneIdToName,
+        kitchenIdToName,
+        dishZoneKitchenMappings,
+      );
+      buildItemBySectionSheet(workbook, grouped);
+    });
+
+    // 4) AddOn Report
+    await safeBuildReport("AddOn Report", () => buildAddOnSheet(workbook, ctx));
+
+    // 5) Discount Report
+    await safeBuildReport("Discount Report", () =>
+      buildDiscountSheet(workbook, ctx),
+    );
+
+    // 6) Service Charge Report
+    await safeBuildReport("Service Charge Report", () =>
+      buildServiceChargeSheet(workbook, ctx),
+    );
+
+    // 7) Open Item Sale Report
+    await safeBuildReport("Open Item Sale Report", () =>
+      buildOpenItemSaleSheet(workbook, ctx),
+    );
+
+    await safeBuildReport("Delete Items report", () =>
+      buildDeletedItemsSheet(workbook, ctx),
+    );
+
+    // Log report status
+    if (reportStatus.failed.length > 0) {
+      console.warn("⚠️ Some reports failed to build:", reportStatus.failed);
+    }
+    console.log("✅ Successfully built reports:", reportStatus.succeeded);
+
+    // 🔚 Final write & response
+    const fromIST = formatDateToIST(from);
+    const toIST = formatDateToIST(to);
+    const filename = `test_${businessIds.join("_")}_${fromIST}_${toIST}.xlsx`;
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    c.header(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; charset=utf-8",
+    );
+    c.header(
+      "Content-Disposition",
+      `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(
+        filename,
+      )}`,
+    );
+
+    return c.body(buffer);
+  },
+);
+
+export default unifiedExcelRouter;

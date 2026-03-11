@@ -183,6 +183,8 @@ interface GetReportsPayload {
   businessIds: string[];
 }
 
+export type ItemReportMode = "zone" | "kitchen";
+
 export interface ItemReport {
   categoryId: string;
   itemName: string;
@@ -199,14 +201,50 @@ export interface ItemReport {
   tax: number;
   /** Final total (net + GST + service charge) — use for Net Revenue to reconcile with Sales */
   totalSales?: number;
+  /** When reportMode === 'zone': area(s) where dish was ordered */
+  zoneNames?: string[];
+  /** When reportMode === 'kitchen': kitchen id and name */
+  kitchenId?: string;
+  kitchenName?: string;
 }
 
 export interface BusinessItemReport {
   businessId: string;
-  form: string;
+  /** Date range start (API sends `from`) */
+  from: string;
   to: string;
   businessName: string;
+  /** 'zone' = zone-wise (dish + area); 'kitchen' = kitchen-wise (dish per kitchen) */
+  reportMode?: ItemReportMode;
   items: ItemReport[];
+}
+
+/** Item row from item-by-section API (section-scoped). */
+export interface ItemBySectionRow {
+  itemName: string;
+  categoryId: string;
+  itemCount: number;
+  amount: number;
+  discount: number;
+  tax: number;
+  totalSales: number;
+}
+
+/** One section (zone or kitchen) with items. */
+export interface ItemBySectionSection {
+  sectionId: string;
+  sectionName: string;
+  items: ItemBySectionRow[];
+}
+
+/** Per-business response from item-by-section API. */
+export interface BusinessItemBySectionReport {
+  businessId: string;
+  businessName: string;
+  from: string;
+  to: string;
+  reportFlow: "zone" | "kitchen";
+  sections: ItemBySectionSection[];
 }
 
 export const useItemReports = () => {
@@ -218,11 +256,37 @@ export const useItemReports = () => {
       const response = await apiRpc.report.item.$post({
         json: payload,
       });
-      const itemsData = await handleEnvelope(response);
-      if (!itemsData || !Array.isArray(itemsData)) {
+      const raw = await handleEnvelope(response);
+      if (!raw || !Array.isArray(raw)) {
         throw new Error("Invalid data format received");
       }
-      setItemReports((itemsData as BusinessItemReport[]) || []);
+      const itemsData = (raw as Record<string, unknown>[]).map(
+        (b): BusinessItemReport => ({
+          businessId: String(b.businessId ?? ""),
+          from: String(b.from ?? (b as { form?: string }).form ?? ""),
+          to: String(b.to ?? ""),
+          businessName: String(b.businessName ?? "Unknown"),
+          reportMode: (b.reportMode === "zone" || b.reportMode === "kitchen" ? b.reportMode : undefined) as ItemReportMode | undefined,
+          items: Array.isArray(b.items)
+            ? (b.items as Record<string, unknown>[]).map((it) => ({
+                categoryId: String(it.categoryId ?? ""),
+                itemName: String(it.itemName ?? ""),
+                itemCount: Number(it.itemCount ?? 0),
+                quantity: Number(it.quantity ?? it.itemCount ?? 0),
+                amount: Number(it.amount ?? 0),
+                discount: Number(it.discount ?? 0),
+                gst: it.gst != null ? Number(it.gst) : undefined,
+                serviceCharge: it.serviceCharge != null ? Number(it.serviceCharge) : undefined,
+                tax: Number(it.tax ?? 0),
+                totalSales: it.totalSales != null ? Number(it.totalSales) : undefined,
+                zoneNames: Array.isArray(it.zoneNames) ? (it.zoneNames as string[]) : undefined,
+                kitchenId: it.kitchenId != null ? String(it.kitchenId) : undefined,
+                kitchenName: it.kitchenName != null ? String(it.kitchenName) : undefined,
+              })) as ItemReport[]
+            : [],
+        }),
+      );
+      setItemReports(itemsData);
       const totalItems = itemsData.reduce(
         (acc, business) => acc + business.items.length,
         0,
@@ -301,6 +365,186 @@ export const useGetItemReportsCsv = () => {
     isPending,
     getItemReportsCsv: mutateAsync,
     resetError: reset,
+  };
+};
+
+export const useItemBySectionReports = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const setItemBySectionReports = useReports((s) => s.setItemBySectionReports);
+  const { handleEnvelope } = useApiErrorHandler();
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.item_by_section.$post({
+        json: payload,
+      });
+      const raw = await handleEnvelope(response);
+      if (!raw || !Array.isArray(raw)) {
+        throw new Error("Invalid data format received");
+      }
+      const data = (raw as Record<string, unknown>[]).map(
+        (b): BusinessItemBySectionReport => ({
+          businessId: String(b.businessId ?? ""),
+          from: String(b.from ?? (b as { form?: string }).form ?? ""),
+          to: String(b.to ?? ""),
+          businessName: String(b.businessName ?? "Unknown"),
+          reportFlow:
+            b.reportFlow === "zone" || b.reportFlow === "kitchen"
+              ? b.reportFlow
+              : "kitchen",
+          sections: Array.isArray(b.sections)
+            ? (b.sections as Record<string, unknown>[]).map((sec) => ({
+                sectionId: String(sec.sectionId ?? ""),
+                sectionName: String(sec.sectionName ?? ""),
+                items: Array.isArray(sec.items)
+                  ? (sec.items as Record<string, unknown>[]).map((it) => ({
+                      itemName: String(it.itemName ?? ""),
+                      categoryId: String(it.categoryId ?? ""),
+                      itemCount: Number(it.itemCount ?? 0),
+                      amount: Number(it.amount ?? 0),
+                      discount: Number(it.discount ?? 0),
+                      tax: Number(it.tax ?? 0),
+                      totalSales: Number(it.totalSales ?? 0),
+                    }))
+                  : [],
+              }))
+            : [],
+        }),
+      );
+      setItemBySectionReports(data);
+      const totalSections = data.reduce(
+        (acc, business) => acc + business.sections.length,
+        0,
+      );
+      toast.success(
+        `Item by section report generated! ${totalSections} section(s).`,
+      );
+      return response;
+    },
+    onError: (error) => {
+      console.error("Item by section report error:", error);
+      setOpenErrorModal(true);
+      setError("Failed to fetch item by section report. Please try again.");
+      toast.error("Failed to fetch report. Please try again.");
+    },
+  });
+
+  return {
+    isPending,
+    getItemBySectionReports: mutateAsync,
+    clearReportData: () => setItemBySectionReports([]),
+    resetError: reset,
+  };
+};
+
+export const useGetItemBySectionReportsExcel = () => {
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.item_by_section.download_xlsx.$post({
+        json: payload,
+      });
+      return response.blob();
+    },
+    onSuccess: async (blob, variables) => {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const fromStr = formatDate(Number(variables.from));
+      const toStr = formatDate(Number(variables.to));
+      const fileName = `item-by-areas ${fromStr} to ${toStr}.xlsx`;
+      link.href = url;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Item by Areas Excel downloaded.");
+    },
+    onError: () => {
+      toast.error("Failed to download Item by Areas Excel.");
+    },
+  });
+  return { isPending: isPending, getItemBySectionReportsExcel: mutateAsync };
+};
+
+/** Consolidated report block (per-business) - matches server ConsolidatedBusinessBlock */
+export interface ConsolidatedBusinessBlock {
+  businessId: string;
+  businessName: string;
+  from: string;
+  to: string;
+  summary: {
+    netSale: number;
+    grossSale: number;
+    totalOrdersPaid: number;
+    duesGetBack: number;
+    pendingDuesSubtotal: number;
+  };
+  parentCategories: Array<{
+    parentCategoryName: string;
+    subTotal: number;
+    discount: number;
+    netAmount: number;
+    tax: number;
+    grossAmount: number;
+  }>;
+  categories: Array<{
+    categoryName: string;
+    subTotal: number;
+    discountAmount: number;
+    netAmount: number;
+    tax: number;
+    grossAmount: number;
+  }>;
+  paymentTypes: Array<{
+    paymentType: string;
+    amount: number;
+    totalBills: number;
+  }>;
+  duesSettlement: Array<{
+    paymentType: string;
+    duesGetBackAmount: number;
+    totalBills: number;
+  }>;
+  dues: {
+    totalDues: number;
+    totalDuesGetBack: number;
+    duesOrdersCount: number;
+  };
+  complimentaryDiscounts: {
+    totalComplementary: number;
+    totalDiscountsAll: number;
+  };
+  tips: Array<{
+    paymentType: string;
+    amount: number;
+    totalBills: number;
+  }>;
+}
+
+export const useConsolidateReports = () => {
+  const setConsolidateReports = useReports((s) => s.setConsolidateReports);
+  const { handleEnvelope } = useApiErrorHandler();
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.consolidate.$post({
+        json: {
+          businessIds: payload.businessIds,
+          from: Number(payload.from),
+          to: Number(payload.to),
+        },
+      });
+      const data = await handleEnvelope(response);
+      setConsolidateReports((data as ConsolidatedBusinessBlock[]) || []);
+      toast.success("Consolidated report loaded.");
+      return response;
+    },
+    onError: () => {
+      toast.error("Failed to fetch consolidated report");
+    },
+  });
+  return {
+    isPending,
+    getConsolidateReports: mutateAsync,
+    clearReportData: () => setConsolidateReports([]),
   };
 };
 
@@ -927,7 +1171,7 @@ export const useGetDishTypeReportsCsv = () => {
   const { isPending, mutateAsync, reset } = useMutation({
     mutationFn: async (payload: GetReportsPayload) => {
       // Use the dedicated dish type download endpoint
-      const response = await apiRpc.report.item["download_csv_dish_type"].$post({
+      const response = await apiRpc.report.item.download_csv_dish_type.$post({
         json: {
           businessIds: payload.businessIds,
           from: Number(payload.from),
