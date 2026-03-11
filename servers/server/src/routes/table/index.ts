@@ -2,8 +2,10 @@ import {
   BillUrlModel,
   Business,
   BusinessPosConfig,
+  Category,
   DuesUser,
   KotOrder,
+  Menu,
   MergeAndSplitBillInvoiceCounter,
   MergeTable,
   NpcUser,
@@ -18,6 +20,7 @@ import {
   UpiMode,
   User,
   UserSession,
+  Zone,
 } from "@hi/db-models";
 import {
   type SwitchTableType,
@@ -42,8 +45,6 @@ import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
 import { respond } from "../../utils/response";
 import { generateTenDigitCode } from "../pos";
-import { monadHelperFunction } from "../../utils/monad";
-import { calculatedCashbackCoins } from "../payments";
 
 const tableRouter = new Hono()
   .get(
@@ -93,6 +94,78 @@ const tableRouter = new Hono()
         },
         200,
       );
+    },
+  )
+
+  .get(
+    "/menu",
+    zValidator(
+      "query",
+      z.object({
+        tableId: z.string().min(1).max(500),
+        businessId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { businessId, tableId } = c.req.query();
+      c.req.query();
+      const businessPosConfig = await BusinessPosConfig.findOne({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
+      const tableData = await Table.findOne({
+        _id: tableId,
+        businessId,
+        active: true,
+      }).lean();
+
+      // Find the associated zone using either internalZoneId or zoneId
+      const zone = await Zone.findOne({
+        $or: [
+          { _id: tableData?.internalZoneId, businessId, active: true },
+          { zoneId: tableData?.zoneId, businessId, active: true },
+        ],
+      });
+
+      if (!zone) {
+        return respond(c, "menu not found", true, 404, {});
+      }
+
+      // Find the active menu for the zone and business
+      const menu = await Menu.findOne({
+        zoneIds: zone?._id,
+        businessId,
+        isActive: true,
+      });
+
+      if (!menu) {
+        return respond(c, "menu not found", true, 404, {});
+      }
+
+      const query = {
+        businessId,
+        hierarchy: "CHILD",
+        isDeleted: false,
+        menuId: menu?._id,
+        pos: !!businessPosConfig,
+        active: true,
+      };
+
+      const existingCategories = await Category.find(query)
+        .populate({
+          path: "dishIds",
+          match: {
+            businessId: businessId,
+            isDeleted: false,
+            visibility: true,
+          },
+          populate: { path: "addOnIds" },
+        })
+        .sort(businessPosConfig ? { rank: 1 } : {});
+
+      return respond(c, "fetched successfully", false, 200, existingCategories);
     },
   )
 
@@ -335,10 +408,10 @@ const tableRouter = new Hono()
           variantId,
         } = await c.req.json();
         const table = await Table.findById(tableId);
-        console.log('table',table)
-        console.log('captainId',captainId)
+        console.log("table", table);
+        console.log("captainId", captainId);
         const captain = await User.findById(captainId);
-        console.log('captain',captain)
+        console.log("captain", captain);
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
           isDeleted: false,
@@ -393,7 +466,7 @@ const tableRouter = new Hono()
           businessId: table?.businessId,
           tableName: table?.name,
         });
-        console.log('tableSession',tableSession)
+        console.log("tableSession", tableSession);
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
@@ -1006,30 +1079,30 @@ const tableRouter = new Hono()
           { session },
         );
         // TODO when normal settle cashback is implemented we can activate this line
-      //   const payingUser = await User.findById(saveOrder[0].userId).session(session);
-      //   const isCaptainAtThisBusiness = payingUser?.customRole?.some(cr => 
-      //   cr.businessId.toString() === saveOrder[0].businessId.toString() && 
-      //   cr.role === "CAPTAIN" || "MANAGER" || "CO_OWNER"
-      // );
-      // if (!isCaptainAtThisBusiness) {
-      //   let cashBack = await calculatedCashbackCoins(
-      //     saveOrder[0].businessId.toString(),
-      //     Number(saveOrder[0].billValue),
-      //     Number(saveOrder[0].claimedCoins),
-      //     Number(saveOrder[0].couponDiscount),
-      //     Number(saveOrder[0].discount),
-      //   );
-      //   await monadHelperFunction({
-      //     businessId: saveOrder[0].businessId,
-      //     userId: saveOrder[0].userId,
-      //     orderId: saveOrder[0].order_id,
-      //     claimedCoinz: saveOrder[0].claimedCoins,
-      //     subTotal: saveOrder[0].billValue
-      //   });
-      //   console.log(`Success: Monad credit sent to customer ${saveOrder[0].userId}`);
-      // } else {
-      //   console.log(`Skipped: User ${saveOrder[0].userId} is a Captain at business ${saveOrder[0].businessId}`);
-      // }
+        //   const payingUser = await User.findById(saveOrder[0].userId).session(session);
+        //   const isCaptainAtThisBusiness = payingUser?.customRole?.some(cr =>
+        //   cr.businessId.toString() === saveOrder[0].businessId.toString() &&
+        //   cr.role === "CAPTAIN" || "MANAGER" || "CO_OWNER"
+        // );
+        // if (!isCaptainAtThisBusiness) {
+        //   let cashBack = await calculatedCashbackCoins(
+        //     saveOrder[0].businessId.toString(),
+        //     Number(saveOrder[0].billValue),
+        //     Number(saveOrder[0].claimedCoins),
+        //     Number(saveOrder[0].couponDiscount),
+        //     Number(saveOrder[0].discount),
+        //   );
+        //   await monadHelperFunction({
+        //     businessId: saveOrder[0].businessId,
+        //     userId: saveOrder[0].userId,
+        //     orderId: saveOrder[0].order_id,
+        //     claimedCoinz: saveOrder[0].claimedCoins,
+        //     subTotal: saveOrder[0].billValue
+        //   });
+        //   console.log(`Success: Monad credit sent to customer ${saveOrder[0].userId}`);
+        // } else {
+        //   console.log(`Skipped: User ${saveOrder[0].userId} is a Captain at business ${saveOrder[0].businessId}`);
+        // }
 
         const payload = {
           app_key: pos.accessKey,
