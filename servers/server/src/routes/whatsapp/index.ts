@@ -2394,7 +2394,16 @@ const whatsappRouter = new Hono()
         select: "name phone",
       });
 
-      const obj = waAnalyticsUser.reduce(
+      // Deduplicate by messageId and status to prevent double counting from retried webhooks
+      const seen = new Set();
+      const deduplicatedAnalytics = waAnalyticsUser.filter((item) => {
+        const key = `${item.messageId}-${item.status}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      const obj = deduplicatedAnalytics.reduce(
         (acc, user) => {
           acc.sent += user.status === "sent" ? 1 : 0;
           acc.delivered += user.status === "delivered" ? 1 : 0;
@@ -2413,23 +2422,18 @@ const whatsappRouter = new Hono()
           blocked: 0,
         },
       );
-      if (status) {
-        const waCampaignAnalyticsUser = await WhatsAppAnalyticsUser.find({
-          businessId,
-          campaignId,
 
-          status: status,
-        }).populate({
-          path: "userId",
-          select: "name phone",
-        });
+      if (status) {
+        const filteredAnalytics = deduplicatedAnalytics.filter(
+          (item) => item.status === status,
+        );
 
         return c.json({
           message: "wa analytics user",
           err: false,
           data: {
             overAllCount: obj,
-            campaignAnalttics: waCampaignAnalyticsUser,
+            campaignAnalytics: filteredAnalytics,
           },
         });
       }
@@ -2439,7 +2443,7 @@ const whatsappRouter = new Hono()
         err: false,
         data: {
           overAllCount: obj,
-          campaignAnalytics: waAnalyticsUser,
+          campaignAnalytics: deduplicatedAnalytics,
         },
       });
     },
