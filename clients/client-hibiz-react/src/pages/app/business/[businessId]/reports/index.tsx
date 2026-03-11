@@ -3,10 +3,12 @@ import MemoizedHeader from '@/components/molecules/header/index.tsx';
 import AddonReports from '@/components/reports/AddOnReports.tsx';
 import CategoryReports from '@/components/reports/CategoryReports.tsx';
 import MultiReportDownloadButton from '@/components/reports/CombinedReport';
+import ConsolidatedReports from '@/components/reports/ConsolidatedReports.tsx';
 import DeletedItemsReports from '@/components/reports/DeletedItemReport';
 import DiscountReports from '@/components/reports/DiscountReport.tsx';
 import DishTypeReports from '@/components/reports/DishTypeReports.tsx';
 import ItemReports from '@/components/reports/ItemReports.tsx';
+import ItemBySectionReports from '@/components/reports/ItemBySectionReports.tsx';
 import ItemVariantReports from '@/components/reports/ItemVariantReports.tsx';
 import ParentCategoryReports from '@/components/reports/ParentCategoryReports.tsx';
 import ServiceChargeReports from '@/components/reports/ServiceChargeReports.tsx';
@@ -18,9 +20,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 enum ReportType {
   Combined = 'combined',
+  Consolidate = 'consolidate',
   Category = 'category',
   ParentCategory = 'parentCategory',
   Item = 'item',
+  ItemBySection = 'itemBySection',
   ItemVariant = 'itemVariant',
   DishType = 'dishType',
   Discount = 'discount',
@@ -31,9 +35,11 @@ enum ReportType {
 
 const navItems = [
   { text: 'Combined' },
+  { text: 'Consolidate Report' },
   { text: 'Category' },
   { text: 'Parent Category' },
   { text: 'Item' },
+  { text: 'Item by Areas' },
   { text: 'Item Variant' },
   { text: 'Dish Type' },
   { text: 'Add On' },
@@ -46,9 +52,12 @@ const normalizeNavKey = (s: string) => s.toLowerCase().replace(/\s+/g, '');
 
 const navKeyToReportType: Record<string, ReportsTypes> = {
   combined: ReportType.Combined,
+  consolidatereport: ReportType.Consolidate,
   category: ReportType.Category,
   parentcategory: ReportType.ParentCategory,
   item: ReportType.Item,
+  itembysection: ReportType.ItemBySection,
+  itembyareas: ReportType.ItemBySection,
   itemvariant: ReportType.ItemVariant,
   dishtype: ReportType.DishType,
   discount: ReportType.Discount,
@@ -112,6 +121,11 @@ const Reports = () => {
           <MultiReportDownloadButton />
         </div>
       )}
+      {reportPage === ReportType.Consolidate && (
+        <div>
+          <ConsolidatedReports />
+        </div>
+      )}
       {reportPage === ReportType.Category && (
         <div>
           <CategoryReports />
@@ -125,6 +139,11 @@ const Reports = () => {
       {reportPage === ReportType.Item && (
         <div>
           <ItemReports />
+        </div>
+      )}
+      {reportPage === ReportType.ItemBySection && (
+        <div>
+          <ItemBySectionReports />
         </div>
       )}
       {reportPage === ReportType.ItemVariant && (

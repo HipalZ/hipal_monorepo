@@ -11,6 +11,11 @@ import type { ClientSession } from "mongoose";
 import z from "zod";
 import { respond } from "../../utils/response";
 //
+/**
+ * Flow rule for reports / UI:
+ * - Empty array from GET /business/:businessId → **kitchen flow** (no zone routing; use dish.kitchenId).
+ * - Non-empty array → **zone flow** (zone routing; use DishZoneKitchen: table/zone → kitchen per dish).
+ */
 const dishZoneKitchenRouter = new Hono()
   .get(
     "/business/:businessId",
@@ -37,7 +42,8 @@ const dishZoneKitchenRouter = new Hono()
           updatedAt: 1,
         });
 
-      // Format response to match client-side structure
+      // Format response to match client-side structure.
+      // Empty data = kitchen flow; has data = zone flow (see flow rule above).
       const formattedData = dishZoneKitchens.map((item: any) => ({
         dishId: item.dishId?.toString() || item.dishId,
         zoneId: item.zoneId?.toString() || item.zoneId,

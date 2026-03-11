@@ -12,6 +12,7 @@ import type { Workbook } from "exceljs";
 import { Category } from "@hi/db-models";
 import type { Payment as PaymentType } from "./itemType";
 import { calculateFinalItemTotals, filterPaymentsForItemReports } from "./itemFinancialCalculator";
+import { OPEN_ITEM_CATEGORY_ID } from "./itemReport";
 import type { BaseContext } from "./types";
 import { addBoldHeaderRow, addKeyValueRow, autoFitColumns } from "./excelUtils";
 
@@ -84,7 +85,10 @@ async function fetchCategoryMaps(
 
   const parentCategoryMap: Record<string, { name: string; parentCategoryIds: string[] }> = {};
   const childToParentMap: Record<string, string> = {};
-  const categoryNameById: Record<string, string> = { uncategorized: "Uncategorized" };
+  const categoryNameById: Record<string, string> = {
+    uncategorized: "Uncategorized",
+    [OPEN_ITEM_CATEGORY_ID]: "Open Item",
+  };
 
   for (const c of categories) {
     const id = c._id.toString();
@@ -98,6 +102,9 @@ async function fetchCategoryMaps(
   const uncategorizedKey = "uncategorized";
   if (!(uncategorizedKey in childToParentMap)) {
     childToParentMap[uncategorizedKey] = uncategorizedKey;
+  }
+  if (!(OPEN_ITEM_CATEGORY_ID in childToParentMap)) {
+    childToParentMap[OPEN_ITEM_CATEGORY_ID] = OPEN_ITEM_CATEGORY_ID;
   }
 
   return { parentCategoryMap, childToParentMap, categoryNameById };
@@ -161,7 +168,10 @@ function aggregateByParentCategory(
       const item = billItems[i];
       const b = result.items[i];
       const dish = item?.dish;
-      const childCategoryId = dish?.categoryIds?.[0] ?? "uncategorized";
+      const isOpenItem = Boolean((item as { isOpenItem?: boolean }).isOpenItem);
+      const childCategoryId = isOpenItem
+        ? OPEN_ITEM_CATEGORY_ID
+        : dish?.categoryIds?.[0] ?? "uncategorized";
       const childIdStr = typeof childCategoryId === "string" ? childCategoryId : String(childCategoryId);
 
       if (!childTotals[childIdStr]) {
@@ -232,7 +242,9 @@ function aggregateByParentCategory(
         catId,
         {
           categoryId: catId,
-          categoryName: categoryNameById[catId] ?? (catId === "uncategorized" ? "Uncategorized" : catId),
+          categoryName:
+            categoryNameById[catId] ??
+            (catId === "uncategorized" ? "Uncategorized" : catId === OPEN_ITEM_CATEGORY_ID ? "Open Item" : catId),
           itemCount: tot.itemCount,
           grossAmount: Number(tot.grossAmount.toFixed(2)),
           discount: Number(tot.discount.toFixed(2)),

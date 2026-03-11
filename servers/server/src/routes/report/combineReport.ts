@@ -196,10 +196,10 @@ const unifiedExcelRouter = new Hono().post(
       buildParentCategorySheet(workbook, ctx),
     );
 
-    // 3) Item Report (with DishZoneKitchen mappings for correct kitchen routing)
-    await safeBuildReport("Item Report", () =>
-      buildItemSheet(workbook, ctx, dishZoneKitchenMappings, getZoneIdForExcel),
-    );
+    // // 3) Item Report (with DishZoneKitchen mappings for correct kitchen routing)
+    // await safeBuildReport("Item Report", () =>
+    //   buildItemSheet(workbook, ctx, dishZoneKitchenMappings, getZoneIdForExcel),
+    // );
 
     // 3.5) Item Type Report (VEG/NON_VEG/etc.)
     await safeBuildReport("Item Type Report", () =>

@@ -41,7 +41,13 @@ const MemoItemReports = () => {
     return itemReports
       .map((business: BusinessItemReport) => ({
         ...business,
-        items: business?.items?.filter((item) => item?.itemName?.toLowerCase().includes(query) || item?.categoryId?.toLowerCase().includes(query)),
+        items: business?.items?.filter(
+          (item) =>
+            item?.itemName?.toLowerCase().includes(query) ||
+            item?.categoryId?.toLowerCase().includes(query) ||
+            (item?.zoneNames?.some((z) => z.toLowerCase().includes(query))) ||
+            (item?.kitchenName?.toLowerCase().includes(query)),
+        ),
       }))
       .filter((business) => business.items.length > 0);
   }, [itemReports, searchQuery]);

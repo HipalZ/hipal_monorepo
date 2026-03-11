@@ -80,6 +80,14 @@ const SidebarCategories = () => {
         <QuickActionsDrawer customActions={customActions} />
       </div>
 
+      {/* Categories header with refresh */}
+      <div className="flex items-center justify-between border-b px-3 py-2">
+        <span className="font-bold uppercase">Categories</span>
+        <Button variant="ghost" size="icon" onClick={handleRefresh} className="h-8 w-8 shrink-0" title="Refresh categories">
+          <RefreshCcw className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Scrollable Category List */}
       <div className="hide-scrollbar flex-1 overflow-y-auto py-2">
         {categories?.map((cat) => (

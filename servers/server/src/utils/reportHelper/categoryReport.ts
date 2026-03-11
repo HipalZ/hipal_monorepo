@@ -2,7 +2,7 @@
 import type { Workbook } from "exceljs";
 import { Category } from "@hi/db-models";
 import type { Payment as PaymentType } from "./itemType";
-import { type AggregatedItem, aggregateBillItems } from "./itemReport";
+import { type AggregatedItem, aggregateBillItems, OPEN_ITEM_CATEGORY_ID } from "./itemReport";
 import type { BaseContext } from "./types";
 import { addBoldHeaderRow, addKeyValueRow, autoFitColumns } from "./excelUtils";
 import { filterPaymentsForItemReports } from "./itemFinancialCalculator";
@@ -63,14 +63,16 @@ export async function buildCategoryReport(
   }, {});
 
   const catIds = Object.keys(catMap).filter((id) => id !== "uncategorized");
-  const categories = await Category.find({ _id: { $in: catIds } })
+  const catIdsForFetch = catIds.filter((id) => id !== OPEN_ITEM_CATEGORY_ID);
+  const categories = await Category.find({ _id: { $in: catIdsForFetch } })
     .lean()
     .select({ name: 1 });
 
-  const nameById = categories.reduce<Record<string, string>>((m, c) => {
-    m[c._id.toString()] = c.name;
-    return m;
-  }, {});
+  const nameById: Record<string, string> = {};
+  for (const c of categories) {
+    nameById[c._id.toString()] = c.name;
+  }
+  nameById[OPEN_ITEM_CATEGORY_ID] = "Open Item";
 
   return Object.entries(catMap)
     .map<CategoryReport>(([catId, grp]) => ({
@@ -107,7 +109,10 @@ export async function buildCategorySheet(workbook: Workbook, ctx: BaseContext) {
   }
 
   for (const p of categoryEligiblePayments) {
-    const bid = (p as any).businessId.toString();
+    const bid =
+      typeof p.businessId === "string"
+        ? p.businessId
+        : (p.businessId as { toString(): string }).toString();
     if (!paymentsByBiz[bid]) paymentsByBiz[bid] = [];
     paymentsByBiz[bid].push(p);
   }
