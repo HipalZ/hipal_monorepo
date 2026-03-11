@@ -1,11 +1,10 @@
 import BottomPopUp from '@/components/atoms/bottomPopUp';
-import MenuListModal from '@/components/desktop/MenuListModal';
 import { useCategories } from '@/components/hooks/useCategories';
 import { useCartStore } from '@/components/store/useCartStore';
 import { useOrderStore } from '@/components/store/useOrderData';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, List, RefreshCcw, Settings2 } from 'lucide-react';
+import { ArrowLeft, RefreshCcw, Settings2 } from 'lucide-react';
 import { memo, useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SpinnerMemo from '../atoms/loadingSpinner';
@@ -19,7 +18,6 @@ const SidebarCategories = () => {
   const categories = useOrderStore((s) => s.allCategories);
   const selected = useOrderStore((s) => s.selectedCategory);
   const setSelected = useOrderStore((s) => s.setSelectedCategory);
-  const [openMenuModal, setOpenMenuModal] = useState(false);
   const [showCartWarningModal, setShowCartWarningModal] = useState(false);
   const setCartEmpty = useCartStore((s) => s.setCartEmpty);
 
@@ -48,7 +46,7 @@ const SidebarCategories = () => {
   const keepCart = useCallback(() => {
     setShowCartWarningModal(false);
     navigate(`/${businessId}/alerts`);
-  }, [businessId, navigate, setShowCartWarningModal]);
+  }, [businessId, navigate]);
 
   const customActions = [
     {
@@ -61,12 +59,6 @@ const SidebarCategories = () => {
       name: 'Quick Edit Dishes',
       icon: Settings2,
       onClick: toQuickEdit,
-      variant: 'secondary' as const,
-    },
-    {
-      name: 'View Menus',
-      icon: List,
-      onClick: () => setOpenMenuModal(true),
       variant: 'secondary' as const,
     },
   ];
@@ -105,9 +97,6 @@ const SidebarCategories = () => {
           </Button>
         ))}
       </div>
-      {openMenuModal && (
-        <MenuListModal show={openMenuModal} onClose={() => setOpenMenuModal(false)} businessId={businessId} refreshCategories={handleRefresh} />
-      )}
 
       {/* Cart Warning Modal */}
       <BottomPopUp height="300px" show={showCartWarningModal} onClose={() => setShowCartWarningModal(false)} hide={false}>
