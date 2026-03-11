@@ -38,6 +38,34 @@ export interface AggregatedItem {
   kitchenId: string;
 }
 
+/** Simple item report row (no zone/kitchen). Used by item report API. */
+export interface ItemReportRow {
+  itemName: string;
+  categoryId: string;
+  itemCount: number;
+  amount: number;
+  discount: number;
+  tax: number;
+  totalSales: number;
+}
+
+/**
+ * Build item report for a set of payments. Uses aggregateBillItems with no zone/kitchen (dish-level only).
+ * Same pattern as buildCategoryReport.
+ */
+export function buildItemReport(payments: Payment[]): ItemReportRow[] {
+  const items = aggregateBillItems(payments);
+  return items.map((it) => ({
+    itemName: it.itemName,
+    categoryId: it.categoryId ?? "",
+    itemCount: it.itemCount,
+    amount: it.amount,
+    discount: it.discount,
+    tax: it.tax,
+    totalSales: it.totalSales,
+  }));
+}
+
 /**
  * Build lookup map for Dish-Zone-Kitchen mappings
  * Key format: `${dishId}_${zoneId}` -> kitchenId
@@ -105,13 +133,18 @@ export async function buildItemSheet(
     allPayments,
   ) as Payment[];
 
+  const toBizKey = (id: unknown): string => {
+    if (typeof id === "string") return id;
+    const o = id as { _id?: unknown; toString?(): string };
+    if (o?._id != null) return toBizKey(o._id);
+    return typeof o?.toString === "function"
+      ? (o as { toString(): string }).toString()
+      : String(id);
+  };
   const paymentsByBiz: Record<string, Payment[]> = {};
-  for (const id of businessIds) paymentsByBiz[id] = [];
+  for (const id of businessIds) paymentsByBiz[toBizKey(id)] = [];
   for (const p of itemEligiblePayments) {
-    const bid =
-      typeof p.businessId === "string"
-        ? p.businessId
-        : (p.businessId as { toString(): string }).toString();
+    const bid = toBizKey(p.businessId);
     if (!paymentsByBiz[bid]) paymentsByBiz[bid] = [];
     paymentsByBiz[bid].push(p);
   }
@@ -130,7 +163,7 @@ export async function buildItemSheet(
 
   for (const biz of businessIds) {
     const bizName = bizNameMap[biz] ?? "Unknown";
-    const payments = paymentsByBiz[biz] || [];
+    const payments = paymentsByBiz[toBizKey(biz)] || [];
     const kitchenNameMap = kitchenNameMapByBiz?.[biz] || {};
 
     type AggItem = {
@@ -186,22 +219,10 @@ export async function buildItemSheet(
       }
       const zoneIdStr = zoneId || "UNASSIGNED_ZONE";
 
-      const DELETED_DISH_LABEL = "Not found or deleted dish";
-      const DELETED_DISH_ID = "deleted";
-
       for (let i = 0; i < billItems.length; i++) {
         const bi = billItems[i];
         const b = result.items[i];
-        const dish = bi.dish;
-        const isDeletedOrMissing = !dish || dish._id == null || dish._id === undefined;
-        const itemName = isDeletedOrMissing
-          ? DELETED_DISH_LABEL
-          : (dish.name ?? DELETED_DISH_LABEL);
-        const dishId = isDeletedOrMissing
-          ? DELETED_DISH_ID
-          : typeof dish!._id === "string"
-            ? dish!._id
-            : (dish!._id as { toString(): string }).toString();
+        const { dishId, itemName } = getDishInfo(bi);
 
         const kitchenId = resolveKitchenId(
           dishId,
@@ -335,7 +356,11 @@ export async function buildItemSheet(
     addKeyValueRow(sheet, "Total Discount", overallTotals.discount);
     addKeyValueRow(sheet, "GST", overallTotals.gst);
     addKeyValueRow(sheet, "Service Charge", overallTotals.serviceCharge);
-    addKeyValueRow(sheet, "Total Tax (GST + Service Charge)", overallTotals.tax);
+    addKeyValueRow(
+      sheet,
+      "Total Tax (GST + Service Charge)",
+      overallTotals.tax,
+    );
     addKeyValueRow(sheet, "Net Revenue", overallTotals.totalSales);
 
     if (topItem) {
@@ -435,6 +460,62 @@ export async function buildItemSheet(
 }
 
 /**
+ * Simple item report sheet (dish-level only, no zone/kitchen). Used by item route download.
+ * Same pattern as buildCategorySheet: one section per business with item rows.
+ */
+export function buildSimpleItemSheet(
+  workbook: Workbook,
+  ctx: BaseContext,
+): void {
+  const { businessIds, allPayments, bizNameMap } = ctx;
+  const sheet = workbook.addWorksheet("Item Report");
+  const itemPayments = filterPaymentsForItemReports(allPayments) as Payment[];
+
+  const paymentsByBiz: Record<string, Payment[]> = {};
+  for (const id of businessIds) paymentsByBiz[id] = [];
+  for (const p of itemPayments) {
+    const bid =
+      typeof p.businessId === "string"
+        ? p.businessId
+        : (p.businessId as { toString(): string }).toString();
+    if (paymentsByBiz[bid]) paymentsByBiz[bid].push(p);
+  }
+
+  const header = [
+    "Item Name",
+    "Quantity",
+    "Amount",
+    "Discount",
+    "Tax",
+    "Total Sales",
+  ];
+
+  for (const biz of businessIds) {
+    const bizName = bizNameMap[biz] ?? "Unknown";
+    const items = buildItemReport(paymentsByBiz[biz] ?? []);
+
+    sheet.addRow([]);
+    addKeyValueRow(sheet, "BusinessId", biz);
+    addKeyValueRow(sheet, "BusinessName", bizName);
+    sheet.addRow([]);
+    addBoldHeaderRow(sheet, header);
+
+    for (const row of items) {
+      sheet.addRow([
+        row.itemName,
+        row.itemCount,
+        row.amount,
+        row.discount,
+        row.tax,
+        row.totalSales,
+      ]);
+    }
+  }
+
+  autoFitColumns(sheet);
+}
+
+/**
  * Aggregate bill items across payments
  * REFACTORED: Now uses Dish-Zone-Kitchen mapping instead of dish.kitchenId
  *
@@ -488,17 +569,7 @@ export function aggregateBillItems(
       for (let i = 0; i < billItems.length; i++) {
         const item = billItems[i];
         const b = result.items[i];
-        const dish = item.dish;
-        const isDeletedOrMissing = !dish || dish._id == null || dish._id === undefined;
-        const dishId = isDeletedOrMissing
-          ? DELETED_DISH_ID
-          : typeof dish!._id === "string"
-            ? dish!._id
-            : (dish!._id as { toString(): string }).toString();
-        const itemName = isDeletedOrMissing
-          ? DELETED_DISH_LABEL
-          : (dish!.name ?? DELETED_DISH_LABEL);
-        const categoryId = isDeletedOrMissing ? null : (dish!.categoryIds?.[0] ?? null);
+        const { dishId, itemName, categoryId } = getDishInfo(item);
 
         const kitchenId = resolveKitchenId(
           dishId,
@@ -540,6 +611,195 @@ export function aggregateBillItems(
     },
     {},
   );
+
+  return Object.values(groups).sort((a, b) => b.itemCount - a.itemCount);
+}
+
+// ---------------------------------------------------------------------------
+// Zone-wise vs Kitchen-wise item report (see docs/ITEM_REPORT_REDESIGN.md)
+// ---------------------------------------------------------------------------
+
+export type ReportMode = "zone" | "kitchen";
+
+/** One row when report is zone-wise: dish + zone(s) with quantity and financials */
+export interface ZoneWiseItemRow {
+  dishId: string;
+  itemName: string;
+  itemCount: number;
+  /** Zone names (areas) where this dish was ordered */
+  zoneNames: string[];
+  amount: number;
+  discount: number;
+  tax: number;
+  netRevenue: number;
+  categoryId: string | null;
+}
+
+/** One row when report is kitchen-wise: dish + kitchen with quantity and financials */
+export interface KitchenWiseItemRow {
+  dishId: string;
+  itemName: string;
+  itemCount: number;
+  kitchenId: string;
+  kitchenName: string;
+  amount: number;
+  discount: number;
+  tax: number;
+  netRevenue: number;
+  categoryId: string | null;
+}
+
+/** True if business has at least one DishZoneKitchen mapping (zones involved). */
+export function hasDzkForBusiness(
+  businessId: string,
+  mappings: DishZoneKitchenMapping[],
+): boolean {
+  const bid = typeof businessId === "string" ? businessId : String(businessId);
+  return mappings.some((m) => {
+    const mBiz =
+      typeof m.businessId === "string"
+        ? m.businessId
+        : (m.businessId as { toString(): string }).toString();
+    return mBiz === bid;
+  });
+}
+
+const DELETED_DISH_LABEL = "Not found or deleted dish";
+const DELETED_DISH_ID = "deleted";
+
+/** Sentinel categoryId for open items; show as "Open Item" in category report. */
+export const OPEN_ITEM_CATEGORY_ID = "open_item";
+
+function getDishInfo(bi: BillItem): {
+  dishId: string;
+  itemName: string;
+  categoryId: string | null;
+} {
+  const dish = bi.dish;
+  const isOpenItem = Boolean(bi.isOpenItem);
+  const missing = !dish || dish._id == null || dish._id === undefined;
+  const dishId = missing
+    ? DELETED_DISH_ID
+    : typeof dish!._id === "string"
+      ? dish!._id
+      : (dish!._id as { toString(): string }).toString();
+  const baseName = missing
+    ? DELETED_DISH_LABEL
+    : dish!.name ?? DELETED_DISH_LABEL;
+  const itemName = isOpenItem ? `${baseName} (open item)` : baseName;
+  const categoryId = isOpenItem
+    ? OPEN_ITEM_CATEGORY_ID
+    : missing
+      ? null
+      : ((dish!.categoryIds?.[0] ?? null) as string | null);
+  return { dishId, itemName, categoryId };
+}
+
+/**
+ * Zone-wise aggregation: group by (dishId, itemName, zoneId). Use zone names from map.
+ * Use when DZK has entries for the business (zones involved).
+ */
+export function aggregateZoneWise(
+  payments: Payment[],
+  getZoneIdFromPayment: (p: Payment) => string | null,
+  zoneIdToName: Record<string, string>,
+): ZoneWiseItemRow[] {
+  const groups: Record<string, ZoneWiseItemRow> = {};
+  const key = (dishId: string, zoneId: string) => `${dishId}\t${zoneId}`;
+
+  for (const payment of payments) {
+    const billItems = payment.billItems || [];
+    if (billItems.length === 0) continue;
+    const result = calculateFinalItemTotals(billItems, payment);
+    const zoneIdRaw = getZoneIdFromPayment(payment);
+    const zoneIdStr = zoneIdRaw || "UNASSIGNED_ZONE";
+    const zoneName = zoneIdToName[zoneIdStr] ?? zoneIdStr;
+
+    for (let i = 0; i < billItems.length; i++) {
+      const bi = billItems[i];
+      const b = result.items[i];
+      const { dishId, itemName, categoryId } = getDishInfo(bi);
+      const k = key(dishId, zoneIdStr);
+      if (!groups[k]) {
+        groups[k] = {
+          dishId,
+          itemName,
+          itemCount: 0,
+          zoneNames: [zoneName],
+          amount: 0,
+          discount: 0,
+          tax: 0,
+          netRevenue: 0,
+          categoryId,
+        };
+      }
+      const row = groups[k];
+      row.itemCount += b.quantity;
+      row.amount += b.netItemValue;
+      row.discount += b.itemDiscount;
+      row.tax += b.totalTax;
+      row.netRevenue += b.finalItemTotal;
+    }
+  }
+
+  return Object.values(groups).sort((a, b) => b.itemCount - a.itemCount);
+}
+
+/**
+ * Kitchen-wise aggregation: use dish.kitchenId; group by (dishId, itemName, kitchenId).
+ * Use when DZK is empty for the business (no zone routing).
+ */
+export function aggregateKitchenWise(
+  payments: Payment[],
+  kitchenIdToName: Record<string, string>,
+): KitchenWiseItemRow[] {
+  const groups: Record<string, KitchenWiseItemRow> = {};
+  const key = (dishId: string, kitchenId: string) => `${dishId}\t${kitchenId}`;
+
+  for (const payment of payments) {
+    const billItems = payment.billItems || [];
+    if (billItems.length === 0) continue;
+    const result = calculateFinalItemTotals(billItems, payment);
+
+    for (let i = 0; i < billItems.length; i++) {
+      const bi = billItems[i];
+      const b = result.items[i];
+      const dish = bi.dish;
+      const { dishId, itemName, categoryId } = getDishInfo(bi);
+      const kitchenId =
+        dish && (dish as { kitchenId?: string }).kitchenId != null
+          ? typeof (dish as { kitchenId: string | { toString(): string } })
+              .kitchenId === "string"
+            ? (dish as { kitchenId: string }).kitchenId
+            : (
+                dish as { kitchenId: { toString(): string } }
+              ).kitchenId.toString()
+          : "UNASSIGNED";
+      const kitchenName = kitchenIdToName[kitchenId] ?? kitchenId;
+
+      const k = key(dishId, kitchenId);
+      if (!groups[k]) {
+        groups[k] = {
+          dishId,
+          itemName,
+          itemCount: 0,
+          kitchenId,
+          kitchenName,
+          amount: 0,
+          discount: 0,
+          tax: 0,
+          netRevenue: 0,
+          categoryId,
+        };
+      }
+      const row = groups[k];
+      row.itemCount += b.quantity;
+      row.amount += b.netItemValue;
+      row.discount += b.itemDiscount;
+      row.tax += b.totalTax;
+      row.netRevenue += b.finalItemTotal;
+    }
+  }
 
   return Object.values(groups).sort((a, b) => b.itemCount - a.itemCount);
 }

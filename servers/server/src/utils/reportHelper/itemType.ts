@@ -96,6 +96,8 @@ export interface BillItem {
   isDeleted: boolean;
   discount: number;
   _id: string;
+  /** When true, item has no category; display as "dishName (open item)" and use Open Item for category/dish-type. */
+  isOpenItem?: boolean;
 }
 
 // the top‑level Payment document

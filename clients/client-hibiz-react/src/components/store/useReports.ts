@@ -3,10 +3,12 @@ import type {
   BusinessCategoryReport,
   BusinessDiscountReport,
   BusinessItemReport,
+  BusinessItemBySectionReport,
   BusinessDishTypeReport,
   BusinessItemVariantReport,
   BusinessParentCategoryReport,
   ServiceChargeReport,
+  ConsolidatedBusinessBlock,
 } from "@/hooks/useReportHook.ts";
 import { create } from "zustand";
 
@@ -14,11 +16,13 @@ export type ReportsTypes =
   | "category"
   | "parentCategory"
   | "item"
+  | "itemBySection"
   | "itemVariant"
   | "dishType"
   | "discount"
   | "serviceCharge"
   | "combined"
+  | "consolidate"
   | "addOn"
   | "deleted_items";
 
@@ -37,6 +41,9 @@ interface ReportsState {
   itemReports: BusinessItemReport[];
   setItemReports: (reports: BusinessItemReport[]) => void;
 
+  itemBySectionReports: BusinessItemBySectionReport[];
+  setItemBySectionReports: (reports: BusinessItemBySectionReport[]) => void;
+
   discountReports: BusinessDiscountReport[];
   setDiscountReports: (reports: BusinessDiscountReport[]) => void;
 
@@ -51,6 +58,9 @@ interface ReportsState {
 
   itemVariantReports: BusinessItemVariantReport[];
   setItemVariantReports: (reports: BusinessItemVariantReport[]) => void;
+
+  consolidateReports: ConsolidatedBusinessBlock[];
+  setConsolidateReports: (reports: ConsolidatedBusinessBlock[]) => void;
 
   layoutType: LayoutType;
   setLayoutType: (layoutType: LayoutType) => void;
@@ -72,6 +82,10 @@ const useReports = create<ReportsState>((set) => ({
   setItemReports: (reports: BusinessItemReport[]) =>
     set({ itemReports: reports }),
 
+  itemBySectionReports: [],
+  setItemBySectionReports: (reports: BusinessItemBySectionReport[]) =>
+    set({ itemBySectionReports: reports }),
+
   discountReports: [],
   setDiscountReports: (reports: BusinessDiscountReport[]) =>
     set({ discountReports: reports }),
@@ -91,6 +105,10 @@ const useReports = create<ReportsState>((set) => ({
   itemVariantReports: [],
   setItemVariantReports: (reports: BusinessItemVariantReport[]) =>
     set({ itemVariantReports: reports }),
+
+  consolidateReports: [],
+  setConsolidateReports: (reports: ConsolidatedBusinessBlock[]) =>
+    set({ consolidateReports: reports }),
 
   layoutType: "table",
   setLayoutType: (layoutType: LayoutType) => set({ layoutType }),
