@@ -1737,6 +1737,7 @@ const whatsappRouter = new Hono()
       }
       const { messages, contacts, statuses, whatsAppBusinessConfigData } =
         await whatsAppEventData(body);
+        console.log('statuses', statuses);
       if (messages && whatsAppBusinessConfigData) {
         const { userData, userInput } = await whatsAppUserAndTextMessage(
           contacts,
@@ -2367,13 +2368,10 @@ const whatsappRouter = new Hono()
   )
 
   .get(
-    "/campaign_analytics/:businessId/:campaignId",
+    '/campaign_analytics/:businessId/:campaignId',
+    zValidator('param', z.object({ businessId: z.string(), campaignId: z.string() })),
     zValidator(
-      "param",
-      z.object({ businessId: z.string(), campaignId: z.string() }),
-    ),
-    zValidator(
-      "query",
+      'query',
       z.object({
         status: z.string().optional(),
       }),
@@ -2387,30 +2385,21 @@ const whatsappRouter = new Hono()
         businessId,
         campaignId,
         status: {
-          $ne: "pending",
+          $ne: 'pending',
         },
       }).populate({
-        path: "userId",
-        select: "name phone",
+        path: 'userId',
+        select: 'name phone',
       });
 
-      // Deduplicate by messageId and status to prevent double counting from retried webhooks
-      const seen = new Set();
-      const deduplicatedAnalytics = waAnalyticsUser.filter((item) => {
-        const key = `${item.messageId}-${item.status}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-
-      const obj = deduplicatedAnalytics.reduce(
+      const obj = waAnalyticsUser.reduce(
         (acc, user) => {
-          acc.sent += user.status === "sent" ? 1 : 0;
-          acc.delivered += user.status === "delivered" ? 1 : 0;
-          acc.read += user.status === "read" ? 1 : 0;
-          acc.clicked += user.status === "clicked" ? 1 : 0;
-          acc.failed += user.status === "failed" ? 1 : 0;
-          acc.blocked += user.status === "blocked" ? 1 : 0;
+          acc.sent += user.status === 'sent' ? 1 : 0;
+          acc.delivered += user.status === 'delivered' ? 1 : 0;
+          acc.read += user.status === 'read' ? 1 : 0;
+          acc.clicked += user.status === 'clicked' ? 1 : 0;
+          acc.failed += user.status === 'failed' ? 1 : 0;
+          acc.blocked += user.status === 'blocked' ? 1 : 0;
           return acc;
         },
         {
@@ -2422,28 +2411,33 @@ const whatsappRouter = new Hono()
           blocked: 0,
         },
       );
-
       if (status) {
-        const filteredAnalytics = deduplicatedAnalytics.filter(
-          (item) => item.status === status,
-        );
+        const waCampaignAnalyticsUser = await WhatsAppAnalyticsUser.find({
+          businessId,
+          campaignId,
+
+          status: status,
+        }).populate({
+          path: 'userId',
+          select: 'name phone',
+        });
 
         return c.json({
-          message: "wa analytics user",
+          message: 'wa analytics user',
           err: false,
           data: {
             overAllCount: obj,
-            campaignAnalytics: filteredAnalytics,
+            campaignAnalttics: waCampaignAnalyticsUser,
           },
         });
       }
 
       return c.json({
-        message: "wa analytics user",
+        message: 'wa analytics user',
         err: false,
         data: {
           overAllCount: obj,
-          campaignAnalytics: deduplicatedAnalytics,
+          campaignAnalytics: waAnalyticsUser,
         },
       });
     },
