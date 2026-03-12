@@ -1,9 +1,9 @@
-import { WhatsAppAnalyticsUser, WhatsAppWallet } from '@hi/db-models';
-import type { WhatsAppBusinessConfigType } from '@hi/db-models/src/validators';
+import { WhatsAppAnalyticsUser, WhatsAppWallet } from "@hi/db-models";
+import type { WhatsAppBusinessConfigType } from "@hi/db-models/src/validators";
 
 async function whatsAppCampaignHandler(
   whatsAppBusinessConfigData: WhatsAppBusinessConfigType,
-  // @ts-expect-error statuses is not typed
+  //@ts-ignore
   statuses,
 ) {
   try {
@@ -20,25 +20,20 @@ async function whatsAppCampaignHandler(
       businessId: whatsAppBusinessConfigData?.businessId,
     });
 
-    await WhatsAppAnalyticsUser.findOneAndUpdate(
-      {
-        messageId: wamid,
-        businessId: whatsAppBusinessConfigData?.businessId,
-        status: firstStatus?.status,
-      },
-      {
-        campaignId: findUserByMessageId?.campaignId,
-        userId: findUserByMessageId?.userId,
-        templateId: findUserByMessageId?.templateId,
-        date: Date.now(),
-        error: firstStatus?.errors,
-      },
-      { upsert: true },
-    );
+    await WhatsAppAnalyticsUser.create({
+      businessId: whatsAppBusinessConfigData?.businessId,
+      campaignId: findUserByMessageId?.campaignId,
+      userId: findUserByMessageId?.userId,
+      templateId: findUserByMessageId?.templateId,
+      status: firstStatus?.status,
+      date: Date.now(),
+      messageId: wamid,
+      error: firstStatus?.errors,
+    });
 
     if (
-      extractedData?.status === 'delivered' &&
-      extractedData?.category === 'marketing'
+      extractedData?.status === "delivered" &&
+      extractedData?.category === "marketing"
     ) {
       // Fetch the current balance
       const wallet = await WhatsAppWallet.findOne({
@@ -54,11 +49,12 @@ async function whatsAppCampaignHandler(
           { businessId: whatsAppBusinessConfigData?.businessId },
           { $inc: { currentBalance: -minimumAmount } },
         );
+      } else {
       }
     }
     if (
-      extractedData?.status === 'delivered' &&
-      extractedData?.category === 'utility'
+      extractedData?.status === "delivered" &&
+      extractedData?.category === "utility"
     ) {
       // Fetch the current balance
       const wallet = await WhatsAppWallet.findOne({
@@ -74,10 +70,11 @@ async function whatsAppCampaignHandler(
           { businessId: whatsAppBusinessConfigData?.businessId },
           { $inc: { currentBalance: -minimumAmount } },
         );
+      } else {
       }
     }
   } catch (error) {
-    console.error('Error in whatsAppCampaignHandler:', error);
+    console.error("Error in whatsAppCampaignHandler:", error);
   }
 }
 

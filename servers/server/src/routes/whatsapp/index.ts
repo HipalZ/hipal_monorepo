@@ -1666,7 +1666,9 @@ const whatsappRouter = new Hono()
       if (!body?.object) {
         return c.json({ message: 'ignored', err: false }, 200);
       }
-      const { messages, contacts, statuses, whatsAppBusinessConfigData } = await whatsAppEventData(body);
+      const { messages, contacts, statuses, whatsAppBusinessConfigData } =
+        await whatsAppEventData(body);
+        console.log('statuses', statuses);
       if (messages && whatsAppBusinessConfigData) {
         const { userData, userInput } = await whatsAppUserAndTextMessage(contacts, messages, whatsAppBusinessConfigData);
 
@@ -2283,16 +2285,7 @@ const whatsappRouter = new Hono()
         select: 'name phone',
       });
 
-      // Deduplicate by messageId and status to prevent double counting from retried webhooks
-      const seen = new Set();
-      const deduplicatedAnalytics = waAnalyticsUser.filter((item) => {
-        const key = `${item.messageId}-${item.status}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-
-      const obj = deduplicatedAnalytics.reduce(
+      const obj = waAnalyticsUser.reduce(
         (acc, user) => {
           acc.sent += user.status === 'sent' ? 1 : 0;
           acc.delivered += user.status === 'delivered' ? 1 : 0;
@@ -2311,18 +2304,23 @@ const whatsappRouter = new Hono()
           blocked: 0,
         },
       );
-
       if (status) {
-        const filteredAnalytics = deduplicatedAnalytics.filter(
-          (item) => item.status === status,
-        );
+        const waCampaignAnalyticsUser = await WhatsAppAnalyticsUser.find({
+          businessId,
+          campaignId,
+
+          status: status,
+        }).populate({
+          path: 'userId',
+          select: 'name phone',
+        });
 
         return c.json({
           message: 'wa analytics user',
           err: false,
           data: {
             overAllCount: obj,
-            campaignAnalytics: filteredAnalytics,
+            campaignAnalttics: waCampaignAnalyticsUser,
           },
         });
       }
@@ -2332,7 +2330,7 @@ const whatsappRouter = new Hono()
         err: false,
         data: {
           overAllCount: obj,
-          campaignAnalytics: deduplicatedAnalytics,
+          campaignAnalytics: waAnalyticsUser,
         },
       });
     },
