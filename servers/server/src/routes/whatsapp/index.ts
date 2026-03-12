@@ -675,6 +675,7 @@ const whatsappRouter = new Hono()
 
         const upcomingSeconds = getFutureSeconds(sendLaterTime) || 2000;
 
+        // Quick validations
         const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
           businessId,
         });
@@ -708,141 +709,21 @@ const whatsappRouter = new Hono()
         }
 
         const bodyVariableSequence = template?.bodyVariableSequence as string[];
-
         const imageUrl = template?.imageUrl;
 
-        // for all customers
+        // Quick estimate of customer count for balance check (without building full list)
+        let estimatedCustomerCount = 0;
+
         if (allCustomers) {
-          const allCustomersList = await Subscriber.find({
-            businessId,
-          })
-            .select('userId')
-            .populate({
-              path: 'userId',
-              select: 'phone name email',
-            })
-            .limit(200)
-            .sort({ _id: -1 });
-
-          const customersArray = [] as {
-            name: string;
-            phone: string;
-            email?: string;
-            _id: string;
-          }[];
-
-          for (const customer of allCustomersList) {
-            const blockedUser = await WhatsAppBlockedUser.findOne({
-              phone: customer?.userId?.phone,
-            }).select('phone');
-
-            if (!blockedUser) {
-              customersArray.push({
-                name: customer?.userId?.name,
-                phone: customer?.userId?.phone,
-                email: customer?.userId?.email,
-                _id: customer?.userId?._id.toString() || '',
-              });
-            }
-          }
-
-          const { insufficientBalance } = calculateAndCheckBalance(template.category, customersArray.length, whatsAppConfigData, businessWallet);
-
-          if (insufficientBalance) {
-            return respond(c, 'Insufficient balance', true, 400, {});
-          }
-
-          await pushToQueue(
-            customersArray,
-            template,
-            businessName,
-            address,
-            bodyVariableSequence,
-            imageUrl,
-            whatsAppConfigData,
-            businessId,
-            templateId,
-            upcomingSeconds,
-          );
-
-          return c.json({
-            message: 'Campaign scheduled successfully',
-            err: false,
-            data: {
-              success: true,
-            },
-          });
-        }
-        // for bulk customers
-        if (bulkCustomers.length > 0) {
-          const bulkCustomersList = [] as {
-            name: string;
-            phone: string;
-            _id: string;
-          }[];
-          for (const customer of bulkCustomers) {
-            if (customer.phone.length === 10 && customer.name && customer.name.length >= 2) {
-              const saveUser = await User.findOneAndUpdate(
-                {
-                  phone: customer.phone,
-                },
-                {
-                  name: customer.name,
-                  role: ['HIPAL_CUSTOMER', 'OWNER', 'MANAGER', 'CAPTAIN', 'CO_OWNER'],
-                },
-                {
-                  upsert: true,
-                },
-              );
-
-              const blockedUser = await WhatsAppBlockedUser.findOne({
-                phone: customer.phone,
-              }).select('phone');
-
-              if (!blockedUser) {
-                bulkCustomersList.push({
-                  name: customer.name,
-                  phone: customer.phone,
-                  _id: saveUser?._id.toString() || '',
-                });
-              }
-            }
-          }
-
-          const { insufficientBalance } = calculateAndCheckBalance(template.category, bulkCustomers.length, whatsAppConfigData, businessWallet);
-
-          if (insufficientBalance) {
-            return respond(c, 'Insufficient balance', true, 400, {});
-          }
-
-          await pushToQueue(
-            bulkCustomersList,
-            template,
-            businessName,
-            address,
-            bodyVariableSequence,
-            imageUrl,
-            whatsAppConfigData,
-            businessId,
-            templateId,
-            upcomingSeconds,
-          );
-
-          return respond(c, 'Campaign scheduled successfully', false, 200, {});
-        }
-        // for group customers
-        if (groupIds.length > 0) {
-          const groupIdsList = [] as {
-            name: string;
-            phone: string;
-            _id: string;
-          }[];
-
-          for (let i = 0; i < groupIds.length; i++) {
-            const group = await GroupModel.findOne({
-              _id: groupIds[i],
-            }).select('userIds');
-
+          const subscriberCount = await Subscriber.countDocuments({ businessId });
+          estimatedCustomerCount = Math.min(subscriberCount, 200);
+        } else if (bulkCustomers && bulkCustomers.length > 0) {
+          estimatedCustomerCount = bulkCustomers.filter(
+            (cust: { phone: string; name: string }) => cust.phone?.length === 10 && cust.name && cust.name.length >= 2,
+          ).length;
+        } else if (groupIds && groupIds.length > 0) {
+          for (const groupId of groupIds) {
+            const group = await GroupModel.findOne({ _id: groupId }).select('userIds');
             if (!group) {
               return c.json(
                 {
@@ -853,67 +734,201 @@ const whatsappRouter = new Hono()
                 404,
               );
             }
+            estimatedCustomerCount += group.userIds?.length || 0;
+          }
+        }
 
-            for (const user of group.userIds || []) {
-              const findUser = await Subscriber.findOne({
-                userId: user,
+        if (estimatedCustomerCount === 0) {
+          return c.json(
+            {
+              message: 'No customers found',
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
+
+        // Balance check using estimated count
+        const { insufficientBalance } = calculateAndCheckBalance(template.category, estimatedCustomerCount, whatsAppConfigData, businessWallet);
+
+        if (insufficientBalance) {
+          return respond(c, 'Insufficient balance', true, 400, {});
+        }
+
+        // Return 200 immediately — process heavy work in background
+        // This prevents gateway timeout for large contact lists
+        (async () => {
+          try {
+            // for all customers
+            if (allCustomers) {
+              const allCustomersList = await Subscriber.find({
+                businessId,
               })
                 .select('userId')
                 .populate({
                   path: 'userId',
-                  select: 'phone name',
-                });
+                  select: 'phone name email',
+                })
+                .limit(200)
+                .sort({ _id: -1 });
 
-              const blockedUser = await WhatsAppBlockedUser.findOne({
-                phone: findUser?.userId?.phone,
-              }).select('phone');
+              const customersArray = [] as {
+                name: string;
+                phone: string;
+                email?: string;
+                _id: string;
+              }[];
 
-              if (!blockedUser) {
-                groupIdsList.push({
-                  name: findUser?.userId?.name,
-                  phone: findUser?.userId?.phone,
-                  _id: findUser?.userId?.id,
-                });
+              for (const customer of allCustomersList) {
+                const blockedUser = await WhatsAppBlockedUser.findOne({
+                  phone: customer?.userId?.phone,
+                }).select('phone');
+
+                if (!blockedUser) {
+                  customersArray.push({
+                    name: customer?.userId?.name,
+                    phone: customer?.userId?.phone,
+                    email: customer?.userId?.email,
+                    _id: customer?.userId?._id.toString() || '',
+                  });
+                }
+              }
+
+              if (customersArray.length > 0) {
+                await pushToQueue(
+                  customersArray,
+                  template,
+                  businessName,
+                  address,
+                  bodyVariableSequence,
+                  imageUrl,
+                  whatsAppConfigData,
+                  businessId,
+                  templateId,
+                  upcomingSeconds,
+                );
               }
             }
+
+            // for bulk customers
+            else if (bulkCustomers && bulkCustomers.length > 0) {
+              const bulkCustomersList = [] as {
+                name: string;
+                phone: string;
+                _id: string;
+              }[];
+              for (const customer of bulkCustomers) {
+                if (customer.phone.length === 10 && customer.name && customer.name.length >= 2) {
+                  const saveUser = await User.findOneAndUpdate(
+                    {
+                      phone: customer.phone,
+                    },
+                    {
+                      name: customer.name,
+                      role: ['HIPAL_CUSTOMER', 'OWNER', 'MANAGER', 'CAPTAIN', 'CO_OWNER'],
+                    },
+                    {
+                      upsert: true,
+                    },
+                  );
+
+                  const blockedUser = await WhatsAppBlockedUser.findOne({
+                    phone: customer.phone,
+                  }).select('phone');
+
+                  if (!blockedUser) {
+                    bulkCustomersList.push({
+                      name: customer.name,
+                      phone: customer.phone,
+                      _id: saveUser?._id.toString() || '',
+                    });
+                  }
+                }
+              }
+
+              if (bulkCustomersList.length > 0) {
+                await pushToQueue(
+                  bulkCustomersList,
+                  template,
+                  businessName,
+                  address,
+                  bodyVariableSequence,
+                  imageUrl,
+                  whatsAppConfigData,
+                  businessId,
+                  templateId,
+                  upcomingSeconds,
+                );
+              }
+            }
+
+            // for group customers
+            else if (groupIds && groupIds.length > 0) {
+              const groupIdsList = [] as {
+                name: string;
+                phone: string;
+                _id: string;
+              }[];
+
+              for (let i = 0; i < groupIds.length; i++) {
+                const group = await GroupModel.findOne({
+                  _id: groupIds[i],
+                }).select('userIds');
+
+                if (!group) continue;
+
+                for (const user of group.userIds || []) {
+                  const findUser = await Subscriber.findOne({
+                    userId: user,
+                  })
+                    .select('userId')
+                    .populate({
+                      path: 'userId',
+                      select: 'phone name',
+                    });
+
+                  const blockedUser = await WhatsAppBlockedUser.findOne({
+                    phone: findUser?.userId?.phone,
+                  }).select('phone');
+
+                  if (!blockedUser) {
+                    groupIdsList.push({
+                      name: findUser?.userId?.name,
+                      phone: findUser?.userId?.phone,
+                      _id: findUser?.userId?.id,
+                    });
+                  }
+                }
+              }
+
+              if (groupIdsList.length > 0) {
+                await pushToQueue(
+                  groupIdsList,
+                  template,
+                  businessName,
+                  address,
+                  bodyVariableSequence,
+                  imageUrl,
+                  whatsAppConfigData,
+                  businessId,
+                  templateId,
+                  upcomingSeconds,
+                );
+              }
+            }
+          } catch (bgError) {
+            console.error('Background campaign processing error:', bgError);
           }
+        })();
 
-          const { insufficientBalance } = calculateAndCheckBalance(template.category, groupIdsList.length, whatsAppConfigData, businessWallet);
-
-          if (insufficientBalance) {
-            return respond(c, 'Insufficient balance', true, 400, {});
-          }
-
-          await pushToQueue(
-            groupIdsList,
-            template,
-            businessName,
-            address,
-            bodyVariableSequence,
-            imageUrl,
-            whatsAppConfigData,
-            businessId,
-            templateId,
-            upcomingSeconds,
-          );
-
-          return c.json({
-            message: 'Campaign scheduled successfully',
-            err: false,
-            data: {
-              success: true,
-            },
-          });
-        }
-
-        return c.json(
-          {
-            message: 'No customers found',
-            err: true,
-            data: {},
+        return c.json({
+          message: 'Campaign scheduled successfully',
+          err: false,
+          data: {
+            success: true,
           },
-          400,
-        );
+        });
       } catch (error) {
         const axiosError = error as AxiosError;
         const message = axiosError.response?.data?.error?.message ?? axiosError.message;
@@ -1666,9 +1681,8 @@ const whatsappRouter = new Hono()
       if (!body?.object) {
         return c.json({ message: 'ignored', err: false }, 200);
       }
-      const { messages, contacts, statuses, whatsAppBusinessConfigData } =
-        await whatsAppEventData(body);
-        console.log('statuses', statuses);
+      const { messages, contacts, statuses, whatsAppBusinessConfigData } = await whatsAppEventData(body);
+      console.log('statuses', statuses);
       if (messages && whatsAppBusinessConfigData) {
         const { userData, userInput } = await whatsAppUserAndTextMessage(contacts, messages, whatsAppBusinessConfigData);
 
