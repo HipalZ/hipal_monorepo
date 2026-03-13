@@ -20,12 +20,12 @@ async function sendWhatsAppTemplateForTableQr(
         interactive: {
           type: "cta_url",
           body: {
-            text: `Welcome to ${whatsAppBusinessConfigData?.businessName}! 🍽️\n\nWe’re excited to offer you an exceptional dining experience.\n\nClick below to explore our curated menu of handcrafted delights.`,
+            text: `Welcome to ${whatsAppBusinessConfigData?.businessName}! ✨\n\nThank you for connecting with us.\n\nTap below to continue and discover a seamless experience designed for you.`
           },
           action: {
             name: "cta_url",
             parameters: {
-              display_text: "Explore Menu",
+              display_text: "Explore Us",
               url: tableQrShortUrl,
             },
           },
@@ -56,7 +56,6 @@ async function tableQrHandler(
     }
     let tableQrShortUrl = tableInfo?.tableLink;
     tableQrShortUrl = `${tableQrShortUrl}?q=wa&id=${userId}`;
-
     await sendWhatsAppTemplateForTableQr(
       whatsAppBusinessConfigData,
       userPhone,
