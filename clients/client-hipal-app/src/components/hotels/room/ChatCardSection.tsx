@@ -121,9 +121,9 @@ const ChatCardSection = ({
     setIsOpenChat(!isOpenChat);
   };
 
-  // useEffect(() => {
-  //   updateTheme(themeData);
-  // }, [themeData]);
+  useEffect(() => {
+    updateTheme(themeData);
+  }, [themeData]);
 
   const handleSelectService = (service: QuickService) => {
     console.log("Selected service:", service);
