@@ -99,7 +99,7 @@ const MemoPhoneNumbersTable = () => {
   return (
     <section className="rounded-lg bg-white shadow-sm" aria-label="Phone Numbers">
       <div className="flex items-center justify-between border-b px-4 py-2">
-        <h2 className="text-xl font-semibold text-gray-900">Total {campaignsData?.campaignAnalytics?.length} contacts</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Recipient Activity</h2>
         <div className="flex items-center gap-4">
           {status && (
             <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm ${getStatusStyle(status)}`}>
