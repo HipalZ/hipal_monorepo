@@ -6,11 +6,12 @@ import { useCartStore } from '@/components/store/useCartStore';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import { useOrderStore } from '@/components/store/useOrderData';
 import { useStaffPermissionStore } from '@/components/store/usePermissions';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { CategoryType } from '@hi/db-models/src/validators';
-import { FileText, Receipt, ShoppingCart } from 'lucide-react';
+import { ChevronDown, FileText, Info, Receipt, ShoppingCart } from 'lucide-react';
 import { lazy, memo, Suspense, useEffect, useState } from 'react';
 import CartWithPos from '../atoms/cartItem/cartWithpos';
 import { useHorizontalScroll } from '../hooks/useHorizontalScoll';
@@ -29,6 +30,7 @@ type RightPanelView = 'cart' | 'orders' | 'bill';
 const DesktopTablePOS = () => {
   const selectedCategory = useOrderStore((s) => s.selectedCategory);
   const [rightPanelView, setRightPanelView] = useState<RightPanelView>('cart');
+  const [menuSyncWarningOpen, setMenuSyncWarningOpen] = useState(false);
   const selectedBill = useOrderStore((s) => s.selectedBill);
   const cartData = useLiteStore((s) => s.cartData);
   const selectedTable = useOrderStore((s) => s.selectedTable);
@@ -67,6 +69,18 @@ const DesktopTablePOS = () => {
               <main className="bg-muted/30 flex flex-col overflow-y-auto rounded-xl border-r-2 bg-gray-300">
                 <div className="bg-background border-b-2">
                   <div className="px-4 pb-2 pt-4">
+                    <Collapsible open={menuSyncWarningOpen} onOpenChange={setMenuSyncWarningOpen} className="mb-2">
+                      <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-left text-sm text-amber-800 transition-colors hover:bg-amber-100 data-[state=open]:rounded-b-none">
+                        <Info className="h-4 w-4 shrink-0 text-amber-600" />
+                        <span className="flex-1 font-medium">Menu syncs every 10 min</span>
+                        <ChevronDown
+                          className={`h-4 w-4 shrink-0 text-amber-600 transition-transform duration-200 ${menuSyncWarningOpen ? 'rotate-180' : ''}`}
+                        />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="rounded-b-md border border-t-0 border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                        Menu data is saved per table and will sync automatically every 10 minutes. Changes may take up to 10 min to reflect.
+                      </CollapsibleContent>
+                    </Collapsible>
                     <TableQuickNav key={selectedCategory?._id} />
                     <SearchComponent />
                     <h2 className="mt-3 text-xl font-semibold">{selectedCategory ? selectedCategory.name : 'Select a category'}</h2>
