@@ -26,22 +26,20 @@ const MemoSearchComponent = () => {
   const setSearchTerm = useOrderStore((s) => s.setSearchTerm);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
-  const allDishes = useMemo(() => {
-    return allCategories?.flatMap((cat) => cat?.dishIds).sort((a, b) => a?.name?.localeCompare(b?.name));
-  }, [allCategories]);
+  const categories = Array.isArray(allCategories) ? allCategories : [];
 
-  console.log('allDishes', allDishes);
+  const allDishes = useMemo(() => {
+    return categories.flatMap((cat) => (Array.isArray(cat?.dishIds) ? cat.dishIds : [])).sort((a, b) => (a?.name || '').localeCompare(b?.name || ''));
+  }, [categories]);
 
   const firstFiveDishNames = useMemo(
     () =>
       allDishes
-        ?.slice(0, 5)
-        ?.map((dish) => dish?.name)
-        ?.filter(Boolean) as string[],
+        .slice(0, 5)
+        .map((dish) => dish?.name)
+        .filter(Boolean) as string[],
     [allDishes],
   );
-
-  console.log('firstFiveDishNames', firstFiveDishNames);
 
   useEffect(() => {
     if (!firstFiveDishNames.length) return;
@@ -52,9 +50,8 @@ const MemoSearchComponent = () => {
   }, [firstFiveDishNames.length]);
 
   const handleChange = (value: string) => {
-    const term = value;
-    setSearchTerm(term);
-    setSearchActive(!!term.trim());
+    setSearchTerm(value);
+    setSearchActive(!!value.trim());
   };
 
   const handleClearSearch = () => {
@@ -75,7 +72,7 @@ const MemoSearchComponent = () => {
           className="w-full rounded-md border border-gray-300 pl-10 pr-10"
           placeholder="Search for"
         />
-        {!searchTerm && <AnimatedPlaceholder text={firstFiveDishNames[placeholderIndex]} />}
+        {!searchTerm && <AnimatedPlaceholder text={firstFiveDishNames?.[placeholderIndex] || ''} />}
         <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
         {searchTerm && (
           <button

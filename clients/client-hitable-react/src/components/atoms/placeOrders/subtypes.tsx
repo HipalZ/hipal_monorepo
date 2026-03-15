@@ -24,9 +24,10 @@ const MemoSubtypes = () => {
   const [categorySearch, setCategorySearch] = useState('');
   const [openMenuModal, setOpenMenuModal] = useState(false);
 
-  /** 🔎 Filter categories by search */
   const filteredCategories = useMemo(() => {
+    if (!Array.isArray(allCategories)) return [];
     if (!categorySearch.trim()) return allCategories;
+
     return allCategories.filter((cat) => cat.name.toLowerCase().includes(categorySearch.toLowerCase()));
   }, [categorySearch, allCategories]);
 
@@ -74,50 +75,51 @@ const MemoSubtypes = () => {
       {/* 🧭 Left Scrollable Category Sidebar */}
       <ScrollArea className="w-1/4 bg-white pt-4">
         <div className="hide-scrollbar relative pb-[5rem] md:space-y-8">
-          {allCategories?.map((category, index) => (
-            <motion.div
-              key={category?._id}
-              id={category?._id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{
-                delay: index * 0.1,
-                type: 'spring',
-                stiffness: 600,
-                damping: 60,
-              }}
-              onClick={() => setSelectedCategory(category)}
-              className={cn(
-                'relative flex cursor-pointer flex-col items-center py-4 transition-all',
-                selectedCategory?._id === category?._id ? 'rounded-l-2xl bg-purple-50' : 'hover:bg-gray-100',
-              )}
-            >
-              {selectedCategory?._id === category._id && (
-                <motion.div
-                  layoutId="category-border"
-                  className="absolute inset-0 border-r-4 border-purple-200"
-                  initial={false}
-                  transition={{
-                    type: 'spring',
-                    stiffness: 600,
-                    damping: 60,
-                  }}
-                />
-              )}
-
-              <Avatar className="h-10 w-10">
-                {category?.coverImage ? (
-                  <AvatarImage src={category.coverImage} alt={category.name} />
-                ) : (
-                  <AvatarFallback>
-                    <ImageIcon className="h-6 w-6 text-gray-500" />
-                  </AvatarFallback>
+          {Array.isArray(allCategories) &&
+            allCategories?.map((category, index) => (
+              <motion.div
+                key={category?._id}
+                id={category?._id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  delay: index * 0.1,
+                  type: 'spring',
+                  stiffness: 600,
+                  damping: 60,
+                }}
+                onClick={() => setSelectedCategory(category)}
+                className={cn(
+                  'relative flex cursor-pointer flex-col items-center py-4 transition-all',
+                  selectedCategory?._id === category?._id ? 'rounded-l-2xl bg-purple-50' : 'hover:bg-gray-100',
                 )}
-              </Avatar>
+              >
+                {selectedCategory?._id === category._id && (
+                  <motion.div
+                    layoutId="category-border"
+                    className="absolute inset-0 border-r-4 border-purple-200"
+                    initial={false}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 600,
+                      damping: 60,
+                    }}
+                  />
+                )}
 
-              <h3 className="mt-2 text-center text-sm font-semibold md:text-base">{category?.name}</h3>
-            </motion.div>
-          ))}
+                <Avatar className="h-10 w-10">
+                  {category?.coverImage ? (
+                    <AvatarImage src={category.coverImage} alt={category.name} />
+                  ) : (
+                    <AvatarFallback>
+                      <ImageIcon className="h-6 w-6 text-gray-500" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+
+                <h3 className="mt-2 text-center text-sm font-semibold md:text-base">{category?.name}</h3>
+              </motion.div>
+            ))}
         </div>
       </ScrollArea>
 
