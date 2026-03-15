@@ -30,14 +30,18 @@ const MemoSearchComponent = () => {
     return allCategories?.flatMap((cat) => cat?.dishIds).sort((a, b) => a?.name?.localeCompare(b?.name));
   }, [allCategories]);
 
+  console.log('allDishes', allDishes);
+
   const firstFiveDishNames = useMemo(
     () =>
       allDishes
-        .slice(0, 5)
-        .map((dish) => dish?.name)
-        .filter(Boolean) as string[],
+        ?.slice(0, 5)
+        ?.map((dish) => dish?.name)
+        ?.filter(Boolean) as string[],
     [allDishes],
   );
+
+  console.log('firstFiveDishNames', firstFiveDishNames);
 
   useEffect(() => {
     if (!firstFiveDishNames.length) return;
