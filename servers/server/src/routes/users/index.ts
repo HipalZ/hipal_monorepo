@@ -1256,8 +1256,9 @@ const usersRouter = new Hono()
           //TODO monad integration
           await monadHelperFunction({
             businessId: businessId,
-            userId: userId,
+            loyaltyId,
             orderId: "0",
+            userId: userId,
             claimedCoinz: 0,
             signUpBonus,
           });
