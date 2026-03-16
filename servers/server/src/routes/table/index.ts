@@ -1336,7 +1336,7 @@ const tableRouter = new Hono()
             err: false,
             data: {
               qrBillId: billId,
-              path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${variantId ? variantId : billId}`,
+              path: `https://hipal.hipalz.com/${customLink?.customLink}/posPayment?orderId=${variantId ? variantId : billId}`,
             },
           },
           200,
@@ -1678,7 +1678,7 @@ const tableRouter = new Hono()
         billId = tableSession?._id.toString();
       }
 
-      const longUrl = `https://hipal-test.hipalz.com/${business?.customLink}/ebill?billId=${billId}`;
+      const longUrl = `https://hipal.hipalz.com/${business?.customLink}/ebill?billId=${billId}`;
 
       const uniqueOrderId = nanoid(5);
       let findLongUrl = await BillUrlModel.findOne({ longUrl });
@@ -1686,7 +1686,7 @@ const tableRouter = new Hono()
       if (!findLongUrl) {
         const createShortUrl = await BillUrlModel.create({
           longUrl: longUrl,
-          shortUrl: `https://api.test.hipalz.com/surl/c/b?urlCode=${uniqueOrderId}`,
+          shortUrl: `https://api.hipalz.com/surl/c/b?urlCode=${uniqueOrderId}`,
           urlCode: uniqueOrderId,
           createdAt: Date.now(),
         });
