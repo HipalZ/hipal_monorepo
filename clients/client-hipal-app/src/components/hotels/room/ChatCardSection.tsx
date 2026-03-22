@@ -19,8 +19,8 @@ import { updateTheme } from "@/components/utils/themes";
 import { useGetServiceCategories } from "@/components/hooks/useServicesHotel";
 import type { IService } from "@/components/hooks/useServicesHotel";
 import { Skeleton } from "@/components/ui/skeleton";
-import CleaningImg from "@/assets/hotel/clean_room.png";
-import CheckoutImg from "@/assets/hotel/checkout.png";
+import CleaningImg from "@/assets/hotel/clean_room.jpg";
+import CheckoutImg from "@/assets/hotel/checkout.jpeg";
 import {
   useCreateAlert,
   useHotelRoomData,
@@ -126,8 +126,6 @@ const ChatCardSection = ({
   }, [themeData]);
 
   const handleSelectService = (service: QuickService) => {
-    console.log("Selected service:", service);
-
     if (service.isCheckout) {
       setShowConfirmation(true);
     } else {
@@ -218,53 +216,67 @@ const ChatCardSection = ({
       {categoriesLoading ? (
         renderLoadingSkeleton()
       ) : (
-        <section className="grid grid-cols-4 gap-1.5 md:gap-2 lg:gap-2 mx-4 mb-6">
-          {quickServices.map((service, index) => {
-            let serviceImage = DummyImage;
+        <>
+{/* SECTION HEADER */}
+<div className="mx-4 mb-3 flex items-center gap-2">
+  <h3 className="font-semibold text-h-primary text-base poppins">
+    Quick Actions
+  </h3>
+</div>
 
-            if (service.isCheckout) {
-              serviceImage = CheckoutImg;
-            } else if (service.image) {
-              serviceImage = service.image;
-            }
+<section className="grid grid-cols-4 gap-x-3 gap-y-2 mx-4 mb-6">
+  {quickServices.map((service) => {
+    let serviceImage = DummyImage;
 
-            return (
-              <article
-                key={service._id}
-                onClick={() => handleSelectService(service)}
-                onKeyDown={() => handleSelectService(service)}
-                className="bg-white relative pb-4 overflow-hidden rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-              >
-                <Image
-                  src={serviceImage || "/placeholder.svg"}
-                  alt={service.name}
-                  width={96}
-                  height={96}
-                  className="w-full h-full absolute -bottom-4 object-cover"
-                />
-                <div className="relative z-10">
-                  <h4
-                    className={cn(
-                      "text-[0.625rem] uppercase leading-3 pt-1 px-1 h-[4.5rem] text-center !font-semibold text-gray-500 poppins-regular",
-                      service.isCheckout && "text-primary",
-                    )}
-                  >
-                    {service.name}
-                  </h4>
-                </div>
+    if (service.isCheckout) {
+      serviceImage = CheckoutImg;
+    } else if (service.image) {
+      serviceImage = service.image;
+    }
 
-                {/* Availability indicator */}
-                {!service.availability && !service.isCheckout && (
-                  <div className="absolute inset-0 bg-black/20 rounded-2xl flex items-center justify-center">
-                    <span className="text-[0.5rem] font-medium text-white bg-red-500 px-1 py-0.5 rounded">
-                      Unavailable
-                    </span>
-                  </div>
-                )}
-              </article>
-            );
-          })}
-        </section>
+    return (
+      <article
+        key={service._id}
+        onClick={() => handleSelectService(service)}
+        onKeyDown={() => handleSelectService(service)}
+        className="group flex flex-col items-center cursor-pointer"
+      >
+        {/* Uniform image tile */}
+        <div className="relative h-[84px] w-[84px] overflow-hidden rounded-[22px] border border-[#E9E4DC] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_8px_18px_rgba(0,0,0,0.10)]">
+          <Image
+            src={serviceImage || "/placeholder.svg"}
+            alt={service.name}
+            fill
+            className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+
+          <div className="absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/20" />
+
+          {!service.availability && !service.isCheckout && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[22px] bg-white/65 backdrop-blur-[1px]">
+              <span className="rounded-full bg-red-500 px-2 py-0.5 text-[0.52rem] font-medium text-white">
+                Unavailable
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Label below */}
+        <div className="mt-2 min-h-[28px] px-1 text-center">
+          <span
+            className={cn(
+             "text-[#5B6470] text-sm md:text-base leading-[1.05] tracking-[-0.04em] line-clamp-2",
+              service.isCheckout && "text-[#E85D3A]"
+            )}
+          >
+            {service.name}
+          </span>
+        </div>
+      </article>
+        );
+      })}
+      </section>
+        </>
       )}
 
       <div
@@ -277,30 +289,24 @@ const ChatCardSection = ({
       >
         <div className="flex-1">
           <p className="font-light text-h-primary text-xs poppins mb-1">
-            For any further assistance.
+            Track Your Service Requests
           </p>
           <h1 className="font-semibold text-h-primary text-base poppins">
-            Chat With Us
+            Click to view
           </h1>
         </div>
-        <Button
-          size="icon"
-          aria-label="Chat with us"
-          className="relative transition-colors rounded-full bg-green-700 text-white"
-        >
-          <MessageCircle />
-          <motion.span
-            className="absolute top-0 right-0 w-2 h-2 rounded-full bg-green-700"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 20,
-              delay: 0.2,
-            }}
-          />
-        </Button>
+    <Button
+      size="icon"
+      className="relative h-11 w-11 rounded-full border border-white/60 bg-[#178A43] text-white shadow-[0_6px_14px_rgba(23,138,67,0.24)] transition-all duration-200 hover:scale-[1.03] hover:bg-[#147B3B]"
+    >
+      <MessageCircle size={18} />
+      <motion.span
+        className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border border-white bg-[#22C55E]"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
+      />
+    </Button>
       </div>
 
       {/* Service Request Modal */}

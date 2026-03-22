@@ -13,8 +13,7 @@ export enum NavItemsHotelEnum {
   Sales = "Sales",
   Rooms = "Rooms",
   Escalation = "Escalation",
-  Reviews = "Reviews"
-
+  Reviews = "Reviews",
 }
 
 export interface guestData {
@@ -42,6 +41,7 @@ export interface RoomData {
 }
 
 export interface Service {
+  image: string;
   _id: string;
   name: string;
 }
@@ -93,8 +93,7 @@ export interface Alert {
     | "WARNING"
     | "ESCALATION"
     | "NOT_DELIVERED"
-    | "MESSAGE"
-    ;
+    | "MESSAGE";
   serviceIds: Service[];
   businessId: string;
   userId: string;

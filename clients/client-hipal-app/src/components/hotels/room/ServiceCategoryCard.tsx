@@ -1,4 +1,4 @@
-"use client";
+"use client";;
 import { useState, useCallback, memo, useMemo } from "react";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
@@ -200,14 +200,6 @@ function MemoServiceCategoryCard({
     [selectedServices]
   );
 
-  const dynamicHeightAndWidth = useMemo(() => {
-    const sizes: Record<string, { height: number; width: number }> = {
-      xs: { height: 130, width: 130 },
-      xl: { height: 170, width: 170 },
-    };
-    return sizes[screenSize] || { height: 150, width: 150 };
-  }, [screenSize]);
-
   // Optimized: Memoize the button configuration to prevent CommonBottomButton re-renders
   const footerButtons = useMemo(() => [
     {
@@ -230,29 +222,24 @@ function MemoServiceCategoryCard({
     <>
       <Card
         onClick={openServicePopup}
-        className={`transition-all duration-200 border border-[#E0E0E0] cursor-pointer aspect-square rounded-3xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col items-start justify-between hover:shadow-lg hover:scale-[1.02] ${className}`}
+        className={`group relative aspect-square cursor-pointer overflow-hidden rounded-[28px] border border-[#E9E4DC] bg-[#F8F5F0] shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(0,0,0,0.10)] ${className}`}
       >
-        <CardContent className="relative flex flex-col justify-between w-full h-full p-3 z-10 overflow-hidden">
-          <div className="absolute -bottom-2 -right-2 z-0">
-            <Image
-              src={category.image || "/placeholder.svg"}
-              alt={category.name}
-              width={dynamicHeightAndWidth.width}
-              height={dynamicHeightAndWidth.height}
-              style={{ objectFit: "cover" }}
-            />
-          </div>
-          <div className="relative z-10">
-            <h3 className="text-lg poppins-regular !font-semibold capitalize text-[#000000] !tracking-tighter">
-              {formattedCategoryName}
-            </h3>
-            <h6 className="text-xs text-[#00000080] poppins-regular !tracking-tighter">
-              {category.description}
-            </h6>
-          </div>
-        </CardContent>
-      </Card>
+        <Image
+          src={category.image || "/placeholder.svg"}
+          alt={category.name}
+          fill
+          className="object-cover scale-[1.02] transition-transform duration-500 group-hover:scale-[1.06]"
+        />
 
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/15 to-transparent" />
+        <div className="absolute inset-0 rounded-[28px] ring-1 ring-inset ring-white/20" />
+
+        <CardContent className="relative z-20 p-3">
+        <h3 className="max-w-[60%] text-sm md:text-base leading-[1.05] tracking-[-0.04em] text-white line-clamp-2">
+          {formattedCategoryName}
+        </h3>
+      </CardContent>
+      </Card>
       {servicePopup && (
         <>
           {isFoodOrderCategory ? (

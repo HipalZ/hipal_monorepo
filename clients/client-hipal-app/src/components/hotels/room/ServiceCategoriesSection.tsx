@@ -2,12 +2,11 @@
 import { useGetServiceCategories } from "@/components/hooks/useServicesHotel";
 import ServiceCategoryCard from "./ServiceCategoryCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import bell from "@/assets/hotel/bell.png";
+import orderfood from "@/assets/hotel/orderfood.jpeg";
 import { motion } from "framer-motion";
-import foodDome from "@/assets/hotel/Food.png";
-import housekeeping from "@/assets/hotel/House_keeping.png";
-import maintainance from "@/assets/hotel/maintainace_new.png";
-import frontoffice from "@/assets/hotel/Front_Office.png";
+import housekeeping from "@/assets/hotel/housekeeping.jpeg";
+import maintainance from "@/assets/hotel/maintainace.jpeg";
+import frontoffice from "@/assets/hotel/frontoffice.jpeg";
 import type { IMenuLayout } from "@/components/types/businessData";
 import { HomeIcon, MessageCircle, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,7 @@ export default function ServiceCategoriesSection({
   // Memoize static configuration objects to prevent unnecessary re-renders
   const config = useMemo(() => ({
     categoryImages: {
-      FOOD: foodDome,
+      FOOD: orderfood,
       HOUSE_KEEPING: housekeeping,
       FRONT_OFFICE: frontoffice,
       OTHERS: maintainance,
@@ -92,40 +91,44 @@ export default function ServiceCategoriesSection({
 
   return (
     <div className="relative">
-      <div className="flex items-center justify-between mb-4 mr-2">
-        <section>
-          <span className="poppins-regular flex gap-1 items-center text-gray-400 text-[0.9rem]">
-            Guest Support
-          </span>
-          <span className="poppins-regular gap-2 flex items-center text-gray-600 !font-semibold text-[0.9rem]">
-            <HomeIcon size={14} />
-            {room}
-          </span>
-        </section>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={handleOpenSearch}
-            size="icon"
-            className="relative transition-colors rounded-full text-base-100"
-          >
-            <Search size={18} />
-          </Button>
+     <div className="mb-5 flex items-start justify-between">
+  <section className="flex flex-col gap-1">
+    <span className="poppins-regular text-[0.92rem] leading-none tracking-[0.01em] text-[#A79F97]">
+      Guest Support
+    </span>
 
-          <Button
-            onClick={toggleChat}
-            size="icon"
-            className="relative transition-colors rounded-full bg-green-700 text-white"
-          >
-            <MessageCircle />
-            <motion.span
-              className="absolute top-0 right-0 w-2 h-2 rounded-full bg-green-700"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
-            />
-          </Button>
-        </div>
-      </div>
+    <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.04)] ring-1 ring-[#E9E4DC]">
+      <HomeIcon size={13} className="text-[#6B625A]" />
+      <span className="poppins-regular text-[0.9rem] font-semibold leading-none text-[#4A433D]">
+        {room}
+      </span>
+    </div>
+  </section>
+
+  <div className="flex items-center gap-2">
+    <Button
+      onClick={handleOpenSearch}
+      size="icon"
+      className="h-11 w-11 rounded-full border border-white/60 bg-[#E85D3A] text-white shadow-[0_6px_14px_rgba(232,93,58,0.28)] transition-all duration-200 hover:scale-[1.03] hover:bg-[#DF5532]"
+    >
+      <Search size={18} />
+    </Button>
+
+    <Button
+      onClick={toggleChat}
+      size="icon"
+      className="relative h-11 w-11 rounded-full border border-white/60 bg-[#178A43] text-white shadow-[0_6px_14px_rgba(23,138,67,0.24)] transition-all duration-200 hover:scale-[1.03] hover:bg-[#147B3B]"
+    >
+      <MessageCircle size={18} />
+      <motion.span
+        className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border border-white bg-[#22C55E]"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
+      />
+    </Button>
+  </div>
+</div>
 
       <section className="flex justify-center">
         <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-4 mt-2 w-full">
@@ -134,7 +137,7 @@ export default function ServiceCategoriesSection({
               <ServiceCategoryCard
                 category={{
                   ...category,
-                  image: config.categoryImages[category.name as keyof typeof config.categoryImages] || bell,
+                  image: config.categoryImages[category.name as keyof typeof config.categoryImages] || orderfood,
                   description: config.categoryDescriptions[category.name as keyof typeof config.categoryDescriptions] || "",
                 }}
                 businessId={businessId}
