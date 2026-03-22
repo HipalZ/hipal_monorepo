@@ -825,7 +825,7 @@ const hotelAlertRouter = new Hono()
 
       // Step 4: Fetch and populate alerts
       let alerts = await HotelAlert.find(alertQuery)
-        .populate({ path: "serviceIds", select: "name" })
+        .populate({ path: "serviceIds", select: "name image" })
         .populate({ path: "createdBy", select: "name phone" })
         .populate({ path: "acceptedBy", select: "name phone" })
         .populate({ path: "roomId", select: "name" })

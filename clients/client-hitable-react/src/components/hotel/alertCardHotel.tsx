@@ -147,14 +147,27 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
           <h3 className="flex items-center text-lg font-bold">Room {alert?.roomId?.name}</h3>
           <RingClock createdAt={alert?.createdAt} />
         </div>
-        <h1 className="my-2">{getAlertLabel(alert?.alertProgress)}</h1>
+        <h1 className="my-2 font-bold">{getAlertLabel(alert?.alertProgress)}</h1>
         {/* Services */}
         <div className="mb-3 flex flex-wrap gap-2">
           {alert?.serviceIds.map((service) => (
-            <Badge key={service._id} variant="outline" className="flex items-center gap-1">
-              <Package className="h-3.5 w-3.5" />
-              {service?.name}
-            </Badge>
+            <article key={service._id} className="inline-flex">
+              {service.image ? (
+                <div className="h-[100px] w-[100px] flex-shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+                  <img
+                    src={service.image}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
+              ) : null}
+              <div key={service._id} className="group flex items-center gap-3 rounded-xl bg-white px-2 py-1.5 text-slate-900 transition-colors">
+                <span className="pr-1 text-base font-semibold">{service?.name}</span>
+              </div>
+            </article>
           ))}
           <h1 className="text-sm">{alert?.message}</h1>
         </div>
