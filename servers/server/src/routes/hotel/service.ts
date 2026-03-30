@@ -337,6 +337,23 @@ const serviceRouter = new Hono()
       return respond(c, "Category sequences updated", false, 200, {});
     },
   )
+  .get(
+    "/get_category_sequence",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.query();
+      const categories = await HotelServiceCategory.find({
+        businessId,
+        availability: true,
+      }).sort({ sequence: 1 });
+      return respond(c, "Category sequences", false, 200, { categories });
+    },
+  )
 
   .post(
     "/update_service_sequence",
