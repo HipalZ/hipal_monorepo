@@ -4,6 +4,7 @@ import {
   HotelServiceCategory,
   User,
 } from "@hi/db-models";
+import mongoose from "mongoose";
 import {
   hotelService,
   hotelServiceCategory,
@@ -49,7 +50,9 @@ const serviceRouter = new Hono()
       const { businessId } = c.req.query();
       const services = await HotelService.find({
         businessId,
-      }).lean();
+      })
+        .sort({ sequence: 1 })
+        .lean();
 
       return respond(c, "All services ", false, 200, services);
     },
@@ -68,10 +71,13 @@ const serviceRouter = new Hono()
       const { businessId } = c.req.query();
       const services = await HotelServiceCategory.find({
         businessId,
-      }).populate({
-        path: "serviceIds",
-        select: "name image availability",
-      });
+      })
+        .sort({ sequence: 1 })
+        .populate({
+          path: "serviceIds",
+          select: "name image availability sequence",
+          options: { sort: { sequence: 1 } },
+        });
 
       return respond(c, "All services ", false, 200, services);
     },
@@ -92,11 +98,14 @@ const serviceRouter = new Hono()
         businessId,
         availability: true,
       })
+        .sort({ sequence: 1, _id: 1 })
         .populate({
           path: "serviceIds",
-          select: "name image availability avgAcceptanceTime avgCompletionTime",
+          select:
+            "name image availability avgAcceptanceTime avgCompletionTime sequence",
+          options: { sort: { sequence: 1, _id: 1 } },
         })
-        .select("name image serviceIds")
+        .select("name image serviceIds sequence")
         .lean();
 
       return respond(c, "All service categories", false, 200, categories);
@@ -297,6 +306,64 @@ const serviceRouter = new Hono()
 
         return respond(c, "Services deleted successfully", false, 200, {});
       });
+    },
+  )
+
+  .post(
+    "/update_category_sequence",
+    zValidator(
+      "json",
+      z.object({
+        sequences: z.array(
+          z.object({
+            id: z.string(),
+            sequence: z.number(),
+          }),
+        ),
+      }),
+    ),
+    async (c) => {
+      const { sequences } = await c.req.json();
+
+      const bulkOps = sequences.map((item: any) => ({
+        updateOne: {
+          filter: { _id: new mongoose.Types.ObjectId(item.id) },
+          update: { $set: { sequence: item.sequence } },
+        },
+      }));
+
+      await HotelServiceCategory.bulkWrite(bulkOps);
+
+      return respond(c, "Category sequences updated", false, 200, {});
+    },
+  )
+
+  .post(
+    "/update_service_sequence",
+    zValidator(
+      "json",
+      z.object({
+        sequences: z.array(
+          z.object({
+            id: z.string(),
+            sequence: z.number(),
+          }),
+        ),
+      }),
+    ),
+    async (c) => {
+      const { sequences } = await c.req.json();
+
+      const bulkOps = sequences.map((item: any) => ({
+        updateOne: {
+          filter: { _id: new mongoose.Types.ObjectId(item.id) },
+          update: { $set: { sequence: item.sequence } },
+        },
+      }));
+
+      await HotelService.bulkWrite(bulkOps);
+
+      return respond(c, "Service sequences updated", false, 200, {});
     },
   );
 

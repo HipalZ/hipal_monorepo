@@ -16,6 +16,7 @@ const hotelServiceSchema = new Schema<HotelServiceType>({
   avgCompletionTime: { type: Number, default: 4 },
   avgAcceptanceTime: { type: Number, default: 2 },
   avgDeliveryTime: { type: Number, default: 3 },
+  sequence: { type: Number, default: 0 },
 });
 
 const hotelServiceCategorySchema = new Schema<HotelServiceCategoryType>({
@@ -24,6 +25,7 @@ const hotelServiceCategorySchema = new Schema<HotelServiceCategoryType>({
   businessId: { type: ObjectId, required: true, ref: "Business" },
   image: { type: String },
   serviceIds: [{ type: ObjectId, ref: "hotelservice" }],
+  sequence: { type: Number, default: 0 },
 });
 
 const HotelService: Model<HotelServiceType> = mongoose.model<HotelServiceType>(
