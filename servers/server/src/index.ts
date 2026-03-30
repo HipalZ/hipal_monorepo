@@ -58,7 +58,6 @@ app.use(
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:3004',
-
       'https://www.biz.test.hipalz.com',
       'https://www.hipal-test.hipalz.com',
       'https://www.hipalz.com',
