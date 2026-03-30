@@ -63,8 +63,7 @@ export default function ServiceCategoriesSection({
   const { primary, others } = useMemo(() => {
     if (!categoriesData) return { primary: [], others: [] };
 
-    const transformed = [...categoriesData]
-      .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
+    const transformed = categoriesData
       .map((cat) => ({
         ...cat,
         name: config.nameMap[cat.name] || cat.name,
