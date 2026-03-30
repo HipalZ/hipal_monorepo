@@ -33,6 +33,7 @@ const MemoListOfParentCategory = () => {
     setCatId,
     setIdCheck,
     setTimings,
+    setCategoryInfo,
   } = useMenuPageStore((state) => ({
     search: state.search,
     visibilityFilter: state.visibilityFilter,
@@ -44,6 +45,7 @@ const MemoListOfParentCategory = () => {
     setImagePreview: state.setImagePreview,
     setSelectedIds: state.setSelectedIds,
     setCategoryName: state.setCategoryName,
+    setCategoryInfo: state.setCategoryInfo,
     setEditingCat: state.setEditingMainCat,
     setCatId: state.setCatId,
     setIdCheck: state.setIdCheck,
@@ -97,6 +99,7 @@ const MemoListOfParentCategory = () => {
       setSelectedIds(category.subCategoryIds);
       setIdCheck(category.subCategoryIds);
       setCategoryName(category.name);
+      setCategoryInfo(category.categoryInfo || "");
       setCatId(category._id?.toString() ?? "");
       setOpenMenu(true);
       setEditingCat(true);
@@ -111,6 +114,7 @@ const MemoListOfParentCategory = () => {
       setImagePreview,
       setSelectedIds,
       setCategoryName,
+      setCategoryInfo,
       setEditingCat,
       setCatId,
       setIdCheck,

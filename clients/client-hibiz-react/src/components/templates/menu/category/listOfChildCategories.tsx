@@ -57,6 +57,7 @@ const MemoListOfChildCategory = () => {
   const setAvailability = useMenuPageStore((s) => s.setAvailability);
   const setImagePreview = useMenuPageStore((s) => s.setImagePreview);
   const setCategoryName = useMenuPageStore((s) => s.setCategoryName);
+  const setCategoryInfo = useMenuPageStore((s) => s.setCategoryInfo);
   const setEditingSubCat = useMenuPageStore((s) => s.setEditingSubCat);
   const setCatId = useMenuPageStore((s) => s.setCatId);
   const setIdCheck = useMenuPageStore((s) => s.setIdCheck);
@@ -127,6 +128,7 @@ const MemoListOfChildCategory = () => {
     setRecommendationIds(category.dishIds);
     setRemoveRecommendationIds(category.dishIds);
     setCategoryName(category.name);
+    setCategoryInfo(category.categoryInfo || '');
     setCatId(category._id?.toString() ?? '');
     setOpenMenu(true);
     setEditingSubCat(true);

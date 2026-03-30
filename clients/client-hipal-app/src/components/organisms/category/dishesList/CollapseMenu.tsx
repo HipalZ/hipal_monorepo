@@ -51,6 +51,10 @@ const CollapseMenu: FC<CollapseMenuProps> = ({
     return matchExists ? isActiveCategory : parentCategories[0]?._id || null;
   }, [isActiveCategory, parentCategories]);
 
+  const activeCategoryObj = useMemo(() => {
+    return parentCategories.find((cat) => cat._id === activeMainCategory);
+  }, [activeMainCategory, parentCategories]);
+
   useEffect(() => {
     const allDishes = childCategories.reduce((acc: DishType[], category) => {
       return acc.concat(
@@ -66,6 +70,8 @@ const CollapseMenu: FC<CollapseMenuProps> = ({
     cat?.parentCategoryIds.includes(activeMainCategory),
   );
 
+  console.log("activeCategoryObj", activeCategoryObj);
+  
   return (
     <div className="min-h-[calc(100vh-6rem)]">
       {/* Tabs for main categories */}
@@ -124,6 +130,34 @@ const CollapseMenu: FC<CollapseMenuProps> = ({
               </button>
             );
           })}
+        </div>
+      )}
+
+      {activeCategoryObj?.categoryInfo && (
+        <div className="px-4 pb-4 bg-gray-50 transition-all duration-300">
+          <div 
+            className="flex items-start gap-3 rounded-xl p-3 shadow-sm bg-white border"
+            style={{ 
+              borderLeft: `4px solid ${primaryColor}`,
+              borderColor: `${primaryColor}30`, 
+              borderLeftColor: primaryColor
+            }}
+          >
+            <div className="mt-0.5 flex-shrink-0">
+               <svg 
+                 className="w-5 h-5 opacity-90" 
+                 style={{ color: primaryColor }} 
+                 fill="none" 
+                 viewBox="0 0 24 24" 
+                 stroke="currentColor"
+               >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+               </svg>
+            </div>
+            <p className="text-[13px] sm:text-sm font-medium text-gray-600 poppins whitespace-pre-wrap leading-relaxed w-full">
+              {activeCategoryObj.categoryInfo}
+            </p>
+          </div>
         </div>
       )}
 
