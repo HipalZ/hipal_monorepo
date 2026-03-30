@@ -23,4 +23,4 @@ NAWABS issue
 WABA ID templates
 Test
 expiry 1hour
-testing prod
+testing production
