@@ -281,9 +281,7 @@ function MemoServiceCategoryCard({
                   </div>
                 ) : (
                   <div className="mb-20 grid grid-cols-3 gap-4">
-                    {[...category.serviceIds]
-                      .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
-                      .map((service) => (
+                    {category.serviceIds.map((service) => (
                       service.availability && (
                         <ServiceItem
                           key={service._id}
