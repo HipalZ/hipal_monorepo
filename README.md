@@ -65,3 +65,4 @@ bun run dev
 - **State Management**: Zustand, TanStack Query
 - **Local Database**: Dexie (IndexedDB wrapper)
 - **Icons**: Lucide React
+test
