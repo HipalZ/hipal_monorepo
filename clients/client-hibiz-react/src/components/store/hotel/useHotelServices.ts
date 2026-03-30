@@ -10,12 +10,14 @@ export interface IService {
   availability?: boolean;
   avgCompletionTime?: number;
   avgAcceptanceTime?: number;
+  sequence?: number;
 }
 export interface ICategoryPayload {
   businessId: string;
   name: string;
   image: string;
   availability: boolean;
+  sequence?: number;
 }
 
 export interface IServiceCategory {
@@ -23,6 +25,7 @@ export interface IServiceCategory {
   name: string;
   image: string;
   serviceIds: IService[];
+  sequence?: number;
 }
 
 interface UpdateServicePayload {
@@ -256,4 +259,50 @@ export const useAddService = () => {
   });
 
   return { addServiceLoader, addService };
+};
+
+export const useUpdateCategorySequence = () => {
+  const queryClient = useQueryClient();
+  const { mutateAsync: updateCategorySequence, isPending: updatingCategorySequence } = useMutation({
+    mutationFn: async (payload: { sequences: { id: string; sequence: number }[]; businessId: string }) => {
+      const response = await apiRpc.hotel.service.update_category_sequence.$post({
+        json: { sequences: payload.sequences },
+      });
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["getServiceCategories", variables.businessId],
+      });
+      toast.success("Category order updated");
+    },
+    onError: () => {
+      toast.error("Failed to update category order");
+    },
+  });
+
+  return { updateCategorySequence, updatingCategorySequence };
+};
+
+export const useUpdateServiceSequence = () => {
+  const queryClient = useQueryClient();
+  const { mutateAsync: updateServiceSequence, isPending: updatingServiceSequence } = useMutation({
+    mutationFn: async (payload: { sequences: { id: string; sequence: number }[]; businessId: string }) => {
+      const response = await apiRpc.hotel.service.update_service_sequence.$post({
+        json: { sequences: payload.sequences },
+      });
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["getServiceCategories", variables.businessId],
+      });
+      toast.success("Service order updated");
+    },
+    onError: () => {
+      toast.error("Failed to update service order");
+    },
+  });
+
+  return { updateServiceSequence, updatingServiceSequence };
 };

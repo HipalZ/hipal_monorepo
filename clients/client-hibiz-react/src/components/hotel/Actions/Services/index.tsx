@@ -44,6 +44,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Save } from "lucide-react";
+import {
+  useUpdateCategorySequence,
+  useUpdateServiceSequence,
+} from "@/components/store/hotel/useHotelServices";
 
 const BirthdayImageUploader = lazy(
   () => import("@/components/templates/events/birthdayImage"),
@@ -67,7 +89,12 @@ const HotelServices = () => {
   );
   const { updateService } = useUpdateHotelService();
   const { deleteService } = useDeleteHotelService();
+  const { updateCategorySequence, updatingCategorySequence } = useUpdateCategorySequence();
+  const { updateServiceSequence, updatingServiceSequence } = useUpdateServiceSequence();
+
   const [searchQuery, setSearchQuery] = useState("");
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [localCategories, setLocalCategories] = useState<any[]>([]);
 
   const [serviceAvailability, setServiceAvailability] = useState<
     Record<string, boolean>
@@ -95,8 +122,68 @@ const HotelServices = () => {
       }
 
       setServiceAvailability(availabilityMap);
+      setLocalCategories(categoriesData);
     }
   }, [categoriesData]);
+
+  // Sensors for dnd-kit
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const handleDragEndCategory = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setLocalCategories((items) => {
+        const oldIndex = items.findIndex((i) => i._id === active.id);
+        const newIndex = items.findIndex((i) => i._id === over.id);
+        const newItems = arrayMove(items, oldIndex, newIndex);
+        
+        // Prepare sequences for backend
+        const sequences = newItems.map((item, index) => ({
+          id: item._id,
+          sequence: index,
+        }));
+        
+        updateCategorySequence({ sequences, businessId: businessId as string });
+        return newItems;
+      });
+    }
+  };
+
+  const handleDragEndService = async (categoryId: string, event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setLocalCategories((items) => {
+        const categoryIndex = items.findIndex((c) => c._id === categoryId);
+        if (categoryIndex === -1) return items;
+
+        const services = [...items[categoryIndex].serviceIds];
+        const oldIndex = services.findIndex((s) => s._id === active.id);
+        const newIndex = services.findIndex((s) => s._id === over.id);
+        const newServices = arrayMove(services, oldIndex, newIndex);
+
+        const newItems = [...items];
+        newItems[categoryIndex] = { ...newItems[categoryIndex], serviceIds: newServices };
+
+        // Prepare sequences for backend
+        const sequences = newServices.map((item, index) => ({
+          id: item._id,
+          sequence: index,
+        }));
+
+        updateServiceSequence({ sequences, businessId: businessId as string });
+        return newItems;
+      });
+    }
+  };
 
   const handleServiceClick = useCallback(
     (service: IService, categoryName: string) => {
@@ -442,9 +529,29 @@ const HotelServices = () => {
     <div className="space-y-6 mb-24">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Manage Services</h2>
-        <Badge variant="outline" className="px-3 py-1">
-          {totalServices} Services
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={isReorderMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setIsReorderMode(!isReorderMode)}
+            className={isReorderMode ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+          >
+            {isReorderMode ? (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Exit Reorder
+              </>
+            ) : (
+              <>
+                <GripVertical className="w-4 h-4 mr-2" />
+                Reorder
+              </>
+            )}
+          </Button>
+          <Badge variant="outline" className="px-3 py-1">
+            {totalServices} Services
+          </Badge>
+        </div>
       </div>
 
       <div className="relative">
@@ -480,44 +587,38 @@ const HotelServices = () => {
         <div className="flex justify-center py-10">
           <LoadingSpinner />
         </div>
-      ) : filteredCategories && filteredCategories.length > 0 ? (
+      ) : localCategories && localCategories.length > 0 ? (
         <div className="space-y-8">
-          {filteredCategories.map((category) => (
-            <div key={category._id} className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 overflow-hidden rounded-md bg-primary/10">
-                  {category.image ? (
-                    <img
-                      src={category.image || "/placeholder.svg"}
-                      alt={category.name}
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <Settings className="w-5 h-5 m-1.5 text-primary" />
-                  )}
-                </div>
-                <h3 className="text-lg font-semibold">{category.name}</h3>
-              </div>
-
-              {category.serviceIds.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {category.serviceIds.map((service) => (
-                    <ServiceCard
-                      key={service._id}
-                      service={service}
-                      categoryName={category.name}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <Card className="p-4 text-center bg-muted/30">
-                  <p className="text-sm text-muted-foreground">
-                    No services in this category
-                  </p>
-                </Card>
-              )}
-            </div>
-          ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEndCategory}
+          >
+            <SortableContext
+              items={localCategories.map((c) => c._id)}
+              strategy={verticalListSortingStrategy}
+              disabled={!isReorderMode}
+            >
+              {localCategories
+                .filter((category) => {
+                  if (!searchQuery.trim()) return true;
+                  return category.serviceIds.some((s: any) =>
+                    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+                  );
+                })
+                .map((category) => (
+                  <SortableCategoryWrapper
+                    key={category._id}
+                    category={category}
+                    isReorderMode={isReorderMode}
+                    onDragEndService={(e) => handleDragEndService(category._id, e)}
+                    sensors={sensors}
+                    ServiceCard={ServiceCard}
+                    searchQuery={searchQuery}
+                  />
+                ))}
+            </SortableContext>
+          </DndContext>
           <AdvancedBottomButton
             fixed={true}
             maxWidth="30rem"
@@ -687,6 +788,126 @@ const HotelServices = () => {
           />
         </Suspense>
       </PopUp>
+    </div>
+  );
+};
+
+const SortableCategoryWrapper = ({
+  category,
+  isReorderMode,
+  onDragEndService,
+  sensors,
+  ServiceCard,
+  searchQuery,
+}: any) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: category._id,
+    disabled: !isReorderMode,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const filteredServices = category.serviceIds.filter((s: any) =>
+    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div ref={setNodeRef} style={style} className="space-y-3">
+      <div className="flex items-center justify-between group">
+        <div className="flex items-center gap-3">
+          {isReorderMode && (
+            <div
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+            >
+              <GripVertical className="w-5 h-5 text-muted-foreground" />
+            </div>
+          )}
+          <div className="w-8 h-8 overflow-hidden rounded-md bg-primary/10">
+            {category.image ? (
+              <img
+                src={category.image || "/placeholder.svg"}
+                alt={category.name}
+                className="object-cover w-full h-full"
+              />
+            ) : (
+              <Settings className="w-5 h-5 m-1.5 text-primary" />
+            )}
+          </div>
+          <h3 className="text-lg font-semibold">{category.name}</h3>
+        </div>
+        {isReorderMode && (
+          <Badge variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity">
+            Drag to reorder category
+          </Badge>
+        )}
+      </div>
+
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEndService}>
+        <SortableContext
+          items={category.serviceIds.map((s: any) => s._id)}
+          strategy={verticalListSortingStrategy}
+          disabled={!isReorderMode}
+        >
+          {filteredServices.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {filteredServices.map((service: any) => (
+                <SortableServiceWrapper
+                  key={service._id}
+                  service={service}
+                  categoryName={category.name}
+                  isReorderMode={isReorderMode}
+                  ServiceCard={ServiceCard}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card className="p-4 text-center bg-muted/30">
+              <p className="text-sm text-muted-foreground">No services in this category</p>
+            </Card>
+          )}
+        </SortableContext>
+      </DndContext>
+    </div>
+  );
+};
+
+const SortableServiceWrapper = ({ service, categoryName, isReorderMode, ServiceCard }: any) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: service._id,
+    disabled: !isReorderMode,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group">
+      {isReorderMode && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute z-10 top-2 left-2 cursor-grab active:cursor-grabbing p-1.5 bg-white/90 shadow-sm border rounded-md hover:bg-green-50 hover:border-green-300 transition-colors"
+        >
+          <GripVertical className="w-4 h-4 text-green-600" />
+        </div>
+      )}
+      <div className={isReorderMode ? "opacity-90 grayscale-[0.2]" : ""}>
+        <ServiceCard service={service} categoryName={categoryName} />
+      </div>
+      {isReorderMode && (
+        <div className="absolute inset-0 bg-green-500/5 pointer-events-none rounded-lg border-2 border-dashed border-transparent group-hover:border-green-200" />
+      )}
     </div>
   );
 };

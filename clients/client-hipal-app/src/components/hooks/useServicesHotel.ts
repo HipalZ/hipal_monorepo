@@ -8,6 +8,7 @@ export interface IService {
   name: string;
   image: string;
   availability?: boolean;
+  sequence?: number;
 }
 
 export interface IServiceCategory {
@@ -16,6 +17,7 @@ export interface IServiceCategory {
   image: string | StaticImageData;
   serviceIds: IService[];
   description?: string;
+  sequence?: number;
 }
 
 export const useGetServiceCategories = (businessId?: string) => {
