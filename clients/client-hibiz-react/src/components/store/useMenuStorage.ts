@@ -127,6 +127,9 @@ interface MenuPageStore {
   categoryName: string;
   setCategoryName: (name: string) => void;
 
+  categoryInfo: string;
+  setCategoryInfo: (info: string) => void;
+
   categoryStep: CategoryStep;
   setCategoryStep: (step: CategoryStep) => void;
 
@@ -368,6 +371,9 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   categoryName: "",
   setCategoryName: (name: string) => set({ categoryName: name }),
 
+  categoryInfo: "",
+  setCategoryInfo: (info: string) => set({ categoryInfo: info }),
+
   categoryStep: "CATEGORY_STEP_1",
   setCategoryStep: (step: CategoryStep) => set({ categoryStep: step }),
 
@@ -421,6 +427,7 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
     set({
       selectedCategory: "",
       categoryName: "",
+      categoryInfo: "",
       selectedIds: [],
       categoryStep: "CATEGORY_STEP_1",
       selectedDish: "",

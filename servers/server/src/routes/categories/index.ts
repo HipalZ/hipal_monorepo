@@ -74,6 +74,7 @@ const categoriesRouter = new Hono()
               pos: !!hipalZPos,
               timings: requestData.timings,
               active: true,
+              categoryInfo: requestData.categoryInfo,
             },
           ],
           {
@@ -148,6 +149,7 @@ const categoriesRouter = new Hono()
             visibility: requestData.visibility,
             availability: requestData.availability,
             timings: requestData.timings,
+            categoryInfo: requestData.categoryInfo,
           },
           { session },
         );
@@ -294,7 +296,7 @@ const categoriesRouter = new Hono()
         };
 
         const existingCategories = await Category.find(query).select(
-          '_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage createdAt updatedAt',
+          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence categoryInfo createdAt updatedAt",
         );
 
         // const existingCategoriesWithTiming =
@@ -348,7 +350,9 @@ const categoriesRouter = new Hono()
 
         const existingCategories = await Category.find(query)
           .sort({ sequence: 1 })
-          .select('_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence createdAt updatedAt');
+          .select(
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence categoryInfo createdAt updatedAt",
+          );
 
         return respond(c, 'fetched successfully', false, 200, existingCategories);
       }
@@ -444,7 +448,7 @@ const categoriesRouter = new Hono()
 
         const existingCategories = await Category.find(query)
           .select(
-            '_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId timings createdAt updatedAt',
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence categoryInfo hierarchy businessId timings createdAt updatedAt",
           )
           .sort({ sequence: 1 });
 

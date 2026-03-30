@@ -41,6 +41,8 @@ const CategoryMainForm = memo(() => {
   const addTiming = useMenuPageStore((s) => s.addTiming);
   const removeTiming = useMenuPageStore((s) => s.removeTiming);
   const categoryName = useMenuPageStore((s) => s.categoryName);
+  const categoryInfo = useMenuPageStore((s) => s.categoryInfo);
+  const setCategoryInfo = useMenuPageStore((s) => s.setCategoryInfo);
 
   const { businessId, menuId } = useParams<{
     businessId: string;
@@ -73,6 +75,7 @@ const CategoryMainForm = memo(() => {
       businessId: businessId?.toString() || '',
       menuId,
       timings: sanitizedTimings as Timing[],
+      categoryInfo,
     };
 
     const payload =
@@ -86,7 +89,7 @@ const CategoryMainForm = memo(() => {
           };
 
     createCategory(payload);
-  }, [categoryName, businessId, menuId, selectedCategory, selectIds, selectSingleParentCat, recommendationIds, timings, hasAllDay, createCategory]);
+  }, [categoryName, categoryInfo, businessId, menuId, selectedCategory, selectIds, selectSingleParentCat, recommendationIds, timings, hasAllDay, createCategory]);
 
   const goToNextStep = useCallback(() => {
     if (!categoryName.trim()) {
@@ -112,6 +115,23 @@ const CategoryMainForm = memo(() => {
             value={categoryName}
             maxLength={21}
             onChange={(e) => setCategoryName(e.target.value)}
+            className="w-full rounded-xl border border-black bg-white p-2 focus:border-[#8C63FF] focus:bg-white focus:ring-0"
+          />
+        </Background>
+      </article>
+
+      <article className="mx-6 lg:mx-16 lg:mt-6 mt-4">
+        <label className="font-semibold opacity-50" htmlFor="info">
+          Category Info (Optional)
+        </label>
+        <Background>
+          <input
+            type="text"
+            id="info"
+            placeholder="Enter Category Description"
+            value={categoryInfo}
+            maxLength={120}
+            onChange={(e) => setCategoryInfo(e.target.value)}
             className="w-full rounded-xl border border-black bg-white p-2 focus:border-[#8C63FF] focus:bg-white focus:ring-0"
           />
         </Background>

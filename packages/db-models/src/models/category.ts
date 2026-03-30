@@ -134,6 +134,11 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       ref: "menu",
       default: null,
     },
+    categoryInfo: {
+      type: String,
+      required: false,
+      default: "",
+    },
   },
   {
     timestamps: true,

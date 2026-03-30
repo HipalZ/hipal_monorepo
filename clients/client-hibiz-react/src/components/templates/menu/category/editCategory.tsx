@@ -38,6 +38,8 @@ const MemoEditCategory = () => {
   const idCheck = useMenuPageStore((s) => s.idCheck);
   const setCategoryName = useMenuPageStore((s) => s.setCategoryName);
   const categoryName = useMenuPageStore((s) => s.categoryName);
+  const setCategoryInfo = useMenuPageStore((s) => s.setCategoryInfo);
+  const categoryInfo = useMenuPageStore((s) => s.categoryInfo);
   const setSelectedFile = useMenuPageStore((s) => s.setSelectedFile);
   const selectedFile = useMenuPageStore((s) => s.selectedFile);
   const setImagePreview = useMenuPageStore((s) => s.setImagePreview);
@@ -158,6 +160,7 @@ const MemoEditCategory = () => {
       visibility: visibility,
       _id: catId,
       timings: sanitizedTimings,
+      categoryInfo,
     };
 
     const payload =
@@ -227,7 +230,7 @@ const MemoEditCategory = () => {
 
         {!isMenuManager && (
           <section className="flex-1">
-            <article className="lg:mx-4">
+            <article className="lg:mx-4 mb-4">
               <label className="font-semibold opacity-50" htmlFor="name">
                 Category Name*
               </label>
@@ -239,6 +242,23 @@ const MemoEditCategory = () => {
                   value={categoryName}
                   maxLength={21}
                   onChange={(e) => setCategoryName(e.target.value)}
+                  className="w-full rounded-xl border border-black bg-white p-2 focus:border-[#8C63FF] focus:bg-white focus:ring-0"
+                />
+              </Background>
+            </article>
+
+            <article className="lg:mx-4">
+              <label className="font-semibold opacity-50" htmlFor="info">
+                Category Info (Optional)
+              </label>
+              <Background>
+                <input
+                  type="text"
+                  id="info"
+                  placeholder="Enter Category Description"
+                  value={categoryInfo}
+                  maxLength={120}
+                  onChange={(e) => setCategoryInfo(e.target.value)}
                   className="w-full rounded-xl border border-black bg-white p-2 focus:border-[#8C63FF] focus:bg-white focus:ring-0"
                 />
               </Background>

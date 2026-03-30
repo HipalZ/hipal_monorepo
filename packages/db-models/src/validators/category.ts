@@ -88,6 +88,7 @@ export const categorySchema = z.object({
   timings: z.array(timingSchema).optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
+  categoryInfo: z.string().optional(),
 });
 
 export const catalogueSchema = z.object({
@@ -151,6 +152,7 @@ export const catalogueSchema = z.object({
   categoryTimings: z.string().min(3).max(200).optional(),
   active: z.boolean().default(true).optional(),
   timings: z.array(timingSchema).optional(),
+  categoryInfo: z.string().optional(),
 });
 
 export const timingsArraySchema = z
@@ -217,6 +219,7 @@ export const updateCategorySchema = z.object({
   removeParentCategoryIds: z.array(ObjectIdSchema).optional().default([]),
   sequence: z.number().optional(),
   timings: timingsArraySchema.optional(),
+  categoryInfo: z.string().optional(),
 });
 
 export const updateCatalogueSchema = z.object({
@@ -268,6 +271,7 @@ export const updateCatalogueSchema = z.object({
   removeDishIds: z.array(ObjectIdSchema).optional().default([]),
   removeParentCategoryIds: z.array(ObjectIdSchema).optional().default([]),
   sequence: z.number().optional(),
+  categoryInfo: z.string().optional(),
 });
 
 export type CategoryType = z.infer<typeof categorySchema>;
