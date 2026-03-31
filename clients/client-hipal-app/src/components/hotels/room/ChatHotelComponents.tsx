@@ -56,6 +56,39 @@ export const ChatHeader = ({
   </section>
 );
 
+/* ─────────────────────── Status Badge (extracted, stable) ─────────────────────── */
+
+interface StatusBadgeProps {
+  isInProgress: boolean;
+  isDelivered: boolean;
+  isWarning: boolean;
+}
+
+const StatusBadge = ({ isInProgress, isDelivered, isWarning }: StatusBadgeProps) => {
+  if (isInProgress)
+    return (
+      <span className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-[9px] font-bold px-2.5 py-[3px] rounded-full uppercase tracking-widest shadow-sm">
+        <span className="w-1.5 h-1.5 rounded-full bg-blue-200 animate-pulse" />
+        In Progress
+      </span>
+    );
+  if (isDelivered)
+    return (
+      <span className="inline-flex items-center gap-1.5 bg-emerald-500 text-white text-[9px] font-bold px-2.5 py-[3px] rounded-full uppercase tracking-widest shadow-sm">
+        <CheckCircle2 className="h-2.5 w-2.5" />
+        Delivered
+      </span>
+    );
+  if (isWarning)
+    return (
+      <span className="inline-flex items-center gap-1.5 bg-red-500 text-white text-[9px] font-bold px-2.5 py-[3px] rounded-full uppercase tracking-widest shadow-sm">
+        <AlertTriangle className="h-2.5 w-2.5" />
+        Unable to Fulfill
+      </span>
+    );
+  return null;
+};
+
 /* ─────────────────────── Chat Message Container ─────────────────────── */
 
 export const ChatMessageHotel = ({
@@ -66,6 +99,8 @@ export const ChatMessageHotel = ({
   selectedReplyId,
   handleReviewSubmit,
 }: ChatMessageHotelProps) => {
+  const replyCount = chat?.roomChatReplyIds?.length ?? 0;
+
   return (
     <section className="flex flex-col gap-4 mt-20 px-4 pb-6 overflow-x-hidden">
       {/* Date pill */}
@@ -120,6 +155,7 @@ export const ChatMessageHotel = ({
             key={reply._id}
             chat={chat}
             reply={reply}
+            isLatest={index === replyCount - 1}
             userResponses={userResponses}
             handleActionClick={handleActionClick}
             openReview={openReview}
@@ -138,29 +174,32 @@ export const ChatMessageHotel = ({
 const ChatReplyMessage = ({
   chat,
   reply,
+  isLatest,
   userResponses,
   handleActionClick,
   openReview,
   selectedReplyId,
   handleReviewSubmit,
   delay = 0,
-}: ChatReplyMessageProps & { delay?: number }) => {
+}: ChatReplyMessageProps & { delay?: number; isLatest: boolean }) => {
   const isWarning = reply?.status === ActionType.WARNING;
-  const isInProgress = chat?.alertId?.alertProgress === "ACCEPTED";
-  const isDelivered = chat?.alertId?.alertProgress === "DELIVERED";
 
-  // ETA progress – derived purely from alertId data, no string parsing
+  // Status badges only shown on the latest reply — older ones are plain history
+  const isInProgress = isLatest && chat?.alertId?.alertProgress === "ACCEPTED";
+  const isDelivered  = isLatest && chat?.alertId?.alertProgress === "DELIVERED";
+
+  /* ETA — computed only when the progress bar will actually render */
   let remainingMinutes = 0;
   let progressPercent = 0;
 
-  if (isInProgress && chat) {
+  if (isInProgress) {
     const acceptedAt = chat?.alertId?.acceptedAt || chat?.alertId?.createdAt || chat?.date;
     const avgMins = chat?.alertId?.serviceIds?.[0]?.avgCompletionTime || 15;
-    const expectedAt = acceptedAt + avgMins * 60 * 1000;
-    const now = Date.now();
-    const remaining = Math.max(0, expectedAt - now);
+    const totalMs = avgMins * 60 * 1000;
+    const expectedAt = acceptedAt + totalMs;
+    const remaining = Math.max(0, expectedAt - Date.now());
     remainingMinutes = Math.ceil(remaining / 60000);
-    progressPercent = Math.min(100, Math.max(0, ((avgMins * 60000 - remaining) / (avgMins * 60000)) * 100));
+    progressPercent = Math.min(100, Math.max(0, ((totalMs - remaining) / totalMs) * 100));
   }
 
   /* Bubble theme */
@@ -171,32 +210,6 @@ const ChatReplyMessage = ({
     : isDelivered
     ? "bg-gradient-to-br from-[#F0FDF4] to-[#ECFDF5] border-[#BBF7D0]"
     : "bg-white border-slate-100";
-
-  /* Status badge */
-  const StatusBadge = () => {
-    if (isInProgress)
-      return (
-        <span className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-[9px] font-bold px-2.5 py-[3px] rounded-full uppercase tracking-widest shadow-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-200 animate-pulse" />
-          In Progress
-        </span>
-      );
-    if (isDelivered)
-      return (
-        <span className="inline-flex items-center gap-1.5 bg-emerald-500 text-white text-[9px] font-bold px-2.5 py-[3px] rounded-full uppercase tracking-widest shadow-sm">
-          <CheckCircle2 className="h-2.5 w-2.5" />
-          Delivered
-        </span>
-      );
-    if (isWarning)
-      return (
-        <span className="inline-flex items-center gap-1.5 bg-red-500 text-white text-[9px] font-bold px-2.5 py-[3px] rounded-full uppercase tracking-widest shadow-sm">
-          <AlertTriangle className="h-2.5 w-2.5" />
-          Unable to Fulfill
-        </span>
-      );
-    return null;
-  };
 
   return (
     <motion.div
@@ -224,17 +237,23 @@ const ChatReplyMessage = ({
           <div className="pointer-events-none absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-white/40 to-transparent" />
 
           <div className="flex flex-col gap-2.5 relative z-10">
-            {/* Status badge */}
-            <StatusBadge />
+            {/* Status badge — only on latest reply */}
+            {isLatest && (
+              <StatusBadge
+                isInProgress={isInProgress}
+                isDelivered={isDelivered}
+                isWarning={isWarning}
+              />
+            )}
 
-            {/* Message text – purely from backend */}
+            {/* Message text — purely from backend */}
             <p className={`text-[13.5px] leading-[1.6] font-normal tracking-[-0.01em] ${
               isWarning ? "text-red-700" : "text-slate-700"
             }`}>
               {reply?.description}
             </p>
 
-            {/* ETA progress bar – only on in-progress replies */}
+            {/* ETA progress bar — only on latest in-progress reply */}
             {isInProgress && (
               <div className="mt-1 bg-slate-50 rounded-2xl p-3 border border-slate-100/80 shadow-inner">
                 <div className="flex justify-between items-center mb-2">
@@ -270,7 +289,7 @@ const ChatReplyMessage = ({
               <p className="text-[9.5px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">
                 How did we do?
               </p>
-              {actionOptions.map((option, i) => {
+              {actionOptions.map((option) => {
                 const isNegative = option.text?.toLowerCase().includes("not");
                 return (
                   <motion.button
@@ -316,7 +335,7 @@ const ChatReplyMessage = ({
                   Share your experience
                 </p>
                 <div className="flex justify-between items-center gap-1 p-2 bg-slate-50/60 rounded-[20px] border border-slate-100/60">
-                  {reviewOptions?.map((option) => (
+                  {reviewOptions.map((option) => (
                     <motion.button
                       key={option?.id}
                       whileHover={{ scale: 1.18, y: -3 }}
@@ -365,7 +384,7 @@ const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
 
       {/* Items */}
       <div className="px-2 py-2 bg-slate-50/60 flex flex-col gap-1.5">
-        {cart?.map((item) => (
+        {cart.map((item) => (
           <div
             key={item?.id}
             className="p-3 bg-white rounded-[12px] shadow-[0_1px_4px_rgba(0,0,0,0.03)] border border-slate-100"
