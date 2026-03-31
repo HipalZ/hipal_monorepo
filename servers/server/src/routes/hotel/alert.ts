@@ -964,10 +964,10 @@ const hotelAlertRouter = new Hono()
         })
         .populate({
           path: "alertId",
-          select: "alertProgress",
+          select: "alertProgress acceptedAt createdAt",
           populate: {
             path: "serviceIds",
-            select: "name",
+            select: "name avgCompletionTime",
           },
         })
         .populate({
@@ -1503,7 +1503,7 @@ const hotelAlertRouter = new Hono()
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
-      const { alertId, userId, action } = requestData as AcceptHotelAlertType;
+      const { alertId, userId, action, reasonOfRejection } = requestData as AcceptHotelAlertType;
 
       const roomChat = await HotelRoomChat.findOne({
         alertId: alertId,
@@ -1575,6 +1575,7 @@ const hotelAlertRouter = new Hono()
           alertProgress: "REJECTED",
           rejectedAt: Date.now(),
           rejectedBy: userId,
+          message: reasonOfRejection,
         },
         RESOLVED: {
           alertProgress: "DELIVERED",
@@ -1616,9 +1617,18 @@ const hotelAlertRouter = new Hono()
           throw new Error("Room chat not found");
         }
 
+        const service = await HotelService.findById(alert.serviceIds[0]);
+        const avgCompletionTime = service?.avgCompletionTime || 15;
+        const etaTimestamp = Date.now() + avgCompletionTime * 60 * 1000;
+        const formattedTime = new Date(etaTimestamp).toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
+
         const roomChatReply = new HotelRoomChatReply({
           action: false,
-          description: "In Progress",
+          description: `Thank you for your patience! Your request has been received and our team is on it. We aim to have everything ready for you by ${formattedTime}. Sit back and relax! 🙏`,
           roomChatId: roomChat._id,
           userId: userId,
           status: "NORMAL",
@@ -1639,6 +1649,35 @@ const hotelAlertRouter = new Hono()
           { session },
         );
       }
+
+      if (action === "REJECTED") {
+        const roomChat = await HotelRoomChat.findOne({
+          alertId: alertId,
+        });
+
+        if (!roomChat) {
+          throw new Error("Room chat not found");
+        }
+
+        const roomChatReply = new HotelRoomChatReply({
+          action: false,
+          description: `We sincerely apologize for the inconvenience. Unfortunately, we are unable to fulfill your request at this time. Reason: ${reasonOfRejection || "not specified"}. Please feel free to contact our front desk and we will be happy to assist you further.`,
+          roomChatId: roomChat._id,
+          userId: userId,
+          status: "WARNING",
+          date: Date.now(),
+        });
+
+        await roomChatReply.save({ session });
+
+        await HotelRoomChat.findByIdAndUpdate(
+          roomChat._id,
+          {
+            $addToSet: { roomChatReplyIds: roomChatReply._id },
+          },
+          { session },
+        );
+      }
       if (action === "DELIVERED") {
         const roomChat = await HotelRoomChat.findOne({
           alertId: alertId,
@@ -1647,9 +1686,20 @@ const hotelAlertRouter = new Hono()
           throw new Error("Room chat not found");
         }
 
+        const acceptedTime = alert.acceptedAt || alert.createdAt || Date.now();
+        const timeTakenMs = Date.now() - acceptedTime;
+        const timeTakenMins = Math.max(1, Math.ceil(timeTakenMs / 60000));
+        const service = await HotelService.findById(alert.serviceIds[0]);
+        const avgCompletionTime = service?.avgCompletionTime || 15;
+        const deliveredFast = timeTakenMins < avgCompletionTime;
+
+        const deliveryAck = deliveredFast
+          ? `Great news — your service was delivered in just ${timeTakenMins} min, ahead of schedule! 🎉`
+          : `Your service has been successfully delivered in ${timeTakenMins} min.`;
+
         const roomChatReply = new HotelRoomChatReply({
           action: true,
-          description: "Delivered",
+          description: `${deliveryAck} We hope everything is to your satisfaction. If something isn't right, please tap "Not Delivered" to raise a concern. Otherwise, we'd love to hear your feedback! 😊`,
           roomChatId: roomChat._id,
           userId: userId,
           status: "NORMAL",
@@ -1715,6 +1765,10 @@ const hotelAlertRouter = new Hono()
               businessId: alert.businessId,
             });
 
+            const timeTakenMs = Date.now() - (alert?.acceptedAt || alert?.createdAt || Date.now());
+            const timeTakenMinutes = Math.floor(timeTakenMs / 60000);
+            const timeTakenText = timeTakenMinutes > 0 ? `${timeTakenMinutes} Minutes` : `${Math.floor(timeTakenMs / 1000)} Seconds`;
+
             const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
             const components = await returnHotelBodyComponents(
               outLetInfo?.name as string,
@@ -1726,7 +1780,7 @@ const hotelAlertRouter = new Hono()
               userData?.name as string,
 
               alert?.serviceIds[0]?.name || "other",
-              captainData?.name as string,
+              `${captainData?.name} within ${timeTakenText}`,
               `https://hipal-test.hipalz.com/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
               outLetInfo?.placeUrl as string,
               "serviceRejectionReason",
@@ -1900,6 +1954,10 @@ const hotelAlertRouter = new Hono()
               businessId: alert.businessId,
             });
 
+            const timeTakenMs = Date.now() - (alert?.acceptedAt || alert?.createdAt || Date.now());
+            const timeTakenMinutes = Math.floor(timeTakenMs / 60000);
+            const timeTakenText = timeTakenMinutes > 0 ? `${timeTakenMinutes} Minutes` : `${Math.floor(timeTakenMs / 1000)} Seconds`;
+
             const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
             const components = await returnHotelBodyComponents(
               outLetInfo?.name as string,
@@ -1911,7 +1969,7 @@ const hotelAlertRouter = new Hono()
               userData?.name as string,
 
               alert?.serviceIds[0]?.name || "other",
-              captainData?.name as string,
+              `${captainData?.name} within ${timeTakenText}`,
               `https://hipal-test.hipalz.com/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
               outLetInfo?.placeUrl as string,
               "serviceRejectionReason",
@@ -1945,29 +2003,7 @@ const hotelAlertRouter = new Hono()
       }
       if (action === "REJECTED") {
         if (alert.alertProgress !== "MESSAGE") {
-          const roomChatReply = new HotelRoomChatReply({
-            action: false,
-            description: "your cart is rejected",
-            roomChatId: roomChat?._id,
-            userId: alert.userId,
-            status: "NORMAL",
-            date: Date.now(),
-          });
-
-          await roomChatReply.save({ session });
-
-          if (!roomChatReply) {
-            throw new Error("Failed to create room chat reply");
-          }
-
-          await HotelRoomChat.findByIdAndUpdate(
-            roomChat?._id,
-            {
-              $addToSet: { roomChatReplyIds: roomChatReply._id },
-            },
-            { session },
-          );
-
+          // Removed redundant "your cart is rejected" message
           const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
             businessId: alert.businessId,
           });
@@ -1991,10 +2027,6 @@ const hotelAlertRouter = new Hono()
                 languageCode: string;
                 category: string;
               };
-
-              // const businessWallet = await WhatsAppWallet.findOne({
-              //   businessId: roomExists.businessId,
-              // }).select("currentBalance");
 
               if (!template) {
                 return c.json(
@@ -2024,7 +2056,7 @@ const hotelAlertRouter = new Hono()
                 captainData?.name as string,
                 "https://chatlink.com",
                 outLetInfo?.placeUrl as string,
-                "serviceRejectionReason",
+                reasonOfRejection || "serviceRejectionReason",
                 "phone",
               );
 

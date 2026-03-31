@@ -59,6 +59,7 @@ const MemoStaffManagementHotel = () => {
         height="h-[100dvh] lg:h-[90dvh]"
         show={staffModal}
         onClose={toggleModal}
+        rightTopBack
       >
         <Suspense fallback={<LoadingSpinner />}>
           <AddStaffToHotel />
@@ -87,12 +88,6 @@ const MemoStaffManagementHotel = () => {
             onClick: goBack,
             isBackButton: true,
             className: "pl-3 rounded-md",
-          },
-          {
-            text: "Reports",
-            onClick: openShowStaffReport,
-            icon: <FileText size={24} />,
-            className: "rounded-md w-full !bg-purple-600",
           },
           {
             text: "Add Staff",

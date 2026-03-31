@@ -57,7 +57,7 @@ const CategoryForm = ({
             </div>
 
             <section className="space-y-2">
-              <Label htmlFor="category-image">Category Image (Optional)</Label>
+              <Label htmlFor="category-image">Category Image *</Label>
               <article className="flex gap-3">
                 <BirthdayImageUploader
                   image={""}

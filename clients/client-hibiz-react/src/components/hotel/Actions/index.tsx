@@ -33,41 +33,6 @@ const serviceCards = [
     ),
     color: "bg-rose-50 dark:bg-blue-950",
   },
-  // {
-  //   id: "rooms",
-  //   title: "Room Services",
-  //   description: "Manage room-specific services and amenities",
-  //   icon: <Bed className="w-6 h-6 text-primary" />,
-  //   color: "bg-green-50 dark:bg-green-950",
-  // },
-  // {
-  //   id: "restaurant",
-  //   title: "Restaurant",
-  //   description: "Manage restaurant services and menu items",
-  //   icon: <Utensils className="w-6 h-6 text-primary" />,
-  //   color: "bg-amber-50 dark:bg-amber-950",
-  // },
-  // {
-  //   id: "parking",
-  //   title: "Parking",
-  //   description: "Manage valet and parking services",
-  //   icon: <Car className="w-6 h-6 text-primary" />,
-  //   color: "bg-purple-50 dark:bg-purple-950",
-  // },
-  // {
-  //   id: "spa",
-  //   title: "Spa & Wellness",
-  //   description: "Manage spa and wellness services",
-  //   icon: <Spa className="w-6 h-6 text-primary" />,
-  //   color: "bg-rose-50 dark:bg-rose-950",
-  // },
-  // {
-  //   id: "amenities",
-  //   title: "Amenities",
-  //   description: "Manage additional hotel amenities",
-  //   icon: <Coffee className="w-6 h-6 text-primary" />,
-  //   color: "bg-cyan-50 dark:bg-cyan-950",
-  // },
 ];
 
 const HotelActions = () => {
@@ -114,22 +79,6 @@ const HotelActions = () => {
     switch (activeService) {
       case "services":
         return <HotelServices />;
-      case "rooms":
-      case "restaurant":
-      case "parking":
-      case "spa":
-      case "amenities":
-        // Placeholder for future implementations
-        return (
-          <div className="py-10 text-center">
-            <h2 className="mb-4 text-2xl font-bold">
-              {serviceCards.find((s) => s.id === activeService)?.title}
-            </h2>
-            <p className="text-muted-foreground">
-              This feature is coming soon!
-            </p>
-          </div>
-        );
       default:
         return null;
     }
@@ -139,8 +88,6 @@ const HotelActions = () => {
   return (
     <div className="px-4 pt-6 pb-8 xl:pt-0 mx-auto">
       <h2 className="mb-6 text-3xl font-bold xl:px-0">Actions</h2>
-
-
       {/* Back button when viewing a service */}
       {activeService && (
         <Button

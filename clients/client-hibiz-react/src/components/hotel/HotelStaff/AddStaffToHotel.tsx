@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo } from "react";
-import { User, UserPlus } from "lucide-react";
+import { User } from "lucide-react";
 import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useStepNavigation } from "@/hooks/useStepNavigation";
@@ -66,18 +66,13 @@ const AddStaffToHotel = () => {
   }
 
   return (
-    <div className="w-full lg:w-[48rem] p-4 mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="w-full lg:w-[30rem] h-full">
+      <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-bold">Add New Staff</h1>
-        <div className="flex items-center space-x-1">
-          <UserPlus className="w-5 h-5 text-primary" />
-        </div>
       </div>
-
       <StepIndicatior currentStep={currentStep} steps={steps} />
-
       {/* Step content */}
-      <div className="mb-6 h-[80dvh] overflow-auto pb-[10rem] hide-scrollbar">
+      <div className="mb-6 h-[72dvh] overflow-auto pb-24">
         <Suspense fallback={<LoadingSpinner />}>
           {currentStep === 1 && <FirstStep />}
           {currentStep === 2 && <SecondStep />}

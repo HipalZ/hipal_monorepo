@@ -11,6 +11,7 @@ import type { IMenuLayout } from "@/components/types/businessData";
 import { HomeIcon, MessageCircle, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHotelTemp } from "@/components/store/useHotelTemp";
+import { useLogin } from "@/components/store/useLogin";
 import SearchModal from "./SearchModal";
 import { useCallback, useState, useMemo } from "react";
 
@@ -28,6 +29,7 @@ export default function ServiceCategoriesSection({
   const { categoriesLoading, categoriesData } = useGetServiceCategories(businessId);
   const isOpenChat = useHotelTemp((s) => s.isOpenChat);
   const setIsOpenChat = useHotelTemp((s) => s.setIsOpenChat);
+  const userDetails = useLogin((s) => s.userDetails);
   const [showSearchModal, setShowSearchModal] = useState(false);
 
   // Memoize static configuration objects to prevent unnecessary re-renders
@@ -92,44 +94,54 @@ export default function ServiceCategoriesSection({
 
   return (
     <div className="relative">
-     <div className="mb-5 flex items-start justify-between">
-  <section className="flex flex-col gap-1">
-    <span className="poppins-regular text-[0.92rem] leading-none tracking-[0.01em] text-[#A79F97]">
-      Guest Support
-    </span>
+      <div className="mb-6 flex items-start justify-between px-1">
+        <section className="flex flex-col gap-2.5 relative">
+          {/* Subtle Vertical Accent */}
+          <div className="absolute -left-3 top-1 bottom-1 w-1 bg-[#A79F97]/30 rounded-full" />
+          
+          <div className="flex flex-col gap-1">
+            <span className="poppins-regular text-[1.25rem] leading-none tracking-tight text-[#A79F97]">
+              Hello {userDetails?.name ? userDetails.name.split(' ')[0] : "Guest"},
+            </span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="poppins-semibold text-[1.05rem] leading-none tracking-tight text-[#4A433D]">
+                Guest Support
+              </span>
+              <span className="h-1 w-1 rounded-full bg-[#E9E4DC]" />
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F5F2EE]/50 px-2.5 py-1 ring-1 ring-[#E9E4DC]/60 shadow-sm transition-all duration-300 hover:bg-[#F5F2EE]">
+                <HomeIcon size={12} className="text-[#A79F97]" />
+                <span className="poppins-bold text-[0.85rem] leading-none text-[#4A433D]">
+                  {room}
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
 
-    <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.04)] ring-1 ring-[#E9E4DC]">
-      <HomeIcon size={13} className="text-[#6B625A]" />
-      <span className="poppins-regular text-[0.9rem] font-semibold leading-none text-[#4A433D]">
-        {room}
-      </span>
-    </div>
-  </section>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleOpenSearch}
+            size="icon"
+            className="h-11 w-11 rounded-full border border-white/60 bg-[#E85D3A] text-white shadow-[0_6px_14px_rgba(232,93,58,0.22)] transition-all duration-300 hover:scale-[1.05] hover:bg-[#D95332] active:scale-95"
+          >
+            <Search size={18} />
+          </Button>
 
-  <div className="flex items-center gap-2">
-    <Button
-      onClick={handleOpenSearch}
-      size="icon"
-      className="h-11 w-11 rounded-full border border-white/60 bg-[#E85D3A] text-white shadow-[0_6px_14px_rgba(232,93,58,0.28)] transition-all duration-200 hover:scale-[1.03] hover:bg-[#DF5532]"
-    >
-      <Search size={18} />
-    </Button>
-
-    <Button
-      onClick={toggleChat}
-      size="icon"
-      className="relative h-11 w-11 rounded-full border border-white/60 bg-[#178A43] text-white shadow-[0_6px_14px_rgba(23,138,67,0.24)] transition-all duration-200 hover:scale-[1.03] hover:bg-[#147B3B]"
-    >
-      <MessageCircle size={18} />
-      <motion.span
-        className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border border-white bg-[#22C55E]"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
-      />
-    </Button>
-  </div>
-</div>
+          <Button
+            onClick={toggleChat}
+            size="icon"
+            className="relative h-11 w-11 rounded-full border border-white/60 bg-[#178A43] text-white shadow-[0_6px_14px_rgba(23,138,67,0.18)] transition-all duration-300 hover:scale-[1.05] hover:bg-[#147B3B] active:scale-95"
+          >
+            <MessageCircle size={18} />
+            <motion.span
+              className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#22C55E]"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.3 }}
+            />
+          </Button>
+        </div>
+      </div>
 
       <section className="flex justify-center">
         <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-4 mt-2 w-full">

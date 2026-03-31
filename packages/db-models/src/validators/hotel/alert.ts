@@ -55,6 +55,7 @@ export const acceptHotelAlert = z.object({
   alertId: ObjectIdSchema,
   userId: ObjectIdSchema,
   action: z.enum(alertProgressEnum),
+  reasonOfRejection: z.string().optional(),
 });
 
 export const updateAlertCart = z.object({

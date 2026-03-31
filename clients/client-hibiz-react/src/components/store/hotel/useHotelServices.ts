@@ -83,7 +83,7 @@ export const useUpdateHotelService = () => {
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
-            errorData?.error?.message || "Failed to update service",
+            errorData?.message || errorData?.error?.message || "Failed to update service",
           );
         }
 
@@ -274,10 +274,10 @@ export const useUpdateCategorySequence = () => {
       queryClient.invalidateQueries({
         queryKey: ["getServiceCategories", variables.businessId],
       });
-      toast.success("Category order updated");
+      // toast is intentionally omitted — the caller handles UX feedback
     },
     onError: () => {
-      toast.error("Failed to update category order");
+      // toast is intentionally omitted — the caller handles UX feedback
     },
   });
 
@@ -297,10 +297,10 @@ export const useUpdateServiceSequence = () => {
       queryClient.invalidateQueries({
         queryKey: ["getServiceCategories", variables.businessId],
       });
-      toast.success("Service order updated");
+      // toast is intentionally omitted — the caller handles UX feedback
     },
     onError: () => {
-      toast.error("Failed to update service order");
+      // toast is intentionally omitted — the caller handles UX feedback
     },
   });
 

@@ -35,7 +35,7 @@ export const useShareRoom = () => {
   const phone = useHotelBusinessData((state) => state.hotelData.phone);
   const shareCart = async (content: string) => {
     const message = encodeURIComponent(
-      `Hi, I am interested in booking this room. Can I know more details?\n\n${content}`,
+      `Hi, I am interested about this room. Can I know more details?\n\n${content}`,
     )
 
     const whatsappUrl = `https://wa.me/+91${phone}?text=${message}`
@@ -62,9 +62,9 @@ export const actionOptions = [
 ];
 
 export const reviewOptions = [
-  { id: "bad", text: "😞", value: 1 },
-  { id: "good", text: "😊", value: 3 },
-  { id: "great", text: "😍", value: 5 },
+  { id: "Not Happy", text: "😞", value: 1 },
+  { id: "Good", text: "😊", value: 3 },
+  { id: "Great", text: "😍", value: 5 },
 ]
 
 export const formatHotelTime = (timestamp: number) => {
