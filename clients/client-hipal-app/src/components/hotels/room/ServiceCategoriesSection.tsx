@@ -27,7 +27,6 @@ export default function ServiceCategoriesSection({
   room,
 }: ServiceCategoriesSectionProps) {
   const { categoriesLoading, categoriesData } = useGetServiceCategories(businessId);
-  const isOpenChat = useHotelTemp((s) => s.isOpenChat);
   const setIsOpenChat = useHotelTemp((s) => s.setIsOpenChat);
   const userDetails = useLogin((s) => s.userDetails);
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -58,8 +57,8 @@ export default function ServiceCategoriesSection({
   const handleCloseSearch = useCallback(() => setShowSearchModal(false), []);
   
   const toggleChat = useCallback(() => {
-    setIsOpenChat(!isOpenChat);
-  }, [isOpenChat, setIsOpenChat]);
+    setIsOpenChat((v) => !v);
+  }, [setIsOpenChat]);
 
   // Memoize the data transformation and filtering
   const { primary, others } = useMemo(() => {
