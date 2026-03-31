@@ -24,26 +24,26 @@ const MemoIntegrations = () => {
       ),
       href: "whatsapp",
     },
-    {
-      title: "Loyalty",
-      description: "Manage your hotel Loyalty marketing and campaigns",
-      icon: (
-        <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-pink-500 to-purple-600 hover:scale-105">
-          <FaRegCreditCard className="w-8 h-8 text-white drop-shadow-md" />
-        </div>
-      ),
-      href: "loyalty",
-    },
-    {
-      title: "Coupons",
-      description: "Manage your hotel Coupons marketing and campaigns",
-      icon: (
-        <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-yellow-400 to-orange-500 hover:scale-105">
-          <RiCouponLine className="w-8 h-8 text-white drop-shadow-md" />
-        </div>
-      ),
-      href: "coupons",
-    },
+    // {
+    //   title: "Loyalty",
+    //   description: "Manage your hotel Loyalty marketing and campaigns",
+    //   icon: (
+    //     <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-pink-500 to-purple-600 hover:scale-105">
+    //       <FaRegCreditCard className="w-8 h-8 text-white drop-shadow-md" />
+    //     </div>
+    //   ),
+    //   href: "loyalty",
+    // },
+    // {
+    //   title: "Coupons",
+    //   description: "Manage your hotel Coupons marketing and campaigns",
+    //   icon: (
+    //     <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-yellow-400 to-orange-500 hover:scale-105">
+    //       <RiCouponLine className="w-8 h-8 text-white drop-shadow-md" />
+    //     </div>
+    //   ),
+    //   href: "coupons",
+    // },
   ];
   return (
     <>

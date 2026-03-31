@@ -217,65 +217,68 @@ const ChatCardSection = ({
         renderLoadingSkeleton()
       ) : (
         <>
-{/* SECTION HEADER */}
-<div className="mx-4 mb-3 flex items-center gap-2">
-  <h3 className="font-semibold text-h-primary text-base poppins">
-    Quick Actions
-  </h3>
-</div>
-
-<section className="grid grid-cols-4 gap-x-3 gap-y-2 mx-4 mb-6">
-  {quickServices.map((service) => {
-    let serviceImage = DummyImage;
-
-    if (service.isCheckout) {
-      serviceImage = CheckoutImg;
-    } else if (service.image) {
-      serviceImage = service.image;
-    }
-
-    return (
-      <article
-        key={service._id}
-        onClick={() => handleSelectService(service)}
-        onKeyDown={() => handleSelectService(service)}
-        className="group flex flex-col items-center cursor-pointer"
-      >
-        {/* Uniform image tile */}
-        <div className="relative h-[84px] w-[84px] overflow-hidden rounded-[22px] border border-[#E9E4DC] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_8px_18px_rgba(0,0,0,0.10)]">
-          <Image
-            src={serviceImage || "/placeholder.svg"}
-            alt={service.name}
-            fill
-            className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
-          />
-
-          <div className="absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/20" />
-
-          {!service.availability && !service.isCheckout && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[22px] bg-white/65 backdrop-blur-[1px]">
-              <span className="rounded-full bg-red-500 px-2 py-0.5 text-[0.52rem] font-medium text-white">
-                Unavailable
-              </span>
+          {/* QUICK ACTIONS GROUP */}
+          <section className="mx-4 mb-8 p-4 rounded-3xl bg-gradient-to-br from-[#FAF9F6] to-[#F5F2F0] border border-[#E9E4DC]/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] selection:bg-none">
+            <div className="mb-4 flex items-center gap-2 px-1">
+              <div className="h-4 w-1 bg-gradient-to-b from-[#E85D3A] to-[#E85D3A]/40 rounded-full" />
+              <h3 className="font-semibold text-[#4A433D] text-[0.95rem] poppins tracking-tight uppercase">
+                Quick Actions
+              </h3>
             </div>
-          )}
-        </div>
 
-        {/* Label below */}
-        <div className="mt-2 min-h-[28px] px-1 text-center">
-          <span
-            className={cn(
-             "text-[#5B6470] text-sm md:text-base leading-[1.05] tracking-[-0.04em] line-clamp-2",
-              service.isCheckout && "text-[#E85D3A]"
-            )}
-          >
-            {service.name}
-          </span>
-        </div>
-      </article>
-        );
-      })}
-      </section>
+            <div className="grid grid-cols-4 gap-x-3 gap-y-3">
+              {quickServices.map((service) => {
+                let serviceImage = DummyImage;
+
+                if (service.isCheckout) {
+                  serviceImage = CheckoutImg;
+                } else if (service.image) {
+                  serviceImage = service.image;
+                }
+
+                return (
+                  <article
+                    key={service._id}
+                    onClick={() => handleSelectService(service)}
+                    onKeyDown={() => handleSelectService(service)}
+                    className="group flex flex-col items-center cursor-pointer"
+                  >
+                    {/* Uniform image tile */}
+                    <div className="relative h-[78px] w-[78px] overflow-hidden rounded-[24px] border border-white bg-white shadow-[0_6px_16px_rgba(0,0,0,0.04)] ring-1 ring-[#E9E4DC]/40 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] group-active:scale-95">
+                      <Image
+                        src={serviceImage || "/placeholder.svg"}
+                        alt={service.name}
+                        fill
+                        className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.1]"
+                      />
+
+                      <div className="absolute inset-0 rounded-[24px] ring-1 ring-inset ring-white/30" />
+
+                      {!service.availability && !service.isCheckout && (
+                        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[24px] bg-white/70 backdrop-blur-[2px]">
+                          <span className="rounded-full bg-red-500/90 px-1.5 py-0.5 text-[0.5rem] font-bold text-white uppercase tracking-wider">
+                            OFF
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Label below */}
+                    <div className="mt-2 min-h-[28px] px-0.5 text-center">
+                      <span
+                        className={cn(
+                          "text-[#6B625A] text-[0.8rem] font-medium leading-[1.1] tracking-tight line-clamp-2 transition-colors duration-200 group-hover:text-black font-poppins",
+                          service.isCheckout && "text-[#E85D3A] font-semibold"
+                        )}
+                      >
+                        {service.name}
+                      </span>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
         </>
       )}
 

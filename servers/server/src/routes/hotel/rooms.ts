@@ -1056,58 +1056,6 @@ const roomRouter = new Hono()
             console.error("Error sending message:", error);
           }
         }
-
-        // const response = await axios.post(
-        //   `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-        //   {
-        //     messaging_product: "whatsapp",
-        //     to: user?.phone?.toString(),
-        //     type: "template",
-        //     template: {
-        //       name: "fi_welcoming_template",
-        //       language: { code: "en" },
-        //       components: [
-        //         {
-        //           type: "header",
-        //           parameters: [
-        //             {
-        //               type: "image",
-        //               image: {
-        //                 link: "https://t-static.blr1.digitaloceanspaces.com/e3039890-ede4-4fec-bcc4-ad12c2aa87ac.jpeg",
-        //               },
-        //             },
-        //           ],
-        //         },
-        //         {
-        //           type: "body",
-        //           parameters: [
-        //             {
-        //               type: "text",
-        //               text: business?.name,
-        //             },
-
-        //             {
-        //               type: "text",
-        //               text: `${updateLongUrl}&sessionId=${roomSession[0]._id.toString()}`,
-        //             },
-        //             {
-        //               type: "text",
-        //               text: authCode,
-        //             },
-        //           ],
-        //         },
-        //       ],
-        //     },
-        //   },
-        //   {
-        //     headers: {
-        //       Authorization: `Bearer ${whatsAppConfig.token}`,
-        //     },
-        //   },
-        // );
-        // if (response.status !== 200) {
-        //   throw new Error("Error sending message");
-        // }
       }
 
       return respond(c, "Checked in successfully", false, 200, {

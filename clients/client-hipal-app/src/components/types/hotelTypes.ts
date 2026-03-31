@@ -39,6 +39,7 @@ export interface IRoomProps {
 export interface Service {
   _id: string;
   name: string;
+  avgCompletionTime?: number;
 }
 
 export interface RoomChatReply {
@@ -56,6 +57,8 @@ interface Alert {
   _id: string;
   alertProgress: string;
   serviceIds: Service[];
+  acceptedAt?: number;
+  createdAt?: number;
 }
 
 export interface Cart {
@@ -114,6 +117,7 @@ export interface ChatMessageHotelProps {
 }
 
 export interface ChatReplyMessageProps {
+  chat?: RoomChat;
   reply: RoomChatReply;
   userResponses: Record<string, string>;
   handleActionClick: (chatReplyId: string, action: string) => void;

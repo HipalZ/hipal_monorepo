@@ -69,7 +69,7 @@ const StepIndicator = ({
   return (
     <div
       ref={containerRef}
-      className="relative px-4 mb-2 overflow-x-auto hide-scrollbar"
+      className="relative px-4 overflow-x-auto hide-scrollbar"
     >
       <div className="flex items-center justify-between min-w-full">
         {displaySteps.map((step, index) => (

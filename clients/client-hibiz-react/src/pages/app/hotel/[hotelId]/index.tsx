@@ -6,7 +6,7 @@ import { cn } from "@hi/common";
 import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSidenav";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import HotelActions from "@/components/hotel/Actions";
-import PaymentCards from "@/components/hotel/payments";
+// import PaymentCards from "@/components/hotel/payments";
 import {
   HotelInfoTabs,
   useHotelInfoTabs,
@@ -21,7 +21,7 @@ const navItems = [
   { text: HotelInfoTabs.Actions },
   { text: HotelInfoTabs.Integrations },
   { text: HotelInfoTabs.Analytics },
-  { text: HotelInfoTabs.Payments },
+  // { text: HotelInfoTabs.Payments },
 ];
 
 const MemoHotelInfoMain = () => {
@@ -81,7 +81,7 @@ const MemoHotelInfoMain = () => {
           {selectedTab === HotelInfoTabs.Integrations && <Integrations />}
           {selectedTab === HotelInfoTabs.Actions && <HotelActions />}
           {selectedTab === HotelInfoTabs.Analytics && <AnalyticsCards />}
-          {selectedTab === HotelInfoTabs.Payments && <PaymentCards />}
+          {/* {selectedTab === HotelInfoTabs.Payments && <PaymentCards />} */}
         </section>
       </Suspense>
     </main>
