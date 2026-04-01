@@ -25,6 +25,9 @@ export const whatsAppBusinessConfigSchema = z.object({
   campaign: z.boolean().default(false),
   outLetId: ObjectIdSchema.optional(),
   chat: z.boolean().default(false),
+  tableQrCustomMessage: z.string().optional(),
+  tableQrCustomUrlText: z.string().optional(),
+  tableQrCustomUrl: z.string().optional(),
 });
 
 export type WhatsAppBusinessConfigType = z.infer<
