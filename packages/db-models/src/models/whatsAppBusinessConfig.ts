@@ -111,6 +111,18 @@ const whatsAppBusinessConfigSchema =
         required: false,
         ref: "outlet",
       },
+      tableQrCustomMessage: {
+        type: String,
+        required: false,
+      },
+      tableQrCustomUrlText: {
+        type: String,
+        required: false,
+      },
+      tableQrCustomUrl: {
+        type: String,
+        required: false,
+      },
     },
     {
       timestamps: true,

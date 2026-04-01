@@ -7,8 +7,22 @@ async function sendWhatsAppTemplateForTableQr(
   whatsAppBusinessConfigData: WhatsAppBusinessConfigType,
   userPhone: string,
   tableQrShortUrl: string,
+  tableName?: string,
 ) {
   try {
+    const defaultMessage = `Welcome to ${whatsAppBusinessConfigData?.businessName}! ✨\n\nThank you for connecting with us.\n\nTap below to continue and discover a seamless experience designed for you.`
+    const defaultUrlText = "Explore Us";
+
+    let messageText = whatsAppBusinessConfigData?.tableQrCustomMessage || defaultMessage;
+    // Replace placeholders
+    messageText = messageText.replace(/{{business_name}}/g, whatsAppBusinessConfigData?.businessName || "");
+    if (tableName) {
+      messageText = messageText.replace(/{{table_name}}/g, tableName);
+    }
+
+    const urlText = whatsAppBusinessConfigData?.tableQrCustomUrlText || defaultUrlText;
+    const finalUrl = whatsAppBusinessConfigData?.tableQrCustomUrl || tableQrShortUrl;
+
     await axios({
       method: "POST",
       url: `${whatsAppApiBaseUrl.BASE_URL}/${whatsAppBusinessConfigData?.version}/${whatsAppBusinessConfigData.phoneId}/messages?access_token=${whatsAppBusinessConfigData?.token}`,
@@ -20,13 +34,13 @@ async function sendWhatsAppTemplateForTableQr(
         interactive: {
           type: "cta_url",
           body: {
-            text: `Welcome to ${whatsAppBusinessConfigData?.businessName}! ✨\n\nThank you for connecting with us.\n\nTap below to continue and discover a seamless experience designed for you.`
+            text: messageText,
           },
           action: {
             name: "cta_url",
             parameters: {
-              display_text: "Explore Us",
-              url: tableQrShortUrl,
+              display_text: urlText,
+              url: finalUrl,
             },
           },
         },
@@ -60,6 +74,7 @@ async function tableQrHandler(
       whatsAppBusinessConfigData,
       userPhone,
       tableQrShortUrl,
+      tableName
     );
   } catch (error) {
     console.error("Error in tableQrHandler:", error);

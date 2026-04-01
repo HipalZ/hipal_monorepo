@@ -5,7 +5,7 @@ import useWhatsapp, { Step, TemplateSteps, TemplateType } from '@/components/sto
 import { Tabs, useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
 import { useFetchTemplates } from '@/hooks/useTemplates';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, MessageCircle, Workflow } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageCircle, Workflow, Settings } from 'lucide-react';
 import { lazy, memo, useCallback, useState } from 'react';
 import { HiOutlineTemplate } from 'react-icons/hi';
 import { MdCampaign } from 'react-icons/md';
@@ -17,6 +17,7 @@ const WhatsappChats = lazy(() => import('./whatsappChats'));
 const CampaignAdvancedAnalytics = lazy(() => import('./campaignAdvancedAnalytics'));
 const TemplatesCarousel = lazy(() => import('./templatesCarousel'));
 const CampaignAnalytics = lazy(() => import('./campaignAnalytics'));
+const WhatsappSettings = lazy(() => import('./whatsappSettings'));
 
 const MemoWhatzappDashboard = () => {
   const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
@@ -63,6 +64,8 @@ const MemoWhatzappDashboard = () => {
         return <Workflow className="mr-2 h-5 w-5" />;
       case Tabs.CHATS:
         return <MessageCircle className="mr-2 h-5 w-5" />;
+      case Tabs.SETTINGS:
+        return <Settings className="mr-2 h-5 w-5" />;
       default:
         return null;
     }
@@ -189,6 +192,7 @@ const MemoWhatzappDashboard = () => {
         {activeTab === Tabs.CHATS && <WhatsappChats />}
         {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}
         {activeTab === Tabs.CAMPAIGNS && openAnalytics && <CampaignAdvancedAnalytics />}
+        {activeTab === Tabs.SETTINGS && <WhatsappSettings />}
       </div>
 
       {/* Overlay popup */}

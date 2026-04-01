@@ -1904,7 +1904,7 @@ const whatsappRouter = new Hono()
 
       const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
         businessId,
-      }).select('appId token -_id');
+      }).select("appId token tableQrCustomMessage tableQrCustomUrlText tableQrCustomUrl -_id");
 
       if (!whatsAppConfig) {
         return c.json({
@@ -1946,6 +1946,9 @@ const whatsappRouter = new Hono()
             whatsAppPhone: requestData.whatsAppPhone,
             appId: requestData.appId,
             configId: requestData.configId,
+            tableQrCustomMessage: requestData.tableQrCustomMessage,
+            tableQrCustomUrlText: requestData.tableQrCustomUrlText,
+            tableQrCustomUrl: requestData.tableQrCustomUrl,
           },
         },
         {
@@ -1967,6 +1970,52 @@ const whatsappRouter = new Hono()
         data: createWhatsAppConfig,
       });
     },
+  )
+
+  .patch(
+    "/patch_whatsapp_config/:businessId",
+
+    zValidator("param", z.object({ businessId: z.string() })),
+    zValidator(
+      "json",
+      z.object({
+        tableQrCustomMessage: z.string().optional(),
+        tableQrCustomUrlText: z.string().optional(),
+        tableQrCustomUrl: z.string().optional(),
+      })
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const requestData = await c.req.json();
+
+      const updateData: Record<string, any> = {};
+      if (requestData.tableQrCustomMessage !== undefined) {
+        updateData.tableQrCustomMessage = requestData.tableQrCustomMessage;
+      }
+      if (requestData.tableQrCustomUrlText !== undefined) {
+        updateData.tableQrCustomUrlText = requestData.tableQrCustomUrlText;
+      }
+      if (requestData.tableQrCustomUrl !== undefined) {
+        updateData.tableQrCustomUrl = requestData.tableQrCustomUrl;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+         return c.json({ message: "No data to update", err: true, data: {} });
+      }
+
+      const updatedConfig = await WhatsAppBusinessConfig.findOneAndUpdate(
+        { businessId },
+        { $set: updateData },
+        { new: true }
+      );
+
+      return c.json({
+        message: "Updated successfully",
+        err: false,
+        data: updatedConfig,
+      });
+    }
   )
 
   .post(
