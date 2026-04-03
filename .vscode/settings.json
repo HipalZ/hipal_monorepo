@@ -14,7 +14,7 @@
     { "column": 80, "color": "#636e72" },
     { "column": 100, "color": "#b2bec3" }
   ],
-  "workbench.colorTheme": "Default Dark Modern",
+  "workbench.colorTheme": "Dark Modern",
   "workbench.editor.labelFormat": "short",
   "breadcrumbs.enabled": true,
   "breadcrumbs.filePath": "on",
