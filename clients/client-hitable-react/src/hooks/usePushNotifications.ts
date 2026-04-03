@@ -1,9 +1,27 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useCallback } from "react";
 import { getToken } from "firebase/messaging";
 import { messaging } from "./clientApp";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { PushNotificationService } from "@/services/fcm/pushNotificationService";
 import { useLiteStore } from "@/components/store/useLiteStore";
+
+const pushNotificationService = new PushNotificationService();
+
+/**
+ * Plays a local alert sound as fallback for devices where FCM notification
+ * sound doesn't work. Uses the Web Audio API which works in Capacitor webview.
+ */
+const playFallbackSound = () => {
+  try {
+    const audio = new Audio("/order.mp3");
+    audio.volume = 1.0;
+    audio.play().catch(() => {
+      // Autoplay blocked — nothing we can do, the native notification should handle it
+    });
+  } catch {
+    // Silently fail — this is just a fallback
+  }
+};
 
 export const usePushNotifications = () => {
   const { setNotificationStatus } = useLiteStore((s) => ({
@@ -13,7 +31,6 @@ export const usePushNotifications = () => {
     setPushToken: s.setPushToken,
     setPlatform: s.setPlatform,
   }));
-  const pushNotificationService = new PushNotificationService();
   const initializedRef = useRef(false);
 
   const platform = useMemo(() => {
@@ -22,7 +39,6 @@ export const usePushNotifications = () => {
   }, []);
 
   const initializePushNotifications = async () => {
-    // If already initialized or token exists, return early
     if (initializedRef.current) return;
     setPlatform(platform);
     try {
@@ -31,26 +47,23 @@ export const usePushNotifications = () => {
           await pushNotificationService.initializePushNotifications();
         if (token) {
           setPushToken(token);
-          pushNotificationService.initListeners();
-          console.log("notification status", true);
+          // Pass foreground sound fallback callback
+          pushNotificationService.initListeners(() => {
+            playFallbackSound();
+          });
           setNotificationStatus(true);
         } else {
           setNotificationStatus(false);
-          console.log("notification status", false);
         }
       } else {
         const permission = await Notification.requestPermission();
         if (permission === "granted" && "serviceWorker" in navigator) {
-          // Register service worker
           await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-
           const serviceWorkerRegistration = await navigator.serviceWorker.ready;
-
           const token = await getToken(messaging, {
             vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
             serviceWorkerRegistration: serviceWorkerRegistration,
           });
-
           if (token) {
             setPushToken(token);
             setNotificationStatus(true);
@@ -68,8 +81,36 @@ export const usePushNotifications = () => {
     }
   };
 
+  /**
+   * Re-check permission status (e.g. after user returns from settings).
+   * Updates the store so the NotificationBanner can show/hide accordingly.
+   */
+  const recheckPermission = useCallback(async () => {
+    try {
+      if (platform === "android") {
+        const status = await pushNotificationService.checkPermissionStatus();
+        const granted = status === "granted";
+        setNotificationStatus(granted);
+
+        // If now granted and we didn't initialize yet, do it
+        if (granted && !initializedRef.current) {
+          initializedRef.current = false;
+          await initializePushNotifications();
+        }
+        return granted;
+      } else {
+        const granted = Notification.permission === "granted";
+        setNotificationStatus(granted);
+        return granted;
+      }
+    } catch {
+      return false;
+    }
+  }, [platform, setNotificationStatus]);
+
   return {
     initializePushNotifications,
+    recheckPermission,
     initializedRef,
   };
 };

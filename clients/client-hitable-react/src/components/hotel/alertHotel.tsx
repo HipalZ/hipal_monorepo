@@ -3,11 +3,13 @@ import { useAlertsStore } from "../store/useAlertStore";
 import { AlertsSearchAndFilter } from "./alertsSearchAndFilter";
 import { AlertCardHotel } from "./alertCardHotel";
 import { EmptyAlerts } from "./emptyAlerts";
+import NotificationBanner from "./NotificationBanner";
 
 const MemoAlertHotel = () => {
   const { filteredAlerts } = useAlertsStore();
   return (
     <div className="p-4">
+      <NotificationBanner />
       <Suspense fallback={<div>Loading...</div>}>
         <AlertsSearchAndFilter />
       </Suspense>

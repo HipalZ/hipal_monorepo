@@ -6,7 +6,7 @@ import useTimings from '@/components/store/useTimings';
 import type { Alert, Cart } from '@/components/types/hotelData';
 import { apiRpc } from '@hi/common';
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
 import { useError } from '../components/store/useError';
@@ -120,15 +120,32 @@ export type UseRoomAlertsResult = UseQueryResult<Alert[], unknown> & {
   roomAlerts: () => Promise<Alert[]>;
 };
 
+/**
+ * Play alert sound via Web Audio API.
+ * Used as fallback when FCM push notification sound doesn't work,
+ * or when device doesn't support FCM at all (no Google Play Services).
+ */
+const playAlertSound = () => {
+  try {
+    const audio = new Audio('/order.mp3');
+    audio.volume = 1.0;
+    audio.play().catch(() => {});
+  } catch {}
+};
+
 export const useRoomAlerts = (): UseRoomAlertsResult => {
   const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
   const isHotel = outletType === 'HOTEL';
 
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const userId = useHiClientZ((s) => s.captainData?._id);
+  const pushToken = useHiClientZ((s) => s.pushToken);
 
   const { setAlerts } = useAlertsStore();
   const { setHotelAlertsCount } = useHotelStore();
+
+  // Track previous alert count to detect new alerts
+  const prevCountRef = useRef(0);
 
   const roomAlerts = async (): Promise<Alert[]> => {
     if (!businessId || !userId) return [];
@@ -141,6 +158,13 @@ export const useRoomAlerts = (): UseRoomAlertsResult => {
       const data: Alert[] = res?.data ?? [];
       setAlerts(data);
       setHotelAlertsCount(data.length);
+
+      // If no push token (FCM not working) and new alerts appeared, play sound
+      if (!pushToken && data.length > prevCountRef.current && prevCountRef.current > 0) {
+        playAlertSound();
+      }
+      prevCountRef.current = data.length;
+
       return data;
     }
     return [];
