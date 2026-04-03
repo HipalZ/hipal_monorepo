@@ -1,11 +1,13 @@
+import BottomPopUp from '@/components/atoms/bottomPopUp';
 import DateRangePicker from '@/components/atoms/dateRangePicker';
+import { useCartStore } from '@/components/store/useCartStore';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useHistoryAlerts } from '@/hooks/useHotelApis';
 import { ChevronDown, ChevronUp, Clock, Home, Package, Search, User } from 'lucide-react';
-import { memo, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useHotelStore } from '../store/useHotelStore';
 import { useFormatTimes } from '../utils/helpersHotel';
 
@@ -13,7 +15,7 @@ const MemoHistoryHotel = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const { historyData } = useHistoryAlerts();
-  const { formatTimestamp, formatDate } = useFormatTimes();
+  const { formatTimestamp } = useFormatTimes();
   const { setCartData, setOpenCartModal } = useHotelStore();
   const [showCartWarningModal, setShowCartWarningModal] = useState(false);
   const navigate = useNavigate();
@@ -63,7 +65,7 @@ const MemoHistoryHotel = () => {
   const keepCart = useCallback(() => {
     setShowCartWarningModal(false);
     navigate(`/${businessId}/alerts`);
-  }, [businessId, navigate, setShowCartWarningModal]);
+  }, [businessId, navigate]);
   const clearCart = useCallback(() => {
     setCartEmpty();
     setShowCartWarningModal(false);
@@ -107,7 +109,6 @@ const MemoHistoryHotel = () => {
                   </div>
                   <div>
                     <div className="font-medium">Room:- {item?.roomId?.name}</div>
-                    <div className="text-xs text-gray-600">{/* {formatDate(item?.createdAt)} */}</div>
                   </div>
                 </article>
 

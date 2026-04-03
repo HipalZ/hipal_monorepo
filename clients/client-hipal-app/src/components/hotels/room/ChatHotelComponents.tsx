@@ -331,7 +331,7 @@ const ChatReplyMessage = ({
                 transition={{ duration: 0.25 }}
                 className="flex flex-col gap-3 mt-4 pt-4 border-t border-slate-100"
               >
-                <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-[0.18em]">
+                <p className="text-center font-bold tracking-[0.18em]">
                   Share your experience
                 </p>
                 <div className="flex justify-between items-center gap-1 p-2 bg-slate-50/60 rounded-[20px] border border-slate-100/60">
@@ -344,10 +344,10 @@ const ChatReplyMessage = ({
                       className="flex flex-col items-center gap-1.5 p-3 rounded-[16px] hover:bg-white transition-all cursor-pointer flex-1 outline-none group focus:ring-2 focus:ring-indigo-100"
                       aria-label={option?.id}
                     >
-                      <span className="text-[28px] md:text-[32px] leading-none drop-shadow-sm group-hover:drop-shadow-md transition-all">
+                      <span className="text-[28px] md:text-[32px] leading-none drop-shadow-sm transition-all">
                         {option?.text}
                       </span>
-                      <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tight opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                      <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tight whitespace-nowrap">
                         {option?.id}
                       </span>
                     </motion.button>

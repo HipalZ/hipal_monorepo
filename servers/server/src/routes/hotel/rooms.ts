@@ -1237,6 +1237,13 @@ const roomRouter = new Hono()
         }
       }
 
+      // Auto-close any remaining MESSAGE alerts (checkout requests) for this room
+      await HotelAlert.updateMany(
+        { roomId, alertProgress: "MESSAGE" },
+        { $set: { alertProgress: "REJECTED", rejectedAt: Date.now() } },
+        { session },
+      );
+
       const updatedRoom = await HotelRoom.findByIdAndUpdate(
         roomId,
         {
@@ -1346,6 +1353,53 @@ const roomRouter = new Hono()
 
         if (!alert) {
           throw new Error("Error creating alert");
+        }
+
+        // Send push notification to frontoffice staff assigned to this room
+        const frontofficeStaff = await User.find({
+          _id: { $in: roomExists.staffIds },
+          customRole: {
+            $elemMatch: {
+              businessId: { $eq: roomExists.businessId },
+              role: "FRONT_OFFICE",
+            },
+          },
+        })
+          .select("_id")
+          .lean();
+
+        const frontofficeIds = frontofficeStaff.map((s) =>
+          s._id.toString(),
+        );
+
+        if (frontofficeIds.length > 0) {
+          const registrationTokens = await DeviceToken.find({
+            userId: { $in: frontofficeIds },
+            notification: true,
+          });
+
+          for (const obj of registrationTokens) {
+            if (obj.notification) {
+              const pushMessage = {
+                token: obj.token,
+                notification: {
+                  title: "Checkout Request",
+                  body: `${roomExists.name} - ${userData.name} has requested to check out.`,
+                },
+                android: {
+                  notification: {
+                    channel_id: "custom_channel_id",
+                    sound: "order",
+                  },
+                },
+              };
+              try {
+                await admin.messaging().send(pushMessage);
+              } catch (error) {
+                console.error("Error sending checkout push notification:", error);
+              }
+            }
+          }
         }
 
         if (whatsAppConfig) {
