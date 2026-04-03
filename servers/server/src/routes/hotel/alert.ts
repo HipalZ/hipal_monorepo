@@ -47,7 +47,7 @@ const sendPushNotification = async (
     token: token, // or use 'topic' if you're sending to a topic
     notification: {
       title: "Room Attention Required",
-      body: `Room ${hotelNo} requires your attention for ${serviceName}. kindly respond to the alert!`,
+      body: `${hotelNo} requires your attention for ${serviceName}. kindly respond to the alert!`,
     },
     android: {
       notification: {
@@ -71,7 +71,7 @@ const sendPushNotificationForNotDeliverd = async (
     token: token,
     notification: {
       title: "Service Delivery Alert 🚨",
-      body: `Heads up! Room ${hotelNo} has a service that wasn't delivered. Please check and resolve ASAP.`,
+      body: `Heads up! ${hotelNo} has a service that wasn't delivered. Please check and resolve ASAP.`,
     },
     android: {
       notification: {
@@ -495,16 +495,27 @@ const scheduleLevel2Alert = (
         { new: true },
       );
 
-      // Send push notifications to staff members
-      const registrationTokens = await DeviceToken.find({
-        userId: { $in: l2ManagerIds },
-        notification: true,
-      });
-      registrationTokens.map(async (obj) => {
-        if (obj.notification) {
-          await sendPushNotification(obj.token, roomName, serviceName);
-        }
-      });
+      // Send push notifications to staff members (skip if accepted)
+      const isAccepted =
+        alertData &&
+        [
+          "ACCEPTED",
+          "IS_ACCEPTED_AND_WARNING",
+          "IS_ACCEPTED_AND_ESCALATION",
+          "DELIVERED",
+        ].includes(alertData.alertProgress);
+
+      if (!isAccepted) {
+        const registrationTokens = await DeviceToken.find({
+          userId: { $in: l2ManagerIds },
+          notification: true,
+        });
+        registrationTokens.map(async (obj) => {
+          if (obj.notification) {
+            await sendPushNotification(obj.token, roomName, serviceName);
+          }
+        });
+      }
 
       scheduleLevel3Alert(
         alertId,
@@ -621,16 +632,27 @@ const scheduleLevel3Alert = (
         { new: true },
       );
 
-      // Send push notifications to staff members
-      const registrationTokens = await DeviceToken.find({
-        userId: { $in: l3ManagerIds },
-        notification: true,
-      });
-      registrationTokens.map(async (obj) => {
-        if (obj.notification) {
-          await sendPushNotification(obj.token, roomName, serviceName);
-        }
-      });
+      // Send push notifications to staff members (skip if accepted)
+      const isAccepted =
+        alertData &&
+        [
+          "ACCEPTED",
+          "IS_ACCEPTED_AND_WARNING",
+          "IS_ACCEPTED_AND_ESCALATION",
+          "DELIVERED",
+        ].includes(alertData.alertProgress);
+
+      if (!isAccepted) {
+        const registrationTokens = await DeviceToken.find({
+          userId: { $in: l3ManagerIds },
+          notification: true,
+        });
+        registrationTokens.map(async (obj) => {
+          if (obj.notification) {
+            await sendPushNotification(obj.token, roomName, serviceName);
+          }
+        });
+      }
 
       const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
         businessId: alertData?.businessId,
@@ -712,42 +734,42 @@ const scheduleLevel3Alert = (
   }
 };
 
+const PUSH_INTERVAL_MS = 59 * 1000;
+
 const scheduleAlert = (
-  intervals: number[],
   businessId: string,
   roomName: string,
   alertId: string,
   serviceName: string,
   validStaffIds: string[],
 ) => {
-  for (const interval of intervals) {
-    if (interval > 0) {
-      const runTime = new Date(Date.now() + interval * 1000);
-      const cronExpression = `${runTime.getSeconds()} ${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
-        runTime.getMonth() + 1
-      } *`;
+  const intervalId = setInterval(async () => {
+    try {
+      const alertData = await HotelAlert.findById(alertId)
+        .select("alertProgress")
+        .lean();
 
-      schedule(cronExpression, async () => {
-        const alertData = await HotelAlert.findById(alertId).populate({
-          path: "serviceIds",
-          select: "name",
-        });
+      // Only keep sending while alert is still in CREATED state
+      if (!alertData || alertData.alertProgress !== "CREATED") {
+        clearInterval(intervalId);
+        return;
+      }
 
-        if (alertData?.alertProgress !== "DELIVERED") {
-          const registrationTokens = await DeviceToken.find({
-            businessId,
-            userId: { $in: validStaffIds },
-            notification: true,
-          });
-          for (const obj of registrationTokens) {
-            if (obj.notification) {
-              await sendPushNotification(obj.token, roomName, serviceName);
-            }
-          }
-        }
+      const registrationTokens = await DeviceToken.find({
+        businessId,
+        userId: { $in: validStaffIds },
+        notification: true,
       });
+      for (const obj of registrationTokens) {
+        if (obj.notification) {
+          await sendPushNotification(obj.token, roomName, serviceName);
+        }
+      }
+    } catch (error) {
+      console.error("scheduleAlert interval error:", error);
+      clearInterval(intervalId);
     }
-  }
+  }, PUSH_INTERVAL_MS);
 };
 
 const hotelAlertRouter = new Hono()
@@ -803,56 +825,46 @@ const hotelAlertRouter = new Hono()
         );
       }
 
-      // Step 3: Build alert query with both roomId & staffId conditions
+      // Step 3: Single query — service alerts by serviceIds, MESSAGE alerts by room only
+      const activeStatuses = [
+        "CREATED",
+        "ACCEPTED",
+        "IS_ACCEPTED_AND_WARNING",
+        "NON_ACCEPTED_AND_WARNING",
+        "IS_ACCEPTED_AND_ESCALATION",
+        "NON_ACCEPTED_AND_ESCALATION",
+        "NOT_DELIVERED",
+      ];
+
       const alertQuery: any = {
         businessId,
-        alertProgress: {
-          $in: [
-            "CREATED",
-            "ACCEPTED",
-            "IS_ACCEPTED_AND_WARNING",
-            "MESSAGE",
-            "NON_ACCEPTED_AND_WARNING",
-            "IS_ACCEPTED_AND_ESCALATION",
-            "NON_ACCEPTED_AND_ESCALATION",
-            "NOT_DELIVERED",
-          ],
-        },
-
         roomId: { $in: roomIds },
-        serviceIds: { $in: serviceIds || [] },
+        $or: [
+          {
+            alertProgress: { $in: activeStatuses },
+            serviceIds: { $in: serviceIds || [] },
+          },
+          { alertProgress: "MESSAGE" },
+        ],
       };
 
       // Step 4: Fetch and populate alerts
+      const populateFields = [
+        { path: "serviceIds", select: "name image" },
+        { path: "createdBy", select: "name phone" },
+        { path: "acceptedBy", select: "name phone" },
+        { path: "roomId", select: "name" },
+      ];
+
       let alerts = await HotelAlert.find(alertQuery)
-        .populate({ path: "serviceIds", select: "name image" })
-        .populate({ path: "createdBy", select: "name phone" })
-        .populate({ path: "acceptedBy", select: "name phone" })
-        .populate({ path: "roomId", select: "name" })
+        .populate(populateFields)
         .lean();
 
       if (role === "MANAGER") {
         alerts = [];
       }
 
-      const checkOutRequestalerts = await HotelAlert.find({
-        businessId,
-        alertProgress: "MESSAGE",
-        roomId: { $in: roomIds },
-      })
-        .populate({ path: "serviceIds", select: "name" })
-        .populate({ path: "createdBy", select: "name phone" })
-        .populate({ path: "acceptedBy", select: "name phone" })
-        .populate({ path: "roomId", select: "name" })
-        .lean();
-
-      if (role === "MANAGER") {
-        alerts = [];
-      }
-
-      const newArray = alerts.concat(checkOutRequestalerts);
-
-      return respond(c, "Alerts fetched successfully", false, 200, newArray);
+      return respond(c, "Alerts fetched successfully", false, 200, alerts);
     },
   )
   .get(
@@ -1450,7 +1462,6 @@ const hotelAlertRouter = new Hono()
         }
 
         scheduleAlert(
-          [0, 60],
           requestData.businessId,
           roomData.name,
           alert._id.toString(),
@@ -1503,7 +1514,8 @@ const hotelAlertRouter = new Hono()
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
-      const { alertId, userId, action, reasonOfRejection } = requestData as AcceptHotelAlertType;
+      const { alertId, userId, action, reasonOfRejection } =
+        requestData as AcceptHotelAlertType;
 
       const roomChat = await HotelRoomChat.findOne({
         alertId: alertId,
@@ -1555,7 +1567,6 @@ const hotelAlertRouter = new Hono()
           "CREATED",
           "NON_ACCEPTED_AND_WARNING",
           "NON_ACCEPTED_AND_ESCALATION",
-          "MESSAGE",
         ],
         RESOLVED: ["NOT_DELIVERED"],
       };
@@ -1620,15 +1631,19 @@ const hotelAlertRouter = new Hono()
         const service = await HotelService.findById(alert.serviceIds[0]);
         const avgCompletionTime = service?.avgCompletionTime || 15;
         const etaTimestamp = Date.now() + avgCompletionTime * 60 * 1000;
-        const formattedTime = new Date(etaTimestamp).toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        });
+        const formattedTime = new Date(etaTimestamp).toLocaleTimeString(
+          "en-IN",
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+            timeZone: "Asia/Kolkata",
+          },
+        );
 
         const roomChatReply = new HotelRoomChatReply({
           action: false,
-          description: `Thank you for your patience! Your request has been received and our team is on it. We aim to have everything ready for you by ${formattedTime}. Sit back and relax! 🙏`,
+          description: `Thanks for your patience. We’ve received your request and are working on it. It will be ready by ${formattedTime}.`,
           roomChatId: roomChat._id,
           userId: userId,
           status: "NORMAL",
@@ -1661,7 +1676,9 @@ const hotelAlertRouter = new Hono()
 
         const roomChatReply = new HotelRoomChatReply({
           action: false,
-          description: `We sincerely apologize for the inconvenience. Unfortunately, we are unable to fulfill your request at this time. Reason: ${reasonOfRejection || "not specified"}. Please feel free to contact our front desk and we will be happy to assist you further.`,
+          description: `Sorry, we’re unable to process your request right now. Reason: ${
+            reasonOfRejection || "not specified"
+          }. Please contact the front desk for assistance.`,
           roomChatId: roomChat._id,
           userId: userId,
           status: "WARNING",
@@ -1765,9 +1782,14 @@ const hotelAlertRouter = new Hono()
               businessId: alert.businessId,
             });
 
-            const timeTakenMs = Date.now() - (alert?.acceptedAt || alert?.createdAt || Date.now());
+            const timeTakenMs =
+              Date.now() -
+              (alert?.acceptedAt || alert?.createdAt || Date.now());
             const timeTakenMinutes = Math.floor(timeTakenMs / 60000);
-            const timeTakenText = timeTakenMinutes > 0 ? `${timeTakenMinutes} Minutes` : `${Math.floor(timeTakenMs / 1000)} Seconds`;
+            const timeTakenText =
+              timeTakenMinutes > 0
+                ? `${timeTakenMinutes} Minutes`
+                : `${Math.floor(timeTakenMs / 1000)} Seconds`;
 
             const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
             const components = await returnHotelBodyComponents(
@@ -1899,9 +1921,14 @@ const hotelAlertRouter = new Hono()
               businessId: alert.businessId,
             });
 
-            const timeTakenMs = Date.now() - (alert?.acceptedAt || alert?.createdAt || Date.now());
+            const timeTakenMs =
+              Date.now() -
+              (alert?.acceptedAt || alert?.createdAt || Date.now());
             const timeTakenMinutes = Math.floor(timeTakenMs / 60000);
-            const timeTakenText = timeTakenMinutes > 0 ? `${timeTakenMinutes} Minutes` : `${Math.floor(timeTakenMs / 1000)} Seconds`;
+            const timeTakenText =
+              timeTakenMinutes > 0
+                ? `${timeTakenMinutes} Minutes`
+                : `${Math.floor(timeTakenMs / 1000)} Seconds`;
 
             const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
             const components = await returnHotelBodyComponents(
@@ -2037,6 +2064,45 @@ const hotelAlertRouter = new Hono()
       });
     });
   })
+
+  .post(
+    "/dismiss_message_alert",
+    zValidator(
+      "json",
+      z.object({
+        alertId: z.string().min(2).max(50),
+        userId: z.string().min(2).max(50),
+      }),
+    ),
+    async (c) => {
+      const { alertId, userId } = await c.req.json();
+
+      const alert = await HotelAlert.findById(alertId);
+      if (!alert) {
+        return respond(c, "Alert not found", true, 404, {});
+      }
+
+      if (alert.alertProgress !== "MESSAGE") {
+        return respond(
+          c,
+          "Only MESSAGE alerts can be dismissed via this route",
+          true,
+          400,
+          {},
+        );
+      }
+
+      await HotelAlert.findByIdAndUpdate(alertId, {
+        alertProgress: "REJECTED",
+        rejectedAt: Date.now(),
+        rejectedBy: userId,
+      });
+
+      return respond(c, "Alert dismissed successfully", false, 200, {
+        _id: alertId,
+      });
+    },
+  )
 
   .post("/chat_complain", zValidator("json", updateRoomChat), async (c) => {
     //@ts-ignore

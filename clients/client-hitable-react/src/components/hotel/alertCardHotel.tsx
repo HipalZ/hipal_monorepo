@@ -1,14 +1,13 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { useEditAlertCart, useRespondAlerts } from '@/hooks/useHotelApis';
+import { useDismissMessageAlert, useEditAlertCart, useRespondAlerts } from '@/hooks/useHotelApis';
 import { useMutation } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
-import { CheckCheck, CheckCircle, ChevronLeft, Loader2, Package, Phone, ShoppingCart, User, XCircle } from 'lucide-react';
+import { CheckCheck, CheckCircle, ChevronLeft, Loader2, Phone, ShoppingCart, User, XCircle } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
 import CommonBottomButton from '../atoms/bottomButton';
@@ -32,6 +31,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const { mutateAsync } = useMutation({
     mutationFn: respondAlert,
   });
+  const { dismissAlert, isDismissing } = useDismissMessageAlert();
 
   // State for rejection popup
   const [showRejectPopup, setShowRejectPopup] = useState(false);
@@ -265,10 +265,17 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
           {alert?.alertProgress === 'MESSAGE' ? (
             <Button
               className="w-full bg-black text-white hover:bg-black"
-              onClick={() => handleAction(alert?._id, 'REJECTED')}
-              disabled={isLoading !== null}
+              onClick={async () => {
+                try {
+                  await dismissAlert(alert?._id);
+                  toast.success('Alert dismissed successfully');
+                } catch (error) {
+                  toast.error(error?.message || 'Failed to dismiss alert');
+                }
+              }}
+              disabled={isDismissing}
             >
-              {isLoading === 'REJECTED' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+              {isDismissing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
               Remove
             </Button>
           ) : null}

@@ -93,7 +93,12 @@ export interface Alert {
     | "WARNING"
     | "ESCALATION"
     | "NOT_DELIVERED"
-    | "MESSAGE";
+    | "MESSAGE"
+    | "NON_ACCEPTED_AND_WARNING"
+    | "NON_ACCEPTED_AND_ESCALATION"
+    | "IS_ACCEPTED_AND_WARNING"
+    | "IS_ACCEPTED_AND_ESCALATION"
+    | "RESOLVED";
   serviceIds: Service[];
   businessId: string;
   userId: string;
