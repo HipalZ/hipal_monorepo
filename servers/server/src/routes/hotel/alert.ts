@@ -749,8 +749,13 @@ const scheduleAlert = (
         .select("alertProgress")
         .lean();
 
-      // Only keep sending while alert is still in CREATED state
-      if (!alertData || alertData.alertProgress !== "CREATED") {
+      // Keep sending while alert has not been accepted, delivered, or rejected
+      const keepReminding = [
+        "CREATED",
+        "NON_ACCEPTED_AND_WARNING",
+        "NON_ACCEPTED_AND_ESCALATION",
+      ];
+      if (!alertData || !keepReminding.includes(alertData.alertProgress)) {
         clearInterval(intervalId);
         return;
       }
