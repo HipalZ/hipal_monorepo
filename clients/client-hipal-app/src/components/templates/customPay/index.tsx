@@ -30,13 +30,16 @@ const RAZORPAY_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
   const tableNameFromUrl = searchParams?.get("tableName") || "";
-  const userId = searchParams?.get("id");
+  const userIdFromUrl = searchParams?.get("id");
 
   const [amount, setAmount] = useState("");
   const [isReady, setIsReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<SuccessState>(null);
   const [isRazorpayReady, setIsRazorpayReady] = useState(false);
+  const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(
+    !!userIdFromUrl,
+  );
 
   const scriptLoadingPromiseRef = useRef<Promise<boolean> | null>(null);
 
@@ -76,12 +79,45 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     setTableNameTimeStamp(Date.now());
   }, [tableNameFromUrl, setTableName, setTableNameTimeStamp]);
 
+  // Auth: if ?id= present, AutoLoginWrapper (root layout) handles it.
+  // Poll for token to appear. If no ?id=, trigger CombinedLogin immediately.
   useEffect(() => {
     const accessToken = useUserToken.getState().accessToken;
-    if (!userId && !accessToken) {
-      setCheckLogin(true);
+
+    // Already logged in
+    if (accessToken) {
+      setWaitingForAutoLogin(false);
+      return;
     }
-  }, [userId, setCheckLogin]);
+
+    // No ?id= param — show manual login
+    if (!userIdFromUrl) {
+      setCheckLogin(true);
+      return;
+    }
+
+    // ?id= present — AutoLoginWrapper is handling it, poll for token
+    const interval = setInterval(() => {
+      if (useUserToken.getState().accessToken) {
+        setWaitingForAutoLogin(false);
+        clearInterval(interval);
+      }
+    }, 300);
+
+    // Timeout 8s — fallback to manual login if auto-login failed
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      if (!useUserToken.getState().accessToken) {
+        setWaitingForAutoLogin(false);
+        setCheckLogin(true);
+      }
+    }, 8000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [userIdFromUrl, setCheckLogin]);
 
   const loadRazorpayScript = useCallback((): Promise<boolean> => {
     if (typeof window === "undefined") {
@@ -382,7 +418,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   const numericAmount = Number(amount) || 0;
 
-  if (!isReady) {
+  if (!isReady || waitingForAutoLogin) {
     return <LoadingSpinnerCircle />;
   }
 

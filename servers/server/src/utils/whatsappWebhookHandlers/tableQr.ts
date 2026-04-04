@@ -8,20 +8,28 @@ async function sendWhatsAppTemplateForTableQr(
   userPhone: string,
   tableQrShortUrl: string,
   tableName?: string,
+  userId?: string,
 ) {
   try {
     const defaultMessage = `Welcome to ${whatsAppBusinessConfigData?.businessName}! ✨\n\nThank you for connecting with us.\n\nTap below to continue and discover a seamless experience designed for you.`
     const defaultUrlText = "Explore Us";
 
     let messageText = whatsAppBusinessConfigData?.tableQrCustomMessage || defaultMessage;
-    // Replace placeholders
+    // Replace placeholders in message
     messageText = messageText.replace(/{{business_name}}/g, whatsAppBusinessConfigData?.businessName || "");
     if (tableName) {
       messageText = messageText.replace(/{{table_name}}/g, tableName);
     }
 
     const urlText = whatsAppBusinessConfigData?.tableQrCustomUrlText || defaultUrlText;
-    const finalUrl = whatsAppBusinessConfigData?.tableQrCustomUrl || tableQrShortUrl;
+    let finalUrl = whatsAppBusinessConfigData?.tableQrCustomUrl || tableQrShortUrl;
+
+    // Interpolate dynamic variables in custom URL
+    if (whatsAppBusinessConfigData?.tableQrCustomUrl) {
+      finalUrl = finalUrl.replace(/{{userId}}/g, userId || "");
+      finalUrl = finalUrl.replace(/{{tableName}}/g, tableName || "");
+      finalUrl = finalUrl.replace(/{{userPhone}}/g, userPhone || "");
+    }
 
     await axios({
       method: "POST",
@@ -74,7 +82,8 @@ async function tableQrHandler(
       whatsAppBusinessConfigData,
       userPhone,
       tableQrShortUrl,
-      tableName
+      tableName,
+      userId,
     );
   } catch (error) {
     console.error("Error in tableQrHandler:", error);
