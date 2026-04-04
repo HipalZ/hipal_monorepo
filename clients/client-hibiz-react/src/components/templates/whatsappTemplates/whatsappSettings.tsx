@@ -213,13 +213,37 @@ const MemoWhatsappSettings = () => {
                       <label htmlFor="customUrl" className="font-semibold text-gray-700">Custom Link URL</label>
                       <input
                         id="customUrl"
-                        type="url"
+                        type="text"
                         className="rounded-lg border border-gray-200 p-3 text-sm shadow-sm transition-all focus:border-[#075E54] focus:outline-none focus:ring-1 focus:ring-[#075E54]"
-                        placeholder="https://yourwebsite.com/menu"
+                        placeholder="https://yoursite.com/pay?tableName={{tableName}}&id={{userId}}"
                         value={tableQrCustomUrl}
                         onChange={(e) => setTableQrCustomUrl(e.target.value)}
                         required
                       />
+                      <div className="rounded-lg border border-[#075E54]/20 bg-[#075E54]/5 p-3">
+                        <p className="text-xs font-medium text-[#075E54] mb-1.5">Available Variables</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            { label: '{{userId}}', desc: 'Auto-login ID' },
+                            { label: '{{tableName}}', desc: 'Table / counter name' },
+                            { label: '{{userPhone}}', desc: 'Phone number' },
+                          ].map((v) => (
+                            <button
+                              key={v.label}
+                              type="button"
+                              onClick={() => setTableQrCustomUrl((prev) => prev + v.label)}
+                              className="inline-flex items-center gap-1 rounded-md border border-[#075E54]/30 bg-white px-2 py-1 text-[11px] font-mono text-[#075E54] transition hover:bg-[#075E54]/10"
+                              title={v.desc}
+                            >
+                              {v.label}
+                              <span className="text-[10px] font-sans text-gray-400">{v.desc}</span>
+                            </button>
+                          ))}
+                        </div>
+                        <p className="mt-2 text-[11px] text-gray-500 leading-relaxed">
+                          These variables are replaced with actual values when the message is sent. Click a variable to append it to your URL.
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
