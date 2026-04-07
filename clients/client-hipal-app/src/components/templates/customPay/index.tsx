@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiRpc } from "@hi/common";
@@ -27,21 +27,54 @@ declare global {
 const RAZORPAY_SCRIPT_ID = "razorpay-checkout-script";
 const RAZORPAY_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 
+const ensureRazorpayScript = (() => {
+  let promise: Promise<boolean> | null = null;
+
+  return (): Promise<boolean> => {
+    if (typeof window === "undefined") return Promise.resolve(false);
+
+    if (window.Razorpay) return Promise.resolve(true);
+
+    if (promise) return promise;
+
+    promise = new Promise((resolve) => {
+      const existing = document.getElementById(RAZORPAY_SCRIPT_ID) as HTMLScriptElement | null;
+
+      if (existing) {
+        const onLoad = () => resolve(true);
+        const onError = () => resolve(false);
+
+        existing.addEventListener("load", onLoad, { once: true });
+        existing.addEventListener("error", onError, { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.id = RAZORPAY_SCRIPT_ID;
+      script.src = RAZORPAY_SCRIPT_SRC;
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+
+      document.body.appendChild(script);
+    });
+
+    return promise;
+  };
+})();
+
 const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
   const tableNameFromUrl = searchParams?.get("tableName") || "";
-  const userIdFromUrl = searchParams?.get("id");
+  const userIdFromUrl = searchParams?.get("id") || "";
 
   const [amount, setAmount] = useState("");
-  const [isReady, setIsReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<SuccessState>(null);
   const [isRazorpayReady, setIsRazorpayReady] = useState(false);
-  const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(
-    !!userIdFromUrl,
-  );
+  const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(Boolean(userIdFromUrl));
 
-  const scriptLoadingPromiseRef = useRef<Promise<boolean> | null>(null);
+  const mountedRef = useRef(true);
 
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const { setBusinessDetails } = useBusinessDetails();
@@ -59,9 +92,18 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   const businessId = data?.outletInfo?.businessId || "";
   const business = data?.business;
+  const numericAmount = useMemo(() => Number(amount) || 0, [amount]);
 
   useMerchantDetails(businessId);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Single initialization effect for business and table sync
   useEffect(() => {
     setBusinessData(data);
 
@@ -69,153 +111,124 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       setBusinessDetails(data.business);
     }
 
-    setIsReady(true);
-  }, [data, setBusinessData, setBusinessDetails]);
+    if (tableNameFromUrl) {
+      setTableName(tableNameFromUrl);
+      setTableNameTimeStamp(Date.now());
+    }
+  }, [
+    data,
+    tableNameFromUrl,
+    setBusinessData,
+    setBusinessDetails,
+    setTableName,
+    setTableNameTimeStamp,
+  ]);
 
-  useEffect(() => {
-    if (!tableNameFromUrl) return;
-
-    setTableName(tableNameFromUrl);
-    setTableNameTimeStamp(Date.now());
-  }, [tableNameFromUrl, setTableName, setTableNameTimeStamp]);
-
-  // Auth: if ?id= present, AutoLoginWrapper (root layout) handles it.
-  // Poll for token to appear. If no ?id=, trigger CombinedLogin immediately.
+  // Auth orchestration
   useEffect(() => {
     const accessToken = useUserToken.getState().accessToken;
 
-    // Already logged in
     if (accessToken) {
       setWaitingForAutoLogin(false);
       return;
     }
 
-    // No ?id= param — show manual login
     if (!userIdFromUrl) {
+      setWaitingForAutoLogin(false);
       setCheckLogin(true);
       return;
     }
 
-    // ?id= present — AutoLoginWrapper is handling it, poll for token
-    const interval = setInterval(() => {
-      if (useUserToken.getState().accessToken) {
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    intervalId = setInterval(() => {
+      const token = useUserToken.getState().accessToken;
+      if (token && mountedRef.current) {
         setWaitingForAutoLogin(false);
-        clearInterval(interval);
+        if (intervalId) clearInterval(intervalId);
+        if (timeoutId) clearTimeout(timeoutId);
       }
     }, 300);
 
-    // Timeout 8s — fallback to manual login if auto-login failed
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      if (!useUserToken.getState().accessToken) {
+    timeoutId = setTimeout(() => {
+      const token = useUserToken.getState().accessToken;
+      if (!token && mountedRef.current) {
         setWaitingForAutoLogin(false);
         setCheckLogin(true);
       }
+      if (intervalId) clearInterval(intervalId);
     }, 8000);
 
     return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
+      if (intervalId) clearInterval(intervalId);
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [userIdFromUrl, setCheckLogin]);
 
-  const loadRazorpayScript = useCallback((): Promise<boolean> => {
-    if (typeof window === "undefined") {
-      return Promise.resolve(false);
-    }
-
-    if (window.Razorpay) {
-      setIsRazorpayReady(true);
-      return Promise.resolve(true);
-    }
-
-    if (scriptLoadingPromiseRef.current) {
-      return scriptLoadingPromiseRef.current;
-    }
-
-    scriptLoadingPromiseRef.current = new Promise((resolve) => {
-      const existingScript = document.getElementById(
-        RAZORPAY_SCRIPT_ID,
-      ) as HTMLScriptElement | null;
-
-      if (existingScript) {
-        existingScript.addEventListener("load", () => {
-          setIsRazorpayReady(true);
-          resolve(true);
-        });
-
-        existingScript.addEventListener("error", () => {
-          resolve(false);
-        });
-
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.id = RAZORPAY_SCRIPT_ID;
-      script.src = RAZORPAY_SCRIPT_SRC;
-      script.async = true;
-
-      script.onload = () => {
-        setIsRazorpayReady(true);
-        resolve(true);
-      };
-
-      script.onerror = () => {
-        resolve(false);
-      };
-
-      document.body.appendChild(script);
-    });
-
-    return scriptLoadingPromiseRef.current;
-  }, []);
-
+  // Razorpay preload
   useEffect(() => {
-    loadRazorpayScript().catch(() => {
-      setIsRazorpayReady(false);
-    });
-  }, [loadRazorpayScript]);
+    let active = true;
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAmount(e.target.value);
-  };
-
-  const validatePayment = async (
-    response: any,
-    payAmount: number,
-    currentTableName: string,
-  ) => {
-    try {
-      const res = await apiRpc.payments.validPayment[":merchantId"].$post({
-        param: { merchantId: merchantDetails.razorpayMerchantId },
-        json: { response },
-        query: {
-          userId: userDetails?._id,
-          paidAmount: payAmount.toString(),
-          tableName: currentTableName,
-          businessId,
-        },
+    ensureRazorpayScript()
+      .then((loaded) => {
+        if (active && mountedRef.current) {
+          setIsRazorpayReady(loaded);
+        }
+      })
+      .catch(() => {
+        if (active && mountedRef.current) {
+          setIsRazorpayReady(false);
+        }
       });
 
-      if (res.status === 200) {
-        resetTableData();
-        setSuccess({ mode: "online", amount: payAmount });
-        return true;
-      }
+    return () => {
+      active = false;
+    };
+  }, []);
 
-      toast.error("Payment verification failed.");
-      return false;
-    } catch (error) {
-      console.error("Validate payment error:", error);
-      toast.error("Payment verification failed.");
-      return false;
-    }
-  };
+  const handleAmountChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setAmount(e.target.value);
+    },
+    [],
+  );
+
+  const validatePayment = useCallback(
+    async (response: any, payAmount: number, currentTableName: string) => {
+      try {
+        const res = await apiRpc.payments.validPayment[":merchantId"].$post({
+          param: { merchantId: merchantDetails.razorpayMerchantId },
+          json: { response },
+          query: {
+            userId: userDetails?._id,
+            paidAmount: payAmount.toString(),
+            tableName: currentTableName,
+            businessId,
+            netCoinz: "0",
+          },
+        });
+
+        if (res.status === 200) {
+          resetTableData();
+          setSuccess({ mode: "online", amount: payAmount });
+          return true;
+        }
+
+        toast.error("Payment verification failed.");
+        return false;
+      } catch (error) {
+        console.error("Validate payment error:", error);
+        toast.error("Payment verification failed.");
+        return false;
+      }
+    },
+    [merchantDetails.razorpayMerchantId, userDetails?._id, businessId],
+  );
 
   const openRazorpayCheckout = useCallback(
     async (orderId: string, payAmount: number, currentTableName: string) => {
-      const scriptLoaded = await loadRazorpayScript();
+      const scriptLoaded = await ensureRazorpayScript();
 
       if (!scriptLoaded || !window.Razorpay) {
         toast.error("Failed to load payment gateway.");
@@ -232,7 +245,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         handler: async (response: any) => {
           setLoading(true);
           await validatePayment(response, payAmount, currentTableName);
-          setLoading(false);
+          if (mountedRef.current) setLoading(false);
         },
         prefill: {
           name: userDetails?.name || "",
@@ -267,7 +280,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       razorpay.open();
     },
     [
-      loadRazorpayScript,
       merchantDetails.razorpayKeyId,
       business?.name,
       business?.logoUrl,
@@ -275,150 +287,152 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       userDetails?.email,
       userDetails?.phone,
       businessId,
+      validatePayment,
     ],
   );
 
-  const handleOnlinePay = async (payAmount: number) => {
-    try {
-      setLoading(true);
+const handleOnlinePay = async (payAmount: number) => {
+  try {
+    setLoading(true);
 
-      const currentTableName = useTableData.getState().tableName;
-
-      const res = await apiRpc.payments.createOrder[":merchantId"].$post({
-        param: { merchantId: merchantDetails.razorpayMerchantId },
-        json: {
-          businessId,
-          total: payAmount,
-          currency: "INR",
-          claimedCoins: 0,
-          billValue: payAmount,
-          userId: userDetails?._id,
-          tips: 0,
-          tableName: currentTableName,
-          cashbackAvailable: false,
-        },
-      });
-
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => null);
-        toast.error(errBody?.message || "Failed to create order.");
-        setLoading(false);
-        return;
-      }
-
-      const orderRes = (await res.json()) as { data: { order_id: string } };
-      const orderId = orderRes?.data?.order_id;
-
-      if (!orderId) {
-        toast.error("Order creation failed.");
-        setLoading(false);
-        return;
-      }
-
-      setLoading(false);
-      await openRazorpayCheckout(orderId, payAmount, currentTableName);
-    } catch (error) {
-      console.error("Online payment error:", error);
-      toast.error("Something went wrong. Please try again.");
-      setLoading(false);
-    }
-  };
-
-  const handleOfflinePay = async (payAmount: number) => {
-    try {
-      setLoading(true);
-
-      const currentTableName = useTableData.getState().tableName;
-
-      const res = await apiRpc.payments.createOfflineOrder.$post({
-        json: {
-          businessId,
-          total: payAmount,
-          claimedCoins: 0,
-          billValue: payAmount,
-          userId: userDetails?._id,
-          tips: 0,
-          currency: "INR",
-          tableName: currentTableName,
-          cashbackAvailable: false,
-        },
-      });
-
-      if (res.status === 401) {
-        toast.error("Session expired. Please login again.");
-        setCheckLogin(true);
-        setLoading(false);
-        return;
-      }
-
-      const response = (await res.json()) as {
-        data?: { order_id?: string };
-        message?: string;
-      };
-
-      if (res.status === 400) {
-        toast.error(response?.message || "Payment failed.");
-        setLoading(false);
-        return;
-      }
-
-      if (response?.data?.order_id) {
-        resetTableData();
-        setSuccess({ mode: "offline", amount: payAmount });
-      } else {
-        toast.error("Offline order creation failed.");
-      }
-
-      setLoading(false);
-    } catch (error) {
-      console.error("Offline payment error:", error);
-      toast.error("Something went wrong. Please try again.");
-      setLoading(false);
-    }
-  };
-
-  const handlePay = (mode: "online" | "offline") => {
-    const payAmount = Number(amount);
-    const accessToken = useUserToken.getState().accessToken;
     const currentTableName = useTableData.getState().tableName;
 
-    if (!payAmount || payAmount <= 0) {
-      toast.error("Enter a valid amount");
-      return;
-    }
+    const res = await apiRpc.payments.createOrder[":merchantId"].$post({
+      param: { merchantId: merchantDetails.razorpayMerchantId },
+      json: {
+        businessId,
+        total: payAmount,
+        currency: "INR",
+        claimedCoins: 0,
+        billValue: payAmount,
+        userId: userDetails?._id,
+        tips: 0,
+        tableName: currentTableName,
+        cashbackAvailable: false,
+      },
+    });
 
-    if (!accessToken) {
+    if (res.status === 401) {
+      toast.error("Session expired. Please login again.");
       setCheckLogin(true);
-      toast.error("Please login to continue");
+      setLoading(false);
       return;
     }
 
-    if (!currentTableName) {
-      toast.error("Invalid session. Please scan the QR again.");
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => null);
+      toast.error(errBody?.message || "Failed to create order.");
+      setLoading(false);
       return;
     }
 
-    if (mode === "online") {
-      handleOnlinePay(payAmount);
+    const orderRes = (await res.json()) as { data: { order_id: string } };
+    const orderId = orderRes?.data?.order_id;
+
+    if (!orderId) {
+      toast.error("Order creation failed.");
+      setLoading(false);
       return;
     }
 
-    handleOfflinePay(payAmount);
-  };
+    setLoading(false);
+    await openRazorpayCheckout(orderId, payAmount, currentTableName);
+  } catch (error) {
+    console.error("Online payment error:", error);
+    toast.error("Something went wrong. Please try again.");
+    setLoading(false);
+  }
+};
 
-  const handleNewPayment = () => {
-    setSuccess(null);
-    setAmount("");
+  const handleOfflinePay = useCallback(
+    async (payAmount: number) => {
+      try {
+        setLoading(true);
 
-    if (tableNameFromUrl) {
-      setTableName(tableNameFromUrl);
-      setTableNameTimeStamp(Date.now());
-    }
-  };
+        const currentTableName = useTableData.getState().tableName;
 
-  const numericAmount = Number(amount) || 0;
+        const res = await apiRpc.payments.createOfflineOrder.$post({
+          json: {
+            businessId,
+            total: payAmount,
+            claimedCoins: 0,
+            billValue: payAmount,
+            userId: userDetails?._id,
+            tips: 0,
+            currency: "INR",
+            tableName: currentTableName,
+            cashbackAvailable: false,
+          },
+        });
 
-  if (!isReady || waitingForAutoLogin) {
+        if (res.status === 401) {
+          toast.error("Session expired. Please login again.");
+          setCheckLogin(true);
+          if (mountedRef.current) setLoading(false);
+          return;
+        }
+
+        const response = (await res.json()) as {
+          data?: { order_id?: string };
+          message?: string;
+        };
+
+        if (res.status === 400) {
+          toast.error(response?.message || "Payment failed.");
+          if (mountedRef.current) setLoading(false);
+          return;
+        }
+
+        if (response?.data?.order_id) {
+          resetTableData();
+          setSuccess({ mode: "offline", amount: payAmount });
+        } else {
+          toast.error("Offline order creation failed.");
+        }
+
+        if (mountedRef.current) setLoading(false);
+      } catch (error) {
+        console.error("Offline payment error:", error);
+        toast.error("Something went wrong. Please try again.");
+        if (mountedRef.current) setLoading(false);
+      }
+    },
+    [businessId, userDetails?._id, setCheckLogin],
+  );
+
+  const handlePay = useCallback(
+    (mode: "online" | "offline") => {
+      const payAmount = Number(amount);
+      const accessToken = useUserToken.getState().accessToken;
+      const currentTableName = useTableData.getState().tableName;
+
+      if (!payAmount || payAmount <= 0) {
+        toast.error("Enter a valid amount");
+        return;
+      }
+
+      if (!accessToken) {
+        setCheckLogin(true);
+        toast.error("Please login to continue");
+        return;
+      }
+
+      if (!currentTableName) {
+        toast.error("Invalid session. Please scan the QR again.");
+        return;
+      }
+
+      if (mode === "online") {
+        void handleOnlinePay(payAmount);
+        return;
+      }
+
+      void handleOfflinePay(payAmount);
+    },
+    [amount, setCheckLogin, handleOnlinePay, handleOfflinePay],
+  );
+
+  if (waitingForAutoLogin) {
     return <LoadingSpinnerCircle />;
   }
 
@@ -446,7 +460,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
             </div>
 
             <p className="text-4xl font-semibold tracking-tight text-[#2B2118]">
-              &#8377;{success.amount.toFixed(2)}
+              ₹{success.amount.toFixed(2)}
             </p>
 
             <div className="text-center">
@@ -473,7 +487,15 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     return (
       <main className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-[#F5EBDD] font-sans text-[#1F2937]">
         <section className="relative flex flex-col items-center justify-start">
-          <div className="hipal_loader" style={{ position: "relative", left: "auto", top: "auto", transform: "none" }}>
+          <div
+            className="hipal_loader"
+            style={{
+              position: "relative",
+              left: "auto",
+              top: "auto",
+              transform: "none",
+            }}
+          >
             <Image
               width={210}
               height={210}
@@ -497,7 +519,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   return (
     <main className="relative flex h-screen flex-col items-center bg-[#F5EBDD] font-sans">
-
       <header className="flex w-full flex-col items-center gap-3 px-6 pb-8 pt-12">
         {business?.logoUrl ? (
           <img
@@ -523,7 +544,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
         <div className="w-full rounded-[28px] border border-[#E7DDD2] bg-white/50 px-6 py-6 shadow-[0_20px_50px_rgba(0,0,0,0.03)]">
           <div className="flex w-full items-baseline justify-center gap-1">
-            <span className="text-3xl font-light text-[#6B7280]">&#8377;</span>
+            <span className="text-3xl font-light text-[#6B7280]">₹</span>
             <input
               type="number"
               inputMode="decimal"
