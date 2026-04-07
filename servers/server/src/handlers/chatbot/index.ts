@@ -54,6 +54,15 @@ export async function handleChatbotFlow({
     });
   }
 
+  // 1b) STALE interactive reply — session has moved past the interactive step.
+  //     Ignore silently instead of letting it fall through to trigger-based start.
+  if (interactiveTitleOrId && session.waitingFor !== "interactive") {
+    console.log(
+      `[Chatbot] Ignored stale button click "${interactiveTitleOrId}" from ${from} — session.waitingFor is "${session.waitingFor}", not "interactive"`,
+    );
+    return respond(c, "stale interactive reply ignored", false, 200, {});
+  }
+
   // 2) ask question reply
   if (textBody && session.waitingFor === "ask" && session.currentNodeId) {
     return processAskNodeReply({
@@ -67,8 +76,8 @@ export async function handleChatbotFlow({
     });
   }
 
-  // 3) trigger start
-  const messageInput = textBody || interactiveTitleOrId;
+  // 3) trigger start (only text messages can trigger a new flow)
+  const messageInput = textBody;
   let matchedBot = null;
 
   if (messageInput) {

@@ -63,7 +63,7 @@ import {
   whatsAppUserAndTextMessage,
 } from "../../utils/whatsappWebhookHandlers/helper";
 import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
-import { handleChatbotFlow } from "../../utils/whatsappWebhookHandlers/flows";
+import { handleChatbotFlow } from "../../handlers/chatbot";
 import { exchangeCodeForToken } from "../../utils/instagram";
 // import { enqueueWhatsAppJob } from "../../queues/enqueue";
 interface AxiosError {
@@ -1837,6 +1837,7 @@ const whatsappRouter = new Hono()
           messages,
           contacts,
           whatsAppBusinessConfigData,
+          c,
         });
       }
 
