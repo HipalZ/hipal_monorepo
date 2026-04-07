@@ -1,62 +1,17 @@
-// components/reviews/HotelReviews.tsx
-import { useQuery } from '@tanstack/react-query';
-import { Download, Filter, MessageSquareText, Star, Users } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-
-import type { IService } from '@/components/store/hotel/useHotelServices.ts';
-import { useReviewsFilterStore } from '@/components/store/hotel/useReview.ts';
-import useBusinessData from '@/components/store/useBusinessData';
-import { fetchReviews } from '@/hooks/hotel/useReviewHook.ts';
-import { type IHotelStaff, useGetAllHotelServices, useGetAllHotelStaff } from '@/hooks/useHotelStaff.ts';
-
 import ReviewAccordionCard from '@/components/hotel/review/ReviewCard.tsx';
 import ReviewsFilters from '@/components/hotel/review/ReviewFilters.tsx';
 import MemoizedHeader from '@/components/molecules/header/index.tsx';
+import type { IService } from '@/components/store/hotel/useHotelServices.ts';
+import { useReviewsFilterStore } from '@/components/store/hotel/useReview.ts';
+import useBusinessData from '@/components/store/useBusinessData';
+import type { ReviewItem } from '@/components/types/hotelTypes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-
-type ReviewItem = {
-  _id?: string;
-  reviewRating?: number;
-  improvementAreas?: string[];
-  staffs?: string[];
-  date?: number;
-  isRead?: boolean;
-  readAt?: number;
-  readBy?: {
-    _id?: string;
-    name?: string;
-    phone?: string;
-  } | null;
-  note?: string;
-  userId?:
-    | {
-        _id?: string;
-        name?: string;
-        phone?: string;
-      }
-    | string;
-  roomId?: {
-    _id?: string;
-    name?: string;
-  } | null;
-  alertId?: {
-    serviceIds?: {
-      _id?: string;
-      name?: string;
-    }[];
-    acceptedBy?: {
-      _id?: string;
-      name?: string;
-      phone?: string;
-    } | null;
-    deliveredBy?: {
-      _id?: string;
-      name?: string;
-      phone?: string;
-    } | null;
-  } | null;
-};
+import { fetchReviews } from '@/hooks/hotel/useReviewHook.ts';
+import { type IHotelStaff, useGetAllHotelServices, useGetAllHotelStaff } from '@/hooks/useHotelStaff.ts';
+import { useQuery } from '@tanstack/react-query';
+import { Download, Filter, MessageSquareText, Star, Users } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const formatExcelTimestamp = (timestamp?: number) => {
   if (!timestamp) return '';
@@ -156,11 +111,11 @@ export default function HotelReviews() {
   }, [payload]);
 
   const {
-    data: results = [] as ReviewItem[],
+    data: results = [],
     isFetching,
     isLoading,
     refetch,
-  } = useQuery({
+  } = useQuery<ReviewItem[]>({
     queryKey: ['reviews', businessId, payloadKey],
     queryFn: () => fetchReviews(payload!),
     enabled: !!businessId && !!payload,

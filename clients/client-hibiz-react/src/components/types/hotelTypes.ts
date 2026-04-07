@@ -68,3 +68,67 @@ export interface Cart {
     description: string;
   };
 }
+
+type ReviewUser = {
+  _id?: string;
+  name?: string;
+  phone?: string;
+};
+
+type ReviewRoom = {
+  _id?: string;
+  name?: string;
+};
+
+type ReviewService = {
+  _id?: string;
+  name?: string;
+};
+
+type ReviewStaff = {
+  _id?: string;
+  name?: string;
+  phone?: string;
+};
+
+type ReviewAlert = {
+  serviceIds?: ReviewService[];
+  acceptedBy?: ReviewStaff | null;
+  deliveredBy?: ReviewStaff | null;
+};
+
+export type ReviewItem = {
+  _id?: string;
+  userId?: ReviewUser | string | null;
+  reviewRating?: number | null;
+  improvementAreas?: string[];
+  staffs?: string[];
+  date?: number;
+  isRead?: boolean;
+  readAt?: number;
+  readBy?: ReviewStaff | null;
+  roomId?: ReviewRoom | null;
+  alertId?: ReviewAlert | null;
+  note?: string;
+};
+
+export type ReviewApiResponse = {
+  err: boolean;
+  data: ReviewItem[];
+  message?: string;
+};
+
+type CuratedReviewRow = {
+  "Review Time": string;
+  "Guest Name": string;
+  "Room No": string;
+  "Reviewed Service": string;
+  Rating: number | "";
+  "Improvement Areas": string;
+  "Accepted By": string;
+  "Completed By": string;
+  Read: "TRUE" | "FALSE";
+  "Read At": string;
+  "Read By": string;
+  "Guest Note": string;
+};
