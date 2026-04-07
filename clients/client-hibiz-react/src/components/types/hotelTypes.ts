@@ -1,3 +1,5 @@
+import { FOOD_TYPES } from "@/components/atom/FoodType";
+
 export interface ServiceId {
   _id: string;
   name: string;
@@ -45,4 +47,24 @@ export interface DashboardFilters {
 export interface FilterType {
   type: "service" | "room";
   value: string | null;
+}
+
+export interface Cart {
+  id: string;
+  portion: string | null;
+  extras: any[];
+  quantity: number;
+  dish: {
+    types: FOOD_TYPES[];
+    _id: string;
+    name: string;
+    categoryIds: string[];
+    price: number;
+    visibility: boolean;
+    availability: true;
+    dishTypes: string[];
+    images: string[];
+    portions: any[];
+    description: string;
+  };
 }
