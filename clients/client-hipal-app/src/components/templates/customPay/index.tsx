@@ -24,49 +24,7 @@ declare global {
   }
 }
 
-const RAZORPAY_SCRIPT_ID = 'razorpay-checkout-script';
 const RAZORPAY_SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
-const PENDING_ORDER_KEY = 'hipal_pending_razorpay_order';
-const PENDING_ORDER_TTL = 15 * 60 * 1000; // 15 minutes
-
-type PendingOrder = {
-  orderId: string;
-  payAmount: number;
-  tableName: string;
-  merchantId: string;
-  timestamp: number;
-};
-
-function savePendingOrder(order: PendingOrder) {
-  try {
-    sessionStorage.setItem(PENDING_ORDER_KEY, JSON.stringify(order));
-  } catch {
-    /* storage full or unavailable */
-  }
-}
-
-function clearPendingOrder() {
-  try {
-    sessionStorage.removeItem(PENDING_ORDER_KEY);
-  } catch {
-    /* noop */
-  }
-}
-
-function getPendingOrder(): PendingOrder | null {
-  try {
-    const raw = sessionStorage.getItem(PENDING_ORDER_KEY);
-    if (!raw) return null;
-    const order = JSON.parse(raw) as PendingOrder;
-    if (Date.now() - order.timestamp > PENDING_ORDER_TTL) {
-      clearPendingOrder();
-      return null;
-    }
-    return order;
-  } catch {
-    return null;
-  }
-}
 
 const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
@@ -78,9 +36,9 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<SuccessState>(null);
   const [isRazorpayReady, setIsRazorpayReady] = useState(false);
-  const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(!!userIdFromUrl);
-
-  const scriptLoadingPromiseRef = useRef<Promise<boolean> | null>(null);
+  const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(
+    !!userIdFromUrl,
+  );
 
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const { setBusinessDetails } = useBusinessDetails();
@@ -118,160 +76,127 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     setTableNameTimeStamp(Date.now());
   }, [tableNameFromUrl, setTableName, setTableNameTimeStamp]);
 
-  // Auth: if ?id= present, AutoLoginWrapper (root layout) handles it.
-  // Poll for token to appear. If no ?id=, trigger CombinedLogin immediately.
+  // Auth: wait for Zustand persist to hydrate from localStorage before
+  // checking the token. On page reload (e.g. after UPI redirect)
+  // getState().accessToken returns "" until hydration completes — checking
+  // too early would incorrectly trigger the login popup over a valid session.
   useEffect(() => {
-    const accessToken = useUserToken.getState().accessToken;
+    let cancelled = false;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+    let fallbackTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    // Already logged in
-    if (accessToken) {
-      setWaitingForAutoLogin(false);
-      return;
-    }
+    const checkAuth = () => {
+      if (cancelled) return;
 
-    // No ?id= param — show manual login
-    if (!userIdFromUrl) {
-      setCheckLogin(true);
-      return;
-    }
+      const accessToken = useUserToken.getState().accessToken;
 
-    // ?id= present — AutoLoginWrapper is handling it, poll for token
-    const interval = setInterval(() => {
-      if (useUserToken.getState().accessToken) {
+      if (accessToken) {
         setWaitingForAutoLogin(false);
-        clearInterval(interval);
+        return;
       }
-    }, 300);
 
-    // Timeout 8s — fallback to manual login if auto-login failed
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      if (!useUserToken.getState().accessToken) {
-        setWaitingForAutoLogin(false);
+      // No ?id= param — show manual login
+      if (!userIdFromUrl) {
         setCheckLogin(true);
+        setWaitingForAutoLogin(false);
+        return;
       }
-    }, 8000);
+
+      // ?id= present — AutoLoginWrapper is handling it, poll for token
+      pollInterval = setInterval(() => {
+        if (useUserToken.getState().accessToken) {
+          setWaitingForAutoLogin(false);
+          if (pollInterval) clearInterval(pollInterval);
+        }
+      }, 300);
+
+      // Timeout 8s — fallback to manual login if auto-login failed
+      fallbackTimeout = setTimeout(() => {
+        if (pollInterval) clearInterval(pollInterval);
+        if (!useUserToken.getState().accessToken) {
+          setWaitingForAutoLogin(false);
+          setCheckLogin(true);
+        }
+      }, 8000);
+    };
+
+    // If store already hydrated, check immediately; otherwise wait
+    if (useUserToken.persist?.hasHydrated?.()) {
+      checkAuth();
+    } else {
+      const unsub = useUserToken.persist.onFinishHydration(() => {
+        unsub();
+        checkAuth();
+      });
+      return () => {
+        cancelled = true;
+        unsub();
+      };
+    }
 
     return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
+      cancelled = true;
+      if (pollInterval) clearInterval(pollInterval);
+      if (fallbackTimeout) clearTimeout(fallbackTimeout);
     };
   }, [userIdFromUrl, setCheckLogin]);
 
-  const loadRazorpayScript = useCallback((): Promise<boolean> => {
-    if (typeof window === 'undefined') {
-      return Promise.resolve(false);
-    }
+  // ── Razorpay script loader ──────────────────────────────────────────
+  const scriptLoadedRef = useRef(false);
 
+  const loadRazorpayScript = useCallback((): Promise<boolean> => {
+    if (typeof window === 'undefined') return Promise.resolve(false);
     if (window.Razorpay) {
+      scriptLoadedRef.current = true;
       setIsRazorpayReady(true);
       return Promise.resolve(true);
     }
 
-    if (scriptLoadingPromiseRef.current) {
-      return scriptLoadingPromiseRef.current;
-    }
-
-    scriptLoadingPromiseRef.current = new Promise((resolve) => {
-      const existingScript = document.getElementById(RAZORPAY_SCRIPT_ID) as HTMLScriptElement | null;
-
-      if (existingScript) {
-        existingScript.addEventListener('load', () => {
-          setIsRazorpayReady(true);
-          resolve(true);
-        });
-
-        existingScript.addEventListener('error', () => {
-          resolve(false);
-        });
-
-        return;
-      }
-
+    return new Promise((resolve) => {
       const script = document.createElement('script');
-      script.id = RAZORPAY_SCRIPT_ID;
       script.src = RAZORPAY_SCRIPT_SRC;
       script.async = true;
 
+      const timeout = setTimeout(() => {
+        if (!scriptLoadedRef.current) {
+          toast.error('Facing Internet Issue! Please try again.');
+          setIsRazorpayReady(false);
+          resolve(false);
+        }
+      }, 5000);
+
       script.onload = () => {
+        scriptLoadedRef.current = true;
+        clearTimeout(timeout);
         setIsRazorpayReady(true);
         resolve(true);
       };
 
       script.onerror = () => {
+        clearTimeout(timeout);
+        toast.error('Failed to load Razorpay. Please try again later.');
+        setIsRazorpayReady(false);
         resolve(false);
       };
 
       document.body.appendChild(script);
     });
-
-    return scriptLoadingPromiseRef.current;
   }, []);
 
   useEffect(() => {
-    loadRazorpayScript().catch(() => {
-      setIsRazorpayReady(false);
-    });
+    loadRazorpayScript();
   }, [loadRazorpayScript]);
-
-  // ── Recovery: page reloads after UPI app redirect ──────────────────
-  // The Razorpay handler callback is lost when the browser kills the tab
-  // during UPI switch. On reload we find the pending order in sessionStorage
-  // and call validatePayment to check if it succeeded.
-  const recoveryAttempted = useRef(false);
-
-  useEffect(() => {
-    if (recoveryAttempted.current) return;
-    if (!isReady || waitingForAutoLogin) return;
-    if (!merchantDetails?.razorpayMerchantId) return;
-    if (!userDetails?._id) return;
-
-    const pending = getPendingOrder();
-    if (!pending) return;
-
-    recoveryAttempted.current = true;
-    setLoading(true);
-
-    // Short delay so Razorpay's server-to-server webhook can land first
-    const timer = setTimeout(async () => {
-      try {
-        const res = await apiRpc.payments.validPayment[':merchantId'].$post({
-          param: { merchantId: pending.merchantId },
-          json: { response: { razorpay_order_id: pending.orderId } },
-          query: {
-            userId: userDetails._id,
-            paidAmount: pending.payAmount.toString(),
-            tableName: pending.tableName,
-            businessId,
-            netCoinz: '0',
-          },
-        });
-
-        if (res.status === 200) {
-          clearPendingOrder();
-          resetTableData();
-          setSuccess({ mode: 'online', amount: pending.payAmount });
-        } else {
-          clearPendingOrder();
-          toast.error('Payment status unclear. Please check with the staff or try again.');
-        }
-      } catch (err) {
-        console.error('Recovery validation error:', err);
-        clearPendingOrder();
-        toast.error('Could not verify payment. Please check with the staff.');
-      } finally {
-        setLoading(false);
-      }
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [isReady, waitingForAutoLogin, merchantDetails?.razorpayMerchantId, userDetails?._id, businessId]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAmount(e.target.value);
   };
 
-  const validatePayment = async (response: any, payAmount: number, currentTableName: string) => {
+  // ── Payment validation (mirrors usePayments.ts sendPaymentResponse) ─
+  const validatePayment = async (
+    response: any,
+    payAmount: number,
+    currentTableName: string,
+  ) => {
     try {
       const res = await apiRpc.payments.validPayment[':merchantId'].$post({
         param: { merchantId: merchantDetails.razorpayMerchantId },
@@ -286,7 +211,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       });
 
       if (res.status === 200) {
-        clearPendingOrder();
         resetTableData();
         setSuccess({ mode: 'online', amount: payAmount });
         return true;
@@ -301,27 +225,33 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     }
   };
 
+  // ── Razorpay checkout (mirrors usePayments.ts creatingRazorPayOptions) ─
   const openRazorpayCheckout = useCallback(
     async (orderId: string, payAmount: number, currentTableName: string) => {
       const scriptLoaded = await loadRazorpayScript();
 
       if (!scriptLoaded || !window.Razorpay) {
         toast.error('Failed to load payment gateway.');
+        setLoading(false);
         return;
       }
 
       const options = {
         key: merchantDetails.razorpayKeyId,
         order_id: orderId,
+        amount: payAmount,
         currency: 'INR',
         name: business?.name || '',
         description: 'Payment',
         image: business?.logoUrl || '',
-        handler: async (response: any) => {
-          clearPendingOrder();
+        handler: (response: any) => {
+          // Payment succeeded — clean up navigation guards
+          window.onbeforeunload = null;
+          window.onpopstate = null;
           setLoading(true);
-          await validatePayment(response, payAmount, currentTableName);
-          setLoading(false);
+          validatePayment(response, payAmount, currentTableName).finally(() => {
+            setLoading(false);
+          });
         },
         prefill: {
           name: userDetails?.name || '',
@@ -329,11 +259,15 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
           contact: userDetails?.phone || '',
         },
         modal: {
+          subscription_card_change: true,
+          remember_customer: true,
           escape: false,
           backdropclose: false,
           handleback: false,
           ondismiss: () => {
-            clearPendingOrder();
+            window.onbeforeunload = null;
+            window.onpopstate = null;
+            setLoading(false);
             toast.error('Payment cancelled');
           },
         },
@@ -348,20 +282,29 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         },
       };
 
-      // Persist order before opening Razorpay — browser tab may be killed
-      // during UPI app switch; we recover from sessionStorage on reload
-      savePendingOrder({
-        orderId,
-        payAmount,
-        tableName: currentTableName,
-        merchantId: merchantDetails.razorpayMerchantId,
-        timestamp: Date.now(),
-      });
-
       const razorpay = new window.Razorpay(options);
 
+      // ── Navigation guards (same pattern as usePayments.ts) ──
+      // Prevent the browser from leaving the page during UPI redirect.
+      // When the UPI app redirects back, onbeforeunload catches it and
+      // forces the browser to stay on this page instead of showing blank.
+      history.pushState(null, '', location.href);
+
+      window.onbeforeunload = (event) => {
+        event.preventDefault();
+        event.returnValue = '';
+      };
+
+      window.onpopstate = (event) => {
+        event.preventDefault();
+        // Force stay on current page
+        history.pushState(null, '', location.href);
+      };
+
       razorpay.on('payment.failed', () => {
-        clearPendingOrder();
+        window.onbeforeunload = null;
+        window.onpopstate = null;
+        setLoading(false);
         toast.error('Payment failed');
       });
 
@@ -381,6 +324,10 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   const handleOnlinePay = async (payAmount: number) => {
     try {
+      if (loading) {
+        return toast.error('Please wait for the previous transaction to complete');
+      }
+
       setLoading(true);
 
       const currentTableName = useTableData.getState().tableName;
@@ -427,6 +374,10 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   const handleOfflinePay = async (payAmount: number) => {
     try {
+      if (loading) {
+        return toast.error('Please wait for the previous transaction to complete');
+      }
+
       setLoading(true);
 
       const currentTableName = useTableData.getState().tableName;
@@ -531,23 +482,41 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         <div className="w-full max-w-sm rounded-[28px] border border-[#E7DDD2] bg-white/60 px-6 py-10 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-sm">
           <div className="flex flex-col items-center gap-6">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#F1E7DB]">
-              <svg className="h-10 w-10 text-[#1F2937]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d={isOnline ? 'M5 13l4 4L19 7' : 'M12 8v4m0 4h.01'} />
+              <svg
+                className="h-10 w-10 text-[#1F2937]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d={isOnline ? 'M5 13l4 4L19 7' : 'M12 8v4m0 4h.01'}
+                />
               </svg>
             </div>
 
-            <p className="text-4xl font-semibold tracking-tight text-[#2B2118]">&#8377;{success.amount.toFixed(2)}</p>
+            <p className="text-4xl font-semibold tracking-tight text-[#2B2118]">
+              &#8377;{success.amount.toFixed(2)}
+            </p>
 
             <div className="text-center">
-              <p className="text-lg font-semibold text-[#1F2937]">{isOnline ? 'Payment Successful' : 'Please Pay at the Counter'}</p>
+              <p className="text-lg font-semibold text-[#1F2937]">
+                {isOnline ? 'Payment Successful' : 'Please Pay at the Counter'}
+              </p>
               <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
-                {isOnline ? 'Thank you for your payment.' : 'Show this screen to the staff to complete your payment. The staff has been notified.'}
+                {isOnline
+                  ? 'Thank you for your payment.'
+                  : 'Show this screen to the staff to complete your payment. The staff has been notified.'}
               </p>
             </div>
           </div>
         </div>
 
-        <p className="absolute bottom-6 text-[10px] tracking-[0.22em] text-[#9CA3AF]">Powered by Hipalz</p>
+        <p className="absolute bottom-6 text-[10px] tracking-[0.22em] text-[#9CA3AF]">
+          Powered by Hipalz
+        </p>
       </main>
     );
   }
@@ -557,34 +526,52 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       <main className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-[#F5EBDD] font-sans text-[#1F2937]">
         <section className="relative flex flex-col items-center justify-start">
           <div className="hipal_loader" style={{ position: 'relative', left: 'auto', top: 'auto', transform: 'none' }}>
-            <Image width={210} height={210} src={hipalLoader} alt="processing" />
+            <Image
+              width={210}
+              height={210}
+              src={hipalLoader}
+              alt="processing"
+            />
           </div>
           <div className="text-center">
             <p className="text-xl font-semibold">Processing</p>
-            <p className="mt-2 text-sm text-[#6B7280]">Please wait while we process your payment.</p>
+            <p className="mt-2 text-sm text-[#6B7280]">
+              Please wait while we process your payment.
+            </p>
           </div>
         </section>
-        <p className="absolute bottom-6 text-[10px] tracking-[0.22em] text-[#9CA3AF]">Powered by Hipalz</p>
+        <p className="absolute bottom-6 text-[10px] tracking-[0.22em] text-[#9CA3AF]">
+          Powered by Hipalz
+        </p>
       </main>
     );
   }
 
   return (
     <main className="relative flex h-screen flex-col items-center bg-[#F5EBDD] font-sans">
+
       <header className="flex w-full flex-col items-center gap-3 px-6 pb-8 pt-12">
         {business?.logoUrl ? (
-          <img src={business.logoUrl} alt={business?.name || ''} className="h-16 w-16 rounded-full border border-[#E7DDD2] object-cover shadow-sm" />
+          <img
+            src={business.logoUrl}
+            alt={business?.name || ''}
+            className="h-16 w-16 rounded-full border border-[#E7DDD2] object-cover shadow-sm"
+          />
         ) : (
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EDE3D7] text-lg font-semibold text-[#1F2937] shadow-sm">
             {business?.name?.[0] || 'P'}
           </div>
         )}
 
-        <h1 className="text-xl font-semibold tracking-tight text-[#1F2937]">{business?.name || 'Payment'}</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-[#1F2937]">
+          {business?.name || 'Payment'}
+        </h1>
       </header>
 
       <section className="mt-4 flex w-full max-w-sm flex-col items-center gap-2 px-6">
-        <span className="text-xs font-medium uppercase tracking-[0.22em] text-[#6B7280]">Amount</span>
+        <span className="text-xs font-medium uppercase tracking-[0.22em] text-[#6B7280]">
+          Amount
+        </span>
 
         <div className="w-full rounded-[28px] border border-[#E7DDD2] bg-white/50 px-6 py-6 shadow-[0_20px_50px_rgba(0,0,0,0.03)]">
           <div className="flex w-full items-baseline justify-center gap-1">
@@ -605,7 +592,13 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         <button
           type="button"
           onClick={() => handlePay('online')}
-          disabled={loading || numericAmount <= 0 || !merchantDetails?.razorpayMerchantId || !merchantDetails?.razorpayKeyId || !isRazorpayReady}
+          disabled={
+            loading ||
+            numericAmount <= 0 ||
+            !merchantDetails?.razorpayMerchantId ||
+            !merchantDetails?.razorpayKeyId ||
+            !isRazorpayReady
+          }
           className="w-full rounded-full bg-[#111827] py-4 text-sm font-medium uppercase tracking-[0.16em] text-white transition hover:opacity-90 disabled:opacity-30"
         >
           Pay Online
@@ -621,7 +614,9 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         </button>
       </section>
 
-      <p className="mt-auto py-6 text-[10px] tracking-[0.22em] text-[#9CA3AF]">Powered by Hipalz</p>
+      <p className="mt-auto py-6 text-[10px] tracking-[0.22em] text-[#9CA3AF]">
+        Powered by Hipalz
+      </p>
     </main>
   );
 };
