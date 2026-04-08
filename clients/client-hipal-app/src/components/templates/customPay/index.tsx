@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import hipalLoader from '@/assets/hipalLoader.png';
-import LoadingSpinnerCircle from '@/components/atoms/loader';
-import { useMerchantDetails } from '@/components/hooks/useMerchantSecret';
-import { _useAllBusiness } from '@/components/store/useAllBusiness';
-import useBusinessDetails from '@/components/store/useBusinessDetails';
-import { useLogin } from '@/components/store/useLogin';
-import { usePaymentStore } from '@/components/store/usePaymentStore';
-import useTableData, { resetTableData } from '@/components/store/useTableData';
-import type { IBusinessData } from '@/components/types/businessData';
-import { apiRpc } from '@hi/common';
-import { useUserToken } from '@hi/common/src/useUserToken';
-import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'react-toastify';
+import { memo, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
+import { apiRpc } from "@hi/common";
+import { useUserToken } from "@hi/common/src/useUserToken";
+import type { IBusinessData } from "@/components/types/businessData";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
+import useTableData, { resetTableData } from "@/components/store/useTableData";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { useMerchantDetails } from "@/components/hooks/useMerchantSecret";
+import { useLogin } from "@/components/store/useLogin";
+import LoadingSpinnerCircle from "@/components/atoms/loader";
+import Image from "next/image";
+import hipalLoader from "@/assets/hipalLoader.png";
 
-type SuccessState = { mode: 'online' | 'offline'; amount: number } | null;
+type SuccessState = { mode: "online" | "offline"; amount: number } | null;
 
 declare global {
   interface Window {
@@ -24,22 +24,19 @@ declare global {
   }
 }
 
-const RAZORPAY_SCRIPT_ID = 'razorpay-checkout-script';
-const RAZORPAY_SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
-
 const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
-  const tableNameFromUrl = searchParams?.get('tableName') || '';
-  const userIdFromUrl = searchParams?.get('id') || '';
+  const tableNameFromUrl = searchParams?.get("tableName") || "";
+  const userIdFromUrl = searchParams?.get("id");
 
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState("");
+  const [isReady, setIsReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<SuccessState>(null);
   const [isRazorpayReady, setIsRazorpayReady] = useState(false);
-  const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(Boolean(userIdFromUrl));
-
-  const mountedRef = useRef(true);
-  const razorpayScriptPromiseRef = useRef<Promise<boolean> | null>(null);
+  const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(
+    !!userIdFromUrl,
+  );
 
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const { setBusinessDetails } = useBusinessDetails();
@@ -55,367 +52,223 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     merchantDetails: s.merchantDetails,
   }));
 
-  const businessId = data?.outletInfo?.businessId || '';
+  const businessId = data?.outletInfo?.businessId || "";
   const business = data?.business;
-  const numericAmount = useMemo(() => Number(amount) || 0, [amount]);
-
-  const paymentSessionKey = useMemo(
-    () =>
-      `custom-pay-session:${businessId}:${tableNameFromUrl || 'no-table'}:${
-        userIdFromUrl || 'guest'
-      }`,
-    [businessId, tableNameFromUrl, userIdFromUrl],
-  );
 
   useMerchantDetails(businessId);
 
+  // Initialise stores + table + preload Razorpay script in a single effect
   useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      window.onbeforeunload = null;
-      window.onpopstate = null;
-    };
-  }, []);
-
-  const clearNavigationGuards = useCallback(() => {
-    window.onbeforeunload = null;
-    window.onpopstate = null;
-  }, []);
-
-  const setNavigationGuards = useCallback(() => {
-    history.pushState(null, '', location.href);
-
-    window.onbeforeunload = (event) => {
-      event.preventDefault();
-      event.returnValue = '';
-    };
-
-    window.onpopstate = (event) => {
-      event.preventDefault();
-      history.pushState(null, '', location.href);
-    };
-  }, []);
-
-  const clearPendingPaymentSession = useCallback(() => {
-    try {
-      sessionStorage.removeItem(paymentSessionKey);
-    } catch {
-      // ignore sessionStorage errors
+    setBusinessData(data);
+    if (data?.business) {
+      setBusinessDetails(data.business);
     }
-  }, [paymentSessionKey]);
-
-  const setPendingPaymentSession = useCallback(
-    (payload: { orderId: string; amount: number; tableName: string }) => {
-      try {
-        sessionStorage.setItem(
-          paymentSessionKey,
-          JSON.stringify({
-            ...payload,
-            businessId,
-            createdAt: Date.now(),
-          }),
-        );
-      } catch {
-        // ignore sessionStorage errors
-      }
-    },
-    [paymentSessionKey, businessId],
-  );
-
-  const hasPendingPaymentSession = useCallback(() => {
-    try {
-      return Boolean(sessionStorage.getItem(paymentSessionKey));
-    } catch {
-      return false;
-    }
-  }, [paymentSessionKey]);
-
-  const resetToFreshEntry = useCallback(() => {
-    clearNavigationGuards();
-    clearPendingPaymentSession();
-
-    if (mountedRef.current) {
-      setLoading(false);
-      setSuccess(null);
-      setAmount('');
-    }
-
     if (tableNameFromUrl) {
       setTableName(tableNameFromUrl);
       setTableNameTimeStamp(Date.now());
     }
-  }, [
-    clearNavigationGuards,
-    clearPendingPaymentSession,
-    tableNameFromUrl,
-    setTableName,
-    setTableNameTimeStamp,
-  ]);
+    loadRazorpayScript();
+    setIsReady(true);
+  }, [data, setBusinessData, setBusinessDetails, tableNameFromUrl, setTableName, setTableNameTimeStamp, loadRazorpayScript]);
 
+  // Reset stale success state when the user revisits via WhatsApp CTA link
   useEffect(() => {
-    setBusinessData(data);
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        setSuccess(null);
+        setLoading(false);
+        setAmount("");
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && success) {
+        setSuccess(null);
+        setLoading(false);
+        setAmount("");
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [success]);
 
-    if (data?.business) {
-      setBusinessDetails(data.business);
-    }
-  }, [data, setBusinessData, setBusinessDetails]);
-
-  useEffect(() => {
-    if (!tableNameFromUrl) return;
-
-    setTableName(tableNameFromUrl);
-    setTableNameTimeStamp(Date.now());
-  }, [tableNameFromUrl, setTableName, setTableNameTimeStamp]);
-
+  // ── Auth: wait for Zustand persist hydration before checking token ──
+  // On page reload getState().accessToken is "" until persist middleware
+  // rehydrates from localStorage. Checking too early triggers the login
+  // popup (BottomPopUp at z-110) which covers the entire screen — this is
+  // the "blank screen" the user sees after UPI redirect.
   useEffect(() => {
     let cancelled = false;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
     let fallbackTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    const stopTimers = () => {
-      if (pollInterval) clearInterval(pollInterval);
-      if (fallbackTimeout) clearTimeout(fallbackTimeout);
-    };
-
-    const complete = (showLogin: boolean) => {
-      if (cancelled || !mountedRef.current) return;
-      setWaitingForAutoLogin(false);
-      if (showLogin) setCheckLogin(true);
-      stopTimers();
-    };
-
-    const startAuthCheck = () => {
+    const checkAuth = () => {
       if (cancelled) return;
-
       const accessToken = useUserToken.getState().accessToken;
 
       if (accessToken) {
-        complete(false);
+        setWaitingForAutoLogin(false);
         return;
       }
 
       if (!userIdFromUrl) {
-        complete(true);
+        setCheckLogin(true);
+        setWaitingForAutoLogin(false);
         return;
       }
 
       pollInterval = setInterval(() => {
         if (useUserToken.getState().accessToken) {
-          complete(false);
+          setWaitingForAutoLogin(false);
+          if (pollInterval) clearInterval(pollInterval);
         }
       }, 300);
 
       fallbackTimeout = setTimeout(() => {
+        if (pollInterval) clearInterval(pollInterval);
         if (!useUserToken.getState().accessToken) {
-          complete(true);
-        } else {
-          complete(false);
+          setWaitingForAutoLogin(false);
+          setCheckLogin(true);
         }
       }, 8000);
     };
 
     if (useUserToken.persist?.hasHydrated?.()) {
-      startAuthCheck();
+      checkAuth();
     } else {
       const unsub = useUserToken.persist.onFinishHydration(() => {
         unsub();
-        startAuthCheck();
+        checkAuth();
       });
-
       return () => {
         cancelled = true;
-        stopTimers();
         unsub();
       };
     }
 
     return () => {
       cancelled = true;
-      stopTimers();
+      if (pollInterval) clearInterval(pollInterval);
+      if (fallbackTimeout) clearTimeout(fallbackTimeout);
     };
   }, [userIdFromUrl, setCheckLogin]);
 
-  useEffect(() => {
-    const navEntry = performance.getEntriesByType('navigation')[0] as
-      | PerformanceNavigationTiming
-      | undefined;
-
-    const navType = navEntry?.type;
-    const pending = hasPendingPaymentSession();
-
-    if ((navType === 'navigate' || navType === 'reload') && !pending) {
-      resetToFreshEntry();
-    }
-  }, [hasPendingPaymentSession, resetToFreshEntry]);
-
-  useEffect(() => {
-    const handlePageShow = (event: PageTransitionEvent) => {
-      const pending = hasPendingPaymentSession();
-
-      if (event.persisted && !pending) {
-        resetToFreshEntry();
-      }
-    };
-
-    window.addEventListener('pageshow', handlePageShow);
-    return () => {
-      window.removeEventListener('pageshow', handlePageShow);
-    };
-  }, [hasPendingPaymentSession, resetToFreshEntry]);
-
+  // ── Razorpay script loader (mirrors usePayments.ts) ──
   const loadRazorpayScript = useCallback((): Promise<boolean> => {
-    if (typeof window === 'undefined') return Promise.resolve(false);
-
+    if (typeof window === "undefined") return Promise.resolve(false);
     if (window.Razorpay) {
       setIsRazorpayReady(true);
       return Promise.resolve(true);
     }
-
-    if (razorpayScriptPromiseRef.current) {
-      return razorpayScriptPromiseRef.current;
-    }
-
-    razorpayScriptPromiseRef.current = new Promise((resolve) => {
-      const existingScript = document.getElementById(
-        RAZORPAY_SCRIPT_ID,
-      ) as HTMLScriptElement | null;
-
-      if (existingScript) {
-        const onLoad = () => {
-          setIsRazorpayReady(true);
-          resolve(true);
-        };
-
-        const onError = () => {
-          setIsRazorpayReady(false);
-          resolve(false);
-        };
-
-        existingScript.addEventListener('load', onLoad, { once: true });
-        existingScript.addEventListener('error', onError, { once: true });
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.id = RAZORPAY_SCRIPT_ID;
-      script.src = RAZORPAY_SCRIPT_SRC;
+    return new Promise((resolve) => {
+      let isScriptLoaded = false;
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.async = true;
+      document.body.appendChild(script);
 
-      const timeout = setTimeout(() => {
-        setIsRazorpayReady(false);
-        toast.error('Facing Internet Issue! Please try again.');
-        resolve(false);
+      const timeoutId = setTimeout(() => {
+        if (!isScriptLoaded) {
+          toast.error("Facing Internet Issue! Please try again.");
+          setIsRazorpayReady(false);
+          document.body.removeChild(script);
+          resolve(false);
+        }
       }, 5000);
 
       script.onload = () => {
-        clearTimeout(timeout);
+        isScriptLoaded = true;
+        clearTimeout(timeoutId);
         setIsRazorpayReady(true);
         resolve(true);
       };
-
       script.onerror = () => {
-        clearTimeout(timeout);
+        clearTimeout(timeoutId);
+        toast.error("Failed to load Razorpay. Please try again later.");
         setIsRazorpayReady(false);
-        toast.error('Failed to load Razorpay. Please try again later.');
         resolve(false);
       };
-
-      document.body.appendChild(script);
     });
-
-    return razorpayScriptPromiseRef.current;
   }, []);
 
-  useEffect(() => {
-    loadRazorpayScript();
-  }, [loadRazorpayScript]);
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAmount(e.target.value);
+  };
 
-  const handleAmountChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setAmount(e.target.value);
-    },
-    [],
-  );
+  // ── Payment validation ──
+  const validatePayment = async (
+    response: any,
+    payAmount: number,
+    currentTableName: string,
+  ) => {
+    try {
+      const res = await apiRpc.payments.validPayment[":merchantId"].$post({
+        param: { merchantId: merchantDetails.razorpayMerchantId },
+        json: { response },
+        query: {
+          userId: userDetails?._id,
+          paidAmount: payAmount.toString(),
+          tableName: currentTableName,
+          businessId,
+          netCoinz: "0",
+        },
+      });
 
-  const validatePayment = useCallback(
-    async (
-      response: any,
-      payAmount: number,
-      currentTableName: string,
-    ): Promise<boolean> => {
-      try {
-        const res = await apiRpc.payments.validPayment[':merchantId'].$post({
-          param: { merchantId: merchantDetails.razorpayMerchantId },
-          json: { response },
-          query: {
-            userId: userDetails?._id,
-            paidAmount: payAmount.toString(),
-            tableName: currentTableName,
-            businessId,
-            netCoinz: '0',
-          },
-        });
-
-        if (res.status === 200) {
-          clearPendingPaymentSession();
-          resetTableData();
-          // setSuccess({ mode: 'online', amount: payAmount });
-          return true;
-        }
-
-        toast.error('Payment verification failed.');
-        return false;
-      } catch (error) {
-        console.error('Validate payment error:', error);
-        toast.error('Payment verification failed.');
-        return false;
+      if (res.status === 200) {
+        resetTableData();
+        setSuccess({ mode: "online", amount: payAmount });
+        return true;
       }
-    },
-    [
-      merchantDetails.razorpayMerchantId,
-      userDetails?._id,
-      businessId,
-      clearPendingPaymentSession,
-    ],
-  );
 
+      toast.error("Payment verification failed.");
+      return false;
+    } catch (error) {
+      console.error("Validate payment error:", error);
+      toast.error("Payment verification failed.");
+      return false;
+    }
+  };
+
+  // ── Razorpay checkout (mirrors usePayments.ts creatingRazorPayOptions) ──
   const openRazorpayCheckout = useCallback(
     async (orderId: string, payAmount: number, currentTableName: string) => {
       const scriptLoaded = await loadRazorpayScript();
-
       if (!scriptLoaded || !window.Razorpay) {
-        toast.error('Failed to load payment gateway.');
-        if (mountedRef.current) setLoading(false);
+        toast.error("Failed to load payment gateway.");
+        setLoading(false);
         return;
       }
 
+      // Force-close any login popup BEFORE opening Razorpay.
+      // The BottomPopUp component sets window.location.hash = "#popup" and
+      // listens for hashchange — if Razorpay or UPI redirect changes the
+      // hash, the popup re-triggers on return. Closing it here prevents that.
+      setCheckLogin(false);
+
       const options = {
         key: merchantDetails.razorpayKeyId,
-        order_id: orderId,
         amount: payAmount,
-        currency: 'INR',
-        name: business?.name || '',
-        description: 'Payment',
-        image: business?.logoUrl || '',
-        handler: async (response: any) => {
-          clearNavigationGuards();
-          if (mountedRef.current) setLoading(true);
-
-          const ok = await validatePayment(response, payAmount, currentTableName);
-
-          if (mountedRef.current) {
+        order_id: orderId,
+        currency: "INR",
+        name: business?.name || "",
+        description: "Payment",
+        image: business?.logoUrl || "",
+        handler: (response: any) => {
+          // Payment succeeded — clean up navigation guards
+          window.onbeforeunload = null;
+          window.onpopstate = null;
+          setLoading(true);
+          validatePayment(response, payAmount, currentTableName).finally(() => {
             setLoading(false);
-          }
-
-          if (!ok) {
-            clearPendingPaymentSession();
-          }
+          });
         },
         prefill: {
-          name: userDetails?.name || '',
-          email: userDetails?.email || '',
-          contact: userDetails?.phone || '',
+          name: userDetails?.name || "",
+          email: userDetails?.email || "",
+          contact: userDetails?.phone || "",
         },
         modal: {
           subscription_card_change: true,
@@ -424,10 +277,10 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
           backdropclose: false,
           handleback: false,
           ondismiss: () => {
-            clearNavigationGuards();
-            clearPendingPaymentSession();
-            if (mountedRef.current) setLoading(false);
-            toast.error('Payment cancelled');
+            window.onbeforeunload = null;
+            window.onpopstate = null;
+            setLoading(false);
+            toast.error("Payment cancelled");
           },
         },
         notes: {
@@ -437,25 +290,43 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
           tableName: currentTableName,
         },
         theme: {
-          color: '#111827',
+          color: "#111827",
         },
       };
 
       const razorpay = new window.Razorpay(options);
 
-      setNavigationGuards();
-      setPendingPaymentSession({
-        orderId,
-        amount: payAmount,
-        tableName: currentTableName,
+      // ── Navigation guards (same pattern as usePayments.ts) ──
+      // Prevent browser from leaving the page during UPI app switch.
+      // When the UPI app redirects back, onbeforeunload keeps the page
+      // alive so the Razorpay handler callback can still fire.
+      history.pushState(null, "", location.href);
+
+      window.onbeforeunload = (event) => {
+        event.preventDefault();
+        event.returnValue = "";
+      };
+
+      window.onpopstate = (event) => {
+        event.preventDefault();
+        history.pushState(null, "", location.href);
+      };
+
+      razorpay.on("payment.failed", () => {
+        window.onbeforeunload = null;
+        window.onpopstate = null;
+        setLoading(false);
+        toast.error("Payment failed");
       });
 
-      razorpay.on('payment.failed', () => {
-        clearNavigationGuards();
-        clearPendingPaymentSession();
-        if (mountedRef.current) setLoading(false);
-        toast.error('Payment failed');
-      });
+      // Remove onbeforeunload once Razorpay starts the payment process
+      document.addEventListener(
+        "rzp_payment_start",
+        () => {
+          window.onbeforeunload = null;
+        },
+        { once: true },
+      );
 
       razorpay.open();
     },
@@ -468,189 +339,197 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       userDetails?.email,
       userDetails?.phone,
       businessId,
-      validatePayment,
-      setNavigationGuards,
-      clearNavigationGuards,
-      setPendingPaymentSession,
-      clearPendingPaymentSession,
-    ],
-  );
-
-  const handleOnlinePay = useCallback(
-    async (payAmount: number) => {
-      try {
-        if (loading) {
-          toast.error('Please wait for the previous transaction to complete');
-          return;
-        }
-
-        setLoading(true);
-
-        const currentTableName = useTableData.getState().tableName;
-
-        const res = await apiRpc.payments.createOrder[':merchantId'].$post({
-          param: { merchantId: merchantDetails.razorpayMerchantId },
-          json: {
-            businessId,
-            total: payAmount,
-            currency: 'INR',
-            claimedCoins: 0,
-            billValue: payAmount,
-            userId: userDetails?._id,
-            tips: 0,
-            tableName: currentTableName,
-            cashbackAvailable: false,
-          },
-        });
-
-        if (res.status === 401) {
-          toast.error('Session expired. Please login again.');
-          setCheckLogin(true);
-          if (mountedRef.current) setLoading(false);
-          return;
-        }
-
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => null);
-          toast.error(errBody?.message || 'Failed to create order.');
-          if (mountedRef.current) setLoading(false);
-          return;
-        }
-
-        const orderRes = (await res.json()) as { data: { order_id: string } };
-        const orderId = orderRes?.data?.order_id;
-
-        if (!orderId) {
-          toast.error('Order creation failed.');
-          if (mountedRef.current) setLoading(false);
-          return;
-        }
-
-        if (mountedRef.current) setLoading(false);
-        await openRazorpayCheckout(orderId, payAmount, currentTableName);
-      } catch (error) {
-        console.error('Online payment error:', error);
-        toast.error('Something went wrong. Please try again.');
-        if (mountedRef.current) setLoading(false);
-      }
-    },
-    [
-      loading,
-      merchantDetails.razorpayMerchantId,
-      businessId,
-      userDetails?._id,
-      openRazorpayCheckout,
       setCheckLogin,
     ],
   );
 
-  const handleOfflinePay = useCallback(
-    async (payAmount: number) => {
-      try {
-        if (loading) {
-          toast.error('Please wait for the previous transaction to complete');
-          return;
-        }
-
-        setLoading(true);
-
-        const currentTableName = useTableData.getState().tableName;
-
-        const res = await apiRpc.payments.createOfflineOrder.$post({
-          json: {
-            businessId,
-            total: payAmount,
-            claimedCoins: 0,
-            billValue: payAmount,
-            userId: userDetails?._id,
-            tips: 0,
-            currency: 'INR',
-            tableName: currentTableName,
-            cashbackAvailable: false,
-          },
-        });
-
-        if (res.status === 401) {
-          toast.error('Session expired. Please login again.');
-          setCheckLogin(true);
-          if (mountedRef.current) setLoading(false);
-          return;
-        }
-
-        const response = (await res.json()) as {
-          data?: { order_id?: string };
-          message?: string;
-        };
-
-        if (res.status === 400) {
-          toast.error(response?.message || 'Payment failed.');
-          if (mountedRef.current) setLoading(false);
-          return;
-        }
-
-        if (response?.data?.order_id) {
-          resetTableData();
-          setSuccess({ mode: 'offline', amount: payAmount });
-        } else {
-          toast.error('Offline order creation failed.');
-        }
-
-        if (mountedRef.current) setLoading(false);
-      } catch (error) {
-        console.error('Offline payment error:', error);
-        toast.error('Something went wrong. Please try again.');
-        if (mountedRef.current) setLoading(false);
+  const handleOnlinePay = async (payAmount: number) => {
+    try {
+      if (loading) {
+        return toast.error(
+          "Please wait for the previous transaction to complete",
+        );
       }
-    },
-    [loading, businessId, userDetails?._id, setCheckLogin],
-  );
+      setLoading(true);
 
-  const handlePay = useCallback(
-    (mode: 'online' | 'offline') => {
-      const payAmount = Number(amount);
-      const accessToken = useUserToken.getState().accessToken;
       const currentTableName = useTableData.getState().tableName;
 
-      if (!payAmount || payAmount <= 0) {
-        toast.error('Enter a valid amount');
+      const res = await apiRpc.payments.createOrder[":merchantId"].$post({
+        param: { merchantId: merchantDetails.razorpayMerchantId },
+        json: {
+          businessId,
+          total: payAmount,
+          currency: "INR",
+          claimedCoins: 0,
+          billValue: payAmount,
+          userId: userDetails?._id,
+          tips: 0,
+          tableName: currentTableName,
+          cashbackAvailable: false,
+        },
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        toast.error(errBody?.message || "Failed to create order.");
+        setLoading(false);
         return;
       }
 
-      if (!accessToken) {
+      const orderRes = (await res.json()) as { data: { order_id: string } };
+      const orderId = orderRes?.data?.order_id;
+
+      if (!orderId) {
+        toast.error("Order creation failed.");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(false);
+      await openRazorpayCheckout(orderId, payAmount, currentTableName);
+    } catch (error) {
+      console.error("Online payment error:", error);
+      toast.error("Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  const handleOfflinePay = async (payAmount: number) => {
+    try {
+      if (loading) {
+        return toast.error(
+          "Please wait for the previous transaction to complete",
+        );
+      }
+      setLoading(true);
+
+      const currentTableName = useTableData.getState().tableName;
+
+      const res = await apiRpc.payments.createOfflineOrder.$post({
+        json: {
+          businessId,
+          total: payAmount,
+          claimedCoins: 0,
+          billValue: payAmount,
+          userId: userDetails?._id,
+          tips: 0,
+          currency: "INR",
+          tableName: currentTableName,
+          cashbackAvailable: false,
+        },
+      });
+
+      if (res.status === 401) {
+        toast.error("Session expired. Please login again.");
         setCheckLogin(true);
-        toast.error('Please login to continue');
+        setLoading(false);
         return;
       }
 
-      if (!currentTableName) {
-        toast.error('Invalid session. Please scan the QR again.');
+      const response = (await res.json()) as {
+        data?: { order_id?: string };
+        message?: string;
+      };
+
+      if (res.status === 400) {
+        toast.error(response?.message || "Payment failed.");
+        setLoading(false);
         return;
       }
 
-      if (mode === 'online') {
-        void handleOnlinePay(payAmount);
-        return;
+      if (response?.data?.order_id) {
+        resetTableData();
+        setSuccess({ mode: "offline", amount: payAmount });
+      } else {
+        toast.error("Offline order creation failed.");
       }
 
-      void handleOfflinePay(payAmount);
-    },
-    [amount, setCheckLogin, handleOnlinePay, handleOfflinePay],
-  );
+      setLoading(false);
+    } catch (error) {
+      console.error("Offline payment error:", error);
+      toast.error("Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  };
 
-  if (waitingForAutoLogin) {
+  const handlePay = (mode: "online" | "offline") => {
+    const payAmount = Number(amount);
+    const accessToken = useUserToken.getState().accessToken;
+    const currentTableName = useTableData.getState().tableName;
+
+    if (!payAmount || payAmount <= 0) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+
+    if (!accessToken) {
+      setCheckLogin(true);
+      toast.error("Please login to continue");
+      return;
+    }
+
+    if (!currentTableName) {
+      toast.error("Invalid session. Please scan the QR again.");
+      return;
+    }
+
+    if (mode === "online") {
+      handleOnlinePay(payAmount);
+      return;
+    }
+
+    handleOfflinePay(payAmount);
+  };
+
+  const handleNewPayment = () => {
+    setSuccess(null);
+    setAmount("");
+
+    if (tableNameFromUrl) {
+      setTableName(tableNameFromUrl);
+      setTableNameTimeStamp(Date.now());
+    }
+  };
+
+  const numericAmount = Number(amount) || 0;
+
+  if (!isReady || waitingForAutoLogin) {
     return <LoadingSpinnerCircle />;
   }
 
   if (success) {
-    const isOnline = success.mode === 'online';
+    const isOnline = success.mode === "online";
 
     return (
-      <main className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-[#F5EBDD] px-6 font-sans text-[#1F2937]">
+      <main className="relative flex min-h-[100dvh] flex-col items-center bg-[#F5EBDD] px-6 pt-12 font-sans text-[#1F2937]">
+        {/* Business branding */}
+        <header className="flex flex-col items-center gap-2 pb-8">
+          {business?.logoUrl ? (
+            <img
+              src={business.logoUrl}
+              alt={business?.name || ""}
+              className="h-16 w-16 rounded-full border border-[#E7DDD2] object-cover shadow-sm"
+            />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EDE3D7] text-lg font-semibold text-[#1F2937] shadow-sm">
+              {business?.name?.[0] || "P"}
+            </div>
+          )}
+          <h1 className="text-lg font-semibold tracking-tight text-[#1F2937]">
+            {business?.name || "Payment"}
+          </h1>
+        </header>
+
+        {/* Success card */}
         <div className="w-full max-w-sm rounded-[28px] border border-[#E7DDD2] bg-white/60 px-6 py-10 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-6">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#F1E7DB]">
+          <div className="flex flex-col items-center gap-5">
+            <div
+              className={`flex h-20 w-20 items-center justify-center rounded-full ${
+                isOnline ? "bg-[#DEF7EC]" : "bg-[#FEF3C7]"
+              }`}
+            >
               <svg
-                className="h-10 w-10 text-[#1F2937]"
+                className={`h-10 w-10 ${isOnline ? "text-[#059669]" : "text-[#D97706]"}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -659,7 +538,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d={isOnline ? 'M5 13l4 4L19 7' : 'M12 8v4m0 4h.01'}
+                  d={isOnline ? "M5 13l4 4L19 7" : "M12 8v4m0 4h.01"}
                 />
               </svg>
             </div>
@@ -670,18 +549,27 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
             <div className="text-center">
               <p className="text-lg font-semibold text-[#1F2937]">
-                {isOnline ? 'Payment Successful' : 'Please Pay at the Counter'}
+                {isOnline ? "Payment Successful" : "Please Pay at the Counter"}
               </p>
               <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
                 {isOnline
-                  ? 'Thank you for your payment.'
-                  : 'Show this screen to the staff to complete your payment. The staff has been notified.'}
+                  ? `Paid to ${business?.name || "the merchant"}. Thank you!`
+                  : "Show this screen to the staff to complete your payment. The staff has been notified."}
               </p>
             </div>
           </div>
         </div>
 
-        <p className="absolute bottom-6 text-[10px] tracking-[0.22em] text-[#9CA3AF]">
+        {/* Make another payment */}
+        <button
+          type="button"
+          onClick={handleNewPayment}
+          className="mt-8 w-full max-w-sm rounded-full border border-[#D6C7B8] bg-white/60 py-4 text-sm font-medium uppercase tracking-[0.16em] text-[#1F2937] transition hover:bg-white/80 active:scale-[0.98]"
+        >
+          Make Another Payment
+        </button>
+
+        <p className="mt-auto py-6 text-[10px] tracking-[0.22em] text-[#9CA3AF]">
           Powered by Hipalz
         </p>
       </main>
@@ -695,10 +583,10 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
           <div
             className="hipal_loader"
             style={{
-              position: 'relative',
-              left: 'auto',
-              top: 'auto',
-              transform: 'none',
+              position: "relative",
+              left: "auto",
+              top: "auto",
+              transform: "none",
             }}
           >
             <Image
@@ -728,17 +616,17 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         {business?.logoUrl ? (
           <img
             src={business.logoUrl}
-            alt={business?.name || ''}
+            alt={business?.name || ""}
             className="h-16 w-16 rounded-full border border-[#E7DDD2] object-cover shadow-sm"
           />
         ) : (
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EDE3D7] text-lg font-semibold text-[#1F2937] shadow-sm">
-            {business?.name?.[0] || 'P'}
+            {business?.name?.[0] || "P"}
           </div>
         )}
 
         <h1 className="text-xl font-semibold tracking-tight text-[#1F2937]">
-          {business?.name || 'Payment'}
+          {business?.name || "Payment"}
         </h1>
       </header>
 
@@ -765,7 +653,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       <section className="mt-10 flex w-full max-w-sm flex-col gap-3 px-6">
         <button
           type="button"
-          onClick={() => handlePay('online')}
+          onClick={() => handlePay("online")}
           disabled={
             loading ||
             numericAmount <= 0 ||
@@ -780,7 +668,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
         <button
           type="button"
-          onClick={() => handlePay('offline')}
+          onClick={() => handlePay("offline")}
           disabled={loading || numericAmount <= 0}
           className="w-full rounded-full border border-[#D6C7B8] bg-transparent py-4 text-sm font-medium uppercase tracking-[0.16em] text-[#1F2937] transition hover:bg-white/60 disabled:opacity-30"
         >
