@@ -360,7 +360,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         if (res.status === 200) {
           clearPendingPaymentSession();
           resetTableData();
-          setSuccess({ mode: 'online', amount: payAmount });
+          // setSuccess({ mode: 'online', amount: payAmount });
           return true;
         }
 
