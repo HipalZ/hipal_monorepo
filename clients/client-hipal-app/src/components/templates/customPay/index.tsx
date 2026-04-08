@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiRpc } from "@hi/common";
@@ -33,7 +33,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const [isReady, setIsReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<SuccessState>(null);
-  const [isRazorpayReady, setIsRazorpayReady] = useState(false);
   const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(
     !!userIdFromUrl,
   );
@@ -57,7 +56,16 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   useMerchantDetails(businessId);
 
-  // Initialise stores + table + preload Razorpay script in a single effect
+  // ── Pending payment tracker ──
+  // Stored in a ref so it survives WebView freeze/unfreeze without re-render.
+  // When user returns from UPI app, visibilitychange reads this to recover.
+  const pendingPaymentRef = useRef<{
+    orderId: string;
+    payAmount: number;
+    tableName: string;
+  } | null>(null);
+
+  // ── Effect 1: Initialise stores + table ──
   useEffect(() => {
     setBusinessData(data);
     if (data?.business) {
@@ -67,39 +75,79 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       setTableName(tableNameFromUrl);
       setTableNameTimeStamp(Date.now());
     }
-    loadRazorpayScript();
     setIsReady(true);
   }, [data, setBusinessData, setBusinessDetails, tableNameFromUrl, setTableName, setTableNameTimeStamp]);
 
-  // Reset stale success state when the user revisits via WhatsApp CTA link
+  // ── Effect 2: Visibility handler ──
+  // This is the ONLY mechanism that works across regular browsers AND WhatsApp
+  // WebView. It handles two scenarios:
+  //
+  // A) User returns from UPI app → WebView was frozen → Razorpay handler may
+  //    not have fired → we detect pendingPaymentRef and validate with backend.
+  //
+  // B) User re-clicks WhatsApp CTA after a completed payment → stale success
+  //    screen is showing → we reset to fresh form.
   useEffect(() => {
-    const handlePageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) {
-        setSuccess(null);
-        setLoading(false);
-        setAmount("");
-      }
-    };
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && success) {
-        setSuccess(null);
-        setLoading(false);
-        setAmount("");
-      }
-    };
-    window.addEventListener("pageshow", handlePageShow);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      window.removeEventListener("pageshow", handlePageShow);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [success]);
+    const onVisible = async () => {
+      if (document.visibilityState !== "visible") return;
 
-  // ── Auth: wait for Zustand persist hydration before checking token ──
-  // On page reload getState().accessToken is "" until persist middleware
-  // rehydrates from localStorage. Checking too early triggers the login
-  // popup (BottomPopUp at z-110) which covers the entire screen — this is
-  // the "blank screen" the user sees after UPI redirect.
+      // Scenario A: returning from UPI with a pending payment
+      const pending = pendingPaymentRef.current;
+      if (pending) {
+        // Give Razorpay handler 1.5s to fire on its own (it works in
+        // regular browsers; only fails in frozen WebViews)
+        await new Promise((r) => setTimeout(r, 1500));
+
+        // If Razorpay handler already handled it, ref will be null
+        if (!pendingPaymentRef.current) return;
+
+        // Razorpay handler didn't fire — validate manually
+        pendingPaymentRef.current = null;
+        setLoading(true);
+        try {
+          const res = await apiRpc.payments.validPayment[":merchantId"].$post({
+            param: { merchantId: merchantDetails.razorpayMerchantId },
+            json: { response: { razorpay_order_id: pending.orderId } },
+            query: {
+              userId: userDetails?._id,
+              paidAmount: pending.payAmount.toString(),
+              tableName: pending.tableName,
+              businessId,
+              netCoinz: "0",
+            },
+          });
+          if (res.status === 200) {
+            resetTableData();
+            setSuccess({ mode: "online", amount: pending.payAmount });
+          } else {
+            toast.error(
+              "Payment status unclear. Please check with the staff.",
+            );
+          }
+        } catch {
+          toast.error("Could not verify payment. Please check with the staff.");
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Scenario B: stale success — user revisited via WhatsApp CTA
+      if (success) {
+        setSuccess(null);
+        setLoading(false);
+        setAmount("");
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [success, merchantDetails?.razorpayMerchantId, userDetails?._id, businessId]);
+
+  // ── Effect 3: Auth — wait for Zustand hydration before checking token ──
+  // On page load, getState().accessToken is "" until persist middleware
+  // rehydrates from localStorage. Checking too early triggers the
+  // BottomPopUp login overlay which covers the entire screen.
   useEffect(() => {
     let cancelled = false;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
@@ -120,6 +168,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         return;
       }
 
+      // ?id= param present — AutoLoginWrapper is handling it, poll for token
       pollInterval = setInterval(() => {
         if (useUserToken.getState().accessToken) {
           setWaitingForAutoLogin(false);
@@ -156,39 +205,34 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     };
   }, [userIdFromUrl, setCheckLogin]);
 
-  // ── Razorpay script loader (mirrors usePayments.ts) ──
+  // ── Razorpay script loader — on-demand only ──
   const loadRazorpayScript = useCallback((): Promise<boolean> => {
     if (typeof window === "undefined") return Promise.resolve(false);
-    if (window.Razorpay) {
-      setIsRazorpayReady(true);
-      return Promise.resolve(true);
-    }
+    if (window.Razorpay) return Promise.resolve(true);
+
     return new Promise((resolve) => {
-      let isScriptLoaded = false;
+      let loaded = false;
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.async = true;
       document.body.appendChild(script);
 
-      const timeoutId = setTimeout(() => {
-        if (!isScriptLoaded) {
+      const timeout = setTimeout(() => {
+        if (!loaded) {
           toast.error("Facing Internet Issue! Please try again.");
-          setIsRazorpayReady(false);
           document.body.removeChild(script);
           resolve(false);
         }
       }, 5000);
 
       script.onload = () => {
-        isScriptLoaded = true;
-        clearTimeout(timeoutId);
-        setIsRazorpayReady(true);
+        loaded = true;
+        clearTimeout(timeout);
         resolve(true);
       };
       script.onerror = () => {
-        clearTimeout(timeoutId);
+        clearTimeout(timeout);
         toast.error("Failed to load Razorpay. Please try again later.");
-        setIsRazorpayReady(false);
         resolve(false);
       };
     });
@@ -232,7 +276,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     }
   };
 
-  // ── Razorpay checkout (mirrors usePayments.ts creatingRazorPayOptions) ──
+  // ── Razorpay checkout ──
   const openRazorpayCheckout = useCallback(
     async (orderId: string, payAmount: number, currentTableName: string) => {
       const scriptLoaded = await loadRazorpayScript();
@@ -243,9 +287,8 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       }
 
       // Force-close any login popup BEFORE opening Razorpay.
-      // The BottomPopUp component sets window.location.hash = "#popup" and
-      // listens for hashchange — if Razorpay or UPI redirect changes the
-      // hash, the popup re-triggers on return. Closing it here prevents that.
+      // BottomPopUp sets window.location.hash = "#popup" and listens for
+      // hashchange — UPI redirect changes the hash, re-triggering the popup.
       setCheckLogin(false);
 
       const options = {
@@ -257,9 +300,8 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         description: "Payment",
         image: business?.logoUrl || "",
         handler: (response: any) => {
-          // Payment succeeded — clean up navigation guards
-          window.onbeforeunload = null;
-          window.onpopstate = null;
+          // Razorpay handler fired — clear pending so visibilitychange skips
+          pendingPaymentRef.current = null;
           setLoading(true);
           validatePayment(response, payAmount, currentTableName).finally(() => {
             setLoading(false);
@@ -277,8 +319,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
           backdropclose: false,
           handleback: false,
           ondismiss: () => {
-            window.onbeforeunload = null;
-            window.onpopstate = null;
+            pendingPaymentRef.current = null;
             setLoading(false);
             toast.error("Payment cancelled");
           },
@@ -296,37 +337,19 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
       const razorpay = new window.Razorpay(options);
 
-      // ── Navigation guards (same pattern as usePayments.ts) ──
-      // Prevent browser from leaving the page during UPI app switch.
-      // When the UPI app redirects back, onbeforeunload keeps the page
-      // alive so the Razorpay handler callback can still fire.
-      history.pushState(null, "", location.href);
-
-      window.onbeforeunload = (event) => {
-        event.preventDefault();
-        event.returnValue = "";
-      };
-
-      window.onpopstate = (event) => {
-        event.preventDefault();
-        history.pushState(null, "", location.href);
+      // Set pending BEFORE opening — visibilitychange will use this to
+      // recover if the Razorpay handler doesn't fire (WebView freeze)
+      pendingPaymentRef.current = {
+        orderId,
+        payAmount,
+        tableName: currentTableName,
       };
 
       razorpay.on("payment.failed", () => {
-        window.onbeforeunload = null;
-        window.onpopstate = null;
+        pendingPaymentRef.current = null;
         setLoading(false);
         toast.error("Payment failed");
       });
-
-      // Remove onbeforeunload once Razorpay starts the payment process
-      document.addEventListener(
-        "rzp_payment_start",
-        () => {
-          window.onbeforeunload = null;
-        },
-        { once: true },
-      );
 
       razorpay.open();
     },
@@ -502,7 +525,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
     return (
       <main className="relative flex min-h-[100dvh] flex-col items-center bg-[#F5EBDD] px-6 pt-12 font-sans text-[#1F2937]">
-        {/* Business branding */}
         <header className="flex flex-col items-center gap-2 pb-8">
           {business?.logoUrl ? (
             <img
@@ -520,7 +542,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
           </h1>
         </header>
 
-        {/* Success card */}
         <div className="w-full max-w-sm rounded-[28px] border border-[#E7DDD2] bg-white/60 px-6 py-10 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-sm">
           <div className="flex flex-col items-center gap-5">
             <div
@@ -560,7 +581,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
           </div>
         </div>
 
-        {/* Make another payment */}
         <button
           type="button"
           onClick={handleNewPayment}
@@ -658,8 +678,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
             loading ||
             numericAmount <= 0 ||
             !merchantDetails?.razorpayMerchantId ||
-            !merchantDetails?.razorpayKeyId ||
-            !isRazorpayReady
+            !merchantDetails?.razorpayKeyId
           }
           className="w-full rounded-full bg-[#111827] py-4 text-sm font-medium uppercase tracking-[0.16em] text-white transition hover:opacity-90 disabled:opacity-30"
         >
