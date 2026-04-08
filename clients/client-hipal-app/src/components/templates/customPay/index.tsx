@@ -13,7 +13,7 @@ import { apiRpc } from '@hi/common';
 import { useUserToken } from '@hi/common/src/useUserToken';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 
 type SuccessState = { mode: 'online' | 'offline'; amount: number } | null;
@@ -24,21 +24,22 @@ declare global {
   }
 }
 
+const RAZORPAY_SCRIPT_ID = 'razorpay-checkout-script';
 const RAZORPAY_SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
 
 const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
   const tableNameFromUrl = searchParams?.get('tableName') || '';
-  const userIdFromUrl = searchParams?.get('id');
+  const userIdFromUrl = searchParams?.get('id') || '';
 
   const [amount, setAmount] = useState('');
-  const [isReady, setIsReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<SuccessState>(null);
   const [isRazorpayReady, setIsRazorpayReady] = useState(false);
-  const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(
-    !!userIdFromUrl,
-  );
+  const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(Boolean(userIdFromUrl));
+
+  const mountedRef = useRef(true);
+  const razorpayScriptPromiseRef = useRef<Promise<boolean> | null>(null);
 
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const { setBusinessDetails } = useBusinessDetails();
@@ -56,8 +57,101 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   const businessId = data?.outletInfo?.businessId || '';
   const business = data?.business;
+  const numericAmount = useMemo(() => Number(amount) || 0, [amount]);
+
+  const paymentSessionKey = useMemo(
+    () =>
+      `custom-pay-session:${businessId}:${tableNameFromUrl || 'no-table'}:${
+        userIdFromUrl || 'guest'
+      }`,
+    [businessId, tableNameFromUrl, userIdFromUrl],
+  );
 
   useMerchantDetails(businessId);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      window.onbeforeunload = null;
+      window.onpopstate = null;
+    };
+  }, []);
+
+  const clearNavigationGuards = useCallback(() => {
+    window.onbeforeunload = null;
+    window.onpopstate = null;
+  }, []);
+
+  const setNavigationGuards = useCallback(() => {
+    history.pushState(null, '', location.href);
+
+    window.onbeforeunload = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.onpopstate = (event) => {
+      event.preventDefault();
+      history.pushState(null, '', location.href);
+    };
+  }, []);
+
+  const clearPendingPaymentSession = useCallback(() => {
+    try {
+      sessionStorage.removeItem(paymentSessionKey);
+    } catch {
+      // ignore sessionStorage errors
+    }
+  }, [paymentSessionKey]);
+
+  const setPendingPaymentSession = useCallback(
+    (payload: { orderId: string; amount: number; tableName: string }) => {
+      try {
+        sessionStorage.setItem(
+          paymentSessionKey,
+          JSON.stringify({
+            ...payload,
+            businessId,
+            createdAt: Date.now(),
+          }),
+        );
+      } catch {
+        // ignore sessionStorage errors
+      }
+    },
+    [paymentSessionKey, businessId],
+  );
+
+  const hasPendingPaymentSession = useCallback(() => {
+    try {
+      return Boolean(sessionStorage.getItem(paymentSessionKey));
+    } catch {
+      return false;
+    }
+  }, [paymentSessionKey]);
+
+  const resetToFreshEntry = useCallback(() => {
+    clearNavigationGuards();
+    clearPendingPaymentSession();
+
+    if (mountedRef.current) {
+      setLoading(false);
+      setSuccess(null);
+      setAmount('');
+    }
+
+    if (tableNameFromUrl) {
+      setTableName(tableNameFromUrl);
+      setTableNameTimeStamp(Date.now());
+    }
+  }, [
+    clearNavigationGuards,
+    clearPendingPaymentSession,
+    tableNameFromUrl,
+    setTableName,
+    setTableNameTimeStamp,
+  ]);
 
   useEffect(() => {
     setBusinessData(data);
@@ -65,8 +159,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     if (data?.business) {
       setBusinessDetails(data.business);
     }
-
-    setIsReady(true);
   }, [data, setBusinessData, setBusinessDetails]);
 
   useEffect(() => {
@@ -76,97 +168,147 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     setTableNameTimeStamp(Date.now());
   }, [tableNameFromUrl, setTableName, setTableNameTimeStamp]);
 
-  // Auth: wait for Zustand persist to hydrate from localStorage before
-  // checking the token. On page reload (e.g. after UPI redirect)
-  // getState().accessToken returns "" until hydration completes — checking
-  // too early would incorrectly trigger the login popup over a valid session.
   useEffect(() => {
     let cancelled = false;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
     let fallbackTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    const checkAuth = () => {
+    const stopTimers = () => {
+      if (pollInterval) clearInterval(pollInterval);
+      if (fallbackTimeout) clearTimeout(fallbackTimeout);
+    };
+
+    const complete = (showLogin: boolean) => {
+      if (cancelled || !mountedRef.current) return;
+      setWaitingForAutoLogin(false);
+      if (showLogin) setCheckLogin(true);
+      stopTimers();
+    };
+
+    const startAuthCheck = () => {
       if (cancelled) return;
 
       const accessToken = useUserToken.getState().accessToken;
 
       if (accessToken) {
-        setWaitingForAutoLogin(false);
+        complete(false);
         return;
       }
 
-      // No ?id= param — show manual login
       if (!userIdFromUrl) {
-        setCheckLogin(true);
-        setWaitingForAutoLogin(false);
+        complete(true);
         return;
       }
 
-      // ?id= present — AutoLoginWrapper is handling it, poll for token
       pollInterval = setInterval(() => {
         if (useUserToken.getState().accessToken) {
-          setWaitingForAutoLogin(false);
-          if (pollInterval) clearInterval(pollInterval);
+          complete(false);
         }
       }, 300);
 
-      // Timeout 8s — fallback to manual login if auto-login failed
       fallbackTimeout = setTimeout(() => {
-        if (pollInterval) clearInterval(pollInterval);
         if (!useUserToken.getState().accessToken) {
-          setWaitingForAutoLogin(false);
-          setCheckLogin(true);
+          complete(true);
+        } else {
+          complete(false);
         }
       }, 8000);
     };
 
-    // If store already hydrated, check immediately; otherwise wait
     if (useUserToken.persist?.hasHydrated?.()) {
-      checkAuth();
+      startAuthCheck();
     } else {
       const unsub = useUserToken.persist.onFinishHydration(() => {
         unsub();
-        checkAuth();
+        startAuthCheck();
       });
+
       return () => {
         cancelled = true;
+        stopTimers();
         unsub();
       };
     }
 
     return () => {
       cancelled = true;
-      if (pollInterval) clearInterval(pollInterval);
-      if (fallbackTimeout) clearTimeout(fallbackTimeout);
+      stopTimers();
     };
   }, [userIdFromUrl, setCheckLogin]);
 
-  // ── Razorpay script loader ──────────────────────────────────────────
-  const scriptLoadedRef = useRef(false);
+  useEffect(() => {
+    const navEntry = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+
+    const navType = navEntry?.type;
+    const pending = hasPendingPaymentSession();
+
+    if ((navType === 'navigate' || navType === 'reload') && !pending) {
+      resetToFreshEntry();
+    }
+  }, [hasPendingPaymentSession, resetToFreshEntry]);
+
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      const pending = hasPendingPaymentSession();
+
+      if (event.persisted && !pending) {
+        resetToFreshEntry();
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, [hasPendingPaymentSession, resetToFreshEntry]);
 
   const loadRazorpayScript = useCallback((): Promise<boolean> => {
     if (typeof window === 'undefined') return Promise.resolve(false);
+
     if (window.Razorpay) {
-      scriptLoadedRef.current = true;
       setIsRazorpayReady(true);
       return Promise.resolve(true);
     }
 
-    return new Promise((resolve) => {
+    if (razorpayScriptPromiseRef.current) {
+      return razorpayScriptPromiseRef.current;
+    }
+
+    razorpayScriptPromiseRef.current = new Promise((resolve) => {
+      const existingScript = document.getElementById(
+        RAZORPAY_SCRIPT_ID,
+      ) as HTMLScriptElement | null;
+
+      if (existingScript) {
+        const onLoad = () => {
+          setIsRazorpayReady(true);
+          resolve(true);
+        };
+
+        const onError = () => {
+          setIsRazorpayReady(false);
+          resolve(false);
+        };
+
+        existingScript.addEventListener('load', onLoad, { once: true });
+        existingScript.addEventListener('error', onError, { once: true });
+        return;
+      }
+
       const script = document.createElement('script');
+      script.id = RAZORPAY_SCRIPT_ID;
       script.src = RAZORPAY_SCRIPT_SRC;
       script.async = true;
 
       const timeout = setTimeout(() => {
-        if (!scriptLoadedRef.current) {
-          toast.error('Facing Internet Issue! Please try again.');
-          setIsRazorpayReady(false);
-          resolve(false);
-        }
+        setIsRazorpayReady(false);
+        toast.error('Facing Internet Issue! Please try again.');
+        resolve(false);
       }, 5000);
 
       script.onload = () => {
-        scriptLoadedRef.current = true;
         clearTimeout(timeout);
         setIsRazorpayReady(true);
         resolve(true);
@@ -174,65 +316,77 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
       script.onerror = () => {
         clearTimeout(timeout);
-        toast.error('Failed to load Razorpay. Please try again later.');
         setIsRazorpayReady(false);
+        toast.error('Failed to load Razorpay. Please try again later.');
         resolve(false);
       };
 
       document.body.appendChild(script);
     });
+
+    return razorpayScriptPromiseRef.current;
   }, []);
 
   useEffect(() => {
     loadRazorpayScript();
   }, [loadRazorpayScript]);
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAmount(e.target.value);
-  };
+  const handleAmountChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setAmount(e.target.value);
+    },
+    [],
+  );
 
-  // ── Payment validation (mirrors usePayments.ts sendPaymentResponse) ─
-  const validatePayment = async (
-    response: any,
-    payAmount: number,
-    currentTableName: string,
-  ) => {
-    try {
-      const res = await apiRpc.payments.validPayment[':merchantId'].$post({
-        param: { merchantId: merchantDetails.razorpayMerchantId },
-        json: { response },
-        query: {
-          userId: userDetails?._id,
-          paidAmount: payAmount.toString(),
-          tableName: currentTableName,
-          businessId,
-          netCoinz: '0',
-        },
-      });
+  const validatePayment = useCallback(
+    async (
+      response: any,
+      payAmount: number,
+      currentTableName: string,
+    ): Promise<boolean> => {
+      try {
+        const res = await apiRpc.payments.validPayment[':merchantId'].$post({
+          param: { merchantId: merchantDetails.razorpayMerchantId },
+          json: { response },
+          query: {
+            userId: userDetails?._id,
+            paidAmount: payAmount.toString(),
+            tableName: currentTableName,
+            businessId,
+            netCoinz: '0',
+          },
+        });
 
-      if (res.status === 200) {
-        resetTableData();
-        setSuccess({ mode: 'online', amount: payAmount });
-        return true;
+        if (res.status === 200) {
+          clearPendingPaymentSession();
+          resetTableData();
+          setSuccess({ mode: 'online', amount: payAmount });
+          return true;
+        }
+
+        toast.error('Payment verification failed.');
+        return false;
+      } catch (error) {
+        console.error('Validate payment error:', error);
+        toast.error('Payment verification failed.');
+        return false;
       }
+    },
+    [
+      merchantDetails.razorpayMerchantId,
+      userDetails?._id,
+      businessId,
+      clearPendingPaymentSession,
+    ],
+  );
 
-      toast.error('Payment verification failed.');
-      return false;
-    } catch (error) {
-      console.error('Validate payment error:', error);
-      toast.error('Payment verification failed.');
-      return false;
-    }
-  };
-
-  // ── Razorpay checkout (mirrors usePayments.ts creatingRazorPayOptions) ─
   const openRazorpayCheckout = useCallback(
     async (orderId: string, payAmount: number, currentTableName: string) => {
       const scriptLoaded = await loadRazorpayScript();
 
       if (!scriptLoaded || !window.Razorpay) {
         toast.error('Failed to load payment gateway.');
-        setLoading(false);
+        if (mountedRef.current) setLoading(false);
         return;
       }
 
@@ -244,14 +398,19 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         name: business?.name || '',
         description: 'Payment',
         image: business?.logoUrl || '',
-        handler: (response: any) => {
-          // Payment succeeded — clean up navigation guards
-          window.onbeforeunload = null;
-          window.onpopstate = null;
-          setLoading(true);
-          validatePayment(response, payAmount, currentTableName).finally(() => {
+        handler: async (response: any) => {
+          clearNavigationGuards();
+          if (mountedRef.current) setLoading(true);
+
+          const ok = await validatePayment(response, payAmount, currentTableName);
+
+          if (mountedRef.current) {
             setLoading(false);
-          });
+          }
+
+          if (!ok) {
+            clearPendingPaymentSession();
+          }
         },
         prefill: {
           name: userDetails?.name || '',
@@ -265,9 +424,9 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
           backdropclose: false,
           handleback: false,
           ondismiss: () => {
-            window.onbeforeunload = null;
-            window.onpopstate = null;
-            setLoading(false);
+            clearNavigationGuards();
+            clearPendingPaymentSession();
+            if (mountedRef.current) setLoading(false);
             toast.error('Payment cancelled');
           },
         },
@@ -284,27 +443,17 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
       const razorpay = new window.Razorpay(options);
 
-      // ── Navigation guards (same pattern as usePayments.ts) ──
-      // Prevent the browser from leaving the page during UPI redirect.
-      // When the UPI app redirects back, onbeforeunload catches it and
-      // forces the browser to stay on this page instead of showing blank.
-      history.pushState(null, '', location.href);
-
-      window.onbeforeunload = (event) => {
-        event.preventDefault();
-        event.returnValue = '';
-      };
-
-      window.onpopstate = (event) => {
-        event.preventDefault();
-        // Force stay on current page
-        history.pushState(null, '', location.href);
-      };
+      setNavigationGuards();
+      setPendingPaymentSession({
+        orderId,
+        amount: payAmount,
+        tableName: currentTableName,
+      });
 
       razorpay.on('payment.failed', () => {
-        window.onbeforeunload = null;
-        window.onpopstate = null;
-        setLoading(false);
+        clearNavigationGuards();
+        clearPendingPaymentSession();
+        if (mountedRef.current) setLoading(false);
         toast.error('Payment failed');
       });
 
@@ -319,158 +468,176 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       userDetails?.email,
       userDetails?.phone,
       businessId,
+      validatePayment,
+      setNavigationGuards,
+      clearNavigationGuards,
+      setPendingPaymentSession,
+      clearPendingPaymentSession,
     ],
   );
 
-  const handleOnlinePay = async (payAmount: number) => {
-    try {
-      if (loading) {
-        return toast.error('Please wait for the previous transaction to complete');
+  const handleOnlinePay = useCallback(
+    async (payAmount: number) => {
+      try {
+        if (loading) {
+          toast.error('Please wait for the previous transaction to complete');
+          return;
+        }
+
+        setLoading(true);
+
+        const currentTableName = useTableData.getState().tableName;
+
+        const res = await apiRpc.payments.createOrder[':merchantId'].$post({
+          param: { merchantId: merchantDetails.razorpayMerchantId },
+          json: {
+            businessId,
+            total: payAmount,
+            currency: 'INR',
+            claimedCoins: 0,
+            billValue: payAmount,
+            userId: userDetails?._id,
+            tips: 0,
+            tableName: currentTableName,
+            cashbackAvailable: false,
+          },
+        });
+
+        if (res.status === 401) {
+          toast.error('Session expired. Please login again.');
+          setCheckLogin(true);
+          if (mountedRef.current) setLoading(false);
+          return;
+        }
+
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => null);
+          toast.error(errBody?.message || 'Failed to create order.');
+          if (mountedRef.current) setLoading(false);
+          return;
+        }
+
+        const orderRes = (await res.json()) as { data: { order_id: string } };
+        const orderId = orderRes?.data?.order_id;
+
+        if (!orderId) {
+          toast.error('Order creation failed.');
+          if (mountedRef.current) setLoading(false);
+          return;
+        }
+
+        if (mountedRef.current) setLoading(false);
+        await openRazorpayCheckout(orderId, payAmount, currentTableName);
+      } catch (error) {
+        console.error('Online payment error:', error);
+        toast.error('Something went wrong. Please try again.');
+        if (mountedRef.current) setLoading(false);
       }
+    },
+    [
+      loading,
+      merchantDetails.razorpayMerchantId,
+      businessId,
+      userDetails?._id,
+      openRazorpayCheckout,
+      setCheckLogin,
+    ],
+  );
 
-      setLoading(true);
+  const handleOfflinePay = useCallback(
+    async (payAmount: number) => {
+      try {
+        if (loading) {
+          toast.error('Please wait for the previous transaction to complete');
+          return;
+        }
 
+        setLoading(true);
+
+        const currentTableName = useTableData.getState().tableName;
+
+        const res = await apiRpc.payments.createOfflineOrder.$post({
+          json: {
+            businessId,
+            total: payAmount,
+            claimedCoins: 0,
+            billValue: payAmount,
+            userId: userDetails?._id,
+            tips: 0,
+            currency: 'INR',
+            tableName: currentTableName,
+            cashbackAvailable: false,
+          },
+        });
+
+        if (res.status === 401) {
+          toast.error('Session expired. Please login again.');
+          setCheckLogin(true);
+          if (mountedRef.current) setLoading(false);
+          return;
+        }
+
+        const response = (await res.json()) as {
+          data?: { order_id?: string };
+          message?: string;
+        };
+
+        if (res.status === 400) {
+          toast.error(response?.message || 'Payment failed.');
+          if (mountedRef.current) setLoading(false);
+          return;
+        }
+
+        if (response?.data?.order_id) {
+          resetTableData();
+          setSuccess({ mode: 'offline', amount: payAmount });
+        } else {
+          toast.error('Offline order creation failed.');
+        }
+
+        if (mountedRef.current) setLoading(false);
+      } catch (error) {
+        console.error('Offline payment error:', error);
+        toast.error('Something went wrong. Please try again.');
+        if (mountedRef.current) setLoading(false);
+      }
+    },
+    [loading, businessId, userDetails?._id, setCheckLogin],
+  );
+
+  const handlePay = useCallback(
+    (mode: 'online' | 'offline') => {
+      const payAmount = Number(amount);
+      const accessToken = useUserToken.getState().accessToken;
       const currentTableName = useTableData.getState().tableName;
 
-      const res = await apiRpc.payments.createOrder[':merchantId'].$post({
-        param: { merchantId: merchantDetails.razorpayMerchantId },
-        json: {
-          businessId,
-          total: payAmount,
-          currency: 'INR',
-          claimedCoins: 0,
-          billValue: payAmount,
-          userId: userDetails?._id,
-          tips: 0,
-          tableName: currentTableName,
-          cashbackAvailable: false,
-        },
-      });
-
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => null);
-        toast.error(errBody?.message || 'Failed to create order.');
-        setLoading(false);
+      if (!payAmount || payAmount <= 0) {
+        toast.error('Enter a valid amount');
         return;
       }
 
-      const orderRes = (await res.json()) as { data: { order_id: string } };
-      const orderId = orderRes?.data?.order_id;
-
-      if (!orderId) {
-        toast.error('Order creation failed.');
-        setLoading(false);
-        return;
-      }
-
-      setLoading(false);
-      await openRazorpayCheckout(orderId, payAmount, currentTableName);
-    } catch (error) {
-      console.error('Online payment error:', error);
-      toast.error('Something went wrong. Please try again.');
-      setLoading(false);
-    }
-  };
-
-  const handleOfflinePay = async (payAmount: number) => {
-    try {
-      if (loading) {
-        return toast.error('Please wait for the previous transaction to complete');
-      }
-
-      setLoading(true);
-
-      const currentTableName = useTableData.getState().tableName;
-
-      const res = await apiRpc.payments.createOfflineOrder.$post({
-        json: {
-          businessId,
-          total: payAmount,
-          claimedCoins: 0,
-          billValue: payAmount,
-          userId: userDetails?._id,
-          tips: 0,
-          currency: 'INR',
-          tableName: currentTableName,
-          cashbackAvailable: false,
-        },
-      });
-
-      if (res.status === 401) {
-        toast.error('Session expired. Please login again.');
+      if (!accessToken) {
         setCheckLogin(true);
-        setLoading(false);
+        toast.error('Please login to continue');
         return;
       }
 
-      const response = (await res.json()) as {
-        data?: { order_id?: string };
-        message?: string;
-      };
-
-      if (res.status === 400) {
-        toast.error(response?.message || 'Payment failed.');
-        setLoading(false);
+      if (!currentTableName) {
+        toast.error('Invalid session. Please scan the QR again.');
         return;
       }
 
-      if (response?.data?.order_id) {
-        resetTableData();
-        setSuccess({ mode: 'offline', amount: payAmount });
-      } else {
-        toast.error('Offline order creation failed.');
+      if (mode === 'online') {
+        void handleOnlinePay(payAmount);
+        return;
       }
 
-      setLoading(false);
-    } catch (error) {
-      console.error('Offline payment error:', error);
-      toast.error('Something went wrong. Please try again.');
-      setLoading(false);
-    }
-  };
+      void handleOfflinePay(payAmount);
+    },
+    [amount, setCheckLogin, handleOnlinePay, handleOfflinePay],
+  );
 
-  const handlePay = (mode: 'online' | 'offline') => {
-    const payAmount = Number(amount);
-    const accessToken = useUserToken.getState().accessToken;
-    const currentTableName = useTableData.getState().tableName;
-
-    if (!payAmount || payAmount <= 0) {
-      toast.error('Enter a valid amount');
-      return;
-    }
-
-    if (!accessToken) {
-      setCheckLogin(true);
-      toast.error('Please login to continue');
-      return;
-    }
-
-    if (!currentTableName) {
-      toast.error('Invalid session. Please scan the QR again.');
-      return;
-    }
-
-    if (mode === 'online') {
-      handleOnlinePay(payAmount);
-      return;
-    }
-
-    handleOfflinePay(payAmount);
-  };
-
-  const handleNewPayment = () => {
-    setSuccess(null);
-    setAmount('');
-
-    if (tableNameFromUrl) {
-      setTableName(tableNameFromUrl);
-      setTableNameTimeStamp(Date.now());
-    }
-  };
-
-  const numericAmount = Number(amount) || 0;
-
-  if (!isReady || waitingForAutoLogin) {
+  if (waitingForAutoLogin) {
     return <LoadingSpinnerCircle />;
   }
 
@@ -525,7 +692,15 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     return (
       <main className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-[#F5EBDD] font-sans text-[#1F2937]">
         <section className="relative flex flex-col items-center justify-start">
-          <div className="hipal_loader" style={{ position: 'relative', left: 'auto', top: 'auto', transform: 'none' }}>
+          <div
+            className="hipal_loader"
+            style={{
+              position: 'relative',
+              left: 'auto',
+              top: 'auto',
+              transform: 'none',
+            }}
+          >
             <Image
               width={210}
               height={210}
@@ -549,7 +724,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   return (
     <main className="relative flex h-screen flex-col items-center bg-[#F5EBDD] font-sans">
-
       <header className="flex w-full flex-col items-center gap-3 px-6 pb-8 pt-12">
         {business?.logoUrl ? (
           <img
