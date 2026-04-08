@@ -69,7 +69,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     }
     loadRazorpayScript();
     setIsReady(true);
-  }, [data, setBusinessData, setBusinessDetails, tableNameFromUrl, setTableName, setTableNameTimeStamp, loadRazorpayScript]);
+  }, [data, setBusinessData, setBusinessDetails, tableNameFromUrl, setTableName, setTableNameTimeStamp]);
 
   // Reset stale success state when the user revisits via WhatsApp CTA link
   useEffect(() => {
