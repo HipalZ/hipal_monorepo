@@ -24,6 +24,42 @@ declare global {
   }
 }
 
+// Detect any in-app browser (WhatsApp, Instagram, Facebook, etc.)
+function isInAppBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /WhatsApp|FBAN|FBAV|Instagram|Line|Snapchat|Twitter|MicroMessenger/i.test(ua);
+}
+
+// Open the current URL in the device's default external browser.
+// Uses multiple strategies — Android intent with fallback to any browser,
+// iOS googlechrome:// scheme, and window.open as last resort.
+function openInExternalBrowser() {
+  if (typeof window === "undefined") return;
+  const url = window.location.href;
+  const urlWithoutScheme = url.replace(/^https?:\/\//, "");
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
+  if (isIOS) {
+    // iOS: try Safari via window.open (WhatsApp WebView on iOS
+    // respects window.open as an external browser open in most cases)
+    window.open(url, "_system") || window.open(url, "_blank");
+    return;
+  }
+
+  // Android: intent URL — tries Chrome first, falls back to any browser
+  // S.browser_fallback_url ensures that if Chrome isn't installed, the
+  // device's default browser opens the URL instead of showing an error.
+  const intentUrl =
+    `intent://${urlWithoutScheme}` +
+    `#Intent;scheme=https;` +
+    `package=com.android.chrome;` +
+    `S.browser_fallback_url=${encodeURIComponent(url)};` +
+    `end`;
+  window.location.href = intentUrl;
+}
+
 const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
   const tableNameFromUrl = searchParams?.get("tableName") || "";
@@ -31,6 +67,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   const [amount, setAmount] = useState("");
   const [isReady, setIsReady] = useState(false);
+  const [redirectingToBrowser, setRedirectingToBrowser] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<SuccessState>(null);
   const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(
@@ -55,6 +92,60 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const business = data?.business;
 
   useMerchantDetails(businessId);
+
+  // ── Auto-redirect: escape WhatsApp / in-app browser ──
+  // In-app WebViews freeze JS during UPI app switch, causing blank screens
+  // and popup overlays. Opening in the real browser fixes all of it.
+  useEffect(() => {
+    if (isInAppBrowser()) {
+      setRedirectingToBrowser(true);
+      openInExternalBrowser();
+    }
+  }, []);
+
+  // Redirect screen — shown briefly while the external browser opens.
+  // Includes a manual "Open in Browser" button as fallback if the
+  // auto-redirect doesn't work on the user's device.
+  if (redirectingToBrowser) {
+    return (
+      <main className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-[#F5EBDD] px-6 font-sans text-[#1F2937]">
+        <div className="flex flex-col items-center gap-5 text-center">
+          {business?.logoUrl ? (
+            <img
+              src={business.logoUrl}
+              alt={business?.name || ""}
+              className="h-20 w-20 rounded-full border border-[#E7DDD2] object-cover shadow-sm"
+            />
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EDE3D7] text-xl font-semibold text-[#1F2937] shadow-sm">
+              {business?.name?.[0] || "P"}
+            </div>
+          )}
+
+          <div>
+            <p className="text-xl font-semibold text-[#1F2937]">
+              {business?.name || "Payment"}
+            </p>
+            <p className="mt-2 text-sm text-[#6B7280]">
+              Opening in your browser for a secure payment experience...
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => openInExternalBrowser()}
+            className="mt-4 w-full max-w-xs rounded-full bg-[#111827] py-4 text-sm font-medium uppercase tracking-[0.16em] text-white transition hover:opacity-90 active:scale-[0.98]"
+          >
+            Open in Browser
+          </button>
+
+          <p className="mt-2 text-xs text-[#9CA3AF]">
+            Tap the button above if your browser didn&apos;t open automatically
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   // ── Pending payment tracker ──
   // Stored in a ref so it survives WebView freeze/unfreeze without re-render.
@@ -91,17 +182,31 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     const onVisible = async () => {
       if (document.visibilityState !== "visible") return;
 
+      // FIRST: kill any popup overlay immediately.
+      // BottomPopUp sets window.location.hash = "#popup" and renders a
+      // full-screen grey overlay (z-110, backdrop-blur). Razorpay / UPI
+      // redirects can dirty the hash, and the global 401 handler in
+      // helper.ts can re-trigger setCheckLogin(true). Force everything
+      // closed before we do anything else.
+      setCheckLogin(false);
+      if (window.location.hash === "#popup") {
+        history.replaceState(
+          "",
+          document.title,
+          window.location.pathname + window.location.search,
+        );
+      }
+
       // Scenario A: returning from UPI with a pending payment
       const pending = pendingPaymentRef.current;
       if (pending) {
-        // Give Razorpay handler 1.5s to fire on its own (it works in
-        // regular browsers; only fails in frozen WebViews)
+        // Give Razorpay handler 1.5s to fire on its own
         await new Promise((r) => setTimeout(r, 1500));
 
         // If Razorpay handler already handled it, ref will be null
         if (!pendingPaymentRef.current) return;
 
-        // Razorpay handler didn't fire — validate manually
+        // Razorpay handler didn't fire (WebView froze it) — validate
         pendingPaymentRef.current = null;
         setLoading(true);
         try {
@@ -142,7 +247,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [success, merchantDetails?.razorpayMerchantId, userDetails?._id, businessId]);
+  }, [success, merchantDetails?.razorpayMerchantId, userDetails?._id, businessId, setCheckLogin]);
 
   // ── Effect 3: Auth — wait for Zustand hydration before checking token ──
   // On page load, getState().accessToken is "" until persist middleware
@@ -286,10 +391,18 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         return;
       }
 
-      // Force-close any login popup BEFORE opening Razorpay.
-      // BottomPopUp sets window.location.hash = "#popup" and listens for
-      // hashchange — UPI redirect changes the hash, re-triggering the popup.
+      // Force-close any popup overlay and clean its hash BEFORE opening
+      // Razorpay. BottomPopUp sets window.location.hash = "#popup" — if
+      // that hash survives into the UPI redirect, the hashchange listener
+      // can re-trigger the overlay when the user returns.
       setCheckLogin(false);
+      if (window.location.hash === "#popup") {
+        history.replaceState(
+          "",
+          document.title,
+          window.location.pathname + window.location.search,
+        );
+      }
 
       const options = {
         key: merchantDetails.razorpayKeyId,
