@@ -47,49 +47,78 @@ async function whatsAppUserAndTextMessage(
     phone: userPhone,
   });
 
-  const isAlreadySubscribed = await Subscriber.findOne({
-    userId: isAlreadyRegisteredUser?._id.toString(),
-    businessId: whatsAppBusinessConfigData?.businessId,
-  });
+  const isNewUser = !isAlreadyRegisteredUser;
+  console.log(
+    `[WA-Webhook] Phone: ${userPhone} | Name: ${userName} | Existing user: ${!isNewUser}${
+      isAlreadyRegisteredUser ? ` | userId: ${isAlreadyRegisteredUser._id}` : ""
+    }`,
+  );
 
-  if (!isAlreadySubscribed) {
-    await Subscriber.findOneAndUpdate(
-      {
-        userId: isAlreadyRegisteredUser?._id.toString(),
-        businessId: whatsAppBusinessConfigData?.businessId,
-      },
-      {
-        date: Date.now(),
-        userCount: 0,
-        whatsappMsgUnseenCount: 0,
-      },
-      { upsert: true, new: true },
-    );
-  }
-
-  if (!isAlreadyRegisteredUser) {
+  // Create user FIRST so we have a valid userId for Subscriber and UserAnalytic
+  if (isNewUser) {
     isAlreadyRegisteredUser = await User.create({
       phone: userPhone,
       name: userName,
       role: ["HIPAL_CUSTOMER", "OWNER", "MANAGER", "CAPTAIN", "CO_OWNER"],
     });
+    console.log(
+      `[WA-Webhook] NEW USER CREATED | userId: ${isAlreadyRegisteredUser._id} | phone: ${userPhone} | name: ${userName}`,
+    );
+  }
+
+  const isAlreadySubscribed = await Subscriber.findOne({
+    userId: isAlreadyRegisteredUser._id.toString(),
+    businessId: whatsAppBusinessConfigData?.businessId,
+  });
+
+  if (!isAlreadySubscribed) {
+    const subscriber = await Subscriber.findOneAndUpdate(
+      {
+        userId: isAlreadyRegisteredUser._id.toString(),
+        businessId: whatsAppBusinessConfigData?.businessId,
+      },
+      {
+        date: Date.now(),
+        phone: userPhone,
+        name: userName,
+        userCount: 0,
+        whatsappMsgUnseenCount: 0,
+      },
+      { upsert: true, new: true },
+    );
+    console.log(
+      `[WA-Webhook] NEW SUBSCRIBER CREATED | subscriberId: ${subscriber?._id} | userId: ${isAlreadyRegisteredUser._id} | businessId: ${whatsAppBusinessConfigData?.businessId}`,
+    );
+  } else {
+    console.log(
+      `[WA-Webhook] Existing subscriber found | subscriberId: ${isAlreadySubscribed._id} | userId: ${isAlreadyRegisteredUser._id}`,
+    );
   }
 
   const userAnalytics = await UserAnalytic.findOne({
-    userId: isAlreadyRegisteredUser?._id.toString(),
+    userId: isAlreadyRegisteredUser._id.toString(),
     businessId: whatsAppBusinessConfigData?.businessId,
   });
 
   if (!userAnalytics) {
-    await UserAnalytic.create({
-      userId: isAlreadyRegisteredUser?._id.toString(),
+    const analytics = await UserAnalytic.create({
+      userId: isAlreadyRegisteredUser._id.toString(),
       businessId: whatsAppBusinessConfigData?.businessId,
       visitCount: 1,
       totalSpend: 0,
       avgSpend: 0,
       dateOfJoining: Date.now(),
     });
+    console.log(
+      `[WA-Webhook] NEW USER ANALYTICS CREATED | analyticsId: ${analytics._id} | userId: ${isAlreadyRegisteredUser._id}`,
+    );
   }
+
+  console.log(
+    `[WA-Webhook] SUMMARY | ${isNewUser ? "NEW" : "EXISTING"} user | userId: ${
+      isAlreadyRegisteredUser._id
+    } | phone: ${userPhone} | message: ${userInput || "(media/no text)"}`,
+  );
 
   return {
     userData: isAlreadyRegisteredUser,
