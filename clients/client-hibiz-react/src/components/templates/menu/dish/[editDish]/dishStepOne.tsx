@@ -319,7 +319,7 @@ const MemoDishForm = () => {
         )}
         <section className="mx-6 my-4 flex flex-col md:flex-row lg:mx-16 lg:mt-6">
           <article className="flex flex-1 justify-between rounded-full bg-white px-4 py-3">
-            <h1 className="font-semibold opacity-50">Hide Dish</h1>
+            <h1 className="font-semibold opacity-50">Dish visibility</h1>
             <Switch
               checked={visibility}
               onChange={handleVisibility}
