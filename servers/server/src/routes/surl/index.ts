@@ -52,7 +52,9 @@ const surlRouter = new Hono()
             tableLink: result.shortUrl,
           });
 
-          const message = `Hi! I’m interested. Could you share more details-${tableInfo?.name}`;
+          const message = tableInfo?.name
+            ? `Hi! I’m interested. Could you share more details-${tableInfo.name}`
+            : `Hi! I’m interested. Could you share more details`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;

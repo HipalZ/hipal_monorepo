@@ -45,7 +45,7 @@ async function whatsAppUserAndTextMessage(
   const isNewUser = !isAlreadyRegisteredUser;
   console.log(
     `[WA-Webhook] Phone: ${userPhone} | Name: ${userName} | Existing user: ${!isNewUser}${
-      isAlreadyRegisteredUser ? ` | userId: ${isAlreadyRegisteredUser._id}` : ""
+      isAlreadyRegisteredUser ? ` | userId: ${isAlreadyRegisteredUser._id}` : ''
     }`,
   );
 
@@ -56,9 +56,7 @@ async function whatsAppUserAndTextMessage(
       name: userName,
       role: ['HIPAL_CUSTOMER', 'OWNER', 'MANAGER', 'CAPTAIN', 'CO_OWNER'],
     });
-    console.log(
-      `[WA-Webhook] NEW USER CREATED | userId: ${isAlreadyRegisteredUser._id} | phone: ${userPhone} | name: ${userName}`,
-    );
+    console.log(`[WA-Webhook] NEW USER CREATED | userId: ${isAlreadyRegisteredUser._id} | phone: ${userPhone} | name: ${userName}`);
   }
 
   const isAlreadySubscribed = await Subscriber.findOne({
@@ -85,9 +83,7 @@ async function whatsAppUserAndTextMessage(
       `[WA-Webhook] NEW SUBSCRIBER CREATED | subscriberId: ${subscriber?._id} | userId: ${isAlreadyRegisteredUser._id} | businessId: ${whatsAppBusinessConfigData?.businessId}`,
     );
   } else {
-    console.log(
-      `[WA-Webhook] Existing subscriber found | subscriberId: ${isAlreadySubscribed._id} | userId: ${isAlreadyRegisteredUser._id}`,
-    );
+    console.log(`[WA-Webhook] Existing subscriber found | subscriberId: ${isAlreadySubscribed._id} | userId: ${isAlreadyRegisteredUser._id}`);
   }
 
   const userAnalytics = await UserAnalytic.findOne({
@@ -104,15 +100,13 @@ async function whatsAppUserAndTextMessage(
       avgSpend: 0,
       dateOfJoining: Date.now(),
     });
-    console.log(
-      `[WA-Webhook] NEW USER ANALYTICS CREATED | analyticsId: ${analytics._id} | userId: ${isAlreadyRegisteredUser._id}`,
-    );
+    console.log(`[WA-Webhook] NEW USER ANALYTICS CREATED | analyticsId: ${analytics._id} | userId: ${isAlreadyRegisteredUser._id}`);
   }
 
   console.log(
-    `[WA-Webhook] SUMMARY | ${isNewUser ? "NEW" : "EXISTING"} user | userId: ${
+    `[WA-Webhook] SUMMARY | ${isNewUser ? 'NEW' : 'EXISTING'} user | userId: ${
       isAlreadyRegisteredUser._id
-    } | phone: ${userPhone} | message: ${userInput || "(media/no text)"}`,
+    } | phone: ${userPhone} | message: ${userInput || '(media/no text)'}`,
   );
 
   return {
@@ -125,7 +119,7 @@ function identifyQrTypeFromMessage(userInput: string): QrParseResult | null {
   if (!userInput) return null;
 
   const patterns: Array<{ qrType: QrType; re: RegExp }> = [
-    { qrType: 'TABLE_QR', re: /\bdetails\s*-\s*([\w\W]+)/i },
+    { qrType: 'TABLE_QR', re: /\bdetails(?:\s*-\s*([\w\W]+))?$/i },
     { qrType: 'CHECK_IN_QR', re: /\bQR\s*-\s*([\w\W]+)/i },
     { qrType: 'COUPON_QR', re: /\blink\s*-\s*([\w\W]+)/i },
     { qrType: 'ROOM_QR', re: /\broom\s*-\s*([\w\W]+)/i },
@@ -134,9 +128,13 @@ function identifyQrTypeFromMessage(userInput: string): QrParseResult | null {
   for (const { qrType, re } of patterns) {
     const m = userInput.match(re);
     if (m) {
+      const raw = m[1]?.trim() || '';
+      // Treat "undefined" as empty — this happens when the QR scan
+      // redirect had no table name (tableInfo was null in /surl/)
+      const value = raw === 'undefined' ? '' : raw;
       return {
         qrType,
-        value: m[1].trim(), // ✅ allows any characters, trims spaces
+        value,
         match: m[0],
       };
     }
