@@ -15,11 +15,13 @@ async function sendWhatsAppTemplateForTableQr(
     const defaultUrlText = "Explore Us";
 
     let messageText = whatsAppBusinessConfigData?.tableQrCustomMessage || defaultMessage;
-    // Replace placeholders in message
+    // Replace all placeholders — use empty string for missing values
     messageText = messageText.replace(/{{business_name}}/g, whatsAppBusinessConfigData?.businessName || "");
-    if (tableName) {
-      messageText = messageText.replace(/{{table_name}}/g, tableName);
-    }
+    messageText = messageText.replace(/{{table_name}}/g, tableName || "");
+    messageText = messageText.replace(/{{tableName}}/g, tableName || "");
+    messageText = messageText.replace(/{{userId}}/g, userId || "");
+    messageText = messageText.replace(/{{userPhone}}/g, userPhone || "");
+    messageText = messageText.replace(/{{payLink}}/g, tableQrShortUrl || "");
 
     const urlText = whatsAppBusinessConfigData?.tableQrCustomUrlText || defaultUrlText;
     let finalUrl = whatsAppBusinessConfigData?.tableQrCustomUrl || tableQrShortUrl;
@@ -29,6 +31,18 @@ async function sendWhatsAppTemplateForTableQr(
       finalUrl = finalUrl.replace(/{{userId}}/g, userId || "");
       finalUrl = finalUrl.replace(/{{tableName}}/g, tableName || "");
       finalUrl = finalUrl.replace(/{{userPhone}}/g, userPhone || "");
+
+      // Clean up empty query params left by missing values
+      // e.g. "?tableName=&id=abc" → "?id=abc"
+      try {
+        const urlObj = new URL(finalUrl);
+        for (const [key, value] of [...urlObj.searchParams.entries()]) {
+          if (!value) urlObj.searchParams.delete(key);
+        }
+        finalUrl = urlObj.toString();
+      } catch {
+        // not a valid URL, use as-is
+      }
     }
 
     await axios({
@@ -69,20 +83,34 @@ async function tableQrHandler(
   whatsAppBusinessConfigData: WhatsAppBusinessConfigType,
 ) {
   try {
-    const tableInfo = await Table.findOne({
-      businessId: whatsAppBusinessConfigData?.businessId,
-      name: tableName,
-    });
-    if (!tableInfo) {
-      return null;
+    let tableQrShortUrl = "";
+
+    if (tableName) {
+      // Table name provided — find the specific table and use its link
+      const tableInfo = await Table.findOne({
+        businessId: whatsAppBusinessConfigData?.businessId,
+        name: tableName,
+      });
+      if (!tableInfo) {
+        return null;
+      }
+      tableQrShortUrl = `${tableInfo?.tableLink}?q=wa&id=${userId}`;
+    } else {
+      // No table name — find ANY table for this business to get the base
+      // explore URL, or use the custom URL without tableName param
+      const anyTable = await Table.findOne({
+        businessId: whatsAppBusinessConfigData?.businessId,
+      });
+      if (anyTable?.tableLink) {
+        tableQrShortUrl = `${anyTable.tableLink}?q=wa&id=${userId}`;
+      }
     }
-    let tableQrShortUrl = tableInfo?.tableLink;
-    tableQrShortUrl = `${tableQrShortUrl}?q=wa&id=${userId}`;
+
     await sendWhatsAppTemplateForTableQr(
       whatsAppBusinessConfigData,
       userPhone,
       tableQrShortUrl,
-      tableName,
+      tableName || undefined,
       userId,
     );
   } catch (error) {

@@ -130,7 +130,7 @@ function identifyQrTypeFromMessage(userInput: string): QrParseResult | null {
   if (!userInput) return null;
 
   const patterns: Array<{ qrType: QrType; re: RegExp }> = [
-    { qrType: "TABLE_QR", re: /\bdetails\s*-\s*([\w\W]+)/i },
+    { qrType: "TABLE_QR", re: /\bdetails(?:\s*-\s*([\w\W]+))?$/i },
     { qrType: "CHECK_IN_QR", re: /\bQR\s*-\s*([\w\W]+)/i },
     { qrType: "COUPON_QR", re: /\blink\s*-\s*([\w\W]+)/i },
     { qrType: "ROOM_QR", re: /\broom\s*-\s*([\w\W]+)/i },
@@ -139,9 +139,13 @@ function identifyQrTypeFromMessage(userInput: string): QrParseResult | null {
   for (const { qrType, re } of patterns) {
     const m = userInput.match(re);
     if (m) {
+      const raw = m[1]?.trim() || "";
+      // Treat "undefined" as empty — this happens when the QR scan
+      // redirect had no table name (tableInfo was null in /surl/)
+      const value = raw === "undefined" ? "" : raw;
       return {
         qrType,
-        value: m[1].trim(), // ✅ allows any characters, trims spaces
+        value,
         match: m[0],
       };
     }
