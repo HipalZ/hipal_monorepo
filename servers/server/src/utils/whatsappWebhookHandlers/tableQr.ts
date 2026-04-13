@@ -91,19 +91,28 @@ async function tableQrHandler(
         businessId: whatsAppBusinessConfigData?.businessId,
         name: tableName,
       });
-      if (!tableInfo) {
-        return null;
+      if (tableInfo?.tableLink) {
+        tableQrShortUrl = `${tableInfo.tableLink}?q=wa&id=${userId}`;
       }
-      tableQrShortUrl = `${tableInfo?.tableLink}?q=wa&id=${userId}`;
-    } else {
-      // No table name — find ANY table for this business to get the base
-      // explore URL, or use the custom URL without tableName param
+    }
+
+    // If no URL yet (no tableName, or table not found), use any table's
+    // link for this business — just for auto-login redirect, no tableName
+    if (!tableQrShortUrl) {
       const anyTable = await Table.findOne({
         businessId: whatsAppBusinessConfigData?.businessId,
       });
       if (anyTable?.tableLink) {
         tableQrShortUrl = `${anyTable.tableLink}?q=wa&id=${userId}`;
       }
+    }
+
+    // Still no URL — nothing to send
+    if (!tableQrShortUrl) {
+      console.error(
+        `[tableQrHandler] No table found for business ${whatsAppBusinessConfigData?.businessId}`,
+      );
+      return null;
     }
 
     await sendWhatsAppTemplateForTableQr(
