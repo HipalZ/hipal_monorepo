@@ -17,19 +17,19 @@ interface IFooter {
 
 const iconMapping: { [key: string]: JSX.Element } = {
   instagram: (
-    <PiInstagramLogoFill className="my-auto text-3xl text-base-content" />
+    <PiInstagramLogoFill className="my-auto text-4xl text-base-content" />
   ),
-  facebook: <IoLogoFacebook className="my-auto text-3xl text-base-content" />,
-  twitter: <IoLogoTwitter className="my-auto text-3xl text-base-content" />,
-  telegram: <FaTelegram className="my-auto text-3xl text-base-content" />,
-  linkedin: <IoLogoLinkedin className="my-auto text-3xl text-base-content" />,
-  youtube: <IoLogoYoutube className="my-auto text-3xl text-base-content" />,
+  facebook: <IoLogoFacebook className="my-auto text-4xl text-base-content" />,
+  twitter: <IoLogoTwitter className="my-auto text-4xl text-base-content" />,
+  telegram: <FaTelegram className="my-auto text-4xl text-base-content" />,
+  linkedin: <IoLogoLinkedin className="my-auto text-4xl text-base-content" />,
+  youtube: <IoLogoYoutube className="my-auto text-4xl text-base-content" />,
 };
 
 const Footer = (props: IFooter) => {
   const { socialMediaLinks } = props;
   return (
-    <section className="flex justify-center px-2 pb-12 mt-8 space-x-2">
+    <section className="flex justify-center px-2 pb-20 mt-8 gap-4">
       {socialMediaLinks
         ? socialMediaLinks.map(({ _id, icon, link }) => (
             <a

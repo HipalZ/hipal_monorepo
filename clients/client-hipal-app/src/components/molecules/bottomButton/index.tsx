@@ -1,12 +1,10 @@
-"use client";
-
+"use client";;
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { cn } from "@/components/utils/helpers";
 import { LuScanLine } from "react-icons/lu";
 import { MdAccountBalanceWallet, MdMenuBook } from "react-icons/md";
 import { motion } from "framer-motion";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
-import { RiCouponLine } from "react-icons/ri";
 import { useCallback } from "react";
 import { useCart } from "@/components/store/useCart";
 import { useLogin } from "@/components/store/useLogin";
@@ -19,6 +17,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import useTableData from "@/components/store/useTableData";
+import { FiAward } from "react-icons/fi";
 
 const MemoCart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -33,41 +32,75 @@ const MenuItem = ({
   href,
   isSelected,
   onClick,
+  highlight,
 }: {
   icon: any;
   label?: string;
   href?: string;
   isSelected: boolean;
   onClick?: () => void;
+  highlight?: boolean;
 }) => {
   const content = (
     <motion.div
-      className={cn(
-        "relative flex flex-col items-center justify-center z-10 px-2",
-      )}
+      className="relative z-10 flex min-w-0 flex-1 items-center justify-center"
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
       <motion.div
         className={cn(
-          "relative z-10 flex items-center space-x-1 justify-center px-2",
+          "relative z-10 flex h-[2.35rem] min-w-0 max-w-full items-center justify-center gap-1 rounded-full",
+          "px-3 md:px-4"
         )}
         transition={{ type: "spring", stiffness: 800, damping: 50 }}
       >
         {isSelected && (
           <motion.div
-            className="absolute inset-0 w-full h-[3rem] px-4 rounded-full -top-2.5 bg-base-300"
             layoutId="outline"
             transition={{ type: "spring", stiffness: 800, damping: 50 }}
+            className="absolute inset-0 overflow-hidden rounded-full"
+          >
+            <div
+              className="
+                absolute inset-0 rounded-full
+                bg-base-100
+                shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_3px_10px_rgba(0,0,0,0.16)]
+              "
+            />
+          </motion.div>
+        )}
+
+        {highlight && !isSelected && (
+          <div
+            className="
+              absolute inset-0 rounded-full
+              bg-base-100
+              shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_2px_8px_rgba(0,0,0,0.2)]
+            "
           />
         )}
+
         <Icon
-          size={isSelected ? 28 : 24}
+          size={20}
           className={cn(
-            "relative z-10",
-            isSelected ? "text-primary" : "text-base-100",
+            "relative z-10 shrink-0 transition-colors duration-200 sm:size-auto",
+            isSelected
+              ? "text-primary"
+              : highlight
+              ? "text-primary"
+              : "text-base-100"
           )}
         />
-        <span className="relative z-10 mt-1 text-xs text-base-100 text-nowrap">
+
+        <span
+          className={cn(
+            "relative z-10 min-w-0 truncate text-[11px] leading-none transition-colors duration-200 sm:text-xs",
+            isSelected
+              ? "font-medium text-primary"
+              : highlight
+              ? "font-medium text-primary"
+              : "text-base-100"
+          )}
+        >
           {label}
         </span>
       </motion.div>
@@ -75,14 +108,18 @@ const MenuItem = ({
   );
 
   if (href) {
-    return <Link href={href}>{content}</Link>;
+    return (
+      <Link href={href} className="min-w-0 flex-1">
+        {content}
+      </Link>
+    );
   }
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="p-0 bg-transparent border-none"
+      className="min-w-0 flex-1 border-none bg-transparent p-0"
     >
       {content}
     </button>
@@ -92,7 +129,10 @@ const MenuItem = ({
 export default function BottomButton({
   selected,
   showBack,
-}: { selected?: ButtonType; showBack?: boolean }) {
+}: {
+  selected?: ButtonType;
+  showBack?: boolean;
+}) {
   const tableName = useTableData((s) => s.tableName);
   const router = useRouter();
   const setDirection = useLogin((s) => s.setDirection);
@@ -143,7 +183,7 @@ export default function BottomButton({
       setDirection("loyalty");
       router.push(`/${customLink}/loyalty`);
     }
-  }, [accessToken, setDirection, setCheckLogin, customLink]);
+  }, [accessToken, setDirection, setCheckLogin, customLink, router]);
 
   const goBack = () => {
     if (showBack) {
@@ -155,6 +195,7 @@ export default function BottomButton({
   if (subscribeModal || reviewPopup) {
     return null;
   }
+
   const shineVariants = {
     initial: { x: "-100%" },
     animate: { x: "100%" },
@@ -169,29 +210,15 @@ export default function BottomButton({
     <>
       <motion.nav
         className="
-          fixed z-50 bottom-4 w-[calc(100%-2rem)] 
-          left-4 max-w-[30rem] bg-primary shadow-lg
-          transform md:-translate-x-1/2 md:left-1/2
-          overflow-hidden rounded-[1.5rem] py-4
+          fixed bottom-4 left-4 z-50 w-[calc(100%-2rem)]
+          max-w-[30rem] transform overflow-hidden rounded-[1.5rem]
+          bg-primary py-3 px-3 shadow-lg
+          md:left-1/2 md:-translate-x-1/2
         "
         style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        <motion.div
-          className="absolute inset-0 pointer-events-none w-full max-w-[30rem]"
-          variants={shineVariants}
-          initial="initial"
-          animate="animate"
-          transition={{
-            duration: 2,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "backInOut",
-          }}
-          style={{
-            background: "var(--shine-effect)",
-          }}
-        />
-        <div className="flex items-center justify-between">
+        <div className="relative z-10 flex items-center justify-between gap-2">
           {showBack && (
             <MenuItem
               icon={PiArrowBendUpLeftBold}
@@ -200,8 +227,9 @@ export default function BottomButton({
               label="Back"
             />
           )}
+
           <MenuItem
-            icon={RiCouponLine}
+            icon={FiAward}
             label="Rewards"
             isSelected={selectedBtn === "rewards"}
             onClick={handleRedirection}
@@ -215,7 +243,7 @@ export default function BottomButton({
                 onClick={openModal}
                 isSelected={false}
               />
-            ) : null 
+            ) : null
           ) : (
             <MenuItem
               icon={LuScanLine}
@@ -224,6 +252,7 @@ export default function BottomButton({
               isSelected={false}
             />
           )}
+
           {!showBack && (
             <MenuItem
               icon={MdMenuBook}
@@ -232,6 +261,7 @@ export default function BottomButton({
                 tableName ? `tableName=${tableName}` : ""
               }`}
               isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
+              highlight={selectedBtn !== "menu" && selectedBtn !== "catalogue"}
             />
           )}
         </div>

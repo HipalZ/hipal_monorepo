@@ -1,5 +1,4 @@
-"use client";
-
+"use client";;
 import { useActiveClass } from "@/components/store/useActiveClass";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { cn } from "@hi/common";
@@ -14,7 +13,6 @@ import { Splide, SplideSlide } from "@splidejs/react-splide";
 import type { Splide as SplideInstance } from "@splidejs/splide";
 
 import GridDishCard from "@/components/atoms/card/GridDishCard";
-import { getRandomBlurImg } from "@/components/utils/images";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
 import OtherOutletCard from "@/components/atoms/card/otherOutletCard";
 import NoDishesCard from "@/components/atoms/empty/NoDishesCard";
@@ -199,7 +197,8 @@ function MemoSubTypes({
             drag: "free",
             snap: true,
             arrows: false,
-            autoWidth: true,
+            fixedWidth: "5rem",
+            gap: "0.25rem",
           }}
           className="w-full no-scrollbar"
         >
@@ -211,31 +210,34 @@ function MemoSubTypes({
                 <motion.button
                   type="button"
                   onClick={() => handleCategoryClick(cat)}
-                  className="relative flex flex-col items-center px-2 py-2 mx-2"
+                  className="relative flex w-full flex-col items-center py-2"
                   whileTap={{ scale: 0.95 }}
                 >
                   {cat.coverImage ? (
-                    <div className="w-12 h-12 mb-1 overflow-hidden rounded-md">
+                    <div className="h-11 w-11 overflow-hidden rounded-lg">
                       <Image
                         src={cat.coverImage}
                         alt={cat.name}
-                        width={48}
-                        height={48}
-                        className="object-cover w-full h-full"
+                        width={44}
+                        height={44}
+                        className="h-full w-full object-cover"
                       />
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center w-12 h-12 mb-1 rounded-md"
-                      style={{ backgroundColor: secondaryColor }}>
-                      <span className="text-lg font-semibold">
+                    <div
+                      className="flex h-11 w-11 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: secondaryColor }}
+                    >
+                      <span className="text-base font-semibold">
                         {cat.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
 
+                  {/* Fixed-height label area — prevents layout shift */}
                   <span
-                    className="w-full max-w-[6rem] text-sm font-medium leading-4 text-center line-clamp-2"
-                    style={{ color: active ? primaryColor : "#000" }}
+                    className="mt-1 h-[2rem] w-full text-center text-[11px] font-medium leading-[1rem] line-clamp-2"
+                    style={{ color: active ? primaryColor : "#555" }}
                   >
                     {cat.name}
                   </span>
@@ -243,7 +245,7 @@ function MemoSubTypes({
                   {active && (
                     <motion.div
                       layoutId="activeIndicator"
-                      className="absolute bottom-0 w-full h-1 rounded-t-md"
+                      className="absolute inset-x-1 bottom-0 h-[3px] rounded-t-full"
                       style={{ backgroundColor: primaryColor }}
                     />
                   )}
