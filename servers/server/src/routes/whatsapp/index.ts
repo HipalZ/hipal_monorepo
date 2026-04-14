@@ -2000,7 +2000,7 @@ const whatsappRouter = new Hono()
       const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
         businessId,
       }).select(
-        "appId token tableQrCustomMessage tableQrCustomUrlText tableQrCustomUrl -_id",
+        "appId token tableQrCustomMessage tableQrCustomUrlText tableQrCustomUrl tableQrButtonOption -_id",
       );
 
       if (!whatsAppConfig) {
@@ -2080,6 +2080,7 @@ const whatsappRouter = new Hono()
         tableQrCustomMessage: z.string().optional(),
         tableQrCustomUrlText: z.string().optional(),
         tableQrCustomUrl: z.string().optional(),
+        tableQrButtonOption: z.enum(["EXPLORE", "CUSTOM", "NONE"]).optional(),
       }),
     ),
 
@@ -2096,6 +2097,9 @@ const whatsappRouter = new Hono()
       }
       if (requestData.tableQrCustomUrl !== undefined) {
         updateData.tableQrCustomUrl = requestData.tableQrCustomUrl;
+      }
+      if (requestData.tableQrButtonOption !== undefined) {
+        updateData.tableQrButtonOption = requestData.tableQrButtonOption;
       }
 
       if (Object.keys(updateData).length === 0) {
