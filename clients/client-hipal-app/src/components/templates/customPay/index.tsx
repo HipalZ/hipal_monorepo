@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiRpc } from "@hi/common";
@@ -18,11 +18,6 @@ import hipalLoader from "@/assets/hipalLoader.png";
 
 type SuccessState = { mode: "online" | "offline"; amount: number } | null;
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
 
 // Detect any in-app browser (WhatsApp, Instagram, Facebook, etc.)
 function isInAppBrowser(): boolean {
@@ -65,11 +60,19 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const tableNameFromUrl = searchParams?.get("tableName") || "";
   const userIdFromUrl = searchParams?.get("id");
 
+  // Razorpay Payment Link callback — redirects here with ?paymentStatus=success
+  const paymentStatusFromUrl = searchParams?.get("paymentStatus");
+  const amountFromUrl = searchParams?.get("amount");
+
   const [amount, setAmount] = useState("");
   const [isReady, setIsReady] = useState(false);
   const [redirectingToBrowser, setRedirectingToBrowser] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState<SuccessState>(null);
+  const [success, setSuccess] = useState<SuccessState>(
+    paymentStatusFromUrl === "success" && amountFromUrl
+      ? { mode: "online", amount: Number(amountFromUrl) }
+      : null,
+  );
   const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(
     !!userIdFromUrl,
   );
@@ -147,15 +150,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     );
   }
 
-  // ── Pending payment tracker ──
-  // Stored in a ref so it survives WebView freeze/unfreeze without re-render.
-  // When user returns from UPI app, visibilitychange reads this to recover.
-  const pendingPaymentRef = useRef<{
-    orderId: string;
-    payAmount: number;
-    tableName: string;
-  } | null>(null);
-
   // ── Effect 1: Initialise stores + table ──
   useEffect(() => {
     setBusinessData(data);
@@ -168,86 +162,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     }
     setIsReady(true);
   }, [data, setBusinessData, setBusinessDetails, tableNameFromUrl, setTableName, setTableNameTimeStamp]);
-
-  // ── Effect 2: Visibility handler ──
-  // This is the ONLY mechanism that works across regular browsers AND WhatsApp
-  // WebView. It handles two scenarios:
-  //
-  // A) User returns from UPI app → WebView was frozen → Razorpay handler may
-  //    not have fired → we detect pendingPaymentRef and validate with backend.
-  //
-  // B) User re-clicks WhatsApp CTA after a completed payment → stale success
-  //    screen is showing → we reset to fresh form.
-  useEffect(() => {
-    const onVisible = async () => {
-      if (document.visibilityState !== "visible") return;
-
-      // FIRST: kill any popup overlay immediately.
-      // BottomPopUp sets window.location.hash = "#popup" and renders a
-      // full-screen grey overlay (z-110, backdrop-blur). Razorpay / UPI
-      // redirects can dirty the hash, and the global 401 handler in
-      // helper.ts can re-trigger setCheckLogin(true). Force everything
-      // closed before we do anything else.
-      setCheckLogin(false);
-      if (window.location.hash === "#popup") {
-        history.replaceState(
-          "",
-          document.title,
-          window.location.pathname + window.location.search,
-        );
-      }
-
-      // Scenario A: returning from UPI with a pending payment
-      const pending = pendingPaymentRef.current;
-      if (pending) {
-        // Give Razorpay handler 1.5s to fire on its own
-        await new Promise((r) => setTimeout(r, 1500));
-
-        // If Razorpay handler already handled it, ref will be null
-        if (!pendingPaymentRef.current) return;
-
-        // Razorpay handler didn't fire (WebView froze it) — validate
-        pendingPaymentRef.current = null;
-        setLoading(true);
-        try {
-          const res = await apiRpc.payments.validPayment[":merchantId"].$post({
-            param: { merchantId: merchantDetails.razorpayMerchantId },
-            json: { response: { razorpay_order_id: pending.orderId } },
-            query: {
-              userId: userDetails?._id,
-              paidAmount: pending.payAmount.toString(),
-              tableName: pending.tableName,
-              businessId,
-              netCoinz: "0",
-            },
-          });
-          if (res.status === 200) {
-            resetTableData();
-            setSuccess({ mode: "online", amount: pending.payAmount });
-          } else {
-            toast.error(
-              "Payment status unclear. Please check with the staff.",
-            );
-          }
-        } catch {
-          toast.error("Could not verify payment. Please check with the staff.");
-        } finally {
-          setLoading(false);
-        }
-        return;
-      }
-
-      // Scenario B: stale success — user revisited via WhatsApp CTA
-      if (success) {
-        setSuccess(null);
-        setLoading(false);
-        setAmount("");
-      }
-    };
-
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [success, merchantDetails?.razorpayMerchantId, userDetails?._id, businessId, setCheckLogin]);
 
   // ── Effect 3: Auth — wait for Zustand hydration before checking token ──
   // On page load, getState().accessToken is "" until persist middleware
@@ -310,175 +224,15 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     };
   }, [userIdFromUrl, setCheckLogin]);
 
-  // ── Razorpay script loader — on-demand only ──
-  const loadRazorpayScript = useCallback((): Promise<boolean> => {
-    if (typeof window === "undefined") return Promise.resolve(false);
-    if (window.Razorpay) return Promise.resolve(true);
-
-    return new Promise((resolve) => {
-      let loaded = false;
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      document.body.appendChild(script);
-
-      const timeout = setTimeout(() => {
-        if (!loaded) {
-          toast.error("Facing Internet Issue! Please try again.");
-          document.body.removeChild(script);
-          resolve(false);
-        }
-      }, 5000);
-
-      script.onload = () => {
-        loaded = true;
-        clearTimeout(timeout);
-        resolve(true);
-      };
-      script.onerror = () => {
-        clearTimeout(timeout);
-        toast.error("Failed to load Razorpay. Please try again later.");
-        resolve(false);
-      };
-    });
-  }, []);
-
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAmount(e.target.value);
   };
 
-  // ── Payment validation ──
-  const validatePayment = async (
-    response: any,
-    payAmount: number,
-    currentTableName: string,
-  ) => {
-    try {
-      const res = await apiRpc.payments.validPayment[":merchantId"].$post({
-        param: { merchantId: merchantDetails.razorpayMerchantId },
-        json: { response },
-        query: {
-          userId: userDetails?._id,
-          paidAmount: payAmount.toString(),
-          tableName: currentTableName,
-          businessId,
-          netCoinz: "0",
-        },
-      });
-
-      if (res.status === 200) {
-        resetTableData();
-        setSuccess({ mode: "online", amount: payAmount });
-        return true;
-      }
-
-      toast.error("Payment verification failed.");
-      return false;
-    } catch (error) {
-      console.error("Validate payment error:", error);
-      toast.error("Payment verification failed.");
-      return false;
-    }
-  };
-
-  // ── Razorpay checkout ──
-  const openRazorpayCheckout = useCallback(
-    async (orderId: string, payAmount: number, currentTableName: string) => {
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded || !window.Razorpay) {
-        toast.error("Failed to load payment gateway.");
-        setLoading(false);
-        return;
-      }
-
-      // Force-close any popup overlay and clean its hash BEFORE opening
-      // Razorpay. BottomPopUp sets window.location.hash = "#popup" — if
-      // that hash survives into the UPI redirect, the hashchange listener
-      // can re-trigger the overlay when the user returns.
-      setCheckLogin(false);
-      if (window.location.hash === "#popup") {
-        history.replaceState(
-          "",
-          document.title,
-          window.location.pathname + window.location.search,
-        );
-      }
-
-      const options = {
-        key: merchantDetails.razorpayKeyId,
-        amount: payAmount,
-        order_id: orderId,
-        currency: "INR",
-        name: business?.name || "",
-        description: "Payment",
-        image: business?.logoUrl || "",
-        handler: (response: any) => {
-          // Razorpay handler fired — clear pending so visibilitychange skips
-          pendingPaymentRef.current = null;
-          setLoading(true);
-          validatePayment(response, payAmount, currentTableName).finally(() => {
-            setLoading(false);
-          });
-        },
-        prefill: {
-          name: userDetails?.name || "",
-          email: userDetails?.email || "",
-          contact: userDetails?.phone || "",
-        },
-        modal: {
-          subscription_card_change: true,
-          remember_customer: true,
-          escape: false,
-          backdropclose: false,
-          handleback: false,
-          ondismiss: () => {
-            pendingPaymentRef.current = null;
-            setLoading(false);
-            toast.error("Payment cancelled");
-          },
-        },
-        notes: {
-          businessId,
-          total: payAmount,
-          billValue: payAmount,
-          tableName: currentTableName,
-        },
-        theme: {
-          color: "#111827",
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-
-      // Set pending BEFORE opening — visibilitychange will use this to
-      // recover if the Razorpay handler doesn't fire (WebView freeze)
-      pendingPaymentRef.current = {
-        orderId,
-        payAmount,
-        tableName: currentTableName,
-      };
-
-      razorpay.on("payment.failed", () => {
-        pendingPaymentRef.current = null;
-        setLoading(false);
-        toast.error("Payment failed");
-      });
-
-      razorpay.open();
-    },
-    [
-      loadRazorpayScript,
-      merchantDetails.razorpayKeyId,
-      business?.name,
-      business?.logoUrl,
-      userDetails?.name,
-      userDetails?.email,
-      userDetails?.phone,
-      businessId,
-      setCheckLogin,
-    ],
-  );
-
+  // ── Online payment via Razorpay Payment Link (hosted page) ──
+  // Creates a payment link on Razorpay's servers and redirects the user
+  // to Razorpay's hosted payment page. This works in ANY browser/WebView
+  // because the payment happens on Razorpay's domain, not ours.
+  // After payment, Razorpay redirects to our callback URL with the result.
   const handleOnlinePay = async (payAmount: number) => {
     try {
       if (loading) {
@@ -489,40 +243,48 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       setLoading(true);
 
       const currentTableName = useTableData.getState().tableName;
+      const customLink = window.location.pathname.split("/")[1] || "";
 
-      const res = await apiRpc.payments.createOrder[":merchantId"].$post({
+      // Build callback URL — Razorpay redirects here after payment
+      const callbackUrl = `${window.location.origin}/${customLink}/custompayment?paymentStatus=success&amount=${payAmount}&tableName=${currentTableName || ""}`;
+
+      const res = await apiRpc.payments.createPaymentLink[":merchantId"].$post({
         param: { merchantId: merchantDetails.razorpayMerchantId },
         json: {
           businessId,
           total: payAmount,
           currency: "INR",
-          claimedCoins: 0,
-          billValue: payAmount,
           userId: userDetails?._id,
-          tips: 0,
           tableName: currentTableName,
-          cashbackAvailable: false,
+          callbackUrl,
+          customerName: userDetails?.name || "",
+          customerPhone: userDetails?.phone || "",
+          customerEmail: userDetails?.email || "",
+          description: `Payment to ${business?.name || "merchant"}`,
         },
       });
 
       if (!res.ok) {
         const errBody = await res.json().catch(() => null);
-        toast.error(errBody?.message || "Failed to create order.");
+        toast.error(errBody?.message || "Failed to create payment link.");
         setLoading(false);
         return;
       }
 
-      const orderRes = (await res.json()) as { data: { order_id: string } };
-      const orderId = orderRes?.data?.order_id;
+      const linkRes = (await res.json()) as {
+        data: { short_url: string; payment_link_id: string };
+      };
+      const shortUrl = linkRes?.data?.short_url;
 
-      if (!orderId) {
-        toast.error("Order creation failed.");
+      if (!shortUrl) {
+        toast.error("Payment link creation failed.");
         setLoading(false);
         return;
       }
 
-      setLoading(false);
-      await openRazorpayCheckout(orderId, payAmount, currentTableName);
+      // Redirect to Razorpay's hosted payment page
+      // This works in WhatsApp WebView — no JS checkout needed
+      window.location.href = shortUrl;
     } catch (error) {
       console.error("Online payment error:", error);
       toast.error("Something went wrong. Please try again.");

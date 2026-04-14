@@ -994,6 +994,116 @@ const paymentsRouter = new Hono()
     },
   )
 
+  // ── Razorpay Payment Link (hosted page — works in WhatsApp WebView) ──
+  .post(
+    "/createPaymentLink/:merchantId",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
+    zValidator("param", z.object({ merchantId: z.string() })),
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string(),
+        total: z.number(),
+        currency: z.string().default("INR"),
+        userId: z.string().optional(),
+        tableName: z.string().optional(),
+        callbackUrl: z.string(),
+        customerName: z.string().optional(),
+        customerPhone: z.string().optional(),
+        customerEmail: z.string().optional(),
+        description: z.string().optional(),
+      }),
+    ),
+
+    async (c) => {
+      try {
+        const { merchantId } = c.req.param();
+        const requestData = await c.req.json();
+        const {
+          businessId,
+          total,
+          currency,
+          userId,
+          tableName,
+          callbackUrl,
+          customerName,
+          customerPhone,
+          customerEmail,
+          description,
+        } = requestData;
+
+        const merchant = await BusinessSettings.findOne({ businessId })
+          .select("razorpayMerchantId razorpayKeyId")
+          .lean();
+
+        if (!merchant) {
+          return respond(c, "Merchant not found", true, 404, {});
+        }
+
+        const client = await razorpayWrapper.getClient(merchantId);
+        const uniqueReceiptId = nanoid(15);
+
+        const paymentLink = await client.paymentLink.create({
+          amount: Math.round(total * 100),
+          currency,
+          description: description || `Payment to ${businessId}`,
+          receipt: uniqueReceiptId,
+          customer: {
+            ...(customerName && { name: customerName }),
+            ...(customerPhone && { contact: `+91${customerPhone}` }),
+            ...(customerEmail && { email: customerEmail }),
+          },
+          callback_url: callbackUrl,
+          callback_method: "get",
+          expire_by: Math.floor(Date.now() / 1000) + 900, // 15 min
+          notes: {
+            businessId,
+            tableName: tableName || "",
+            userId: userId || "",
+            total,
+            receipt: uniqueReceiptId,
+          },
+        });
+
+        // Save order record so validPayment webhook can find it
+        await Order.create({
+          total,
+          currency,
+          billValue: total,
+          businessId,
+          receipt: uniqueReceiptId,
+          userId,
+          claimedCoins: 0,
+          tableName: tableName || "",
+          order_id: paymentLink.id,
+          tips: 0,
+          cashbackAvailable: false,
+          date: Date.now(),
+        });
+
+        return respond(c, "Payment link created", false, 200, {
+          payment_link_id: paymentLink.id,
+          short_url: paymentLink.short_url,
+          receipt: uniqueReceiptId,
+        });
+      } catch (error: any) {
+        console.error("Error creating payment link:", error);
+        return respond(
+          c,
+          error?.message || "Failed to create payment link",
+          true,
+          400,
+          {},
+        );
+      }
+    },
+  )
+
   .post(
     "/reviews",
     authTokenValidator,
