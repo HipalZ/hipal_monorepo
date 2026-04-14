@@ -1021,53 +1021,62 @@ const paymentsRouter = new Hono()
     ),
 
     async (c) => {
+      const { merchantId } = c.req.param();
+      const requestData = await c.req.json();
+      const {
+        businessId,
+        total,
+        currency,
+        userId,
+        tableName,
+        callbackUrl,
+        customerName,
+        customerPhone,
+        customerEmail,
+        description,
+      } = requestData;
+
+      if (!total || total <= 0) {
+        return respond(c, "Invalid amount", true, 400, {});
+      }
+
+      const merchant = await BusinessSettings.findOne({ businessId })
+        .select("razorpayMerchantId razorpayKeyId businessId")
+        .lean();
+
+      if (!merchant) {
+        return respond(c, "Merchant not found", true, 404, {});
+      }
+
       try {
-        const { merchantId } = c.req.param();
-        const requestData = await c.req.json();
-        const {
-          businessId,
-          total,
-          currency,
-          userId,
-          tableName,
-          callbackUrl,
-          customerName,
-          customerPhone,
-          customerEmail,
-          description,
-        } = requestData;
-
-        const merchant = await BusinessSettings.findOne({ businessId })
-          .select("razorpayMerchantId razorpayKeyId")
-          .lean();
-
-        if (!merchant) {
-          return respond(c, "Merchant not found", true, 404, {});
-        }
-
         const client = await razorpayWrapper.getClient(merchantId);
         const uniqueReceiptId = nanoid(15);
 
-        // Build customer object — all 3 fields required by Razorpay
-        const customer: { name: string; contact: string; email: string } = {
-          name: customerName || "Customer",
-          contact: customerPhone
-            ? customerPhone.startsWith("+")
-              ? customerPhone
-              : `+91${customerPhone}`
-            : "+910000000000",
-          email: customerEmail || `${userId || "user"}@hipalz.com`,
-        };
+        // Format phone: Razorpay requires E.164 format (+91XXXXXXXXXX)
+        let formattedPhone = "";
+        if (customerPhone) {
+          const digits = customerPhone.replace(/\D/g, "");
+          formattedPhone =
+            digits.length === 10
+              ? `+91${digits}`
+              : digits.length === 12 && digits.startsWith("91")
+                ? `+${digits}`
+                : `+91${digits.slice(-10)}`;
+        }
 
-        const paymentLinkPayload: Record<string, any> = {
+        const paymentLink = await client.paymentLink.create({
           amount: Math.round(total * 100),
           currency,
-          description: description || `Payment to ${businessId}`,
+          description: description || `Payment - ${businessId}`,
           reference_id: uniqueReceiptId,
-          customer,
+          customer: {
+            name: customerName || "Customer",
+            contact: formattedPhone || "+910000000000",
+            email: customerEmail || undefined,
+          },
+          notify: { sms: false, email: false },
           callback_url: callbackUrl,
           callback_method: "get",
-          expire_by: Math.floor(Date.now() / 1000) + 900, // 15 min
           notes: {
             businessId,
             tableName: tableName || "",
@@ -1075,18 +1084,9 @@ const paymentsRouter = new Hono()
             total: String(total),
             receipt: uniqueReceiptId,
           },
-        };
+        });
 
-        console.log(
-          "[PaymentLink] Creating:",
-          JSON.stringify(paymentLinkPayload, null, 2),
-        );
-
-        const paymentLink = await client.paymentLink.create(
-          paymentLinkPayload,
-        );
-
-        // Save order record so validPayment webhook can find it
+        // Save order record (same pattern as createOrder)
         await Order.create({
           total,
           currency,
@@ -1108,18 +1108,11 @@ const paymentsRouter = new Hono()
           receipt: uniqueReceiptId,
         });
       } catch (error: any) {
-        const errDetail =
-          error?.error?.description ||
-          error?.message ||
-          JSON.stringify(error?.error || error);
-        console.error("[PaymentLink] Error:", errDetail, error);
-        return respond(
-          c,
-          `Failed to create payment link: ${errDetail}`,
-          true,
-          400,
-          {},
-        );
+        const razorpayError =
+          error?.error?.description || error?.description || "";
+        const msg = razorpayError || error?.message || "Unknown error";
+        console.error("[PaymentLink] Error:", msg, error?.error || error);
+        return respond(c, msg, true, 400, {});
       }
     },
   )
