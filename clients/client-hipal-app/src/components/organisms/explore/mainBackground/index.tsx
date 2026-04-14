@@ -42,9 +42,6 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
       const timeStamp = Date.now();
       setTableNameTimeStamp(timeStamp);
     }
-    if (pathName.includes("/packaging")) {
-      setTableName("");
-    }
   }, [tableName, pathName, setTableName]);
 
   useEffect(() => {
@@ -71,7 +68,7 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
 
   return (
     <section className="p-2 bg-base-100">
-      <article className="relative w-full max-w-[26rem] mx-auto overflow-hidden aspect-square rounded-[2.5rem]">
+      <article className="relative w-full max-w-[26rem] mx-auto overflow-hidden aspect-square rounded-[2.5rem] shadow-lg">
         <section style={backgroundStyle} className="absolute inset-0 z-10" />
         <div className="absolute top-0 z-0 w-full bg-gradient">
           {isVideo(data.business?.specialBannerUrl || "") ? (
