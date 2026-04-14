@@ -1048,16 +1048,23 @@ const paymentsRouter = new Hono()
         const client = await razorpayWrapper.getClient(merchantId);
         const uniqueReceiptId = nanoid(15);
 
-        const paymentLink = await client.paymentLink.create({
+        // Build customer object — all 3 fields required by Razorpay
+        const customer: { name: string; contact: string; email: string } = {
+          name: customerName || "Customer",
+          contact: customerPhone
+            ? customerPhone.startsWith("+")
+              ? customerPhone
+              : `+91${customerPhone}`
+            : "+910000000000",
+          email: customerEmail || `${userId || "user"}@hipalz.com`,
+        };
+
+        const paymentLinkPayload: Record<string, any> = {
           amount: Math.round(total * 100),
           currency,
           description: description || `Payment to ${businessId}`,
-          receipt: uniqueReceiptId,
-          customer: {
-            ...(customerName && { name: customerName }),
-            ...(customerPhone && { contact: `+91${customerPhone}` }),
-            ...(customerEmail && { email: customerEmail }),
-          },
+          reference_id: uniqueReceiptId,
+          customer,
           callback_url: callbackUrl,
           callback_method: "get",
           expire_by: Math.floor(Date.now() / 1000) + 900, // 15 min
@@ -1065,10 +1072,19 @@ const paymentsRouter = new Hono()
             businessId,
             tableName: tableName || "",
             userId: userId || "",
-            total,
+            total: String(total),
             receipt: uniqueReceiptId,
           },
-        });
+        };
+
+        console.log(
+          "[PaymentLink] Creating:",
+          JSON.stringify(paymentLinkPayload, null, 2),
+        );
+
+        const paymentLink = await client.paymentLink.create(
+          paymentLinkPayload,
+        );
 
         // Save order record so validPayment webhook can find it
         await Order.create({
@@ -1092,10 +1108,14 @@ const paymentsRouter = new Hono()
           receipt: uniqueReceiptId,
         });
       } catch (error: any) {
-        console.error("Error creating payment link:", error);
+        const errDetail =
+          error?.error?.description ||
+          error?.message ||
+          JSON.stringify(error?.error || error);
+        console.error("[PaymentLink] Error:", errDetail, error);
         return respond(
           c,
-          error?.message || "Failed to create payment link",
+          `Failed to create payment link: ${errDetail}`,
           true,
           400,
           {},
