@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiRpc } from "@hi/common";
@@ -32,6 +32,8 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const [amount, setAmount] = useState("");
   const [isReady, setIsReady] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Flag to block auth from showing login popup during payment redirect
+  const paymentRedirectingRef = useRef(false);
   const [success, setSuccess] = useState<SuccessState>(
     paymentStatusFromUrl === "success" && amountFromUrl
       ? { mode: "online", amount: Number(amountFromUrl) }
@@ -159,7 +161,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     let fallbackTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const checkAuth = () => {
-      if (cancelled) return;
+      if (cancelled || paymentRedirectingRef.current) return;
       const accessToken = useUserToken.getState().accessToken;
 
       if (accessToken) {
@@ -168,7 +170,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       }
 
       if (!userIdFromUrl) {
-        setCheckLogin(true);
+        if (!paymentRedirectingRef.current) setCheckLogin(true);
         setWaitingForAutoLogin(false);
         return;
       }
@@ -183,7 +185,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
       fallbackTimeout = setTimeout(() => {
         if (pollInterval) clearInterval(pollInterval);
-        if (!useUserToken.getState().accessToken) {
+        if (!useUserToken.getState().accessToken && !paymentRedirectingRef.current) {
           setWaitingForAutoLogin(false);
           setCheckLogin(true);
         }
@@ -268,10 +270,14 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         return;
       }
 
-      // Kill ALL popups before redirecting — BottomPopUp's hashchange
-      // listener and the global 401 handler can trigger the login overlay
-      // during navigation, causing the blank screen the user sees.
+      // Block auth from showing login popup during/after redirect.
+      // WhatsApp shows a "Leaving WhatsApp" dialog that keeps our page
+      // alive — during that time, React effects can still fire and
+      // trigger setCheckLogin(true). This ref prevents that.
+      paymentRedirectingRef.current = true;
       setCheckLogin(false);
+
+      // Clean hash to prevent BottomPopUp hashchange listener
       if (window.location.hash === "#popup") {
         history.replaceState(
           "",
@@ -280,8 +286,17 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         );
       }
 
+      // Keep killing the popup until the page actually navigates away.
+      // WhatsApp's dialog can keep the page alive for seconds.
+      const popupKiller = setInterval(() => {
+        usePaymentStore.getState().setCheckLogin(false);
+      }, 100);
+
       // Redirect to Razorpay's hosted payment page
       window.location.href = shortUrl;
+
+      // Cleanup if redirect somehow doesn't happen (shouldn't, but safety)
+      setTimeout(() => clearInterval(popupKiller), 30000);
     } catch (error) {
       console.error("Online payment error:", error);
       toast.error("Something went wrong. Please try again.");
