@@ -60,14 +60,9 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   useMerchantDetails(businessId);
 
-  // ── Force-close any popup SYNCHRONOUSLY before first paint ──
-  // DynamicCombinedLogin (root layout) renders BottomPopUp when
-  // checkLogin=true, covering the entire screen with a grey overlay.
-  // This can be triggered by: auth hydration race, global 401 handler,
-  // or hash changes during Razorpay redirect. Kill it on every render.
-  if (typeof window !== "undefined") {
-    // Synchronous — runs before React commits to DOM
-    usePaymentStore.getState().setCheckLogin(false);
+  // ── Force-close any popup on mount ──
+  useEffect(() => {
+    setCheckLogin(false);
     if (window.location.hash === "#popup") {
       history.replaceState(
         "",
@@ -75,7 +70,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         window.location.pathname + window.location.search,
       );
     }
-  }
+  }, [setCheckLogin]);
 
   // ── Payment callback: show success immediately, skip everything else ──
   // When Razorpay redirects back with ?paymentStatus=success, we're back
