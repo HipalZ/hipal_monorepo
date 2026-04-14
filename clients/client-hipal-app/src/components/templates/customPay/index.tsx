@@ -19,41 +19,6 @@ import hipalLoader from "@/assets/hipalLoader.png";
 type SuccessState = { mode: "online" | "offline"; amount: number } | null;
 
 
-// Detect any in-app browser (WhatsApp, Instagram, Facebook, etc.)
-function isInAppBrowser(): boolean {
-  if (typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent || "";
-  return /WhatsApp|FBAN|FBAV|Instagram|Line|Snapchat|Twitter|MicroMessenger/i.test(ua);
-}
-
-// Open the current URL in the device's default external browser.
-// Uses multiple strategies — Android intent with fallback to any browser,
-// iOS googlechrome:// scheme, and window.open as last resort.
-function openInExternalBrowser() {
-  if (typeof window === "undefined") return;
-  const url = window.location.href;
-  const urlWithoutScheme = url.replace(/^https?:\/\//, "");
-  const ua = navigator.userAgent || "";
-  const isIOS = /iPhone|iPad|iPod/i.test(ua);
-
-  if (isIOS) {
-    // iOS: try Safari via window.open (WhatsApp WebView on iOS
-    // respects window.open as an external browser open in most cases)
-    window.open(url, "_system") || window.open(url, "_blank");
-    return;
-  }
-
-  // Android: intent URL — tries Chrome first, falls back to any browser
-  // S.browser_fallback_url ensures that if Chrome isn't installed, the
-  // device's default browser opens the URL instead of showing an error.
-  const intentUrl =
-    `intent://${urlWithoutScheme}` +
-    `#Intent;scheme=https;` +
-    `package=com.android.chrome;` +
-    `S.browser_fallback_url=${encodeURIComponent(url)};` +
-    `end`;
-  window.location.href = intentUrl;
-}
 
 const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
@@ -66,7 +31,6 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   const [amount, setAmount] = useState("");
   const [isReady, setIsReady] = useState(false);
-  const [redirectingToBrowser, setRedirectingToBrowser] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<SuccessState>(
     paymentStatusFromUrl === "success" && amountFromUrl
@@ -96,59 +60,86 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
 
   useMerchantDetails(businessId);
 
-  // ── Auto-redirect: escape WhatsApp / in-app browser ──
-  // In-app WebViews freeze JS during UPI app switch, causing blank screens
-  // and popup overlays. Opening in the real browser fixes all of it.
-  useEffect(() => {
-    if (isInAppBrowser()) {
-      setRedirectingToBrowser(true);
-      openInExternalBrowser();
+  // ── Force-close any popup SYNCHRONOUSLY before first paint ──
+  // DynamicCombinedLogin (root layout) renders BottomPopUp when
+  // checkLogin=true, covering the entire screen with a grey overlay.
+  // This can be triggered by: auth hydration race, global 401 handler,
+  // or hash changes during Razorpay redirect. Kill it on every render.
+  if (typeof window !== "undefined") {
+    // Synchronous — runs before React commits to DOM
+    usePaymentStore.getState().setCheckLogin(false);
+    if (window.location.hash === "#popup") {
+      history.replaceState(
+        "",
+        document.title,
+        window.location.pathname + window.location.search,
+      );
     }
-  }, []);
+  }
 
-  // Redirect screen — shown briefly while the external browser opens.
-  // Includes a manual "Open in Browser" button as fallback if the
-  // auto-redirect doesn't work on the user's device.
-  if (redirectingToBrowser) {
+  // ── Payment callback: show success immediately, skip everything else ──
+  // When Razorpay redirects back with ?paymentStatus=success, we're back
+  // inside the WhatsApp WebView. If we let the normal flow run, the auth
+  // hydration race triggers the login popup overlay (blank screen).
+  // Short-circuit: render success screen before any effects execute.
+  if (paymentStatusFromUrl === "success" && amountFromUrl) {
     return (
-      <main className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-[#F5EBDD] px-6 font-sans text-[#1F2937]">
-        <div className="flex flex-col items-center gap-5 text-center">
+      <main className="relative flex min-h-[100dvh] flex-col items-center bg-[#F5EBDD] px-6 pt-12 font-sans text-[#1F2937]">
+        <header className="flex flex-col items-center gap-2 pb-8">
           {business?.logoUrl ? (
             <img
               src={business.logoUrl}
               alt={business?.name || ""}
-              className="h-20 w-20 rounded-full border border-[#E7DDD2] object-cover shadow-sm"
+              className="h-16 w-16 rounded-full border border-[#E7DDD2] object-cover shadow-sm"
             />
           ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EDE3D7] text-xl font-semibold text-[#1F2937] shadow-sm">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EDE3D7] text-lg font-semibold text-[#1F2937] shadow-sm">
               {business?.name?.[0] || "P"}
             </div>
           )}
+          <h1 className="text-lg font-semibold tracking-tight text-[#1F2937]">
+            {business?.name || "Payment"}
+          </h1>
+        </header>
 
-          <div>
-            <p className="text-xl font-semibold text-[#1F2937]">
-              {business?.name || "Payment"}
+        <div className="w-full max-w-sm rounded-[28px] border border-[#E7DDD2] bg-white/60 px-6 py-10 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-5">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#DEF7EC]">
+              <svg
+                className="h-10 w-10 text-[#059669]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <p className="text-4xl font-semibold tracking-tight text-[#2B2118]">
+              &#8377;{Number(amountFromUrl).toFixed(2)}
             </p>
-            <p className="mt-2 text-sm text-[#6B7280]">
-              Opening in your browser for a secure payment experience...
-            </p>
+            <div className="text-center">
+              <p className="text-lg font-semibold text-[#1F2937]">
+                Payment Successful
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
+                {`Paid to ${business?.name || "the merchant"}. Thank you!`}
+              </p>
+            </div>
           </div>
-
-          <button
-            type="button"
-            onClick={() => openInExternalBrowser()}
-            className="mt-4 w-full max-w-xs rounded-full bg-[#111827] py-4 text-sm font-medium uppercase tracking-[0.16em] text-white transition hover:opacity-90 active:scale-[0.98]"
-          >
-            Open in Browser
-          </button>
-
-          <p className="mt-2 text-xs text-[#9CA3AF]">
-            Tap the button above if your browser didn&apos;t open automatically
-          </p>
         </div>
+
+        <p className="mt-auto py-6 text-[10px] tracking-[0.22em] text-[#9CA3AF]">
+          Powered by Hipalz
+        </p>
       </main>
     );
   }
+
 
   // ── Effect 1: Initialise stores + table ──
   useEffect(() => {
@@ -282,8 +273,19 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         return;
       }
 
+      // Kill ALL popups before redirecting — BottomPopUp's hashchange
+      // listener and the global 401 handler can trigger the login overlay
+      // during navigation, causing the blank screen the user sees.
+      setCheckLogin(false);
+      if (window.location.hash === "#popup") {
+        history.replaceState(
+          "",
+          document.title,
+          window.location.pathname + window.location.search,
+        );
+      }
+
       // Redirect to Razorpay's hosted payment page
-      // This works in WhatsApp WebView — no JS checkout needed
       window.location.href = shortUrl;
     } catch (error) {
       console.error("Online payment error:", error);
