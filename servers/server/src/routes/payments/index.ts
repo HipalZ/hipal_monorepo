@@ -1054,6 +1054,7 @@ const paymentsRouter = new Hono()
 
         // Format phone: Razorpay requires E.164 format (+91XXXXXXXXXX)
         let formattedPhone = "";
+        console.log("customerPhone", customerPhone);
         if (customerPhone) {
           const digits = customerPhone.replace(/\D/g, "");
           formattedPhone =
@@ -1077,6 +1078,14 @@ const paymentsRouter = new Hono()
           notify: { sms: false, email: false },
           callback_url: callbackUrl,
           callback_method: "get",
+          options: {
+            checkout: {
+              prefill: {
+                contact: formattedPhone || "",
+                ...(customerEmail && { email: customerEmail }),
+              },
+            },
+          },
           notes: {
             businessId,
             tableName: tableName || "",
@@ -1085,7 +1094,7 @@ const paymentsRouter = new Hono()
             receipt: uniqueReceiptId,
           },
         });
-
+        console.log("paymentLink", paymentLink);
         // Save order record (same pattern as createOrder)
         await Order.create({
           total,
