@@ -1,4 +1,5 @@
 import CommonBottomButton from '@/components/atoms/bottomButton';
+import { useTableData } from '@/components/hooks/useTableData';
 import { useCartStore } from '@/components/store/useCartStore';
 import { Button } from '@/components/ui/button';
 import type { DishType } from '@hi/db-models/src/validators';
@@ -34,7 +35,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   const removeFromCart = useCartStore((s) => s.removeFromCart);
   const setCartPopup = useCartStore((s) => s.setCartPopup);
   const cartPopup = useCartStore((s) => s.cartPopup);
-
+  const { tableName } = useTableData();
   const handleOpenModal = useCallback(() => {
     setOpenBottomPanel(true);
   }, [setOpenBottomPanel]);
@@ -223,8 +224,14 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
               transition={{ duration: 0.2 }}
               className="absolute inset-0"
             >
-              <Button onClick={() => handleClick(dishData)} variant="outline" className="h-full w-full rounded-md">
-                Add
+              <Button
+                onClick={() => {
+                  handleClick(dishData);
+                }}
+                variant="outline"
+                className="h-full w-full rounded-md"
+              >
+                {tableName ? 'Add' : 'View'}
               </Button>
             </motion.div>
           )}

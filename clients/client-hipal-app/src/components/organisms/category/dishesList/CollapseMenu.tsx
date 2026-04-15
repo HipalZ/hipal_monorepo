@@ -6,6 +6,8 @@ import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
 import Image from "next/image";
 import HorizontalTileCard from "@/components/atoms/card/horizontalTileCard";
+import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
+import MemoDishPopup from "@/components/atoms/dishPopup";
 
 interface CollapseMenuProps {
   parentCategories: CategoryType[];
@@ -41,7 +43,7 @@ const CollapseMenu: FC<CollapseMenuProps> = ({
     parentCategories[0]?._id || null,
   );
   const { setDishes } = useDishesStore();
-  const { isActiveDishType, isActiveCategory, setActiveCategory } =
+  const { isActiveDishType, isActiveCategory, isSelectedDish, setSelectedDish, setActiveCategory } =
     useActiveClass();
 
   const activeMainCategory = useMemo(() => {
@@ -54,6 +56,18 @@ const CollapseMenu: FC<CollapseMenuProps> = ({
   const activeCategoryObj = useMemo(() => {
     return parentCategories.find((cat) => cat._id === activeMainCategory);
   }, [activeMainCategory, parentCategories]);
+
+const [isModalOpen, setIsModalOpen] = useState(false);
+
+const openDishDetails = (dish: DishType) => {
+  setSelectedDish(dish);
+  setIsModalOpen(true);
+};
+
+const closeModal = () => {
+  setSelectedDish({} as DishType);
+  setIsModalOpen(false);
+};
 
   useEffect(() => {
     const allDishes = childCategories.reduce((acc: DishType[], category) => {
@@ -70,8 +84,6 @@ const CollapseMenu: FC<CollapseMenuProps> = ({
     cat?.parentCategoryIds.includes(activeMainCategory),
   );
 
-  console.log("activeCategoryObj", activeCategoryObj);
-  
   return (
     <div className="min-h-[calc(100vh-6rem)]">
       {/* Tabs for main categories */}
@@ -247,6 +259,7 @@ const CollapseMenu: FC<CollapseMenuProps> = ({
                         dishData={dish}
                         primaryColor={primaryColor}
                         secondaryColor={secondaryColor}
+                        onReadMore={() => openDishDetails(dish)}
                       />
                     ))}
                   </>
@@ -260,6 +273,11 @@ const CollapseMenu: FC<CollapseMenuProps> = ({
           </center>
         )}
       </div>
+      {isModalOpen && (
+        <ItemDescriptionPopup show={isModalOpen} onClose={closeModal}>
+          <MemoDishPopup dishData={isSelectedDish} />
+        </ItemDescriptionPopup>
+)}
     </div>
   );
 };

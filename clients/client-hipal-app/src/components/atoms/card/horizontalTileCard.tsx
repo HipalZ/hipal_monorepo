@@ -17,12 +17,14 @@ interface HorizontalDishCardProps {
   dishData: DishType;
   primaryColor?: string;
   secondaryColor?: string;
+  onReadMore?: () => void;
 }
 
 const HorizontalTileCard = ({
   dishData,
   primaryColor = "#ec4899",
   secondaryColor = "#fce7f3",
+  onReadMore
 }: HorizontalDishCardProps) => {
   if (!dishData?.availability) return null;
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -93,6 +95,14 @@ const HorizontalTileCard = ({
                 .join(" | ")}
             </p>
           )}
+          <button
+          type="button"
+          onClick={onReadMore}
+          className="mt-1 text-xs underline"
+          style={{ color: primaryColor }}
+        >
+          Read more
+        </button>
         </article>
 
         {/* Dish Image + ADD Button */}
