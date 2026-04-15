@@ -1,4 +1,4 @@
-"use client";
+"use client";;
 import { memo, useState, useCallback, useMemo } from "react";
 import type { DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
@@ -6,15 +6,13 @@ import { useCartStore } from "@/components/store/useCartStore";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import DishPopup from "@/components/atoms/dishPopup";
-import CommonBottomButton from "@/components/atoms/bottomButton";
 import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes";
 import { useCart } from "@/components/store/useCart";
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
-import ShimmerImage from "../imageshimmer";
 import MemoFoodType from "../foodType";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import foodImage from "@/assets/food.png";
 import Image from "next/image";
+import useTableData from "@/components/store/useTableData";
 interface HorizontalDishCardProps {
   dishData: DishType;
   primaryColor?: string;
@@ -33,8 +31,7 @@ const HorizontalCard = ({
   const { setSelectedDish, isSelectedDish } = useActiveClass();
   const { setCartPage, setShowCart } = useCart();
   const outletInfo = useBusinessDetails((state) => state.businessDetails);
-
-  // Check if dish is in cart
+  const { tableName } = useTableData(); 
   const cartItems = cart.filter((item) => item.dish?._id === dishData._id);
   const isDishInCart = cartItems.length > 0;
   const recommendations = isDishInCart ? dishData.recommendationIds || [] : [];
@@ -173,11 +170,13 @@ const HorizontalCard = ({
             )}
           >
             {dishData.availability ? (
-              <DishQuantityButton
-                dishData={dishData}
-                primaryColor={primaryColor}
-                secondaryColor={secondaryColor}
-              />
+              tableName ? (
+                <DishQuantityButton
+                  dishData={dishData}
+                  primaryColor={primaryColor}
+                  secondaryColor={secondaryColor}
+                />
+              ) : null
             ) : (
               <div className="px-3 py-1 mt-2 text-xs text-gray-500 bg-gray-200 rounded-md">
                 Not Available
