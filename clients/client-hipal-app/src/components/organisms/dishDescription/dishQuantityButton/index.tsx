@@ -14,6 +14,7 @@ import MemoAlertVariant from "@/components/atoms/alertVariant";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import { cn } from "@/lib/utils";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useTableData from "@/components/store/useTableData";
 
 function generateCartItemId(dishId, portionId, extras) {
   const sortedExtras = [...extras]
@@ -53,6 +54,7 @@ const MemoDishQuantityButton = ({
     resetSelections,
     updateCartItem,
   } = useCartStore();
+  const { tableName } = useTableData();
   const { setShowCart, setCartPage } = useCart();
   const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
   const handleOpenModal = useCallback(() => {
@@ -305,7 +307,7 @@ const MemoDishQuantityButton = ({
                   border: `1px solid ${primaryColor}20`,
                 }}
               >
-                {outletInfo?.placeOrderButton ? "Add" : "View"}
+                {outletInfo?.placeOrderButton && tableName ? "Add" : "View"}
               </button>
             </motion.div>
           )}
