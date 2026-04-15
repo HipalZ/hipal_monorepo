@@ -28,6 +28,7 @@ export const whatsAppBusinessConfigSchema = z.object({
   tableQrCustomMessage: z.string().optional(),
   tableQrCustomUrlText: z.string().optional(),
   tableQrCustomUrl: z.string().optional(),
+  tableQrMessageType: z.enum(["TEXT", "INTERACTIVE"]).optional(),
 });
 
 export type WhatsAppBusinessConfigType = z.infer<

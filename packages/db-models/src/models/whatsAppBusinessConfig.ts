@@ -122,6 +122,11 @@ const whatsAppBusinessConfigSchema =
         type: String,
         required: false,
       },
+      tableQrMessageType: {
+        type: String,
+        enum: ["TEXT", "INTERACTIVE"],
+        default: "INTERACTIVE",
+      },
     },
     {
       timestamps: true,
