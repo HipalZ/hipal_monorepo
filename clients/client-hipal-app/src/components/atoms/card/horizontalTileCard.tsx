@@ -13,6 +13,8 @@ import DishQuantityButton from "@/components/organisms/dishDescription/dishQuant
 import ShimmerImage from "../imageshimmer";
 import MemoFoodType from "../foodType";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useTableData from "@/components/store/useTableData";
+import { CiImageOn } from "react-icons/ci";
 interface HorizontalDishCardProps {
   dishData: DishType;
   primaryColor?: string;
@@ -32,7 +34,7 @@ const HorizontalTileCard = ({
   const { setSelectedDish, isSelectedDish } = useActiveClass();
   const { setCartPage, setShowCart } = useCart();
   const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
-
+  const { tableName } = useTableData();
   // Check if dish is in cart
   const cartItems = cart.filter((item) => item.dish?._id === dishData._id);
   const isDishInCart = cartItems.length > 0;
@@ -107,21 +109,25 @@ const HorizontalTileCard = ({
 
         {/* Dish Image + ADD Button */}
         <section className="min-h-[4rem] flex flex-col items-center relative shrink-0">
-          {dishData?.images?.[0] && (
-            <article className="h-[4.75rem] w-[4.75rem] rounded-md overflow-hidden">
-              <ShimmerImage
-                src={dishData.images[0]}
-                alt="dish"
-                width={80}
-                height={80}
-                onClick={openDishDetails}
-                className={cn(
-                  "cursor-pointer transition-all",
-                  !dishData.availability && "grayscale",
-                )}
-              />
-            </article>
+          <article className="h-[4.75rem] w-[4.75rem] rounded-md overflow-hidden">
+          {dishData?.images?.[0] && dishData.images[0].trim() !== "" ? (
+            <ShimmerImage
+              src={dishData.images[0]}
+              alt={dishData?.name || "dish"}
+              width={80}
+              height={80}
+              onClick={openDishDetails}
+              className={cn(
+                "cursor-pointer transition-all",
+                !dishData.availability && "grayscale",
+              )}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center rounded-md border-2 border-dashed border-gray-100 bg-gray-50">
+              <CiImageOn className="text-gray-300" size={24} />
+            </div>
           )}
+        </article>
 
           {/* Action Button */}
           <article
@@ -133,21 +139,21 @@ const HorizontalTileCard = ({
               `${
                 dishData?.images[0]?.length > 0
                   ? "left-1/2 -mt-4"
-                  : "top-1/2 mt-2"
+                  : "top-1/2"
               }`,
             )}
           >
-            {dishData.availability ? (
-              <DishQuantityButton
-                dishData={dishData}
-                primaryColor={primaryColor}
-                secondaryColor={secondaryColor}
-              />
-            ) : (
-              <div className="text-xs bg-gray-200 text-gray-500 rounded px-2 py-0.5">
-                Not Available
-              </div>
-            )}
+          {!dishData.availability ? (
+            <div className="text-xs bg-gray-200 text-gray-500 rounded px-2 py-0.5">
+              Not Available
+            </div>
+          ) : tableName ? (
+            <DishQuantityButton
+              dishData={dishData}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
+            />
+          ) : null}
           </article>
         </section>
       </div>

@@ -15,6 +15,9 @@ import MemoFoodType from "../foodType";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import foodImage from "@/assets/food.png";
 import Image from "next/image";
+import useTableData from "@/components/store/useTableData";
+import { CiImageOn } from "react-icons/ci";
+
 interface HorizontalDishCardProps {
   dishData: DishType;
   primaryColor?: string;
@@ -33,7 +36,7 @@ const HorizontalCard = ({
   const { setSelectedDish, isSelectedDish } = useActiveClass();
   const { setCartPage, setShowCart } = useCart();
   const outletInfo = useBusinessDetails((state) => state.businessDetails);
-
+  const { tableName } = useTableData();
   // Check if dish is in cart
   const cartItems = cart.filter((item) => item.dish?._id === dishData._id);
   const isDishInCart = cartItems.length > 0;
@@ -146,22 +149,25 @@ const HorizontalCard = ({
               compactLayout ? "w-28 h-28" : "w-32 h-32",
             )}
           >
-            {dishData?.images &&
-            (dishData?.images.length > 0 || dishData?.images?.[0] === "") ? (
+            {dishData?.images?.[0] && dishData.images[0].trim() !== "" ? (
               <Image
-                src={dishData?.images?.[0]}
-                alt="dish"
+                src={dishData.images[0]}
+                alt={dishData?.name || "dish"}
                 quality={95}
                 width={128}
                 height={128}
                 onClick={openDishDetails}
                 className={cn(
-                  "rounded-lg !object-cover !object-center",
+                  "rounded-lg !object-cover !object-center cursor-pointer",
                   compactLayout ? "w-28 h-28" : "w-32 h-32",
                   !dishData.availability && "grayscale",
                 )}
               />
-            ) : null}
+            ) : (
+              <div className="w-full h-full flex items-center justify-center rounded-lg border-2 border-dashed border-gray-100 bg-gray-50">
+                <CiImageOn className="text-gray-300" size={compactLayout ? 26 : 30} />
+              </div>
+            )}
           </div>
           <section
             className={cn(
@@ -172,17 +178,17 @@ const HorizontalCard = ({
                 : "bottom-8",
             )}
           >
-            {dishData.availability ? (
+            {!dishData.availability ? (
+              <div className="text-xs bg-gray-200 text-gray-500 rounded px-2 py-0.5">
+              Not Available
+              </div>
+            ) : tableName ? (
               <DishQuantityButton
                 dishData={dishData}
                 primaryColor={primaryColor}
                 secondaryColor={secondaryColor}
               />
-            ) : (
-              <div className="px-3 py-1 mt-2 text-xs text-gray-500 bg-gray-200 rounded-md">
-                Not Available
-              </div>
-            )}
+            ) : null}
           </section>
           {/* Modal for dish details */}
         </div>
