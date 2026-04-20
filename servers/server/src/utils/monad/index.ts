@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 // 1. CONFIG
 const RPC_URL =
   process.env.MONAD_RPC_URL ||
-  "https://monad-testnet.g.alchemy.com/v2/RkaEGbTvpOeoXdFIB9yoP";
+  "https://monad-testnet.g.alchemy.com/v2/FakLhEvJyXeSLNYDlt3nK";
 const CONTRACT_ADDRESS =
   process.env.MONAD_CONTRACT_ADDRESS ||
   "0xDA768CCA70903c60471CdEAbC40293d021E3DfE9"; //@change - new address for V3 deployment
