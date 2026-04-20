@@ -1,23 +1,27 @@
+import Hi from '@/assets/svg/hi.svg';
+import whatzAppDoodle from '@/assets/whatzapp/whatsappdoodle.jpg';
 import useBusinessData from '@/components/store/useBusinessData';
 import { apiRpc } from '@hi/common';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { memo, useState, useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { memo, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { BsCameraVideo, BsTelephone } from 'react-icons/bs';
 import { FaBatteryFull, FaSignal, FaWifi } from 'react-icons/fa';
 import { FiChevronLeft, FiExternalLink } from 'react-icons/fi';
-import whatzAppDoodle from '@/assets/whatzapp/whatsappdoodle.jpg';
-import Hi from '@/assets/svg/hi.svg';
+
+type MessageType = 'TEXT' | 'INTERACTIVE';
+type UrlOption = 'EXPLORE' | 'CUSTOM';
 
 const MemoWhatsappSettings = () => {
   const businessData = useBusinessData((s) => s.businessData);
   const businessId = businessData?._id;
   const queryClient = useQueryClient();
 
+  const [messageType, setMessageType] = useState<MessageType>('INTERACTIVE');
   const [tableQrCustomMessage, setTableQrCustomMessage] = useState('');
   const [tableQrCustomUrlText, setTableQrCustomUrlText] = useState('');
   const [tableQrCustomUrl, setTableQrCustomUrl] = useState('');
-  const [urlOption, setUrlOption] = useState<'EXPLORE' | 'CUSTOM'>('EXPLORE');
+  const [urlOption, setUrlOption] = useState<UrlOption>('EXPLORE');
 
   const { data: whatsappConfig, isLoading } = useQuery({
     queryKey: ['whatsapp_config', businessId],
@@ -37,6 +41,7 @@ const MemoWhatsappSettings = () => {
       setTableQrCustomUrlText(whatsappConfig?.tableQrCustomUrlText || '');
       setTableQrCustomUrl(whatsappConfig?.tableQrCustomUrl || '');
       setUrlOption(whatsappConfig?.tableQrCustomUrl ? 'CUSTOM' : 'EXPLORE');
+      setMessageType((whatsappConfig as any)?.tableQrMessageType === 'TEXT' ? 'TEXT' : 'INTERACTIVE');
     }
   }, [whatsappConfig]);
 
@@ -47,11 +52,15 @@ const MemoWhatsappSettings = () => {
         param: { businessId: businessId || '' },
         json: {
           tableQrCustomMessage,
-          tableQrCustomUrlText,
+          // Only send button-related fields when the interactive mode is on
+          // Button caption is button-only; URL is used in BOTH modes
+          // (TEXT mode resolves {{payLink}} from it before shortening).
+          tableQrCustomUrlText: messageType === 'INTERACTIVE' ? tableQrCustomUrlText : '',
           tableQrCustomUrl,
-        },
+          tableQrMessageType: messageType,
+        } as any,
       });
-      
+
       const payload = await res.json();
       if (payload.err) {
         throw new Error(payload.message || 'Error updating config');
@@ -86,25 +95,25 @@ const MemoWhatsappSettings = () => {
         parts.push(
           <strong key={key++} className="font-semibold">
             {segment.slice(1, -1)}
-          </strong>
+          </strong>,
         );
       } else if (/^_[^_]+_$/.test(segment)) {
         parts.push(
           <em key={key++} className="italic">
             {segment.slice(1, -1)}
-          </em>
+          </em>,
         );
       } else if (/^~[^~]+~$/.test(segment)) {
         parts.push(
           <span key={key++} className="line-through">
             {segment.slice(1, -1)}
-          </span>
+          </span>,
         );
       } else if (/^`[^`]+`$/.test(segment)) {
         parts.push(
           <code key={key++} className="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm">
             {segment.slice(1, -1)}
-          </code>
+          </code>,
         );
       } else {
         parts.push(segment);
@@ -120,7 +129,11 @@ const MemoWhatsappSettings = () => {
 
   const rawPreviewMessage = (tableQrCustomMessage || defaultMessage)
     .replace(/{{business_name}}/g, businessData?.name || 'Business Name')
-    .replace(/{{table_name}}/g, 'Table 12');
+    .replace(/{{table_name}}/g, 'Table 12')
+    .replace(/{{tableName}}/g, 'Table 12')
+    .replace(/{{userId}}/g, '64f2a...')
+    .replace(/{{userPhone}}/g, '9198765...')
+    .replace(/{{payLink}}/g, 'www.hipalz.com/pay?tableName=Table 12&id=64f2a...');
 
   const previewUrlText = tableQrCustomUrlText || defaultUrlText;
 
@@ -133,7 +146,7 @@ const MemoWhatsappSettings = () => {
 
       {isLoading ? (
         <div className="flex h-40 items-center justify-center">
-           <p className="text-gray-500">Loading settings...</p>
+          <p className="text-gray-500">Loading settings...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
@@ -143,52 +156,113 @@ const MemoWhatsappSettings = () => {
               <div className="space-y-6 rounded-xl border border-gray-100 bg-[#FAFAFA] p-5 shadow-sm">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">Welcome Message Template Customization</h3>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="mt-1 text-sm text-gray-500">
                     Customize the automated WhatsApp message sent immediately when a guest scans your QR code.
                   </p>
                 </div>
 
+                {/* Message Type Toggle */}
+                <div className="flex flex-col space-y-2">
+                  <label className="font-semibold text-gray-700">Message Type</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setMessageType('INTERACTIVE')}
+                      className={`flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-all ${
+                        messageType === 'INTERACTIVE'
+                          ? 'border-[#075E54] bg-[#075E54]/5 ring-1 ring-[#075E54]'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="text-sm font-semibold text-gray-800">Interactive (CTA Button)</span>
+                      <span className="text-[11px] leading-snug text-gray-500">Sends a message with a tappable button that opens a link.</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMessageType('TEXT')}
+                      className={`flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-all ${
+                        messageType === 'TEXT'
+                          ? 'border-[#075E54] bg-[#075E54]/5 ring-1 ring-[#075E54]'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="text-sm font-semibold text-gray-800">Plain Text Link</span>
+                      <span className="text-[11px] leading-snug text-gray-500">
+                        Link opens in external browser. Recommended for payments. Use <b>{`{{payLink}}`}</b> inside the text.
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="flex flex-col space-y-2">
                   <div className="flex items-baseline justify-between">
-                    <label htmlFor="customMessage" className="font-semibold text-gray-700">Message Body</label>
-                    <span className="text-xs text-gray-400">Placeholders: <b>{`{{business_name}}`}</b>, <b>{`{{table_name}}`}</b></span>
+                    <label htmlFor="customMessage" className="font-semibold text-gray-700">
+                      Message Body
+                    </label>
+                    <span className="text-xs text-gray-400">
+                      Placeholders: <b>{`{{business_name}}`}</b>, <b>{`{{table_name}}`}</b>
+                      {messageType === 'TEXT' && (
+                        <>
+                          , <b>{`{{payLink}}`}</b>
+                        </>
+                      )}
+                    </span>
                   </div>
                   <textarea
                     id="customMessage"
                     rows={5}
                     className="rounded-lg border border-gray-200 p-3 text-sm shadow-sm transition-all focus:border-[#075E54] focus:outline-none focus:ring-1 focus:ring-[#075E54]"
-                    placeholder="e.g. Welcome to {{business_name}}! 🥽✨&#10;&#10;To view your bill and skip the wait, please tap the button below."
+                    placeholder={
+                      messageType === 'TEXT'
+                        ? 'e.g. Welcome to {{business_name}}! ✨\n\nTap the link to view your bill: {{payLink}}'
+                        : 'e.g. Welcome to {{business_name}}! 🥽✨\n\nTo view your bill and skip the wait, please tap the button below.'
+                    }
                     value={tableQrCustomMessage}
                     onChange={(e) => setTableQrCustomMessage(e.target.value)}
                   />
+                  {messageType === 'TEXT' && (
+                    <p className="text-[11px] leading-relaxed text-gray-500">
+                      Tip: Include <b>{`{{payLink}}`}</b> in your message so the customer can tap the link directly.
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <div className="flex flex-col space-y-2">
-                    <label htmlFor="customUrlText" className="font-semibold text-gray-700">Button Name</label>
-                    <input
-                      id="customUrlText"
-                      type="text"
-                      maxLength={20}
-                      className="rounded-lg border border-gray-200 p-3 text-sm shadow-sm transition-all focus:border-[#075E54] focus:outline-none focus:ring-1 focus:ring-[#075E54]"
-                      placeholder="e.g. View Bill & Pay"
-                      value={tableQrCustomUrlText}
-                      onChange={(e) => setTableQrCustomUrlText(e.target.value)}
-                    />
-                    <div className="flex justify-between">
-                      <span className="text-xs text-gray-400">Max 20 characters</span>
-                      <span className="text-xs text-gray-400">{tableQrCustomUrlText.length}/20</span>
+                  {/* Button Name — only relevant when a CTA button is actually shown */}
+                  {messageType === 'INTERACTIVE' && (
+                    <div className="flex flex-col space-y-2">
+                      <label htmlFor="customUrlText" className="font-semibold text-gray-700">
+                        Button Name
+                      </label>
+                      <input
+                        id="customUrlText"
+                        type="text"
+                        maxLength={20}
+                        className="rounded-lg border border-gray-200 p-3 text-sm shadow-sm transition-all focus:border-[#075E54] focus:outline-none focus:ring-1 focus:ring-[#075E54]"
+                        placeholder="e.g. View Bill & Pay"
+                        value={tableQrCustomUrlText}
+                        onChange={(e) => setTableQrCustomUrlText(e.target.value)}
+                      />
+                      <div className="flex justify-between">
+                        <span className="text-xs text-gray-400">Max 20 characters</span>
+                        <span className="text-xs text-gray-400">{tableQrCustomUrlText.length}/20</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
+                  {/* Link Action selector — visible in BOTH modes because
+                      the destination URL is what {{payLink}} resolves to
+                      (whether it ends up in a button or inside the text). */}
                   <div className="flex flex-col space-y-2">
-                    <label htmlFor="urlOption" className="font-semibold text-gray-700">Button Link Action</label>
+                    <label htmlFor="urlOption" className="font-semibold text-gray-700">
+                      {messageType === 'INTERACTIVE' ? 'Button Link Action' : 'Link Destination'}
+                    </label>
                     <select
                       id="urlOption"
-                      className="rounded-lg border border-gray-200 p-3 text-sm shadow-sm bg-white transition-all focus:border-[#075E54] focus:outline-none focus:ring-1 focus:ring-[#075E54]"
+                      className="rounded-lg border border-gray-200 bg-white p-3 text-sm shadow-sm transition-all focus:border-[#075E54] focus:outline-none focus:ring-1 focus:ring-[#075E54]"
                       value={urlOption}
                       onChange={(e) => {
-                        const val = e.target.value as 'EXPLORE' | 'CUSTOM';
+                        const val = e.target.value as UrlOption;
                         setUrlOption(val);
                         if (val === 'EXPLORE') {
                           setTableQrCustomUrl('');
@@ -201,16 +275,19 @@ const MemoWhatsappSettings = () => {
                   </div>
 
                   {urlOption === 'EXPLORE' && (
-                    <div className="md:col-span-2 pt-1 pb-2">
-                      <p className="text-xs leading-relaxed text-gray-500 rounded-lg border border-[#075E54]/20 bg-[#075E54]/5 p-3">
-                        <span className="font-medium text-[#075E54]">Note:</span> This option will automatically redirect the guest to their correct live table session based on the specific QR code they just scanned. No custom link setup is required.
+                    <div className="pb-2 pt-1 md:col-span-2">
+                      <p className="rounded-lg border border-[#075E54]/20 bg-[#075E54]/5 p-3 text-xs leading-relaxed text-gray-500">
+                        <span className="font-medium text-[#075E54]">Note:</span> This option will automatically redirect the guest to their correct
+                        live table session based on the specific QR code they just scanned. No custom link setup is required.
                       </p>
                     </div>
                   )}
 
                   {urlOption === 'CUSTOM' && (
                     <div className="flex flex-col space-y-2 md:col-span-2">
-                      <label htmlFor="customUrl" className="font-semibold text-gray-700">Custom Link URL</label>
+                      <label htmlFor="customUrl" className="font-semibold text-gray-700">
+                        Custom Link URL
+                      </label>
                       <input
                         id="customUrl"
                         type="text"
@@ -221,7 +298,7 @@ const MemoWhatsappSettings = () => {
                         required
                       />
                       <div className="rounded-lg border border-[#075E54]/20 bg-[#075E54]/5 p-3">
-                        <p className="text-xs font-medium text-[#075E54] mb-1.5">Available Variables</p>
+                        <p className="mb-1.5 text-xs font-medium text-[#075E54]">Available Variables</p>
                         <div className="flex flex-wrap gap-1.5">
                           {[
                             { label: '{{userId}}', desc: 'Auto-login ID' },
@@ -232,15 +309,15 @@ const MemoWhatsappSettings = () => {
                               key={v.label}
                               type="button"
                               onClick={() => setTableQrCustomUrl((prev) => prev + v.label)}
-                              className="inline-flex items-center gap-1 rounded-md border border-[#075E54]/30 bg-white px-2 py-1 text-[11px] font-mono text-[#075E54] transition hover:bg-[#075E54]/10"
+                              className="inline-flex items-center gap-1 rounded-md border border-[#075E54]/30 bg-white px-2 py-1 font-mono text-[11px] text-[#075E54] transition hover:bg-[#075E54]/10"
                               title={v.desc}
                             >
                               {v.label}
-                              <span className="text-[10px] font-sans text-gray-400">{v.desc}</span>
+                              <span className="font-sans text-[10px] text-gray-400">{v.desc}</span>
                             </button>
                           ))}
                         </div>
-                        <p className="mt-2 text-[11px] text-gray-500 leading-relaxed">
+                        <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
                           These variables are replaced with actual values when the message is sent. Click a variable to append it to your URL.
                         </p>
                       </div>
@@ -262,8 +339,8 @@ const MemoWhatsappSettings = () => {
           </div>
 
           {/* Preview Panel - 5 columns */}
-          <div className="lg:col-span-5 xl:col-span-4 flex justify-center">
-            <div className="inter relative w-full max-w-[265px] rounded-[2rem] border-[8px] border-black shadow-[0_8px_25px_rgb(0,0,0,0.12)] md:max-h-[520px] sticky top-6">
+          <div className="flex justify-center lg:col-span-5 xl:col-span-4">
+            <div className="inter relative sticky top-6 w-full max-w-[265px] rounded-[2rem] border-[8px] border-black shadow-[0_8px_25px_rgb(0,0,0,0.12)] md:max-h-[520px]">
               {/* iPhone Notch */}
               <div className="absolute inset-x-0 top-0 h-5 rounded-b-2xl">
                 <div className="absolute left-1/2 top-1 h-3.5 w-[70px] -translate-x-1/2 rounded-full bg-black" />
@@ -309,12 +386,15 @@ const MemoWhatsappSettings = () => {
                     <div className="clear-both hidden"></div>
                   </div>
 
-                  <div className="border-t border-gray-100 mt-1">
-                    <button type="button" className="flex w-full items-center justify-center py-2 text-[14px] font-medium text-[#34B7F1]">
-                      <FiExternalLink className="mr-2" size={15} />
-                      {previewUrlText}
-                    </button>
-                  </div>
+                  {/* CTA button — only in INTERACTIVE mode */}
+                  {messageType === 'INTERACTIVE' && (
+                    <div className="mt-1 border-t border-gray-100">
+                      <button type="button" className="flex w-full items-center justify-center py-2 text-[14px] font-medium text-[#34B7F1]">
+                        <FiExternalLink className="mr-2" size={15} />
+                        {previewUrlText}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* iPhone Home Indicator */}
