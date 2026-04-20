@@ -57,8 +57,10 @@ const MemoWhatsappSettings = () => {
         json: {
           tableQrCustomMessage,
           // Only send button-related fields when the interactive mode is on
+          // Button caption is button-only; URL is used in BOTH modes
+          // (TEXT mode resolves {{payLink}} from it before shortening).
           tableQrCustomUrlText: messageType === 'INTERACTIVE' ? tableQrCustomUrlText : '',
-          tableQrCustomUrl: messageType === 'INTERACTIVE' ? tableQrCustomUrl : '',
+          tableQrCustomUrl,
           tableQrMessageType: messageType,
         } as any,
       });
@@ -135,7 +137,7 @@ const MemoWhatsappSettings = () => {
     .replace(/{{tableName}}/g, 'Table 12')
     .replace(/{{userId}}/g, '64f2a...')
     .replace(/{{userPhone}}/g, '9198765...')
-    .replace(/{{payLink}}/g, 'hipalz.com/s/Abc12');
+    .replace(/{{payLink}}/g, 'www.hipalz.com/pay?tableName=Table 12&id=64f2a...');
 
   const previewUrlText = tableQrCustomUrlText || defaultUrlText;
 
@@ -190,9 +192,9 @@ const MemoWhatsappSettings = () => {
                           : 'border-gray-200 bg-white hover:border-gray-300'
                       }`}
                     >
-                      <span className="text-sm font-semibold text-gray-800">Text Only</span>
+                      <span className="text-sm font-semibold text-gray-800">Plain Text Link</span>
                       <span className="text-[11px] leading-snug text-gray-500">
-                        Plain text message. Use <b>{`{{payLink}}`}</b> to include the link inside the text.
+                        Link opens in external browser. Recommended for payments. Use <b>{`{{payLink}}`}</b> inside the text.
                       </span>
                     </button>
                   </div>
@@ -225,9 +227,9 @@ const MemoWhatsappSettings = () => {
                   )}
                 </div>
 
-                {/* Button-related fields — only visible for INTERACTIVE mode */}
-                {messageType === 'INTERACTIVE' && (
-                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  {/* Button Name — only relevant when a CTA button is actually shown */}
+                  {messageType === 'INTERACTIVE' && (
                     <div className="flex flex-col space-y-2">
                       <label htmlFor="customUrlText" className="font-semibold text-gray-700">Button Name</label>
                       <input
@@ -244,74 +246,79 @@ const MemoWhatsappSettings = () => {
                         <span className="text-xs text-gray-400">{tableQrCustomUrlText.length}/20</span>
                       </div>
                     </div>
+                  )}
 
-                    <div className="flex flex-col space-y-2">
-                      <label htmlFor="urlOption" className="font-semibold text-gray-700">Button Link Action</label>
-                      <select
-                        id="urlOption"
-                        className="rounded-lg border border-gray-200 p-3 text-sm shadow-sm bg-white transition-all focus:border-[#075E54] focus:outline-none focus:ring-1 focus:ring-[#075E54]"
-                        value={urlOption}
-                        onChange={(e) => {
-                          const val = e.target.value as UrlOption;
-                          setUrlOption(val);
-                          if (val === 'EXPLORE') {
-                            setTableQrCustomUrl('');
-                          }
-                        }}
-                      >
-                        <option value="EXPLORE">Dynamic Explore Page</option>
-                        <option value="CUSTOM">Custom Link</option>
-                      </select>
+                  {/* Link Action selector — visible in BOTH modes because
+                      the destination URL is what {{payLink}} resolves to
+                      (whether it ends up in a button or inside the text). */}
+                  <div className="flex flex-col space-y-2">
+                    <label htmlFor="urlOption" className="font-semibold text-gray-700">
+                      {messageType === 'INTERACTIVE' ? 'Button Link Action' : 'Link Destination'}
+                    </label>
+                    <select
+                      id="urlOption"
+                      className="rounded-lg border border-gray-200 p-3 text-sm shadow-sm bg-white transition-all focus:border-[#075E54] focus:outline-none focus:ring-1 focus:ring-[#075E54]"
+                      value={urlOption}
+                      onChange={(e) => {
+                        const val = e.target.value as UrlOption;
+                        setUrlOption(val);
+                        if (val === 'EXPLORE') {
+                          setTableQrCustomUrl('');
+                        }
+                      }}
+                    >
+                      <option value="EXPLORE">Dynamic Explore Page</option>
+                      <option value="CUSTOM">Custom Link</option>
+                    </select>
+                  </div>
+
+                  {urlOption === 'EXPLORE' && (
+                    <div className="md:col-span-2 pt-1 pb-2">
+                      <p className="text-xs leading-relaxed text-gray-500 rounded-lg border border-[#075E54]/20 bg-[#075E54]/5 p-3">
+                        <span className="font-medium text-[#075E54]">Note:</span> This option will automatically redirect the guest to their correct live table session based on the specific QR code they just scanned. No custom link setup is required.
+                      </p>
                     </div>
+                  )}
 
-                    {urlOption === 'EXPLORE' && (
-                      <div className="md:col-span-2 pt-1 pb-2">
-                        <p className="text-xs leading-relaxed text-gray-500 rounded-lg border border-[#075E54]/20 bg-[#075E54]/5 p-3">
-                          <span className="font-medium text-[#075E54]">Note:</span> This option will automatically redirect the guest to their correct live table session based on the specific QR code they just scanned. No custom link setup is required.
+                  {urlOption === 'CUSTOM' && (
+                    <div className="flex flex-col space-y-2 md:col-span-2">
+                      <label htmlFor="customUrl" className="font-semibold text-gray-700">Custom Link URL</label>
+                      <input
+                        id="customUrl"
+                        type="text"
+                        className="rounded-lg border border-gray-200 p-3 text-sm shadow-sm transition-all focus:border-[#075E54] focus:outline-none focus:ring-1 focus:ring-[#075E54]"
+                        placeholder="https://yoursite.com/pay?tableName={{tableName}}&id={{userId}}"
+                        value={tableQrCustomUrl}
+                        onChange={(e) => setTableQrCustomUrl(e.target.value)}
+                        required
+                      />
+                      <div className="rounded-lg border border-[#075E54]/20 bg-[#075E54]/5 p-3">
+                        <p className="text-xs font-medium text-[#075E54] mb-1.5">Available Variables</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            { label: '{{userId}}', desc: 'Auto-login ID' },
+                            { label: '{{tableName}}', desc: 'Table / counter name' },
+                            { label: '{{userPhone}}', desc: 'Phone number' },
+                          ].map((v) => (
+                            <button
+                              key={v.label}
+                              type="button"
+                              onClick={() => setTableQrCustomUrl((prev) => prev + v.label)}
+                              className="inline-flex items-center gap-1 rounded-md border border-[#075E54]/30 bg-white px-2 py-1 text-[11px] font-mono text-[#075E54] transition hover:bg-[#075E54]/10"
+                              title={v.desc}
+                            >
+                              {v.label}
+                              <span className="text-[10px] font-sans text-gray-400">{v.desc}</span>
+                            </button>
+                          ))}
+                        </div>
+                        <p className="mt-2 text-[11px] text-gray-500 leading-relaxed">
+                          These variables are replaced with actual values when the message is sent. Click a variable to append it to your URL.
                         </p>
                       </div>
-                    )}
-
-                    {urlOption === 'CUSTOM' && (
-                      <div className="flex flex-col space-y-2 md:col-span-2">
-                        <label htmlFor="customUrl" className="font-semibold text-gray-700">Custom Link URL</label>
-                        <input
-                          id="customUrl"
-                          type="text"
-                          className="rounded-lg border border-gray-200 p-3 text-sm shadow-sm transition-all focus:border-[#075E54] focus:outline-none focus:ring-1 focus:ring-[#075E54]"
-                          placeholder="https://yoursite.com/pay?tableName={{tableName}}&id={{userId}}"
-                          value={tableQrCustomUrl}
-                          onChange={(e) => setTableQrCustomUrl(e.target.value)}
-                          required
-                        />
-                        <div className="rounded-lg border border-[#075E54]/20 bg-[#075E54]/5 p-3">
-                          <p className="text-xs font-medium text-[#075E54] mb-1.5">Available Variables</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {[
-                              { label: '{{userId}}', desc: 'Auto-login ID' },
-                              { label: '{{tableName}}', desc: 'Table / counter name' },
-                              { label: '{{userPhone}}', desc: 'Phone number' },
-                            ].map((v) => (
-                              <button
-                                key={v.label}
-                                type="button"
-                                onClick={() => setTableQrCustomUrl((prev) => prev + v.label)}
-                                className="inline-flex items-center gap-1 rounded-md border border-[#075E54]/30 bg-white px-2 py-1 text-[11px] font-mono text-[#075E54] transition hover:bg-[#075E54]/10"
-                                title={v.desc}
-                              >
-                                {v.label}
-                                <span className="text-[10px] font-sans text-gray-400">{v.desc}</span>
-                              </button>
-                            ))}
-                          </div>
-                          <p className="mt-2 text-[11px] text-gray-500 leading-relaxed">
-                            These variables are replaced with actual values when the message is sent. Click a variable to append it to your URL.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
 
                 <div className="pt-2">
                   <button
