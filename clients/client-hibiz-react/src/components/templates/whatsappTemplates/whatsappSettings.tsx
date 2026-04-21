@@ -37,11 +37,14 @@ const MemoWhatsappSettings = () => {
 
   useEffect(() => {
     if (whatsappConfig) {
-      setTableQrCustomMessage(whatsappConfig?.tableQrCustomMessage || '');
-      setTableQrCustomUrlText(whatsappConfig?.tableQrCustomUrlText || '');
-      setTableQrCustomUrl(whatsappConfig?.tableQrCustomUrl || '');
-      setUrlOption(whatsappConfig?.tableQrCustomUrl ? 'CUSTOM' : 'EXPLORE');
-      setMessageType((whatsappConfig as any)?.tableQrMessageType === 'TEXT' ? 'TEXT' : 'INTERACTIVE');
+      // Hono RPC infers `data` as a union of error/success shapes,
+      // narrowing away our custom fields. Cast once for clarity.
+      const cfg = whatsappConfig as any;
+      setTableQrCustomMessage(cfg?.tableQrCustomMessage || '');
+      setTableQrCustomUrlText(cfg?.tableQrCustomUrlText || '');
+      setTableQrCustomUrl(cfg?.tableQrCustomUrl || '');
+      setUrlOption(cfg?.tableQrCustomUrl ? 'CUSTOM' : 'EXPLORE');
+      setMessageType(cfg?.tableQrMessageType === 'TEXT' ? 'TEXT' : 'INTERACTIVE');
     }
   }, [whatsappConfig]);
 
