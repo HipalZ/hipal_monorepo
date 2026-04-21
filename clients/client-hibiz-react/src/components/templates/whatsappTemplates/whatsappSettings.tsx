@@ -37,14 +37,11 @@ const MemoWhatsappSettings = () => {
 
   useEffect(() => {
     if (whatsappConfig) {
-      // Hono RPC infers `data` as a union of error/success shapes,
-      // narrowing away our custom fields. Cast once for clarity.
-      const cfg = whatsappConfig as any;
-      setTableQrCustomMessage(cfg?.tableQrCustomMessage || '');
-      setTableQrCustomUrlText(cfg?.tableQrCustomUrlText || '');
-      setTableQrCustomUrl(cfg?.tableQrCustomUrl || '');
-      setUrlOption(cfg?.tableQrCustomUrl ? 'CUSTOM' : 'EXPLORE');
-      setMessageType(cfg?.tableQrMessageType === 'TEXT' ? 'TEXT' : 'INTERACTIVE');
+      setTableQrCustomMessage(whatsappConfig?.tableQrCustomMessage || '');
+      setTableQrCustomUrlText(whatsappConfig?.tableQrCustomUrlText || '');
+      setTableQrCustomUrl(whatsappConfig?.tableQrCustomUrl || '');
+      setUrlOption(whatsappConfig?.tableQrCustomUrl ? 'CUSTOM' : 'EXPLORE');
+      setMessageType((whatsappConfig as any)?.tableQrMessageType === 'TEXT' ? 'TEXT' : 'INTERACTIVE');
     }
   }, [whatsappConfig]);
 
@@ -55,9 +52,6 @@ const MemoWhatsappSettings = () => {
         param: { businessId: businessId || '' },
         json: {
           tableQrCustomMessage,
-          // Only send button-related fields when the interactive mode is on
-          // Button caption is button-only; URL is used in BOTH modes
-          // (TEXT mode resolves {{payLink}} from it before shortening).
           tableQrCustomUrlText: messageType === 'INTERACTIVE' ? tableQrCustomUrlText : '',
           tableQrCustomUrl: messageType === 'INTERACTIVE' ? tableQrCustomUrl : '',
           tableQrMessageType: messageType,

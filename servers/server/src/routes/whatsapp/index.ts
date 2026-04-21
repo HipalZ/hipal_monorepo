@@ -1950,7 +1950,6 @@ const whatsappRouter = new Hono()
 
   .patch(
     '/patch_whatsapp_config/:businessId',
-
     zValidator('param', z.object({ businessId: z.string() })),
     zValidator(
       'json',
@@ -1958,9 +1957,9 @@ const whatsappRouter = new Hono()
         tableQrCustomMessage: z.string().optional(),
         tableQrCustomUrlText: z.string().optional(),
         tableQrCustomUrl: z.string().optional(),
+        tableQrMessageType: z.enum(['TEXT', 'INTERACTIVE']).optional(),
       }),
     ),
-
     async (c) => {
       const { businessId } = c.req.param();
       const requestData = await c.req.json();
@@ -1983,14 +1982,10 @@ const whatsappRouter = new Hono()
         return c.json({ message: 'No data to update', err: true, data: {} });
       }
 
-      if (Object.keys(updateData).length === 0) {
-        return c.json({ message: 'No data to update', err: true, data: {} });
-      }
-
       const updatedConfig = await WhatsAppBusinessConfig.findOneAndUpdate({ businessId }, { $set: updateData }, { new: true });
 
       return c.json({
-        message: 'Updated successfully',
+        message: 'Config updated',
         err: false,
         data: updatedConfig,
       });

@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import Loading from "./loading";
 import "./globals.css";
+import { BusinessDetails } from "@/components/types/businessData";
+import { apiRpc } from "@hi/common";
 // import AutoLoginWrapper from "@/components/AutoLoginWrapper.jsx";
 const DynamicThemes = dynamic(
   () => import("@/components/atoms/dynamicThemes"),
@@ -64,93 +66,66 @@ const ErrorPopupComponent = dynamic(
   },
 );
 
-export const metadata: Metadata = {
-  title: {
-    default: "Hipal App - Menu Application for Businesses",
-    template: "%s | Hipal App",
-  },
-  description: "Menu Application for Businesses - Transform your business with HipalZ's digital menu solution. Improve customer engagement, streamline operations, and enhance your business presence.",
-  keywords: [
-    "digital menu",
-    "business menu app",
-    "restaurant menu",
-    "HipalZ",
-    "Hipal App",
-    "menu application",
-    "customer engagement",
-    "business solutions",
-  ],
-  authors: [{ name: "Paltribe Solutions PVT Ltd" }],
-  creator: "HipalZ",
-  publisher: "Paltribe Solutions PVT Ltd",
-  
-  // Open Graph metadata for social sharing
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "https://hipalz.com",
-    siteName: "Hipal App",
-    title: "Hipal App - Menu Application for Businesses",
-    description: "Menu Application for Businesses - Transform your business with HipalZ's digital menu solution. Improve customer engagement, streamline operations, and enhance your business presence.",
-    images: [
-      {
-        url: "/android-chrome-512x512.png",
-        width: 512,
-        height: 512,
-        alt: "Hipal App Logo",
-      },
-    ],
-  },
+export async function generateMetadata({
+  params,
+}: {
+  params: { businessId: string };
+}) {
+  const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+  const { businessId } = params;
 
-  icons: {
-    icon: [
-      {
-        rel: "icon",
-        type: "image/ico",
-        url: "/favicon/favicon.ico",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "16x16",
-        url: "/apple-touch-icon.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "16x16",
-        url: "/favicon-16x16.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "32x32",
-        url: "/favicon-32x32.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "192x192",
-        url: "/android-chrome-192x192.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "512x512",
-        url: "/android-chrome-512x512.png",
-      },
-    ],
-    apple: [
-      {
-        url: "/apple-touch-icon.png",
-        sizes: "180x180",
-        type: "image/png",
-      },
-    ],
-  },
+  if (!objectIdRegex.test(businessId)) {
+    try {
+      const res = await apiRpc.businesses.n[":customLink"].$get({
+        param: { customLink: businessId },
+      });
+      const response = (await res.json()) as {
+        data: BusinessDetails;
+        message: string;
+        error: boolean;
+      };
 
-  manifest: "/manifest.json",
-};
+      const businessData = response?.data;
+      if (!businessData) {
+        return {
+          title: "Explore",
+          description: "Explore page for businesses",
+        };
+      }
+
+      const { name, description, logoUrl } = businessData;
+      const metaDescription = description || "Explore our business offerings!";
+
+      return {
+        title: name,
+        description: metaDescription,
+        icons: {
+          icon: logoUrl,
+        },
+        openGraph: {
+          title: name,
+          description: metaDescription,
+          images: [
+            {
+              url: logoUrl || "https://example.com/fallback-image.jpg",
+              width: 1200,
+              height: 630,
+              alt: name,
+            },
+          ],
+          type: "website",
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching business metadata:", error);
+    }
+  }
+
+  return {
+    title: "Explore",
+    description: "Explore our businesses",
+  };
+}
 
 const ubuntu = Ubuntu({
   subsets: ["latin"],
