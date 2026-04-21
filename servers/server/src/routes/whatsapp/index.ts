@@ -1880,7 +1880,7 @@ const whatsappRouter = new Hono()
 
       const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
         businessId,
-      }).select('appId token tableQrCustomMessage tableQrCustomUrlText tableQrCustomUrl -_id');
+      }).select('appId token tableQrCustomMessage tableQrCustomUrlText tableQrCustomUrl tableQrMessageType -_id');
 
       if (!whatsAppConfig) {
         return c.json({
@@ -1974,6 +1974,13 @@ const whatsappRouter = new Hono()
       }
       if (requestData.tableQrCustomUrl !== undefined) {
         updateData.tableQrCustomUrl = requestData.tableQrCustomUrl;
+      }
+      if (requestData.tableQrMessageType !== undefined) {
+        updateData.tableQrMessageType = requestData.tableQrMessageType;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        return c.json({ message: 'No data to update', err: true, data: {} });
       }
 
       if (Object.keys(updateData).length === 0) {

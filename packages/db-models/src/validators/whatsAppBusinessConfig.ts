@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { ObjectIdSchema } from "./common";
+import { z } from 'zod';
+import { ObjectIdSchema } from './common';
 
 export const whatsAppBusinessConfigSchema = z.object({
   businessId: ObjectIdSchema,
@@ -28,8 +28,7 @@ export const whatsAppBusinessConfigSchema = z.object({
   tableQrCustomMessage: z.string().optional(),
   tableQrCustomUrlText: z.string().optional(),
   tableQrCustomUrl: z.string().optional(),
+  tableQrMessageType: z.enum(['TEXT', 'INTERACTIVE']).optional(),
 });
 
-export type WhatsAppBusinessConfigType = z.infer<
-  typeof whatsAppBusinessConfigSchema
->;
+export type WhatsAppBusinessConfigType = z.infer<typeof whatsAppBusinessConfigSchema>;
