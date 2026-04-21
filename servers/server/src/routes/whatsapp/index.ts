@@ -2617,49 +2617,76 @@ const whatsappRouter = new Hono()
   // the business name without an extra round-trip.
   // ────────────────────────────────────────────────────────────────
   .get(
-    "/wa_payments",
-    zValidator(
-      "query",
-      z.object({
-        from: z.coerce.number().int().nonnegative(),
-        to: z.coerce.number().int().nonnegative(),
+  '/wa_payments',
+  zValidator(
+    'query',
+    z
+      .object({
+        from: z.coerce.number().int().nonnegative().optional(),
+        to: z.coerce.number().int().nonnegative().optional(),
+        order_id: z.string().optional(),
+        razorpay_id: z.string().optional(),
         businessId: z.string().optional(),
         limit: z.coerce.number().int().min(1).max(500).optional().default(100),
         skip: z.coerce.number().int().nonnegative().optional().default(0),
-      }),
-    ),
-    async (c) => {
-      const { from, to, businessId, limit, skip } = c.req.valid("query");
+      })
+      .refine(
+        (d) =>
+          (d.from !== undefined && d.to !== undefined) ||
+          !!d.order_id ||
+          !!d.razorpay_id,
+        {
+          message:
+            'Provide either `from`+`to`, `order_id`, or `razorpay_id`.',
+        },
+      ),
+  ),
+  async (c) => {
+    const { from, to, order_id, razorpay_id, businessId, limit, skip } =
+      c.req.valid('query');
 
+    const filter: Record<string, any> = {};
+
+    // Priority: specific ID lookups first, then date range.
+    if (order_id) {
+      filter.order_id = order_id;
+    } else if (razorpay_id) {
+      // razorpay_id can be either the payment id (pay_xxx) or order id (order_xxx)
+      filter.$or = [
+        { razorpayPaymentId: razorpay_id },
+        { razorpayOrderId: razorpay_id },
+      ];
+    } else if (from !== undefined && to !== undefined) {
       if (from > to) {
         return c.json(
-          { message: "`from` must be <= `to`", err: true, data: [] },
+          { message: '`from` must be <= `to`', err: true, data: [] },
           400,
         );
       }
+      filter.date = { $gte: from, $lte: to };
+    }
 
-      const filter: Record<string, any> = { date: { $gte: from, $lte: to } };
-      if (businessId) filter.businessId = businessId;
+    if (businessId) filter.businessId = businessId;
 
-      const [payments, count] = await Promise.all([
-        WhatsAppPayment.find(filter)
-          .populate("businessId", "name")
-          .select(
-            "order_id razorpayPaymentId razorpayOrderId businessId date total billValue mode paymentMode userId",
-          )
-          .sort({ date: -1 })
-          .skip(skip)
-          .limit(limit)
-          .lean(),
-        WhatsAppPayment.countDocuments(filter),
-      ]);
+    const [payments, count] = await Promise.all([
+      WhatsAppPayment.find(filter)
+        .populate('businessId', 'name')
+        .select(
+          'order_id razorpayPaymentId razorpayOrderId businessId date total billValue mode paymentMode userId',
+        )
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      WhatsAppPayment.countDocuments(filter),
+    ]);
 
-      return c.json({
-        message: "Payments fetched",
-        err: false,
-        data: { items: payments, total: count, limit, skip },
-      });
-    },
-  );
+    return c.json({
+      message: 'Payments fetched',
+      err: false,
+      data: { items: payments, total: count, limit, skip },
+    });
+  },
+);
 
 export default whatsappRouter;
