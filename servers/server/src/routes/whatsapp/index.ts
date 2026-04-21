@@ -2608,6 +2608,58 @@ const whatsappRouter = new Hono()
         );
       }
     },
+  )
+
+  // ────────────────────────────────────────────────────────────────
+  // GET /whatsapp/wa_payments?from=<ms>&to=<ms>&businessId=<optional>
+  // Returns WhatsApp-initiated payments within a date range.
+  // businessId is populated with { _id, name } so the caller gets
+  // the business name without an extra round-trip.
+  // ────────────────────────────────────────────────────────────────
+  .get(
+    "/wa_payments",
+    zValidator(
+      "query",
+      z.object({
+        from: z.coerce.number().int().nonnegative(),
+        to: z.coerce.number().int().nonnegative(),
+        businessId: z.string().optional(),
+        limit: z.coerce.number().int().min(1).max(500).optional().default(100),
+        skip: z.coerce.number().int().nonnegative().optional().default(0),
+      }),
+    ),
+    async (c) => {
+      const { from, to, businessId, limit, skip } = c.req.valid("query");
+
+      if (from > to) {
+        return c.json(
+          { message: "`from` must be <= `to`", err: true, data: [] },
+          400,
+        );
+      }
+
+      const filter: Record<string, any> = { date: { $gte: from, $lte: to } };
+      if (businessId) filter.businessId = businessId;
+
+      const [payments, count] = await Promise.all([
+        WhatsAppPayment.find(filter)
+          .populate("businessId", "name")
+          .select(
+            "order_id razorpayPaymentId razorpayOrderId businessId date total billValue mode paymentMode userId",
+          )
+          .sort({ date: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        WhatsAppPayment.countDocuments(filter),
+      ]);
+
+      return c.json({
+        message: "Payments fetched",
+        err: false,
+        data: { items: payments, total: count, limit, skip },
+      });
+    },
   );
 
 export default whatsappRouter;
