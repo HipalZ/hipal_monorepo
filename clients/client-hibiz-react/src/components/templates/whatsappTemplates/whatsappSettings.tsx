@@ -59,7 +59,7 @@ const MemoWhatsappSettings = () => {
           // Button caption is button-only; URL is used in BOTH modes
           // (TEXT mode resolves {{payLink}} from it before shortening).
           tableQrCustomUrlText: messageType === 'INTERACTIVE' ? tableQrCustomUrlText : '',
-          tableQrCustomUrl,
+          tableQrCustomUrl: messageType === 'INTERACTIVE' ? tableQrCustomUrl : '',
           tableQrMessageType: messageType,
         } as any,
       });
