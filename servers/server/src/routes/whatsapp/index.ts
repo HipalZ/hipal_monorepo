@@ -2454,26 +2454,12 @@ const whatsappRouter = new Hono()
   .post(
     '/deactivate/wa_redirection/:businessId',
     zValidator('param', z.object({ businessId: z.string() })),
-
     zValidator('json', z.object({ menuRedirection: z.string() })),
-
     async (c) => {
       const { businessId } = c.req.param();
       const { menuRedirection } = await c.req.json();
 
-      const updateConfig = await WhatsAppBusinessConfig.findOneAndUpdate(
-        {
-          businessId,
-        },
-        {
-          $set: {
-            menuRedirection,
-          },
-        },
-        {
-          new: true,
-        },
-      );
+      const updateConfig = await WhatsAppBusinessConfig.findOneAndUpdate({ businessId }, { $set: { menuRedirection } }, { new: true });
 
       if (!updateConfig) {
         return c.json({
@@ -2487,6 +2473,46 @@ const whatsappRouter = new Hono()
         message: 'Updated successfully',
         err: false,
         data: updateConfig,
+      });
+    },
+  )
+  .get(
+    '/wa_payments',
+    zValidator(
+      'query',
+      z.object({
+        from: z.coerce.number().int().nonnegative(),
+        to: z.coerce.number().int().nonnegative(),
+        businessId: z.string().optional(),
+        limit: z.coerce.number().int().min(1).max(500).optional().default(100),
+        skip: z.coerce.number().int().nonnegative().optional().default(0),
+      }),
+    ),
+    async (c) => {
+      const { from, to, businessId, limit, skip } = c.req.valid('query');
+
+      if (from > to) {
+        return c.json({ message: '`from` must be <= `to`', err: true, data: [] }, 400);
+      }
+
+      const filter: Record<string, any> = { date: { $gte: from, $lte: to } };
+      if (businessId) filter.businessId = businessId;
+
+      const [payments, count] = await Promise.all([
+        WhatsAppPayment.find(filter)
+          .populate('businessId', 'name')
+          .select('order_id razorpayPaymentId razorpayOrderId businessId date total billValue mode paymentMode userId')
+          .sort({ date: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        WhatsAppPayment.countDocuments(filter),
+      ]);
+
+      return c.json({
+        message: 'Payments fetched',
+        err: false,
+        data: { items: payments, total: count, limit, skip },
       });
     },
   );
