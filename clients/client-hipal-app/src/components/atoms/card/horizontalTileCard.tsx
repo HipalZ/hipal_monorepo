@@ -1,5 +1,5 @@
 "use client";
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import type { DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
 import { useCartStore } from "@/components/store/useCartStore";
@@ -58,6 +58,13 @@ const HorizontalTileCard = ({
     setCartPage("cart");
     setShowCart(true);
   }, [setShowCart, setCartPage, setSelectedDish]);
+
+  const shouldShowAddButton = useMemo(() => {
+    return (
+      outletInfo?.addButton !== false &&
+      (!!tableName || outletInfo?.outLetType === "HOTEL")
+    );
+  }, [outletInfo, tableName]);
 
   return (
     <>
@@ -147,7 +154,7 @@ const HorizontalTileCard = ({
             <div className="text-xs bg-gray-200 text-gray-500 rounded px-2 py-0.5">
               Not Available
             </div>
-          ) : tableName ? (
+          ) : shouldShowAddButton ? (
             <DishQuantityButton
               dishData={dishData}
               primaryColor={primaryColor}
@@ -161,15 +168,6 @@ const HorizontalTileCard = ({
       {isModalOpen && (
         <ItemDescriptionPopup show={isModalOpen} onClose={closeModal}>
           <DishPopup dishData={isSelectedDish} />
-          {/* <CommonBottomButton
-            buttons={[
-              {
-                text: "Go to cart",
-                onClick: openCart,
-                className: "shadow-md",
-              },
-            ]}
-          /> */}
         </ItemDescriptionPopup>
       )}
       {isDishInCart && (
