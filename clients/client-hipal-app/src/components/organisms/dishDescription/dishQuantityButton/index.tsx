@@ -288,7 +288,8 @@ const MemoDishQuantityButton = ({
                 <Plus className="w-4 h-4" />
               </motion.button>
             </motion.div>
-          ) : outletInfo?.addButton === false ? null : (
+          ) : outletInfo?.addButton === false ||
+            (!tableName && outletInfo?.outLetType !== "HOTEL") ? null : (
             <motion.div
               key="add"
               initial={{ opacity: 0, scale: 0.8 }}

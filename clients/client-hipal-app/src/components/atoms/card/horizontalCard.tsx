@@ -1,4 +1,4 @@
-"use client";
+"use client";;
 import { memo, useState, useCallback, useMemo } from "react";
 import type { DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
@@ -6,14 +6,11 @@ import { useCartStore } from "@/components/store/useCartStore";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import DishPopup from "@/components/atoms/dishPopup";
-import CommonBottomButton from "@/components/atoms/bottomButton";
 import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes";
 import { useCart } from "@/components/store/useCart";
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
-import ShimmerImage from "../imageshimmer";
 import MemoFoodType from "../foodType";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import foodImage from "@/assets/food.png";
 import Image from "next/image";
 import useTableData from "@/components/store/useTableData";
 import { CiImageOn } from "react-icons/ci";
@@ -170,13 +167,7 @@ const HorizontalCard = ({
             )}
           </div>
           <section
-            className={cn(
-              "absolute right-0 flex flex-col items-center justify-center w-full",
-              dishData.images &&
-                (dishData.images.length > 0 || dishData.images[0] === "")
-                ? "-bottom-4"
-                : "bottom-8",
-            )}
+            className= "absolute right-0 flex flex-col items-center justify-center w-full -bottom-4"
           >
             {!dishData.availability ? (
               <div className="text-xs bg-gray-200 text-gray-500 rounded px-2 py-0.5">
