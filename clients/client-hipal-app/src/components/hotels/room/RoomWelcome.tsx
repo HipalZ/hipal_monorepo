@@ -17,7 +17,6 @@ export interface HotelWelcomeCardProps {
   hotelName: string;
   logo: string;
   room?: string;
-  className?: string;
   businessId?: string;
   customLink?: string;
   userID?: string;
@@ -28,7 +27,6 @@ export default function HotelWelcomeCard({
   hotelName = "Hi Palz",
   logo,
   customLink,
-  className,
   room,
   businessId,
   userID,
@@ -75,7 +73,7 @@ export default function HotelWelcomeCard({
     return response;
   };
 
-  const { isLoading: checkingSession } = useQuery({
+  useQuery({
     queryKey: ["checkSession", sessionId],
     queryFn: () => checkSessionIsActive(sessionId),
     enabled: !!sessionId,

@@ -16,7 +16,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
   const currencySymbol = useBusinessDetails(
     (s) => s.businessDetails?.currencySymbol,
   );
-  const { outLetType } = _useAllBusiness((s) => s.data.outletInfo);
+  const outLetType = useBusinessDetails((s) => s.businessDetails.outLetType);
 
   const price = useMemo(
     () => getPrice(dishData?.price || 0),

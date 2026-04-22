@@ -197,7 +197,7 @@ export default function FoodOrderPopup({
 
   return (
     <BottomPopUp hide show={show} onClose={onClose}>
-      <section className="relative overflow-auto hide-scrollbar">
+      <section className="relative h-full overflow-auto hide-scrollbar pb-36">
         {renderContent()}
       </section>
 

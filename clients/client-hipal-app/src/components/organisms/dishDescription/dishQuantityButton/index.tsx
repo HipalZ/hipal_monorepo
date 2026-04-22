@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import type { DishType } from "@hi/db-models/src/validators";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import { useCartStore } from "@/components/store/useCartStore";
@@ -13,8 +13,8 @@ import { useBottomPanel } from "@/components/store/useBottomPanel";
 import MemoAlertVariant from "@/components/atoms/alertVariant";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import { cn } from "@/lib/utils";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useTableData from "@/components/store/useTableData";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 function generateCartItemId(dishId, portionId, extras) {
   const sortedExtras = [...extras]
@@ -56,13 +56,20 @@ const MemoDishQuantityButton = ({
   } = useCartStore();
   const { tableName } = useTableData();
   const { setShowCart, setCartPage } = useCart();
-  const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
+  const outletInfo = useBusinessDetails((s) => s.businessDetails);
   const handleOpenModal = useCallback(() => {
     setOpenBottomPanel(true);
   }, [setOpenBottomPanel]);
   const { displayAlert } = useBottomPanel((s) => ({
     displayAlert: s.displayAlert,
   }));
+
+  const shouldShowAddButton = useMemo(() => {
+    return (
+      outletInfo?.addButton !== false &&
+      (!!tableName || outletInfo?.outLetType === "HOTEL")
+    );
+  }, [outletInfo, tableName]);
 
   const closeModal = useCallback(() => {
     setOpenBottomPanel(false);
@@ -288,8 +295,7 @@ const MemoDishQuantityButton = ({
                 <Plus className="w-4 h-4" />
               </motion.button>
             </motion.div>
-          ) : outletInfo?.addButton === false ||
-            (!tableName && outletInfo?.outLetType !== "HOTEL") ? null : (
+          ) : shouldShowAddButton ? (
             <motion.div
               key="add"
               initial={{ opacity: 0, scale: 0.8 }}
@@ -308,10 +314,10 @@ const MemoDishQuantityButton = ({
                   border: `1px solid ${primaryColor}20`,
                 }}
               >
-                {outletInfo?.placeOrderButton && tableName ? "Add" : "View"}
+                Add
               </button>
             </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
       </div>
 

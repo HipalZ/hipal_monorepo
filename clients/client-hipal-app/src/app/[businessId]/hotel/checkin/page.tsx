@@ -137,6 +137,7 @@ const page = async ({
             specialBannerUrl={businessData?.specialBannerUrl}
             logoUrl={businessData?.logoUrl}
             hotelBanners={businessData?.hotelBanners}
+            businessData={businessData}
           />
         </section>
 

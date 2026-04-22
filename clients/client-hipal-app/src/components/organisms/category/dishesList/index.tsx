@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { type FC, memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
 import SubTypes from "@/components/molecules/categoryTypes/subTypes";

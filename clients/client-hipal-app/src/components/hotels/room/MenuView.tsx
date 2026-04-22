@@ -26,7 +26,6 @@ export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
   const { menuLoading, menuData } = useGetAllRestaurantMenu(
     restaurant._id as string,
   );
-  console.log("menuData", menuData);
   return (
     <div className="relative">
       <div className="flex items-center mb-4">

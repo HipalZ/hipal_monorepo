@@ -19,12 +19,14 @@ const MemoLiveCart = () => {
         animate: { x: "100%" },
     };
 
+    // bottom = height of the fixed "Place Orders" action bar (~4rem)
+    // so this bar always sits directly above it, never overlapping.
     const cartVariants = {
-        initial: { width: "100%", borderRadius: "0px", bottom: "4.5rem" },
+        initial: { width: "100%", borderRadius: "0px", bottom: "4rem" },
         animate: {
             width: "100%",
             borderRadius:  "0px",
-            bottom:  "4.5rem",
+            bottom:  "4rem",
         },
     };
 

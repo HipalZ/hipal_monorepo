@@ -3,6 +3,7 @@ import type { CategoryType } from "@hi/db-models/src/validators";
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
 
 export interface IBiz {
+  addButton: boolean;
   currencySymbol: string;
   placeId: string;
   placeUrl: string;
