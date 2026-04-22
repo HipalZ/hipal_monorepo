@@ -110,16 +110,36 @@ async function sendWhatsAppTemplateForTableQr(
 
 async function tableQrHandler(tableName: string, userPhone: string, userId: string, whatsAppBusinessConfigData: WhatsAppBusinessConfigType) {
   try {
-    const tableInfo = await Table.findOne({
-      businessId: whatsAppBusinessConfigData?.businessId,
-      name: tableName,
-    });
+    // 1. Try to find the specific table the user scanned
+    let tableInfo = tableName
+      ? await Table.findOne({
+          businessId: whatsAppBusinessConfigData?.businessId,
+          name: tableName,
+        })
+      : null;
+
+    // 2. If no matching table (or no tableName passed), fall back to ANY
+    // table for this business — just so we have a business-level link
+    // for auto-login. The message still goes out, but without tableName
+    // in the URL or body.
+    let resolvedTableName: string | undefined = tableInfo?.name;
     if (!tableInfo) {
-      return null;
+      tableInfo = await Table.findOne({
+        businessId: whatsAppBusinessConfigData?.businessId,
+      });
+      resolvedTableName = undefined; // omit tableName from URL/body
     }
-    let tableQrShortUrl = tableInfo?.tableLink;
-    tableQrShortUrl = `${tableQrShortUrl}?q=wa&id=${userId}`;
-    await sendWhatsAppTemplateForTableQr(whatsAppBusinessConfigData, userPhone, tableQrShortUrl, tableName, userId);
+
+    // 3. Build the default URL. If we have no table at all (brand new
+    // business with zero tables), leave it empty — the custom URL
+    // template (if configured) can still resolve, otherwise the message
+    // body will just not include a link.
+    let tableQrShortUrl = '';
+    if (tableInfo?.tableLink) {
+      tableQrShortUrl = `${tableInfo.tableLink}?q=wa&id=${userId}`;
+    }
+
+    await sendWhatsAppTemplateForTableQr(whatsAppBusinessConfigData, userPhone, tableQrShortUrl, resolvedTableName, userId);
   } catch (error) {
     console.error('Error in tableQrHandler:', error);
   }
