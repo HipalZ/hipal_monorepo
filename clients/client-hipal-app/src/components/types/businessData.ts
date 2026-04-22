@@ -4,6 +4,7 @@ import type { ILoyaltySetting } from "../store/useLoyaltyData";
 import { Dish } from "@hipal/server/src/utils/bill";
 
 export interface IBiz {
+  addButton: boolean;
   currencySymbol: string;
   placeId: string;
   placeUrl: string;

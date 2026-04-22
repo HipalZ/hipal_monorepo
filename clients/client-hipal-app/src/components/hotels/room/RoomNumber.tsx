@@ -2,27 +2,37 @@
 import { Splide, SplideSlide } from "@splidejs/react-splide";
 import "@splidejs/react-splide/css"; // Basic Splide styles
 import ShimmerImage from "@/components/atoms/imageshimmer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion"
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useLogin } from "@/components/store/useLogin";
-import { User, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import HI from "@/assets/HiHand.png";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
+
 export default function RoomCard({
   roomNumber,
   specialBannerUrl,
   logoUrl,
   hotelBanners,
+  businessData,
 }: {
   roomNumber: string;
   specialBannerUrl: string;
   logoUrl?: string;
   hotelBanners: string[];
+  businessData:any;
 }) {
   const [userModal, setUserModal] = useState<boolean>(false);
   const guestName = useLogin((s) => s.userDetails?.name);
   const userDetails = useLogin((s) => s.userDetails);
+  const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails);
+
+  useEffect(() => {
+    setBusinessDetails(businessData);
+  }, [businessData, setBusinessDetails]);
+  
   return (
     <div className="relative w-full rounded-2xl overflow-hidden flex">
       <Splide
@@ -68,19 +78,6 @@ export default function RoomCard({
           />
         </div>
       )}
-      {/* <div
-        onClick={() => setUserModal(true)}
-        onKeyDown={() => setUserModal(true)}
-        className="absolute top-2 right-2 z-50 bg-gradient-to-br from-pink-100 to-purple-200 rounded-xl p-2"
-      >
-        <User
-          style={{
-            textShadow:
-              "1px 1px 2px black, -1px -1px 2px black, 1px -1px 2px black, -1px 1px 2px black",
-          }}
-          className="w-7 h-7 text-black"
-        />
-      </div> */}
       {
         <BottomPopUp
           height="30rem"

@@ -71,6 +71,13 @@ const HorizontalCard = ({
   // Determine if we should use a more compact layout
   const compactLayout = isEdgeLayout;
 
+  const shouldShowAddButton = useMemo(() => {
+    return (
+      outletInfo?.addButton !== false &&
+      (!!tableName || outletInfo?.outLetType === "HOTEL")
+    );
+  }, [outletInfo, tableName]);
+
   return (
     <>
       <div
@@ -173,7 +180,7 @@ const HorizontalCard = ({
               <div className="text-xs bg-gray-200 text-gray-500 rounded px-2 py-0.5">
               Not Available
               </div>
-            ) : tableName ? (
+            ) : shouldShowAddButton ? (
               <DishQuantityButton
                 dishData={dishData}
                 primaryColor={primaryColor}
