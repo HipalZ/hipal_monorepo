@@ -12,7 +12,7 @@ import { useCart } from "@/components/store/useCart";
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
 import ShimmerImage from "../imageshimmer";
 import MemoFoodType from "../foodType";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useTableData from "@/components/store/useTableData";
 import { CiImageOn } from "react-icons/ci";
 interface HorizontalDishCardProps {
@@ -33,7 +33,8 @@ const HorizontalTileCard = ({
   const { cart } = useCartStore();
   const { setSelectedDish, isSelectedDish } = useActiveClass();
   const { setCartPage, setShowCart } = useCart();
-  const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
+
+  const outletInfo = useBusinessDetails((state) => state.businessDetails);
   const { tableName } = useTableData();
   // Check if dish is in cart
   const cartItems = cart.filter((item) => item.dish?._id === dishData._id);

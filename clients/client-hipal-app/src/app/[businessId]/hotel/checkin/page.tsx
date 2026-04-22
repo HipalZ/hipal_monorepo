@@ -166,17 +166,10 @@ const page = async ({
             room={room}
           />
         </section>
-        {/* <section>
-          <QuickCard />
-        </section> */}
         <ChatCardSection
           themeData={themeData}
           businessId={businessData.businessId}
         />
-        {/* <CheckOutRequest
-          businessId={businessData.businessId}
-          themeData={themeData}
-        /> */}
       </ViewPortContainer>
     </HotelBackgroundContainer>
   );
