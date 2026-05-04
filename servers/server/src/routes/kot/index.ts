@@ -1,15 +1,4 @@
-import {
-  BusinessPosConfig,
-  Kitchen,
-  KotOrder,
-  MergeTable,
-  PasswordManager,
-  PaymentAlert,
-  Table,
-  User,
-  UserAnalytic,
-  UserSession,
-} from '@hi/db-models';
+import { BusinessPosConfig, Kitchen, KotOrder, PasswordManager, PaymentAlert, Table, User, UserAnalytic, UserSession } from '@hi/db-models';
 import type { UserSessionSchemaType } from '@hi/db-models/src/validators';
 
 import { kotOrderAcceptSchema } from '@hi/db-models/src/validators';
@@ -473,235 +462,208 @@ const kotRouter = new Hono()
     },
   )
 
-.post(
-  '/delete_kot',
-  zValidator(
-    'json',
-    z.object({
-      kotItems: z.array(
-        z.object({
-          itemId: z.string().min(24).max(24),
-          quantity: z.number().min(1),
-        }),
-      ),
-      deletedBy: z.string().min(1).max(50),
-      reasonOfDeletion: z.string().min(1).max(500),
-      password: z.string().min(4).max(50).optional(),
-    }),
-  ),
-  async (c) => {
-    //@ts-ignore
-    return runInTransaction(async (session: ClientSession) => {
-      const { kotItems, deletedBy, reasonOfDeletion, password } =
-        await c.req.json();
+  .post(
+    '/delete_kot',
+    zValidator(
+      'json',
+      z.object({
+        kotItems: z.array(
+          z.object({
+            itemId: z.string().min(24).max(24),
+            quantity: z.number().min(1),
+          }),
+        ),
+        deletedBy: z.string().min(1).max(50),
+        reasonOfDeletion: z.string().min(1).max(500),
+        password: z.string().min(4).max(50).optional(),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { kotItems, deletedBy, reasonOfDeletion, password } = await c.req.json();
 
-      // ✅ USER VALIDATION
-      const user = await User.findById(deletedBy).session(session);
-      if (!user) {
-        return respond(c, 'User not found', true, 404);
-      }
-
-      const itemIds = kotItems.map((i) => i.itemId);
-
-      const kotDocs = await KotOrder.find(
-        { 'cart._id': { $in: itemIds } },
-        {
-          cart: 1,
-          businessId: 1,
-          acceptedBy: 1,
-          tableName: 1,
-          name: 1,
-          phone: 1,
-          kotInvoiceNumber: 1,
-        },
-      ).session(session);
-
-      // ✅ SAFETY CHECK
-      if (!kotDocs.length) {
-        return respond(c, 'KOT items not found', true, 404);
-      }
-
-      const tableSession = await UserSession.findOne({
-        tableName: kotDocs[0].tableName,
-        businessId: kotDocs[0].businessId,
-      });
-
-      if (!tableSession) {
-        return respond(c, 'Table session not found', true, 404);
-      }
-
-      const tableInfo = await Table.findOne({
-        businessId: kotDocs[0].businessId,
-        name: tableSession.tableName,
-      }).session(session);
-
-      // ✅ BUSINESS RULES
-      if (checkOriginBillIsSplit(tableSession)) {
-        return respond(c, 'Bill already split you cannot delete the KOT', true, 400);
-      }
-
-      if (tableSession.isDiscountApplied) {
-        return respond(
-          c,
-          'Discount already applied for this table please remove it first',
-          true,
-          400,
-        );
-      }
-
-      // ✅ PASSWORD CHECK
-      if (password) {
-        const passwordManager = await PasswordManager.findOne({
-          businessId: kotDocs[0].businessId,
-          name: 'DELETE_KOT',
-          isActive: true,
-          password,
-        });
-
-        if (!passwordManager) {
-          return respond(c, 'Please enter the correct delete kot password.', true, 400);
-        }
-      }
-
-      // ✅ FIXED LOOKUP (CORE FIX)
-      const lookup = new Map<string, { kotDoc: any; cartItem: any }>();
-
-      for (const kd of kotDocs) {
-        for (const ci of kd.cart) {
-          const id = ci._id.toString();
-
-          if (!itemIds.includes(id)) continue;
-          if (ci.isDeleted) continue;
-          if (lookup.has(id)) continue;
-
-          lookup.set(id, { kotDoc: kd, cartItem: ci });
-        }
-      }
-
-      // ✅ VALIDATION
-      for (const { itemId, quantity } of kotItems) {
-        const entry = lookup.get(itemId);
-
-        if (!entry) {
-          return respond(
-            c,
-            `KOT item ${itemId} not found or already deleted`,
-            true,
-            404,
-          );
+        // ✅ USER VALIDATION
+        const user = await User.findById(deletedBy).session(session);
+        if (!user) {
+          return respond(c, 'User not found', true, 404);
         }
 
-        if (quantity > entry.cartItem.quantity) {
-          return respond(c, 'Quantity exceeds available amount', true, 400);
-        }
-      }
+        const itemIds = kotItems.map((i) => i.itemId);
 
-      // ✅ PROCESS DELETE
-      for (const { itemId, quantity } of kotItems) {
-        const { kotDoc, cartItem: matched } = lookup.get(itemId)!;
-        const kotId = kotDoc._id;
-
-        // reduce quantity if partial
-        if (matched.quantity > quantity) {
-          await KotOrder.updateOne(
-            { _id: kotId, 'cart._id': itemId },
-            { $inc: { 'cart.$.quantity': -quantity } },
-            { session },
-          );
-        }
-
-        const original = matched.toObject();
-        delete original._id;
-
-        const baseDeleted = {
-          ...original,
-          quantity: 1,
-          isDeleted: true,
-          deletedBy: user.name,
-          reasonOfDeletion,
-        };
-
-        let deletedItems: any[] = [];
-
-        if (quantity === matched.quantity) {
-          // ✅ full delete
-          await KotOrder.updateOne(
-            { _id: kotId, 'cart._id': itemId },
-            {
-              $set: {
-                'cart.$.isDeleted': true,
-                'cart.$.deletedBy': user.name,
-                'cart.$.reasonOfDeletion': reasonOfDeletion,
-              },
-            },
-            { session },
-          );
-
-          deletedItems = [{ ...baseDeleted, quantity }];
-        } else {
-          // ✅ partial delete
-          deletedItems = Array.from({ length: quantity }, () => ({
-            ...baseDeleted,
-          }));
-
-          await KotOrder.updateOne(
-            { _id: kotId },
-            { $push: { cart: { $each: deletedItems } } },
-            { session },
-          );
-        }
-
-        // ✅ RECALCULATE TABLE TOTAL
-        const calSubTotal = await calculateSubtotal(
-          tableSession.tableName,
-          tableSession.businessId,
-          session,
-        );
-
-        await Table.updateOne(
-          { businessId: kotDoc.businessId, name: kotDoc.tableName },
-          { $set: { currentTableAmount: calSubTotal } },
-          { session },
-        );
-
-        // ✅ PRINT EVENT
-        const pos = await BusinessPosConfig.findOne(
+        const kotDocs = await KotOrder.find(
+          { 'cart._id': { $in: itemIds } },
           {
-            businessId: kotDoc.businessId,
-            isDeleted: false,
-            active: true,
+            cart: 1,
+            businessId: 1,
+            acceptedBy: 1,
+            tableName: 1,
+            name: 1,
+            phone: 1,
+            kotInvoiceNumber: 1,
           },
-          undefined,
-          { session },
-        );
+        ).session(session);
 
-        const captain = await User.findById(kotDoc.acceptedBy).session(session);
+        // ✅ SAFETY CHECK
+        if (!kotDocs.length) {
+          return respond(c, 'KOT items not found', true, 404);
+        }
 
-        const cart = await assignKitchenToDish(
-          tableInfo?.zoneId || '',
-          tableInfo?.businessId || '',
-          deletedItems,
-        );
-
-        deleteKOTPrintEvent({
-          tableName: kotDoc.tableName,
-          businessId: kotDoc.businessId,
-          customerName: kotDoc.name,
-          customerPhone: kotDoc.phone,
-          cart,
-          deletedBy: user.name,
-          acceptedBy: captain?.name || user.name,
-          kotId: nanoid(10),
-          date: Date.now(),
-          posRestName: pos?.restName,
-          kotInvoiceNumber: kotDoc.kotInvoiceNumber,
+        const tableSession = await UserSession.findOne({
+          tableName: kotDocs[0].tableName,
+          businessId: kotDocs[0].businessId,
         });
-      }
 
-      return respond(c, 'KOT item(s) marked as deleted successfully', false, 200);
-    });
-  },
-);
+        if (!tableSession) {
+          return respond(c, 'Table session not found', true, 404);
+        }
+
+        const tableInfo = await Table.findOne({
+          businessId: kotDocs[0].businessId,
+          name: tableSession.tableName,
+        }).session(session);
+
+        // ✅ BUSINESS RULES
+        if (checkOriginBillIsSplit(tableSession)) {
+          return respond(c, 'Bill already split you cannot delete the KOT', true, 400);
+        }
+
+        if (tableSession.isDiscountApplied) {
+          return respond(c, 'Discount already applied for this table please remove it first', true, 400);
+        }
+
+        // ✅ PASSWORD CHECK
+        if (password) {
+          const passwordManager = await PasswordManager.findOne({
+            businessId: kotDocs[0].businessId,
+            name: 'DELETE_KOT',
+            isActive: true,
+            password,
+          });
+
+          if (!passwordManager) {
+            return respond(c, 'Please enter the correct delete kot password.', true, 400);
+          }
+        }
+
+        // ✅ FIXED LOOKUP (CORE FIX)
+        const lookup = new Map<string, { kotDoc: any; cartItem: any }>();
+
+        for (const kd of kotDocs) {
+          for (const ci of kd.cart) {
+            const id = ci._id.toString();
+
+            if (!itemIds.includes(id)) continue;
+            if (ci.isDeleted) continue;
+            if (lookup.has(id)) continue;
+
+            lookup.set(id, { kotDoc: kd, cartItem: ci });
+          }
+        }
+
+        // ✅ VALIDATION
+        for (const { itemId, quantity } of kotItems) {
+          const entry = lookup.get(itemId);
+
+          if (!entry) {
+            return respond(c, `KOT item ${itemId} not found or already deleted`, true, 404);
+          }
+
+          if (quantity > entry.cartItem.quantity) {
+            return respond(c, 'Quantity exceeds available amount', true, 400);
+          }
+        }
+
+        // ✅ PROCESS DELETE
+        for (const { itemId, quantity } of kotItems) {
+          const { kotDoc, cartItem: matched } = lookup.get(itemId)!;
+          const kotId = kotDoc._id;
+
+          // reduce quantity if partial
+          if (matched.quantity > quantity) {
+            await KotOrder.updateOne({ _id: kotId, 'cart._id': itemId }, { $inc: { 'cart.$.quantity': -quantity } }, { session });
+          }
+
+          const original = matched.toObject();
+          delete original._id;
+
+          const baseDeleted = {
+            ...original,
+            quantity: 1,
+            isDeleted: true,
+            deletedBy: user.name,
+            reasonOfDeletion,
+          };
+
+          let deletedItems: any[] = [];
+
+          if (quantity === matched.quantity) {
+            // ✅ full delete
+            await KotOrder.updateOne(
+              { _id: kotId, 'cart._id': itemId },
+              {
+                $set: {
+                  'cart.$.isDeleted': true,
+                  'cart.$.deletedBy': user.name,
+                  'cart.$.reasonOfDeletion': reasonOfDeletion,
+                },
+              },
+              { session },
+            );
+
+            deletedItems = [{ ...baseDeleted, quantity }];
+          } else {
+            // ✅ partial delete
+            deletedItems = Array.from({ length: quantity }, () => ({
+              ...baseDeleted,
+            }));
+
+            await KotOrder.updateOne({ _id: kotId }, { $push: { cart: { $each: deletedItems } } }, { session });
+          }
+
+          // ✅ RECALCULATE TABLE TOTAL
+          const calSubTotal = await calculateSubtotal(tableSession.tableName, tableSession.businessId, session);
+
+          await Table.updateOne(
+            { businessId: kotDoc.businessId, name: kotDoc.tableName },
+            { $set: { currentTableAmount: calSubTotal } },
+            { session },
+          );
+
+          // ✅ PRINT EVENT
+          const pos = await BusinessPosConfig.findOne(
+            {
+              businessId: kotDoc.businessId,
+              isDeleted: false,
+              active: true,
+            },
+            undefined,
+            { session },
+          );
+
+          const captain = await User.findById(kotDoc.acceptedBy).session(session);
+
+          const cart = await assignKitchenToDish(tableInfo?.zoneId || '', tableInfo?.businessId || '', deletedItems);
+
+          deleteKOTPrintEvent({
+            tableName: kotDoc.tableName,
+            businessId: kotDoc.businessId,
+            customerName: kotDoc.name,
+            customerPhone: kotDoc.phone,
+            cart,
+            deletedBy: user.name,
+            acceptedBy: captain?.name || user.name,
+            kotId: nanoid(10),
+            date: Date.now(),
+            posRestName: pos?.restName,
+            kotInvoiceNumber: kotDoc.kotInvoiceNumber,
+          });
+        }
+
+        return respond(c, 'KOT item(s) marked as deleted successfully', false, 200);
+      });
+    },
+  )
 
   .put(
     '/',
