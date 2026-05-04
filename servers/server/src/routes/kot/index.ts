@@ -2,7 +2,6 @@ import {
   BusinessPosConfig,
   Kitchen,
   KotOrder,
-  MergeTable,
   PasswordManager,
   PaymentAlert,
   Table,
@@ -521,8 +520,6 @@ const kotRouter = new Hono()
 
   .post(
     "/delete_kot",
-
-    // ubacMiddleware("delete_kot"),
     zValidator(
       "json",
       z.object({
@@ -543,13 +540,11 @@ const kotRouter = new Hono()
         const { kotItems, deletedBy, reasonOfDeletion, password } =
           await c.req.json();
 
-        // 1. Load and validate user
         const user = await User.findById(deletedBy).session(session);
-        if (!user) {
-          return respond(c, "User not found", true, 404);
-        }
+        if (!user) return respond(c, "User not found", true, 404);
 
         const itemIds = kotItems.map((i) => i.itemId);
+
         const kotDocs = await KotOrder.find(
           { "cart._id": { $in: itemIds } },
           {
@@ -559,42 +554,46 @@ const kotRouter = new Hono()
             tableName: 1,
             name: 1,
             phone: 1,
-            isDeleted: 1,
             kotInvoiceNumber: 1,
           },
         ).session(session);
 
-        const tableSession = (await UserSession.findOne({
+        // ✅ SAFETY: no docs found
+        if (!kotDocs.length) {
+          return respond(c, "KOT items not found", true, 404);
+        }
+
+        const tableSession = await UserSession.findOne({
           tableName: kotDocs[0].tableName,
           businessId: kotDocs[0].businessId,
-        })) as UserSessionSchemaType;
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404);
+        }
 
         const tableInfo = await Table.findOne({
           businessId: kotDocs[0].businessId,
           name: tableSession.tableName,
         }).session(session);
 
-        const billAlreadySplit = checkOriginBillIsSplit(tableSession);
-        if (billAlreadySplit) {
+        // ✅ BUSINESS RULES
+        if (checkOriginBillIsSplit(tableSession)) {
           return respond(
             c,
             "Bill already split you cannot delete the KOT",
             true,
             400,
-            {},
           );
         }
 
-        if (tableSession) {
-          if (tableSession.isDiscountApplied) {
-            return respond(
-              c,
-              "Discount already applied for this table please remove it first",
-              true,
-              400,
-              {},
-            );
-          }
+        if (tableSession.isDiscountApplied) {
+          return respond(
+            c,
+            "Discount already applied for this table please remove it first",
+            true,
+            400,
+          );
         }
 
         if (password) {
@@ -602,7 +601,7 @@ const kotRouter = new Hono()
             businessId: kotDocs[0].businessId,
             name: "DELETE_KOT",
             isActive: true,
-            password: password,
+            password,
           });
 
           if (!passwordManager) {
@@ -611,47 +610,44 @@ const kotRouter = new Hono()
               "Please enter the correct delete kot password.",
               true,
               400,
-              {},
             );
           }
         }
 
-        const deletedOrders = kotDocs.filter((d) => d.isDeleted);
-        if (deletedOrders.length) {
-          const ids = deletedOrders.map((d) => d._id.toString()).join(", ");
-          return respond(
-            c,
-            `KOT order${
-              deletedOrders.length > 1 ? "s" : ""
-            } (${ids}) already deleted`,
-            true,
-            400,
-          );
-        }
-
+        // ✅ FIXED LOOKUP (CORE FIX)
         const lookup = new Map<string, { kotDoc: any; cartItem: any }>();
+
         for (const kd of kotDocs) {
           for (const ci of kd.cart) {
             const id = ci._id.toString();
-            if (itemIds.includes(id)) {
-              lookup.set(id, { kotDoc: kd, cartItem: ci });
-            }
+
+            if (!itemIds.includes(id)) continue;
+            if (ci.isDeleted) continue; // 🔥 ignore deleted
+            if (lookup.has(id)) continue; // 🔥 prevent overwrite
+
+            lookup.set(id, { kotDoc: kd, cartItem: ci });
           }
         }
 
+        // ✅ VALIDATION
         for (const { itemId, quantity } of kotItems) {
           const entry = lookup.get(itemId);
+
           if (!entry) {
-            return respond(c, `KOT item ${itemId} not found`, true, 404);
+            return respond(
+              c,
+              `KOT item ${itemId} not found or already deleted`,
+              true,
+              404,
+            );
           }
-          if (entry.cartItem.isDeleted) {
-            return respond(c, `KOT item ${itemId} already deleted`, true, 400);
-          }
+
           if (quantity > entry.cartItem.quantity) {
             return respond(c, "Quantity exceeds available amount", true, 400);
           }
         }
 
+        // ✅ PROCESS DELETE
         for (const { itemId, quantity } of kotItems) {
           const { kotDoc, cartItem: matched } = lookup.get(itemId)!;
           const kotId = kotDoc._id;
@@ -666,6 +662,7 @@ const kotRouter = new Hono()
 
           const original = matched.toObject();
           delete original._id;
+
           const baseDeleted = {
             ...original,
             quantity: 1,
@@ -674,10 +671,9 @@ const kotRouter = new Hono()
             reasonOfDeletion,
           };
 
-          let deletedItems: (typeof baseDeleted)[];
+          let deletedItems: any[] = [];
 
           if (quantity === matched.quantity) {
-            // full-stack delete: mark existing cart item
             await KotOrder.updateOne(
               { _id: kotId, "cart._id": itemId },
               {
@@ -690,10 +686,8 @@ const kotRouter = new Hono()
               { session },
             );
 
-            // for billing, treat it as one item of `quantity`
             deletedItems = [{ ...baseDeleted, quantity }];
           } else {
-            // partial delete: push `quantity` one-unit deleted copies
             deletedItems = Array.from({ length: quantity }, () => ({
               ...baseDeleted,
             }));
@@ -705,6 +699,7 @@ const kotRouter = new Hono()
             );
           }
 
+          // ✅ RECALCULATE
           const calSubTotal = await calculateSubtotal(
             tableSession.tableName,
             tableSession.businessId,
@@ -726,76 +721,23 @@ const kotRouter = new Hono()
             undefined,
             { session },
           );
+
           const captain = await User.findById(kotDoc.acceptedBy).session(
             session,
           );
+
           const cart = await assignKitchenToDish(
             tableInfo?.zoneId || "",
             tableInfo?.businessId || "",
-            deletedItems.map((it) => ({ ...it, quantity: it.quantity })),
+            deletedItems,
           );
-
-          const tableData = await Table.findOne({
-            businessId: tableInfo?.businessId,
-            name: tableInfo?.name,
-          }).session(session);
-
-          if (
-            tableData?.currentTableAmount === 0 &&
-            tableSession.billInvoice === 0
-          ) {
-            await KotOrder.updateMany(
-              {
-                tableName: tableData?.name,
-                settled: false,
-                businessId: tableData?.businessId,
-              },
-              { $set: { settled: true } },
-              { session },
-            );
-            const tableInfo = await Table.findByIdAndUpdate(
-              tableData?._id,
-              {
-                status: "EMPTY",
-                capacity: 0,
-                hiCode: "",
-                currentTableAmount: 0,
-                totalItemCount: 0,
-                userIds: [],
-                isTransfer: false,
-                edited: false,
-                isMerge: false,
-                mergeTableIds: [],
-                mergedBy: null,
-                isBillGenerated: false,
-              },
-              { session },
-            );
-
-            await UserSession.deleteOne(
-              {
-                businessId: tableData?.businessId,
-                tableName: tableData?.name,
-              },
-              { session },
-            );
-
-            await MergeTable.deleteOne(
-              {
-                parentTableId: tableInfo?._id,
-              },
-              {
-                session,
-              },
-            );
-          }
 
           deleteKOTPrintEvent({
             tableName: kotDoc.tableName,
             businessId: kotDoc.businessId,
             customerName: kotDoc.name,
             customerPhone: kotDoc.phone,
-            cart: cart,
+            cart,
             deletedBy: user.name,
             acceptedBy: captain?.name || user.name,
             kotId: nanoid(10),
