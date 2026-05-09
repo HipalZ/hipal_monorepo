@@ -10,6 +10,7 @@ export const campaignSchema = z.object({
       z.object({
         name: z.string().min(1).max(100),
         phone: z.string().min(3).max(100),
+        variables: z.record(z.string(), z.string()).optional(),
       }),
     )
     .default([]),

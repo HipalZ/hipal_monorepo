@@ -356,9 +356,6 @@ export const useWhatsapp = create(
 
         addVariable: () => {
           set((state) => {
-            if (state.bodyVariables.length >= 5) {
-              return state;
-            }
             const newVariables = [...state.bodyVariables, ""];
             const newBodyText = `${state.bodyText} {{${newVariables.length}}} `;
             return { bodyVariables: newVariables, bodyText: newBodyText };
@@ -479,8 +476,11 @@ export const useWhatsapp = create(
           set({
             templateName: data.name,
             templateType: data.category,
-            headerType: headerComponent?.format,
-            headerText: headerComponent?.text,
+            // Default to Text when the loaded template has no HEADER component
+            // so the editor always shows a selected option instead of an
+            // unstyled blank state.
+            headerType: headerComponent?.format ?? HeaderInterface.Text,
+            headerText: headerComponent?.text ?? "",
             imagePreview: headerImage,
 
             bodyText: bodyComponent?.text,
