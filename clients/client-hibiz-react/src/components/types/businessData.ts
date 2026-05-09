@@ -1059,6 +1059,7 @@ export interface MainResponseHandling {
 interface IBulk {
   name: string;
   phone: string;
+  variables?: Record<string, string>;
 }
 export interface ISendOptionsPayload {
   templateId: number;

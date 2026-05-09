@@ -143,6 +143,7 @@ const pushToQueue = async (
     phone: string;
     email?: string;
     _id: string;
+    variables?: Record<string, string>;
   }[],
   template: {
     templateName: string;
@@ -844,6 +845,7 @@ const whatsappRouter = new Hono()
                 name: string;
                 phone: string;
                 _id: string;
+                variables?: Record<string, string>;
               }[];
               for (const customer of bulkCustomers) {
                 if (
@@ -879,6 +881,7 @@ const whatsappRouter = new Hono()
                       name: customer.name,
                       phone: customer.phone,
                       _id: saveUser?._id.toString() || "",
+                      variables: customer.variables,
                     });
                   }
                 }

@@ -17,6 +17,36 @@ const defaultData = [
   { label: 'address', value: 'Bangalore' },
   { label: 'time', value: '10:00 AM' },
   { label: 'date', value: '31st Dec, 2024' },
+  { label: 'hostelName', value: 'Sunset Hostel' }, // alias for businessName when "Book My Hostels" branding is needed
+  { label: 'confirmationId', value: 'BMH123456' },
+  { label: 'checkinDate', value: '15 Jan 2025' },
+  { label: 'checkinTime', value: '02:00 PM' },
+  { label: 'checkoutDate', value: '17 Jan 2025' },
+  { label: 'checkoutTime', value: '11:00 AM' },
+  { label: 'roomType', value: 'Executive Suite' },
+  { label: 'roomNumber', value: '402' }, // already exists — keep
+  { label: 'guestCount', value: '2' },
+  { label: 'inclusions', value: 'Wi-Fi, Hot water' },
+  { label: 'sharingPreference', value: 'Twin Sharing' },
+  { label: 'mapsLink', value: 'https://maps.google.com/?q=BMH' },
+  { label: 'contactInfo', value: '+91 90000 00000' },
+
+  // Payment
+  { label: 'paymentStatus', value: 'Successful' }, // also covers Pending
+  { label: 'transactionDate', value: '15 Jan 2025' },
+  { label: 'amount', value: '₹4,500' },
+  { label: 'paymentMethod', value: 'UPI' },
+
+  // Cancellation
+  { label: 'cancellationDate', value: '14 Jan 2025' },
+  { label: 'cancellationFee', value: 'Nil' },
+  { label: 'refundAmount', value: '₹4,500' },
+  { label: 'refundMethod', value: 'Original Payment Method' },
+  { label: 'processingTime', value: '5-7 Business Days' },
+
+  // Extension
+  { label: 'newCheckoutDate', value: '19 Jan 2025' },
+  { label: 'additionalRate', value: '₹1,200 per night' },
 ];
 
 const defaultHotelOptions = [

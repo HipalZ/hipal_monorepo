@@ -231,7 +231,12 @@ export const useBulkUploadContacts = () => {
                 throw new Error("Invalid file format. Please ensure the file contains 'name' and 'phone' columns.");
               }
 
-              // 🔹 Step 2: Normalize and validate each row
+              // 🔹 Step 2: Normalize and validate each row.
+              // `name`, `phone`, `dob` keep their dedicated handling. EVERY other
+              // column becomes a per-row `variables[<columnHeader>]` so backend
+              // can substitute matching template placeholders (e.g. CSV column
+              // `guestName` fills the `{{guestName}}` slot at send time).
+              const RESERVED = new Set(['name', 'phone', 'dob']);
               const data = result.data.map((item: Record<string, any>) => {
                 const lowerKeys: Record<string, any> = {};
                 Object.keys(item).forEach((k) => {
@@ -244,10 +249,26 @@ export const useBulkUploadContacts = () => {
 
                 const dobTimestamp = dobRaw ? parseDobToTimestamp(dobRaw) : undefined;
 
-                const normalized = {
+                const variables: Record<string, string> = {};
+                Object.keys(item).forEach((origKey) => {
+                  const key = origKey.trim();
+                  if (!key || RESERVED.has(key.toLowerCase())) return;
+                  const raw = item[origKey];
+                  if (raw === undefined || raw === null) return;
+                  const val = String(raw).trim();
+                  if (val !== '') variables[key] = val;
+                });
+
+                const normalized: {
+                  name: string;
+                  phone: string;
+                  dob?: number;
+                  variables?: Record<string, string>;
+                } = {
                   name,
                   phone,
                   ...(dobTimestamp && { dob: dobTimestamp }),
+                  ...(Object.keys(variables).length > 0 && { variables }),
                 };
 
                 if (normalized.phone) {
