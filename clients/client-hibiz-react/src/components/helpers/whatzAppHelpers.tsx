@@ -67,13 +67,13 @@ export const useWhatzappCroppedImg = () => {
           const croppedFile = new File([blob], imageFiles?.name, {
             type: 'image/png',
           });
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            setImagePreview(reader?.result);
-            setImageFiles(croppedFile);
-            setShowCropper(false);
-          };
-          reader.readAsDataURL(croppedFile);
+          // Use a blob URL for the preview — keeps the multi-MB base64 string
+          // out of state (and out of localStorage). The real File goes to
+          // setImageFiles so uploadMedia() works unchanged.
+          const blobUrl = URL.createObjectURL(croppedFile);
+          setImagePreview(blobUrl);
+          setImageFiles(croppedFile);
+          setShowCropper(false);
         } catch (err) {
           console.error(err);
         }

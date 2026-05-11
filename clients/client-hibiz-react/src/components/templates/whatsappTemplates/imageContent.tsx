@@ -4,38 +4,56 @@ import { type ChangeEvent, memo, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { BiPlus, BiX } from 'react-icons/bi';
 
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB frontend cap (Meta's hard limit is 5 MB; over that returns a Meta error to the popup)
+
 const MemoImageContent = () => {
   const setHeaderType = useWhatsapp((s) => s.setHeaderType);
   const imagePreview = useWhatsapp((s) => s.imagePreview);
   const setImageFiles = useWhatsapp((s) => s.setImageFiles);
   const setImagePreview = useWhatsapp((s) => s.setImagePreview);
   const setCropping = useWhatsapp((s) => s.setCropping);
+  const setTemplateError = useWhatsapp((s) => s.setTemplateError);
   const templateImageRef = useRef<HTMLInputElement | null>(null);
+
   const handleImageChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       const file = event?.target?.files?.[0];
-      if (file) {
-        const maxSizeInBytes = 2 * 1024 * 1024; // 2MB in bytes
-        if (file.size > maxSizeInBytes) {
-          toast.error('File size exceeds 2MB. Please select a smaller file.');
-          return;
-        }
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onloadend = () => {
-          setCropping({ image: reader.result, type: file.type });
-          setImagePreview(reader.result as string);
-          setImageFiles(file);
-        };
+      if (!file) return;
+
+      if (file.size > MAX_IMAGE_BYTES) {
+        const mb = (file.size / 1024 / 1024).toFixed(1);
+        setTemplateError(
+          `This image is ${mb} MB — over the 10 MB limit. Please pick a smaller image.`,
+        );
+        if (templateImageRef.current) templateImageRef.current.value = '';
+        return;
       }
+
+      // Blob URL — small token string, no localStorage bloat. Works as both
+      // the cropper source and the preview <img src>.
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(imagePreview);
+        } catch {}
+      }
+      const blobUrl = URL.createObjectURL(file);
+      setCropping({ image: blobUrl, type: file.type });
+      setImagePreview(blobUrl);
+      setImageFiles(file);
     },
-    [setImageFiles, setImagePreview, setCropping],
+    [setImageFiles, setImagePreview, setCropping, setTemplateError, imagePreview],
   );
 
   const handleRemoveImage = useCallback(() => {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(imagePreview);
+      } catch {}
+    }
     setImagePreview('');
+    setImageFiles(null);
     setHeaderType(HeaderInterface.Image);
-  }, [setHeaderType, setImagePreview]);
+  }, [imagePreview, setHeaderType, setImagePreview, setImageFiles]);
 
   return (
     <>
