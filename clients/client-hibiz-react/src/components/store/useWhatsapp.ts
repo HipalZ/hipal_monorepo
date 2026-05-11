@@ -292,6 +292,9 @@ interface whatsappTemplate {
 
   openBot: boolean;
   setOpenBot: (openBot: boolean) => void;
+
+  templateError: string | null;
+  setTemplateError: (error: string | null) => void;
 }
 
 export const useWhatsapp = create(
@@ -660,11 +663,34 @@ export const useWhatsapp = create(
           set({ whatzappFormEnabled: value }),
         openBot: false,
         setOpenBot: (openBot: boolean) => set({ openBot }),
+
+        templateError: null,
+        setTemplateError: (error: string | null) => set({ templateError: error }),
       };
     },
     {
       name: "whatsapp-storage",
       storage: createJSONStorage(() => localStorage),
+      // Skip transient + non-serializable state from localStorage:
+      //   - templateError   : stale errors must not resurrect on reload.
+      //   - imagePreview    : was base64 data URL — multi-MB strings blew the
+      //                       quota (~3.5 MB ceiling). Now a blob URL that's
+      //                       only valid in the current page session anyway.
+      //   - videoPreview    : same reason as imagePreview.
+      //   - imageFiles      : File objects aren't JSON-serializable; storing
+      //                       silently produced `{}` and broke uploadMedia().
+      //   - cropping        : holds a temporary data URL during cropping.
+      partialize: (state) =>
+        Object.fromEntries(
+          Object.entries(state).filter(
+            ([key]) =>
+              key !== "templateError" &&
+              key !== "imagePreview" &&
+              key !== "videoPreview" &&
+              key !== "imageFiles" &&
+              key !== "cropping",
+          ),
+        ) as whatsappTemplate,
     },
   ),
 );

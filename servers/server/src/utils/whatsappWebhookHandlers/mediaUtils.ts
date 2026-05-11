@@ -1,12 +1,13 @@
 import axios from "axios";
 import FormData from "form-data";
 
-// ✅ STEP 1: Update limit to 5MB to match your storage server
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+// 10 MB cap for WhatsApp media. Other features (banners, explore, etc.) keep
+// their own smaller frontend checks; this is WhatsApp-specific.
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 /**
  * Downloads from WhatsApp.
- * Throws "FILE_TOO_LARGE" if metadata indicates size > 5MB.
+ * Throws "FILE_TOO_LARGE" if metadata indicates size > 10MB.
  */
 async function downloadWhatsAppMedia(mediaId: string, token: string) {
   try {
@@ -72,11 +73,12 @@ async function uploadToPermanentStorage(
 
     return uploadResponse.data?.url || uploadResponse.data?.location || "";
   } catch (error: any) {
-    // ✅ STEP 2: Catch Storage Server Rejection
-    // Your log showed: status 400 and data "File size exceeds the 5 MB limit."
+    // Catch storage server rejection for any file-size limit message (the
+    // server can return "5 MB" or "10 MB" depending on its current config).
     if (
       error.response?.status === 400 &&
-      error.response?.data?.includes("limit")
+      typeof error.response?.data === "string" &&
+      error.response.data.includes("limit")
     ) {
       const customError: any = new Error("Storage server rejected file size");
       customError.code = "FILE_TOO_LARGE";

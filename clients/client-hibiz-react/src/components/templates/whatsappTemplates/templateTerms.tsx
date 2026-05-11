@@ -106,6 +106,7 @@ const MemoTemplateTerms = () => {
   const secondWebsiteUrl = useWhatsapp((s) => s.secondWebsiteUrl);
   const secondPhoneNumber = useWhatsapp((s) => s.secondPhoneNumber);
   const bodyVariableSequence = useWhatsapp((s) => s.bodyVariableSequence);
+  const setTemplateError = useWhatsapp((s) => s.setTemplateError);
   const templateId = useWhatsapp((s) => s.templateId);
   const setShowSuccessPopup = useWhatsapp((s) => s.setShowSuccessPopup);
   const confirmCreate = useWhatsapp((s) => s.confirmCreate);
@@ -119,6 +120,29 @@ const MemoTemplateTerms = () => {
   const { uploadMedia } = useMediaUpload();
 
   const handleConfirmPopUp = useCallback(async () => {
+    // Clear any previous error so the retry starts clean.
+    setTemplateError(null);
+
+    // Pre-flight: Meta rejects bodies that start or end with a placeholder.
+    // Plus a couple of cheap local checks so the user gets fast feedback.
+    const trimmedBody = (bodyText ?? '').trim();
+    if (!templateName || templateName.trim().length < 3) {
+      setTemplateError('Template name must be at least 3 characters.');
+      return;
+    }
+    if (trimmedBody.length < 24) {
+      setTemplateError('Message body is too short (minimum 24 characters).');
+      return;
+    }
+    if (/^\{\{(?:\d+|[a-zA-Z_][\w]*)\}\}/.test(trimmedBody)) {
+      setTemplateError('The message body cannot START with a variable. Add some text before the first {{...}} placeholder.');
+      return;
+    }
+    if (/\{\{(?:\d+|[a-zA-Z_][\w]*)\}\}\s*$/.test(trimmedBody)) {
+      setTemplateError('The message body cannot END with a variable. Add some text after the last {{...}} placeholder.');
+      return;
+    }
+
     setIsLoading(true);
     let whatsappImageHandler = imagePreview || '';
 
@@ -208,6 +232,11 @@ const MemoTemplateTerms = () => {
 
     if (buttons.length > 0) components.push({ type: 'BUTTONS', buttons });
 
+    // Only send `imageUrl` if we have a real HTTPS URL — never base64 or a
+    // blob: URL (those are local-only and would be useless on the backend).
+    const safeImageUrl =
+      imagePreview && /^https?:\/\//i.test(imagePreview) ? imagePreview : undefined;
+
     // FINAL payload
     const payload: WhatsAppTemplatePayload = {
       businessId,
@@ -216,17 +245,22 @@ const MemoTemplateTerms = () => {
       ...(templateId?.length ? { templateId } : {}),
       category: templateType,
       components,
-      ...(imagePreview ? { imageUrl: imagePreview } : {}),
+      ...(safeImageUrl ? { imageUrl: safeImageUrl } : {}),
       ...(Array.isArray(bodyVariableSequence) ? { bodyVariableSequence } : {}),
     };
-    if (templateId?.length > 0) {
-      await editTemplate(payload);
-    } else {
-      await createTemplate(payload);
+    try {
+      if (templateId?.length > 0) {
+        await editTemplate(payload);
+      } else {
+        await createTemplate(payload);
+      }
+    } catch (err: any) {
+      // Mutation hooks already surface the error via setTemplateError. As a
+      // final safety net, capture anything that escaped (sync throw, etc.).
+      setTemplateError(err?.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-
-    setShowSuccessPopup(true);
-    setIsLoading(false);
   }, [
     businessId,
     businessName,
@@ -241,7 +275,7 @@ const MemoTemplateTerms = () => {
     phoneNumber,
     templateId,
     uploadMedia,
-    setShowSuccessPopup,
+    setTemplateError,
     bodyVariableSequence,
     createTemplate,
     editTemplate,
@@ -252,7 +286,7 @@ const MemoTemplateTerms = () => {
     secondActionType,
     secondPhoneNumber,
     secondWebsiteUrl,
-    flow?.id
+    flow?.id,
   ]);
 
   const [isAccepted, setIsAccepted] = useState(false);

@@ -1,9 +1,11 @@
+import MiddlePopUp from '@/components/atom/middlePopUp';
 import { normalizeInput, useAddTemplate } from '@/components/helpers/whatzAppHelpers';
 import useBusinessData from '@/components/store/useBusinessData';
 import useWhatsapp, { HeaderInterface } from '@/components/store/useWhatsapp';
 import { cn } from '@/components/utils/helper';
 import { lazy, memo, useCallback, useEffect } from 'react';
 import { BiPlus } from 'react-icons/bi';
+import { FiAlertTriangle } from 'react-icons/fi';
 import { IoMdClose } from 'react-icons/io';
 
 const MediaContent = lazy(() => import('./mediaContent'));
@@ -75,6 +77,8 @@ const MemoContent = () => {
   const updateBodySequenceVariable = useWhatsapp((s) => s.updateBodySequenceVariable);
   const updateDisplayBodySequenceVariable = useWhatsapp((s) => s.updateDisplayBodySequenceVariable);
   const footerText = useWhatsapp((s) => s.footerText);
+  const templateError = useWhatsapp((s) => s.templateError);
+  const setTemplateError = useWhatsapp((s) => s.setTemplateError);
   const { addTemplateName, handleBodyTextChange, handleFooterInput } = useAddTemplate();
 
   const handleAddVariable = useCallback(() => {
@@ -99,6 +103,29 @@ const MemoContent = () => {
 
   return (
     <section className="mx-auto mb-4 w-full rounded-lg border bg-white p-3 shadow-md">
+      <MiddlePopUp show={Boolean(templateError)} onlyPopUp>
+        <div className="w-full overflow-hidden rounded-[1.5rem] bg-white">
+          <div className="flex items-center gap-3 bg-gradient-to-r from-red-600 to-red-500 px-6 py-4 text-white">
+            <FiAlertTriangle className="text-2xl" />
+            <h3 className="text-lg font-semibold">Template could not be saved</h3>
+          </div>
+          <div className="px-6 py-5">
+            <p className="text-sm leading-relaxed text-gray-700">{templateError}</p>
+            <p className="mt-3 text-xs italic text-gray-500">
+              Your edits are preserved. Adjust the template and try again.
+            </p>
+          </div>
+          <div className="flex justify-end border-t bg-gray-50 px-6 py-3">
+            <button
+              type="button"
+              onClick={() => setTemplateError(null)}
+              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+            >
+              Got it, let me fix
+            </button>
+          </div>
+        </div>
+      </MiddlePopUp>
       <div className="mb-4">
         <label htmlFor="templateName" className="mb-2 block font-bold">
           Template Name <span className="text-red-500">*</span>
