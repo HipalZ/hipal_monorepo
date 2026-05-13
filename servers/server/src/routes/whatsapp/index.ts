@@ -57,7 +57,7 @@ import { whatsAppChatHandler } from '../../utils/whatsappWebhookHandlers/chatHan
 import { handleChatbotFlow } from '../../utils/whatsappWebhookHandlers/flows';
 import { identifyQrTypeFromMessage, whatsAppEventData, whatsAppUserAndTextMessage } from '../../utils/whatsappWebhookHandlers/helper';
 import { whatsAppBlockUserHandler } from '../../utils/whatsappWebhookHandlers/whatsappBlockUser';
-// import { enqueueWhatsAppJob } from "../../queues/enqueue";
+
 interface AxiosError {
   response?: {
     status?: number;
@@ -1708,11 +1708,8 @@ const whatsappRouter = new Hono()
           // those orders also credit the right amount.
           const totalAmount = Number(getOrder?.total) || 0;
           const storedBase = Number(getOrder?.billValue) || 0;
-          const looksLikeLegacy =
-            storedBase > 0 && Math.abs(storedBase - totalAmount) < 0.01;
-          const baseToCredit = looksLikeLegacy
-            ? Math.round(totalAmount / 1.18)
-            : storedBase;
+          const looksLikeLegacy = storedBase > 0 && Math.abs(storedBase - totalAmount) < 0.01;
+          const baseToCredit = looksLikeLegacy ? Math.round(totalAmount / 1.18) : storedBase;
 
           await WhatsAppWallet.findOneAndUpdate(
             {
@@ -2699,6 +2696,3 @@ const whatsappRouter = new Hono()
   );
 
 export default whatsappRouter;
-function bodyLimit(arg0: { maxSize: number; onError: (c: any) => any }): any {
-  throw new Error('Function not implemented.');
-}
