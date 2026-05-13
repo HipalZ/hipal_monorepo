@@ -5,6 +5,7 @@ import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import useWhatsapp, {
   Step,
   TemplateSteps,
+  type WalletTransaction,
 } from "@/components/store/useWhatsapp";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 import type { LinkedTemplate } from "@/components/templates/whatsappTemplates/linkTemplatePopup";
@@ -12,7 +13,6 @@ import type {
   ICouponzLinks,
   ISendOptionsPayload,
   IUserMessage,
-  IWalletHistory,
   WhatsAppTemplatePayload,
 } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
@@ -426,19 +426,28 @@ export const useWalletBalance = () => {
     return response;
   }, [businessId, setWalletBalance]);
 
-  const getWalletHistory = useCallback(async () => {
-    if (!businessId) return;
-    const res = await apiRpc.whatsapp.whatsapp_wallet.history[
-      ":businessId"
-    ].$get({
-      param: {
-        businessId,
-      },
-    });
-    const response: { data: IWalletHistory[] } = await res.json();
-    setWalletHistory(response?.data);
-    return response;
-  }, [businessId, setWalletHistory]);
+  const getWalletHistory = useCallback(
+    async (opts?: { from?: number; to?: number }) => {
+      if (!businessId) return;
+      const query: Record<string, string> = {};
+      if (opts?.from != null) query.from = String(opts.from);
+      if (opts?.to != null) query.to = String(opts.to);
+      const res = await apiRpc.whatsapp.whatsapp_wallet.history[
+        ":businessId"
+      ].$get({
+        param: {
+          businessId,
+        },
+        query,
+      });
+      const response = (await res.json()) as unknown as {
+        data: WalletTransaction[];
+      };
+      setWalletHistory(response?.data ?? []);
+      return response;
+    },
+    [businessId, setWalletHistory],
+  );
 
   return { getWalletBalance, getWalletHistory };
 };
