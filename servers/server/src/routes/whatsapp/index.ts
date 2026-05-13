@@ -32,11 +32,12 @@ import {
   whatsAppWalletHistorySchema,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
-import { createHmac } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
@@ -245,6 +246,182 @@ const calculateAndCheckBalance = (
   return { insufficientBalance: false, reduceAmount };
 };
 const whatsappRouter = new Hono()
+  .post(
+    "/media-upload/:businessId",
+    bodyLimit({
+      maxSize: 10 * 1024 * 1024,
+      onError: (c) =>
+        c.json(
+          {
+            err: true,
+            message:
+              "File exceeds 10 MB upload limit. Compress or pick a smaller file.",
+            data: {},
+          },
+          413,
+        ),
+    }),
+    zValidator("param", z.object({ businessId: z.string().min(3).max(26) })),
+    async (c) => {
+      try {
+        const { businessId } = c.req.param();
+        console.log("[media-upload] start", { businessId });
+
+        const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+          businessId,
+        });
+        if (!whatsAppConfig) {
+          return respond(c, "whatsAppConfigData not found", true, 404, {});
+        }
+        const appId = "1166415764661953";
+
+        let formData: FormData;
+        try {
+          formData = await c.req.raw.formData();
+        } catch (parseErr: any) {
+          console.error("[media-upload] formData parse failed", parseErr);
+          return respond(
+            c,
+            `Could not parse multipart body. Ensure Content-Type is 'multipart/form-data' with a boundary. Detail: ${
+              parseErr?.message || parseErr?.name || "unknown"
+            }`,
+            true,
+            400,
+            {},
+          );
+        }
+
+        const file = formData.get("file");
+        const isLikeFile =
+          file &&
+          typeof file === "object" &&
+          typeof (file as any).arrayBuffer === "function";
+        if (!isLikeFile) {
+          console.error("[media-upload] no file in body", {
+            keys: Array.from(formData.keys()),
+            fileType: typeof file,
+          });
+          return respond(
+            c,
+            "Missing 'file' field in multipart body",
+            true,
+            400,
+            {},
+          );
+        }
+        const fileLike = file as any;
+        console.log("[media-upload] file received", {
+          name: fileLike.name,
+          size: fileLike.size,
+          type: fileLike.type,
+        });
+
+        // Step 1: Start a resumable upload session with Meta.
+        // Read the file bytes ONCE — we'll fan out to two destinations.
+        const buffer = Buffer.from(await fileLike.arrayBuffer());
+
+        // ── Destination A: Hipalz storage server (returns a permanent HTTPS URL).
+        const storageUpload = (async (): Promise<string> => {
+          const storageForm = new FormData();
+          storageForm.append(
+            "fileData",
+            new Blob([buffer], { type: fileLike.type }),
+            fileLike.name,
+          );
+          storageForm.append("fileName", randomUUID());
+          storageForm.append("bucketName", "assets");
+          const r = await axios.post(
+            "https://storage.test.hipalz.com/upload",
+            storageForm,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+              maxBodyLength: Number.POSITIVE_INFINITY,
+              maxContentLength: Number.POSITIVE_INFINITY,
+            },
+          );
+          return r.data?.url || r.data?.location || "";
+        })();
+
+        // ── Destination B: Meta Resumable Upload API (returns a media handle).
+        const metaUpload = (async (): Promise<string> => {
+          const sessionRes = await axios.post(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${appId}/uploads`,
+            null,
+            {
+              params: {
+                file_name: fileLike.name,
+                file_length: fileLike.size,
+                file_type: fileLike.type,
+                access_token: whatsAppConfig.token,
+              },
+            },
+          );
+          console.log("[media-upload] step1 ok", {
+            sessionId: sessionRes.data?.id,
+          });
+          const sessionId = String(sessionRes.data?.id ?? "");
+          if (!sessionId) throw new Error("Meta did not return an upload session id");
+          const sessionPath = sessionId.startsWith("upload:")
+            ? sessionId
+            : `upload:${sessionId}`;
+
+          const uploadRes = await axios.post(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${sessionPath}`,
+            buffer,
+            {
+              headers: {
+                Authorization: `OAuth ${whatsAppConfig.token}`,
+                file_offset: "0",
+                "Content-Type": "application/octet-stream",
+              },
+              maxBodyLength: Number.POSITIVE_INFINITY,
+              maxContentLength: Number.POSITIVE_INFINITY,
+            },
+          );
+          const h = uploadRes.data?.h;
+          if (!h) throw new Error("Meta did not return a media handle");
+          return h as string;
+        })();
+
+        // Run both in parallel — total time is max(storage, meta), not sum.
+        const [url, handle] = await Promise.all([storageUpload, metaUpload]);
+
+        console.log("[media-upload] fan-out done", {
+          urlPresent: Boolean(url),
+          handleLen: handle.length,
+        });
+
+        return c.json(
+          {
+            message: "Uploaded successfully",
+            err: false,
+            data: { url, handle },
+          },
+          200,
+        );
+      } catch (error: any) {
+        // Log the full error so we can debug from server logs.
+        console.error("[media-upload] unexpected error", {
+          message: error?.message,
+          status: error?.response?.status,
+          data: error?.response?.data,
+        });
+        const metaMsg =
+          error?.response?.data?.error?.error_user_msg ||
+          error?.response?.data?.error?.message ||
+          error?.message ||
+          "Unknown error";
+        return c.json(
+          {
+            message: `Media upload failed: ${metaMsg}`,
+            err: true,
+            data: error?.response?.data || {},
+          },
+          400,
+        );
+      }
+    },
+  )
   .get(
     "/template/all/:businessId",
 
@@ -2620,76 +2797,82 @@ const whatsappRouter = new Hono()
   // the business name without an extra round-trip.
   // ────────────────────────────────────────────────────────────────
   .get(
-  '/wa_payments',
-  zValidator(
-    'query',
-    z
-      .object({
-        from: z.coerce.number().int().nonnegative().optional(),
-        to: z.coerce.number().int().nonnegative().optional(),
-        order_id: z.string().optional(),
-        razorpay_id: z.string().optional(),
-        businessId: z.string().optional(),
-        limit: z.coerce.number().int().min(1).max(500).optional().default(100),
-        skip: z.coerce.number().int().nonnegative().optional().default(0),
-      })
-      .refine(
-        (d) =>
-          (d.from !== undefined && d.to !== undefined) ||
-          !!d.order_id ||
-          !!d.razorpay_id,
-        {
-          message:
-            'Provide either `from`+`to`, `order_id`, or `razorpay_id`.',
-        },
-      ),
-  ),
-  async (c) => {
-    const { from, to, order_id, razorpay_id, businessId, limit, skip } =
-      c.req.valid('query');
+    "/wa_payments",
+    zValidator(
+      "query",
+      z
+        .object({
+          from: z.coerce.number().int().nonnegative().optional(),
+          to: z.coerce.number().int().nonnegative().optional(),
+          order_id: z.string().optional(),
+          razorpay_id: z.string().optional(),
+          businessId: z.string().optional(),
+          limit: z.coerce
+            .number()
+            .int()
+            .min(1)
+            .max(500)
+            .optional()
+            .default(100),
+          skip: z.coerce.number().int().nonnegative().optional().default(0),
+        })
+        .refine(
+          (d) =>
+            (d.from !== undefined && d.to !== undefined) ||
+            !!d.order_id ||
+            !!d.razorpay_id,
+          {
+            message:
+              "Provide either `from`+`to`, `order_id`, or `razorpay_id`.",
+          },
+        ),
+    ),
+    async (c) => {
+      const { from, to, order_id, razorpay_id, businessId, limit, skip } =
+        c.req.valid("query");
 
-    const filter: Record<string, any> = {};
+      const filter: Record<string, any> = {};
 
-    // Priority: specific ID lookups first, then date range.
-    if (order_id) {
-      filter.order_id = order_id;
-    } else if (razorpay_id) {
-      // razorpay_id can be either the payment id (pay_xxx) or order id (order_xxx)
-      filter.$or = [
-        { razorpayPaymentId: razorpay_id },
-        { razorpayOrderId: razorpay_id },
-      ];
-    } else if (from !== undefined && to !== undefined) {
-      if (from > to) {
-        return c.json(
-          { message: '`from` must be <= `to`', err: true, data: [] },
-          400,
-        );
+      // Priority: specific ID lookups first, then date range.
+      if (order_id) {
+        filter.order_id = order_id;
+      } else if (razorpay_id) {
+        // razorpay_id can be either the payment id (pay_xxx) or order id (order_xxx)
+        filter.$or = [
+          { razorpayPaymentId: razorpay_id },
+          { razorpayOrderId: razorpay_id },
+        ];
+      } else if (from !== undefined && to !== undefined) {
+        if (from > to) {
+          return c.json(
+            { message: "`from` must be <= `to`", err: true, data: [] },
+            400,
+          );
+        }
+        filter.date = { $gte: from, $lte: to };
       }
-      filter.date = { $gte: from, $lte: to };
-    }
 
-    if (businessId) filter.businessId = businessId;
+      if (businessId) filter.businessId = businessId;
 
-    const [payments, count] = await Promise.all([
-      WhatsAppPayment.find(filter)
-        .populate('businessId', 'name')
-        .select(
-          'order_id razorpayPaymentId razorpayOrderId businessId date total billValue mode paymentMode userId',
-        )
-        .sort({ date: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      WhatsAppPayment.countDocuments(filter),
-    ]);
+      const [payments, count] = await Promise.all([
+        WhatsAppPayment.find(filter)
+          .populate("businessId", "name")
+          .select(
+            "order_id razorpayPaymentId razorpayOrderId businessId date total billValue mode paymentMode userId",
+          )
+          .sort({ date: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        WhatsAppPayment.countDocuments(filter),
+      ]);
 
-    return c.json({
-      message: 'Payments fetched',
-      err: false,
-      data: { items: payments, total: count, limit, skip },
-    });
-  },
-);
+      return c.json({
+        message: "Payments fetched",
+        err: false,
+        data: { items: payments, total: count, limit, skip },
+      });
+    },
+  );
 
 export default whatsappRouter;
