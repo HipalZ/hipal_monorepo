@@ -267,63 +267,39 @@ export const useMediaUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   const uploadMedia = async (): Promise<{ handle: string }> => {
+    const cached = useWhatsapp.getState().mediaHandle;
+    if (cached) return { handle: cached };
+
+    if (!imageFiles) {
+      return { handle: "" };
+    }
+    if (!businessId) {
+      throw new Error("Missing businessId");
+    }
+
+    setIsUploading(true);
     try {
-      if (!imageFiles) {
-        throw new Error("No image files to upload");
-      }
-
-      setIsUploading(true);
-
-      const res = await apiRpc.whatsapp.whatsapp_config[":businessId"].$get({
-        param: {
-          businessId,
-        },
-      });
-
-      const response = await res.json();
-
-      // Step 1: Start upload session
-      // TODO: CALL API TO APPiD TOKEN
-      const sessionResponse = await axios.post(
-        "https://graph.facebook.com/v21.0/1166415764661953/uploads",
-        null,
-        {
-          params: {
-            file_name: imageFiles.name,
-            file_length: imageFiles.size,
-            file_type: imageFiles.type,
-            access_token: response?.data?.token,
-          },
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-
-      // Step 2: Upload to custom storage
-      const imageId = crypto.randomUUID();
-      const storageFormData = new FormData();
-      storageFormData.append("fileData", imageFiles);
-      storageFormData.append("fileName", `${imageId}`);
-      storageFormData.append("bucketName", "assets");
-
-      // Step 3: Upload the file
       const formData = new FormData();
       formData.append("file", imageFiles);
-      formData.append("file_name", imageFiles.name);
-
-      const uploadResponse = await axios.post(
-        `https://temp-storage-six.vercel.app/upload?sessionId=${sessionResponse.data.id}`,
+      const res = await axios.post(
+        `/whatsapp/media-upload/${businessId}`,
         formData,
+        {
+          maxBodyLength: Number.POSITIVE_INFINITY,
+          maxContentLength: Number.POSITIVE_INFINITY,
+        },
       );
-
+      if (res.data?.err || !res.data?.data?.handle) {
+        throw new Error(res.data?.message || "Media upload failed");
+      }
+      const handle = res.data.data.handle as string;
+      useWhatsapp.getState().setMediaHandle(handle);
+      if (res.data.data.url) {
+        useWhatsapp.getState().setImagePreview(res.data.data.url);
+      }
+      return { handle };
+    } finally {
       setIsUploading(false);
-
-      return {
-        handle: uploadResponse.data.h as string,
-      };
-    } catch (error) {
-      setIsUploading(false);
-      console.error("Upload failed:", error);
-      throw error;
     }
   };
 

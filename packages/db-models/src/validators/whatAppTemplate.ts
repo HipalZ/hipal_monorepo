@@ -58,11 +58,13 @@ export const headerSchemaForText = z
   })
   .optional();
 
+const HEADER_HANDLE_MAX = 8000;
+
 export const headerSchemaForImage = z
   .object({
     example: z
       .object({
-        header_handle: z.array(z.string().min(3).max(1000)),
+        header_handle: z.array(z.string().min(3).max(HEADER_HANDLE_MAX)),
       })
       .optional(),
   })
@@ -72,7 +74,7 @@ export const headerSchemaForVideo = z
   .object({
     example: z
       .object({
-        header_handle: z.array(z.string().min(3).max(1000)),
+        header_handle: z.array(z.string().min(3).max(HEADER_HANDLE_MAX)),
       })
       .optional(),
   })
@@ -82,7 +84,7 @@ export const headerSchemaForDocument = z
   .object({
     example: z
       .object({
-        header_handle: z.array(z.string().min(3).max(300)),
+        header_handle: z.array(z.string().min(3).max(HEADER_HANDLE_MAX)),
       })
       .optional(),
   })

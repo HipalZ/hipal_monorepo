@@ -39,36 +39,45 @@ app.get('/metrics', printMetrics);
 app.use(timeout(1800000, customTimeoutException));
 app.use(secureHeaders());
 app.use(prettyJSON());
+
+// Single source of truth for trusted frontend origins. Both CORS and CSRF use
+// this list so they stay in sync (mismatches caused silent CSRF rejections).
+const ALLOWED_ORIGINS = [
+  'https://table.test.hipalz.com',
+  'https://localhost/',
+  'https://localhost',
+  'https://biz.test.hipalz.com',
+  'https://hipal-test.hipalz.com',
+  'https://hipalz.com',
+  'https://hibiz.hipalz.com',
+  'https://hiclient.hipalz.com',
+  'https://www.table.test.hipalz.com',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3004',
+  'https://www.biz.test.hipalz.com',
+  'https://www.hipal-test.hipalz.com',
+  'https://www.hipalz.com',
+  'https://www.hibiz.hipalz.com',
+  'https://www.hiclient.hipalz.com',
+];
+
 app.use(
   '*',
   cors({
-    origin: [
-      'https://table.test.hipalz.com',
-      'https://localhost/',
-      'https://localhost',
-      'https://biz.test.hipalz.com',
-      'https://hipal-test.hipalz.com',
-      'https://hipalz.com',
-      'https://hibiz.hipalz.com',
-      'https://hiclient.hipalz.com',
-      'https://www.table.test.hipalz.com',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:3004',
-      'https://www.biz.test.hipalz.com',
-      'https://www.hipal-test.hipalz.com',
-      'https://www.hipalz.com',
-      'https://www.hibiz.hipalz.com',
-      'https://www.hiclient.hipalz.com',
-    ], // Update this with your frontend URL
-    credentials: true, // Allow sending cookies
+    origin: ALLOWED_ORIGINS,
+    credentials: true,
     allowHeaders: ['Authorization', 'Content-Type', 'x-refresh-token'],
   }),
 );
-app.use(csrf());
+// CSRF middleware compares the request's Origin against the allowed list. By
+// default (no options) it only allows same-origin POSTs, which silently kills
+// every cross-origin request from our frontends — that's what was causing the
+// empty 400 on /whatsapp/media-upload.
+app.use(csrf({ origin: ALLOWED_ORIGINS }));
 app.use(logger());
 app.use('/assets/*', serveStatic({ path: './assets' }));
 app.get('/ui', swaggerUI({ url: '/doc' }));

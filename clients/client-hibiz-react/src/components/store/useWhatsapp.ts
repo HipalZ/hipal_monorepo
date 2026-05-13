@@ -295,6 +295,17 @@ interface whatsappTemplate {
 
   templateError: string | null;
   setTemplateError: (error: string | null) => void;
+
+  // Cached Meta media handle from the single backend fan-out upload. Set at
+  // file-pick time; consumed at template-save time. No second upload needed.
+  mediaHandle: string;
+  setMediaHandle: (mediaHandle: string) => void;
+
+  // Fingerprint of the file that produced the cached handle. Used to detect
+  // "same file picked again" and skip a duplicate upload. Format:
+  // "<name>|<size>|<lastModified>". Empty string means "no upload cached".
+  mediaFingerprint: string;
+  setMediaFingerprint: (fp: string) => void;
 }
 
 export const useWhatsapp = create(
@@ -666,6 +677,12 @@ export const useWhatsapp = create(
 
         templateError: null,
         setTemplateError: (error: string | null) => set({ templateError: error }),
+
+        mediaHandle: "",
+        setMediaHandle: (mediaHandle: string) => set({ mediaHandle }),
+
+        mediaFingerprint: "",
+        setMediaFingerprint: (fp: string) => set({ mediaFingerprint: fp }),
       };
     },
     {
@@ -688,7 +705,9 @@ export const useWhatsapp = create(
               key !== "imagePreview" &&
               key !== "videoPreview" &&
               key !== "imageFiles" &&
-              key !== "cropping",
+              key !== "cropping" &&
+              key !== "mediaHandle" &&
+              key !== "mediaFingerprint",
           ),
         ) as whatsappTemplate,
     },
