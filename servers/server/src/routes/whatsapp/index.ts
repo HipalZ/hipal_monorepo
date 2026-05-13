@@ -32,14 +32,13 @@ import {
   whatsAppWalletHistorySchema,
 } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
-import { createHmac, randomUUID } from 'node:crypto';
-
 import { zValidator } from '@hono/zod-validator';
 import axios from 'axios';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import type { ClientSession } from 'mongoose';
 import { nanoid } from 'nanoid';
+import { createHmac, randomUUID } from 'node:crypto';
 import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
 import { z } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
@@ -1428,82 +1427,113 @@ const whatsappRouter = new Hono()
       const { businessId } = c.req.param();
       const { from, to } = c.req.query();
 
-      const fromDate = from ? new Date(Number(from)) : new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
-      const toDate = to ? new Date(Number(to)) : new Date();
+      // Date filter is applied ONLY when caller supplies a range. The previous
+      // silent 5-day default was hiding older history rows.
+      const dateFilter: { $gte?: number; $lte?: number } = {};
+      if (from) dateFilter.$gte = Number(from);
+      if (to) dateFilter.$lte = Number(to);
 
-      const walletHistory = await WhatsAppWalletHistory.find({
-        businessId,
-        date: { $gte: Number(fromDate), $lte: Number(toDate) },
+      const query: Record<string, unknown> = { businessId };
+      if (dateFilter.$gte != null || dateFilter.$lte != null) {
+        query.date = dateFilter;
+      }
+
+      const walletHistory = await WhatsAppWalletHistory.find(query)
+        .sort({ date: -1 })
+        .populate({ path: 'userId', select: 'name email' })
+        .populate({ path: 'businessId', select: 'name', model: 'Business' })
+        .populate({ path: 'order_id', select: 'total billValue date' })
+        .lean();
+
+      // Join with WhatsAppPayment in a single query so the UI can show
+      // razorpayPaymentId / method / acquirer data without storing them
+      // twice. Both collections share `order_id` as the join key.
+      const orderIds = walletHistory.map((h: any) => h.order_id?._id ?? h.order_id).filter(Boolean);
+
+      const payments = await WhatsAppPayment.find({
+        order_id: { $in: orderIds },
       })
-        .populate({
-          path: 'userId',
-          select: 'name',
-        })
-        .populate({
-          path: 'order_id',
-          select: 'total billValue',
-        });
+        .select('order_id razorpayPaymentId razorpayOrderId razorpayEventId razorpayAcquirerData mode paymentMode date')
+        .lean();
+
+      const paymentByOrder = new Map<string, any>();
+      for (const p of payments) {
+        paymentByOrder.set(String(p.order_id), p);
+      }
+
+      // Compute display amounts. Three shapes of rows live in this collection:
+      //
+      //  (A) NEW-format Razorpay row: order has `total` (GST-inclusive,
+      //      charged) and a DIFFERENT `billValue` (base, credited).
+      //        → amountCharged = total, amountCredited = billValue,
+      //          taxAmount = total - billValue.
+      //
+      //  (B) LEGACY Razorpay row: order has `total === billValue` (the old
+      //      flow sent both equal). At that time the wallet was credited
+      //      `total` verbatim — no GST split existed. So show that as-is;
+      //      DO NOT divide by 1.18 (the wallet did not receive total/1.18).
+      //        → amountCharged = total, amountCredited = total, taxAmount = 0.
+      //
+      //  (C) Off-schema manual credit from the legacy `/wallet/credit`
+      //      endpoint: no order_id, no status, but a top-level `amount`.
+      //        → amountCharged/Credited = amount, taxAmount = 0.
+      const data = walletHistory.map((h: any) => {
+        const order = h.order_id || {};
+        const totalAmount = Number(order.total) || 0;
+        const storedBase = Number(order.billValue) || 0;
+        const hasOrder = !!order._id;
+
+        let amountCharged = 0;
+        let amountCredited = 0;
+        let taxAmount = 0;
+
+        const isFailed = h.status === 'FAILED';
+
+        if (hasOrder) {
+          const hasGstSplit = storedBase > 0 && Math.abs(storedBase - totalAmount) >= 0.01;
+          if (hasGstSplit) {
+            amountCharged = totalAmount;
+            amountCredited = storedBase;
+            taxAmount = Math.max(0, amountCharged - amountCredited);
+          } else {
+            amountCharged = totalAmount;
+            amountCredited = totalAmount;
+            taxAmount = 0;
+          }
+          // No money moved for failed attempts — don't display a credited
+          // figure that never actually hit the wallet.
+          if (isFailed) {
+            amountCredited = 0;
+            taxAmount = 0;
+          }
+        } else if (typeof h.amount === 'number') {
+          amountCharged = h.amount;
+          amountCredited = h.amount;
+          taxAmount = 0;
+        }
+
+        const orderKey = String(order._id ?? h.order_id ?? '');
+        const payment = paymentByOrder.get(orderKey) || null;
+
+        return {
+          ...h,
+          amountCredited,
+          amountCharged,
+          taxAmount,
+          payment,
+        };
+      });
 
       return c.json(
         {
           message: 'Wallet history',
           err: false,
-          data: walletHistory,
+          data,
         },
         200,
       );
     },
   )
-  .post(
-    '/wallet/credit',
-
-    zValidator('json', whatsAppWalletHistorySchema),
-
-    async (c) => {
-      const { amount, userId, businessId } = await c.req.json();
-
-      const wallet = await WhatsAppWallet.findOneAndUpdate(
-        {
-          businessId,
-        },
-        {
-          $inc: { currentBalance: amount },
-        },
-        {
-          new: true,
-          upsert: true,
-        },
-      );
-
-      if (!wallet) {
-        return c.json(
-          {
-            message: 'Wallet not found',
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
-
-      await WhatsAppWalletHistory.create({
-        businessId,
-        amount,
-        userId,
-        date: Date.now(),
-      });
-
-      return c.json(
-        {
-          message: 'Wallet credited',
-          err: false,
-          data: wallet,
-        },
-        200,
-      );
-    },
-  )
-
   .get(
     '/coupon_link/:businessId',
     zValidator('param', z.object({ businessId: z.string() })),
@@ -1698,18 +1728,16 @@ const whatsappRouter = new Hono()
             { session },
           );
 
-          // Wallet credit must use the BASE amount (no GST). The `total`
-          // field is the GST-inclusive amount that was charged via Razorpay;
-          // `billValue` is the base — that's what gets added to the wallet.
-          //
-          // Defensive fallback: for legacy orders saved before the frontend
-          // started sending a distinct billValue, both fields will be equal
-          // (the GST-inclusive value). Detect that and back out the GST so
-          // those orders also credit the right amount.
+          // Wallet credit uses the BASE amount (without GST) when the order
+          // carries a real GST split — i.e. billValue differs from total.
+          // If both are equal (stale-frontend or legacy order shape) credit
+          // `total` verbatim, matching the pre-fix behavior. Never divide by
+          // 1.18 here: we'd silently under-credit anyone whose frontend sent
+          // the gross amount as both fields.
           const totalAmount = Number(getOrder?.total) || 0;
           const storedBase = Number(getOrder?.billValue) || 0;
-          const looksLikeLegacy = storedBase > 0 && Math.abs(storedBase - totalAmount) < 0.01;
-          const baseToCredit = looksLikeLegacy ? Math.round(totalAmount / 1.18) : storedBase;
+          const hasGstSplit = storedBase > 0 && Math.abs(storedBase - totalAmount) >= 0.01;
+          const baseToCredit = hasGstSplit ? storedBase : totalAmount;
 
           await WhatsAppWallet.findOneAndUpdate(
             {

@@ -217,7 +217,16 @@ const MemoWhatzappPayment = () => {
         setRazorPayPaymentId('');
         setIsLoading(false);
         setStep(Step.SETUP);
-        queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
+        // The wallet credit + history row are written by the Razorpay webhook,
+        // which lands a moment after the client gets its success callback.
+        // Invalidate immediately and once more after a short delay to cover
+        // that race — otherwise the user sees a stale (empty) list.
+        const refreshWallet = () => {
+          queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
+          queryClient.invalidateQueries({ queryKey: ['walletHistory'] });
+        };
+        refreshWallet();
+        setTimeout(refreshWallet, 2500);
         return;
       }
       toast.error('Payment failed');

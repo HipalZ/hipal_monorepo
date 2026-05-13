@@ -82,18 +82,40 @@ export interface ITemplateAnalytics {
 
 export interface WalletTransaction {
   _id: string;
-  businessId: string;
+  businessId:
+    | string
+    | {
+        _id: string;
+        name: string;
+      };
   userId: {
     _id: string;
     name: string;
+    email?: string;
   };
   date: number;
-  status: string;
-  order_id: {
-    _id: string;
-    total: number;
-    billValue: number;
+  status?: string;
+  order_id?: {
+    _id?: string;
+    total?: number;
+    billValue?: number;
+    date?: number;
   };
+  amountCredited?: number;
+  amountCharged?: number;
+  taxAmount?: number;
+  payment?: {
+    _id: string;
+    razorpayPaymentId?: string;
+    razorpayOrderId?: string;
+    razorpayEventId?: string;
+    razorpayAcquirerData?: Record<string, unknown> | null;
+    mode?: string;
+    paymentMode?: string;
+    date?: number;
+  } | null;
+  errorReason?: string;
+  errorDescription?: string;
   createdAt: string;
   updatedAt: string;
 }
