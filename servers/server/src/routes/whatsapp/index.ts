@@ -65,6 +65,7 @@ import {
 import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
 import { handleChatbotFlow } from "../../utils/whatsappWebhookHandlers/flows";
 import { exchangeCodeForToken } from "../../utils/instagram";
+import sandboxRouter from "./sandbox";
 // import { enqueueWhatsAppJob } from "../../queues/enqueue";
 interface AxiosError {
   response?: {
@@ -245,6 +246,8 @@ const calculateAndCheckBalance = (
   return { insufficientBalance: false, reduceAmount };
 };
 const whatsappRouter = new Hono()
+  // Multi-tenant public sandbox: /whatsapp/sandbox/{keys, templates, send, messages}
+  .route("/sandbox", sandboxRouter)
   .post(
     "/media-upload/:businessId",
     bodyLimit({

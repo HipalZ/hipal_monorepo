@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/ADMIN/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/09bff111-d933-4d26-aaa1-484524835532/ac29aee1-a7ac-4969-a1e3-9a020141ee0d/skills/docx/**)",
+      "Bash(./scripts/extract-text \"C:/Users/ADMIN/Desktop/whatsapp Templates.docx\")",
+      "Bash(pandoc \"C:/Users/ADMIN/Desktop/whatsapp Templates.docx\" -t plain)",
+      "Bash(python -c \"import docx2txt; print\\(docx2txt.process\\(r'C:\\\\Users\\\\ADMIN\\\\Desktop\\\\whatsapp Templates.docx'\\)\\)\")",
+      "Bash(python -c ' *)"
+    ]
+  }
+}
