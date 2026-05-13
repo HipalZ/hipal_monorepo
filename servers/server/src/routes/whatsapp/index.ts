@@ -1698,12 +1698,28 @@ const whatsappRouter = new Hono()
             { session },
           );
 
+          // Wallet credit must use the BASE amount (no GST). The `total`
+          // field is the GST-inclusive amount that was charged via Razorpay;
+          // `billValue` is the base — that's what gets added to the wallet.
+          //
+          // Defensive fallback: for legacy orders saved before the frontend
+          // started sending a distinct billValue, both fields will be equal
+          // (the GST-inclusive value). Detect that and back out the GST so
+          // those orders also credit the right amount.
+          const totalAmount = Number(getOrder?.total) || 0;
+          const storedBase = Number(getOrder?.billValue) || 0;
+          const looksLikeLegacy =
+            storedBase > 0 && Math.abs(storedBase - totalAmount) < 0.01;
+          const baseToCredit = looksLikeLegacy
+            ? Math.round(totalAmount / 1.18)
+            : storedBase;
+
           await WhatsAppWallet.findOneAndUpdate(
             {
               businessId: getOrder?.businessId,
             },
             {
-              $inc: { currentBalance: getOrder?.total },
+              $inc: { currentBalance: baseToCredit },
             },
             {
               new: true,
