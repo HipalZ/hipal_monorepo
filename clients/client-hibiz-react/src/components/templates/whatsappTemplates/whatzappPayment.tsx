@@ -234,9 +234,13 @@ const MemoWhatzappPayment = () => {
     ],
   );
 
-  // create razorpay order generates order_id in response
+  // create razorpay order generates order_id in response.
+  //   total     → GST-inclusive amount actually charged via Razorpay.
+  //   billValue → base amount (without GST) that should be credited to the
+  //               WhatsApp wallet. Backend uses this for the $inc on
+  //               `currentBalance`.
   const createRazorPayOrder = useCallback(
-    async (total: number): Promise<string> => {
+    async (total: number, billValue: number): Promise<string> => {
       const res = await apiRpc.whatsapp.create_whatsapp_order[':merchantId'].$post({
         param: {
           merchantId: merchantDetails.razorpayMerchantId,
@@ -245,7 +249,7 @@ const MemoWhatzappPayment = () => {
           businessId: businessDetails?._id || '',
           total: total,
           currency: 'INR',
-          billValue: total,
+          billValue: billValue,
           userId: user?._id,
         },
       });
@@ -295,9 +299,11 @@ const MemoWhatzappPayment = () => {
   );
 
   const handleCreateOrder = async () => {
-    // Calculate total with tax before creating order
-    const finalAmount = calculateTotal(selectedPlan?.price || 0);
-    const orderId = await createRazorPayOrder(finalAmount);
+    // `basePrice` is what the user actually buys (credited to wallet).
+    // `finalAmount` is base + 18% GST (charged via Razorpay).
+    const basePrice = selectedPlan?.price || 0;
+    const finalAmount = calculateTotal(basePrice);
+    const orderId = await createRazorPayOrder(finalAmount, basePrice);
     setIsLoading(true);
     await creatingRazorPayOptions(orderId);
   };
