@@ -56,6 +56,7 @@ import { whatsAppChatHandler } from '../../utils/whatsappWebhookHandlers/chatHan
 import { handleChatbotFlow } from '../../utils/whatsappWebhookHandlers/flows';
 import { identifyQrTypeFromMessage, whatsAppEventData, whatsAppUserAndTextMessage } from '../../utils/whatsappWebhookHandlers/helper';
 import { whatsAppBlockUserHandler } from '../../utils/whatsappWebhookHandlers/whatsappBlockUser';
+import sandboxRouter from './sandbox';
 
 interface AxiosError {
   response?: {
@@ -232,6 +233,8 @@ const calculateAndCheckBalance = (
   return { insufficientBalance: false, reduceAmount };
 };
 const whatsappRouter = new Hono()
+  // Multi-tenant public sandbox: /whatsapp/sandbox/{keys, templates, send, messages}
+  .route('/sandbox', sandboxRouter)
   .post(
     '/media-upload/:businessId',
     bodyLimit({
