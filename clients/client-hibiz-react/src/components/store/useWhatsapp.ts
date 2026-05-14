@@ -247,6 +247,10 @@ interface whatsappTemplate {
     displayBodyVariableSequence: string[],
   ) => void;
 
+  bodyVariableModes: ("preset" | "custom")[];
+  setBodyVariableMode: (index: number, mode: "preset" | "custom") => void;
+  setBodyVariableModes: (modes: ("preset" | "custom")[]) => void;
+
   showCropper: boolean;
   setShowCropper: (showCropper: boolean) => void;
 
@@ -546,6 +550,11 @@ export const useWhatsapp = create(
                   (option) => option.label === variable,
                 )?.value || variable,
             ),
+            bodyVariableModes: variables.map((variable: string) =>
+              get().variableOptions.some((option) => option.label === variable)
+                ? "preset"
+                : ("custom" as const),
+            ),
           });
         },
 
@@ -564,6 +573,8 @@ export const useWhatsapp = create(
             footerText: "",
             bodyVariables: [],
             bodyVariableSequence: [],
+            displayBodyVariableSequence: [],
+            bodyVariableModes: [],
             firstActionType: ActionType.VisitWebsite,
             secondActionType: ActionType.VisitWebsite,
             buttonText: "",
@@ -612,6 +623,15 @@ export const useWhatsapp = create(
           set({ bodyVariableSequence }),
 
         displayBodyVariableSequence: [],
+        bodyVariableModes: [],
+        setBodyVariableMode: (index, mode) =>
+          set((state) => {
+            const next = [...state.bodyVariableModes];
+            while (next.length <= index) next.push("preset");
+            next[index] = mode;
+            return { bodyVariableModes: next };
+          }),
+        setBodyVariableModes: (modes) => set({ bodyVariableModes: modes }),
         setDisplayBodyVariableSequence: (
           displayBodyVariableSequence: string[],
         ) => set({ displayBodyVariableSequence }),
@@ -698,7 +718,8 @@ export const useWhatsapp = create(
         setOpenBot: (openBot: boolean) => set({ openBot }),
 
         templateError: null,
-        setTemplateError: (error: string | null) => set({ templateError: error }),
+        setTemplateError: (error: string | null) =>
+          set({ templateError: error }),
 
         mediaHandle: "",
         setMediaHandle: (mediaHandle: string) => set({ mediaHandle }),

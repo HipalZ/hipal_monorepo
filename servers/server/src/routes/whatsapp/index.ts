@@ -85,10 +85,12 @@ const bodySequence = async (
     name: string;
     phone: string;
     email?: string;
+    variables?: Record<string, string>;
   },
   businessId: string,
 ) => {
   const ans = [];
+  const perRow = customer?.variables ?? {};
 
   for (const variable of bodyvariblesequence) {
     let value: string | undefined;
@@ -116,12 +118,16 @@ const bodySequence = async (
       value = userReward?.rewards?.toString();
     }
 
-    if (value !== undefined) {
-      ans.push({
-        type: 'text',
-        text: value,
-      });
+    // Fallback to per-customer named variables for custom template fields.
+    if (value === undefined && Object.prototype.hasOwnProperty.call(perRow, variable)) {
+      value = perRow[variable];
     }
+
+    // Always push — preserves positional alignment with `{{N}}`.
+    ans.push({
+      type: 'text',
+      text: value ?? '',
+    });
   }
 
   return ans;
