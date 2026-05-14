@@ -68,6 +68,8 @@ export const returnBodyComponents = async (
   customer: {
     name: string;
     phone: string;
+    email?: string;
+    variables?: Record<string, string>;
   },
   businessId: string,
 ) => {
