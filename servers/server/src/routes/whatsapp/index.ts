@@ -1058,6 +1058,7 @@ const whatsappRouter = new Hono()
                     },
                     {
                       upsert: true,
+                      new: true, // ensures Mongoose returns the newly created document during an upsert,
                     },
                   );
 
