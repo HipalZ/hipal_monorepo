@@ -29,8 +29,8 @@ const DishesList = ({
 }: IDishesProps) => {
   const { isSearchActive } = useSearch();
 
-  const primaryColor = menuLayout?.primaryColor || "#ec4899";
-  const secondaryColor = menuLayout?.secondaryColor || "#fce7f3";
+  const primaryColor = menuLayout?.primaryColor || "#000000";
+  const secondaryColor = menuLayout?.secondaryColor || "#ffffff";
 
   const categoryLayout = menuLayout?.categoryLayout;
   const isEdgeLayout = categoryLayout === 1;
