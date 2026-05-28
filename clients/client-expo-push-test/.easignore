@@ -1,0 +1,39 @@
+# VCS and editor state
+.git
+.gitignore
+.expo
+.vscode
+.idea
+
+# Dependencies and generated output
+node_modules
+bun.lockb
+dist
+build
+web-build
+coverage
+android
+ios
+*.apk
+
+# Monorepo siblings are not needed in the Expo build archive.
+../client-hitable-react
+../client-hibiz-react
+../client-hikitchen-react
+../client-hipal-app
+../../servers
+../../packages
+../../docs
+../../node_modules
+
+# Local/project noise
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# Local automation/worktree state
+../../.claude
+../../.github
+../../.vscode

@@ -17,8 +17,22 @@ const deviceTokenSchema = new mongoose.Schema<DeviceTokenType>({
     type: String,
     required: true,
     minlength: 1,
-    maxlength: 700,
+    maxlength: 1000,
     unique: true,
+  },
+  provider: {
+    type: String,
+    enum: ["fcm", "expo", "apns"],
+    default: "fcm",
+  },
+  platform: {
+    type: String,
+    enum: ["android", "ios", "web", "unknown"],
+    default: "unknown",
+  },
+  app: {
+    type: String,
+    default: "hitable",
   },
   notification: {
     type: Boolean,

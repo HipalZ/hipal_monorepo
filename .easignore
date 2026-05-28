@@ -1,0 +1,60 @@
+# Keep EAS Android/iOS archives focused on the Expo MVP app.
+
+# VCS and local tooling
+.git
+.claude
+.github
+.vscode
+.idea
+
+# Root dependencies and generated output
+node_modules
+bun.lock
+package.json
+pnpm-workspace.yaml
+tsconfig.json
+biome.json
+.npmrc
+.prettierrc.cjs
+.eslintrc.js
+lint-staged.config.cjs
+dist
+build
+coverage
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# Monorepo apps/packages not needed for client-expo-push-test builds
+clients/client-hitable-react
+clients/client-hibiz-react
+clients/client-hikitchen-react
+clients/client-hipal-app
+servers
+packages
+docs
+
+# Infra and deployment files not needed by EAS
+Dockerfile
+Dockerfile.*
+skaffold.yaml
+vercel.json
+script.sh
+digi.txt
+todo.md
+TRANSFER_ITEM_FLOW.md
+PRODUCTION_ENGINEERING_RULES.md
+
+# Re-include the Expo MVP app files that are required for EAS to install/build.
+!clients/
+!clients/client-expo-push-test/
+!clients/client-expo-push-test/package.json
+!clients/client-expo-push-test/tsconfig.json
+!clients/client-expo-push-test/app.json
+!clients/client-expo-push-test/App.tsx
+!clients/client-expo-push-test/babel.config.js
+!clients/client-expo-push-test/eas.json
+!clients/client-expo-push-test/metro.config.js
+!clients/client-expo-push-test/.easignore

@@ -55,6 +55,7 @@ import googleSheetsRouter from "./googleSheets";
 import pathFinderRouter from "./pathFinder";
 import tokenRouter from "./token";
 import dishZoneKitchenRouter from "./dishZoneKitchen";
+import notificationRouter from "./notifications";
 
 ////
 const app = new Hono();
@@ -115,6 +116,7 @@ export const routes = app
   .route("/google_sheets", googleSheetsRouter)
   .route("/wa_chatbot_analytics", chatbotAnalyticsRouter)
   .route("/token", tokenRouter)
+  .route("/notifications", notificationRouter)
   .route("/path_finder", pathFinderRouter)
   .route("/salon_pos", salonPosRouter)
   .route("/dish_zone_kitchen", dishZoneKitchenRouter)

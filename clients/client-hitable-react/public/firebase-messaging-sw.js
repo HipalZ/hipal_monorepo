@@ -17,9 +17,16 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const notificationTitle = payload.notification.title;
+  const notificationTitle = payload.notification?.title || "HiTable Alert";
   const notificationOptions = {
-    body: payload.notification.body,
+    body: payload.notification?.body || "You have a new staff alert.",
+    data: payload.data || {},
+    icon: "/android-chrome-192x192.png",
+    badge: "/android-chrome-192x192.png",
   };
   self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+self.addEventListener("fetch", () => {
+  // Keeps this Firebase service worker eligible for PWA installability.
 });

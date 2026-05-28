@@ -9,6 +9,7 @@ import { useLiteStore } from './components/store/useLiteStore';
 import { useCartsPoll, useOfflineAlerts, useOnlineAlerts } from './hooks/useF&BHook';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import MainRouter from './routes';
+import InstallAppBanner from './components/pwa/InstallAppBanner';
 const ErrorPopup = lazy(() => import('./components/ErrorPopup'));
 const InternetConnection = lazy(() => import('./components/atoms/internet'));
 const UpdateApp = lazy(() => import('./components/atoms/updateApp'));
@@ -55,6 +56,7 @@ function App() {
 
   return (
     <main className="!lg:poppins relative">
+      <InstallAppBanner />
       <InternetConnection />
       {/* {!notificationStatus && platform === "android" && (
         <div className="fixed z-20 top-0 left-1/2 -translate-x-1/2 w-full max-w-[30rem] flex items-center justify-between h-12 px-2 text-center text-black bg-[#6f2eff] border space-grotesk-700">

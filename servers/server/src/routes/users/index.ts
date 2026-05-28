@@ -1561,12 +1561,19 @@ const usersRouter = new Hono()
 
         businessId: z.string(),
         userId: z.string(),
+        provider: z.enum(["fcm", "expo", "apns"]).optional().default("fcm"),
+        platform: z
+          .enum(["android", "ios", "web", "unknown"])
+          .optional()
+          .default("unknown"),
+        app: z.string().min(1).max(50).optional().default("hitable"),
       }),
     ),
 
     async (c) => {
       const requestData = await c.req.json();
-      const { registrationToken, businessId, userId } = requestData;
+      const { registrationToken, businessId, userId, provider, platform, app } =
+        requestData;
 
       const alreadyExist = await DeviceToken.findOne({
         token: registrationToken,
@@ -1577,6 +1584,9 @@ const usersRouter = new Hono()
           businessId,
           userId,
           token: registrationToken,
+          provider,
+          platform,
+          app,
         });
 
         return c.json({
@@ -1589,7 +1599,11 @@ const usersRouter = new Hono()
       return c.json({
         message: "Token saved successfully",
         err: false,
-        data: alreadyExist,
+        data: await DeviceToken.findOneAndUpdate(
+          { token: registrationToken },
+          { businessId, userId, provider, platform, app },
+          { new: true },
+        ),
       });
     },
   )
@@ -1602,18 +1616,26 @@ const usersRouter = new Hono()
         businessId: z.string(),
         userId: z.string(),
         registrationToken: z.string(),
+        provider: z.enum(["fcm", "expo", "apns"]).optional(),
+        platform: z.enum(["android", "ios", "web", "unknown"]).optional(),
+        app: z.string().min(1).max(50).optional(),
       }),
     ),
 
     async (c) => {
       const requestData = await c.req.json();
-      const { notification, registrationToken } = requestData;
+      const { notification, registrationToken, provider, platform, app } =
+        requestData;
+      const updateData: Record<string, unknown> = { notification };
+      if (provider) updateData.provider = provider;
+      if (platform) updateData.platform = platform;
+      if (app) updateData.app = app;
 
       const updateDeviceToken = await DeviceToken.findOneAndUpdate(
         {
           token: registrationToken,
         },
-        { notification: notification },
+        updateData,
         { new: true },
       );
 
