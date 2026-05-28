@@ -26,12 +26,12 @@ async function sendSizeWarning(to: string, config: WhatsAppBusinessConfigType) {
         to: to,
         type: "text",
         text: {
-          body: "⚠️ The media you sent is too large. The maximum size allowed is 5MB.",
+          body: "⚠️ The media you sent is too large. The maximum size allowed is 10MB.",
         },
       },
       { headers: { Authorization: `Bearer ${config.token}` } },
     );
-    console.log(`[Warning] Sent 5MB limit warning to ${to}`);
+    console.log(`[Warning] Sent 10MB limit warning to ${to}`);
   } catch (err) {
     console.error("Failed to send warning message", err);
   }
@@ -73,7 +73,7 @@ async function whatsAppChatHandler(
       } catch (err: any) {
         // ✅ STEP 3: Handle "FILE_TOO_LARGE" Error
         if (err.code === "FILE_TOO_LARGE") {
-          console.warn(`[Media Skipped] File > 5MB for user ${userId}.`);
+          console.warn(`[Media Skipped] File > 10MB for user ${userId}.`);
 
           // A. Send WhatsApp Warning
           if (userPhone) {
@@ -88,7 +88,7 @@ async function whatsAppChatHandler(
             isOwner: false,
             type: "text",
             message:
-              "⚠️ [System]: User attempted to send a file larger than 5MB.",
+              "⚠️ [System]: User attempted to send a file larger than 10MB.",
           });
 
           // Stop processing this message

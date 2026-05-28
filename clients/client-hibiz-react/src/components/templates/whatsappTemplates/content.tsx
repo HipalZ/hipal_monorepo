@@ -1,22 +1,50 @@
+import MiddlePopUp from '@/components/atom/middlePopUp';
 import { normalizeInput, useAddTemplate } from '@/components/helpers/whatzAppHelpers';
 import useBusinessData from '@/components/store/useBusinessData';
 import useWhatsapp, { HeaderInterface } from '@/components/store/useWhatsapp';
 import { cn } from '@/components/utils/helper';
 import { lazy, memo, useCallback, useEffect } from 'react';
 import { BiPlus } from 'react-icons/bi';
+import { FiAlertTriangle, FiEdit3, FiList } from 'react-icons/fi';
 import { IoMdClose } from 'react-icons/io';
+
+const CUSTOM_NAME_RE = /^[a-zA-Z][a-zA-Z0-9_]{0,49}$/;
 
 const MediaContent = lazy(() => import('./mediaContent'));
 const CouponContent = lazy(() => import('./couponContent'));
 
 const defaultData = [
+  // { label: 'additionalRate', value: '₹1,200 per night' },
+  // { label: 'address', value: 'Bangalore' },
+  // { label: 'amount', value: '₹4,500' },
+  // { label: 'businessName', value: 'Business Name' },
+  // { label: 'cancellationDate', value: '14 Jan 2025' },
+  // { label: 'cancellationFee', value: 'Nil' },
+  // { label: 'checkinDate', value: '15 Jan 2025' },
+  // { label: 'checkinTime', value: '02:00 PM' },
+  // { label: 'checkoutDate', value: '17 Jan 2025' },
+  // { label: 'checkoutTime', value: '11:00 AM' },
+  // { label: 'confirmationId', value: 'BMH123456' },
+  // { label: 'contactInfo', value: '+91 90000 00000' },
+  // { label: 'date', value: '31st Dec, 2024' },
+  // { label: 'email', value: 'rajesh@gmail.com' },
+  // { label: 'guestCount', value: '2' },
+  // { label: 'hostelName', value: 'Sunset Hostel' },
+  // { label: 'inclusions', value: 'Wi-Fi, Hot water' },
+  // { label: 'mapsLink', value: 'https://maps.google.com/?q=BMH' },
   { label: 'name', value: 'Rajesh' },
-  { label: 'email', value: 'rajesh@gmail.com' },
-  { label: 'businessName', value: 'Business Name' },
+  // { label: 'newCheckoutDate', value: '19 Jan 2025' },
+  // { label: 'paymentMethod', value: 'UPI' },
+  // { label: 'paymentStatus', value: 'Successful' },
   { label: 'phone', value: '+913456789090' },
-  { label: 'address', value: 'Bangalore' },
-  { label: 'time', value: '10:00 AM' },
-  { label: 'date', value: '31st Dec, 2024' },
+  // { label: 'processingTime', value: '5-7 Business Days' },
+  // { label: 'refundAmount', value: '₹4,500' },
+  // { label: 'refundMethod', value: 'Original Payment Method' },
+  // { label: 'roomNumber', value: '402' },
+  // { label: 'roomType', value: 'Executive Suite' },
+  // { label: 'sharingPreference', value: 'Twin Sharing' },
+  // { label: 'time', value: '10:00 AM' },
+  // { label: 'transactionDate', value: '15 Jan 2025' },
 ];
 
 const defaultHotelOptions = [
@@ -41,6 +69,7 @@ const MemoContent = () => {
   const bodyText = useWhatsapp((s) => s.bodyText);
   const bodyVariableSequence = useWhatsapp((s) => s.bodyVariableSequence);
   const setBodyVariableSequence = useWhatsapp((s) => s.setBodyVariableSequence);
+  const displayBodyVariableSequence = useWhatsapp((s) => s.displayBodyVariableSequence);
   const addVariable = useWhatsapp((s) => s.addVariable);
   const removeVariable = useWhatsapp((s) => s.removeVariable);
   const bodyVariables = useWhatsapp((s) => s.bodyVariables);
@@ -50,7 +79,12 @@ const MemoContent = () => {
   const setVariableOptions = useWhatsapp((s) => s.setVariableOptions);
   const updateBodySequenceVariable = useWhatsapp((s) => s.updateBodySequenceVariable);
   const updateDisplayBodySequenceVariable = useWhatsapp((s) => s.updateDisplayBodySequenceVariable);
+  const bodyVariableModes = useWhatsapp((s) => s.bodyVariableModes);
+  const setBodyVariableMode = useWhatsapp((s) => s.setBodyVariableMode);
+  const setBodyVariableModes = useWhatsapp((s) => s.setBodyVariableModes);
   const footerText = useWhatsapp((s) => s.footerText);
+  const templateError = useWhatsapp((s) => s.templateError);
+  const setTemplateError = useWhatsapp((s) => s.setTemplateError);
   const { addTemplateName, handleBodyTextChange, handleFooterInput } = useAddTemplate();
 
   const handleAddVariable = useCallback(() => {
@@ -62,8 +96,22 @@ const MemoContent = () => {
       removeVariable(index);
       const newSequence = bodyVariableSequence.filter((_, i) => i !== index);
       setBodyVariableSequence(newSequence);
+      const newModes = bodyVariableModes.filter((_, i) => i !== index);
+      setBodyVariableModes(newModes);
     },
-    [removeVariable, setBodyVariableSequence, bodyVariableSequence],
+    [removeVariable, setBodyVariableSequence, bodyVariableSequence, bodyVariableModes, setBodyVariableModes],
+  );
+
+  const toggleRowMode = useCallback(
+    (index: number) => {
+      const current = bodyVariableModes[index] ?? 'preset';
+      const next = current === 'preset' ? 'custom' : 'preset';
+      setBodyVariableMode(index, next);
+      updateBodySequenceVariable(index, '');
+      updateDisplayBodySequenceVariable(index, '');
+      updateVariable(index, '');
+    },
+    [bodyVariableModes, setBodyVariableMode, updateBodySequenceVariable, updateDisplayBodySequenceVariable, updateVariable],
   );
   useEffect(() => {
     if (outLetType === 'HOTEL') {
@@ -75,6 +123,27 @@ const MemoContent = () => {
 
   return (
     <section className="mx-auto mb-4 w-full rounded-lg border bg-white p-3 shadow-md">
+      <MiddlePopUp show={Boolean(templateError)} onlyPopUp>
+        <div className="w-full overflow-hidden rounded-[1.5rem] bg-white">
+          <div className="flex items-center gap-3 bg-gradient-to-r from-red-600 to-red-500 px-6 py-4 text-white">
+            <FiAlertTriangle className="text-2xl" />
+            <h3 className="text-lg font-semibold">Template could not be saved</h3>
+          </div>
+          <div className="px-6 py-5">
+            <p className="text-sm leading-relaxed text-gray-700">{templateError}</p>
+            <p className="mt-3 text-xs italic text-gray-500">Your edits are preserved. Adjust the template and try again.</p>
+          </div>
+          <div className="flex justify-end border-t bg-gray-50 px-6 py-3">
+            <button
+              type="button"
+              onClick={() => setTemplateError(null)}
+              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+            >
+              Got it, let me fix
+            </button>
+          </div>
+        </div>
+      </MiddlePopUp>
       <div className="mb-4">
         <label htmlFor="templateName" className="mb-2 block font-bold">
           Template Name <span className="text-red-500">*</span>
@@ -177,45 +246,112 @@ const MemoContent = () => {
         </div>
         <div id="dynamicVariables" className="group relative space-y-3 rounded-lg bg-white transition-all">
           {bodyVariables
-            ? bodyVariables?.map((_, index) => (
-                <div key={index?.toString()} className="flex flex-col gap-3">
-                  <div className="flex w-full items-center gap-3 sm:w-auto">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-900">
-                      {index + 1}
-                    </div>
-                    <div className="relative flex-1 sm:w-64 sm:flex-none">
-                      <select
-                        value={bodyVariableSequence[index]}
-                        onChange={(e) => {
-                          const selectedOption = e.target.selectedOptions[0];
-                          const label = e.target.value;
-                          const value = selectedOption.getAttribute('aria-valuetext') || '';
+            ? bodyVariables?.map((_, index) => {
+                const mode = bodyVariableModes[index] ?? 'preset';
+                const currentName = bodyVariableSequence[index] ?? '';
+                const duplicate = mode === 'custom' && !!currentName && bodyVariableSequence.some((n, i) => i !== index && n === currentName);
+                const malformed = mode === 'custom' && !!currentName && !CUSTOM_NAME_RE.test(currentName);
+                const invalid = duplicate || malformed;
+                const displayValue = displayBodyVariableSequence[index] ?? '';
 
-                          updateBodySequenceVariable(index, label);
-                          updateDisplayBodySequenceVariable(index, value);
-                          updateVariable(index, label);
-                        }}
-                        className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                return (
+                  <div key={index?.toString()} className="flex flex-col gap-2">
+                    <div className="flex w-full items-start gap-3 sm:w-auto">
+                      <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-900">
+                        {index + 1}
+                      </div>
+
+                      {mode === 'preset' ? (
+                        <div className="relative flex-1 sm:w-64 sm:flex-none">
+                          <select
+                            value={currentName}
+                            onChange={(e) => {
+                              const selectedOption = e.target.selectedOptions[0];
+                              const label = e.target.value;
+                              const value = selectedOption.getAttribute('aria-valuetext') || '';
+
+                              updateBodySequenceVariable(index, label);
+                              updateDisplayBodySequenceVariable(index, value);
+                              updateVariable(index, label);
+                            }}
+                            className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          >
+                            <option value="">Select Variable</option>
+                            {variableOptions.map((option) => (
+                              <option key={option?.label} value={option?.label} aria-valuetext={option?.value}>
+                                {option?.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        // Custom key/value entry — mirrors the meta-cloud
+                        // template editor. The `name` becomes the key in
+                        // `bodyVariableSequence` (and in the sandbox JSON
+                        // payload); the `example` is preview-only.
+                        <div className="flex flex-1 flex-col gap-2 sm:flex-row">
+                          <input
+                            type="text"
+                            value={currentName}
+                            placeholder="variable name (e.g. eventDate)"
+                            maxLength={50}
+                            onChange={(e) => {
+                              const name = e.target.value.trim();
+                              updateBodySequenceVariable(index, name);
+                              updateVariable(index, name);
+                            }}
+                            className={cn(
+                              'w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 sm:w-44',
+                              invalid
+                                ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                                : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500',
+                            )}
+                          />
+                          <input
+                            type="text"
+                            value={displayValue}
+                            placeholder="example value (preview only)"
+                            maxLength={200}
+                            onChange={(e) => {
+                              updateDisplayBodySequenceVariable(index, e.target.value);
+                            }}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:flex-1"
+                          />
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => toggleRowMode(index)}
+                        title={mode === 'preset' ? 'Switch to custom key/value entry' : 'Switch back to preset list'}
+                        className={cn(
+                          'inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors',
+                          mode === 'preset' ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' : 'bg-purple-50 text-purple-600 hover:bg-purple-100',
+                        )}
+                        aria-label="Toggle variable mode"
                       >
-                        <option value="">Select Variable</option>
-                        {variableOptions.map((option) => (
-                          <option key={option?.label} value={option?.label} aria-valuetext={option?.value}>
-                            {option?.label}
-                          </option>
-                        ))}
-                      </select>
+                        {mode === 'preset' ? <FiEdit3 className="h-4 w-4" /> : <FiList className="h-4 w-4" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveVariable(index)}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                        aria-label="Remove variable"
+                      >
+                        <IoMdClose className="h-5 w-5" />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveVariable(index)}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                      aria-label="Remove variable"
-                    >
-                      <IoMdClose className="h-5 w-5" />
-                    </button>
+                    {mode === 'custom' && invalid && (
+                      <p className="ml-11 text-xs text-red-500">
+                        {duplicate
+                          ? 'Variable name already used in this template.'
+                          : 'Use letters, digits and underscores only — must start with a letter.'}
+                      </p>
+                    )}
                   </div>
-                </div>
-              ))
+                );
+              })
             : null}
         </div>
       </div>
@@ -223,7 +359,7 @@ const MemoContent = () => {
       <div className="relative">
         <input
           maxLength={60}
-          placeholder="Write your message content here"
+          placeholder="Footer message content here"
           value={footerText}
           onChange={handleFooterInput}
           className="w-full rounded-md border border-gray-300 px-3 py-2"

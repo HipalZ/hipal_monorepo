@@ -1,4 +1,3 @@
-import LoadingSpinner from '@/components/atom/loadingSpinner';
 import useWhatsapp, { TemplateSteps } from '@/components/store/useWhatsapp';
 import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
 import { lazy, memo, type FormEvent } from 'react';
@@ -12,6 +11,7 @@ const ShowOptionsToSend = lazy(() => import('./showOptionsToSend'));
 const StepHeader = lazy(() => import('./stepHeader'));
 const SendTemplate = lazy(() => import('./sendTemplate'));
 const TemplatePreview = lazy(() => import('./templatePreview'));
+const TemplateLoader = lazy(() => import('./templateLoader'));
 
 const MemoCreateEditTemplate = () => {
   const templateSteps = useWhatsapp((s) => s.templateSteps);
@@ -63,7 +63,7 @@ const MemoCreateEditTemplate = () => {
       {/* Modals */}
       {showSuccessPopup && <SuccessPopup />}
       {confirmCreate && <TemplateTerms />}
-      {isLoading && <LoadingSpinner />}
+      {isLoading && <TemplateLoader />}
     </form>
   );
 };

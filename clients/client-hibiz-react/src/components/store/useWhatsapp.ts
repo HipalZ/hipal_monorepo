@@ -82,18 +82,40 @@ export interface ITemplateAnalytics {
 
 export interface WalletTransaction {
   _id: string;
-  businessId: string;
+  businessId:
+    | string
+    | {
+        _id: string;
+        name: string;
+      };
   userId: {
     _id: string;
     name: string;
+    email?: string;
   };
   date: number;
-  status: string;
-  order_id: {
-    _id: string;
-    total: number;
-    billValue: number;
+  status?: string;
+  order_id?: {
+    _id?: string;
+    total?: number;
+    billValue?: number;
+    date?: number;
   };
+  amountCredited?: number;
+  amountCharged?: number;
+  taxAmount?: number;
+  payment?: {
+    _id: string;
+    razorpayPaymentId?: string;
+    razorpayOrderId?: string;
+    razorpayEventId?: string;
+    razorpayAcquirerData?: Record<string, unknown> | null;
+    mode?: string;
+    paymentMode?: string;
+    date?: number;
+  } | null;
+  errorReason?: string;
+  errorDescription?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -225,6 +247,10 @@ interface whatsappTemplate {
     displayBodyVariableSequence: string[],
   ) => void;
 
+  bodyVariableModes: ("preset" | "custom")[];
+  setBodyVariableMode: (index: number, mode: "preset" | "custom") => void;
+  setBodyVariableModes: (modes: ("preset" | "custom")[]) => void;
+
   showCropper: boolean;
   setShowCropper: (showCropper: boolean) => void;
 
@@ -292,6 +318,20 @@ interface whatsappTemplate {
 
   openBot: boolean;
   setOpenBot: (openBot: boolean) => void;
+
+  templateError: string | null;
+  setTemplateError: (error: string | null) => void;
+
+  // Cached Meta media handle from the single backend fan-out upload. Set at
+  // file-pick time; consumed at template-save time. No second upload needed.
+  mediaHandle: string;
+  setMediaHandle: (mediaHandle: string) => void;
+
+  // Fingerprint of the file that produced the cached handle. Used to detect
+  // "same file picked again" and skip a duplicate upload. Format:
+  // "<name>|<size>|<lastModified>". Empty string means "no upload cached".
+  mediaFingerprint: string;
+  setMediaFingerprint: (fp: string) => void;
 }
 
 export const useWhatsapp = create(
@@ -356,9 +396,6 @@ export const useWhatsapp = create(
 
         addVariable: () => {
           set((state) => {
-            if (state.bodyVariables.length >= 5) {
-              return state;
-            }
             const newVariables = [...state.bodyVariables, ""];
             const newBodyText = `${state.bodyText} {{${newVariables.length}}} `;
             return { bodyVariables: newVariables, bodyText: newBodyText };
@@ -479,8 +516,11 @@ export const useWhatsapp = create(
           set({
             templateName: data.name,
             templateType: data.category,
-            headerType: headerComponent?.format,
-            headerText: headerComponent?.text,
+            // Default to Text when the loaded template has no HEADER component
+            // so the editor always shows a selected option instead of an
+            // unstyled blank state.
+            headerType: headerComponent?.format ?? HeaderInterface.Text,
+            headerText: headerComponent?.text ?? "",
             imagePreview: headerImage,
 
             bodyText: bodyComponent?.text,
@@ -510,6 +550,11 @@ export const useWhatsapp = create(
                   (option) => option.label === variable,
                 )?.value || variable,
             ),
+            bodyVariableModes: variables.map((variable: string) =>
+              get().variableOptions.some((option) => option.label === variable)
+                ? "preset"
+                : ("custom" as const),
+            ),
           });
         },
 
@@ -528,6 +573,8 @@ export const useWhatsapp = create(
             footerText: "",
             bodyVariables: [],
             bodyVariableSequence: [],
+            displayBodyVariableSequence: [],
+            bodyVariableModes: [],
             firstActionType: ActionType.VisitWebsite,
             secondActionType: ActionType.VisitWebsite,
             buttonText: "",
@@ -576,6 +623,15 @@ export const useWhatsapp = create(
           set({ bodyVariableSequence }),
 
         displayBodyVariableSequence: [],
+        bodyVariableModes: [],
+        setBodyVariableMode: (index, mode) =>
+          set((state) => {
+            const next = [...state.bodyVariableModes];
+            while (next.length <= index) next.push("preset");
+            next[index] = mode;
+            return { bodyVariableModes: next };
+          }),
+        setBodyVariableModes: (modes) => set({ bodyVariableModes: modes }),
         setDisplayBodyVariableSequence: (
           displayBodyVariableSequence: string[],
         ) => set({ displayBodyVariableSequence }),
@@ -660,11 +716,43 @@ export const useWhatsapp = create(
           set({ whatzappFormEnabled: value }),
         openBot: false,
         setOpenBot: (openBot: boolean) => set({ openBot }),
+
+        templateError: null,
+        setTemplateError: (error: string | null) =>
+          set({ templateError: error }),
+
+        mediaHandle: "",
+        setMediaHandle: (mediaHandle: string) => set({ mediaHandle }),
+
+        mediaFingerprint: "",
+        setMediaFingerprint: (fp: string) => set({ mediaFingerprint: fp }),
       };
     },
     {
       name: "whatsapp-storage",
       storage: createJSONStorage(() => localStorage),
+      // Skip transient + non-serializable state from localStorage:
+      //   - templateError   : stale errors must not resurrect on reload.
+      //   - imagePreview    : was base64 data URL — multi-MB strings blew the
+      //                       quota (~3.5 MB ceiling). Now a blob URL that's
+      //                       only valid in the current page session anyway.
+      //   - videoPreview    : same reason as imagePreview.
+      //   - imageFiles      : File objects aren't JSON-serializable; storing
+      //                       silently produced `{}` and broke uploadMedia().
+      //   - cropping        : holds a temporary data URL during cropping.
+      partialize: (state) =>
+        Object.fromEntries(
+          Object.entries(state).filter(
+            ([key]) =>
+              key !== "templateError" &&
+              key !== "imagePreview" &&
+              key !== "videoPreview" &&
+              key !== "imageFiles" &&
+              key !== "cropping" &&
+              key !== "mediaHandle" &&
+              key !== "mediaFingerprint",
+          ),
+        ) as whatsappTemplate,
     },
   ),
 );
