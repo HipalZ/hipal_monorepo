@@ -1296,6 +1296,49 @@ const scriptRouter = new Hono()
   )
 
   .post(
+    '/shift_menu_redirection',
+    zValidator(
+      'json',
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+        menuRedirection: z.enum(['WA', 'MENU']),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const filter = requestData.businessId ? { businessId: requestData.businessId } : {};
+
+        const result = await WhatsAppBusinessConfig.updateMany(
+          filter,
+          {
+            $set: {
+              menuRedirection: requestData.menuRedirection,
+            },
+          },
+          { session },
+        );
+
+        if (requestData.businessId && result.matchedCount === 0) {
+          return respond(c, 'WhatsApp config not found for business', true, 404, {
+            businessId: requestData.businessId,
+          });
+        }
+
+        return respond(c, 'menu redirection updated successfully', false, 200, {
+          businessId: requestData.businessId || 'ALL',
+          menuRedirection: requestData.menuRedirection,
+          matchedCount: result.matchedCount,
+          modifiedCount: result.modifiedCount,
+          direction: requestData.menuRedirection,
+        });
+      });
+    },
+  )
+
+  .post(
     '/change_business_owner',
     zValidator(
       'json',
