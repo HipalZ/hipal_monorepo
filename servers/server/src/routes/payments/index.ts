@@ -69,6 +69,7 @@ import {
 } from "../../utils/defaultBillingTime";
 import { executePosHandler } from "../../utils/executePoshandlers.ts";
 import { convertToPetpoojaCart } from "../../utils/helper";
+import { monadHelperFunction, triggerBlockchain } from "../../utils/monad";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
 import {
@@ -79,7 +80,6 @@ import { buildUnifiedDashboardCore } from "../../utils/reportHelper/unifiedSales
 import { respond } from "../../utils/response";
 import { buildBillsExcelBuffer } from "../../utils/sales";
 import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
-import { monadHelperFunction, triggerBlockchain } from "../../utils/monad";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -3977,7 +3977,7 @@ const paymentsRouter = new Hono()
       };
 
       const existingPayments = await Payment.find(queryObject)
-        .sort({ billInvoice: 1 })
+        .sort({ billInvoice: -1 })
         .skip(skip)
         .limit(PAGE_SIZE)
         .populate({ path: "order_id" })
