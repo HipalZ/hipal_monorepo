@@ -2,6 +2,10 @@
   "name": "HiTable",
   "short_name": "HiTable",
   "description": "staff, captain, manager application",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/favicon.ico",
@@ -34,7 +38,7 @@
       "sizes": "512x512"
     }
   ],
-  "theme_color": "#ffffff",
+  "theme_color": "#000000",
   "background_color": "#ffffff",
   "display": "standalone"
 }

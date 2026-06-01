@@ -29,14 +29,14 @@ import {
   validateWhatAppTemplateSchema,
   whatsAppBusinessConfigSchema,
   whatsAppOrderSchema,
-  whatsAppWalletHistorySchema,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
-import { createHmac } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
@@ -65,6 +65,7 @@ import {
 import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
 import { handleChatbotFlow } from "../../utils/whatsappWebhookHandlers/flows";
 import { exchangeCodeForToken } from "../../utils/instagram";
+import sandboxRouter from "./sandbox";
 // import { enqueueWhatsAppJob } from "../../queues/enqueue";
 interface AxiosError {
   response?: {
@@ -95,10 +96,12 @@ const bodySequence = async (
     name: string;
     phone: string;
     email?: string;
+    variables?: Record<string, string>;
   },
   businessId: string,
 ) => {
   const ans = [];
+  const perRow = customer?.variables ?? {};
 
   for (const variable of bodyvariblesequence) {
     let value: string | undefined;
@@ -126,12 +129,19 @@ const bodySequence = async (
       value = userReward?.rewards?.toString();
     }
 
-    if (value !== undefined) {
-      ans.push({
-        type: "text",
-        text: value,
-      });
+    // Fallback to per-customer named variables for custom template fields.
+    if (
+      value === undefined &&
+      Object.prototype.hasOwnProperty.call(perRow, variable)
+    ) {
+      value = perRow[variable];
     }
+
+    // Always push — preserves positional alignment with `{{N}}`.
+    ans.push({
+      type: "text",
+      text: value ?? "",
+    });
   }
 
   return ans;
@@ -143,6 +153,7 @@ const pushToQueue = async (
     phone: string;
     email?: string;
     _id: string;
+    variables?: Record<string, string>;
   }[],
   template: {
     templateName: string;
@@ -244,6 +255,185 @@ const calculateAndCheckBalance = (
   return { insufficientBalance: false, reduceAmount };
 };
 const whatsappRouter = new Hono()
+  // Multi-tenant public sandbox: /whatsapp/sandbox/{keys, templates, send, messages}
+  .route("/sandbox", sandboxRouter)
+  .post(
+    "/media-upload/:businessId",
+    bodyLimit({
+      maxSize: 10 * 1024 * 1024,
+      onError: (c) =>
+        c.json(
+          {
+            err: true,
+            message:
+              "File exceeds 10 MB upload limit. Compress or pick a smaller file.",
+            data: {},
+          },
+          413,
+        ),
+    }),
+    zValidator("param", z.object({ businessId: z.string().min(3).max(26) })),
+    async (c) => {
+      try {
+        const { businessId } = c.req.param();
+        console.log("[media-upload] start", { businessId });
+
+        const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+          businessId,
+        });
+        if (!whatsAppConfig) {
+          return respond(c, "whatsAppConfigData not found", true, 404, {});
+        }
+        const appId = "1166415764661953";
+
+        let formData: FormData;
+        try {
+          formData = await c.req.raw.formData();
+        } catch (parseErr: any) {
+          console.error("[media-upload] formData parse failed", parseErr);
+          return respond(
+            c,
+            `Could not parse multipart body. Ensure Content-Type is 'multipart/form-data' with a boundary. Detail: ${
+              parseErr?.message || parseErr?.name || "unknown"
+            }`,
+            true,
+            400,
+            {},
+          );
+        }
+
+        const file = formData.get("file");
+        const isLikeFile =
+          file &&
+          typeof file === "object" &&
+          typeof (file as any).arrayBuffer === "function";
+        if (!isLikeFile) {
+          console.error("[media-upload] no file in body", {
+            keys: Array.from(formData.keys()),
+            fileType: typeof file,
+          });
+          return respond(
+            c,
+            "Missing 'file' field in multipart body",
+            true,
+            400,
+            {},
+          );
+        }
+        const fileLike = file as any;
+        console.log("[media-upload] file received", {
+          name: fileLike.name,
+          size: fileLike.size,
+          type: fileLike.type,
+        });
+
+        // Step 1: Start a resumable upload session with Meta.
+        // Read the file bytes ONCE — we'll fan out to two destinations.
+        const buffer = Buffer.from(await fileLike.arrayBuffer());
+
+        // ── Destination A: Hipalz storage server (returns a permanent HTTPS URL).
+        const storageUpload = (async (): Promise<string> => {
+          const storageForm = new FormData();
+          storageForm.append(
+            "fileData",
+            new Blob([buffer], { type: fileLike.type }),
+            fileLike.name,
+          );
+          storageForm.append("fileName", randomUUID());
+          storageForm.append("bucketName", "assets");
+          const r = await axios.post(
+            "https://storage.test.hipalz.com/upload",
+            storageForm,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+              maxBodyLength: Number.POSITIVE_INFINITY,
+              maxContentLength: Number.POSITIVE_INFINITY,
+            },
+          );
+          return r.data?.url || r.data?.location || "";
+        })();
+
+        // ── Destination B: Meta Resumable Upload API (returns a media handle).
+        const metaUpload = (async (): Promise<string> => {
+          const sessionRes = await axios.post(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${appId}/uploads`,
+            null,
+            {
+              params: {
+                file_name: fileLike.name,
+                file_length: fileLike.size,
+                file_type: fileLike.type,
+                access_token: whatsAppConfig.token,
+              },
+            },
+          );
+          console.log("[media-upload] step1 ok", {
+            sessionId: sessionRes.data?.id,
+          });
+          const sessionId = String(sessionRes.data?.id ?? "");
+          if (!sessionId)
+            throw new Error("Meta did not return an upload session id");
+          const sessionPath = sessionId.startsWith("upload:")
+            ? sessionId
+            : `upload:${sessionId}`;
+
+          const uploadRes = await axios.post(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${sessionPath}`,
+            buffer,
+            {
+              headers: {
+                Authorization: `OAuth ${whatsAppConfig.token}`,
+                file_offset: "0",
+                "Content-Type": "application/octet-stream",
+              },
+              maxBodyLength: Number.POSITIVE_INFINITY,
+              maxContentLength: Number.POSITIVE_INFINITY,
+            },
+          );
+          const h = uploadRes.data?.h;
+          if (!h) throw new Error("Meta did not return a media handle");
+          return h as string;
+        })();
+
+        // Run both in parallel — total time is max(storage, meta), not sum.
+        const [url, handle] = await Promise.all([storageUpload, metaUpload]);
+
+        console.log("[media-upload] fan-out done", {
+          urlPresent: Boolean(url),
+          handleLen: handle.length,
+        });
+
+        return c.json(
+          {
+            message: "Uploaded successfully",
+            err: false,
+            data: { url, handle },
+          },
+          200,
+        );
+      } catch (error: any) {
+        // Log the full error so we can debug from server logs.
+        console.error("[media-upload] unexpected error", {
+          message: error?.message,
+          status: error?.response?.status,
+          data: error?.response?.data,
+        });
+        const metaMsg =
+          error?.response?.data?.error?.error_user_msg ||
+          error?.response?.data?.error?.message ||
+          error?.message ||
+          "Unknown error";
+        return c.json(
+          {
+            message: `Media upload failed: ${metaMsg}`,
+            err: true,
+            data: error?.response?.data || {},
+          },
+          400,
+        );
+      }
+    },
+  )
   .get(
     "/template/all/:businessId",
 
@@ -844,6 +1034,7 @@ const whatsappRouter = new Hono()
                 name: string;
                 phone: string;
                 _id: string;
+                variables?: Record<string, string>;
               }[];
               for (const customer of bulkCustomers) {
                 if (
@@ -867,6 +1058,7 @@ const whatsappRouter = new Hono()
                     },
                     {
                       upsert: true,
+                      new: true, // ensures Mongoose returns the newly created document during an upsert,
                     },
                   );
 
@@ -879,6 +1071,7 @@ const whatsappRouter = new Hono()
                       name: customer.name,
                       phone: customer.phone,
                       _id: saveUser?._id.toString() || "",
+                      variables: customer.variables,
                     });
                   }
                 }
@@ -1349,84 +1542,118 @@ const whatsappRouter = new Hono()
       const { businessId } = c.req.param();
       const { from, to } = c.req.query();
 
-      const fromDate = from
-        ? new Date(Number(from))
-        : new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
-      const toDate = to ? new Date(Number(to)) : new Date();
+      // Date filter is applied ONLY when caller supplies a range. The previous
+      // silent 5-day default was hiding older history rows.
+      const dateFilter: { $gte?: number; $lte?: number } = {};
+      if (from) dateFilter.$gte = Number(from);
+      if (to) dateFilter.$lte = Number(to);
 
-      const walletHistory = await WhatsAppWalletHistory.find({
-        businessId,
-        date: { $gte: Number(fromDate), $lte: Number(toDate) },
+      const query: Record<string, unknown> = { businessId };
+      if (dateFilter.$gte != null || dateFilter.$lte != null) {
+        query.date = dateFilter;
+      }
+
+      const walletHistory = await WhatsAppWalletHistory.find(query)
+        .sort({ date: -1 })
+        .populate({ path: "userId", select: "name email" })
+        .populate({ path: "businessId", select: "name", model: "Business" })
+        .populate({ path: "order_id", select: "total billValue date" })
+        .lean();
+
+      // Join with WhatsAppPayment in a single query so the UI can show
+      // razorpayPaymentId / method / acquirer data without storing them
+      // twice. Both collections share `order_id` as the join key.
+      const orderIds = walletHistory
+        .map((h: any) => h.order_id?._id ?? h.order_id)
+        .filter(Boolean);
+
+      const payments = await WhatsAppPayment.find({
+        order_id: { $in: orderIds },
       })
-        .populate({
-          path: "userId",
-          select: "name",
-        })
-        .populate({
-          path: "order_id",
-          select: "total billValue",
-        });
+        .select(
+          "order_id razorpayPaymentId razorpayOrderId razorpayEventId razorpayAcquirerData mode paymentMode date",
+        )
+        .lean();
+
+      const paymentByOrder = new Map<string, any>();
+      for (const p of payments) {
+        paymentByOrder.set(String(p.order_id), p);
+      }
+
+      // Compute display amounts. Three shapes of rows live in this collection:
+      //
+      //  (A) NEW-format Razorpay row: order has `total` (GST-inclusive,
+      //      charged) and a DIFFERENT `billValue` (base, credited).
+      //        → amountCharged = total, amountCredited = billValue,
+      //          taxAmount = total - billValue.
+      //
+      //  (B) LEGACY Razorpay row: order has `total === billValue` (the old
+      //      flow sent both equal). At that time the wallet was credited
+      //      `total` verbatim — no GST split existed. So show that as-is;
+      //      DO NOT divide by 1.18 (the wallet did not receive total/1.18).
+      //        → amountCharged = total, amountCredited = total, taxAmount = 0.
+      //
+      //  (C) Off-schema manual credit from the legacy `/wallet/credit`
+      //      endpoint: no order_id, no status, but a top-level `amount`.
+      //        → amountCharged/Credited = amount, taxAmount = 0.
+      const data = walletHistory.map((h: any) => {
+        const order = h.order_id || {};
+        const totalAmount = Number(order.total) || 0;
+        const storedBase = Number(order.billValue) || 0;
+        const hasOrder = !!order._id;
+
+        let amountCharged = 0;
+        let amountCredited = 0;
+        let taxAmount = 0;
+
+        const isFailed = h.status === "FAILED";
+
+        if (hasOrder) {
+          const hasGstSplit =
+            storedBase > 0 && Math.abs(storedBase - totalAmount) >= 0.01;
+          if (hasGstSplit) {
+            amountCharged = totalAmount;
+            amountCredited = storedBase;
+            taxAmount = Math.max(0, amountCharged - amountCredited);
+          } else {
+            amountCharged = totalAmount;
+            amountCredited = totalAmount;
+            taxAmount = 0;
+          }
+          // No money moved for failed attempts — don't display a credited
+          // figure that never actually hit the wallet.
+          if (isFailed) {
+            amountCredited = 0;
+            taxAmount = 0;
+          }
+        } else if (typeof h.amount === "number") {
+          amountCharged = h.amount;
+          amountCredited = h.amount;
+          taxAmount = 0;
+        }
+
+        const orderKey = String(order._id ?? h.order_id ?? "");
+        const payment = paymentByOrder.get(orderKey) || null;
+
+        return {
+          ...h,
+          amountCredited,
+          amountCharged,
+          taxAmount,
+          payment,
+        };
+      });
 
       return c.json(
         {
           message: "Wallet history",
           err: false,
-          data: walletHistory,
+          data,
         },
         200,
       );
     },
   )
-  .post(
-    "/wallet/credit",
-
-    zValidator("json", whatsAppWalletHistorySchema),
-
-    async (c) => {
-      const { amount, userId, businessId } = await c.req.json();
-
-      const wallet = await WhatsAppWallet.findOneAndUpdate(
-        {
-          businessId,
-        },
-        {
-          $inc: { currentBalance: amount },
-        },
-        {
-          new: true,
-          upsert: true,
-        },
-      );
-
-      if (!wallet) {
-        return c.json(
-          {
-            message: "Wallet not found",
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
-
-      await WhatsAppWalletHistory.create({
-        businessId,
-        amount,
-        userId,
-        date: Date.now(),
-      });
-
-      return c.json(
-        {
-          message: "Wallet credited",
-          err: false,
-          data: wallet,
-        },
-        200,
-      );
-    },
-  )
-
   .get(
     "/coupon_link/:businessId",
     zValidator("param", z.object({ businessId: z.string() })),
@@ -1641,12 +1868,24 @@ const whatsappRouter = new Hono()
             { session },
           );
 
+          // Wallet credit uses the BASE amount (without GST) when the order
+          // carries a real GST split — i.e. billValue differs from total.
+          // If both are equal (stale-frontend or legacy order shape) credit
+          // `total` verbatim, matching the pre-fix behavior. Never divide by
+          // 1.18 here: we'd silently under-credit anyone whose frontend sent
+          // the gross amount as both fields.
+          const totalAmount = Number(getOrder?.total) || 0;
+          const storedBase = Number(getOrder?.billValue) || 0;
+          const hasGstSplit =
+            storedBase > 0 && Math.abs(storedBase - totalAmount) >= 0.01;
+          const baseToCredit = hasGstSplit ? storedBase : totalAmount;
+
           await WhatsAppWallet.findOneAndUpdate(
             {
               businessId: getOrder?.businessId,
             },
             {
-              $inc: { currentBalance: getOrder?.total },
+              $inc: { currentBalance: baseToCredit },
             },
             {
               new: true,
@@ -2617,76 +2856,82 @@ const whatsappRouter = new Hono()
   // the business name without an extra round-trip.
   // ────────────────────────────────────────────────────────────────
   .get(
-  '/wa_payments',
-  zValidator(
-    'query',
-    z
-      .object({
-        from: z.coerce.number().int().nonnegative().optional(),
-        to: z.coerce.number().int().nonnegative().optional(),
-        order_id: z.string().optional(),
-        razorpay_id: z.string().optional(),
-        businessId: z.string().optional(),
-        limit: z.coerce.number().int().min(1).max(500).optional().default(100),
-        skip: z.coerce.number().int().nonnegative().optional().default(0),
-      })
-      .refine(
-        (d) =>
-          (d.from !== undefined && d.to !== undefined) ||
-          !!d.order_id ||
-          !!d.razorpay_id,
-        {
-          message:
-            'Provide either `from`+`to`, `order_id`, or `razorpay_id`.',
-        },
-      ),
-  ),
-  async (c) => {
-    const { from, to, order_id, razorpay_id, businessId, limit, skip } =
-      c.req.valid('query');
+    "/wa_payments",
+    zValidator(
+      "query",
+      z
+        .object({
+          from: z.coerce.number().int().nonnegative().optional(),
+          to: z.coerce.number().int().nonnegative().optional(),
+          order_id: z.string().optional(),
+          razorpay_id: z.string().optional(),
+          businessId: z.string().optional(),
+          limit: z.coerce
+            .number()
+            .int()
+            .min(1)
+            .max(500)
+            .optional()
+            .default(100),
+          skip: z.coerce.number().int().nonnegative().optional().default(0),
+        })
+        .refine(
+          (d) =>
+            (d.from !== undefined && d.to !== undefined) ||
+            !!d.order_id ||
+            !!d.razorpay_id,
+          {
+            message:
+              "Provide either `from`+`to`, `order_id`, or `razorpay_id`.",
+          },
+        ),
+    ),
+    async (c) => {
+      const { from, to, order_id, razorpay_id, businessId, limit, skip } =
+        c.req.valid("query");
 
-    const filter: Record<string, any> = {};
+      const filter: Record<string, any> = {};
 
-    // Priority: specific ID lookups first, then date range.
-    if (order_id) {
-      filter.order_id = order_id;
-    } else if (razorpay_id) {
-      // razorpay_id can be either the payment id (pay_xxx) or order id (order_xxx)
-      filter.$or = [
-        { razorpayPaymentId: razorpay_id },
-        { razorpayOrderId: razorpay_id },
-      ];
-    } else if (from !== undefined && to !== undefined) {
-      if (from > to) {
-        return c.json(
-          { message: '`from` must be <= `to`', err: true, data: [] },
-          400,
-        );
+      // Priority: specific ID lookups first, then date range.
+      if (order_id) {
+        filter.order_id = order_id;
+      } else if (razorpay_id) {
+        // razorpay_id can be either the payment id (pay_xxx) or order id (order_xxx)
+        filter.$or = [
+          { razorpayPaymentId: razorpay_id },
+          { razorpayOrderId: razorpay_id },
+        ];
+      } else if (from !== undefined && to !== undefined) {
+        if (from > to) {
+          return c.json(
+            { message: "`from` must be <= `to`", err: true, data: [] },
+            400,
+          );
+        }
+        filter.date = { $gte: from, $lte: to };
       }
-      filter.date = { $gte: from, $lte: to };
-    }
 
-    if (businessId) filter.businessId = businessId;
+      if (businessId) filter.businessId = businessId;
 
-    const [payments, count] = await Promise.all([
-      WhatsAppPayment.find(filter)
-        .populate('businessId', 'name')
-        .select(
-          'order_id razorpayPaymentId razorpayOrderId businessId date total billValue mode paymentMode userId',
-        )
-        .sort({ date: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      WhatsAppPayment.countDocuments(filter),
-    ]);
+      const [payments, count] = await Promise.all([
+        WhatsAppPayment.find(filter)
+          .populate("businessId", "name")
+          .select(
+            "order_id razorpayPaymentId razorpayOrderId businessId date total billValue mode paymentMode userId",
+          )
+          .sort({ date: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        WhatsAppPayment.countDocuments(filter),
+      ]);
 
-    return c.json({
-      message: 'Payments fetched',
-      err: false,
-      data: { items: payments, total: count, limit, skip },
-    });
-  },
-);
+      return c.json({
+        message: "Payments fetched",
+        err: false,
+        data: { items: payments, total: count, limit, skip },
+      });
+    },
+  );
 
 export default whatsappRouter;

@@ -1,4 +1,5 @@
 node_modules
+.expo/
 clients/client-hibiz-react-copy/dist
 infra/*
 

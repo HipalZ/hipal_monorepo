@@ -12,6 +12,10 @@ interface Group {
 interface BulkCustomer {
   name: string;
   phone: string;
+  dob?: number;
+  // Per-row map of CSV column header → cell value. Backend uses this to
+  // substitute template placeholders matching the column name.
+  variables?: Record<string, string>;
 }
 
 export enum ShowOptions {

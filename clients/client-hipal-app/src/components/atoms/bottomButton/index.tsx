@@ -38,6 +38,9 @@ const buttonVariants = {
   tap: { scale: 0.75, rotateX: 0, rotateY: 0, translateZ: 0 },
 };
 
+const DEFAULT_BUTTON_COLOR = "var(--p, #000000)";
+const DEFAULT_BUTTON_TEXT_COLOR = "var(--s, #ffffff)";
+
 function getButtonInnerContent(button: ButtonConfig) {
   const {
     highlight,
@@ -141,8 +144,8 @@ function SwipeButton({
       style={{
         backgroundColor: button.disable
           ? "#cccccc"
-          : button.color ?? "var(--p)",
-        color: button.textColor ?? "var(--s)",
+          : button.color ?? DEFAULT_BUTTON_COLOR,
+        color: button.textColor ?? DEFAULT_BUTTON_TEXT_COLOR,
         boxShadow: pillShadow,
       }}
     >
@@ -246,8 +249,8 @@ const MemoCommonBottomButton = (props: MemoBottomButtonProps) => {
                 style={{
                   backgroundColor: button.disable
                     ? "#cccccc"
-                    : button.color ?? "var(--p)",
-                  color: button.textColor ?? "var(--s)",
+                    : button.color ?? DEFAULT_BUTTON_COLOR,
+                  color: button.textColor ?? DEFAULT_BUTTON_TEXT_COLOR,
                 }}
                 onClick={!button.disable ? button.onClick : undefined}
                 type={button.type ?? "button"}

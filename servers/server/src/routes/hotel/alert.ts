@@ -36,6 +36,7 @@ import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 import { endOfToday, startOfToday } from "../payments";
 import { returnHotelBodyComponents } from "./rooms";
+import { sendPushToToken, sendPushToTokens } from "../../services/notifications";
 const admin = require("firebase-admin");
 
 const sendPushNotification = async (
@@ -43,24 +44,18 @@ const sendPushNotification = async (
   hotelNo: string,
   serviceName: string,
 ) => {
-  const pushMessage = {
-    token: token, // or use 'topic' if you're sending to a topic
-    notification: {
+  return sendPushToToken(
+    { token },
+    {
       title: "Room Attention Required",
       body: `${hotelNo} requires your attention for ${serviceName}. kindly respond to the alert!`,
-    },
-    android: {
-      notification: {
-        channel_id: "custom_channel_id",
-        sound: "order",
+      data: {
+        type: "HOTEL_SERVICE_ALERT",
+        roomName: hotelNo,
+        serviceName,
       },
     },
-  };
-
-  try {
-    const response = await admin.messaging().send(pushMessage);
-    return { success: true, response };
-  } catch (error) {}
+  );
 };
 
 const sendPushNotificationForNotDeliverd = async (
@@ -1482,17 +1477,16 @@ const hotelAlertRouter = new Hono()
       });
 
       // Step 3: Send push notifications
-      await Promise.all(
-        registrationTokens.map(async (obj) => {
-          if (obj.notification) {
-            await sendPushNotification(
-              obj.token,
-              roomData.name,
-              serviceData?.name,
-            );
-          }
-        }),
-      );
+      await sendPushToTokens(registrationTokens, {
+        title: "Room Attention Required",
+        body: `${roomData.name} requires your attention for ${serviceData?.name}. kindly respond to the alert!`,
+        data: {
+          type: "HOTEL_SERVICE_ALERT",
+          businessId: requestData.businessId,
+          roomId: roomData._id.toString(),
+          serviceName: serviceData?.name || "",
+        },
+      });
 
       const roomSession = await HotelRoomSession.findOne({
         roomId: roomData._id,

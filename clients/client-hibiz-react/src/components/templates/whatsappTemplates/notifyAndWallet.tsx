@@ -13,7 +13,7 @@ const MemoNotifyAndWallet = () => {
     setStep: s.setStep,
   }));
   const businessData = useBusinessData((s) => s.businessData);
-  const { getWalletBalance, getWalletHistory } = useWalletBalance();
+  const { getWalletBalance } = useWalletBalance();
 
   const handleWallethistory = useCallback(() => {
     if (step === Step.WALLET_HISTORY) {
@@ -35,12 +35,6 @@ const MemoNotifyAndWallet = () => {
     queryKey: ["walletBalance", businessData?._id],
     queryFn: getWalletBalance,
     enabled: !!businessData?._id,
-  });
-
-  useQuery({
-    queryKey: ["walletHistory", businessData?._id, Step.WALLET_HISTORY],
-    queryFn: getWalletHistory,
-    enabled: !!businessData?._id && step === Step.WALLET_HISTORY,
   });
 
   return (

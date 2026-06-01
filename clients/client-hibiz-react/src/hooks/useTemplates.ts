@@ -5,6 +5,7 @@ import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import useWhatsapp, {
   Step,
   TemplateSteps,
+  type WalletTransaction,
 } from "@/components/store/useWhatsapp";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 import type { LinkedTemplate } from "@/components/templates/whatsappTemplates/linkTemplatePopup";
@@ -12,7 +13,6 @@ import type {
   ICouponzLinks,
   ISendOptionsPayload,
   IUserMessage,
-  IWalletHistory,
   WhatsAppTemplatePayload,
 } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
@@ -24,6 +24,30 @@ import {
 } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
+
+const extractTemplateError = (data: any, error?: any): string => {
+  // Hono Zod issue list
+  const issues = data?.error?.issues;
+  if (Array.isArray(issues) && issues.length > 0) {
+    const i = issues[0];
+    const path =
+      Array.isArray(i.path) && i.path.length > 0 ? `${i.path.join(".")}: ` : "";
+    return `${path}${i.message || "Invalid input"}`;
+  }
+  // Meta-specific
+  if (data?.data?.error?.error_user_msg) return data.data.error.error_user_msg;
+  if (data?.data?.error?.message) return data.data.error.message;
+  // Our own backend
+  if (data?.message && (data?.err === true || data?.data == null)) {
+    return data.message;
+  }
+  // Caught error path (network / thrown)
+  if (error?.response?.data?.error?.error_user_msg)
+    return error.response.data.error.error_user_msg;
+  if (error?.response?.data?.message) return error.response.data.message;
+  if (error?.message) return error.message;
+  return "Something went wrong. Please try again.";
+};
 
 export const useCreateTemplate = () => {
   const queryClient = useQueryClient();
@@ -61,15 +85,12 @@ export const useCreateTemplate = () => {
     },
     onSuccess: (data) => {
       setIsLoading(false);
-      if (data?.err || !data?.data) {
-        setStep(Step.SETUP);
-        setTemplateSteps(TemplateSteps.NONE);
+      if (data?.err || !data?.data || data?.success === false) {
         setShowSuccessPopup(false);
-        toast.error(
-          data?.data?.error?.error_user_msg || "Failed to create template",
-        );
+        useWhatsapp.getState().setTemplateError(extractTemplateError(data));
         return;
       }
+      useWhatsapp.getState().setTemplateError(null);
       setTemplateId(data?.data?.id);
       setShowSuccessPopup(true);
       setTemplateStatus(data?.data?.status);
@@ -78,11 +99,11 @@ export const useCreateTemplate = () => {
       setTemplateSteps(TemplateSteps.NONE);
       queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       setIsLoading(false);
-      toast.error(
-        error.message || "An error occurred while creating the template.",
-      );
+      useWhatsapp
+        .getState()
+        .setTemplateError(extractTemplateError(null, error));
     },
   });
 
@@ -135,27 +156,23 @@ export const useEditTemplate = () => {
     },
     onSuccess: (data) => {
       setIsLoading(false);
-      if (data?.err || !data?.data) {
-        setStep(Step.SETUP);
-        setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+      if (data?.err || !data?.data || data?.success === false) {
         setShowSuccessPopup(false);
-        toast.error(
-          data?.data?.error?.error_user_msg || "Failed to update template",
-        );
+        useWhatsapp.getState().setTemplateError(extractTemplateError(data));
         return;
       }
-
+      useWhatsapp.getState().setTemplateError(null);
       setShowSuccessPopup(true);
       setTemplateStatus(data?.data?.status);
       setStep(Step.SETUP);
       setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
       queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       setIsLoading(false);
-      toast.error(
-        error.message || "An error occurred while updating the template.",
-      );
+      useWhatsapp
+        .getState()
+        .setTemplateError(extractTemplateError(null, error));
     },
   });
 
@@ -250,63 +267,39 @@ export const useMediaUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   const uploadMedia = async (): Promise<{ handle: string }> => {
+    const cached = useWhatsapp.getState().mediaHandle;
+    if (cached) return { handle: cached };
+
+    if (!imageFiles) {
+      return { handle: "" };
+    }
+    if (!businessId) {
+      throw new Error("Missing businessId");
+    }
+
+    setIsUploading(true);
     try {
-      if (!imageFiles) {
-        throw new Error("No image files to upload");
-      }
-
-      setIsUploading(true);
-
-      const res = await apiRpc.whatsapp.whatsapp_config[":businessId"].$get({
-        param: {
-          businessId,
-        },
-      });
-
-      const response = await res.json();
-
-      // Step 1: Start upload session
-      // TODO: CALL API TO APPiD TOKEN
-      const sessionResponse = await axios.post(
-        "https://graph.facebook.com/v21.0/1166415764661953/uploads",
-        null,
-        {
-          params: {
-            file_name: imageFiles.name,
-            file_length: imageFiles.size,
-            file_type: imageFiles.type,
-            access_token: response?.data?.token,
-          },
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-
-      // Step 2: Upload to custom storage
-      const imageId = crypto.randomUUID();
-      const storageFormData = new FormData();
-      storageFormData.append("fileData", imageFiles);
-      storageFormData.append("fileName", `${imageId}`);
-      storageFormData.append("bucketName", "assets");
-
-      // Step 3: Upload the file
       const formData = new FormData();
       formData.append("file", imageFiles);
-      formData.append("file_name", imageFiles.name);
-
-      const uploadResponse = await axios.post(
-        `https://temp-storage-six.vercel.app/upload?sessionId=${sessionResponse.data.id}`,
+      const res = await axios.post(
+        `/whatsapp/media-upload/${businessId}`,
         formData,
+        {
+          maxBodyLength: Number.POSITIVE_INFINITY,
+          maxContentLength: Number.POSITIVE_INFINITY,
+        },
       );
-
+      if (res.data?.err || !res.data?.data?.handle) {
+        throw new Error(res.data?.message || "Media upload failed");
+      }
+      const handle = res.data.data.handle as string;
+      useWhatsapp.getState().setMediaHandle(handle);
+      if (res.data.data.url) {
+        useWhatsapp.getState().setImagePreview(res.data.data.url);
+      }
+      return { handle };
+    } finally {
       setIsUploading(false);
-
-      return {
-        handle: uploadResponse.data.h as string,
-      };
-    } catch (error) {
-      setIsUploading(false);
-      console.error("Upload failed:", error);
-      throw error;
     }
   };
 
@@ -433,19 +426,28 @@ export const useWalletBalance = () => {
     return response;
   }, [businessId, setWalletBalance]);
 
-  const getWalletHistory = useCallback(async () => {
-    if (!businessId) return;
-    const res = await apiRpc.whatsapp.whatsapp_wallet.history[
-      ":businessId"
-    ].$get({
-      param: {
-        businessId,
-      },
-    });
-    const response: { data: IWalletHistory[] } = await res.json();
-    setWalletHistory(response?.data);
-    return response;
-  }, [businessId, setWalletHistory]);
+  const getWalletHistory = useCallback(
+    async (opts?: { from?: number; to?: number }) => {
+      if (!businessId) return;
+      const query: Record<string, string> = {};
+      if (opts?.from != null) query.from = String(opts.from);
+      if (opts?.to != null) query.to = String(opts.to);
+      const res = await apiRpc.whatsapp.whatsapp_wallet.history[
+        ":businessId"
+      ].$get({
+        param: {
+          businessId,
+        },
+        query,
+      });
+      const response = (await res.json()) as unknown as {
+        data: WalletTransaction[];
+      };
+      setWalletHistory(response?.data ?? []);
+      return response;
+    },
+    [businessId, setWalletHistory],
+  );
 
   return { getWalletBalance, getWalletHistory };
 };

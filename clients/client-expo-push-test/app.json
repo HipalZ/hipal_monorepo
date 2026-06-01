@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "HiPal Push MVP",
+    "slug": "hipal-push-mvp",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "hipalpushmvp",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hipal.pushmvp"
+    },
+    "android": {
+      "package": "table.test.hipalz.com",
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "sounds": []
+        }
+      ]
+    ],
+    "extra": {
+      "apiUrl": "https://api.test.hipalz.com",
+      "eas": {
+        "projectId": "7c95b7d7-4c91-4182-973a-cafcc17d3667"
+      }
+    },
+    "owner": "vamsi_mangu"
+  }
+}

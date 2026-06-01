@@ -9,10 +9,12 @@ const bodySequence = async (
     name: string;
     phone: string;
     email?: string;
+    variables?: Record<string, string>;
   },
   businessId: string,
 ) => {
   const ans = [];
+  const perRow = customer?.variables ?? {};
 
   for (const variable of bodyvariblesequence) {
     let value: string | undefined;
@@ -40,12 +42,19 @@ const bodySequence = async (
       value = userReward?.rewards?.toString();
     }
 
-    if (value !== undefined) {
-      ans.push({
-        type: "text",
-        text: value,
-      });
+    // Fallback: per-row CSV columns. Lookup is exact-match on header.
+    if (
+      value === undefined &&
+      Object.prototype.hasOwnProperty.call(perRow, variable)
+    ) {
+      value = perRow[variable];
     }
+
+    // Always push (even empty) so positional `{{N}}` alignment is preserved.
+    ans.push({
+      type: "text",
+      text: value ?? "",
+    });
   }
 
   return ans;
@@ -59,6 +68,8 @@ export const returnBodyComponents = async (
   customer: {
     name: string;
     phone: string;
+    email?: string;
+    variables?: Record<string, string>;
   },
   businessId: string,
 ) => {
