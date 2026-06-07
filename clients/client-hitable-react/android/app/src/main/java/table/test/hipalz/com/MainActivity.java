@@ -28,10 +28,20 @@ public class MainActivity extends BridgeActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void createNotificationChannel() {
-        String channelId = "custom_channel_id";
-        CharSequence name = "Service Alerts";
-        String description = "Alert notifications for room service requests";
+        createAlertChannel(
+                "custom_channel_id",
+                "Service Alerts",
+                "Alert notifications for room service requests"
+        );
+        createAlertChannel(
+                "wake_up_call_channel_v1",
+                "Wake-up Call Alerts",
+                "Urgent wake-up call reminders for front office"
+        );
+    }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void createAlertChannel(String channelId, CharSequence name, String description) {
         // IMPORTANCE_HIGH ensures heads-up popup + sound on all devices
         int importance = NotificationManager.IMPORTANCE_HIGH;
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { apiRpc } from "@hi/common";
+import { useQuery } from "@tanstack/react-query";
 import { AlarmClock, CalendarClock, X } from "lucide-react";
 import { toast } from "react-toastify";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
@@ -19,8 +20,15 @@ type WakeUpRequest = {
   wakeUpAt?: number;
   displayTime?: string;
   note: string;
+  status?: "REQUESTED" | "ACKNOWLEDGED" | "DUE" | "INFORMED" | "CANCELLED";
+  alertProgress?: string;
   acceptedAt?: number;
   acceptedBy?: {
+    name?: string;
+    phone?: string;
+  } | null;
+  deliveredAt?: number;
+  deliveredBy?: {
     name?: string;
     phone?: string;
   } | null;
@@ -55,15 +63,34 @@ function getWakeUpTimeLabel(request: WakeUpRequest) {
   return request.displayTime || "Wake-up call requested";
 }
 
+function isActiveWakeUp(request: WakeUpRequest) {
+  return ["REQUESTED", "ACKNOWLEDGED", "DUE"].includes(
+    request.status || "REQUESTED",
+  );
+}
+
+function getStatusLabel(request: WakeUpRequest) {
+  if (request.status === "INFORMED") return "Guest informed";
+  if (request.status === "CANCELLED") return "Cancelled";
+  if (request.status === "DUE") return "Wake-up due now";
+  if (request.status === "ACKNOWLEDGED" || request.acceptedBy?.name) {
+    return request.acceptedBy?.name
+      ? `Acknowledged by ${request.acceptedBy.name}. Front office will remind you.`
+      : "Acknowledged by front office.";
+  }
+  return "Waiting for front office acknowledgement.";
+}
+
 export default function HotelAlarmReminder({ businessId, room }: HotelAlarmReminderProps) {
   const userDetails = useLogin((s) => s.userDetails);
   const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
   const [showPopup, setShowPopup] = useState(false);
-  const [requests, setRequests] = useState<WakeUpRequest[]>([]);
   const [wakeDate, setWakeDate] = useState("");
   const [wakeTime, setWakeTime] = useState("");
   const [note, setNote] = useState("Remind Me");
   const [saving, setSaving] = useState(false);
+  const canFetchWakeUps =
+    showPopup && hasGuestContactDetails(userDetails) && Boolean(businessId && room);
 
   const resetForm = useCallback(() => {
     const nextHour = new Date(Date.now() + 60 * 60 * 1000);
@@ -103,35 +130,42 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
     return response.json();
   };
 
-  const fetchActiveWakeUps = useCallback(async () => {
-    if (!hasGuestContactDetails(userDetails) || !businessId || !room) return;
-
-    try {
+  const { data: requests = [], refetch: refetchWakeUps } = useQuery({
+    queryKey: ["hotel-wake-up-calls", businessId, room, userDetails?._id],
+    enabled: canFetchWakeUps,
+    refetchInterval: canFetchWakeUps ? 10000 : false,
+    refetchIntervalInBackground: false,
+    queryFn: async () => {
       const response = await apiRpc.hotel.alarm.active.$get({
         query: {
           businessId,
-          userId: userDetails._id,
-          roomName: room,
+          userId: userDetails?._id || "",
+          roomName: room || "",
         },
       });
       const result = await response.json();
 
-      if (result?.err || !Array.isArray(result?.data)) return;
+      if (result?.err || !Array.isArray(result?.data)) {
+        return [];
+      }
 
-      setRequests(
-        result.data.map((item: WakeUpRequest) => ({
-          id: item.id,
-          note: item.note || "Wake-up call",
-          wakeUpAt: item.wakeUpAt,
-          displayTime: item.displayTime,
-          acceptedAt: item.acceptedAt,
-          acceptedBy: item.acceptedBy,
-        })),
-      );
-    } catch (error) {
-      console.error("Unable to fetch active wake-up calls:", error);
-    }
-  }, [businessId, room, userDetails]);
+      return result.data.map((item: WakeUpRequest) => ({
+        id: item.id,
+        note: item.note || "Wake-up call",
+        wakeUpAt: item.wakeUpAt,
+        displayTime: item.displayTime,
+        status: item.status,
+        alertProgress: item.alertProgress,
+        acceptedAt: item.acceptedAt,
+        acceptedBy: item.acceptedBy,
+        deliveredAt: item.deliveredAt,
+        deliveredBy: item.deliveredBy,
+      }));
+    },
+  });
+
+  const activeRequests = requests.filter(isActiveWakeUp);
+  const historyRequests = requests.filter((request) => !isActiveWakeUp(request));
 
   const handleConfirm = async () => {
     if (!requireGuestDetails()) return;
@@ -142,7 +176,7 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
       return;
     }
 
-    if (requests.length >= MAX_ACTIVE_REQUESTS) {
+    if (activeRequests.length >= MAX_ACTIVE_REQUESTS) {
       toast.error("Only one wake-up call can be active at a time");
       return;
     }
@@ -161,14 +195,7 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
         return;
       }
 
-      setRequests((current) => [
-        ...current,
-        {
-          ...wakeUpRequest,
-          id: result?.data?.alertId || wakeUpRequest.id,
-        },
-      ]);
-      void fetchActiveWakeUps();
+      void refetchWakeUps();
       setShowPopup(false);
       resetForm();
       toast.success("Wake-up call request sent to front office.");
@@ -180,15 +207,6 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
     }
   };
 
-  useEffect(() => {
-    if (!showPopup) return;
-
-    void fetchActiveWakeUps();
-    const interval = window.setInterval(fetchActiveWakeUps, 10000);
-
-    return () => window.clearInterval(interval);
-  }, [fetchActiveWakeUps, showPopup]);
-
   return (
     <>
       <Button
@@ -199,9 +217,9 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
         className="relative h-11 w-11 rounded-full border border-white/70 bg-black text-white shadow-[0_6px_14px_rgba(0,0,0,0.18)] transition-all duration-300 hover:scale-[1.05] hover:bg-[#1F1F1F] active:scale-95"
       >
         <AlarmClock size={18} />
-        {requests.length > 0 && (
+        {activeRequests.length > 0 && (
           <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-[#E85D3A] px-1 text-[0.68rem] font-bold leading-none">
-            {requests.length}
+            {activeRequests.length}
           </span>
         )}
       </Button>
@@ -281,16 +299,16 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
                 Front office will be notified
               </p>
               <p className="mt-1 poppins text-[0.76rem] leading-relaxed text-[#6B625A]">
-                They can track and remove it after acknowledging.
+                They can track, acknowledge, and mark the wake-up call as informed.
               </p>
             </div>
 
-            {requests.length > 0 && (
+            {activeRequests.length > 0 && (
               <div className="space-y-2">
                 <p className="poppins text-[0.76rem] font-semibold uppercase text-[#A79F97]">
-                  Active wake-up calls
+                  Active wake-up call
                 </p>
-                {requests.map((request) => (
+                {activeRequests.map((request) => (
                   <div
                     key={request.id}
                     className="rounded-md bg-[#F7F3EE] px-3 py-2"
@@ -300,16 +318,36 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
                         {getWakeUpTimeLabel(request)}
                       </p>
                       <p className="poppins text-[0.75rem] text-[#6B625A]">{request.note}</p>
-                      {request.acceptedBy?.name ? (
-                        <p className="mt-1 poppins text-[0.72rem] font-semibold text-[#198754]">
-                          Acknowledged by {request.acceptedBy.name}. Front office will remind you.
-                        </p>
-                      ) : (
-                        <p className="mt-1 poppins text-[0.72rem] font-semibold text-[#A46A23]">
-                          Waiting for front office acknowledgement.
-                        </p>
-                      )}
+                      <p
+                        className={`mt-1 poppins text-[0.72rem] font-semibold ${
+                          request.status === "DUE" ? "text-[#C2410C]" : request.acceptedBy?.name ? "text-[#198754]" : "text-[#A46A23]"
+                        }`}
+                      >
+                        {getStatusLabel(request)}
+                      </p>
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {historyRequests.length > 0 && (
+              <div className="space-y-2">
+                <p className="poppins text-[0.76rem] font-semibold uppercase text-[#A79F97]">
+                  Wake-up call history
+                </p>
+                {historyRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    className="rounded-md border border-[#E6DDD3] bg-white px-3 py-2"
+                  >
+                    <p className="poppins text-[0.85rem] font-semibold text-[#2F2924]">
+                      {getWakeUpTimeLabel(request)}
+                    </p>
+                    <p className="poppins text-[0.75rem] text-[#6B625A]">{request.note}</p>
+                    <p className="mt-1 poppins text-[0.72rem] font-semibold text-[#198754]">
+                      {getStatusLabel(request)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -324,7 +362,7 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
               text: "Send wake-up call request",
               onClick: handleConfirm,
               isLoading: saving,
-              disable: saving || requests.length >= MAX_ACTIVE_REQUESTS,
+              disable: saving || activeRequests.length >= MAX_ACTIVE_REQUESTS,
               className: "rounded-md",
             },
           ]}

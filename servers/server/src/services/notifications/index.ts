@@ -106,6 +106,14 @@ export const sendPushToToken = async (
         ? await sendExpoPush(target, payload)
         : await sendFirebasePush(target, payload);
 
+    console.log("Push notification sent:", {
+      provider,
+      token: target.token,
+      channelId: payload.channelId,
+      sound: payload.sound,
+      type: payload.data?.type,
+    });
+
     return {
       token: target.token,
       provider,
@@ -117,6 +125,8 @@ export const sendPushToToken = async (
     console.error("Push notification failed:", {
       provider,
       token: target.token,
+      channelId: payload.channelId,
+      sound: payload.sound,
       error: message,
     });
 
