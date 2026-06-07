@@ -32,6 +32,7 @@ export interface reviewResponse {
   readBy?: { _id?: string; name?: string } | null;
   roomId?: { _id?: string; name?: string };
   alertId?: {
+    _id?: string;
     serviceIds?: { _id?: string; name?: string }[];
     acceptedBy?: { _id?: string; name?: string; phone?: string };
     deliveredBy?: { _id?: string; name?: string; phone?: string };

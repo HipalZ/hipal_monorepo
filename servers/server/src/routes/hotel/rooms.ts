@@ -599,7 +599,7 @@ const roomRouter = new Hono()
         })
         .populate({
           path: "alertId",
-          select: "serviceIds acceptedBy deliveredBy -_id",
+          select: "serviceIds acceptedBy deliveredBy",
           populate: [
             { path: "serviceIds", select: "name" },
             { path: "acceptedBy", select: "name phone" },
