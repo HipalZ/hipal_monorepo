@@ -92,6 +92,7 @@ type ReviewStaff = {
 };
 
 type ReviewAlert = {
+  _id?: string;
   serviceIds?: ReviewService[];
   acceptedBy?: ReviewStaff | null;
   deliveredBy?: ReviewStaff | null;

@@ -2,12 +2,22 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { memo } from 'react';
 import { GrGraphQl } from 'react-icons/gr';
 import { IoAnalytics } from 'react-icons/io5';
-import { MdOutlineManageHistory } from 'react-icons/md';
+import { MdOutlineHotelClass, MdOutlineManageHistory } from 'react-icons/md';
 import { SlPeople } from 'react-icons/sl';
 import { VscFeedback } from 'react-icons/vsc';
 import { Link } from 'react-router-dom';
 
 const essentialCards = [
+  {
+    title: 'Guest Experience Report',
+    description: 'Guest, room, service, staff, escalation, rating and visit context',
+    icon: (
+      <div className="transform rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 p-3 shadow-lg transition-transform hover:scale-105">
+        <MdOutlineHotelClass className="h-8 w-8 text-white drop-shadow-md" />
+      </div>
+    ),
+    href: 'guest-service-journey',
+  },
   {
     title: 'Service History',
     description: 'check the service histories',
