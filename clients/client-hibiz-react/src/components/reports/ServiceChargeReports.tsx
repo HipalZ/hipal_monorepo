@@ -131,9 +131,10 @@ const MemoServiceChargeReports = () => {
           ...(hasReports
             ? [
                 {
-                  text: isPendingCsv ? "Downloading..." : "Download CSV",
+                  text: isPendingCsv ? "Preparing Report..." : "Download Report",
                   onClick: downloadReports,
-                  className: "w-full md:max-w-[12rem] !bg-purple-600",
+                  className: "w-full md:max-w-[12rem]",
+                  color: "#2563eb",
                   disable: isPendingCsv,
                   isBackButton: false,
                   icon: isPendingCsv ? (

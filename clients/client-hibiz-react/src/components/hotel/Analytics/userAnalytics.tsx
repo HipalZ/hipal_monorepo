@@ -95,23 +95,55 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
   };
 
   const exportToCSV = (data: any[], filename: string) => {
-    const csvContent = [Object.keys(data[0]).join(','), ...data.map((row) => Object.values(row).join(','))].join('\n');
+    if (!data.length) return;
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const escapeCsvValue = (value: unknown) => {
+      const str = String(value ?? '');
+      if (str.includes('"') || str.includes(',') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.map(escapeCsvValue).join(','),
+      ...data.map((row) => headers.map((header) => escapeCsvValue(row[header])).join(',')),
+    ].join('\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `${filename}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   };
+
+  const formatFilenameDate = (timestamp?: number) => {
+    if (!timestamp) return 'unknown-date';
+
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date(timestamp));
+
+    const getPart = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? '';
+    return `${getPart('year')}-${getPart('month')}-${getPart('day')}`;
+  };
+
+  const staffAnalyticsFilename = `staff_analytics_${formatFilenameDate(timeStampStart)}-to-${formatFilenameDate(timeStampEnd)}`;
 
   return (
     <div className="bg-background min-h-screen space-y-2 p-4 md:p-6 lg:p-0">
       <div className="flex items-end justify-end gap-4">
-        <Button onClick={() => exportToCSV(filteredData, 'user-analytics')} variant="outline" size="sm" className="gap-2 bg-transparent">
+        <Button onClick={() => exportToCSV(filteredData, staffAnalyticsFilename)} size="sm" className="gap-2 bg-blue-600 text-white hover:bg-blue-700">
           <Download className="h-4 w-4" />
-          Export CSV
+          Download Report
         </Button>
       </div>
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="mx-auto max-w-7xl space-y-6">

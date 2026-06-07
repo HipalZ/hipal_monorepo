@@ -24,6 +24,9 @@ export function SourcesDashboard({ sourcePercentages }: SourcesDashboardProps) {
     }));
 
   const hasData = chartData.length > 0;
+  const topSource = hasData
+    ? chartData.reduce((max, item) => (item.value > max.value ? item : max))
+    : null;
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -42,18 +45,17 @@ export function SourcesDashboard({ sourcePercentages }: SourcesDashboardProps) {
   };
 
   return (
-    <Card className="w-full shadow-sm hover:shadow-md transition-shadow duration-300 border-0 bg-gradient-to-br from-card to-card/80">
+    <Card className="w-full overflow-hidden rounded-lg border border-border/60 bg-white shadow-sm transition-all duration-300 hover:shadow-lg">
+      <div className="h-1.5 bg-gradient-to-r from-teal-500 via-amber-400 to-rose-400" />
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg sm:text-xl font-bold flex items-center space-x-3 text-foreground">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            <div className="p-2 rounded-lg bg-teal-50 text-teal-700 ring-1 ring-teal-100">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <span className="bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-              Booking Sources Distribution
-            </span>
+            <span>Booking Sources Distribution</span>
           </CardTitle>
-          <div className="hidden sm:flex items-center space-x-2 text-muted-foreground">
+          <div className="hidden sm:flex items-center space-x-2 rounded-full bg-slate-50 px-3 py-1 text-muted-foreground ring-1 ring-slate-100">
             <BarChart3 className="w-4 h-4" />
             <span className="text-sm font-medium">Analytics</span>
           </div>
@@ -80,20 +82,31 @@ export function SourcesDashboard({ sourcePercentages }: SourcesDashboardProps) {
                   {chartData.map((entry) => (
                     <div
                       key={entry.name}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
+                      className="rounded-lg border border-border/50 bg-slate-50/70 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
                     >
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-                          style={{ backgroundColor: entry.color }}
-                        />
-                        <span className="font-medium text-foreground text-sm sm:text-base">
-                          {entry.name}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center space-x-3">
+                          <div
+                            className="h-3.5 w-3.5 rounded-full border-2 border-white shadow-sm"
+                            style={{ backgroundColor: entry.color }}
+                          />
+                          <span className="truncate text-sm font-semibold text-foreground sm:text-base">
+                            {entry.name}
+                          </span>
+                        </div>
+                        <span className="text-base font-bold text-slate-900">
+                          {entry.value.toFixed(1)}%
                         </span>
                       </div>
-                      <span className="font-bold text-primary text-lg">
-                        {entry.value.toFixed(1)}%
-                      </span>
+                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white ring-1 ring-border/40">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(entry.value, 100)}%`,
+                            backgroundColor: entry.color,
+                          }}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -127,44 +140,24 @@ export function SourcesDashboard({ sourcePercentages }: SourcesDashboardProps) {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
+                {topSource && (
+                  <div className="pointer-events-none absolute left-1/2 top-1/2 w-32 -translate-x-1/2 -translate-y-1/2 text-center">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      Leader
+                    </div>
+                    <div className="truncate text-sm font-bold text-foreground">
+                      {topSource.name}
+                    </div>
+                    <div className="text-lg font-black text-amber-600">
+                      {topSource.value.toFixed(1)}%
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="pt-6 border-t border-border/50">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                <div className="text-center sm:text-left space-y-1">
-                  <div className="text-sm text-muted-foreground font-medium">
-                    Total Sources
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-bold text-primary">
-                    {chartData.length}
-                  </div>
-                </div>
-                <div className="text-center sm:text-left space-y-1">
-                  <div className="text-sm text-muted-foreground font-medium">
-                    Top Source
-                  </div>
-                  <div className="text-base sm:text-lg font-semibold text-foreground truncate">
-                    {
-                      chartData.reduce((max, item) =>
-                        item.value > max.value ? item : max,
-                      ).name
-                    }
-                  </div>
-                </div>
-                <div className="text-center sm:text-left space-y-1">
-                  <div className="text-sm text-muted-foreground font-medium">
-                    Top Percentage
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-bold text-accent">
-                    {`${chartData
-                      .reduce((max, item) =>
-                        item.value > max.value ? item : max,
-                      )
-                      .value.toFixed(1)}%`}
-                  </div>
-                </div>
-              </div>
+            <div className="rounded-lg border border-dashed border-border/70 bg-slate-50/70 px-4 py-3 text-sm text-muted-foreground">
+              Source share is shown in the chart and progress bars above.
             </div>
           </>
         )}

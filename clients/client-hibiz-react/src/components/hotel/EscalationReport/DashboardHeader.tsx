@@ -120,12 +120,12 @@ export default function DashboardHeader({
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="outline" size="icon" onClick={onExport} disabled={!hasData || isLoading}>
+                                <Button size="icon" onClick={onExport} disabled={!hasData || isLoading} className="bg-blue-600 text-white hover:bg-blue-700">
                                     <Download className="h-4 w-4" />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent className="bg-blue-600 text-white border-none">
-                                <p>Export as CSV</p>
+                                <p>Download Report</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>

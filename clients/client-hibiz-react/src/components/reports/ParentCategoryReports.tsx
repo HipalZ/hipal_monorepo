@@ -189,9 +189,10 @@ const MemoParentCategoryReports = () => {
           ...(hasParents
             ? [
                 {
-                  text: isPendingXlsx ? "Downloading..." : "Download Excel",
+                  text: isPendingXlsx ? "Preparing Report..." : "Download Report",
                   onClick: downloadXlsx,
-                  className: "w-full md:max-w-[12rem] !bg-purple-600",
+                  className: "w-full md:max-w-[12rem]",
+                  color: "#2563eb",
                   disable: isPendingXlsx,
                   isBackButton: false,
                   icon: isPendingXlsx ? (

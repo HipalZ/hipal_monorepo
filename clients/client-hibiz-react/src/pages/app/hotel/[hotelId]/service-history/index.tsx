@@ -257,10 +257,10 @@ const MemoHistoryHotel = () => {
               <Button
                 onClick={handleDownloadReport}
                 disabled={isDownloading || !(historyData?.length || filteredHistory?.length)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
               >
                 <Download className="h-4 w-4" />
-                {isDownloading ? 'Preparing Report...' : 'Download CSV'}
+                {isDownloading ? 'Preparing Report...' : 'Download Report'}
               </Button>
             </div>
           </div>
