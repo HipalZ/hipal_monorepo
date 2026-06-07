@@ -38,6 +38,17 @@ const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 const isExpoToken = (token: string) =>
   token.startsWith("ExpoPushToken[") || token.startsWith("ExponentPushToken[");
 
+const getFirebaseMessaging = () => {
+  if (!admin.apps?.length) {
+    const serviceAccount = require("../../utils/service_account.json");
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  }
+
+  return admin.messaging();
+};
+
 const resolveProvider = (target: PushTarget): PushProvider => {
   if (target.provider) return target.provider;
   return isExpoToken(target.token) ? "expo" : "fcm";
@@ -70,7 +81,7 @@ const sendExpoPush = async (target: PushTarget, payload: PushPayload) => {
 };
 
 const sendFirebasePush = async (target: PushTarget, payload: PushPayload) => {
-  return admin.messaging().send({
+  return getFirebaseMessaging().send({
     token: target.token,
     notification: {
       title: payload.title,

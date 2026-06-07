@@ -2,8 +2,9 @@ import mongoose, { type ConnectOptions } from "mongoose";
 // import { BASE_URL } from '../base_url';
 
 const MONGO_URI =
+  Bun.env.MONGO_URI ||
   "mongodb+srv://hipalz:ZYfCIKE6ke5FxJqx@cluster0.5qdkual.mongodb.net";
-const MONGO_DB = "hipalz-test";
+const MONGO_DB = Bun.env.MONGO_DB || "hipalz-test";
 
 const options: ConnectOptions = {
   dbName: MONGO_DB,
