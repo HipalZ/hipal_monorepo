@@ -1,4 +1,4 @@
-import { DeviceToken, HotelAlert, HotelRoom, User } from "@hi/db-models";
+import { DeviceToken, HotelAlert, HotelRoom, HotelRoomSession, User } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -17,6 +17,9 @@ const alarmPayload = z.object({
   notifyFrontOffice: z.boolean().optional().default(true),
 });
 
+const WAKE_UP_NOTIFICATION_CHANNEL_ID = "wake_up_call_channel_v1";
+const WAKE_UP_NOTIFICATION_SOUND = "order";
+
 function formatReminderTime(triggerAt: string) {
   return new Intl.DateTimeFormat("en-IN", {
     dateStyle: "medium",
@@ -34,6 +37,19 @@ function parseWakeUpMessage(message?: string) {
     displayTime: timeMatch?.[1] || "",
     note: noteMatch?.[1] || cleanMessage || "Wake-up call",
   };
+}
+
+function getWakeUpStatus(alert: {
+  alertProgress?: string;
+  acceptedBy?: unknown;
+  deliveredAt?: number;
+  rejectedAt?: number;
+}) {
+  if (alert.alertProgress === "NOT_DELIVERED") return "DUE";
+  if (alert.alertProgress === "RESOLVED" && alert.deliveredAt) return "INFORMED";
+  if (alert.alertProgress === "REJECTED" || alert.rejectedAt) return "CANCELLED";
+  if (alert.acceptedBy) return "ACKNOWLEDGED";
+  return "REQUESTED";
 }
 
 async function notifyFrontOffice(payload: z.infer<typeof alarmPayload>) {
@@ -70,6 +86,8 @@ async function notifyFrontOffice(payload: z.infer<typeof alarmPayload>) {
   await sendPushToTokens(registrationTokens, {
     title: "Wake-up Call Backup",
     body: `Guest ${payload.guestName} in room ${payload.roomName} requested ${payload.note || "a wake-up call"} at ${formatReminderTime(payload.triggerAt)}.`,
+    sound: WAKE_UP_NOTIFICATION_SOUND,
+    channelId: WAKE_UP_NOTIFICATION_CHANNEL_ID,
     data: {
       type: "HOTEL_WAKEUP_BACKUP",
       businessId: payload.businessId,
@@ -123,22 +141,53 @@ const hotelAlarmRouter = new Hono()
         businessId,
         name: roomName,
       })
-        .select("_id")
+        .select("_id userIds")
         .lean();
 
       if (!room) {
         return respond(c, "Room not found", true, 404, []);
       }
 
+      const isCheckedInUser = room.userIds?.some(
+        (id) => id.toString() === userId,
+      );
+
+      if (!isCheckedInUser) {
+        return respond(
+          c,
+          "No active room session found for this guest",
+          false,
+          200,
+          [],
+        );
+      }
+
+      const roomSession = await HotelRoomSession.findOne({
+        roomId: room._id,
+        userIds: userId,
+      })
+        .select("checkIn")
+        .lean();
+
+      if (!roomSession?.checkIn) {
+        return respond(
+          c,
+          "No active room session found for this guest",
+          false,
+          200,
+          [],
+        );
+      }
+
       const alerts = await HotelAlert.find({
         businessId,
         roomId: room._id,
         userId,
-        alertProgress: "MESSAGE",
         message: { $regex: "^WAKE_UP_CALL::" },
-        wakeUpAt: { $gt: Date.now() },
+        createdAt: { $gte: roomSession.checkIn },
       })
         .populate({ path: "acceptedBy", select: "name phone" })
+        .populate({ path: "deliveredBy", select: "name phone" })
         .sort({ createdAt: -1 })
         .lean();
 
@@ -156,8 +205,12 @@ const hotelAlarmRouter = new Hono()
             displayTime: wakeUpMessage.displayTime,
             createdAt: alert.createdAt,
             wakeUpAt: alert.wakeUpAt,
+            status: getWakeUpStatus(alert),
+            alertProgress: alert.alertProgress,
             acceptedAt: alert.acceptedAt,
             acceptedBy: alert.acceptedBy,
+            deliveredAt: alert.deliveredAt,
+            deliveredBy: alert.deliveredBy,
           };
         }),
       );
@@ -206,9 +259,16 @@ const hotelAlarmRouter = new Hono()
       businessId: payload.businessId,
       roomId: room._id,
       userId: payload.userId,
-      alertProgress: "MESSAGE",
       message: { $regex: "^WAKE_UP_CALL::" },
-      wakeUpAt: { $gt: Date.now() },
+      $or: [
+        {
+          alertProgress: "MESSAGE",
+          wakeUpAt: { $gt: Date.now() },
+        },
+        {
+          alertProgress: "NOT_DELIVERED",
+        },
+      ],
     });
 
     if (activeWakeUpCount >= 1) {
@@ -220,27 +280,75 @@ const hotelAlarmRouter = new Hono()
       : null;
 
     if (payload.notifyFrontOffice) {
-      await notifyFrontOffice(payload);
+      notifyFrontOffice(payload)
+        .then(() => {
+          console.log("[hotelAlarm] front-office wake-up request push sent", {
+            businessId: payload.businessId,
+            roomName: payload.roomName,
+            userId: payload.userId,
+          });
+        })
+        .catch((error) => {
+          console.error("[hotelAlarm] front-office wake-up request push failed", {
+            businessId: payload.businessId,
+            roomName: payload.roomName,
+            userId: payload.userId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        });
     }
 
     if (wakeUpAlert?._id) {
-      await enqueueHotelWakeUpJob(
-        "wakeUpCallAckReminder",
-        { alertId: wakeUpAlert._id.toString(), attempt: 1 },
-        {
-          delay: 2 * 60 * 1000,
-          jobId: `hotel-wakeup-ack-${wakeUpAlert._id.toString()}-1`,
-        },
-      );
+      const alertId = wakeUpAlert._id.toString();
+      console.log("[hotelAlarm] queueing wake-up jobs", {
+        queueName: "hotelWakeUpQueue",
+        redisKeyPrefix: "bull:hotelWakeUpQueue",
+        businessId: payload.businessId,
+        roomName: payload.roomName,
+        alertId,
+        triggerAt: payload.triggerAt,
+      });
 
-      await enqueueHotelWakeUpJob(
-        "wakeUpCallDue",
-        { alertId: wakeUpAlert._id.toString() },
-        {
-          delay: triggerAt - Date.now(),
-          jobId: `hotel-wakeup-${wakeUpAlert._id.toString()}`,
-        },
-      );
+      try {
+        await enqueueHotelWakeUpJob(
+          "wakeUpCallAckReminder",
+          { alertId, attempt: 1 },
+          {
+            delay: 2 * 60 * 1000,
+            jobId: `hotel-wakeup-ack-${alertId}-1`,
+          },
+        );
+
+        await enqueueHotelWakeUpJob(
+          "wakeUpCallDue",
+          { alertId },
+          {
+            delay: triggerAt - Date.now(),
+            jobId: `hotel-wakeup-${alertId}`,
+          },
+        );
+      } catch (error) {
+        console.error("[hotelAlarm] wake-up job enqueue failed", {
+          queueName: "hotelWakeUpQueue",
+          redisKeyPrefix: "bull:hotelWakeUpQueue",
+          alertId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+
+        return respond(
+          c,
+          "Wake-up call was created, but reminder queueing failed. Please check Redis connection/logs.",
+          true,
+          503,
+          { alertId },
+        );
+      }
+
+      console.log("[hotelAlarm] wake-up jobs queued", {
+        queueName: "hotelWakeUpQueue",
+        redisKeyPrefix: "bull:hotelWakeUpQueue",
+        alertId,
+      });
     }
 
     return respond(c, "Wake-up call scheduled successfully", false, 201, {

@@ -320,7 +320,13 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             </Button>
           ) : null}
 
-          {isWakeUpCallAlert && (isWakeUpCallDue || isWakeUpAcknowledged) ? (
+          {isWakeUpCallAlert && isWakeUpAcknowledged && !isWakeUpCallDue ? (
+            <div className="w-full rounded-md border border-emerald-200 bg-emerald-50 py-2 text-center text-sm font-semibold text-emerald-800">
+              Wake-up accepted
+            </div>
+          ) : null}
+
+          {isWakeUpCallAlert && isWakeUpCallDue ? (
             <Button
               className="w-full rounded-md border border-emerald-900 !bg-emerald-700 !text-white font-semibold shadow-sm hover:!bg-emerald-800"
               onClick={async () => {
