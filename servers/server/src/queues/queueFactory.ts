@@ -39,3 +39,14 @@ export const razorpayWebhookQueue = new Queue(
     },
   },
 );
+
+// ----------------- HOTEL WAKE-UP QUEUE -----------------
+export const hotelWakeUpQueue = new Queue(QUEUE_NAME.HOTEL_WAKEUP_QUEUE, {
+  connection: redis,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 3000 },
+    removeOnComplete: { age: 86400 },
+    removeOnFail: { age: 86400 },
+  },
+});

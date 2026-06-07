@@ -850,6 +850,10 @@ const hotelAlertRouter = new Hono()
             serviceIds: { $in: serviceIds || [] },
           },
           { alertProgress: "MESSAGE" },
+          {
+            alertProgress: "NOT_DELIVERED",
+            message: { $regex: "^WAKE_UP_CALL::" },
+          },
         ],
       };
 
@@ -2071,6 +2075,51 @@ const hotelAlertRouter = new Hono()
   })
 
   .post(
+    "/acknowledge_wake_up_alert",
+    zValidator(
+      "json",
+      z.object({
+        alertId: z.string().min(2).max(50),
+        userId: z.string().min(2).max(50),
+      }),
+    ),
+    async (c) => {
+      const { alertId, userId } = await c.req.json();
+
+      const alert = await HotelAlert.findById(alertId);
+      if (!alert) {
+        return respond(c, "Alert not found", true, 404, {});
+      }
+
+      if (
+        alert.alertProgress !== "MESSAGE" ||
+        !alert.message?.startsWith("WAKE_UP_CALL::")
+      ) {
+        return respond(
+          c,
+          "Only active wake-up call alerts can be acknowledged",
+          true,
+          400,
+          {},
+        );
+      }
+
+      const updatedAlert = await HotelAlert.findByIdAndUpdate(
+        alertId,
+        {
+          acceptedAt: alert.acceptedAt || Date.now(),
+          acceptedBy: alert.acceptedBy || userId,
+        },
+        { new: true },
+      );
+
+      return respond(c, "Wake-up call acknowledged successfully", false, 200, {
+        _id: updatedAlert?._id,
+      });
+    },
+  )
+
+  .post(
     "/dismiss_message_alert",
     zValidator(
       "json",
@@ -2087,21 +2136,32 @@ const hotelAlertRouter = new Hono()
         return respond(c, "Alert not found", true, 404, {});
       }
 
-      if (alert.alertProgress !== "MESSAGE") {
+      const isWakeUpCallAlert = alert.message?.startsWith("WAKE_UP_CALL::");
+
+      if (
+        alert.alertProgress !== "MESSAGE" &&
+        !(isWakeUpCallAlert && alert.alertProgress === "NOT_DELIVERED")
+      ) {
         return respond(
           c,
-          "Only MESSAGE alerts can be dismissed via this route",
+          "Only MESSAGE alerts or due wake-up calls can be dismissed via this route",
           true,
           400,
           {},
         );
       }
 
-      await HotelAlert.findByIdAndUpdate(alertId, {
-        alertProgress: "REJECTED",
-        rejectedAt: Date.now(),
-        rejectedBy: userId,
-      });
+      await HotelAlert.findByIdAndUpdate(alertId, isWakeUpCallAlert
+        ? {
+            alertProgress: "RESOLVED",
+            deliveredAt: Date.now(),
+            deliveredBy: userId,
+          }
+        : {
+            alertProgress: "REJECTED",
+            rejectedAt: Date.now(),
+            rejectedBy: userId,
+          });
 
       return respond(c, "Alert dismissed successfully", false, 200, {
         _id: alertId,

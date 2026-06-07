@@ -259,6 +259,29 @@ export const useDismissMessageAlert = () => {
   return { dismissAlert, isDismissing: isPending };
 };
 
+export const useAcknowledgeWakeUpAlert = () => {
+  const queryClient = useQueryClient();
+  const userId = useHiClientZ((s) => s.captainData._id);
+
+  const { mutateAsync: acknowledgeWakeUpAlert, isPending } = useMutation({
+    mutationFn: async (alertId: string) => {
+      const response = await apiRpc.hotel.alert.acknowledge_wake_up_alert.$post({
+        json: { alertId, userId },
+      });
+      const res = await response.json();
+      if (response.status !== 200 && response.status !== 201) {
+        throw new Error(res.message);
+      }
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roomAlerts'] });
+    },
+  });
+
+  return { acknowledgeWakeUpAlert, isAcknowledgingWakeUp: isPending };
+};
+
 export const useHistoryAlerts = () => {
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);

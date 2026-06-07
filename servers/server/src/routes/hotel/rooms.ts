@@ -1237,9 +1237,27 @@ const roomRouter = new Hono()
         }
       }
 
-      // Auto-close any remaining MESSAGE alerts (checkout requests) for this room
+      // Auto-close any remaining MESSAGE alerts for this room.
+      // Wake-up calls are resolved so they remain visible in hotel history.
       await HotelAlert.updateMany(
-        { roomId, alertProgress: "MESSAGE" },
+        {
+          roomId,
+          alertProgress: "MESSAGE",
+          message: { $regex: "^WAKE_UP_CALL::" },
+        },
+        { $set: { alertProgress: "RESOLVED", deliveredAt: Date.now() } },
+        { session },
+      );
+
+      await HotelAlert.updateMany(
+        {
+          roomId,
+          alertProgress: "MESSAGE",
+          $or: [
+            { message: { $exists: false } },
+            { message: { $not: /^WAKE_UP_CALL::/ } },
+          ],
+        },
         { $set: { alertProgress: "REJECTED", rejectedAt: Date.now() } },
         { session },
       );
