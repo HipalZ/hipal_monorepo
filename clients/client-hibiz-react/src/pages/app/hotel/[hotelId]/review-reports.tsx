@@ -249,10 +249,10 @@ export default function HotelReviews() {
           <Button
             onClick={handleDownloadReviewsReport}
             disabled={isDownloading || isFetching || isLoading || !results.length}
-            className="h-11 rounded-xl px-5 text-sm font-medium shadow-sm"
+            className="h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
           >
             <Download className="mr-2 h-4 w-4" />
-            {isDownloading ? 'Preparing Report...' : 'Download Review CSV'}
+            {isDownloading ? 'Preparing Report...' : 'Download Report'}
           </Button>
         </div>
 

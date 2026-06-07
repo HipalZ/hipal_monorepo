@@ -30,9 +30,10 @@ const MemoMultiReportDownloadButton = () => {
         buttons={[
           {
             type: 'button',
-            text: isPendingExcel ? 'Preparing Excel...' : 'Download Excel',
+            text: isPendingExcel ? 'Preparing Report...' : 'Download Report',
             onClick: handleDownload,
             disable: isPendingExcel || !businessId,
+            color: '#2563eb',
             icon: isPendingExcel ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />,
           },
         ]}

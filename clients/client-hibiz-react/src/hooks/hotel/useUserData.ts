@@ -163,7 +163,7 @@ const normalize = (items: UserAnalyticsItemByUser[]) =>
     checkOut: typeof b.checkOut === "number" ? b.checkOut : 0,
   }));
 
-const fetchIndividualUserAnalytics = async ({
+export const fetchIndividualUserAnalytics = async ({
   businessId,
   userId,
 }: Args): Promise<IndividualUserAnalyticsData> => {

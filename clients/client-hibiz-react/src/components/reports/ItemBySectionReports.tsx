@@ -193,9 +193,10 @@ const MemoItemBySectionReports = () => {
           ...(hasItems
             ? [
                 {
-                  text: isExcelPending ? 'Downloading...' : 'Download Excel',
+                  text: isExcelPending ? 'Preparing Report...' : 'Download Report',
                   onClick: handleDownloadExcel,
                   className: 'w-full md:max-w-[14rem]',
+                  color: '#2563eb',
                   disable: isExcelPending,
                   isBackButton: false,
                   icon: isExcelPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />,

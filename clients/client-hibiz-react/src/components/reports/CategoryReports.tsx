@@ -109,9 +109,10 @@ const MemoCategoryReports = () => {
           ...(hasCategories
             ? [
                 {
-                  text: isPendingXlsx ? "Downloading..." : "Download XLSX",
+                  text: isPendingXlsx ? "Preparing Report..." : "Download Report",
                   onClick: downloadReports,
-                  className: "w-full md:max-w-[12rem] !bg-purple-600",
+                  className: "w-full md:max-w-[12rem]",
+                  color: "#2563eb",
                   disable: isPendingXlsx,
                   isBackButton: false,
                   icon: isPendingXlsx ? (

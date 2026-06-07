@@ -179,6 +179,14 @@ const DateRangePicker = () => {
     (preset: PresetRange) => {
       if (selectedRange !== preset) setSelectedRange(preset);
 
+      if (preset === 'custom') {
+        setTempStart(startDate ?? new Date());
+        setTempEnd(endDate ?? new Date());
+        setValidationError('');
+        setIsCustomDate(true);
+        return;
+      }
+
       // 1️⃣ calendar range for the label (today, yesterday, etc.)
       let { start, end } = computePresetRange(preset);
       // 2️⃣ overlay billing times (24h cycles, per business)
@@ -189,7 +197,7 @@ const DateRangePicker = () => {
       setValidationError('');
       setIsCustomDate(true);
     },
-    [selectedRange, setSelectedRange, outletInfo, useExtendedTime],
+    [selectedRange, setSelectedRange, startDate, endDate, outletInfo, useExtendedTime],
   );
 
   const dateRangeDisplay = useMemo(() => {
@@ -218,7 +226,9 @@ const DateRangePicker = () => {
 
     const { selectedRange: curPreset, useExtendedTime: extFlag } = useTimings.getState();
 
-    const preset: PresetRange = curPreset === 'custom' ? 'today' : curPreset;
+    if (curPreset === 'custom') return;
+
+    const preset: PresetRange = curPreset;
 
     let { start, end } = computePresetRange(preset);
     ({ start, end } = applyBillingTimesToRange(start, end, outletInfo, extFlag));
@@ -278,8 +288,8 @@ const DateRangePicker = () => {
   };
 
   return (
-    <>
-      <div className="flex items-center justify-between space-x-2 pl-4 pt-4">
+    <div className="flex min-w-0 flex-col">
+      <div className="flex items-center space-x-2 pl-4 pt-4">
         <div className="sticky top-0 overflow-hidden">
           <div className="flex w-full max-w-[30rem] gap-2 overflow-x-auto text-nowrap px-4 md:max-w-full">
             <button
@@ -413,8 +423,8 @@ const DateRangePicker = () => {
         </div>
       </div>
 
-      <div className="mt-4 w-full max-w-[28rem]">{dateRangeDisplay}</div>
-    </>
+      <div className="mt-2 w-full max-w-[28rem] pl-8">{dateRangeDisplay}</div>
+    </div>
   );
 };
 

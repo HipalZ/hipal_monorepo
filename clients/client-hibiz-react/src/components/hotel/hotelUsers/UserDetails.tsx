@@ -12,6 +12,8 @@ import {
   MessageSquare,
   Inbox,
   AlertCircle,
+  BadgeCheck,
+  Clock3,
 } from "lucide-react";
 import { useIndividualUserAnalytics } from "@/hooks/hotel/useUserData.ts";
 
@@ -60,24 +62,61 @@ export function UserDetails({
     totalReviews: 0,
   };
 
-  const formatDate = (ts: number) =>
-    ts === 0
-      ? "Still checked in"
-      : new Date(ts).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        });
+  const getOrdinalDay = (day: number) => {
+    if (day > 3 && day < 21) return `${day}th`;
+    switch (day % 10) {
+      case 1:
+        return `${day}st`;
+      case 2:
+        return `${day}nd`;
+      case 3:
+        return `${day}rd`;
+      default:
+        return `${day}th`;
+    }
+  };
 
-  const formatDateTime = (ts: number) =>
-    ts === 0
-      ? "Still checked in"
-      : new Date(ts).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+  const formatDateTime = (ts: number, includeTime = true) => {
+    if (ts === 0) return "Still checked in";
+
+    const parts = new Intl.DateTimeFormat("en-IN", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      ...(includeTime
+        ? {
+            hour: "2-digit" as const,
+            minute: "2-digit" as const,
+            hour12: true,
+          }
+        : {}),
+    }).formatToParts(new Date(ts));
+
+    const getPart = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((part) => part.type === type)?.value ?? "";
+    const day = Number(getPart("day"));
+    const dateLabel = `${getOrdinalDay(day)} ${getPart("month")} ${getPart(
+      "year",
+    )}`;
+
+    if (!includeTime) return dateLabel;
+
+    return `${dateLabel}, ${getPart("hour")}:${getPart("minute")} ${getPart(
+      "dayPeriod",
+    ).toUpperCase()}`;
+  };
+
+  const formatDate = (ts: number) => formatDateTime(ts, false);
+
+  const getCompanionGuests = (
+    guests: Array<{ name: string; phone: string }>,
+    primaryPhone?: string,
+  ) =>
+    guests.filter((guest) => {
+      if (!guest?.phone) return true;
+      return guest.phone !== primaryPhone;
+    });
 
   // Normalize arrays + fields for safety
   const safeAnalytics = Array.isArray(rawAnalytics)
@@ -105,8 +144,9 @@ export function UserDetails({
     b.serviceIds.map((s) => s.name),
   );
   const uniqueServices = [...new Set(allServices)];
-  const totalGuests = safeAnalytics.reduce(
-    (sum, b) => sum + b.guestUserIds.length,
+  const totalCompanions = safeAnalytics.reduce(
+    (sum, b) =>
+      sum + getCompanionGuests(b.guestUserIds, b.userId?.phone || user.phone).length,
     0,
   );
 
@@ -158,19 +198,24 @@ export function UserDetails({
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 border-0 shadow-sm bg-gradient-to-br from-card to-card/60">
+        <Card className="lg:col-span-2 overflow-hidden rounded-lg border border-border/60 bg-white shadow-sm">
+          <div className="h-1.5 bg-gradient-to-r from-teal-500 via-amber-400 to-rose-400" />
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                <User className="w-8 h-8 text-primary" />
+              <div className="w-16 h-16 bg-teal-50 rounded-lg flex items-center justify-center flex-shrink-0 ring-1 ring-teal-100">
+                <User className="w-8 h-8 text-teal-700" />
               </div>
               <div className="flex-1 min-w-0 space-y-2">
-                <h2 className="text-2xl font-bold capitalize bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                <div className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-100">
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  Customer profile
+                </div>
+                <h2 className="text-2xl font-bold capitalize text-foreground">
                   {user.name}
                 </h2>
-                <div className="flex items-center space-x-2 p-2 bg-muted/30 rounded-lg w-fit">
-                  <div className="p-1 bg-primary/10 rounded">
-                    <Phone className="w-3 h-3 text-primary" />
+                <div className="flex items-center space-x-2 p-2 bg-slate-50 rounded-md w-fit ring-1 ring-slate-100">
+                  <div className="p-1 bg-white rounded">
+                    <Phone className="w-3 h-3 text-teal-700" />
                   </div>
                   <span className="text-sm font-medium text-foreground">
                     {user.phone}
@@ -181,10 +226,10 @@ export function UserDetails({
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-primary/5 to-accent/5">
+        <Card className="rounded-lg border border-amber-200 bg-amber-50/80 shadow-sm">
           <CardContent className="p-6">
             <div className="text-center space-y-3">
-              <div className="text-4xl font-bold text-primary">
+              <div className="text-4xl font-bold text-amber-700">
                 {hasAnalytics ? rawOverall.averageRating : "—"}
               </div>
               <div className="flex justify-center space-x-1">
@@ -208,11 +253,11 @@ export function UserDetails({
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow duration-300">
+        <Card className="rounded-lg border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-primary/10 rounded-xl">
-                <Calendar className="w-5 h-5 text-primary" />
+              <div className="p-3 bg-slate-100 rounded-lg">
+                <Calendar className="w-5 h-5 text-slate-700" />
               </div>
               <div>
                 <div className="text-2xl font-bold text-foreground">
@@ -226,11 +271,11 @@ export function UserDetails({
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow duration-300">
+        <Card className="rounded-lg border border-amber-200 bg-amber-50/80 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-accent/10 rounded-xl">
-                <MessageSquare className="w-5 h-5 text-accent" />
+              <div className="p-3 bg-white rounded-lg ring-1 ring-amber-100">
+                <MessageSquare className="w-5 h-5 text-amber-700" />
               </div>
               <div>
                 <div className="text-2xl font-bold text-foreground">
@@ -244,11 +289,11 @@ export function UserDetails({
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow duration-300">
+        <Card className="rounded-lg border border-rose-200 bg-rose-50/80 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-primary/10 rounded-xl">
-                <Wrench className="w-5 h-5 text-primary" />
+              <div className="p-3 bg-white rounded-lg ring-1 ring-rose-100">
+                <Wrench className="w-5 h-5 text-rose-700" />
               </div>
               <div>
                 <div className="text-2xl font-bold text-foreground">
@@ -262,18 +307,18 @@ export function UserDetails({
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow duration-300">
+        <Card className="rounded-lg border border-teal-200 bg-teal-50/80 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-accent/10 rounded-xl">
-                <Users className="w-5 h-5 text-accent" />
+              <div className="p-3 bg-white rounded-lg ring-1 ring-teal-100">
+                <Users className="w-5 h-5 text-teal-700" />
               </div>
               <div>
                 <div className="text-2xl font-bold text-foreground">
-                  {totalGuests}
+                  {totalCompanions}
                 </div>
                 <div className="text-sm font-medium text-muted-foreground">
-                  Total Guests
+                  Companions
                 </div>
               </div>
             </div>
@@ -281,15 +326,13 @@ export function UserDetails({
         </Card>
       </div>
 
-      <Card className="border-0 shadow-none">
+      <Card className="rounded-lg border border-border/60 bg-white/80 shadow-sm">
         <CardHeader className="pb-4 px-0">
-          <CardTitle className="text-xl font-bold flex items-center space-x-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-primary" />
+          <CardTitle className="px-5 text-xl font-bold flex items-center space-x-3">
+            <div className="p-2 bg-teal-50 rounded-lg text-teal-700 ring-1 ring-teal-100">
+              <TrendingUp className="w-5 h-5" />
             </div>
-            <span className="bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-              Booking History
-            </span>
+            <span>Booking History</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pb-6 px-0 pt-0">
@@ -320,19 +363,24 @@ export function UserDetails({
                         : "from-zinc-500/15 to-zinc-500/5 text-zinc-700 border-zinc-500/20";
 
                 const reviewCount = booking.reviewIds.length;
-                const guestCount = booking.guestUserIds.length;
+                const companionGuests = getCompanionGuests(
+                  booking.guestUserIds,
+                  booking.userId?.phone || user.phone,
+                );
+                const guestCount = companionGuests.length;
                 const serviceCount = booking.serviceIds.length;
 
                 return (
                   <article
                     key={index}
-                    className="group rounded-2xl border border-border/60 bg-gradient-to-b from-card to-card/70 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+                    className="group overflow-hidden rounded-lg border border-border/60 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl"
                   >
+                    <div className="h-1 bg-gradient-to-r from-teal-500 via-amber-400 to-rose-400 opacity-80" />
                     {/* Header strip */}
-                    <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border/60 bg-gradient-to-r from-muted/40 to-transparent">
+                    <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border/60 bg-slate-50/80">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <MapPin className="w-4 h-4 text-primary" />
+                        <div className="h-9 w-9 rounded-lg bg-white flex items-center justify-center text-teal-700 ring-1 ring-teal-100">
+                          <MapPin className="w-4 h-4" />
                         </div>
                         <div className="truncate">
                           <div className="text-sm text-muted-foreground">
@@ -345,7 +393,7 @@ export function UserDetails({
                       </div>
 
                       <div
-                        className={`text-xs font-medium px-3 py-1 rounded-full border bg-gradient-to-r ${sourceHue}`}
+                        className={`text-xs font-semibold px-3 py-1 rounded-full border bg-gradient-to-r ${sourceHue}`}
                         title={booking.source}
                       >
                         {booking.source || "N/A"}
@@ -355,13 +403,13 @@ export function UserDetails({
                     {/* Dates row */}
                     <div className="px-5 pt-4">
                       <div className="flex flex-wrap items-center gap-2 text-sm">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 text-foreground/90">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 text-foreground/90 ring-1 ring-slate-100">
                           <Calendar className="w-3.5 h-3.5" />
                           {formatDate(booking.checkIn)}
                         </span>
                         <span className="text-muted-foreground">→</span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 text-foreground/90">
-                          <Calendar className="w-3.5 h-3.5" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 text-foreground/90 ring-1 ring-slate-100">
+                          <Clock3 className="w-3.5 h-3.5" />
                           {formatDate(booking.checkOut)}
                         </span>
                       </div>
@@ -370,15 +418,16 @@ export function UserDetails({
                     {/* Quick stats chips */}
                     <div className="px-5 pt-3">
                       <div className="flex flex-wrap gap-2">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 ring-1 ring-rose-100">
                           <Wrench className="w-3.5 h-3.5" />
                           {serviceCount} service{serviceCount === 1 ? "" : "s"}
                         </span>
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-accent/10 text-accent-foreground/90">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-teal-50 text-teal-700 ring-1 ring-teal-100">
                           <Users className="w-3.5 h-3.5" />
-                          {guestCount} guest{guestCount === 1 ? "" : "s"}
+                          {guestCount} companion
+                          {guestCount === 1 ? "" : "s"}
                         </span>
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-700">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 ring-1 ring-amber-100">
                           <Star className="w-3.5 h-3.5" />
                           {reviewCount} review{reviewCount === 1 ? "" : "s"}
                         </span>
@@ -416,14 +465,14 @@ export function UserDetails({
                         )}
                       </section>
 
-                      {/* Guests */}
+                      {/* Companions */}
                       <section>
                         <div className="text-[11px] uppercase tracking-wide text-muted-foreground/80 mb-2">
-                          Guests
+                          Companions
                         </div>
                         {guestCount > 0 ? (
                           <div className="space-y-1.5">
-                            {booking.guestUserIds.slice(0, 4).map((g, i) => (
+                            {companionGuests.slice(0, 4).map((g, i) => (
                               <div
                                 key={i}
                                 className="text-sm text-foreground/90 px-2 py-1 rounded-md bg-muted/40 inline-flex"
@@ -439,7 +488,7 @@ export function UserDetails({
                           </div>
                         ) : (
                           <div className="text-sm text-muted-foreground">
-                            No guests added
+                            No companions added
                           </div>
                         )}
                       </section>

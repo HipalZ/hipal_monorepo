@@ -234,9 +234,10 @@ const MemoDishTypeReports = () => {
           ...(hasDishTypes
             ? [
                 {
-                  text: isPendingCsv ? 'Downloading...' : 'Download Excel',
+                  text: isPendingCsv ? 'Preparing Report...' : 'Download Report',
                   onClick: downloadReports,
-                  className: 'w-full md:max-w-[12rem] !bg-purple-600',
+                  className: 'w-full md:max-w-[12rem]',
+                  color: '#2563eb',
                   disable: isPendingCsv,
                   isBackButton: false,
                   icon: isPendingCsv ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />,
