@@ -12,12 +12,16 @@ import { useHotelTemp } from "@/components/store/useHotelTemp";
 import type { IThemes } from "@/components/types/businessData";
 import { updateTheme } from "@/components/utils/themes";
 import { CardContent } from "@/components/ui/card";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { toast } from "react-toastify";
+import { hasGuestContactDetails } from "./guestContactGuard";
 
 const MemoCheckOutRequest = ({
   businessId,
   themeData,
 }: { businessId: string; themeData: IThemes }) => {
   const userDetails = useLogin((s) => s.userDetails);
+  const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
   const {
     isSubmitting,
     setIsSubmitting,
@@ -31,10 +35,21 @@ const MemoCheckOutRequest = ({
     mutationFn: checkoutRequest,
   });
   const proceedToCheckout = () => {
+    if (!hasGuestContactDetails(userDetails)) {
+      toast.info("Please add your name and phone number to continue.");
+      setCheckLogin(true);
+      return;
+    }
     setShowConfirmation(true);
   };
 
   const confirmCheckout = async () => {
+    if (!hasGuestContactDetails(userDetails)) {
+      toast.info("Please add your name and phone number to continue.");
+      setCheckLogin(true);
+      return;
+    }
+
     setIsSubmitting(true);
     mutateAsync({
       userId: userDetails?._id,

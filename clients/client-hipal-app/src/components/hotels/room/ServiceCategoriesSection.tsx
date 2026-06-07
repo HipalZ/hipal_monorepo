@@ -14,6 +14,7 @@ import { useHotelTemp } from "@/components/store/useHotelTemp";
 import { useLogin } from "@/components/store/useLogin";
 import SearchModal from "./SearchModal";
 import { useCallback, useState, useMemo } from "react";
+import HotelAlarmReminder from "./HotelAlarmReminder";
 
 interface ServiceCategoriesSectionProps {
   businessId: string;
@@ -117,7 +118,9 @@ export default function ServiceCategoriesSection({
           </div>
         </section>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <HotelAlarmReminder businessId={businessId} room={room} />
+
           <Button
             onClick={handleOpenSearch}
             size="icon"

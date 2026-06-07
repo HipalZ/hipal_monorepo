@@ -36,6 +36,7 @@ export const hotelAlert = z.object({
   businessId: ObjectIdSchema,
   userId: ObjectIdSchema,
   createdAt: z.number().optional(),
+  wakeUpAt: z.number().optional(),
   acceptedAt: z.number().optional(),
   deliveredAt: z.number().optional(),
   rejectedAt: z.number().optional(),

@@ -87,6 +87,9 @@ const sendFirebasePush = async (target: PushTarget, payload: PushPayload) => {
 };
 
 const shouldDeleteToken = (error: string) =>
+  error.includes("NotRegistered") ||
+  error.includes("Device unregistered") ||
+  error.includes("Requested entity was not found") ||
   error.includes("DeviceNotRegistered") ||
   error.includes("messaging/registration-token-not-registered") ||
   error.includes("messaging/invalid-registration-token");
@@ -118,7 +121,19 @@ export const sendPushToToken = async (
     });
 
     if (shouldDeleteToken(message)) {
-      await DeviceToken.deleteOne({ token: target.token });
+      console.warn("Deleting stale push token:", {
+        provider,
+        token: target.token,
+        reason: message,
+      });
+
+      const deleteResult = await DeviceToken.deleteOne({ token: target.token });
+
+      console.warn("Stale push token delete result:", {
+        provider,
+        token: target.token,
+        deletedCount: deleteResult.deletedCount,
+      });
     }
 
     return {

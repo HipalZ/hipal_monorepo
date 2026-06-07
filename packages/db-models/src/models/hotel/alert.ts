@@ -33,6 +33,11 @@ const hotelAlertSchema = new mongoose.Schema<HotelAlertType>({
     required: true,
   },
 
+  wakeUpAt: {
+    type: Number,
+    required: false,
+  },
+
   acceptedAt: {
     type: Number,
     required: false,

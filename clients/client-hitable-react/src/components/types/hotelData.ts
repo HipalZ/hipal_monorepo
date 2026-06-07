@@ -110,7 +110,9 @@ export interface Alert {
   __v: number;
   acceptedAt: number;
   deliveredAt: number;
+  rejectedAt?: number;
   deliveredBy: AcceptedBy;
+  rejectedBy?: AcceptedBy;
 }
 
 export interface AlertProgress {

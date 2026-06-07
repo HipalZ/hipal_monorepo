@@ -28,6 +28,8 @@ import {
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { hasGuestContactDetails } from "./guestContactGuard";
 
 interface QuickService extends IService {
   isCheckout?: boolean;
@@ -44,6 +46,7 @@ const ChatCardSection = ({
     useGetServiceCategories(businessId);
   const { setIsOpenChat, isOpenChat } = useHotelTemp();
   const userDetails = useLogin((s) => s.userDetails);
+  const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
   const {
     isSubmitting,
     setIsSubmitting,
@@ -126,6 +129,12 @@ const ChatCardSection = ({
   }, [themeData]);
 
   const handleSelectService = (service: QuickService) => {
+    if (!hasGuestContactDetails(userDetails)) {
+      toast.info("Please add your name and phone number to continue.");
+      setCheckLogin(true);
+      return;
+    }
+
     if (service.isCheckout) {
       setShowConfirmation(true);
     } else {
@@ -143,7 +152,12 @@ const ChatCardSection = ({
   }, []);
 
   const handleConfirmServiceRequest = useCallback(async () => {
-    if (!selectedService || !userDetails?._id) return;
+    if (!selectedService) return;
+    if (!hasGuestContactDetails(userDetails)) {
+      toast.info("Please add your name and phone number to continue.");
+      setCheckLogin(true);
+      return;
+    }
 
     try {
       setServiceRequestStatus("loading");
@@ -180,7 +194,8 @@ const ChatCardSection = ({
     }
   }, [
     selectedService,
-    userDetails?._id,
+    userDetails,
+    setCheckLogin,
     businessId,
     room,
     roomPayload,
@@ -193,6 +208,12 @@ const ChatCardSection = ({
   }, []);
 
   const confirmCheckout = async () => {
+    if (!hasGuestContactDetails(userDetails)) {
+      toast.info("Please add your name and phone number to continue.");
+      setCheckLogin(true);
+      return;
+    }
+
     setIsSubmitting(true);
     mutateAsync({
       userId: userDetails?._id,

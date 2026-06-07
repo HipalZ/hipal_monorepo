@@ -89,8 +89,19 @@ export type RazorpayJobTypes = {
   razorpayPaymentHandler: RazorpayPaymentHandlerTypeValidator;
 };
 
+export type HotelWakeUpJobTypes = {
+  wakeUpCallAckReminder: {
+    alertId: string;
+    attempt: number;
+  };
+  wakeUpCallDue: {
+    alertId: string;
+  };
+};
+
 export type JobMap = {
   [QUEUE_NAME.BILL_QUEUE]: BillJobTypes;
   [QUEUE_NAME.WHATSAPP_CAMPAIGN_QUEUE]: WhatsAppJobTypes;
   [QUEUE_NAME.RAZORPAY_WEBHOOK_QUEUE]: RazorpayJobTypes;
+  [QUEUE_NAME.HOTEL_WAKEUP_QUEUE]: HotelWakeUpJobTypes;
 };

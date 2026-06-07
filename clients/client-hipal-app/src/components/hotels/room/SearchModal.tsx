@@ -22,6 +22,8 @@ import {
 import { toast } from "react-toastify";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import dynamic from "next/dynamic";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { hasGuestContactDetails } from "./guestContactGuard";
 
 // Lazy-loaded components
 const AlertCircle = dynamic(
@@ -172,6 +174,7 @@ export default function SearchModal({
   // Hooks
   const accessToken = useUserToken.getState().accessToken;
   const userDetails = useLogin((s) => s.userDetails);
+  const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
   const query = useSearchParams();
   const room = query.get("room");
   const { gettingRoomLoader, roomPayload } = useHotelRoomData();
@@ -233,7 +236,12 @@ export default function SearchModal({
 
   // Alert creation handler
   const handleConfirmSelection = async () => {
-    if (!hasSelectedServices || !accessToken) return;
+    if (!hasSelectedServices) return;
+    if (!accessToken || !hasGuestContactDetails(userDetails)) {
+      toast.info("Please add your name and phone number to continue.");
+      setCheckLogin(true);
+      return;
+    }
 
     try {
       setAlertStatus("loading");

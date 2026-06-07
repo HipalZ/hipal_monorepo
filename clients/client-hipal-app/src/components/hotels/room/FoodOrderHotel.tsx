@@ -17,6 +17,9 @@ import { useCartStore } from "@/components/store/useCartStore";
 import { useCart } from "@/components/store/useCart";
 import { SuccessView } from "./SuccessView";
 import type { IMenuLayout } from "@/components/types/businessData";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { useLogin } from "@/components/store/useLogin";
+import { hasGuestContactDetails } from "./guestContactGuard";
 
 interface FoodOrderPopupProps {
   show: boolean;
@@ -67,6 +70,8 @@ export default function FoodOrderPopup({
 
   const { cart, setCartEmpty } = useCartStore();
   const { setShowCart } = useCart();
+  const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
+  const userDetails = useLogin((s) => s.userDetails);
 
   const sanitizedCart = useMemo(() => {
     return cart.map(({ dish, ...item }) => {
@@ -109,6 +114,12 @@ export default function FoodOrderPopup({
 
   // Handle order submission
   const handlePlaceOrder = useCallback(async () => {
+    if (!hasGuestContactDetails(userDetails)) {
+      toast.info("Please add your name and phone number to continue.");
+      setCheckLogin(true);
+      return;
+    }
+
     try {
       setOrderStatus("loading");
 
@@ -125,7 +136,7 @@ export default function FoodOrderPopup({
       await createAlert({
         serviceIds: [services?.[0]?._id],
         businessId,
-        userId,
+        userId: userDetails?._id || userId,
         roomId: roomData.data._id,
         cart: sanitizedCart,
       });
@@ -144,6 +155,8 @@ export default function FoodOrderPopup({
     userId,
     services,
     sanitizedCart,
+    setCheckLogin,
+    userDetails,
   ]);
 
   // Loading state

@@ -4,10 +4,10 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { useDismissMessageAlert, useEditAlertCart, useRespondAlerts } from '@/hooks/useHotelApis';
+import { useAcknowledgeWakeUpAlert, useDismissMessageAlert, useEditAlertCart, useRespondAlerts } from '@/hooks/useHotelApis';
 import { useMutation } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
-import { CheckCheck, CheckCircle, ChevronLeft, Loader2, Phone, ShoppingCart, User, XCircle } from 'lucide-react';
+import { AlarmClock, CheckCheck, CheckCircle, ChevronLeft, Loader2, Phone, ShoppingCart, User, XCircle } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
 import CommonBottomButton from '../atoms/bottomButton';
@@ -23,6 +23,18 @@ export interface AlertCardProps {
   alert: Alert;
 }
 
+function parseWakeUpMessage(message?: string) {
+  const cleanMessage = message?.replace('WAKE_UP_CALL::', '') || '';
+  const match = cleanMessage.match(/^(.*?) \((.*?)\) requested a wake-up call for (.*?)\. Note: (.*)$/);
+
+  return {
+    guestName: match?.[1] || '',
+    guestPhone: match?.[2] || '',
+    displayTime: match?.[3] || '',
+    note: match?.[4] || '',
+  };
+}
+
 export function AlertCardHotel({ alert }: AlertCardProps) {
   const { borderColor } = useAlertsColors();
   const staffRole = useHiClientZ((s) => s.selectedBiz?.role);
@@ -32,6 +44,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     mutationFn: respondAlert,
   });
   const { dismissAlert, isDismissing } = useDismissMessageAlert();
+  const { acknowledgeWakeUpAlert, isAcknowledgingWakeUp } = useAcknowledgeWakeUpAlert();
 
   // State for rejection popup
   const [showRejectPopup, setShowRejectPopup] = useState(false);
@@ -104,6 +117,15 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   };
 
   const hasCart = alert?.cart && alert?.cart?.length > 0;
+  const isWakeUpCallAlert = ['MESSAGE', 'NOT_DELIVERED'].includes(alert?.alertProgress) && alert?.message?.startsWith('WAKE_UP_CALL::');
+  const isWakeUpCallDue = isWakeUpCallAlert && alert?.alertProgress === 'NOT_DELIVERED';
+  const isWakeUpAcknowledged = isWakeUpCallAlert && Boolean(alert?.acceptedBy);
+  const wakeUpInfo = isWakeUpCallAlert ? parseWakeUpMessage(alert?.message) : null;
+  const guestName = wakeUpInfo?.guestName || alert?.createdBy?.name || '';
+  const guestPhone = wakeUpInfo?.guestPhone || alert?.createdBy?.phone || '';
+  const displayMessage = isWakeUpCallAlert
+    ? `Requested wake-up call for ${wakeUpInfo?.displayTime || 'the selected time'}. Note: ${wakeUpInfo?.note || 'Wake-up call'}`
+    : alert?.message;
   const timeAgo = formatDistanceToNow(new Date(alert?.createdAt), {
     addSuffix: true,
   });
@@ -124,9 +146,9 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     IS_ACCEPTED_AND_ESCALATION: 'Escalation',
     ACCEPTED: 'Accepted',
     DELIVERED: 'Delivered',
-    NOT_DELIVERED: 'Not Delivered',
+    NOT_DELIVERED: isWakeUpCallAlert ? 'Wake-up Due Now' : 'Not Delivered',
     RESOLVED: 'Resolved',
-    MESSAGE: 'Message',
+    MESSAGE: isWakeUpCallAlert ? 'Wake-up Call' : 'Message',
   };
 
   const getAlertLabel = (progress?: string) => ALERT_PROGRESS_LABELS[progress ?? ''] || progress || 'Unknown';
@@ -137,7 +159,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
         alert?.alertProgress === 'NOT_DELIVERED' ? 'animation-blink' : ''
       } overflow-hidden border border-l-4 transition-all duration-200 hover:shadow-md`}
       style={{
-        borderLeftColor: borderColor(alert?.alertProgress),
+        borderLeftColor: isWakeUpCallDue ? '#dc2626' : isWakeUpCallAlert ? '#7c3aed' : borderColor(alert?.alertProgress),
       }}
     >
       {/* Primary information section */}
@@ -147,7 +169,18 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
           <h3 className="flex items-center text-lg font-bold">Room {alert?.roomId?.name}</h3>
           <RingClock createdAt={alert?.createdAt} />
         </div>
-        <h1 className="my-2 font-bold">{getAlertLabel(alert?.alertProgress)}</h1>
+        <h1
+          className={`my-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-bold ${
+            isWakeUpCallDue
+              ? 'bg-red-100 text-red-900 ring-1 ring-red-200'
+              : isWakeUpCallAlert
+              ? 'bg-violet-100 text-violet-900 ring-1 ring-violet-200'
+              : 'bg-slate-100 text-slate-900'
+          }`}
+        >
+          {isWakeUpCallAlert && <AlarmClock className="h-4 w-4" />}
+          {getAlertLabel(alert?.alertProgress)}
+        </h1>
         {/* Services */}
         <div className="mb-3 flex flex-wrap gap-2">
           {alert?.serviceIds.map((service) => (
@@ -169,7 +202,9 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
               </div>
             </article>
           ))}
-          <h1 className="text-sm">{alert?.message}</h1>
+          <h1 className={`text-sm ${isWakeUpCallAlert ? 'rounded-lg bg-violet-50 p-3 font-semibold text-violet-950' : ''}`}>
+            {displayMessage}
+          </h1>
         </div>
 
         {/* Order details button */}
@@ -191,7 +226,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
                     <div className="mb-1 text-xs text-gray-500">Guest</div>
                     <div className="flex items-center">
                       <User className="mr-1 h-3.5 w-3.5 text-gray-600" />
-                      <span className="font-medium">{alert?.createdBy?.name}</span>
+                      <span className="font-medium">{guestName || 'Guest'}</span>
                     </div>
                   </div>
 
@@ -201,11 +236,11 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
                       <Phone className="mr-1 h-3.5 w-3.5 text-gray-600" />
                       <span>
                         {staffRole === 'MANAGER'
-                          ? alert?.createdBy?.phone
-                          : alert?.createdBy?.phone
-                            ? alert.createdBy.phone.replace(
+                          ? guestPhone
+                          : guestPhone
+                            ? guestPhone.replace(
                                 /^(\d{2})\d{5,}(\d{2})$/,
-                                (match, p1, p2) => `${p1}${'*'.repeat(alert.createdBy.phone.length - (p1.length + p2.length))}${p2}`,
+                                (match, p1, p2) => `${p1}${'*'.repeat(guestPhone.length - (p1.length + p2.length))}${p2}`,
                               )
                             : ''}
                       </span>
@@ -215,11 +250,16 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
                 {alert?.acceptedBy && (
                   <div className="mt-2 border-t border-gray-200 pt-2">
-                    <div className="mb-1 text-xs text-gray-500">Accepted By</div>
+                    <div className="mb-1 text-xs text-gray-500">{isWakeUpCallAlert ? 'Acknowledged By' : 'Accepted By'}</div>
                     <div className="flex items-center text-green-600">
                       <User className="mr-1 h-3.5 w-3.5" />
                       <span className="font-medium">{alert?.acceptedBy?.name}</span>
                     </div>
+                    {isWakeUpCallAlert && (
+                      <p className="mt-1 text-xs text-gray-600">
+                        This staff member has confirmed they will remind the guest at the requested time.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -228,7 +268,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
         </Accordion>
 
         {/* Action buttons */}
-        <div className="flex gap-2">
+        <div className={`flex gap-2 ${isWakeUpCallAlert ? 'flex-col' : ''}`}>
           {isPendingState(alert?.alertProgress) ? (
             <>
               <Button
@@ -262,9 +302,49 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             </Button>
           ) : null}
 
-          {alert?.alertProgress === 'MESSAGE' ? (
+          {isWakeUpCallAlert && alert?.alertProgress === 'MESSAGE' && !isWakeUpAcknowledged ? (
             <Button
-              className="w-full bg-black text-white hover:bg-black"
+              className="w-full rounded-md border border-emerald-700 !bg-emerald-600 !text-white font-semibold shadow-sm hover:!bg-emerald-700"
+              onClick={async () => {
+                try {
+                  await acknowledgeWakeUpAlert(alert?._id);
+                  toast.success('Wake-up call acknowledged');
+                } catch (error) {
+                  toast.error(error?.message || 'Failed to acknowledge wake-up call');
+                }
+              }}
+              disabled={isAcknowledgingWakeUp}
+            >
+              {isAcknowledgingWakeUp ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+              Acknowledge Wake-up Call
+            </Button>
+          ) : null}
+
+          {isWakeUpCallAlert && (isWakeUpCallDue || isWakeUpAcknowledged) ? (
+            <Button
+              className="w-full rounded-md border border-emerald-900 !bg-emerald-700 !text-white font-semibold shadow-sm hover:!bg-emerald-800"
+              onClick={async () => {
+                try {
+                  await dismissAlert(alert?._id);
+                  toast.success('Wake-up call marked as informed');
+                } catch (error) {
+                  toast.error(error?.message || 'Failed to complete wake-up call');
+                }
+              }}
+              disabled={isDismissing}
+            >
+              {isDismissing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+              Informed Guest
+            </Button>
+          ) : null}
+
+          {alert?.alertProgress === 'MESSAGE' && (!isWakeUpCallAlert || !isWakeUpAcknowledged) ? (
+            <Button
+              className={`w-full rounded-md border font-semibold shadow-sm ${
+                isWakeUpCallAlert
+                  ? 'border-violet-900 !bg-violet-700 !text-white hover:!bg-violet-800'
+                  : 'border-black !bg-black !text-white hover:!bg-black'
+              }`}
               onClick={async () => {
                 try {
                   await dismissAlert(alert?._id);
@@ -276,11 +356,11 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
               disabled={isDismissing}
             >
               {isDismissing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
-              Remove
+              {isWakeUpCallAlert ? 'Cancel Wake-up Call' : 'Remove'}
             </Button>
           ) : null}
 
-          {alert.alertProgress === 'NOT_DELIVERED' && (
+          {alert.alertProgress === 'NOT_DELIVERED' && !isWakeUpCallAlert && (
             <Button
               className="w-full bg-red-600 text-white hover:bg-red-700"
               onClick={() => handleAction(alert?._id, 'RESOLVED')}

@@ -23,6 +23,7 @@ import dynamic from "next/dynamic";
 import { useCartStore } from "@/components/store/useCartStore";
 import type { IMenuLayout } from "@/components/types/businessData";
 import { useScreenSize } from "@/components/hooks/useScreenSize";
+import { hasGuestContactDetails } from "./guestContactGuard";
 
 // Lazy-loaded components
 const AlertCircle = dynamic(
@@ -145,10 +146,15 @@ function MemoServiceCategoryCard({
       setCheckLogin(true);
       return;
     }
+    if (!hasGuestContactDetails(userDetails)) {
+      toast.info("Please add your name and phone number to continue.");
+      setCheckLogin(true);
+      return;
+    }
     setServicePopup(true);
     setSelectedServices([]);
     setAlertStatus("idle");
-  }, [accessToken, setCheckLogin]);
+  }, [accessToken, setCheckLogin, userDetails]);
 
   const closeServicePopup = useCallback(() => {
     setServicePopup(false);
@@ -165,6 +171,11 @@ function MemoServiceCategoryCard({
 
   const handleConfirmSelection = useCallback(async () => {
     if (!hasSelectedServices) return;
+    if (!hasGuestContactDetails(userDetails)) {
+      toast.info("Please add your name and phone number to continue.");
+      setCheckLogin(true);
+      return;
+    }
     try {
       setAlertStatus("loading");
       const roomData = await roomPayload({
@@ -188,7 +199,7 @@ function MemoServiceCategoryCard({
       setAlertStatus("error");
       toast.error("Error sending request. Please try again.");
     }
-  }, [businessId, closeServicePopup, createAlert, hasSelectedServices, room, roomPayload, selectedServices, userDetails?._id]);
+  }, [businessId, closeServicePopup, createAlert, hasSelectedServices, room, roomPayload, selectedServices, setCheckLogin, userDetails]);
 
   const handleRetry = useCallback(() => setAlertStatus("idle"), []);
 

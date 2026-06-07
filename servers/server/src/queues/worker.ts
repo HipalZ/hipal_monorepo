@@ -56,3 +56,4 @@ function createWorker(
 console.log("🚀 Unified worker started");
 console.log("ready to handle jobs");
 createWorker(QUEUE_NAME.WHATSAPP_CAMPAIGN_QUEUE, 5, true); // worker with rate limiting
+createWorker(QUEUE_NAME.HOTEL_WAKEUP_QUEUE, 5);
