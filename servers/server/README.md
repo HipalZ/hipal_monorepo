@@ -24,3 +24,4 @@ WABA ID templates
 Test
 expiry 1hour
 testing production
+retrigger kuber
