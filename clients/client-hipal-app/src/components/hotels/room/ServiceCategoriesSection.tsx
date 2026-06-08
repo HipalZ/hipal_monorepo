@@ -77,20 +77,7 @@ export default function ServiceCategoriesSection({
     };
   }, [categoriesData, config]);
 
-  if (categoriesLoading) {
-    return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold">Our Services</h2>
-        <div className="grid grid-cols-2 gap-4">
-          {[...Array(4)].map((_, index) => (
-            <Skeleton key={index} className="w-full h-[160px] rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!categoriesData || categoriesData.length === 0) return null;
+  const hasCategories = Boolean(categoriesData?.length);
 
   return (
     <div className="relative">
@@ -145,44 +132,55 @@ export default function ServiceCategoriesSection({
         </div>
       </div>
 
-      <section className="flex justify-center">
-        <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-4 mt-2 w-full">
-          {primary.map((category) => (
-            <div key={category._id} className="w-full aspect-square">
-              <ServiceCategoryCard
-                category={{
-                  ...category,
-                  image: config.categoryImages[category.name as keyof typeof config.categoryImages] || orderfood,
-                  description: config.categoryDescriptions[category.name as keyof typeof config.categoryDescriptions] || "",
-                }}
-                businessId={businessId}
-                menuId={menuId}
-              />
-            </div>
-          ))}
+      {categoriesLoading ? (
+        <section className="space-y-4">
+          <h2 className="text-xl font-bold">Our Services</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {[...Array(4)].map((_, index) => (
+              <Skeleton key={index} className="w-full h-[160px] rounded-xl" />
+            ))}
+          </div>
+        </section>
+      ) : hasCategories ? (
+        <section className="flex justify-center">
+          <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-4 mt-2 w-full">
+            {primary.map((category) => (
+              <div key={category._id} className="w-full aspect-square">
+                <ServiceCategoryCard
+                  category={{
+                    ...category,
+                    image: config.categoryImages[category.name as keyof typeof config.categoryImages] || orderfood,
+                    description: config.categoryDescriptions[category.name as keyof typeof config.categoryDescriptions] || "",
+                  }}
+                  businessId={businessId}
+                  menuId={menuId}
+                />
+              </div>
+            ))}
 
-          {others.length > 0 && (
-            <div key="others" className="w-full aspect-square">
-              <ServiceCategoryCard
-                category={{
-                  _id: "others",
-                  name: "MAINTAINANCE",
-                  serviceIds: others.flatMap((c) => c.serviceIds),
-                  image: maintainance,
-                  description: config.categoryDescriptions.OTHERS,
-                }}
-                businessId={businessId}
-              />
-            </div>
-          )}
-        </div>
-      </section>
+            {others.length > 0 && (
+              <div key="others" className="w-full aspect-square">
+                <ServiceCategoryCard
+                  category={{
+                    _id: "others",
+                    name: "MAINTAINANCE",
+                    serviceIds: others.flatMap((c) => c.serviceIds),
+                    image: maintainance,
+                    description: config.categoryDescriptions.OTHERS,
+                  }}
+                  businessId={businessId}
+                />
+              </div>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <SearchModal
         show={showSearchModal}
         onClose={handleCloseSearch}
         businessId={businessId}
-        categories={categoriesData}
+        categories={categoriesData ?? []}
       />
     </div>
   );
