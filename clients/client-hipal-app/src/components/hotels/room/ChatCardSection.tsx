@@ -30,6 +30,7 @@ import { toast } from "react-toastify";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { hasGuestContactDetails } from "./guestContactGuard";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 interface QuickService extends IService {
   isCheckout?: boolean;
@@ -47,6 +48,7 @@ const ChatCardSection = ({
   const { setIsOpenChat, isOpenChat } = useHotelTemp();
   const userDetails = useLogin((s) => s.userDetails);
   const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
+  const accessToken = useUserToken.getState().accessToken;
   const {
     isSubmitting,
     setIsSubmitting,
@@ -129,7 +131,7 @@ const ChatCardSection = ({
   }, [themeData]);
 
   const handleSelectService = (service: QuickService) => {
-    if (!hasGuestContactDetails(userDetails)) {
+    if (!accessToken || !hasGuestContactDetails(userDetails)) {
       toast.info("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
@@ -153,7 +155,7 @@ const ChatCardSection = ({
 
   const handleConfirmServiceRequest = useCallback(async () => {
     if (!selectedService) return;
-    if (!hasGuestContactDetails(userDetails)) {
+    if (!accessToken || !hasGuestContactDetails(userDetails)) {
       toast.info("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
@@ -201,6 +203,7 @@ const ChatCardSection = ({
     roomPayload,
     createAlert,
     handleCloseServiceModal,
+    accessToken,
   ]);
 
   const handleRetryServiceRequest = useCallback(() => {
@@ -208,7 +211,7 @@ const ChatCardSection = ({
   }, []);
 
   const confirmCheckout = async () => {
-    if (!hasGuestContactDetails(userDetails)) {
+    if (!accessToken || !hasGuestContactDetails(userDetails)) {
       toast.info("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
