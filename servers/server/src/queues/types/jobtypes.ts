@@ -1,7 +1,7 @@
 // src/types/jobTypes.ts
 
-import { z } from "zod";
-import { QUEUE_NAME } from "../constants/queueNames";
+import { z } from 'zod';
+import { QUEUE_NAME } from '../constants/queueNames';
 
 export interface AxiosError {
   response?: {
@@ -52,9 +52,7 @@ export const pushCustomerIntoQueueSchema = z.object({
   category: z.string(),
 });
 
-export type pushCustomerIntoQueueTypeValidator = z.infer<
-  typeof pushCustomerIntoQueueSchema
->;
+export type pushCustomerIntoQueueTypeValidator = z.infer<typeof pushCustomerIntoQueueSchema>;
 
 export const razorpayOnlinePaymentSchema = z.object({
   date: z.coerce.number(),
@@ -64,16 +62,14 @@ export const razorpayOnlinePaymentSchema = z.object({
   id: z.string(),
   event: z.string(),
 
-  status: z.enum(["SUCCESS", "FAILED", "PROCESSING", "PENDING"]),
+  status: z.enum(['SUCCESS', 'FAILED', 'PROCESSING', 'PENDING']),
   acquirer_data: z.object({}),
   error_description: z.string(),
   error_reason: z.string(),
   mode: z.string(),
 });
 
-export type RazorpayPaymentHandlerTypeValidator = z.infer<
-  typeof razorpayOnlinePaymentSchema
->;
+export type RazorpayPaymentHandlerTypeValidator = z.infer<typeof razorpayOnlinePaymentSchema>;
 
 export type BillJobTypes = {
   requestOnly: { payload: { orderId: string } };
@@ -103,5 +99,4 @@ export type JobMap = {
   [QUEUE_NAME.BILL_QUEUE]: BillJobTypes;
   [QUEUE_NAME.WHATSAPP_CAMPAIGN_QUEUE]: WhatsAppJobTypes;
   [QUEUE_NAME.RAZORPAY_WEBHOOK_QUEUE]: RazorpayJobTypes;
-  [QUEUE_NAME.HOTEL_WAKEUP_QUEUE]: HotelWakeUpJobTypes;
 };
