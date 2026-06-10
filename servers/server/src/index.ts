@@ -1,6 +1,7 @@
 import { connectDB } from "@hi/utils";
 import { prometheus } from "@hono/prometheus";
 import { swaggerUI } from "@hono/swagger-ui";
+import axios from "axios";
 import { Hono } from "hono";
 import { rateLimiter } from "hono-rate-limiter";
 import { serveStatic } from "hono/bun";
@@ -13,8 +14,38 @@ import { timeout } from "hono/timeout";
 import { catchErrorHandler } from "../middleware/catchErrorHandler";
 import { routes } from "./routes";
 import { customTimeoutException } from "./utils";
+import {
+  META_PAUSED_MESSAGE,
+  WHATSAPP_META_PAUSED,
+} from "./utils/whatsAppApiBaseUrl/apiPaths";
 
 import "./utils/env";
+
+// ─── META API GLOBAL SAFETY NET ────────────────────────────────────────────
+// While the Meta WhatsApp account is under review (see WHATSAPP_META_PAUSED
+// in utils/whatsAppApiBaseUrl/apiPaths.ts), reject every axios request that
+// targets graph.facebook.com BEFORE the network call goes out. This catches
+// any code path the per-route guards missed — uploads, webhook callbacks,
+// analytics, chatbot replies, anything.
+//
+// Removing this interceptor: flip WHATSAPP_META_PAUSED back to false.
+if (WHATSAPP_META_PAUSED) {
+  axios.interceptors.request.use((config) => {
+    const url = (config.url || "") + (config.baseURL || "");
+    if (/graph\.facebook\.com/i.test(url)) {
+      const err: Error & { code?: string; isMetaPause?: boolean } = new Error(
+        META_PAUSED_MESSAGE,
+      );
+      err.code = "WHATSAPP_META_PAUSED";
+      err.isMetaPause = true;
+      return Promise.reject(err);
+    }
+    return config;
+  });
+  console.warn(
+    "[startup] WHATSAPP_META_PAUSED is ON — all graph.facebook.com requests will be rejected.",
+  );
+}
 ////////
 const app = new Hono({
   strict: true,

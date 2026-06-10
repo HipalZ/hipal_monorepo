@@ -10,6 +10,12 @@ import { lazy, memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 import { FaArrowLeft } from "react-icons/fa";
+import { FiInfo } from "react-icons/fi";
+
+// ─── WHATSAPP UNDER-REVIEW GATE ─────────────────────────────────────────────
+// Mirrors the flag in the business-side entry. Flip back to `false` once Meta
+// clears the WhatsApp Business Account.
+const WHATSAPP_UNDER_REVIEW = true;
 
 const WhatzappPayment = lazy(
   () => import("@/components/templates/whatsappTemplates/whatzappPayment"),
@@ -114,6 +120,52 @@ const MemoWhatzapp = () => {
     createEditFlow,
     setCreateEditFlow,
   ]);
+
+  if (WHATSAPP_UNDER_REVIEW) {
+    return (
+      <section>
+        <div className="absolute top-20 z-50 w-full rounded-lg whatzapp_gradient_background">
+          <MemoizedHeader
+            title="WhatzApp"
+            leftIcon={<FaArrowLeft />}
+            rightImage={Hi}
+            onBack={() => navigate(-1)}
+            headingColor="white"
+          />
+        </div>
+        <MiddlePopUp show onlyPopUp>
+          <div className="w-[min(420px,90vw)] overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-4 text-white">
+              <FiInfo className="text-2xl" />
+              <h3 className="text-lg font-semibold">Application Update In Progress</h3>
+            </div>
+            <div className="px-6 py-5">
+              <p className="text-sm leading-relaxed text-gray-700">
+                Your WhatsApp Business application is currently under review with Meta.
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-gray-700">
+                To continue using WhatsApp services, please reach out to your administrator to upgrade your application for security and policy compliance.
+              </p>
+              <p className="mt-4 text-sm font-medium text-gray-900">
+                Thank you for your patience and cooperation.
+              </p>
+              <p className="mt-3 text-xs italic text-gray-500">— Hipalz Team</p>
+            </div>
+            <div className="flex items-center justify-end border-t bg-gray-50 px-6 py-3">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </MiddlePopUp>
+      </section>
+    );
+  }
+
   return (
     <section>
       <div>

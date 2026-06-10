@@ -53,7 +53,10 @@ import {
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
-import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
+import whatsAppApiBaseUrl, {
+  META_PAUSED_MESSAGE,
+  WHATSAPP_META_PAUSED,
+} from "../../utils/whatsAppApiBaseUrl/apiPaths";
 import { qrHandlers } from "../../utils/whatsappWebhookHandlers/allQrHandler";
 import { whatsAppCampaignHandler } from "../../utils/whatsappWebhookHandlers/campaign";
 import { whatsAppChatHandler } from "../../utils/whatsappWebhookHandlers/chatHandler";
@@ -274,6 +277,10 @@ const whatsappRouter = new Hono()
     }),
     zValidator("param", z.object({ businessId: z.string().min(3).max(26) })),
     async (c) => {
+      // [META-PAUSED] Skip Meta media-upload while account is under review.
+      if (WHATSAPP_META_PAUSED) {
+        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
+      }
       try {
         const { businessId } = c.req.param();
         console.log("[media-upload] start", { businessId });
@@ -524,6 +531,10 @@ const whatsappRouter = new Hono()
     "/template",
     zValidator("json", validateWhatAppTemplateSchema),
     async (c) => {
+      // [META-PAUSED] Template creation submits to Meta — skip while under review.
+      if (WHATSAPP_META_PAUSED) {
+        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
+      }
       try {
         const requestData = await c.req.json();
         const {
@@ -715,6 +726,10 @@ const whatsappRouter = new Hono()
     zValidator("json", validateWhatAppTemplateSchema.partial()),
 
     async (c) => {
+      // [META-PAUSED] Template edit submits to Meta — skip while under review.
+      if (WHATSAPP_META_PAUSED) {
+        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
+      }
       const { templateid, businessId } = c.req.param();
       const requestData = await c.req.json();
 
@@ -790,6 +805,10 @@ const whatsappRouter = new Hono()
     ),
 
     async (c) => {
+      // [META-PAUSED] Template deletion calls Meta — skip while under review.
+      if (WHATSAPP_META_PAUSED) {
+        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
+      }
       try {
         const { template_name, templateid, businessId } = c.req.param();
 
@@ -867,6 +886,10 @@ const whatsappRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.MANAGER]),
     async (c) => {
+      // [META-PAUSED] Campaigns enqueue jobs that dispatch to Meta — skip entirely.
+      if (WHATSAPP_META_PAUSED) {
+        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
+      }
       try {
         const requestData = await c.req.json();
         const {
@@ -2362,6 +2385,10 @@ const whatsappRouter = new Hono()
     "/send-messages",
 
     async (c) => {
+      // [META-PAUSED] Direct chat send goes to Meta — skip while under review.
+      if (WHATSAPP_META_PAUSED) {
+        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
+      }
       const body = await c.req.json();
       const {
         text,

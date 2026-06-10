@@ -20,7 +20,10 @@ import {
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { respond } from "../../utils/response";
-import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
+import whatsAppApiBaseUrl, {
+  META_PAUSED_MESSAGE,
+  WHATSAPP_META_PAUSED,
+} from "../../utils/whatsAppApiBaseUrl/apiPaths";
 
 /**
  * WhatsApp Sandbox API — single multi-tenant public surface that lets any
@@ -396,6 +399,12 @@ const sandboxRouter = new Hono()
    * positional → push to Meta → log + return delivery id.
    */
   .post("/send", zValidator("json", sandboxSendSchema), async (c) => {
+    // [META-PAUSED] External sandbox clients (BMH etc.) trigger Meta sends —
+    // skip while account is under review. Returns 503 with a clear message so
+    // partner integrations can surface it to their dashboards.
+    if (WHATSAPP_META_PAUSED) {
+      return respond(c, META_PAUSED_MESSAGE, true, 503, {});
+    }
     const startedAt = Date.now();
 
     const auth = await authenticatePublic(c);

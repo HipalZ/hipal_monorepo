@@ -228,13 +228,32 @@ const hotelReportRouter = new Hono()
         .sort({ createdAt: 1 })
         .lean();
 
+      // Empty result is NOT a "route not found" — return a valid empty CSV
+      // with a 200 so the client can distinguish "we asked for a range with
+      // no data" from "the endpoint doesn't exist in the deployed image".
+      // Browsers / fetch consumers can still detect "nothing to show" by
+      // checking content length or the row count after parse.
       if (!alerts.length) {
-        return respond(
-          c,
-          "No guest experience data in range",
-          true,
-          404,
-          {},
+        const filename = `guest_experience_report_${formatFilenameDate(from)}-to-${formatFilenameDate(to)}.csv`;
+        c.header("Content-Type", "text/csv; charset=utf-8");
+        c.header(
+          "Content-Disposition",
+          `attachment; filename="${filename}"`,
+        );
+        c.header("Cache-Control", "no-store");
+        c.header("X-Hipalz-Report-Status", "empty");
+        return c.body(
+          [
+            "﻿HOTEL GUEST EXPERIENCE REPORT",
+            `Date Range: ${formatDateTime(from)} to ${formatDateTime(to)}`,
+            `Generated At: ${formatDateTime(Date.now())}`,
+            "No guest experience data was recorded in this range.",
+            "--------------------------------------------",
+            "",
+            CSV_HEADERS.map(escapeCsvCell).join(","),
+            "",
+          ].join("\n"),
+          200,
         );
       }
 
