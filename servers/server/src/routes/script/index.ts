@@ -25,6 +25,7 @@ import {
   User,
   UserAnalytic,
   UserReward,
+  WhatsAppAnalyticsUser,
   WhatsAppBusinessConfig,
   WhatsAppWABA,
   Zone,
@@ -2826,5 +2827,52 @@ const scriptRouter = new Hono()
     } catch (e) {
       console.log(e);
     }
-  });
+  })
+
+  .post(
+    "/fill-user-analytics",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = await c.req.json();
+
+      const allUserAnalytics = await UserAnalytic.find({
+        businessId,
+      });
+
+      for (const userAnalytics of allUserAnalytics) {
+        const userId = userAnalytics.userId;
+
+        const [loyaltyUserCount, whatsappUserCount] = await Promise.all([
+          UserReward.countDocuments({ userId, loyaltyId: businessId }),
+          WhatsAppAnalyticsUser.countDocuments({ userId, businessId }),
+        ]);
+
+        const visitCount = loyaltyUserCount + whatsappUserCount;
+
+        await UserAnalytic.findOneAndUpdate(
+          {
+            userId,
+            businessId,
+          },
+          {
+            $set: {
+              visitCount: visitCount > 0 ? visitCount : 1,
+            },
+          },
+          {
+            new: true,
+          },
+        );
+      }
+
+      return respond(c, "User analytics updated successfully", false, 200, {
+        updatedCount: allUserAnalytics.length,
+      });
+    },
+  );
 export default scriptRouter;
