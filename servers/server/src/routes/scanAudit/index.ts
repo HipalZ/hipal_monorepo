@@ -115,6 +115,7 @@ const scanAuditRouter = new Hono()
       statusSummary: job.statusSummary,
       totals: job.totals,
       sampleWamids: job.sampleWamids,
+      blastWindows: (job as Record<string, unknown>).blastWindows ?? [],
       customers: mode === "full" ? customers : customers.slice(0, 50),
     });
   });

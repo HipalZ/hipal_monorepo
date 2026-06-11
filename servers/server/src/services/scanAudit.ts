@@ -104,13 +104,20 @@ export async function runScanAudit(jobDocId: string, businessId: string) {
     .option({ allowDiskUse: true })
     .cursor();
 
-  const perPhone = new Map<string, CustomerStat>();
   let distinctMessageCount = 0;
   let undecodedCount = 0;
   const sampleWamids: Array<{
     messageId: string;
     decodedPhone: string | null;
   }> = [];
+
+  // Buffer decoded events so we can detect campaign blasts before
+  // counting visits. Historical campaign receipts have userId null
+  // (messageId capture for campaigns is recent), so they are
+  // indistinguishable from scan-triggered welcomes row-by-row — but a
+  // blast is a sustained burst of many messages per minute, while
+  // organic scans are sparse.
+  const events: Array<{ phone: string; date: number }> = [];
 
   for await (const msg of cursor) {
     distinctMessageCount++;
@@ -125,19 +132,67 @@ export async function runScanAudit(jobDocId: string, businessId: string) {
       undecodedCount++;
       continue;
     }
-    const phone = normalizePhone(rawPhone);
-    const date = msg.firstDate as number;
-    const entry = perPhone.get(phone) ?? {
+    events.push({
+      phone: normalizePhone(rawPhone),
+      date: msg.firstDate as number,
+    });
+  }
+
+  // Blast detection: any minute with >= BLAST_PER_MINUTE outbound
+  // messages is a campaign window, not organic scanning. (The campaign
+  // worker is rate-limited to ~20 msgs/min, so blasts show up as
+  // sustained ~20/min; a busy bar's organic scans stay well below 10
+  // in any single minute.)
+  const BLAST_PER_MINUTE = 10;
+  const perMinute = new Map<number, number>();
+  for (const e of events) {
+    const minute = Math.floor(e.date / 60_000);
+    perMinute.set(minute, (perMinute.get(minute) ?? 0) + 1);
+  }
+  const blastMinutes = new Set(
+    [...perMinute.entries()]
+      .filter(([, count]) => count >= BLAST_PER_MINUTE)
+      .map(([minute]) => minute),
+  );
+
+  // Summarize blast windows (merge consecutive minutes) for transparency
+  const sortedBlast = [...blastMinutes].sort((a, b) => a - b);
+  const blastWindows: Array<{ start: string; end: string; messages: number }> =
+    [];
+  for (const minute of sortedBlast) {
+    const last = blastWindows[blastWindows.length - 1];
+    const count = perMinute.get(minute) ?? 0;
+    if (last && new Date(last.end).getTime() / 60_000 + 1 >= minute) {
+      last.end = new Date((minute + 1) * 60_000).toISOString();
+      last.messages += count;
+    } else {
+      blastWindows.push({
+        start: new Date(minute * 60_000).toISOString(),
+        end: new Date((minute + 1) * 60_000).toISOString(),
+        messages: count,
+      });
+    }
+  }
+  blastWindows.sort((a, b) => b.messages - a.messages);
+
+  let excludedAsBlast = 0;
+  const perPhone = new Map<string, CustomerStat>();
+  for (const e of events) {
+    if (blastMinutes.has(Math.floor(e.date / 60_000))) {
+      excludedAsBlast++;
+      continue;
+    }
+    const entry = perPhone.get(e.phone) ?? {
       messages: 0,
       days: new Set<string>(),
-      first: date,
-      last: date,
+      first: e.date,
+      last: e.date,
     };
     entry.messages++;
-    entry.days.add(istDay(date));
-    entry.first = Math.min(entry.first, date);
-    entry.last = Math.max(entry.last, date);
-    perPhone.set(phone, entry);
+    entry.days.add(istDay(e.date));
+    entry.first = Math.min(entry.first, e.date);
+    entry.last = Math.max(entry.last, e.date);
+    perPhone.set(e.phone, entry);
   }
 
   // Map phones -> users in chunks, querying every +91 variant and
@@ -194,11 +249,15 @@ export async function runScanAudit(jobDocId: string, businessId: string) {
           campaignMessages: campaignMessageCount[0]?.count ?? 0,
           decodedMessages: distinctMessageCount - undecodedCount,
           undecodedMessages: undecodedCount,
+          excludedAsCampaignBlast: excludedAsBlast,
+          organicMessages: events.length - excludedAsBlast,
+          blastWindowCount: blastWindows.length,
           uniqueCustomers: customers.length,
           matchedToUserRecords: customers.filter((cu) => cu.userId).length,
           uniqueCheckInUsers: checkInSummary[0]?.uniqueCheckInUsers ?? 0,
         },
         sampleWamids,
+        blastWindows: blastWindows.slice(0, 25),
         customers,
       },
     },
