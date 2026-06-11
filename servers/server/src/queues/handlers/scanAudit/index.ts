@@ -1,3 +1,7 @@
+// v2: blast-window campaign filtering lives in services/scanAudit.ts.
+// NOTE: that file is outside src/queues/**, so the worker CI trigger in
+// publish-worker-prod.yml does not see changes to it — bump this file
+// whenever the audit logic changes to force a worker image rebuild.
 import type { Job } from "bullmq";
 import { runScanAudit, ScanAuditResult } from "../../../services/scanAudit";
 import type { ScanAuditJobTypes } from "../../types/jobtypes";
