@@ -33,6 +33,7 @@ import { setCookie } from "hono/cookie";
 //@ts-ignore
 import jwt from "jsonwebtoken";
 import { z } from "zod";
+import { recordVisit } from "../../services/visitTracker";
 import { respond } from "../../utils/response";
 import { monadHelperFunction } from "../../utils/monad";
 const admin = require("firebase-admin");
@@ -1211,6 +1212,16 @@ const usersRouter = new Hono()
           "Max limit reached for this otp verification"
       )
         return respond(c, `${response?.data?.message}`, true, 400, {});
+
+      // OTP verified — a sign-in at this business is a visit (deduped per day)
+      const visitBusinessId = businessId || business?._id.toString();
+      if (visitBusinessId) {
+        await recordVisit({
+          businessId: visitBusinessId,
+          userId,
+          source: "SIGN_IN",
+        });
+      }
 
       try {
         if (loyaltyId && signUpBonus && signUpBonus > 0) {

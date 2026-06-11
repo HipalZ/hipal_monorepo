@@ -1,4 +1,10 @@
-import { CheckInQrUser, User, WhatsAppAnalyticsUser } from "@hi/db-models";
+import {
+  CheckInQrUser,
+  User,
+  UserAnalytic,
+  VisitEvent,
+  WhatsAppAnalyticsUser,
+} from "@hi/db-models";
 import mongoose from "mongoose";
 
 // Reconstructs historical scan/visit data from WhatsApp delivery-status
@@ -259,6 +265,137 @@ export async function runScanAudit(jobDocId: string, businessId: string) {
         sampleWamids,
         blastWindows: blastWindows.slice(0, 25),
         customers,
+      },
+    },
+  );
+}
+
+// ── BACKFILL ──────────────────────────────────────────────────────
+// Takes the latest DONE audit for a business and makes it permanent:
+// 1. Materializes each customer's visit dates as VisitEvent docs
+//    (source BACKFILL, upsert — safe to re-run, no duplicates).
+// 2. Sets UserAnalytic.visitCount to the audited visit-day count so
+//    the hiPeople dashboard shows real numbers immediately.
+export async function runVisitBackfill(
+  jobDocId: string,
+  businessId: string,
+  limit?: number,
+) {
+  await ScanAuditResult.updateOne(
+    { _id: jobDocId },
+    { $set: { status: "RUNNING" } },
+  );
+
+  const audit = await ScanAuditResult.findOne({
+    businessId,
+    status: "DONE",
+    customers: { $exists: true, $ne: [] },
+  })
+    .sort({ startedAt: -1 })
+    .lean();
+
+  if (!audit) {
+    throw new Error("No completed audit with customers found — run /scan_audit/start first");
+  }
+
+  let customers = audit.customers as Array<{
+    userId: string | null;
+    visitDays: number;
+    visitDates: string;
+    firstSeen: string;
+    lastSeen: string;
+  }>;
+
+  // Trial mode: process only the first N matched customers so the
+  // result can be verified on a handful of users before the full run.
+  // Re-running without the limit afterwards is safe — all writes are
+  // upserts, the trial users simply converge to the same values.
+  if (limit && limit > 0) {
+    customers = customers.filter((cust) => cust.userId).slice(0, limit);
+  }
+
+  let visitEventsUpserted = 0;
+  let analyticsUpdated = 0;
+  let skippedNoUser = 0;
+
+  const BATCH = 500;
+  for (let i = 0; i < customers.length; i += BATCH) {
+    const chunk = customers.slice(i, i + BATCH);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const visitOps: any[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const analyticOps: any[] = [];
+
+    for (const cust of chunk) {
+      if (!cust.userId) {
+        skippedNoUser++;
+        continue;
+      }
+      const days = (cust.visitDates || "").split("|").filter(Boolean);
+      for (const day of days) {
+        visitOps.push({
+          updateOne: {
+            filter: {
+              businessId: new mongoose.Types.ObjectId(businessId),
+              userId: new mongoose.Types.ObjectId(cust.userId),
+              day,
+            },
+            update: {
+              $setOnInsert: {
+                // noon IST of that day as representative timestamp
+                date: new Date(`${day}T06:30:00.000Z`).getTime(),
+                source: "BACKFILL",
+              },
+            },
+            upsert: true,
+          },
+        });
+      }
+      analyticOps.push({
+        updateOne: {
+          filter: {
+            userId: new mongoose.Types.ObjectId(cust.userId),
+            businessId: new mongoose.Types.ObjectId(businessId),
+          },
+          update: {
+            $set: { visitCount: days.length },
+            $setOnInsert: {
+              totalSpend: 0,
+              avgSpend: 0,
+              dateOfJoining: new Date(cust.firstSeen).getTime(),
+            },
+          },
+          upsert: true,
+        },
+      });
+    }
+
+    if (visitOps.length) {
+      const r = await VisitEvent.bulkWrite(visitOps, { ordered: false });
+      visitEventsUpserted += r.upsertedCount ?? 0;
+    }
+    if (analyticOps.length) {
+      const r = await UserAnalytic.bulkWrite(analyticOps, { ordered: false });
+      analyticsUpdated += (r.modifiedCount ?? 0) + (r.upsertedCount ?? 0);
+    }
+  }
+
+  await ScanAuditResult.updateOne(
+    { _id: jobDocId },
+    {
+      $set: {
+        status: "DONE",
+        finishedAt: Date.now(),
+        totals: {
+          mode: "BACKFILL",
+          sourceAuditId: String(audit._id),
+          customersProcessed: customers.length,
+          trialLimit: limit ?? null,
+          skippedNoUser,
+          visitEventsUpserted,
+          analyticsUpdated,
+        },
       },
     },
   );

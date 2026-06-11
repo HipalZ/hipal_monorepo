@@ -104,6 +104,11 @@ export type ScanAuditJobTypes = {
     jobDocId: string;
     businessId: string;
   };
+  backfillVisits: {
+    jobDocId: string;
+    businessId: string;
+    limit?: number;
+  };
 };
 
 export type JobMap = {

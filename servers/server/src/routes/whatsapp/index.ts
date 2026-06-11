@@ -69,6 +69,7 @@ import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/wh
 import { handleChatbotFlow } from "../../utils/whatsappWebhookHandlers/flows";
 import { exchangeCodeForToken } from "../../utils/instagram";
 import sandboxRouter from "./sandbox";
+import { recordVisit } from "../../services/visitTracker";
 // import { enqueueWhatsAppJob } from "../../queues/enqueue";
 interface AxiosError {
   response?: {
@@ -2042,6 +2043,16 @@ const whatsappRouter = new Hono()
             userData.name || "Guest",
             whatsAppBusinessConfigData,
           );
+          // Every QR scan is a physical visit — log it (deduped per day)
+          if (whatsAppBusinessConfigData.businessId && userData?._id) {
+            await recordVisit({
+              businessId: whatsAppBusinessConfigData.businessId.toString(),
+              userId: userData._id.toString(),
+              source: qrType.qrType,
+              tableName:
+                qrType.qrType === "TABLE_QR" ? qrType.value : undefined,
+            });
+          }
           return respond(c, "qrHandlers", false, 200, {});
         }
         if (whatsAppBusinessConfigData.chat) {
