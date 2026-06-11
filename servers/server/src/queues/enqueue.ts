@@ -1,6 +1,6 @@
 // src/queues/enqueue.ts
 import type { QUEUE_NAME } from "./constants/queueNames";
-import { billQueue, hotelWakeUpQueue, whatsappCampaignQueue,razorpayWebhookQueue } from "./queueFactory";
+import { billQueue, hotelWakeUpQueue, scanAuditQueue, whatsappCampaignQueue,razorpayWebhookQueue } from "./queueFactory";
 import type { JobMap } from "./types/jobtypes";
 
 export async function enqueueBillJob<
@@ -31,6 +31,16 @@ export async function enqueueRazorpayJob<
   opts: { delay?: number } = {},
 ) {
   return await razorpayWebhookQueue.add(type as string, data, opts);
+}
+
+export async function enqueueScanAuditJob<
+  T extends keyof JobMap[typeof QUEUE_NAME.SCAN_AUDIT_QUEUE],
+>(
+  type: T,
+  data: JobMap[typeof QUEUE_NAME.SCAN_AUDIT_QUEUE][T],
+  opts: { delay?: number; jobId?: string } = {},
+) {
+  return await scanAuditQueue.add(type as string, data, opts);
 }
 
 export async function enqueueHotelWakeUpJob<

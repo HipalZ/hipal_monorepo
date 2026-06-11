@@ -40,6 +40,18 @@ export const razorpayWebhookQueue = new Queue(
   },
 );
 
+// ----------------- SCAN AUDIT QUEUE -----------------
+// Single attempt, no retries — a failed audit is marked ERROR in the
+// result doc and must be re-triggered explicitly via /scan_audit/start.
+export const scanAuditQueue = new Queue(QUEUE_NAME.SCAN_AUDIT_QUEUE, {
+  connection: redis,
+  defaultJobOptions: {
+    attempts: 1,
+    removeOnComplete: { age: 3600 },
+    removeOnFail: { age: 86400 },
+  },
+});
+
 // ----------------- HOTEL WAKE-UP QUEUE -----------------
 export const hotelWakeUpQueue = new Queue(QUEUE_NAME.HOTEL_WAKEUP_QUEUE, {
   connection: redis,
