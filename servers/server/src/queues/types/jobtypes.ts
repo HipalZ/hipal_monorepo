@@ -95,8 +95,17 @@ export type HotelWakeUpJobTypes = {
   };
 };
 
+export type ScanAuditJobTypes = {
+  runScanAudit: {
+    jobDocId: string;
+    businessId: string;
+  };
+};
+
 export type JobMap = {
   [QUEUE_NAME.BILL_QUEUE]: BillJobTypes;
   [QUEUE_NAME.WHATSAPP_CAMPAIGN_QUEUE]: WhatsAppJobTypes;
   [QUEUE_NAME.RAZORPAY_WEBHOOK_QUEUE]: RazorpayJobTypes;
+  // [QUEUE_NAME.HOTEL_WAKEUP_QUEUE]: HotelWakeUpJobTypes;
+  [QUEUE_NAME.SCAN_AUDIT_QUEUE]: ScanAuditJobTypes;
 };

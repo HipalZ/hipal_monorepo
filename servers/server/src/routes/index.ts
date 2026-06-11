@@ -36,6 +36,7 @@ import qrRouter from "./qrs";
 import reportRouter from "./report";
 import googleReview from "./reviews";
 import salonPosRouter from "./salonPos";
+import scanAuditRouter from "./scanAudit";
 import scriptRouter from "./script";
 import settingsRouter from "./settings";
 import splitBillRouter from "./splitBill";
@@ -118,6 +119,7 @@ export const routes = app
   .route("/path_finder", pathFinderRouter)
   .route("/salon_pos", salonPosRouter)
   .route("/dish_zone_kitchen", dishZoneKitchenRouter)
+  .route("/scan_audit", scanAuditRouter)
 
 export type AppType = typeof routes;
 //
