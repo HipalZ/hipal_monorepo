@@ -92,10 +92,13 @@ async function whatsAppUserAndTextMessage(
   });
 
   if (!userAnalytics) {
+    // visitCount starts at 0 — the QR-scan VisitEvent hook in the
+    // webhook does the +1 (deduped per day). Starting at 1 here would
+    // double-count a first-time scanner.
     const analytics = await UserAnalytic.create({
       userId: isAlreadyRegisteredUser._id.toString(),
       businessId: whatsAppBusinessConfigData?.businessId,
-      visitCount: 1,
+      visitCount: 0,
       totalSpend: 0,
       avgSpend: 0,
       dateOfJoining: Date.now(),

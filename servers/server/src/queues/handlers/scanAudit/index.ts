@@ -3,32 +3,40 @@
 // publish-worker-prod.yml does not see changes to it — bump this file
 // whenever the audit logic changes to force a worker image rebuild.
 import type { Job } from "bullmq";
-import { runScanAudit, ScanAuditResult } from "../../../services/scanAudit";
+import {
+  runScanAudit,
+  runVisitBackfill,
+  ScanAuditResult,
+} from "../../../services/scanAudit";
 import type { ScanAuditJobTypes } from "../../types/jobtypes";
 
-async function runScanAuditHandler(job: Job) {
-  const { jobDocId, businessId } =
-    job.data as ScanAuditJobTypes["runScanAudit"];
-
-  try {
-    await runScanAudit(jobDocId, businessId);
-  } catch (err) {
-    // Mark the result doc so /scan_audit/result surfaces the failure
-    // instead of staying RUNNING forever. attempts: 1 — no retry loop.
-    await ScanAuditResult.updateOne(
-      { _id: jobDocId },
-      {
-        $set: {
-          status: "ERROR",
-          error: err instanceof Error ? err.message : String(err),
-          finishedAt: Date.now(),
+// Marks the result doc so /scan_audit/result surfaces failures instead
+// of staying RUNNING forever. attempts: 1 — no retry loop.
+function withErrorMarking(
+  fn: (jobDocId: string, businessId: string, limit?: number) => Promise<void>,
+) {
+  return async (job: Job) => {
+    const { jobDocId, businessId, limit } =
+      job.data as ScanAuditJobTypes["backfillVisits"];
+    try {
+      await fn(jobDocId, businessId, limit);
+    } catch (err) {
+      await ScanAuditResult.updateOne(
+        { _id: jobDocId },
+        {
+          $set: {
+            status: "ERROR",
+            error: err instanceof Error ? err.message : String(err),
+            finishedAt: Date.now(),
+          },
         },
-      },
-    );
-    throw err;
-  }
+      );
+      throw err;
+    }
+  };
 }
 
 export const scanAuditHandlers = {
-  runScanAudit: runScanAuditHandler,
+  runScanAudit: withErrorMarking(runScanAudit),
+  backfillVisits: withErrorMarking(runVisitBackfill),
 };

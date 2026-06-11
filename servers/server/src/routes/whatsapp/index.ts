@@ -52,6 +52,7 @@ import { respond } from '../../utils/response';
 import whatsAppApiBaseUrl from '../../utils/whatsAppApiBaseUrl/apiPaths';
 import { qrHandlers } from '../../utils/whatsappWebhookHandlers/allQrHandler';
 import { whatsAppCampaignHandler } from '../../utils/whatsappWebhookHandlers/campaign';
+import { recordVisit } from '../../services/visitTracker';
 import { whatsAppChatHandler } from '../../utils/whatsappWebhookHandlers/chatHandler';
 import { handleChatbotFlow } from '../../utils/whatsappWebhookHandlers/flows';
 import { identifyQrTypeFromMessage, whatsAppEventData, whatsAppUserAndTextMessage } from '../../utils/whatsappWebhookHandlers/helper';
@@ -1871,6 +1872,15 @@ const whatsappRouter = new Hono()
             userData.name || 'Guest',
             whatsAppBusinessConfigData,
           );
+          // Every QR scan is a physical visit — log it (deduped per day)
+          if (whatsAppBusinessConfigData.businessId && userData?._id) {
+            await recordVisit({
+              businessId: whatsAppBusinessConfigData.businessId.toString(),
+              userId: userData._id.toString(),
+              source: qrType.qrType,
+              tableName: qrType.qrType === 'TABLE_QR' ? qrType.value : undefined,
+            });
+          }
           return respond(c, 'qrHandlers', false, 200, {});
         }
         if (whatsAppBusinessConfigData.chat) {

@@ -5,7 +5,20 @@
       "Bash(./scripts/extract-text \"C:/Users/ADMIN/Desktop/whatsapp Templates.docx\")",
       "Bash(pandoc \"C:/Users/ADMIN/Desktop/whatsapp Templates.docx\" -t plain)",
       "Bash(python -c \"import docx2txt; print\\(docx2txt.process\\(r'C:\\\\Users\\\\ADMIN\\\\Desktop\\\\whatsapp Templates.docx'\\)\\)\")",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(git check-ignore *)",
+      "Bash(gh run *)",
+      "Bash(bunx tsc *)",
+      "Bash(bun run *)",
+      "Bash(xargs grep -l \"localStorage\")",
+      "Bash(xargs grep -l \"visit\\\\|analytics\\\\|session\\\\|heartbeat\")",
+      "Bash(cd \"C:/Users/ADMIN/Desktop/hipal-monorepo/hipal_monorepo/packages/db-models/src\" && tail -30 models/index.ts && grep -n \"signIn\" ../../../servers/server/src/routes/users/index.ts | head -3)",
+      "Bash(git stash *)",
+      "Bash(sed -n '65,80p' routes/payments/index.ts)",
+      "Bash(sed -n '1478,1496p' routes/pos/index.ts)",
+      "Bash(sed -n '1628,1645p' routes/pos/index.ts)",
+      "Bash(grep -n \"^import\\\\|from '\\\\.\\\\./\\\\.\\\\./utils/response'\" routes/pos/index.ts)",
+      "Bash(git checkout *)"
     ]
   }
 }

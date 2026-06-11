@@ -19,6 +19,7 @@ const queryValidator = zValidator(
     businessId: z.string().min(2).max(50),
     key: z.string().min(1),
     mode: z.enum(["summary", "full", "csv"]).optional(),
+    limit: z.string().regex(/^\d+$/).optional(),
   }),
 );
 
@@ -56,6 +57,55 @@ const scanAuditRouter = new Hono()
     return respond(
       c,
       "Audit queued — poll /scan_audit/result in a few minutes",
+      false,
+      200,
+      { jobId: jobDoc._id },
+    );
+  })
+
+  // Enqueue the backfill: materializes the latest DONE audit into
+  // VisitEvent docs and corrects UserAnalytic.visitCount. Idempotent —
+  // upserts only, safe to re-run.
+  .get("/backfill", queryValidator, async (c) => {
+    const { businessId, key, limit } = c.req.query();
+    if (key !== AUDIT_KEY) {
+      return respond(c, "Invalid audit key", true, 401, {});
+    }
+    // Trial mode: &limit=5 processes only the first 5 matched
+    // customers. Verify them in hiPeople, then call again without
+    // limit for the full run (upserts — trial users converge, no
+    // duplicates).
+    const trialLimit = limit ? Number(limit) : undefined;
+    if (limit && (!Number.isInteger(trialLimit) || trialLimit! <= 0)) {
+      return respond(c, "limit must be a positive integer", true, 400, {});
+    }
+
+    const existing = await ScanAuditResult.findOne({
+      businessId,
+      status: { $in: ["QUEUED", "RUNNING"] },
+    });
+    if (existing) {
+      return respond(c, "A job is already in progress", false, 200, {
+        jobId: existing._id,
+        status: existing.status,
+      });
+    }
+
+    const jobDoc = await ScanAuditResult.create({
+      businessId,
+      status: "QUEUED",
+      startedAt: Date.now(),
+    });
+
+    await enqueueScanAuditJob("backfillVisits", {
+      jobDocId: String(jobDoc._id),
+      businessId,
+      ...(trialLimit ? { limit: trialLimit } : {}),
+    });
+
+    return respond(
+      c,
+      "Backfill queued — poll /scan_audit/result in a few minutes",
       false,
       200,
       { jobId: jobDoc._id },

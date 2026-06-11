@@ -109,3 +109,4 @@ export * from "./splitBill";
 export * from "./syncPosMenu";
 export * from "./tableSessionCounter";
 export * from "./termsAndConditions";
+export * from "./visitEvent";
