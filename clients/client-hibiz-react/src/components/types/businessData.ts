@@ -695,6 +695,8 @@ export interface ICustomerRecord {
   __v: number;
   coinzIssued?: number;
   coinzUsed?: number;
+  currentCoins?: number;
+  couponCount?: number;
 }
 
 export interface IGroupFilter {

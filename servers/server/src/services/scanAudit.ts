@@ -1,4 +1,5 @@
 import {
+  Business,
   CheckInQrUser,
   User,
   UserAnalytic,
@@ -41,6 +42,15 @@ function normalizePhone(phone: string): string {
 // All stored variants a 10-digit number might appear under in User.phone
 function phoneVariants(p10: string): string[] {
   return [p10, `91${p10}`, `+91${p10}`];
+}
+
+// Staff userIds for a business (captains/managers/owners) — these scan
+// QRs for work and must never count as customer visits.
+async function getStaffIdSet(businessId: string): Promise<Set<string>> {
+  const business = await Business.findById(businessId)
+    .select("staffIds")
+    .lean();
+  return new Set((business?.staffIds ?? []).map((id) => String(id)));
 }
 
 const scanAuditResultSchema = new mongoose.Schema(
@@ -221,13 +231,19 @@ export async function runScanAudit(jobDocId: string, businessId: string) {
     }
   }
 
+  // Staff (captains/managers) are counted too, but tagged so the
+  // business can clearly see which "visitors" are their own team.
+  const staffIds = await getStaffIdSet(businessId);
+
   const customers = [...perPhone.entries()]
     .map(([phone, v]) => {
       const user = userByPhone.get(phone);
+      const userId = user?._id ?? null;
       return {
         phone,
-        userId: user?._id ?? null,
+        userId,
         name: user?.name ?? null,
+        isStaff: Boolean(userId && staffIds.has(userId)),
         messagesReceived: v.messages,
         visitDays: v.days.size,
         visitDates: [...v.days].sort().join("|"),
@@ -236,6 +252,8 @@ export async function runScanAudit(jobDocId: string, businessId: string) {
       };
     })
     .sort((a, b) => b.visitDays - a.visitDays);
+
+  const staffCustomers = customers.filter((cust) => cust.isStaff).length;
 
   const checkInSummary = await CheckInQrUser.aggregate([
     { $match: { businessId: businessObjectId } },
@@ -259,6 +277,7 @@ export async function runScanAudit(jobDocId: string, businessId: string) {
           organicMessages: events.length - excludedAsBlast,
           blastWindowCount: blastWindows.length,
           uniqueCustomers: customers.length,
+          staffCustomers,
           matchedToUserRecords: customers.filter((cu) => cu.userId).length,
           uniqueCheckInUsers: checkInSummary[0]?.uniqueCheckInUsers ?? 0,
         },
