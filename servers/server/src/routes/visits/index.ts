@@ -1,12 +1,50 @@
-import { User, VisitEvent, WhatsAppAnalyticsUser } from "@hi/db-models";
+import { Business, Campaign, Subscriber, User, VisitEvent, WhatsAppAnalyticsUser } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import mongoose from "mongoose";
 import { z } from "zod";
+import { redis } from "../../queues/connection";
 import { recordVisit } from "../../services/visitTracker";
 import { respond } from "../../utils/response";
 
 const objectIdString = z.string().regex(/^[a-f0-9]{24}$/i);
+
+// Aggregations over a growing VisitEvent collection get cached in Redis
+// so dashboards stay instant regardless of data size, and repeated
+// reloads never re-run the pipelines. generatedAt is included in every
+// payload so the UI can show "data as of X".
+const ANALYTICS_CACHE_TTL_SECONDS = 180;
+
+async function cacheGet(key: string): Promise<Record<string, unknown> | null> {
+  try {
+    const hit = await redis.get(key);
+    return hit ? JSON.parse(hit) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function cacheSet(key: string, value: unknown, ttl: number) {
+  try {
+    await redis.set(key, JSON.stringify(value), "EX", ttl);
+  } catch {
+    // cache failures must never break the API
+  }
+}
+
+// Staff (captains/managers) scan QRs as part of work — their visits
+// are counted like anyone's but tagged, so dashboards can show a clear
+// "staff" label and a staff-vs-customer split.
+async function getStaffObjectIds(
+  businessId: string,
+): Promise<mongoose.Types.ObjectId[]> {
+  const business = await Business.findById(businessId)
+    .select("staffIds")
+    .lean();
+  return (business?.staffIds ?? []).map(
+    (id) => new mongoose.Types.ObjectId(String(id)),
+  );
+}
 
 const visitsRouter = new Hono()
 
@@ -60,6 +98,19 @@ const visitsRouter = new Hono()
       // default window: last 90 days
       const fromDate = from ? Number(from) : toDate - 90 * 24 * 60 * 60 * 1000;
 
+      // Bucket the default (no explicit range) key by hour so the cache
+      // actually hits despite Date.now() moving.
+      const cacheKey = `visits:analytics:${businessId}:${from ?? "auto"}:${
+        to ?? Math.floor(Date.now() / 3_600_000)
+      }`;
+      const cached = await cacheGet(cacheKey);
+      if (cached) {
+        return respond(c, "Visit analytics", false, 200, cached);
+      }
+
+      const staffObjectIds = await getStaffObjectIds(businessId);
+      const staffIdStrings = new Set(staffObjectIds.map(String));
+
       const rangeMatch = {
         businessId: businessObjectId,
         date: { $gte: fromDate, $lte: toDate },
@@ -73,6 +124,7 @@ const visitsRouter = new Hono()
         topVisitors,
         firstVisitInRange,
         lifetime,
+        staffSplit,
       ] = await Promise.all([
         // visits + unique visitors in range
         VisitEvent.aggregate([
@@ -183,6 +235,26 @@ const visitsRouter = new Hono()
             },
           },
         ]),
+
+        // staff vs customer split (in range) — staff are labelled, not
+        // hidden, so the business sees exactly who is team vs guest
+        VisitEvent.aggregate([
+          { $match: rangeMatch },
+          {
+            $group: {
+              _id: { $in: ["$userId", staffObjectIds] },
+              visits: { $sum: 1 },
+              visitors: { $addToSet: "$userId" },
+            },
+          },
+          {
+            $project: {
+              isStaff: "$_id",
+              visits: 1,
+              visitors: { $size: "$visitors" },
+            },
+          },
+        ]),
       ]);
 
       const totalVisits = rangeStats[0]?.totalVisits ?? 0;
@@ -197,7 +269,32 @@ const visitsRouter = new Hono()
         "11": "11+ visits",
       };
 
-      return respond(c, "Visit analytics", false, 200, {
+      // Subscriber ↔ customer overlap and the win-back segment (read a
+      // campaign, never visited) — these power the overlap strip and
+      // the reach & opportunity card.
+      const [allVisitorIds, subscribersTotal, readerIds] = await Promise.all([
+        VisitEvent.distinct("userId", { businessId: businessObjectId }),
+        Subscriber.countDocuments({ businessId: businessObjectId }),
+        WhatsAppAnalyticsUser.distinct("userId", {
+          businessId: businessObjectId,
+          status: "read",
+          userId: { $ne: null },
+        }),
+      ]);
+      const visitorIdSet = new Set(allVisitorIds.map(String));
+      const customerVisitorIds = allVisitorIds.filter(
+        (id) => !staffIdStrings.has(String(id)),
+      );
+      const subscribedAndVisited = await Subscriber.countDocuments({
+        businessId: businessObjectId,
+        userId: { $in: customerVisitorIds },
+      });
+      const totalCustomers = customerVisitorIds.length;
+      const readNeverVisited = readerIds.filter(
+        (id) => id && !visitorIdSet.has(String(id)),
+      ).length;
+
+      const payload = {
         range: { from: fromDate, to: toDate },
         summary: {
           totalVisits,
@@ -241,8 +338,46 @@ const visitsRouter = new Hono()
             visits: s.visits,
           }),
         ),
-        topVisitors,
-      });
+        staffBreakdown: {
+          staffVisits:
+            staffSplit.find((s: { isStaff: boolean }) => s.isStaff)?.visits ??
+            0,
+          staffVisitors:
+            staffSplit.find((s: { isStaff: boolean }) => s.isStaff)
+              ?.visitors ?? 0,
+          customerVisits:
+            staffSplit.find((s: { isStaff: boolean }) => !s.isStaff)?.visits ??
+            0,
+          customerVisitors:
+            staffSplit.find((s: { isStaff: boolean }) => !s.isStaff)
+              ?.visitors ?? 0,
+        },
+        topVisitors: topVisitors.map(
+          (t: { userId: unknown } & Record<string, unknown>) => ({
+            ...t,
+            isStaff: staffIdStrings.has(String(t.userId)),
+          }),
+        ),
+        audience: {
+          subscribersTotal,
+          totalCustomers,
+          subscribedAndVisited,
+          subscribedNeverVisited: Math.max(
+            subscribersTotal - subscribedAndVisited,
+            0,
+          ),
+          visitedNotSubscribed: Math.max(
+            totalCustomers - subscribedAndVisited,
+            0,
+          ),
+          readNeverVisited,
+        },
+        generatedAt: Date.now(),
+        cacheTtlSeconds: ANALYTICS_CACHE_TTL_SECONDS,
+      };
+
+      await cacheSet(cacheKey, payload, ANALYTICS_CACHE_TTL_SECONDS);
+      return respond(c, "Visit analytics", false, 200, payload);
     },
   )
 
@@ -270,6 +405,14 @@ const visitsRouter = new Hono()
       const toDate = to ? Number(to) : Date.now();
       const fromDate = from ? Number(from) : toDate - 90 * 24 * 60 * 60 * 1000;
 
+      const cacheKey = `visits:campaigns:${businessId}:${windowDays ?? 7}:${
+        from ?? "auto"
+      }:${to ?? Math.floor(Date.now() / 3_600_000)}`;
+      const cached = await cacheGet(cacheKey);
+      if (cached) {
+        return respond(c, "Campaign conversion", false, 200, cached);
+      }
+
       // earliest read per (campaign, user)
       const reads: Array<{
         _id: { campaignId: mongoose.Types.ObjectId; userId: mongoose.Types.ObjectId };
@@ -293,10 +436,14 @@ const visitsRouter = new Hono()
       ]).option({ allowDiskUse: true });
 
       if (reads.length === 0) {
-        return respond(c, "Campaign conversion", false, 200, {
+        const emptyPayload = {
           windowDays: windowMs / (24 * 60 * 60 * 1000),
           campaigns: [],
-        });
+          generatedAt: Date.now(),
+          cacheTtlSeconds: ANALYTICS_CACHE_TTL_SECONDS,
+        };
+        await cacheSet(cacheKey, emptyPayload, ANALYTICS_CACHE_TTL_SECONDS);
+        return respond(c, "Campaign conversion", false, 200, emptyPayload);
       }
 
       // all visits of the involved users in one query, then correlate
@@ -335,19 +482,37 @@ const visitsRouter = new Hono()
         perCampaign.set(key, stat);
       }
 
+      const campaignDocs = await Campaign.find({
+        _id: { $in: [...perCampaign.keys()] },
+      })
+        .select("campaignName date")
+        .lean();
+      const campaignNameById = new Map(
+        campaignDocs.map((doc) => [
+          String(doc._id),
+          { name: doc.campaignName, date: doc.date },
+        ]),
+      );
+
       const campaigns = [...perCampaign.entries()]
         .map(([campaignId, s]) => ({
           campaignId,
+          campaignName: campaignNameById.get(campaignId)?.name ?? "Campaign",
+          sentAt: campaignNameById.get(campaignId)?.date ?? null,
           reads: s.reads,
           returnedWithinWindow: s.returned,
           conversionRate: Number(((s.returned / s.reads) * 100).toFixed(1)),
         }))
         .sort((a, b) => b.reads - a.reads);
 
-      return respond(c, "Campaign conversion", false, 200, {
+      const payload = {
         windowDays: windowMs / (24 * 60 * 60 * 1000),
         campaigns,
-      });
+        generatedAt: Date.now(),
+        cacheTtlSeconds: ANALYTICS_CACHE_TTL_SECONDS,
+      };
+      await cacheSet(cacheKey, payload, ANALYTICS_CACHE_TTL_SECONDS);
+      return respond(c, "Campaign conversion", false, 200, payload);
     },
   );
 

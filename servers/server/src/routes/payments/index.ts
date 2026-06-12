@@ -62,11 +62,100 @@ const admin = require('firebase-admin');
 // Hash a passwordss
 
 const { validateWebhookSignature } = require('../../utils/razorpay-utils');
+
+// Parses a query param to a finite number, or undefined. Guards the
+// user-analytics filter against "NaN"/garbage values that previously
+// poisoned the dateOfJoining query and crashed the clients tab.
+const toFiniteNumber = (value?: string): number | undefined => {
+  if (value === undefined || value === null || value === '') return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+};
+
+// Shared by /users/Analytics/filter and /users/Analytics/download_csv.
+// Rules: a date range applies only when valid dates are sent; numeric
+// filters (visits/spend) work standalone over the full customer base;
+// with no filters at all, defaults to today's joiners (legacy behavior).
+async function buildUserAnalyticsFilterQuery(params: Record<string, string | undefined>): Promise<Record<string, any>> {
+  const query: Record<string, any> = { businessId: params.businessId };
+
+  const fromDate = toFiniteNumber(params.dateFrom);
+  const toDate = toFiniteNumber(params.dateTo);
+  const spendMin = toFiniteNumber(params.spendMin);
+  const spendMax = toFiniteNumber(params.spendMax);
+  const totalSpendMin = toFiniteNumber(params.totalSpendMin);
+  const totalSpendMax = toFiniteNumber(params.totalSpendMax);
+  const visitsMin = toFiniteNumber(params.visitsMin);
+  const visitsMax = toFiniteNumber(params.visitsMax);
+  const search = params.search?.trim() ?? '';
+
+  if (fromDate !== undefined || toDate !== undefined) {
+    query.dateOfJoining = {
+      $gte: fromDate ?? 0,
+      $lte: toDate ?? Date.now(),
+    };
+  }
+
+  if (spendMin !== undefined || spendMax !== undefined) {
+    query.avgSpend = {};
+    if (spendMin !== undefined) query.avgSpend.$gte = spendMin;
+    if (spendMax !== undefined) query.avgSpend.$lte = spendMax;
+  }
+
+  if (totalSpendMin !== undefined || totalSpendMax !== undefined) {
+    query.totalSpend = {};
+    if (totalSpendMin !== undefined) query.totalSpend.$gte = totalSpendMin;
+    if (totalSpendMax !== undefined) query.totalSpend.$lte = totalSpendMax;
+  }
+
+  if (visitsMin !== undefined || visitsMax !== undefined) {
+    query.visitCount = {};
+    if (visitsMin !== undefined) query.visitCount.$gte = visitsMin;
+    if (visitsMax !== undefined) query.visitCount.$lte = visitsMax;
+  }
+
+  if (search !== '') {
+    const isPhone = /^[0-9]{10}$/.test(search);
+    if (isPhone) {
+      const user = await User.findOne({ phone: search }).select('_id');
+      query.userId = user?._id || null;
+    } else {
+      const matchedUsers = await User.find({
+        name: new RegExp(search, 'i'),
+      })
+        .select('_id')
+        .limit(2000)
+        .lean();
+      query.userId = { $in: matchedUsers.map((u) => u._id) };
+    }
+  }
+
+  // No filters at all → legacy behavior: today's joiners only
+  const hasAnyFilter =
+    fromDate !== undefined ||
+    toDate !== undefined ||
+    spendMin !== undefined ||
+    spendMax !== undefined ||
+    totalSpendMin !== undefined ||
+    totalSpendMax !== undefined ||
+    visitsMin !== undefined ||
+    visitsMax !== undefined ||
+    search !== '';
+  if (!hasAnyFilter) {
+    query.dateOfJoining = {
+      $gte: startOfDay(new Date()).getTime(),
+      $lte: endOfDay(new Date()).getTime(),
+    };
+  }
+
+  return query;
+}
+
 const transformData = (data: unknown[]) => {
   return data
-    .filter((item) => item.groupId != null) // Filter out items with null groupId
+    .filter((item) => item?.groupId != null) // Filter out items with null groupId
     .map((item) => {
-      const filter = item.groupId.filter[0]; // Assuming there's only one filter object
+      const filter = item?.groupId?.filter[0]; // Assuming there's only one filter object
 
       return {
         duration: filter?.duration || 0,
@@ -74,10 +163,10 @@ const transformData = (data: unknown[]) => {
         visitType: filter?.visitType,
         spendAmount: filter?.spend || 0,
         spendType: filter?.spendType,
-        userCount: item.userCount || 0,
-        userPercentage: item.userPercentage || 0,
-        groupColor: item.groupId.groupColor || '',
-        groupName: item.groupId.name || '',
+        userCount: item?.userCount || 0,
+        userPercentage: item?.userPercentage || 0,
+        groupColor: item?.groupId?.groupColor || '',
+        groupName: item?.groupId?.name || '',
       };
     });
 };
@@ -92,8 +181,8 @@ export const calculateDiscount = async (businessId: string, totalBill: number, a
   const outLetInfo = await OutLetInfo.findOne({ businessId }).select('serviceChargePercentage gstPercentage');
 
   const billValue = totalBill; // bill value
-  const serviceChargePercentage = (outLetInfo.serviceChargePercentage || 0) / 100; // service charge
-  const gstPercentage = (outLetInfo.gstPercentage || 5) / 100; // tax charge
+  const serviceChargePercentage = (outLetInfo?.serviceChargePercentage || 0) / 100; // service charge
+  const gstPercentage = (outLetInfo?.gstPercentage || 5) / 100; // tax charge
   const coins = appliedCoins; // coins
   const finalBillValue = billValue - coins;
 
@@ -3902,55 +3991,10 @@ const paymentsRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { businessId, search, spendMin, spendMax, totalSpendMin, totalSpendMax, visitsMin, visitsMax, dateFrom, dateTo, pageNumber } =
-        c.req.query();
-      // Base query
-      const query: Record<string, any> = { businessId };
+      const queryParams = c.req.query();
+      const { pageNumber } = queryParams;
 
-      // Date range (filter within today if not provided)
-      if (dateFrom || dateTo) {
-        const fromDate = dateFrom ? Number(dateFrom) : startOfToday.getTime();
-        const toDate = dateTo ? Number(dateTo) : endOfToday.getTime();
-        query.dateOfJoining = { $gte: fromDate, $lte: toDate };
-      } else {
-        // default to today’s range
-        query.dateOfJoining = {
-          $gte: startOfDay(new Date()),
-          $lte: endOfDay(new Date()),
-        };
-      }
-
-      // Numeric filters
-      if (spendMin || spendMax) {
-        query.avgSpend = {};
-        if (spendMin) query.avgSpend.$gte = Number(spendMin);
-        if (spendMax) query.avgSpend.$lte = Number(spendMax);
-      }
-
-      if (totalSpendMin || totalSpendMax) {
-        query.totalSpend = {};
-        if (totalSpendMin) query.totalSpend.$gte = Number(totalSpendMin);
-        if (totalSpendMax) query.totalSpend.$lte = Number(totalSpendMax);
-      }
-
-      if (visitsMin || visitsMax) {
-        query.visitCount = {};
-        if (visitsMin) query.visitCount.$gte = Number(visitsMin);
-        if (visitsMax) query.visitCount.$lte = Number(visitsMax);
-      }
-
-      if (search && search.trim() !== '') {
-        const trimmed = search.trim();
-        const isPhone = /^[0-9]{10}$/.test(trimmed);
-
-        if (isPhone) {
-          const user = await User.findOne({ phone: trimmed }).select('_id');
-          query.userId = user?._id || null;
-        } else {
-          const regex = new RegExp(trimmed, 'i');
-          query.$or = [{ 'userId.name': regex }, { 'userId.phone': regex }];
-        }
-      }
+      const query = await buildUserAnalyticsFilterQuery(queryParams);
 
       const page = Number(pageNumber) || 1;
       const limit = 5000;
@@ -3971,6 +4015,81 @@ const paymentsRouter = new Hono()
         },
         200,
       );
+    },
+  )
+  // Full CSV export of the clients list — same filters as
+  // /users/Analytics/filter but NO row cap, so a date-range or
+  // visits-only selection always downloads the complete result.
+  .get(
+    '/users/Analytics/download_csv',
+    zValidator(
+      'query',
+      z.object({
+        businessId: z.string(),
+        search: z.string().optional(),
+        spendMin: z.string().optional(),
+        spendMax: z.string().optional(),
+        totalSpendMin: z.string().optional(),
+        totalSpendMax: z.string().optional(),
+        visitsMin: z.string().optional(),
+        visitsMax: z.string().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+        scope: z.enum(['filtered', 'all']).optional(),
+      }),
+    ),
+    async (c) => {
+      const queryParams = c.req.query();
+
+      const query = queryParams.scope === 'all' ? { businessId: queryParams.businessId } : await buildUserAnalyticsFilterQuery(queryParams);
+
+      // Safety valve: the export is one row per CUSTOMER (not per
+      // transaction), so even a year of data stays small for normal
+      // businesses. If a dataset ever crosses this line, ask for a
+      // narrower filter instead of risking a gateway timeout.
+      const MAX_EXPORT_ROWS = 75_000;
+      const exportCount = await UserAnalytic.countDocuments(query);
+      if (exportCount > MAX_EXPORT_ROWS) {
+        return respond(
+          c,
+          `This export has ${exportCount.toLocaleString()} customers — please narrow the filters (max ${MAX_EXPORT_ROWS.toLocaleString()} per download)`,
+          true,
+          413,
+          { exportCount, max: MAX_EXPORT_ROWS },
+        );
+      }
+
+      const rows: string[][] = [
+        ['NAME', 'PHONE', 'VISITS', 'TOTAL_SPEND', 'AVG_SPEND', 'COINZ_ISSUED', 'COINZ_USED', 'CURRENT_COINZ', 'DATE_OF_JOINING'],
+      ];
+
+      // Cursor — constant memory regardless of result size (no 5000 cap)
+      const cursor = UserAnalytic.find(query).populate({ path: 'userId', select: 'name phone' }).cursor();
+
+      for await (const item of cursor) {
+        const user = item.userId as unknown as {
+          name?: string;
+          phone?: string;
+        } | null;
+        rows.push([
+          user?.name ?? 'N/A',
+          user?.phone ?? 'N/A',
+          String(item.visitCount ?? 0),
+          String(item.totalSpend ?? 0),
+          String(item.avgSpend ?? 0),
+          String(item.coinzIssued ?? 0),
+          String(item.coinzUsed ?? 0),
+          String(item.currentCoins ?? 0),
+          item.dateOfJoining ? new Date(Number(item.dateOfJoining)).toLocaleDateString('en-IN') : '',
+        ]);
+      }
+
+      const csvString = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+
+      const dateTag = new Date().toISOString().slice(0, 10);
+      c.header('Content-Type', 'text/csv');
+      c.header('Content-Disposition', `attachment; filename="customers_${dateTag}.csv"`);
+      return c.body(csvString);
     },
   )
   .get(

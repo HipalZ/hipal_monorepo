@@ -24,6 +24,10 @@ const AutoLoginWrapper = dynamic(
     ssr: false,
   },
 );
+
+const VisitPing = dynamic(() => import("@/components/VisitPing"), {
+  ssr: false,
+});
 const DynamicInternetConnection = dynamic(
   () => import("@/components/atoms/internetConnection"),
   {
@@ -190,6 +194,7 @@ export default function RootLayout({
             <div id="root">
               {children}
               <AutoLoginWrapper />
+              <VisitPing />
               <DynamicCombinedLogin />
             </div>
           </DynamicQueryComponent>
