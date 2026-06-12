@@ -24,6 +24,24 @@ import PopupBulkUpload from './popupBulkUpload';
 
 type UploadPreview = { name: string; phone: string; dob?: number };
 
+const SIX_MONTH_EXPORT_WINDOW_MS = 183 * 24 * 60 * 60 * 1000;
+
+const getCsvDateRangeError = (dateFrom?: number, dateTo?: number) => {
+  if (!Number.isFinite(Number(dateFrom)) || !Number.isFinite(Number(dateTo))) {
+    return 'Please select From and To dates before downloading. Download customer data in 6-month batches.';
+  }
+
+  if (Number(dateFrom) > Number(dateTo)) {
+    return 'From date should be before To date.';
+  }
+
+  if (Number(dateTo) - Number(dateFrom) > SIX_MONTH_EXPORT_WINDOW_MS) {
+    return 'This range is too large. Please download customer data 6 months at a time.';
+  }
+
+  return null;
+};
+
 const mapCustomersData = (data: any[]): ICustomerRecord[] => {
   if (!Array.isArray(data)) return [];
   return data.map((item) => {
@@ -146,14 +164,21 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
   // Server-side export — downloads the COMPLETE result (no 5000 cap).
   // With filters active it exports exactly the filtered set; otherwise
   // it exports the full customer base.
-  const downloadSubscribers = async () => {
+  const downloadSubscribers = useCallback(async () => {
     if (!businessId) {
       toast.error('Business not loaded yet — please retry');
       return;
     }
     const toastId = toast.loading('Preparing your download…');
+    const dateRangeError = getCsvDateRangeError(filters.dateFrom, filters.dateTo);
+    if (dateRangeError) {
+      toast.error(dateRangeError, { id: toastId });
+      setFilterModalOpen(true);
+      return;
+    }
+
     try {
-      const query = filterActive ? buildFilterPayload() : { businessId, scope: 'all' as const };
+      const query = buildFilterPayload();
 
       const response = await apiRpc.payments.users.Analytics.download_csv.$get({ query });
       if (!response.ok) throw new Error('Download failed — please try again');
@@ -173,7 +198,7 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
       console.error(err);
       toast.error(err instanceof Error ? err.message : 'Download failed', { id: toastId });
     }
-  };
+  }, [businessId, buildFilterPayload, filterActive, filters.dateFrom, filters.dateTo]);
 
   const bottomButtons = useMemo(() => {
     const downloadBtn = {
@@ -193,12 +218,28 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
     };
     const addBtn = hasSelection ? [{ id: 'add-group', text: 'Add to group', onClick: openGroup, type: 'button' as const }] : [];
     return [downloadBtn, filterBtn, ...addBtn];
-  }, [hasSelection, activeData.length, openGroup]);
+  }, [hasSelection, activeData.length, openGroup, downloadSubscribers]);
 
   const bottomBarKey = hasSelection ? 'with-add' : 'no-add';
 
   const onApplyFilters = async () => {
     try {
+      if (filters.dateFrom !== undefined || filters.dateTo !== undefined) {
+        const dateFrom = filters.dateFrom ?? 0;
+        const dateTo = filters.dateTo ?? Date.now();
+        const dateRangeError =
+          dateFrom > dateTo
+            ? 'From date should be before To date.'
+            : dateTo - dateFrom > SIX_MONTH_EXPORT_WINDOW_MS
+              ? 'Please apply date filters in 6-month batches for faster downloads.'
+              : null;
+
+        if (dateRangeError) {
+          toast.error(dateRangeError);
+          return;
+        }
+      }
+
       const result = await filterUserAnalytics(buildFilterPayload());
       setFilteredApiData(mapCustomersData(result));
       setFilterModalOpen(false);

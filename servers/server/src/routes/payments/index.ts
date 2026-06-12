@@ -94,6 +94,40 @@ const toFiniteNumber = (value?: string): number | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
+const SIX_MONTH_EXPORT_WINDOW_MS = 183 * 24 * 60 * 60 * 1000;
+
+function validateUserAnalyticsCsvDateWindow(
+  params: Record<string, string | undefined>,
+) {
+  const dateFrom = toFiniteNumber(params.dateFrom);
+  const dateTo = toFiniteNumber(params.dateTo);
+
+  if (dateFrom === undefined || dateTo === undefined) {
+    return {
+      valid: false,
+      message:
+        "Please select a date range before downloading customers. Download up to 6 months of data at a time.",
+    };
+  }
+
+  if (dateFrom > dateTo) {
+    return {
+      valid: false,
+      message: "From date should be before To date.",
+    };
+  }
+
+  if (dateTo - dateFrom > SIX_MONTH_EXPORT_WINDOW_MS) {
+    return {
+      valid: false,
+      message:
+        "This download range is too large. Please download customers in 6-month batches.",
+    };
+  }
+
+  return { valid: true, message: "" };
+}
+
 // Shared by /users/Analytics/filter and /users/Analytics/download_csv.
 // Rules: a date range applies only when valid dates are sent; numeric
 // filters (visits/spend) work standalone over the full customer base;
@@ -4697,15 +4731,16 @@ const paymentsRouter = new Hono()
     async (c) => {
       const queryParams = c.req.query();
 
-      const query =
-        queryParams.scope === "all"
-          ? { businessId: queryParams.businessId }
-          : await buildUserAnalyticsFilterQuery(queryParams);
+      const dateWindow = validateUserAnalyticsCsvDateWindow(queryParams);
+      if (!dateWindow.valid) {
+        return respond(c, dateWindow.message, true, 400);
+      }
 
-      // Safety valve: the export is one row per CUSTOMER (not per
-      // transaction), so even a year of data stays small for normal
-      // businesses. If a dataset ever crosses this line, ask for a
-      // narrower filter instead of risking a gateway timeout.
+      const query = await buildUserAnalyticsFilterQuery(queryParams);
+
+      // Safety valve: the export is one row per customer, and downloads are
+      // already capped to a 6-month join-date window above. Keep a hard row
+      // ceiling too, so unusually large businesses still get a clear response.
       const MAX_EXPORT_ROWS = 75_000;
       const exportCount = await UserAnalytic.countDocuments(query);
       if (exportCount > MAX_EXPORT_ROWS) {

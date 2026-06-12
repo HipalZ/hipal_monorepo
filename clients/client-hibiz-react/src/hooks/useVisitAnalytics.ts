@@ -11,6 +11,9 @@ const GC_MS = 30 * 60 * 1000;
 
 export interface VisitAnalyticsData {
   range: { from: number; to: number };
+  businessSummary: {
+    totalUsers: number;
+  };
   summary: {
     totalVisits: number;
     uniqueVisitors: number;
@@ -83,8 +86,8 @@ export const useVisitAnalytics = (
       const res = await apiRpc.visits.analytics.$get({
         query: {
           businessId: businessId as string,
-          ...(from ? { from: String(from) } : {}),
-          ...(to ? { to: String(to) } : {}),
+          ...(from !== undefined ? { from: String(from) } : {}),
+          ...(to !== undefined ? { to: String(to) } : {}),
         },
       });
       if (!res.ok) throw new Error("Failed to load visit analytics");
