@@ -231,14 +231,9 @@ const MemoSummary = () => {
               sub="in this business"
             />
             <Metric
-              label="Repeat visitors"
-              value={fmt(summary?.returningVisitors)}
-              sub={`${summary?.repeatRate ?? 0}% came back`}
-            />
-            <Metric
-              label="Total visits"
+              label="Recorded visits"
               value={fmt(summary?.totalVisits)}
-              sub={`${fmt(summary?.uniqueVisitors)} unique visitors`}
+              sub="visit events captured"
             />
             <Metric
               label="New visitors"
@@ -392,7 +387,7 @@ const MemoSummary = () => {
                 sub={`read the campaign → visited within ${campaignData?.windowDays} days`}
               />
               <div className="space-y-4">
-                {campaignData?.campaigns.slice(0, 5).map((cmp) => (
+                {campaignData?.campaigns.slice(0, 3).map((cmp) => (
                   <div key={cmp.campaignId}>
                     <div className="mb-1.5 flex items-baseline justify-between gap-3">
                       <span className="truncate text-[13px] font-medium capitalize text-gray-900">

@@ -42,16 +42,27 @@ async function cacheSet(key: string, value: unknown, ttl: number) {
 
 // Staff (captains/managers) scan QRs as part of work — their visits
 // are counted like anyone's but tagged, so dashboards can show a clear
-// "staff" label and a staff-vs-customer split.
+// "staff" label and a staff-vs-customer split. Staff membership lives
+// in TWO places: Business.staffIds AND User.customRole (the staff
+// management flow writes customRole) — check both.
 async function getStaffObjectIds(
   businessId: string,
 ): Promise<mongoose.Types.ObjectId[]> {
-  const business = await Business.findById(businessId)
-    .select("staffIds")
-    .lean();
-  return (business?.staffIds ?? []).map(
-    (id) => new mongoose.Types.ObjectId(String(id)),
-  );
+  const [business, roleStaff] = await Promise.all([
+    Business.findById(businessId).select("staffIds").lean(),
+    User.find({
+      customRole: {
+        $elemMatch: { businessId, isDeleted: { $ne: true } },
+      },
+    })
+      .select("_id")
+      .lean(),
+  ]);
+  const ids = new Set<string>([
+    ...(business?.staffIds ?? []).map((id) => String(id)),
+    ...roleStaff.map((u) => String(u._id)),
+  ]);
+  return [...ids].map((id) => new mongoose.Types.ObjectId(id));
 }
 
 const visitsRouter = new Hono()

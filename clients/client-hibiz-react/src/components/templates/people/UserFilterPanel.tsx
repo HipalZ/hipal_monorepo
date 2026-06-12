@@ -85,7 +85,7 @@ export function FiltersPanel() {
       <div>
         <Label>Date of Joining</Label>
         <p className="mb-2 text-xs leading-relaxed text-gray-500">
-          For large client lists, apply and download customer data in 6-month batches.
+          Browse any date range in paginated results. Use 3-month batches when downloading large exports.
         </p>
         <div className="grid grid-cols-2 gap-2">
           <Popover>

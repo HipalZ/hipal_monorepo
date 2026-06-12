@@ -94,7 +94,7 @@ const toFiniteNumber = (value?: string): number | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
-const SIX_MONTH_EXPORT_WINDOW_MS = 183 * 24 * 60 * 60 * 1000;
+const THREE_MONTH_EXPORT_WINDOW_MS = 92 * 24 * 60 * 60 * 1000;
 
 function validateUserAnalyticsCsvDateWindow(
   params: Record<string, string | undefined>,
@@ -106,7 +106,7 @@ function validateUserAnalyticsCsvDateWindow(
     return {
       valid: false,
       message:
-        "Please select a date range before downloading customers. Download up to 6 months of data at a time.",
+        "Please select a date range before downloading customers. Download up to 3 months of data at a time.",
     };
   }
 
@@ -117,11 +117,11 @@ function validateUserAnalyticsCsvDateWindow(
     };
   }
 
-  if (dateTo - dateFrom > SIX_MONTH_EXPORT_WINDOW_MS) {
+  if (dateTo - dateFrom > THREE_MONTH_EXPORT_WINDOW_MS) {
     return {
       valid: false,
       message:
-        "This download range is too large. Please download customers in 6-month batches.",
+        "This download range is too large. Please download customers in 3-month batches.",
     };
   }
 
@@ -199,7 +199,7 @@ async function buildUserAnalyticsFilterQuery(
     visitsMin !== undefined ||
     visitsMax !== undefined ||
     search !== "";
-  if (!hasAnyFilter) {
+  if (!hasAnyFilter && params.scope !== "all") {
     query.dateOfJoining = {
       $gte: startOfDay(new Date()).getTime(),
       $lte: endOfDay(new Date()).getTime(),
@@ -4684,16 +4684,19 @@ const paymentsRouter = new Hono()
       const query = await buildUserAnalyticsFilterQuery(queryParams);
 
       const page = Number(pageNumber) || 1;
-      const limit = 5000;
-      const skip = (page - 1) * limit;
 
-      // Execute
-      const filteredResults = await UserAnalytic.find(query)
-        .populate("userId")
-        .skip(skip)
-        .limit(limit);
-
-      const totalCount = await UserAnalytic.countDocuments(query);
+      // Execute — lean + minimal populate keeps a 5000-row page fast;
+      // the UI only renders name/phone/customRole from the user doc.
+      const [filteredResults, totalCount] = await Promise.all([
+        UserAnalytic.find(query)
+          .populate({
+            path: "userId",
+            select: "name phone email customRole dob",
+          })
+          .sort({ dateOfJoining: -1, _id: -1 })
+          .lean(),
+        UserAnalytic.countDocuments(query),
+      ]);
 
       return c.json(
         {
@@ -4737,23 +4740,11 @@ const paymentsRouter = new Hono()
       }
 
       const query = await buildUserAnalyticsFilterQuery(queryParams);
-
-      // Safety valve: the export is one row per customer, and downloads are
-      // already capped to a 6-month join-date window above. Keep a hard row
-      // ceiling too, so unusually large businesses still get a clear response.
-      const MAX_EXPORT_ROWS = 75_000;
       const exportCount = await UserAnalytic.countDocuments(query);
-      if (exportCount > MAX_EXPORT_ROWS) {
-        return respond(
-          c,
-          `This export has ${exportCount.toLocaleString()} customers — please narrow the filters (max ${MAX_EXPORT_ROWS.toLocaleString()} per download)`,
-          true,
-          413,
-          { exportCount, max: MAX_EXPORT_ROWS },
-        );
-      }
 
-      const rows: string[][] = [
+      const csvCell = (cell: unknown) =>
+        `"${String(cell ?? "").replace(/"/g, '""')}"`;
+      const csvRows: string[] = [
         [
           "NAME",
           "PHONE",
@@ -4764,46 +4755,73 @@ const paymentsRouter = new Hono()
           "COINZ_USED",
           "CURRENT_COINZ",
           "DATE_OF_JOINING",
-        ],
+        ]
+          .map(csvCell)
+          .join(","),
       ];
 
-      // Cursor — constant memory regardless of result size (no 5000 cap)
-      const cursor = UserAnalytic.find(query)
-        .populate({ path: "userId", select: "name phone" })
-        .cursor();
+      const aggregateMatch = {
+        ...query,
+        businessId: new ObjectId(String(query.businessId)),
+      };
+
+      const cursor = UserAnalytic.aggregate([
+        { $match: aggregateMatch },
+        { $sort: { dateOfJoining: -1, _id: -1 } },
+        {
+          $lookup: {
+            from: User.collection.name,
+            localField: "userId",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            name: "$user.name",
+            phone: "$user.phone",
+            visitCount: 1,
+            totalSpend: 1,
+            avgSpend: 1,
+            coinzIssued: 1,
+            coinzUsed: 1,
+            currentCoins: 1,
+            dateOfJoining: 1,
+          },
+        },
+      ])
+        .allowDiskUse(true)
+        .cursor({ batchSize: 1000 });
 
       for await (const item of cursor) {
-        const user = item.userId as unknown as {
-          name?: string;
-          phone?: string;
-        } | null;
-        rows.push([
-          user?.name ?? "N/A",
-          user?.phone ?? "N/A",
-          String(item.visitCount ?? 0),
-          String(item.totalSpend ?? 0),
-          String(item.avgSpend ?? 0),
-          String(item.coinzIssued ?? 0),
-          String(item.coinzUsed ?? 0),
-          String(item.currentCoins ?? 0),
-          item.dateOfJoining
-            ? new Date(Number(item.dateOfJoining)).toLocaleDateString("en-IN")
-            : "",
-        ]);
+        csvRows.push(
+          [
+            item.name ?? "N/A",
+            item.phone ?? "N/A",
+            item.visitCount ?? 0,
+            item.totalSpend ?? 0,
+            item.avgSpend ?? 0,
+            item.coinzIssued ?? 0,
+            item.coinzUsed ?? 0,
+            item.currentCoins ?? 0,
+            item.dateOfJoining
+              ? new Date(Number(item.dateOfJoining)).toLocaleDateString("en-IN")
+              : "",
+          ]
+            .map(csvCell)
+            .join(","),
+        );
       }
 
-      const csvString = rows
-        .map((row) =>
-          row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-        )
-        .join("\n");
-
+      const csvString = csvRows.join("\n");
       const dateTag = new Date().toISOString().slice(0, 10);
       c.header("Content-Type", "text/csv");
       c.header(
         "Content-Disposition",
         `attachment; filename="customers_${dateTag}.csv"`,
       );
+      c.header("X-Export-Count", String(exportCount));
       return c.body(csvString);
     },
   )
