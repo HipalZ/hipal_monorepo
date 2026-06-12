@@ -1,4 +1,5 @@
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { apiRpc } from "@hi/common";
 import {
   freshnessLabel,
   useCampaignConversion,
@@ -6,6 +7,8 @@ import {
 } from "@/hooks/useVisitAnalytics";
 import { format } from "date-fns";
 import { memo, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import {
   CartesianGrid,
   Line,
@@ -81,13 +84,70 @@ const Metric = ({
   </div>
 );
 
+const InsightRow = ({
+  label,
+  description,
+  value,
+  tone = "neutral",
+}: {
+  label: string;
+  description: string;
+  value: string;
+  tone?: "neutral" | "warning";
+}) => (
+  <div
+    className={`flex items-start justify-between gap-4 rounded-lg px-3.5 py-2.5 ${
+      tone === "warning" ? "bg-[#FAEEDA]" : "bg-gray-50"
+    }`}
+  >
+    <span>
+      <span
+        className={`block text-xs font-medium ${
+          tone === "warning" ? "text-[#854F0B]" : "text-gray-700"
+        }`}
+      >
+        {label}
+      </span>
+      <span
+        className={`mt-0.5 block text-[11px] leading-4 ${
+          tone === "warning" ? "text-[#9A650F]" : "text-gray-400"
+        }`}
+      >
+        {description}
+      </span>
+    </span>
+    <span
+      className={`shrink-0 text-sm font-medium tabular-nums ${
+        tone === "warning" ? "text-[#633806]" : "text-gray-900"
+      }`}
+    >
+      {value}
+    </span>
+  </div>
+);
+
 const MemoSummary = () => {
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const [showStaff, setShowStaff] = useState(false);
+  const navigate = useNavigate();
 
   const { data: analytics, isLoading: analyticsLoading } =
     useVisitAnalytics(businessId);
   const { data: campaignData } = useCampaignConversion(businessId);
+  const { data: hasWhatsAppConfig, isLoading: whatsappConfigLoading } =
+    useQuery({
+      queryKey: ["summary-whatsapp-config", businessId],
+      enabled: Boolean(businessId),
+      staleTime: 5 * 60 * 1000,
+      retry: false,
+      queryFn: async () => {
+        const res = await apiRpc.whatsapp.whatsapp_config[":businessId"].$get({
+          param: { businessId: businessId as string },
+        });
+        const payload = await res.json();
+        return res.ok && payload.err === false;
+      },
+    });
 
   const trend = useMemo(() => {
     if (!analytics?.dailyTrend?.length) return [];
@@ -131,10 +191,9 @@ const MemoSummary = () => {
   const audience = analytics?.audience;
   const businessSummary = analytics?.businessSummary;
   const summary = analytics?.summary;
-  const overlapTotal =
-    (audience?.subscribedAndVisited ?? 0) +
-    (audience?.subscribedNeverVisited ?? 0) +
-    (audience?.visitedNotSubscribed ?? 0);
+  const winBackCampaigns = (campaignData?.campaigns ?? [])
+    .filter((cmp) => cmp.reads > cmp.returnedWithinWindow)
+    .slice(0, 3);
 
   const noDataYet =
     (businessSummary?.totalUsers ?? audience?.totalCustomers ?? 0) === 0 &&
@@ -187,58 +246,6 @@ const MemoSummary = () => {
               sub="first seen overall"
             />
           </div>
-
-          {overlapTotal > 0 && (
-            <Card>
-              <CardTitle
-                title="Audience overlap"
-                sub="how subscribers and customers relate"
-              />
-              <div className="flex h-2.5 overflow-hidden rounded-full">
-                <div
-                  className="bg-[#1D9E75]"
-                  style={{
-                    width: `${((audience?.subscribedAndVisited ?? 0) / overlapTotal) * 100}%`,
-                  }}
-                />
-                <div
-                  className="bg-[#9FE1CB]"
-                  style={{
-                    width: `${((audience?.subscribedNeverVisited ?? 0) / overlapTotal) * 100}%`,
-                  }}
-                />
-                <div
-                  className="bg-[#C7C3F0]"
-                  style={{
-                    width: `${((audience?.visitedNotSubscribed ?? 0) / overlapTotal) * 100}%`,
-                  }}
-                />
-              </div>
-              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-gray-500">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-sm bg-[#1D9E75]" />
-                  Subscribed + visited
-                  <span className="font-medium text-gray-900 tabular-nums">
-                    {fmt(audience?.subscribedAndVisited)}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-sm bg-[#9FE1CB]" />
-                  Subscribed, never visited
-                  <span className="font-medium text-gray-900 tabular-nums">
-                    {fmt(audience?.subscribedNeverVisited)}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-sm bg-[#C7C3F0]" />
-                  Visited, not subscribed
-                  <span className="font-medium text-gray-900 tabular-nums">
-                    {fmt(audience?.visitedNotSubscribed)}
-                  </span>
-                </span>
-              </div>
-            </Card>
-          )}
 
           {trend.length >= 2 && (
             <Card>
@@ -318,45 +325,64 @@ const MemoSummary = () => {
               </Card>
             )}
 
-            {audience && (
+            {hasWhatsAppConfig && audience ? (
               <Card>
                 <CardTitle
-                  title="Reach & opportunity"
-                  sub="who you can bring back"
+                  title="WhatsApp campaign reach"
+                  sub="what your WhatsApp list can do for this business"
                 />
                 <div className="space-y-2.5">
-                  <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3.5 py-2.5">
-                    <span className="text-xs text-gray-500">
-                      Reachable on WhatsApp
-                    </span>
-                    <span className="text-sm font-medium text-gray-900 tabular-nums">
-                      {fmt(audience.subscribersTotal)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3.5 py-2.5">
-                    <span className="text-xs text-gray-500">
-                      Unique visitors
-                    </span>
-                    <span className="text-sm font-medium text-gray-900 tabular-nums">
-                      {fmt(summary?.uniqueVisitors)}
-                    </span>
-                  </div>
+                  <InsightRow
+                    label="Contacts reachable on WhatsApp"
+                    description="Saved WhatsApp subscribers who can receive approved campaign messages."
+                    value={fmt(audience.subscribersTotal)}
+                  />
+                  <InsightRow
+                    label="Total business users tracked"
+                    description="All customer records available for this business in HiPeople."
+                    value={fmt(
+                      businessSummary?.totalUsers ?? audience.totalCustomers,
+                    )}
+                  />
+                  <InsightRow
+                    label="Verified app or QR visitors"
+                    description="Users counted from visit events such as app open, QR scan, sign-in, payment, or POS."
+                    value={fmt(summary?.uniqueVisitors)}
+                  />
                   {audience.readNeverVisited > 0 && (
-                    <div className="flex items-center justify-between rounded-lg bg-[#FAEEDA] px-3.5 py-2.5">
-                      <span className="text-xs text-[#854F0B]">
-                        Read campaigns, never visited
-                        <span className="ml-1.5 rounded-full bg-white/60 px-2 py-0.5 text-[10px] font-medium">
-                          win-back
-                        </span>
-                      </span>
-                      <span className="text-sm font-medium text-[#633806] tabular-nums">
-                        {fmt(audience.readNeverVisited)}
-                      </span>
-                    </div>
+                    <InsightRow
+                      label="Campaign readers not yet visited"
+                      description={
+                        winBackCampaigns.length > 0
+                          ? `Seen in: ${winBackCampaigns
+                              .map((cmp) => cmp.campaignName)
+                              .join(", ")}`
+                          : "Customers read WhatsApp campaigns but have no visit event after reading."
+                      }
+                      value={fmt(audience.readNeverVisited)}
+                      tone="warning"
+                    />
                   )}
                 </div>
               </Card>
-            )}
+            ) : hasWhatsAppConfig === false && !whatsappConfigLoading ? (
+              <Card>
+                <CardTitle
+                  title="Activate WhatsApp"
+                  sub="bring campaigns and customer reach into this summary"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    businessId &&
+                    navigate(`/app/business/${businessId}/whatzapp`)
+                  }
+                  className="w-full rounded-lg bg-[#111111] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-black"
+                >
+                  Activate WhatsApp
+                </button>
+              </Card>
+            ) : null}
           </div>
 
           {(campaignData?.campaigns?.length ?? 0) > 0 && (
