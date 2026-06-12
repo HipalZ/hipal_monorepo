@@ -61,6 +61,9 @@ const userAnalyticsSchema = new mongoose.Schema<UserAnalytics>({
   },
 });
 
+userAnalyticsSchema.index({ businessId: 1, dateOfJoining: -1, _id: -1 });
+userAnalyticsSchema.index({ businessId: 1, visitCount: -1 });
+
 const UserAnalytic: Model<UserAnalytics> = mongoose.model<UserAnalytics>(
   "UserAnalytic",
   userAnalyticsSchema,

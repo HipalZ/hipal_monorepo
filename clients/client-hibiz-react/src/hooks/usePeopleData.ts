@@ -314,12 +314,13 @@ export const useFilterUserAnalytics = () => {
         );
       }
 
+      // Server pages at 5000 rows — return totalCount so callers can
+      // keep fetching pages until the full result set is loaded.
       const result = await response.json();
-      return result.data;
-    },
-
-    onSuccess: (data) => {
-      toast.success(`Fetched ${data.length} records successfully`);
+      return {
+        data: result.data as unknown[],
+        totalCount: (result.totalCount as number) ?? result.data?.length ?? 0,
+      };
     },
 
     onError: (error: Error) => {

@@ -44,13 +44,25 @@ function phoneVariants(p10: string): string[] {
   return [p10, `91${p10}`, `+91${p10}`];
 }
 
-// Staff userIds for a business (captains/managers/owners) — these scan
-// QRs for work and must never count as customer visits.
+// Staff userIds for a business (captains/managers/owners). Staff
+// membership lives in TWO places: Business.staffIds AND
+// User.customRole (the staff management flow writes customRole) —
+// check both so every captain/manager is tagged.
 async function getStaffIdSet(businessId: string): Promise<Set<string>> {
-  const business = await Business.findById(businessId)
-    .select("staffIds")
-    .lean();
-  return new Set((business?.staffIds ?? []).map((id) => String(id)));
+  const [business, roleStaff] = await Promise.all([
+    Business.findById(businessId).select("staffIds").lean(),
+    User.find({
+      customRole: {
+        $elemMatch: { businessId, isDeleted: { $ne: true } },
+      },
+    })
+      .select("_id")
+      .lean(),
+  ]);
+  return new Set<string>([
+    ...(business?.staffIds ?? []).map((id) => String(id)),
+    ...roleStaff.map((u) => String(u._id)),
+  ]);
 }
 
 const scanAuditResultSchema = new mongoose.Schema(

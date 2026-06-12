@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useUploadCustomers } from '@/hooks/useHipeople';
 import { type FilterUserAnalyticsPayload, useFilterUserAnalytics, useGetAllTodayPeople } from '@/hooks/usePeopleData';
 import { apiRpc } from '@hi/common';
-import { CloudDownload, Filter } from 'lucide-react';
+import { CalendarDays, CloudDownload, Filter, Phone, Star } from 'lucide-react';
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { FaMoneyBills } from 'react-icons/fa6';
@@ -24,19 +24,20 @@ import PopupBulkUpload from './popupBulkUpload';
 
 type UploadPreview = { name: string; phone: string; dob?: number };
 
-const SIX_MONTH_EXPORT_WINDOW_MS = 183 * 24 * 60 * 60 * 1000;
+const THREE_MONTH_EXPORT_WINDOW_MS = 92 * 24 * 60 * 60 * 1000;
+const FILTER_PAGE_SIZE = 5000;
 
 const getCsvDateRangeError = (dateFrom?: number, dateTo?: number) => {
   if (!Number.isFinite(Number(dateFrom)) || !Number.isFinite(Number(dateTo))) {
-    return 'Please select From and To dates before downloading. Download customer data in 6-month batches.';
+    return 'Please apply date filters in 3-month batches for faster downloads.';
   }
 
   if (Number(dateFrom) > Number(dateTo)) {
     return 'From date should be before To date.';
   }
 
-  if (Number(dateTo) - Number(dateFrom) > SIX_MONTH_EXPORT_WINDOW_MS) {
-    return 'This range is too large. Please download customer data 6 months at a time.';
+  if (Number(dateTo) - Number(dateFrom) > THREE_MONTH_EXPORT_WINDOW_MS) {
+    return 'Please apply date filters in 3-month batches for faster downloads.';
   }
 
   return null;
@@ -68,6 +69,31 @@ const mapCustomersData = (data: any[]): ICustomerRecord[] => {
   });
 };
 
+const getInitials = (name?: string) => {
+  if (!name || name === 'N/A') return 'NA';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+};
+
+const maskPhone = (phone?: string) => {
+  const cleanPhone = String(phone || '').replace(/\D/g, '');
+  if (cleanPhone.length < 4) return 'Phone not available';
+  return `${cleanPhone.slice(0, 2)}******${cleanPhone.slice(-2)}`;
+};
+
+const formatJoiningDate = (dateOfJoining?: number) => {
+  if (!dateOfJoining || dateOfJoining <= 0) return 'Date not available';
+  return new Date(dateOfJoining).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: '2-digit',
+  });
+};
+
 const MemoUsersList = ({ hide }: { hide?: boolean }) => {
   const toggleUserSelection = useHiPeopleStore((s) => s.toggleUserSelection);
   const selectAllUsers = useHiPeopleStore((s) => s.selectAllUsers);
@@ -82,6 +108,9 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
   const [uploadPreview, setUploadPreview] = useState<UploadPreview[]>([]);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filteredApiData, setFilteredApiData] = useState<ICustomerRecord[] | null>(null);
+  const [filterPage, setFilterPage] = useState(1);
+  const [filterTotalCount, setFilterTotalCount] = useState(0);
+  const [filterLoadingPage, setFilterLoadingPage] = useState(false);
 
   const clearFilters = usePeopleFiltersStore((s) => s.clearFilters);
   const filters = usePeopleFiltersStore((s) => s.filters);
@@ -92,6 +121,8 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
 
   const todayPeopleData = useMemo(() => mapCustomersData(rawTodayPeopleData || []), [rawTodayPeopleData]);
   const activeData = filteredApiData ?? todayPeopleData;
+  const hasFilteredData = filteredApiData !== null;
+  const filterTotalPages = Math.max(1, Math.ceil(filterTotalCount / FILTER_PAGE_SIZE));
 
   const filterActive = useMemo(
     () =>
@@ -161,6 +192,21 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
     return payload;
   }, [businessId, filters]);
 
+  const loadFilteredPage = useCallback(
+    async (page: number) => {
+      const result = await filterUserAnalytics({
+        ...buildFilterPayload(),
+        pageNumber: String(page),
+      });
+      setFilteredApiData(mapCustomersData(result.data));
+      setFilterTotalCount(result.totalCount);
+      setFilterPage(page);
+      clearAllUsers();
+      return result;
+    },
+    [buildFilterPayload, clearAllUsers, filterUserAnalytics],
+  );
+
   // Server-side export — downloads the COMPLETE result (no 5000 cap).
   // With filters active it exports exactly the filtered set; otherwise
   // it exports the full customer base.
@@ -183,6 +229,7 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
       const response = await apiRpc.payments.users.Analytics.download_csv.$get({ query });
       if (!response.ok) throw new Error('Download failed — please try again');
 
+      const exportCount = response.headers.get('X-Export-Count');
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -193,7 +240,14 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success(filterActive ? 'Filtered customers downloaded' : 'All customers downloaded', { id: toastId });
+      toast.success(
+        exportCount
+          ? `Downloaded ${Number(exportCount).toLocaleString('en-IN')} customers`
+          : filterActive
+            ? 'Filtered customers downloaded'
+            : 'All customers downloaded',
+        { id: toastId },
+      );
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : 'Download failed', { id: toastId });
@@ -223,34 +277,53 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
   const bottomBarKey = hasSelection ? 'with-add' : 'no-add';
 
   const onApplyFilters = async () => {
+    let loadingToastId: string | undefined;
     try {
       if (filters.dateFrom !== undefined || filters.dateTo !== undefined) {
         const dateFrom = filters.dateFrom ?? 0;
         const dateTo = filters.dateTo ?? Date.now();
-        const dateRangeError =
-          dateFrom > dateTo
-            ? 'From date should be before To date.'
-            : dateTo - dateFrom > SIX_MONTH_EXPORT_WINDOW_MS
-              ? 'Please apply date filters in 6-month batches for faster downloads.'
-              : null;
-
-        if (dateRangeError) {
-          toast.error(dateRangeError);
+        if (dateFrom > dateTo) {
+          toast.error('From date should be before To date.');
           return;
         }
       }
 
-      const result = await filterUserAnalytics(buildFilterPayload());
-      setFilteredApiData(mapCustomersData(result));
+      const toastId = toast.loading('Loading customers...');
+      loadingToastId = toastId;
+      const first = await loadFilteredPage(1);
       setFilterModalOpen(false);
+      toast.success(
+        `Showing ${first.data.length.toLocaleString('en-IN')} of ${first.totalCount.toLocaleString('en-IN')} customers. Download exports the full selected range.`,
+        { id: toastId },
+      );
     } catch (err) {
       console.error(err);
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to apply filters',
+        loadingToastId ? { id: loadingToastId } : undefined,
+      );
     }
   };
 
   const onClearFilters = () => {
     clearFilters();
     setFilteredApiData(null);
+    setFilterPage(1);
+    setFilterTotalCount(0);
+    clearAllUsers();
+  };
+
+  const goToFilterPage = async (page: number) => {
+    if (page < 1 || page > filterTotalPages || filterLoadingPage) return;
+    setFilterLoadingPage(true);
+    try {
+      await loadFilteredPage(page);
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : 'Failed to load page');
+    } finally {
+      setFilterLoadingPage(false);
+    }
   };
 
   if (isLoading || isPending) return <LoadingSpinner />;
@@ -286,63 +359,91 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
             {alphabet.length > 0 ? (
               alphabet.map((letter) => (
                 <div key={letter} ref={(el) => (alphabetRefs.current[letter] = el)} className="mb-6">
-                  <h3 className="sticky top-0 bg-white py-1 text-lg font-bold">{letter}</h3>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="sticky top-0 z-10 mb-3 flex items-center gap-3 bg-white/95 py-2 backdrop-blur">
+                    <h3 className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-950 text-sm font-semibold text-white">{letter}</h3>
+                    <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                      {groupedData[letter].length} {groupedData[letter].length === 1 ? 'customer' : 'customers'}
+                    </span>
+                    <span className="h-px flex-1 bg-gray-200" />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {groupedData[letter].map((user) => {
                       const visits = user?.visitCount ?? 0;
                       const isRegular = visits >= 5;
                       const isNew =
                         user?.dateOfJoining > 0 && Date.now() - user.dateOfJoining < 30 * 24 * 60 * 60 * 1000 && visits <= 1;
                       return (
-                        <article key={user._id} className="relative w-full rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300">
-                          <section className="flex items-center">
+                        <article
+                          key={user._id}
+                          className="group relative w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md"
+                        >
+                          <section className="flex items-start gap-3">
                             <input
                               type="checkbox"
                               checked={selectedUserIds.includes(user?.userId?._id)}
                               onChange={() => handleSelectUser(user?.userId?._id)}
-                              className="mr-3 h-4 w-4 rounded accent-gray-700"
+                              className="mt-1 h-4 w-4 rounded border-gray-300 accent-gray-950"
                             />
-                            <span className="mr-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-[11px] font-medium text-gray-600">
-                              {(user?.userId?.name ?? '?').slice(0, 2).toUpperCase()}
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-950 text-xs font-semibold text-white shadow-sm">
+                              {getInitials(user?.userId?.name)}
                             </span>
                             <div className="min-w-0 flex-1">
-                              <h3 className="flex items-center truncate text-sm font-medium text-gray-900">
+                              <h3 className="flex items-center gap-2 truncate text-base font-semibold text-gray-950">
                                 <span className="truncate">{user?.userId?.name}</span>
                                 {isRegular && (
-                                  <span className="ml-2 shrink-0 rounded-full bg-[#E1F5EE] px-2 py-0.5 text-[10px] font-medium text-[#0F6E56]">regular</span>
+                                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                    <Star className="h-3 w-3 fill-emerald-600 text-emerald-600" />
+                                    Regular
+                                  </span>
                                 )}
                                 {isNew && (
-                                  <span className="ml-2 shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500">new</span>
+                                  <span className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">New</span>
                                 )}
                               </h3>
-                              <p className="mt-0.5 text-xs text-gray-400">
-                                {user?.userId?.phone?.slice(0, 2)}******{user?.userId?.phone?.slice(-2)}
-                                {user?.dateOfJoining > 0 && (
-                                  <span> · since {new Date(user.dateOfJoining).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' })}</span>
-                                )}
-                              </p>
+                              <div className="mt-2 grid gap-1.5 text-xs text-gray-600">
+                                <span className="flex items-center gap-1.5">
+                                  <Phone className="h-3.5 w-3.5 text-gray-400" />
+                                  <span className="font-medium text-gray-800">{maskPhone(user?.userId?.phone)}</span>
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                  <CalendarDays className="h-3.5 w-3.5 text-gray-400" />
+                                  First seen {formatJoiningDate(user?.dateOfJoining)}
+                                </span>
+                              </div>
                             </div>
                           </section>
-                          <div className="mt-3 flex items-center gap-4 border-t border-gray-100 pt-2.5 text-xs text-gray-500">
-                            <span className="flex items-center gap-1.5">
-                              <SlLocationPin className="text-gray-400" />
-                              <span className="font-medium text-gray-900 tabular-nums">{visits}</span>
-                              {visits === 1 ? 'visit' : 'visits'}
+                          <div className="mt-4 grid grid-cols-2 gap-2 border-t border-gray-100 pt-3 text-xs">
+                            <span className="rounded-xl bg-gray-50 px-3 py-2 text-gray-600">
+                              <span className="mb-1 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-gray-400">
+                                <SlLocationPin />
+                                Visits
+                              </span>
+                              <span className="text-sm font-semibold text-gray-950">
+                                {visits} {visits === 1 ? 'visit' : 'visits'}
+                              </span>
                             </span>
                             {(user?.totalSpend ?? 0) > 0 && (
-                              <span className="flex items-center gap-1.5">
-                                <FaMoneyBills className="text-gray-400" />
-                                <span className="font-medium text-gray-900 tabular-nums">₹{(user?.totalSpend ?? 0).toLocaleString('en-IN')}</span>
+                              <span className="rounded-xl bg-emerald-50 px-3 py-2 text-emerald-700">
+                                <span className="mb-1 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-emerald-500">
+                                  <FaMoneyBills />
+                                  Spend
+                                </span>
+                                <span className="text-sm font-semibold text-emerald-900 tabular-nums">Rs. {(user?.totalSpend ?? 0).toLocaleString('en-IN')}</span>
                               </span>
                             )}
                             {(user?.currentCoins ?? 0) > 0 && (
-                              <span>
-                                <span className="font-medium text-gray-900 tabular-nums">{user.currentCoins}</span> coinz
+                              <span className="rounded-xl bg-amber-50 px-3 py-2 text-amber-700">
+                                <span className="mb-1 block text-[11px] uppercase tracking-wide text-amber-500">Coinz</span>
+                                <span className="text-sm font-semibold text-amber-900 tabular-nums">{user.currentCoins}</span>
                               </span>
                             )}
                           </div>
                           {!hide && (
-                            <Link to={`/app/business/${user?.businessId}/people/${user?.userId?._id}`} className="absolute right-3 top-3 text-gray-300 hover:text-gray-600">
+                            <Link
+                              to={`/app/business/${user?.businessId}/people/${user?.userId?._id}`}
+                              className="absolute right-3 top-3 rounded-full bg-gray-50 p-1.5 text-gray-400 transition-colors hover:bg-gray-950 hover:text-white"
+                              aria-label={`Open ${user?.userId?.name || 'customer'} profile`}
+                            >
                               <MdArrowOutward size={18} />
                             </Link>
                           )}
@@ -379,6 +480,32 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
               </div>
             )}
           </div>
+
+          {hasFilteredData && filterTotalCount > FILTER_PAGE_SIZE && (
+            <div className="mx-4 mt-4 flex flex-col gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                Showing page {filterPage} of {filterTotalPages} · {filterTotalCount.toLocaleString('en-IN')} customers
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={filterPage <= 1 || filterLoadingPage}
+                  onClick={() => goToFilterPage(filterPage - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={filterPage >= filterTotalPages || filterLoadingPage}
+                  onClick={() => goToFilterPage(filterPage + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
 
           {hide && selectedUserIds.length ? (
             <BottomButton buttons={[{ text: 'Save', onClick: () => setAddGroupPage('CREATE GROUP'), type: 'button' }]} />
