@@ -84,6 +84,9 @@ export function FiltersPanel() {
       {/* Date of Joining */}
       <div>
         <Label>Date of Joining</Label>
+        <p className="mb-2 text-xs leading-relaxed text-gray-500">
+          For large client lists, apply and download customer data in 6-month batches.
+        </p>
         <div className="grid grid-cols-2 gap-2">
           <Popover>
             <PopoverTrigger asChild>

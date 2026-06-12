@@ -1,4 +1,12 @@
-import { Business, Campaign, Subscriber, User, VisitEvent, WhatsAppAnalyticsUser } from "@hi/db-models";
+import {
+  Business,
+  Campaign,
+  Subscriber,
+  User,
+  UserAnalytic,
+  VisitEvent,
+  WhatsAppAnalyticsUser,
+} from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import mongoose from "mongoose";
@@ -94,15 +102,15 @@ const visitsRouter = new Hono()
       const { businessId, from, to } = c.req.query();
       const businessObjectId = new mongoose.Types.ObjectId(businessId);
 
+      const hasExplicitRange = from !== undefined || to !== undefined;
       const toDate = to ? Number(to) : Date.now();
-      // default window: last 90 days
-      const fromDate = from ? Number(from) : toDate - 90 * 24 * 60 * 60 * 1000;
+      // Default summary is all-time. Date filters are reserved for callers
+      // that explicitly ask for a range.
+      const fromDate = from ? Number(from) : 0;
 
-      // Bucket the default (no explicit range) key by hour so the cache
-      // actually hits despite Date.now() moving.
-      const cacheKey = `visits:analytics:${businessId}:${from ?? "auto"}:${
-        to ?? Math.floor(Date.now() / 3_600_000)
-      }`;
+      const cacheKey = hasExplicitRange
+        ? `visits:analytics:v3:${businessId}:${from ?? "auto"}:${to ?? "now"}`
+        : `visits:analytics:v3:${businessId}:all-time`;
       const cached = await cacheGet(cacheKey);
       if (cached) {
         return respond(c, "Visit analytics", false, 200, cached);
@@ -272,15 +280,19 @@ const visitsRouter = new Hono()
       // Subscriber ↔ customer overlap and the win-back segment (read a
       // campaign, never visited) — these power the overlap strip and
       // the reach & opportunity card.
-      const [allVisitorIds, subscribersTotal, readerIds] = await Promise.all([
-        VisitEvent.distinct("userId", { businessId: businessObjectId }),
-        Subscriber.countDocuments({ businessId: businessObjectId }),
-        WhatsAppAnalyticsUser.distinct("userId", {
-          businessId: businessObjectId,
-          status: "read",
-          userId: { $ne: null },
-        }),
-      ]);
+      const [allVisitorIds, totalBusinessUsers, subscribersTotal, readerIds] =
+        await Promise.all([
+          VisitEvent.distinct("userId", { businessId: businessObjectId }),
+          UserAnalytic.collection.countDocuments({
+            $or: [{ businessId: businessObjectId }, { businessId }],
+          }),
+          Subscriber.countDocuments({ businessId: businessObjectId }),
+          WhatsAppAnalyticsUser.distinct("userId", {
+            businessId: businessObjectId,
+            status: "read",
+            userId: { $ne: null },
+          }),
+        ]);
       const visitorIdSet = new Set(allVisitorIds.map(String));
       const customerVisitorIds = allVisitorIds.filter(
         (id) => !staffIdStrings.has(String(id)),
@@ -289,13 +301,19 @@ const visitsRouter = new Hono()
         businessId: businessObjectId,
         userId: { $in: customerVisitorIds },
       });
-      const totalCustomers = customerVisitorIds.length;
+      const visitedNotSubscribed = Math.max(
+        customerVisitorIds.length - subscribedAndVisited,
+        0,
+      );
       const readNeverVisited = readerIds.filter(
         (id) => id && !visitorIdSet.has(String(id)),
       ).length;
 
       const payload = {
         range: { from: fromDate, to: toDate },
+        businessSummary: {
+          totalUsers: totalBusinessUsers,
+        },
         summary: {
           totalVisits,
           uniqueVisitors,
@@ -360,16 +378,13 @@ const visitsRouter = new Hono()
         ),
         audience: {
           subscribersTotal,
-          totalCustomers,
+          totalCustomers: totalBusinessUsers,
           subscribedAndVisited,
           subscribedNeverVisited: Math.max(
             subscribersTotal - subscribedAndVisited,
             0,
           ),
-          visitedNotSubscribed: Math.max(
-            totalCustomers - subscribedAndVisited,
-            0,
-          ),
+          visitedNotSubscribed,
           readNeverVisited,
         },
         generatedAt: Date.now(),

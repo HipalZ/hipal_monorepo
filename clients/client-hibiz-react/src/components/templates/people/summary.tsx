@@ -1,7 +1,4 @@
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import PopUp from "@/components/atom/popUp";
-import useHiPeopleStore from "@/components/store/useHipeopleStore";
-import { useSummarizedPeopleData } from "@/hooks/usePeopleData";
 import {
   freshnessLabel,
   useCampaignConversion,
@@ -9,9 +6,6 @@ import {
 } from "@/hooks/useVisitAnalytics";
 import { format } from "date-fns";
 import { memo, useMemo, useState } from "react";
-import { LiaThumbsDown } from "react-icons/lia";
-import { PiThumbsUp } from "react-icons/pi";
-import { SlCalender } from "react-icons/sl";
 import {
   CartesianGrid,
   Line,
@@ -22,7 +16,6 @@ import {
   YAxis,
 } from "recharts";
 import useBusinessData from "../../store/useBusinessData";
-import DateRangePicker from "./dateRangePicker";
 
 const fmt = (n?: number) => (n ?? 0).toLocaleString("en-IN");
 
@@ -90,35 +83,10 @@ const Metric = ({
 
 const MemoSummary = () => {
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
-  const { peopleData } = useHiPeopleStore();
-  const {
-    openDatePickerModal,
-    setOpenDatePickerModal,
-    dateInTimeStamp,
-    dateRange,
-  } = useHiPeopleStore((state) => ({
-    dateRange: state.dateRange,
-    setOpenDatePickerModal: state.setOpenDatePickerModal,
-    openDatePickerModal: state.openDatePickerModal,
-    dateInTimeStamp: state.dateInTimeStamp,
-  }));
-
   const [showStaff, setShowStaff] = useState(false);
 
-  const [from, to] = dateRange;
-  const formattedFrom = from ? format(from, "dd MMM yyyy") : "";
-  const formattedTo = to ? format(to, "dd MMM yyyy") : "";
-
-  const { isLoading: reviewsLoading } = useSummarizedPeopleData(
-    dateInTimeStamp.from,
-    dateInTimeStamp.to,
-  );
-
-  const { data: analytics, isLoading: analyticsLoading } = useVisitAnalytics(
-    businessId,
-    dateInTimeStamp.from || undefined,
-    dateInTimeStamp.to || undefined,
-  );
+  const { data: analytics, isLoading: analyticsLoading } =
+    useVisitAnalytics(businessId);
   const { data: campaignData } = useCampaignConversion(businessId);
 
   const trend = useMemo(() => {
@@ -152,7 +120,7 @@ const MemoSummary = () => {
     1,
   );
 
-  if (analyticsLoading && reviewsLoading) {
+  if (analyticsLoading) {
     return (
       <div>
         <LoadingSpinner />
@@ -161,6 +129,7 @@ const MemoSummary = () => {
   }
 
   const audience = analytics?.audience;
+  const businessSummary = analytics?.businessSummary;
   const summary = analytics?.summary;
   const overlapTotal =
     (audience?.subscribedAndVisited ?? 0) +
@@ -168,7 +137,7 @@ const MemoSummary = () => {
     (audience?.visitedNotSubscribed ?? 0);
 
   const noDataYet =
-    (audience?.totalCustomers ?? 0) === 0 &&
+    (businessSummary?.totalUsers ?? audience?.totalCustomers ?? 0) === 0 &&
     (audience?.subscribersTotal ?? 0) === 0;
 
   return (
@@ -179,21 +148,12 @@ const MemoSummary = () => {
             Summary
           </h3>
           <p className="mt-0.5 text-xs text-gray-400">
-            {formattedFrom && formattedTo
-              ? `${formattedFrom} – ${formattedTo}`
-              : "Last 90 days"}
+            Complete business data
             {analytics?.generatedAt
               ? ` · ${freshnessLabel(analytics.generatedAt)}`
               : ""}
           </p>
         </div>
-        <button
-          onClick={() => setOpenDatePickerModal(true)}
-          type="button"
-          className="flex items-center gap-2 rounded-lg border border-black/[0.08] bg-white px-3.5 py-2 text-sm text-gray-700 hover:bg-gray-50"
-        >
-          <SlCalender size={13} /> Change period
-        </button>
       </div>
 
       {noDataYet ? (
@@ -207,14 +167,9 @@ const MemoSummary = () => {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Metric
-              label="Subscribers"
-              value={fmt(audience?.subscribersTotal)}
-              sub="on your WhatsApp list"
-            />
-            <Metric
-              label="Customers"
-              value={fmt(audience?.totalCustomers)}
-              sub="visited at least once"
+              label="Total users"
+              value={fmt(businessSummary?.totalUsers ?? audience?.totalCustomers)}
+              sub="in this business"
             />
             <Metric
               label="Repeat visitors"
@@ -222,9 +177,14 @@ const MemoSummary = () => {
               sub={`${summary?.repeatRate ?? 0}% came back`}
             />
             <Metric
-              label="Visits in period"
+              label="Total visits"
               value={fmt(summary?.totalVisits)}
               sub={`${fmt(summary?.uniqueVisitors)} unique visitors`}
+            />
+            <Metric
+              label="New visitors"
+              value={fmt(summary?.newVisitors)}
+              sub="first seen overall"
             />
           </div>
 
@@ -375,7 +335,7 @@ const MemoSummary = () => {
                   </div>
                   <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3.5 py-2.5">
                     <span className="text-xs text-gray-500">
-                      Active in this period
+                      Unique visitors
                     </span>
                     <span className="text-sm font-medium text-gray-900 tabular-nums">
                       {fmt(summary?.uniqueVisitors)}
@@ -507,41 +467,6 @@ const MemoSummary = () => {
               </Card>
             )}
 
-            {peopleData?.userReviews &&
-              Object.keys(peopleData.userReviews).length > 0 && (
-                <Card>
-                  <CardTitle title="Average reviews" />
-                  <div className="space-y-2.5">
-                    {Object.keys(peopleData.userReviews).map((key) => (
-                      <div
-                        key={key}
-                        className="flex items-center justify-between text-[13px]"
-                      >
-                        <span className="capitalize text-gray-600">
-                          {key === "service"
-                            ? "Staff and behaviour"
-                            : key === "foodTaste"
-                              ? "Service"
-                              : key}
-                        </span>
-                        <span className="flex items-center gap-4 text-gray-900">
-                          <span className="flex items-center gap-1 tabular-nums">
-                            <PiThumbsUp size={14} className="text-gray-400" />
-                            {peopleData.userReviews[key]?.likePercentage}%
-                          </span>
-                          <span className="flex items-center gap-1 tabular-nums">
-                            <LiaThumbsDown
-                              size={15}
-                              className="text-gray-400"
-                            />
-                            {peopleData.userReviews[key]?.dislikePercentage}%
-                          </span>
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
           </div>
 
           {analytics?.lifetime?.trackedSince && (
@@ -553,19 +478,6 @@ const MemoSummary = () => {
             </p>
           )}
         </div>
-      )}
-
-      {openDatePickerModal && (
-        <PopUp
-          show={openDatePickerModal}
-          onClose={() => setOpenDatePickerModal(false)}
-          width="w-[30rem]"
-          height="h-[30rem]"
-        >
-          <section className="h-[75vh]">
-            <DateRangePicker />
-          </section>
-        </PopUp>
       )}
     </div>
   );
