@@ -55,7 +55,6 @@ const whatsAppBusinessConfigSchema = new mongoose.Schema<WhatsAppBusinessConfigT
     },
     ownerId: {
       type: ObjectId,
-
       required: false,
       ref: 'User',
     },
@@ -101,6 +100,11 @@ const whatsAppBusinessConfigSchema = new mongoose.Schema<WhatsAppBusinessConfigT
       default: false,
     },
     chat: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    whatsAppEnabled: {
       type: Boolean,
       required: false,
       default: false,

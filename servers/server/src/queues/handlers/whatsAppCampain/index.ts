@@ -1,6 +1,7 @@
-import { WhatsAppAnalyticsUser } from '@hi/db-models';
+import { WhatsAppAnalyticsUser, WhatsAppBusinessConfig } from '@hi/db-models';
 import axios from 'axios';
 import type { Job } from 'bullmq';
+import { isWhatsAppConfigEnabled } from '../../../utils/whatsAppApiBaseUrl/apiPaths';
 import { enqueueWhatsAppJob } from '../../enqueue';
 import type { AxiosError, sendTemplateTypeValidator } from '../../types/jobtypes';
 import { returnBodyComponents } from '../../utils/helper';
@@ -22,7 +23,20 @@ async function sendTemplate(job: Job) {
     category,
   } = job.data as sendTemplateTypeValidator;
 
+  const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+    businessId,
+  })
+    .select('businessId whatsAppEnabled')
+    .lean();
+
+  if (!isWhatsAppConfigEnabled(whatsAppConfig)) {
+    console.warn('[whatsAppCampaign.sendTemplate] skipped — WhatsApp disabled for business', { jobId: job.id, businessId });
+    return { skipped: true, reason: 'WHATSAPP_BUSINESS_DISABLED' };
+  }
+
   const apiEndpoint = category === 'UTILITY' ? 'messages' : 'marketing_messages';
+
+  console.log('endpoint', apiEndpoint);
 
   try {
     const res = await axios.post(

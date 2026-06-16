@@ -29,7 +29,6 @@ import {
   validateWhatAppTemplateSchema,
   whatsAppBusinessConfigSchema,
   whatsAppOrderSchema,
-  whatsAppWalletHistorySchema,
 } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import { zValidator } from '@hono/zod-validator';
@@ -44,15 +43,14 @@ import { z } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { enqueueWhatsAppJob } from '../../queues/enqueue';
+import { recordVisit } from '../../services/visitTracker';
 import { getMerchantConfig } from '../../utils/cacheHelper';
 import { getFutureSeconds } from '../../utils/dateAndTime';
-import { exchangeCodeForToken } from '../../utils/instagram';
 import { type MerchantConfig, razorpayWrapper } from '../../utils/razorpay-wrapper';
 import { respond } from '../../utils/response';
-import whatsAppApiBaseUrl from '../../utils/whatsAppApiBaseUrl/apiPaths';
+import whatsAppApiBaseUrl, { WHATSAPP_BUSINESS_DISABLED_MESSAGE, isWhatsAppConfigEnabled } from '../../utils/whatsAppApiBaseUrl/apiPaths';
 import { qrHandlers } from '../../utils/whatsappWebhookHandlers/allQrHandler';
 import { whatsAppCampaignHandler } from '../../utils/whatsappWebhookHandlers/campaign';
-import { recordVisit } from '../../services/visitTracker';
 import { whatsAppChatHandler } from '../../utils/whatsappWebhookHandlers/chatHandler';
 import { handleChatbotFlow } from '../../utils/whatsappWebhookHandlers/flows';
 import { identifyQrTypeFromMessage, whatsAppEventData, whatsAppUserAndTextMessage } from '../../utils/whatsappWebhookHandlers/helper';
@@ -268,6 +266,9 @@ const whatsappRouter = new Hono()
         if (!whatsAppConfig) {
           return respond(c, 'whatsAppConfigData not found', true, 404, {});
         }
+        if (!isWhatsAppConfigEnabled(whatsAppConfig)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+        }
         const appId = '1166415764661953';
 
         let formData: FormData;
@@ -410,6 +411,10 @@ const whatsappRouter = new Hono()
           );
         }
 
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+        }
+
         const wabaId = whatsAppConfigData.whatsAppAccountId;
 
         if (!wabaId) {
@@ -475,17 +480,6 @@ const whatsappRouter = new Hono()
         businessId,
       });
 
-      if (!whatsAppConfigData) {
-        return c.json(
-          {
-            message: 'whatsAppConfigData not found',
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
-
       const templateNameAlreadyExist = await WhatAppTemplate.findOne({
         templateName: requestData.name,
         businessId: requestData.businessId,
@@ -516,7 +510,27 @@ const whatsappRouter = new Hono()
         if (data.status === 'REJECTED') {
           return c.json(
             {
-              message: 'Your template has been rejected!',
+              message: 'whatsAppConfigData not found',
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+        }
+
+        const templateNameAlreadyExist = await WhatAppTemplate.findOne({
+          templateName: requestData.name,
+          businessId: requestData.businessId,
+        }).select('templateName');
+
+        if (templateNameAlreadyExist) {
+          return c.json(
+            {
+              message: 'Template name already exist',
               err: true,
               data: {},
             },
@@ -605,6 +619,10 @@ const whatsappRouter = new Hono()
         );
       }
 
+      if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+        return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+      }
+
       try {
         const getWhatAppTemplate = await axios.get(`${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${templateid}`, {
           headers: {
@@ -664,6 +682,10 @@ const whatsappRouter = new Hono()
           },
           404,
         );
+      }
+
+      if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+        return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
       }
 
       try {
@@ -740,6 +762,10 @@ const whatsappRouter = new Hono()
           );
         }
 
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+        }
+
         await axios.delete(
           `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${whatsAppConfigData.whatsAppAccountId}/message_templates?name=${template_name}`,
           {
@@ -812,6 +838,11 @@ const whatsappRouter = new Hono()
         if (!whatsAppConfigData) {
           return respond(c, 'whatsAppConfigData not found', true, 404, {});
         }
+
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+        }
+
         const template = (await WhatAppTemplate.findOne({
           businessId,
           templateId,
@@ -1117,6 +1148,10 @@ const whatsappRouter = new Hono()
           );
         }
 
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+        }
+
         const currentTimestamp = Math.floor(Date.now() / 1000); // Current timestamp in seconds
         const thirtyDaysAgoTimestamp = currentTimestamp - 20 * 24 * 60 * 60;
 
@@ -1274,6 +1309,10 @@ const whatsappRouter = new Hono()
             },
             404,
           );
+        }
+
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
         }
 
         const templateById = await WhatAppTemplate.findOne({
@@ -2135,6 +2174,7 @@ const whatsappRouter = new Hono()
             tableQrCustomMessage: requestData.tableQrCustomMessage,
             tableQrCustomUrlText: requestData.tableQrCustomUrlText,
             tableQrCustomUrl: requestData.tableQrCustomUrl,
+            whatsAppEnabled: requestData.whatsAppEnabled,
           },
         },
         {
@@ -2168,6 +2208,7 @@ const whatsappRouter = new Hono()
         tableQrCustomUrlText: z.string().optional(),
         tableQrCustomUrl: z.string().optional(),
         tableQrMessageType: z.enum(['TEXT', 'INTERACTIVE']).optional(),
+        whatsAppEnabled: z.boolean().optional(),
       }),
     ),
     async (c) => {
@@ -2186,6 +2227,9 @@ const whatsappRouter = new Hono()
       }
       if (requestData.tableQrMessageType !== undefined) {
         updateData.tableQrMessageType = requestData.tableQrMessageType;
+      }
+      if (requestData.whatsAppEnabled !== undefined) {
+        updateData.whatsAppEnabled = requestData.whatsAppEnabled;
       }
 
       if (Object.keys(updateData).length === 0) {
@@ -2211,6 +2255,14 @@ const whatsappRouter = new Hono()
       const config = await WhatsAppBusinessConfig.findOne({
         businessId,
       });
+
+      if (!config) {
+        return respond(c, 'whatsAppConfigData not found', true, 404, {});
+      }
+
+      if (!isWhatsAppConfigEnabled(config)) {
+        return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+      }
 
       let payload: any = {
         messaging_product: 'whatsapp',

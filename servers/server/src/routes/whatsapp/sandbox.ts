@@ -1,26 +1,15 @@
-import {
-  WhatAppTemplate,
-  WhatsAppApiDelivery,
-  WhatsAppApiKey,
-  WhatsAppBusinessConfig,
-} from "@hi/db-models";
-import {
-  createWhatsAppApiKeySchema,
-  sandboxSendSchema,
-} from "@hi/db-models/src/validators";
-import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
-import type { Context } from "hono";
-import { Hono } from "hono";
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { z } from "zod";
-import {
-  ClientRoles,
-  requireAuthorization,
-} from "../../../middleware/authorization";
-import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { respond } from "../../utils/response";
-import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
+import { WhatAppTemplate, WhatsAppApiDelivery, WhatsAppApiKey, WhatsAppBusinessConfig } from '@hi/db-models';
+import { createWhatsAppApiKeySchema, sandboxSendSchema } from '@hi/db-models/src/validators';
+import { zValidator } from '@hono/zod-validator';
+import axios from 'axios';
+import type { Context } from 'hono';
+import { Hono } from 'hono';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
+import { authTokenValidator } from '../../../middleware/tokenValidator';
+import { respond } from '../../utils/response';
+import whatsAppApiBaseUrl, { WHATSAPP_BUSINESS_DISABLED_MESSAGE, isWhatsAppConfigEnabled } from '../../utils/whatsAppApiBaseUrl/apiPaths';
 
 /**
  * WhatsApp Sandbox API — single multi-tenant public surface that lets any
@@ -51,24 +40,24 @@ import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 // ─── Key minting helpers ────────────────────────────────────────────────────
 
 const KEY_BYTES = 32; // 256 bits of entropy → no rainbow-table risk
-const KEY_PREFIX = "sk_"; // industry standard marker (Stripe / GitHub style)
+const KEY_PREFIX = 'sk_'; // industry standard marker (Stripe / GitHub style)
 const PREFIX_LENGTH = 11; // "sk_" + 8 chars
 
 /** Generate a new plaintext key plus the storable fields. */
 const mintKey = () => {
-  const random = randomBytes(KEY_BYTES).toString("base64url");
+  const random = randomBytes(KEY_BYTES).toString('base64url');
   const plaintext = `${KEY_PREFIX}${random}`;
   const prefix = plaintext.slice(0, PREFIX_LENGTH);
-  const keyHash = createHash("sha256").update(plaintext).digest("hex");
+  const keyHash = createHash('sha256').update(plaintext).digest('hex');
   return { plaintext, prefix, keyHash };
 };
 
 /** Constant-time SHA-256 comparison — prevents timing oracles. */
 const verifyKey = (plaintext: string, storedHash: string): boolean => {
-  const computed = createHash("sha256").update(plaintext).digest();
+  const computed = createHash('sha256').update(plaintext).digest();
   let stored: Buffer;
   try {
-    stored = Buffer.from(storedHash, "hex");
+    stored = Buffer.from(storedHash, 'hex');
   } catch {
     return false;
   }
@@ -91,42 +80,33 @@ type AuthedKey = {
  * to the structured log, not to the response, to avoid leaking which keys
  * exist or whether they're revoked.
  */
-const authenticatePublic = async (
-  c: Context,
-): Promise<AuthedKey | null> => {
-  const authHeader = c.req.header("Authorization");
-  if (!authHeader || !authHeader.toLowerCase().startsWith("bearer ")) {
-    logSecurity(c, "auth.missing_or_malformed_header");
+const authenticatePublic = async (c: Context): Promise<AuthedKey | null> => {
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
+    logSecurity(c, 'auth.missing_or_malformed_header');
     return null;
   }
 
   const plaintext = authHeader.slice(7).trim();
   // Cap length so a malicious caller can't force a huge hash computation.
-  if (
-    plaintext.length < 20 ||
-    plaintext.length > 200 ||
-    !plaintext.startsWith(KEY_PREFIX)
-  ) {
-    logSecurity(c, "auth.bad_key_shape", { length: plaintext.length });
+  if (plaintext.length < 20 || plaintext.length > 200 || !plaintext.startsWith(KEY_PREFIX)) {
+    logSecurity(c, 'auth.bad_key_shape', { length: plaintext.length });
     return null;
   }
 
   const prefix = plaintext.slice(0, PREFIX_LENGTH);
   const row = await WhatsAppApiKey.findOne({ prefix, isRevoked: false });
   if (!row) {
-    logSecurity(c, "auth.unknown_prefix", { prefix });
+    logSecurity(c, 'auth.unknown_prefix', { prefix });
     return null;
   }
   if (!verifyKey(plaintext, row.keyHash)) {
-    logSecurity(c, "auth.hash_mismatch", { prefix });
+    logSecurity(c, 'auth.hash_mismatch', { prefix });
     return null;
   }
 
   // Fire-and-forget lastUsedAt bump.
-  WhatsAppApiKey.updateOne(
-    { _id: row._id },
-    { $set: { lastUsedAt: Date.now() } },
-  ).catch(() => {
+  WhatsAppApiKey.updateOne({ _id: row._id }, { $set: { lastUsedAt: Date.now() } }).catch(() => {
     /* ignore */
   });
 
@@ -144,24 +124,17 @@ const authenticatePublic = async (
  *
  * Never includes the plaintext key — only its prefix (which is not a secret).
  */
-const logSecurity = (
-  c: Context,
-  event: string,
-  detail: Record<string, unknown> = {},
-) => {
+const logSecurity = (c: Context, event: string, detail: Record<string, unknown> = {}) => {
   // Use console.warn so it surfaces in production logs without crashing if
   // a logger isn't wired. Replace with your structured logger when available.
   console.warn(
     JSON.stringify({
-      kind: "whatsapp.sandbox.security",
+      kind: 'whatsapp.sandbox.security',
       event,
       path: c.req.path,
       method: c.req.method,
-      ua: c.req.header("User-Agent"),
-      ip:
-        c.req.header("x-forwarded-for") ||
-        c.req.header("x-real-ip") ||
-        undefined,
+      ua: c.req.header('User-Agent'),
+      ip: c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || undefined,
       at: new Date().toISOString(),
       ...detail,
     }),
@@ -176,10 +149,7 @@ const logSecurity = (
  * a list of names that were missing or non-string (handed back to client
  * so they can fix without contacting support).
  */
-const translateVariables = (
-  sequence: string[],
-  vars: Record<string, unknown>,
-): { positional: string[]; missing: string[]; invalid: string[] } => {
+const translateVariables = (sequence: string[], vars: Record<string, unknown>): { positional: string[]; missing: string[]; invalid: string[] } => {
   const positional: string[] = [];
   const missing: string[] = [];
   const invalid: string[] = [];
@@ -191,12 +161,12 @@ const translateVariables = (
   for (let i = 0; i < limit; i++) {
     const name = sequence[i];
     const value = vars[name];
-    if (value === undefined || value === null || value === "") {
+    if (value === undefined || value === null || value === '') {
       missing.push(name);
-      positional.push("");
+      positional.push('');
       continue;
     }
-    if (typeof value !== "string") {
+    if (typeof value !== 'string') {
       invalid.push(name);
       positional.push(String(value));
       continue;
@@ -223,62 +193,53 @@ const sandboxRouter = new Hono()
    * Mint a new API key for a business. Plaintext is returned in this
    * response and is NEVER recoverable later. Requires a hipalz admin JWT.
    */
-  .post(
-    "/keys",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.HIPAL_ADMIN]),
-    zValidator("json", createWhatsAppApiKeySchema),
-    async (c) => {
-      const body = c.req.valid("json");
-      const currentUser = c.get("current_user") as
-        | { id?: string }
-        | undefined;
+  .post('/keys', authTokenValidator, requireAuthorization([ClientRoles.HIPAL_ADMIN]), zValidator('json', createWhatsAppApiKeySchema), async (c) => {
+    const body = c.req.valid('json');
+    const currentUser = c.get('current_user') as { id?: string } | undefined;
 
-      const { plaintext, prefix, keyHash } = mintKey();
+    const { plaintext, prefix, keyHash } = mintKey();
 
-      const row = await WhatsAppApiKey.create({
-        businessId: body.businessId,
-        keyHash,
+    const row = await WhatsAppApiKey.create({
+      businessId: body.businessId,
+      keyHash,
+      prefix,
+      label: body.label,
+      scopes: body.scopes ?? ['send', 'templates:read'],
+      isRevoked: false,
+      createdBy: currentUser?.id,
+      date: Date.now(),
+    });
+
+    // Audit trail: who created which key for which business, when.
+    console.info(
+      JSON.stringify({
+        kind: 'whatsapp.sandbox.audit',
+        event: 'key.created',
+        apiKeyId: String(row._id),
+        businessId: String(row.businessId),
         prefix,
-        label: body.label,
-        scopes: body.scopes ?? ["send", "templates:read"],
-        isRevoked: false,
         createdBy: currentUser?.id,
-        date: Date.now(),
-      });
+        at: new Date().toISOString(),
+      }),
+    );
 
-      // Audit trail: who created which key for which business, when.
-      console.info(
-        JSON.stringify({
-          kind: "whatsapp.sandbox.audit",
-          event: "key.created",
-          apiKeyId: String(row._id),
-          businessId: String(row.businessId),
+    return c.json(
+      {
+        err: false,
+        message: 'API key created. Copy the `key` value now — it will not be shown again.',
+        data: {
+          apiKeyId: row._id,
+          key: plaintext,
           prefix,
-          createdBy: currentUser?.id,
-          at: new Date().toISOString(),
-        }),
-      );
-
-      return c.json(
-        {
-          err: false,
-          message:
-            "API key created. Copy the `key` value now — it will not be shown again.",
-          data: {
-            apiKeyId: row._id,
-            key: plaintext,
-            prefix,
-            label: row.label,
-            scopes: row.scopes,
-            businessId: row.businessId,
-            createdAt: row.get("createdAt"),
-          },
+          label: row.label,
+          scopes: row.scopes,
+          businessId: row.businessId,
+          createdAt: row.get('createdAt'),
         },
-        201,
-      );
-    },
-  )
+      },
+      201,
+    );
+  })
 
   /**
    * GET /whatsapp/sandbox/keys?businessId=...
@@ -287,22 +248,19 @@ const sandboxRouter = new Hono()
    * or anything from which the plaintext can be derived.
    */
   .get(
-    "/keys",
+    '/keys',
     authTokenValidator,
     requireAuthorization([ClientRoles.HIPAL_ADMIN]),
-    zValidator(
-      "query",
-      z.object({ businessId: z.string().min(3).max(50) }),
-    ),
+    zValidator('query', z.object({ businessId: z.string().min(3).max(50) })),
     async (c) => {
-      const { businessId } = c.req.valid("query");
+      const { businessId } = c.req.valid('query');
       const rows = await WhatsAppApiKey.find({ businessId })
-        .select("_id prefix label scopes isRevoked lastUsedAt revokedAt date")
+        .select('_id prefix label scopes isRevoked lastUsedAt revokedAt date')
         .sort({ date: -1 })
         .lean();
       return c.json({
         err: false,
-        message: "API keys fetched",
+        message: 'API keys fetched',
         data: rows,
       });
     },
@@ -314,29 +272,23 @@ const sandboxRouter = new Hono()
    * Soft-revoke a key. Idempotent. Admin-only.
    */
   .post(
-    "/keys/:apiKeyId/revoke",
+    '/keys/:apiKeyId/revoke',
     authTokenValidator,
     requireAuthorization([ClientRoles.HIPAL_ADMIN]),
-    zValidator("param", z.object({ apiKeyId: z.string().min(3).max(50) })),
+    zValidator('param', z.object({ apiKeyId: z.string().min(3).max(50) })),
     async (c) => {
       const { apiKeyId } = c.req.param();
-      const currentUser = c.get("current_user") as
-        | { id?: string }
-        | undefined;
+      const currentUser = c.get('current_user') as { id?: string } | undefined;
 
-      const row = await WhatsAppApiKey.findByIdAndUpdate(
-        apiKeyId,
-        { $set: { isRevoked: true, revokedAt: Date.now() } },
-        { new: true },
-      );
+      const row = await WhatsAppApiKey.findByIdAndUpdate(apiKeyId, { $set: { isRevoked: true, revokedAt: Date.now() } }, { new: true });
       if (!row) {
-        return respond(c, "API key not found", true, 404, {});
+        return respond(c, 'API key not found', true, 404, {});
       }
 
       console.info(
         JSON.stringify({
-          kind: "whatsapp.sandbox.audit",
-          event: "key.revoked",
+          kind: 'whatsapp.sandbox.audit',
+          event: 'key.revoked',
           apiKeyId: String(row._id),
           businessId: String(row.businessId),
           prefix: row.prefix,
@@ -347,7 +299,7 @@ const sandboxRouter = new Hono()
 
       return c.json({
         err: false,
-        message: "Key revoked",
+        message: 'Key revoked',
         data: { apiKeyId: row._id, isRevoked: row.isRevoked },
       });
     },
@@ -360,31 +312,29 @@ const sandboxRouter = new Hono()
    * clients read each row's `bodyVariableSequence` to learn what variable
    * names they must send to `/send`.
    */
-  .get("/templates", async (c) => {
+  .get('/templates', async (c) => {
     const auth = await authenticatePublic(c);
-    if (!auth) return respond(c, "Invalid API key", true, 401, {});
+    if (!auth) return respond(c, 'Invalid API key', true, 401, {});
 
-    if (!auth.scopes.includes("templates:read")) {
-      logSecurity(c, "scope.denied", {
+    if (!auth.scopes.includes('templates:read')) {
+      logSecurity(c, 'scope.denied', {
         apiKeyId: auth.apiKeyId,
-        required: "templates:read",
+        required: 'templates:read',
       });
-      return respond(c, "Key is not authorized to read templates", true, 403, {});
+      return respond(c, 'Key is not authorized to read templates', true, 403, {});
     }
 
     const templates = await WhatAppTemplate.find({
       businessId: auth.businessId,
       isDeleted: false,
     })
-      .select(
-        "templateName templateId languageCode category bodyVariableSequence headerVariableSequence footerVariableSequence",
-      )
+      .select('templateName templateId languageCode category bodyVariableSequence headerVariableSequence footerVariableSequence')
       .sort({ createdAt: -1 })
       .lean();
 
     return c.json({
       err: false,
-      message: "Templates fetched",
+      message: 'Templates fetched',
       data: templates,
     });
   })
@@ -395,27 +345,24 @@ const sandboxRouter = new Hono()
    * The main endpoint. Take a templateName + named variables → translate to
    * positional → push to Meta → log + return delivery id.
    */
-  .post("/send", zValidator("json", sandboxSendSchema), async (c) => {
+  .post('/send', zValidator('json', sandboxSendSchema), async (c) => {
     const startedAt = Date.now();
 
     const auth = await authenticatePublic(c);
-    if (!auth) return respond(c, "Invalid API key", true, 401, {});
+    if (!auth) return respond(c, 'Invalid API key', true, 401, {});
 
-    if (!auth.scopes.includes("send")) {
-      logSecurity(c, "scope.denied", {
+    if (!auth.scopes.includes('send')) {
+      logSecurity(c, 'scope.denied', {
         apiKeyId: auth.apiKeyId,
-        required: "send",
+        required: 'send',
       });
-      return respond(c, "Key is not authorized to send messages", true, 403, {});
+      return respond(c, 'Key is not authorized to send messages', true, 403, {});
     }
 
     // Bound the idempotency header so an attacker can't bloat the index or
     // probe for collisions cheaply.
-    const idempotencyKeyRaw = c.req.header("Idempotency-Key");
-    const idempotencyKey =
-      idempotencyKeyRaw && idempotencyKeyRaw.length <= 200
-        ? idempotencyKeyRaw
-        : undefined;
+    const idempotencyKeyRaw = c.req.header('Idempotency-Key');
+    const idempotencyKey = idempotencyKeyRaw && idempotencyKeyRaw.length <= 200 ? idempotencyKeyRaw : undefined;
 
     if (idempotencyKey) {
       const existing = await WhatsAppApiDelivery.findOne({
@@ -425,7 +372,7 @@ const sandboxRouter = new Hono()
       if (existing) {
         return c.json({
           err: false,
-          message: "Idempotent replay — returning the original delivery.",
+          message: 'Idempotent replay — returning the original delivery.',
           data: {
             deliveryId: existing._id,
             status: existing.status,
@@ -435,7 +382,7 @@ const sandboxRouter = new Hono()
       }
     }
 
-    const body = c.req.valid("json");
+    const body = c.req.valid('json');
 
     // 1. Resolve template scoped to this business.
     const template = await WhatAppTemplate.findOne({
@@ -447,15 +394,12 @@ const sandboxRouter = new Hono()
     if (!template) {
       // Same response shape for "doesn't exist" and "belongs to another
       // business" — never leak cross-tenant existence.
-      return respond(c, "Template not found", true, 404, {});
+      return respond(c, 'Template not found', true, 404, {});
     }
 
     // 2. Translate named JSON → positional array.
     const sequence = template.bodyVariableSequence ?? [];
-    const { positional, missing, invalid } = translateVariables(
-      sequence,
-      body.variables,
-    );
+    const { positional, missing, invalid } = translateVariables(sequence, body.variables);
 
     if (missing.length || invalid.length) {
       return c.json(
@@ -489,7 +433,7 @@ const sandboxRouter = new Hono()
         positional,
         referenceId: body.referenceId,
         idempotencyKey,
-        status: "QUEUED",
+        status: 'QUEUED',
         date: startedAt,
       });
     } catch (err: any) {
@@ -501,8 +445,7 @@ const sandboxRouter = new Hono()
         if (existing) {
           return c.json({
             err: false,
-            message:
-              "Idempotent replay (race) — returning the original delivery.",
+            message: 'Idempotent replay (race) — returning the original delivery.',
             data: {
               deliveryId: existing._id,
               status: existing.status,
@@ -523,34 +466,49 @@ const sandboxRouter = new Hono()
         { _id: deliveryDoc._id },
         {
           $set: {
-            status: "FAILED",
-            errorReason: "WABA_CONFIG_MISSING",
-            errorDescription:
-              "Business has no WhatsApp Business Config (phoneId/token).",
+            status: 'FAILED',
+            errorReason: 'WABA_CONFIG_MISSING',
+            errorDescription: 'Business has no WhatsApp Business Config (phoneId/token).',
             durationMs: Date.now() - startedAt,
           },
         },
       );
-      return respond(c, "Business not configured for WhatsApp", true, 422, {
+      return respond(c, 'Business not configured for WhatsApp', true, 422, {
+        deliveryId: deliveryDoc._id,
+      });
+    }
+    if (!isWhatsAppConfigEnabled(config)) {
+      await WhatsAppApiDelivery.updateOne(
+        { _id: deliveryDoc._id },
+        {
+          $set: {
+            status: 'FAILED',
+            errorReason: 'WHATSAPP_BUSINESS_DISABLED',
+            errorDescription: WHATSAPP_BUSINESS_DISABLED_MESSAGE,
+            durationMs: Date.now() - startedAt,
+          },
+        },
+      );
+      return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {
         deliveryId: deliveryDoc._id,
       });
     }
 
     // 5. Compose the Meta template payload.
-    const language = body.language || template.languageCode || "en_GB";
+    const language = body.language || template.languageCode || 'en_GB';
     const components = positional.length
       ? [
           {
-            type: "body",
-            parameters: positional.map((text) => ({ type: "text", text })),
+            type: 'body',
+            parameters: positional.map((text) => ({ type: 'text', text })),
           },
         ]
       : [];
 
     const metaPayload = {
-      messaging_product: "whatsapp",
-      to: body.to.replace(/^\+/, ""),
-      type: "template",
+      messaging_product: 'whatsapp',
+      to: body.to.replace(/^\+/, ''),
+      type: 'template',
       template: {
         name: template.templateName,
         language: { code: language },
@@ -567,20 +525,18 @@ const sandboxRouter = new Hono()
     try {
       const metaRes = await axios.post(url, metaPayload, {
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${config.token}`,
         },
         timeout: 15_000,
       });
-      const metaMessageId = metaRes.data?.messages?.[0]?.id as
-        | string
-        | undefined;
+      const metaMessageId = metaRes.data?.messages?.[0]?.id as string | undefined;
 
       await WhatsAppApiDelivery.updateOne(
         { _id: deliveryDoc._id },
         {
           $set: {
-            status: "SENT",
+            status: 'SENT',
             metaMessageId,
             durationMs: Date.now() - startedAt,
           },
@@ -589,29 +545,25 @@ const sandboxRouter = new Hono()
 
       return c.json({
         err: false,
-        message: "Message dispatched",
+        message: 'Message dispatched',
         data: {
           deliveryId: deliveryDoc._id,
-          status: "SENT",
+          status: 'SENT',
           metaMessageId,
         },
       });
     } catch (err: any) {
-      const errorReason =
-        err?.response?.data?.error?.code?.toString() || "META_REQUEST_FAILED";
+      const errorReason = err?.response?.data?.error?.code?.toString() || 'META_REQUEST_FAILED';
       // Cap error text we echo back so a verbose upstream message can't
       // be used to fingerprint internal infra.
-      const upstreamMsg =
-        err?.response?.data?.error?.message ||
-        err?.message ||
-        "Unknown upstream error";
+      const upstreamMsg = err?.response?.data?.error?.message || err?.message || 'Unknown upstream error';
       const errorDescription = String(upstreamMsg).slice(0, 500);
 
       await WhatsAppApiDelivery.updateOne(
         { _id: deliveryDoc._id },
         {
           $set: {
-            status: "FAILED",
+            status: 'FAILED',
             errorReason,
             errorDescription,
             durationMs: Date.now() - startedAt,
@@ -622,10 +574,10 @@ const sandboxRouter = new Hono()
       return c.json(
         {
           err: true,
-          message: "Upstream send failed",
+          message: 'Upstream send failed',
           data: {
             deliveryId: deliveryDoc._id,
-            status: "FAILED",
+            status: 'FAILED',
             errorReason,
             errorDescription,
           },
@@ -640,42 +592,35 @@ const sandboxRouter = new Hono()
    *
    * Fetch the status of a previously-sent message. Tenant-isolated.
    */
-  .get(
-    "/messages/:deliveryId",
-    zValidator(
-      "param",
-      z.object({ deliveryId: z.string().min(3).max(50) }),
-    ),
-    async (c) => {
-      const auth = await authenticatePublic(c);
-      if (!auth) return respond(c, "Invalid API key", true, 401, {});
+  .get('/messages/:deliveryId', zValidator('param', z.object({ deliveryId: z.string().min(3).max(50) })), async (c) => {
+    const auth = await authenticatePublic(c);
+    if (!auth) return respond(c, 'Invalid API key', true, 401, {});
 
-      const { deliveryId } = c.req.param();
-      const row = await WhatsAppApiDelivery.findOne({
-        _id: deliveryId,
-        businessId: auth.businessId,
-      }).lean();
-      // Same 404 for "not yours" and "doesn't exist" — never leak
-      // cross-tenant existence.
-      if (!row) return respond(c, "Delivery not found", true, 404, {});
+    const { deliveryId } = c.req.param();
+    const row = await WhatsAppApiDelivery.findOne({
+      _id: deliveryId,
+      businessId: auth.businessId,
+    }).lean();
+    // Same 404 for "not yours" and "doesn't exist" — never leak
+    // cross-tenant existence.
+    if (!row) return respond(c, 'Delivery not found', true, 404, {});
 
-      return c.json({
-        err: false,
-        message: "Delivery fetched",
-        data: {
-          deliveryId: row._id,
-          templateName: row.templateName,
-          to: row.to,
-          status: row.status,
-          metaMessageId: row.metaMessageId,
-          referenceId: row.referenceId,
-          errorReason: row.errorReason,
-          errorDescription: row.errorDescription,
-          durationMs: row.durationMs,
-          date: row.date,
-        },
-      });
-    },
-  );
+    return c.json({
+      err: false,
+      message: 'Delivery fetched',
+      data: {
+        deliveryId: row._id,
+        templateName: row.templateName,
+        to: row.to,
+        status: row.status,
+        metaMessageId: row.metaMessageId,
+        referenceId: row.referenceId,
+        errorReason: row.errorReason,
+        errorDescription: row.errorDescription,
+        durationMs: row.durationMs,
+        date: row.date,
+      },
+    });
+  });
 
 export default sandboxRouter;

@@ -1,34 +1,25 @@
-import Hi from "@/assets/svg/hi.svg";
-import MemoizedHeader from "@/components/molecules/header";
-import MiddlePopUp from "@/components/atom/middlePopUp";
-import useBusinessData from "@/components/store/useBusinessData";
-import useWhatsapp, {
-  Step,
-  TemplateSteps,
-} from "@/components/store/useWhatsapp";
-import { lazy, memo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
-import { FaArrowLeft } from "react-icons/fa";
+import Hi from '@/assets/svg/hi.svg';
+import MiddlePopUp from '@/components/atom/middlePopUp';
+import MemoizedHeader from '@/components/molecules/header';
+import useBusinessData from '@/components/store/useBusinessData';
+import useWhatsapp, { Step, TemplateSteps } from '@/components/store/useWhatsapp';
+import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
+import { lazy, memo, useCallback } from 'react';
+import { FaArrowLeft } from 'react-icons/fa';
+import { FiInfo } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
-const WhatzappPayment = lazy(
-  () => import("@/components/templates/whatsappTemplates/whatzappPayment"),
-);
-const CreateEditTemplate = lazy(
-  () => import("@/components/templates/whatsappTemplates/createEditTemplate"),
-);
-const NotifyAndWallet = lazy(
-  () => import("@/components/templates/whatsappTemplates/notifyAndWallet"),
-);
-const WalletHistory = lazy(
-  () => import("@/components/templates/whatsappTemplates/walletHistory"),
-);
-const WhatzappDashboard = lazy(
-  () => import("@/components/templates/whatsappTemplates/whatzappDashboard"),
-);
-const WhyNotEditPopup = lazy(
-  () => import("@/components/templates/whatsappTemplates/WhyNotEditPopup"),
-);
+// ─── WHATSAPP UNDER-REVIEW GATE ─────────────────────────────────────────────
+// Mirrors the flag in the business-side entry. Flip back to `false` once Meta
+// clears the WhatsApp Business Account.
+const WHATSAPP_UNDER_REVIEW = false;
+
+const WhatzappPayment = lazy(() => import('@/components/templates/whatsappTemplates/whatzappPayment'));
+const CreateEditTemplate = lazy(() => import('@/components/templates/whatsappTemplates/createEditTemplate'));
+const NotifyAndWallet = lazy(() => import('@/components/templates/whatsappTemplates/notifyAndWallet'));
+const WalletHistory = lazy(() => import('@/components/templates/whatsappTemplates/walletHistory'));
+const WhatzappDashboard = lazy(() => import('@/components/templates/whatsappTemplates/whatzappDashboard'));
+const WhyNotEditPopup = lazy(() => import('@/components/templates/whatsappTemplates/WhyNotEditPopup'));
 
 const MemoWhatzapp = () => {
   const step = useWhatsapp((s) => s.step);
@@ -49,11 +40,7 @@ const MemoWhatzapp = () => {
       switch (templateSteps) {
         case TemplateSteps.MODIFY:
         case TemplateSteps.CREATE_EDIT:
-          if (
-            step === Step.TRANSACTIONS ||
-            step === Step.WALLET_HISTORY ||
-            step === Step.CHATS
-          ) {
+          if (step === Step.TRANSACTIONS || step === Step.WALLET_HISTORY || step === Step.CHATS) {
             setTemplateSteps(TemplateSteps.CREATE_EDIT);
             setStep(Step.CREATE_EDIT);
           } else {
@@ -102,23 +89,49 @@ const MemoWhatzapp = () => {
           break;
       }
     }
-  }, [
-    setStep,
-    step,
-    templateSteps,
-    setTemplateSteps,
-    navigate,
-    businessData,
-    openAnalytics,
-    setOpenAnalytics,
-    createEditFlow,
-    setCreateEditFlow,
-  ]);
+  }, [setStep, step, templateSteps, setTemplateSteps, navigate, businessData, openAnalytics, setOpenAnalytics, createEditFlow, setCreateEditFlow]);
+
+  if (WHATSAPP_UNDER_REVIEW) {
+    return (
+      <section>
+        <div className="whatzapp_gradient_background absolute top-20 z-50 w-full rounded-lg">
+          <MemoizedHeader title="WhatzApp" leftIcon={<FaArrowLeft />} rightImage={Hi} onBack={() => navigate(-1)} headingColor="white" />
+        </div>
+        <MiddlePopUp show onlyPopUp>
+          <div className="w-[min(420px,90vw)] overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-4 text-white">
+              <FiInfo className="text-2xl" />
+              <h3 className="text-lg font-semibold">Application Update In Progress</h3>
+            </div>
+            <div className="px-6 py-5">
+              <p className="text-sm leading-relaxed text-gray-700">Your WhatsApp Business application is currently under review with Meta.</p>
+              <p className="mt-3 text-sm leading-relaxed text-gray-700">
+                To continue using WhatsApp services, please reach out to your administrator to upgrade your application for security and policy
+                compliance.
+              </p>
+              <p className="mt-4 text-sm font-medium text-gray-900">Thank you for your patience and cooperation.</p>
+              <p className="mt-3 text-xs italic text-gray-500">— Hipalz Team</p>
+            </div>
+            <div className="flex items-center justify-end border-t bg-gray-50 px-6 py-3">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </MiddlePopUp>
+      </section>
+    );
+  }
+
   return (
     <section>
       <div>
         {/* Header */}
-        <div className="absolute top-20 z-50 w-full rounded-lg whatzapp_gradient_background">
+        <div className="whatzapp_gradient_background absolute top-20 z-50 w-full rounded-lg">
           <MemoizedHeader
             title="WhatzApp"
             leftIcon={<FaArrowLeft />}
@@ -134,10 +147,7 @@ const MemoWhatzapp = () => {
         {step === Step.CREATE_EDIT && <CreateEditTemplate />}
         {step === Step.TRANSACTIONS && <WhatzappPayment />}
         {notEditPopup && (
-          <MiddlePopUp
-            show={notEditPopup}
-            onClose={() => setNotEditPopup(false)}
-          >
+          <MiddlePopUp show={notEditPopup} onClose={() => setNotEditPopup(false)}>
             <WhyNotEditPopup />
           </MiddlePopUp>
         )}
