@@ -4,6 +4,7 @@ import {
   UserAnalytic,
   WhatsAppBusinessConfig,
 } from "@hi/db-models";
+import { isWhatsAppConfigEnabled } from "../whatsAppApiBaseUrl/apiPaths";
 import type { QrParseResult, QrType } from "./whatsAppHandlerTypes";
 //@ts-ignore
 async function whatsAppEventData(whatsAppWebhookEventBody) {
@@ -19,6 +20,26 @@ async function whatsAppEventData(whatsAppWebhookEventBody) {
   const whatsAppBusinessConfigData = await WhatsAppBusinessConfig.findOne({
     phoneId: phon_no_id,
   });
+
+  if (
+    whatsAppBusinessConfigData &&
+    !isWhatsAppConfigEnabled(whatsAppBusinessConfigData)
+  ) {
+    console.warn("[WA-Webhook] ignored for disabled business", {
+      businessId: whatsAppBusinessConfigData.businessId?.toString(),
+      phoneId: phon_no_id,
+    });
+
+    return {
+      entry,
+      changes,
+      value,
+      messages,
+      contacts,
+      statuses,
+      whatsAppBusinessConfigData: null,
+    };
+  }
 
   return {
     entry,

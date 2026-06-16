@@ -54,8 +54,8 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl, {
-  META_PAUSED_MESSAGE,
-  WHATSAPP_META_PAUSED,
+  WHATSAPP_BUSINESS_DISABLED_MESSAGE,
+  isWhatsAppConfigEnabled,
 } from "../../utils/whatsAppApiBaseUrl/apiPaths";
 import { qrHandlers } from "../../utils/whatsappWebhookHandlers/allQrHandler";
 import { whatsAppCampaignHandler } from "../../utils/whatsappWebhookHandlers/campaign";
@@ -278,10 +278,6 @@ const whatsappRouter = new Hono()
     }),
     zValidator("param", z.object({ businessId: z.string().min(3).max(26) })),
     async (c) => {
-      // [META-PAUSED] Skip Meta media-upload while account is under review.
-      if (WHATSAPP_META_PAUSED) {
-        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
-      }
       try {
         const { businessId } = c.req.param();
         console.log("[media-upload] start", { businessId });
@@ -291,6 +287,9 @@ const whatsappRouter = new Hono()
         });
         if (!whatsAppConfig) {
           return respond(c, "whatsAppConfigData not found", true, 404, {});
+        }
+        if (!isWhatsAppConfigEnabled(whatsAppConfig)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
         }
         const appId = "1166415764661953";
 
@@ -466,6 +465,10 @@ const whatsappRouter = new Hono()
           );
         }
 
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+        }
+
         const wabaId = whatsAppConfigData.whatsAppAccountId;
 
         if (!wabaId) {
@@ -532,10 +535,6 @@ const whatsappRouter = new Hono()
     "/template",
     zValidator("json", validateWhatAppTemplateSchema),
     async (c) => {
-      // [META-PAUSED] Template creation submits to Meta — skip while under review.
-      if (WHATSAPP_META_PAUSED) {
-        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
-      }
       try {
         const requestData = await c.req.json();
         const {
@@ -557,6 +556,10 @@ const whatsappRouter = new Hono()
             },
             404,
           );
+        }
+
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
         }
 
         const templateNameAlreadyExist = await WhatAppTemplate.findOne({
@@ -680,6 +683,10 @@ const whatsappRouter = new Hono()
         );
       }
 
+      if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+        return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+      }
+
       try {
         const getWhatAppTemplate = await axios.get(
           `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${templateid}`,
@@ -727,10 +734,6 @@ const whatsappRouter = new Hono()
     zValidator("json", validateWhatAppTemplateSchema.partial()),
 
     async (c) => {
-      // [META-PAUSED] Template edit submits to Meta — skip while under review.
-      if (WHATSAPP_META_PAUSED) {
-        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
-      }
       const { templateid, businessId } = c.req.param();
       const requestData = await c.req.json();
 
@@ -747,6 +750,10 @@ const whatsappRouter = new Hono()
           },
           404,
         );
+      }
+
+      if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+        return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
       }
 
       try {
@@ -806,10 +813,6 @@ const whatsappRouter = new Hono()
     ),
 
     async (c) => {
-      // [META-PAUSED] Template deletion calls Meta — skip while under review.
-      if (WHATSAPP_META_PAUSED) {
-        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
-      }
       try {
         const { template_name, templateid, businessId } = c.req.param();
 
@@ -826,6 +829,10 @@ const whatsappRouter = new Hono()
             },
             404,
           );
+        }
+
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
         }
 
         await axios.delete(
@@ -887,10 +894,6 @@ const whatsappRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.MANAGER]),
     async (c) => {
-      // [META-PAUSED] Campaigns enqueue jobs that dispatch to Meta — skip entirely.
-      if (WHATSAPP_META_PAUSED) {
-        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
-      }
       try {
         const requestData = await c.req.json();
         const {
@@ -914,6 +917,11 @@ const whatsappRouter = new Hono()
         if (!whatsAppConfigData) {
           return respond(c, "whatsAppConfigData not found", true, 404, {});
         }
+
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+        }
+
         const template = (await WhatAppTemplate.findOne({
           businessId,
           templateId,
@@ -1238,6 +1246,10 @@ const whatsappRouter = new Hono()
           );
         }
 
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+        }
+
         const currentTimestamp = Math.floor(Date.now() / 1000); // Current timestamp in seconds
         const thirtyDaysAgoTimestamp = currentTimestamp - 20 * 24 * 60 * 60;
 
@@ -1398,6 +1410,10 @@ const whatsappRouter = new Hono()
             },
             404,
           );
+        }
+
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
         }
 
         const templateById = await WhatAppTemplate.findOne({
@@ -2319,6 +2335,7 @@ const whatsappRouter = new Hono()
               tableQrCustomMessage: requestData.tableQrCustomMessage,
               tableQrCustomUrlText: requestData.tableQrCustomUrlText,
               tableQrCustomUrl: requestData.tableQrCustomUrl,
+              whatsAppEnabled: requestData.whatsAppEnabled,
             },
           },
           {
@@ -2353,6 +2370,7 @@ const whatsappRouter = new Hono()
         tableQrCustomUrlText: z.string().optional(),
         tableQrCustomUrl: z.string().optional(),
         tableQrMessageType: z.enum(["TEXT", "INTERACTIVE"]).optional(),
+        whatsAppEnabled: z.boolean().optional(),
       }),
     ),
 
@@ -2372,6 +2390,9 @@ const whatsappRouter = new Hono()
       }
       if (requestData.tableQrMessageType !== undefined) {
         updateData.tableQrMessageType = requestData.tableQrMessageType;
+      }
+      if (requestData.whatsAppEnabled !== undefined) {
+        updateData.whatsAppEnabled = requestData.whatsAppEnabled;
       }
 
       if (Object.keys(updateData).length === 0) {
@@ -2396,10 +2417,6 @@ const whatsappRouter = new Hono()
     "/send-messages",
 
     async (c) => {
-      // [META-PAUSED] Direct chat send goes to Meta — skip while under review.
-      if (WHATSAPP_META_PAUSED) {
-        return respond(c, META_PAUSED_MESSAGE, true, 503, {});
-      }
       const body = await c.req.json();
       const {
         text,
@@ -2416,6 +2433,14 @@ const whatsappRouter = new Hono()
       const config = await WhatsAppBusinessConfig.findOne({
         businessId,
       });
+
+      if (!config) {
+        return respond(c, "whatsAppConfigData not found", true, 404, {});
+      }
+
+      if (!isWhatsAppConfigEnabled(config)) {
+        return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
+      }
 
       let payload: any = {
         messaging_product: "whatsapp",

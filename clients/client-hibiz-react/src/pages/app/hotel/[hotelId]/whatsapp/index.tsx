@@ -15,7 +15,7 @@ import { FiInfo } from "react-icons/fi";
 // ─── WHATSAPP UNDER-REVIEW GATE ─────────────────────────────────────────────
 // Mirrors the flag in the business-side entry. Flip back to `false` once Meta
 // clears the WhatsApp Business Account.
-const WHATSAPP_UNDER_REVIEW = true;
+const WHATSAPP_UNDER_REVIEW = false;
 
 const WhatzappPayment = lazy(
   () => import("@/components/templates/whatsappTemplates/whatzappPayment"),

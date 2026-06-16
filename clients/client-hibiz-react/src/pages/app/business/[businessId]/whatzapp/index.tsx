@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom';
 // While our Meta WhatsApp Business Account is under review, the entire
 // WhatsApp module is rendered as a single notice screen. Flip this back to
 // `false` once Meta clears the account; nothing else needs to change.
-const WHATSAPP_UNDER_REVIEW = true;
+const WHATSAPP_UNDER_REVIEW = false;
 
 const PendingStatusStep = lazy(() => import('@/components/templates/whatsappTemplates/pendingStatus'));
 const WhatzappPayment = lazy(() => import('@/components/templates/whatsappTemplates/whatzappPayment'));

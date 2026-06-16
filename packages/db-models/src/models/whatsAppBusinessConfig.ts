@@ -105,6 +105,11 @@ const whatsAppBusinessConfigSchema =
         required: false,
         default: false,
       },
+      whatsAppEnabled: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
       outLetId: {
         type: ObjectId,
         required: false,

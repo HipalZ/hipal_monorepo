@@ -21,8 +21,8 @@ import {
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl, {
-  META_PAUSED_MESSAGE,
-  WHATSAPP_META_PAUSED,
+  WHATSAPP_BUSINESS_DISABLED_MESSAGE,
+  isWhatsAppConfigEnabled,
 } from "../../utils/whatsAppApiBaseUrl/apiPaths";
 
 /**
@@ -399,12 +399,6 @@ const sandboxRouter = new Hono()
    * positional → push to Meta → log + return delivery id.
    */
   .post("/send", zValidator("json", sandboxSendSchema), async (c) => {
-    // [META-PAUSED] External sandbox clients (BMH etc.) trigger Meta sends —
-    // skip while account is under review. Returns 503 with a clear message so
-    // partner integrations can surface it to their dashboards.
-    if (WHATSAPP_META_PAUSED) {
-      return respond(c, META_PAUSED_MESSAGE, true, 503, {});
-    }
     const startedAt = Date.now();
 
     const auth = await authenticatePublic(c);
@@ -541,6 +535,22 @@ const sandboxRouter = new Hono()
         },
       );
       return respond(c, "Business not configured for WhatsApp", true, 422, {
+        deliveryId: deliveryDoc._id,
+      });
+    }
+    if (!isWhatsAppConfigEnabled(config)) {
+      await WhatsAppApiDelivery.updateOne(
+        { _id: deliveryDoc._id },
+        {
+          $set: {
+            status: "FAILED",
+            errorReason: "WHATSAPP_BUSINESS_DISABLED",
+            errorDescription: WHATSAPP_BUSINESS_DISABLED_MESSAGE,
+            durationMs: Date.now() - startedAt,
+          },
+        },
+      );
+      return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {
         deliveryId: deliveryDoc._id,
       });
     }

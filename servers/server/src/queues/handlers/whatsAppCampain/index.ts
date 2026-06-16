@@ -1,4 +1,4 @@
-import { WhatsAppAnalyticsUser } from "@hi/db-models";
+import { WhatsAppAnalyticsUser, WhatsAppBusinessConfig } from "@hi/db-models";
 import axios from "axios";
 import type { Job } from "bullmq";
 import type {
@@ -6,20 +6,12 @@ import type {
   sendTemplateTypeValidator,
 } from "../../types/jobtypes";
 import { returnBodyComponents } from "../../utils/helper";
-import { WHATSAPP_META_PAUSED } from "../../../utils/whatsAppApiBaseUrl/apiPaths";
+import {
+  isWhatsAppConfigEnabled,
+} from "../../../utils/whatsAppApiBaseUrl/apiPaths";
 // import { enqueueWhatsAppJob } from "../../enqueue";
 
 async function sendTemplate(job: Job) {
-  // [META-PAUSED] Worker-level guard. If a job is already in the queue when
-  // the kill switch is flipped on, drop it cleanly instead of failing N times
-  // against Meta — BullMQ would otherwise retry until `attempts` is exhausted.
-  if (WHATSAPP_META_PAUSED) {
-    console.warn(
-      "[whatsAppCampaign.sendTemplate] skipped — WHATSAPP_META_PAUSED is ON",
-      { jobId: job.id },
-    );
-    return { skipped: true, reason: "WHATSAPP_META_PAUSED" };
-  }
   const {
     components,
     to,
@@ -35,6 +27,20 @@ async function sendTemplate(job: Job) {
     userId,
     category,
   } = job.data as sendTemplateTypeValidator;
+
+  const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+    businessId,
+  })
+    .select("businessId whatsAppEnabled")
+    .lean();
+
+  if (!isWhatsAppConfigEnabled(whatsAppConfig)) {
+    console.warn(
+      "[whatsAppCampaign.sendTemplate] skipped — WhatsApp disabled for business",
+      { jobId: job.id, businessId },
+    );
+    return { skipped: true, reason: "WHATSAPP_BUSINESS_DISABLED" };
+  }
 
   const apiEndpoint =
     category === "UTILITY" ? "messages" : "marketing_messages";
