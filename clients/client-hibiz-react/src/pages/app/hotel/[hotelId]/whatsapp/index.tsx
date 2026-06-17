@@ -6,6 +6,8 @@ import useWhatsapp, {
   Step,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
+import WhatsAppLoader from "@/components/templates/whatsappTemplates/whatsappLoader";
+import { useCheckRegistration } from "@/hooks/useTemplates";
 import { lazy, memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
@@ -13,9 +15,9 @@ import { FaArrowLeft } from "react-icons/fa";
 import { FiInfo } from "react-icons/fi";
 
 // ─── WHATSAPP UNDER-REVIEW GATE ─────────────────────────────────────────────
-// Mirrors the flag in the business-side entry. Flip back to `false` once Meta
-// clears the WhatsApp Business Account.
-const WHATSAPP_UNDER_REVIEW = false;
+// The WhatsApp module opens only when the WABA config has whatsAppEnabled=true.
+const WHATSAPP_DISABLED_MESSAGE =
+  "Your WhatsApp account is currently under review. Please contact the administrator to enable your account.";
 
 const WhatzappPayment = lazy(
   () => import("@/components/templates/whatsappTemplates/whatzappPayment"),
@@ -37,6 +39,7 @@ const WhyNotEditPopup = lazy(
 );
 
 const MemoWhatzapp = () => {
+  const { isLoading } = useCheckRegistration();
   const step = useWhatsapp((s) => s.step);
   const setStep = useWhatsapp((s) => s.setStep);
   const notEditPopup = useWhatsapp((s) => s.notEditPopup);
@@ -48,6 +51,7 @@ const MemoWhatzapp = () => {
   const openAnalytics = useWhatsappTempStore((s) => s.openAnalytics);
   const setCreateEditFlow = useWhatsappTempStore((s) => s.setCreateEditFlow);
   const createEditFlow = useWhatsappTempStore((s) => s.createEditFlow);
+  const whatsAppEnabled = useWhatsappTempStore((s) => s.whatsAppEnabled);
   const navigate = useNavigate();
 
   const handleBack = useCallback(() => {
@@ -121,7 +125,11 @@ const MemoWhatzapp = () => {
     setCreateEditFlow,
   ]);
 
-  if (WHATSAPP_UNDER_REVIEW) {
+  if (isLoading || whatsAppEnabled === null) {
+    return <WhatsAppLoader />;
+  }
+
+  if (!whatsAppEnabled) {
     return (
       <section>
         <div className="absolute top-20 z-50 w-full rounded-lg whatzapp_gradient_background">
@@ -141,10 +149,10 @@ const MemoWhatzapp = () => {
             </div>
             <div className="px-6 py-5">
               <p className="text-sm leading-relaxed text-gray-700">
-                Your WhatsApp Business application is currently under review with Meta.
+                {WHATSAPP_DISABLED_MESSAGE}
               </p>
               <p className="mt-3 text-sm leading-relaxed text-gray-700">
-                To continue using WhatsApp services, please reach out to your administrator to upgrade your application for security and policy compliance.
+                Once enabled, campaign, template, chat, and WhatsApp automation actions will become available here.
               </p>
               <p className="mt-4 text-sm font-medium text-gray-900">
                 Thank you for your patience and cooperation.

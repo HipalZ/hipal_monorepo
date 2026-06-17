@@ -152,6 +152,9 @@ interface ITempStore {
   whatzappStatus: boolean;
   setWhatzappStatus: (value: boolean) => void;
 
+  whatsAppEnabled: boolean | null;
+  setWhatsAppEnabled: (value: boolean | null) => void;
+
   termsAccepted: boolean;
   setTermsAccepted: (value: boolean) => void;
 
@@ -270,6 +273,10 @@ export const useWhatsappTempStore = create<ITempStore>((set) => ({
 
   whatzappStatus: false,
   setWhatzappStatus: (value: boolean) => set({ whatzappStatus: value }),
+
+  whatsAppEnabled: null,
+  setWhatsAppEnabled: (value: boolean | null) =>
+    set({ whatsAppEnabled: value }),
 
   checkReg: false,
   setCheckReg: (value: boolean) => set({ checkReg: value }),
