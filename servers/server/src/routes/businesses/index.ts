@@ -580,7 +580,14 @@ const businessesRouter = new Hono()
 
       if (!outLetInfo) return respond(c, "outletInfo not found", true, 404, {});
 
-      return respond(c, "outletInfo found", false, 200, outLetInfo);
+      const businessSettings = await BusinessSettings.findOne({ businessId })
+        .select("notificationSound")
+        .lean();
+
+      return respond(c, "outletInfo found", false, 200, {
+        ...outLetInfo.toObject(),
+        notificationSound: businessSettings?.notificationSound || "order",
+      });
     },
   )
   .get(

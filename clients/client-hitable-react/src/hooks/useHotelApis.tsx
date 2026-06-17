@@ -10,6 +10,7 @@ import { useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
 import { useError } from '../components/store/useError';
+import { playSelectedNotificationSound } from '@/utils/notificationSound';
 interface IHotelRoomData {
   businessId: string;
   roomName: string;
@@ -125,14 +126,6 @@ export type UseRoomAlertsResult = UseQueryResult<Alert[], unknown> & {
  * Used as fallback when FCM push notification sound doesn't work,
  * or when device doesn't support FCM at all (no Google Play Services).
  */
-const playAlertSound = () => {
-  try {
-    const audio = new Audio('/order.mp3');
-    audio.volume = 1.0;
-    audio.play().catch(() => {});
-  } catch {}
-};
-
 export const useRoomAlerts = (): UseRoomAlertsResult => {
   const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
   const isHotel = outletType === 'HOTEL';
@@ -161,7 +154,7 @@ export const useRoomAlerts = (): UseRoomAlertsResult => {
 
       // If no push token (FCM not working) and new alerts appeared, play sound
       if (!pushToken && data.length > prevCountRef.current && prevCountRef.current > 0) {
-        playAlertSound();
+        playSelectedNotificationSound();
       }
       prevCountRef.current = data.length;
 

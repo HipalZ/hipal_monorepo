@@ -10,6 +10,8 @@ export const RegisterType = [
   "OTHER",
 ] as const;
 
+export const NotificationSound = ["order", "alarm"] as const;
+
 export const BusinessSettingsSchema = z.object({
   businessId: ObjectIdSchema,
   registerName: z.string().min(4).max(50).optional(),
@@ -26,6 +28,7 @@ export const BusinessSettingsSchema = z.object({
   razorpayKeyId: z.string().min(4).max(100).optional(),
   razorpayKeySecret: z.string().min(4).max(100).optional(),
   razorpayWebhookSecret: z.string().min(4).max(100).optional(),
+  notificationSound: z.enum(NotificationSound).default("order").optional(),
   isActive: z.boolean().default(true).optional(),
 });
 

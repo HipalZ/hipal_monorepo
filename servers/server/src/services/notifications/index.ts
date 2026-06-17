@@ -1,4 +1,10 @@
 import { DeviceToken } from "@hi/db-models";
+import {
+  getNotificationChannelId,
+  normalizeNotificationSound,
+  resolveBusinessNotificationOptions,
+  type NotificationChannelGroup,
+} from "./sound";
 
 const admin = require("firebase-admin");
 
@@ -8,6 +14,7 @@ type PushPlatform = "android" | "ios" | "web" | "unknown";
 export type PushTarget = {
   _id?: unknown;
   token: string;
+  businessId?: unknown;
   provider?: PushProvider;
   platform?: PushPlatform;
   notification?: boolean;
@@ -15,6 +22,7 @@ export type PushTarget = {
 
 type PersistedPushTarget = Omit<PushTarget, "token"> & {
   token?: string;
+  businessId?: unknown;
 };
 
 export type PushPayload = {
@@ -23,6 +31,7 @@ export type PushPayload = {
   data?: Record<string, string>;
   sound?: string;
   channelId?: string;
+  channelGroup?: NotificationChannelGroup;
 };
 
 type PushResult = {
@@ -81,6 +90,7 @@ const sendExpoPush = async (target: PushTarget, payload: PushPayload) => {
 };
 
 const sendFirebasePush = async (target: PushTarget, payload: PushPayload) => {
+  const sound = normalizeNotificationSound(payload.sound);
   return getFirebaseMessaging().send({
     token: target.token,
     notification: {
@@ -90,8 +100,8 @@ const sendFirebasePush = async (target: PushTarget, payload: PushPayload) => {
     data: payload.data,
     android: {
       notification: {
-        channel_id: payload.channelId || "custom_channel_id",
-        sound: payload.sound || "order",
+        channel_id: payload.channelId || getNotificationChannelId(sound),
+        sound,
       },
     },
   });
@@ -110,19 +120,31 @@ export const sendPushToToken = async (
   payload: PushPayload,
 ): Promise<PushResult> => {
   const provider = resolveProvider(target);
+  const resolvedPayload = { ...payload };
+
+  if (!resolvedPayload.sound || !resolvedPayload.channelId) {
+    const businessId = payload.data?.businessId || target.businessId?.toString();
+    const options = await resolveBusinessNotificationOptions(
+      businessId,
+      payload.channelGroup,
+    );
+
+    resolvedPayload.sound = resolvedPayload.sound || options.sound;
+    resolvedPayload.channelId = resolvedPayload.channelId || options.channelId;
+  }
 
   try {
     const response =
       provider === "expo"
-        ? await sendExpoPush(target, payload)
-        : await sendFirebasePush(target, payload);
+        ? await sendExpoPush(target, resolvedPayload)
+        : await sendFirebasePush(target, resolvedPayload);
 
     console.log("Push notification sent:", {
       provider,
       token: target.token,
-      channelId: payload.channelId,
-      sound: payload.sound,
-      type: payload.data?.type,
+      channelId: resolvedPayload.channelId,
+      sound: resolvedPayload.sound,
+      type: resolvedPayload.data?.type,
     });
 
     return {
@@ -136,8 +158,8 @@ export const sendPushToToken = async (
     console.error("Push notification failed:", {
       provider,
       token: target.token,
-      channelId: payload.channelId,
-      sound: payload.sound,
+      channelId: resolvedPayload.channelId,
+      sound: resolvedPayload.sound,
       error: message,
     });
 
@@ -174,7 +196,21 @@ export const sendPushToTokens = async (
     (target): target is PushTarget =>
       target.notification !== false && typeof target.token === "string",
   );
+  const resolvedPayload = { ...payload };
+
+  if (!resolvedPayload.sound || !resolvedPayload.channelId) {
+    const businessId =
+      payload.data?.businessId || enabledTargets[0]?.businessId?.toString();
+    const options = await resolveBusinessNotificationOptions(
+      businessId,
+      payload.channelGroup,
+    );
+
+    resolvedPayload.sound = resolvedPayload.sound || options.sound;
+    resolvedPayload.channelId = resolvedPayload.channelId || options.channelId;
+  }
+
   return Promise.all(
-    enabledTargets.map((target) => sendPushToToken(target, payload)),
+    enabledTargets.map((target) => sendPushToToken(target, resolvedPayload)),
   );
 };

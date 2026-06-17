@@ -154,11 +154,15 @@ const settingsRouter = new Hono()
           ifscCode: requestData.ifscCode,
           branchName: requestData.branchName,
           beneficiaryName: requestData.beneficiaryName,
+          notificationSound: requestData.notificationSound,
         };
+        const cleanedUpdateData = Object.fromEntries(
+          Object.entries(updateData).filter(([, value]) => value !== undefined),
+        );
 
         const updateSetting = await BusinessSettings.findByIdAndUpdate(
           settingsId,
-          updateData,
+          cleanedUpdateData,
           { new: true },
         );
 

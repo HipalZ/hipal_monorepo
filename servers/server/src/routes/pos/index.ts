@@ -34,6 +34,7 @@ import { z } from 'zod';
 import { generateBillInvoice, generateSplitBillInvoice } from '../../services/bill';
 import calculateSubtotal from '../../services/calculateSubtotal';
 import assignKitchenToDish from '../../services/dishZoneKitchen';
+import { sendPushToToken } from '../../services/notifications';
 import {
   applyCoinToVariantBill,
   applyCouponToVariantBill,
@@ -69,7 +70,6 @@ import { convertToPetpoojaCart } from '../../utils/helper';
 import { sendBillPrintEvent, sendKOTPrintEvent } from '../../utils/kot';
 import { posApiPaths } from '../../utils/posConfig/petPooja';
 import { respond } from '../../utils/response';
-const admin = require('firebase-admin');
 export const generateTenDigitCode = (): string => {
   const min = 1000000000; // Minimum 10-digit number
   const max = 9999999999; // Maximum 10-digit number
@@ -136,27 +136,19 @@ export const saveKotOrder = async (
   };
 };
 
-export const sendPushNotification = async (token: string, customerName: string, tableName: string) => {
-  const pushMessage = {
-    token: token, // or use 'topic' if you're sending to a topic
-    notification: {
+export const sendPushNotification = async (token: string, businessId: string, customerName: string, tableName: string) => {
+  return sendPushToToken(
+    { token },
+    {
       title: 'New Order',
       body: `New order received from ${customerName} for table ${tableName}`,
-    },
-    android: {
-      notification: {
-        channel_id: 'custom_channel_id',
-        sound: 'order',
+      data: {
+        type: 'POS_ORDER_ALERT',
+        businessId,
+        tableName,
       },
     },
-  };
-
-  try {
-    const response = await admin.messaging().send(pushMessage);
-    return { success: true, response };
-  } catch (error) {
-    console.error('Error sending FCM message:', error);
-  }
+  );
 };
 
 const saveOrder = async (
@@ -714,7 +706,7 @@ const posRouter = new Hono()
         if (registrationToken.length > 0) {
           for (const obj of registrationToken) {
             if (obj.notification) {
-              sendPushNotification(obj.token, userData.name as string, tableName);
+              sendPushNotification(obj.token, businessId, userData.name as string, tableName);
             }
           }
         }

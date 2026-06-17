@@ -2,8 +2,8 @@ import { Cart, DeviceToken } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { sendPushToTokens } from "../../services/notifications";
 import { respond } from "../../utils/response";
-const admin = require("firebase-admin");
 
 const timePeriods = [
   { name: "Morning", start: 4, end: 10 },
@@ -264,47 +264,19 @@ const cartRouter = new Hono()
       }
       const registrationToken = await DeviceToken.find({
         businessId: body.businessId,
+        notification: true,
       });
 
       if (registrationToken.length > 0) {
-        for (const obj of registrationToken) {
-          if (obj.notification) {
-            const pushMessage = {
-              token: obj.token,
-              notification: {
-                title: "Please accept the order !!",
-                body: `${body.tableName?.slice(-2)} `,
-              },
-              android: {
-                notification: {
-                  channel_id: "custom_channel_id",
-                  sound: "order",
-                },
-              },
-            };
-
-            admin
-              .messaging()
-              .send(pushMessage)
-              .then((response: unknown) => {
-                return c.json({
-                  message: "FCM message sent successfully",
-                  err: false,
-                  data: response,
-                });
-              })
-              .catch((err: Error) => {
-                return c.json(
-                  {
-                    message: "Error sending FCM message",
-                    err: true,
-                    data: {},
-                  },
-                  400,
-                );
-              });
-          }
-        }
+        await sendPushToTokens(registrationToken, {
+          title: "Please accept the order !!",
+          body: `${body.tableName?.slice(-2)} `,
+          data: {
+            type: "CART_ORDER_ALERT",
+            businessId: body.businessId,
+            tableName: body.tableName || "",
+          },
+        });
       }
 
       return respond(c, "cart created successfully", false, 201, {

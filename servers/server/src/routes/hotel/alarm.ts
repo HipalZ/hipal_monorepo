@@ -16,9 +16,6 @@ const alarmPayload = z.object({
   notifyFrontOffice: z.boolean().optional().default(true),
 });
 
-const WAKE_UP_NOTIFICATION_CHANNEL_ID = 'wake_up_call_channel_v1';
-const WAKE_UP_NOTIFICATION_SOUND = 'order';
-
 function formatReminderTime(triggerAt: string) {
   return new Intl.DateTimeFormat('en-IN', {
     dateStyle: 'medium',
@@ -80,8 +77,7 @@ async function notifyFrontOffice(payload: z.infer<typeof alarmPayload>) {
   await sendPushToTokens(registrationTokens, {
     title: 'Wake-up Call Backup',
     body: `Guest ${payload.guestName} in room ${payload.roomName} requested ${payload.note || 'a wake-up call'} at ${formatReminderTime(payload.triggerAt)}.`,
-    sound: WAKE_UP_NOTIFICATION_SOUND,
-    channelId: WAKE_UP_NOTIFICATION_CHANNEL_ID,
+    channelGroup: 'wakeUp',
     data: {
       type: 'HOTEL_WAKEUP_BACKUP',
       businessId: payload.businessId,
