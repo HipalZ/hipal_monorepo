@@ -2254,11 +2254,6 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json();
       const { businessId, tableName, message, userId } = requestData;
 
-      const appInfo = await DeviceToken.findOne({
-        token: { $exists: true },
-        v: { $exists: true },
-      });
-
       const tableInfo = await Table.findOne({ businessId, name: tableName });
 
       let hiCode = "";
@@ -2277,9 +2272,6 @@ const paymentsRouter = new Hono()
         date: Date.now(),
         order_id: new ObjectId(),
         hiCode: hiCode,
-        v: appInfo?.v,
-        appUrl: appInfo?.appUrl,
-        updateFeature: appInfo?.updateFeature,
       });
 
       const registrationToken = await DeviceToken.find({
@@ -2288,7 +2280,71 @@ const paymentsRouter = new Hono()
       if (registrationToken.length > 0) {
         for (const obj of registrationToken) {
           if (obj.notification) {
-            sendPushNotification(obj.token, "customer", tableName);
+            sendPushNotification(obj.token, businessId, "customer", tableName);
+          }
+        }
+      }
+
+      if (registrationToken.length > 0) {
+        for (const obj of registrationToken) {
+          if (obj.notification) {
+            const pushMessage = {
+              token: obj.token, // or use 'topic' if you're sending to a topic
+              notification: {
+                title: "Hi Captain !!",
+                body: `T-${tableName?.slice(-2)} : ${message}`,
+              },
+              android: {
+                notification: {
+                  channel_id: "custom_channel_id",
+                  sound: "order",
+                },
+              },
+            };
+
+            console.log("[waiterAlert:push:send]", {
+              tokenTail: obj.token.slice(-12),
+              businessId,
+              tableName,
+              title: pushMessage.notification.title,
+              channelId: pushMessage.android.notification.channel_id,
+              sound: pushMessage.android.notification.sound,
+            });
+
+            admin
+              .messaging()
+              .send(pushMessage)
+              .then((response: unknown) => {
+                console.log("[waiterAlert:push:sent]", {
+                  tokenTail: obj.token.slice(-12),
+                  businessId,
+                  tableName,
+                  response,
+                });
+
+                return c.json({
+                  message: "FCM message sent successfully",
+                  err: false,
+                  data: response,
+                });
+              })
+              .catch((err: Error) => {
+                console.error("[waiterAlert:push:failed]", {
+                  tokenTail: obj.token.slice(-12),
+                  businessId,
+                  tableName,
+                  error: err instanceof Error ? err.message : String(err),
+                });
+
+                return c.json(
+                  {
+                    message: "Error sending FCM message",
+                    err: true,
+                    data: {},
+                  },
+                  400,
+                );
+              });
           }
         }
       }

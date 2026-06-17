@@ -36,7 +36,10 @@ import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 import { endOfToday, startOfToday } from "../payments";
 import { returnHotelBodyComponents } from "./rooms";
-import { sendPushToToken, sendPushToTokens } from "../../services/notifications";
+import {
+  sendPushToToken,
+  sendPushToTokens,
+} from "../../services/notifications";
 const admin = require("firebase-admin");
 
 const sendPushNotification = async (
@@ -45,9 +48,9 @@ const sendPushNotification = async (
   hotelNo: string,
   serviceName: string,
 ) => {
-  return sendPushToToken(
-    { token },
-    {
+  const pushMessage = {
+    token: token, // or use 'topic' if you're sending to a topic
+    notification: {
       title: "Room Attention Required",
       body: `${hotelNo} requires your attention for ${serviceName}. kindly respond to the alert!`,
       data: {
@@ -57,7 +60,34 @@ const sendPushNotification = async (
         serviceName,
       },
     },
-  );
+  };
+
+  try {
+    const androidNotification = (pushMessage as any).android?.notification;
+
+    console.log("[hotelAlert:push:send]", {
+      tokenTail: token.slice(-12),
+      businessId,
+      roomName: hotelNo,
+      serviceName,
+      title: pushMessage.notification.title,
+      hasAndroidNotification: Boolean(androidNotification),
+      channelId: androidNotification?.channel_id,
+      sound: androidNotification?.sound,
+      note: "raw hotel service payload",
+    });
+
+    const response = await admin.messaging().send(pushMessage);
+    return { success: true, response };
+  } catch (error) {
+    console.error("[hotelAlert:push:failed]", {
+      tokenTail: token.slice(-12),
+      businessId,
+      roomName: hotelNo,
+      serviceName,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 };
 
 const sendPushNotificationForNotDeliverd = async (
@@ -85,9 +115,26 @@ const sendPushNotificationForNotDeliverd = async (
   };
 
   try {
+    console.log("[hotelAlert:deliveryPush:send]", {
+      tokenTail: token.slice(-12),
+      businessId,
+      roomName: hotelNo,
+      title: pushMessage.notification.title,
+      type: pushMessage.data.type,
+      channelId: pushMessage.android.notification.channel_id,
+      sound: pushMessage.android.notification.sound,
+    });
+
     const response = await admin.messaging().send(pushMessage);
     return { success: true, response };
-  } catch (error) {}
+  } catch (error) {
+    console.error("[hotelAlert:deliveryPush:failed]", {
+      tokenTail: token.slice(-12),
+      businessId,
+      roomName: hotelNo,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 };
 
 const scheduleAlertUpdate = (
@@ -204,7 +251,12 @@ const scheduleAlertUpdate = (
           });
           registrationTokens.map(async (obj) => {
             if (obj.notification) {
-              await sendPushNotification(obj.token, businessId, roomName, serviceName);
+              await sendPushNotification(
+                obj.token,
+                businessId,
+                roomName,
+                serviceName,
+              );
             }
           });
 
@@ -371,7 +423,12 @@ const scheduleAlertUpdate = (
           });
           registrationTokens.map(async (obj) => {
             if (obj.notification) {
-              await sendPushNotification(obj.token, businessId, roomName, serviceName);
+              await sendPushNotification(
+                obj.token,
+                businessId,
+                roomName,
+                serviceName,
+              );
             }
           });
 
@@ -518,7 +575,12 @@ const scheduleLevel2Alert = (
         });
         registrationTokens.map(async (obj) => {
           if (obj.notification) {
-            await sendPushNotification(obj.token, businessId, roomName, serviceName);
+            await sendPushNotification(
+              obj.token,
+              businessId,
+              roomName,
+              serviceName,
+            );
           }
         });
       }
@@ -657,7 +719,12 @@ const scheduleLevel3Alert = (
         });
         registrationTokens.map(async (obj) => {
           if (obj.notification) {
-            await sendPushNotification(obj.token, businessId, roomName, serviceName);
+            await sendPushNotification(
+              obj.token,
+              businessId,
+              roomName,
+              serviceName,
+            );
           }
         });
       }
@@ -775,7 +842,12 @@ const scheduleAlert = (
       });
       for (const obj of registrationTokens) {
         if (obj.notification) {
-          await sendPushNotification(obj.token, businessId, roomName, serviceName);
+          await sendPushNotification(
+            obj.token,
+            businessId,
+            roomName,
+            serviceName,
+          );
         }
       }
     } catch (error) {
@@ -2158,17 +2230,20 @@ const hotelAlertRouter = new Hono()
         );
       }
 
-      await HotelAlert.findByIdAndUpdate(alertId, isWakeUpCallAlert
-        ? {
-            alertProgress: "RESOLVED",
-            deliveredAt: Date.now(),
-            deliveredBy: userId,
-          }
-        : {
-            alertProgress: "REJECTED",
-            rejectedAt: Date.now(),
-            rejectedBy: userId,
-          });
+      await HotelAlert.findByIdAndUpdate(
+        alertId,
+        isWakeUpCallAlert
+          ? {
+              alertProgress: "RESOLVED",
+              deliveredAt: Date.now(),
+              deliveredBy: userId,
+            }
+          : {
+              alertProgress: "REJECTED",
+              rejectedAt: Date.now(),
+              rejectedBy: userId,
+            },
+      );
 
       return respond(c, "Alert dismissed successfully", false, 200, {
         _id: alertId,
