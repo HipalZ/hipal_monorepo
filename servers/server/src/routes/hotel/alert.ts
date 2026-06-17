@@ -53,11 +53,17 @@ const sendPushNotification = async (
     notification: {
       title: "Room Attention Required",
       body: `${hotelNo} requires your attention for ${serviceName}. kindly respond to the alert!`,
-      data: {
-        type: "HOTEL_SERVICE_ALERT",
-        businessId,
-        roomName: hotelNo,
-        serviceName,
+    },
+    data: {
+      type: "HOTEL_SERVICE_ALERT",
+      businessId,
+      roomName: hotelNo,
+      serviceName,
+    },
+    android: {
+      notification: {
+        channel_id: "custom_channel_id",
+        sound: "order",
       },
     },
   };

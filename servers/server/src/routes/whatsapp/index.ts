@@ -291,7 +291,16 @@ const whatsappRouter = new Hono()
         if (!isWhatsAppConfigEnabled(whatsAppConfig)) {
           return respond(c, WHATSAPP_BUSINESS_DISABLED_MESSAGE, true, 403, {});
         }
-        const appId = "1166415764661953";
+        const appId = String(whatsAppConfig.appId || "").trim();
+        if (!appId) {
+          return respond(
+            c,
+            "WhatsApp appId not configured for this business",
+            true,
+            400,
+            {},
+          );
+        }
 
         let formData: FormData;
         try {
@@ -362,8 +371,15 @@ const whatsappRouter = new Hono()
 
         // ── Destination B: Meta Resumable Upload API (returns a media handle).
         const metaUpload = (async (): Promise<string> => {
+          console.log("[media-upload] meta config", {
+            businessId,
+            appId,
+            phoneId: whatsAppConfig.phoneId,
+            wabaId: whatsAppConfig.whatsAppAccountId,
+            version: whatsAppConfig.version,
+          });
           const sessionRes = await axios.post(
-            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${appId}/uploads`,
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.appId}/uploads`,
             null,
             {
               params: {

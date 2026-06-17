@@ -69,18 +69,18 @@ import {
 } from "../../utils/defaultBillingTime";
 import { executePosHandler } from "../../utils/executePoshandlers.ts";
 import { convertToPetpoojaCart } from "../../utils/helper";
-import { monadHelperFunction, triggerBlockchain } from "../../utils/monad";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
+import { monadHelperFunction, triggerBlockchain } from "../../utils/monad";
 import {
   type MerchantConfig,
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
 import { buildUnifiedDashboardCore } from "../../utils/reportHelper/unifiedSalesDashBoard";
 import { respond } from "../../utils/response";
+import { sendPushToTokens } from "../../services/notifications";
 import { buildBillsExcelBuffer } from "../../utils/sales";
-import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
-const admin = require("firebase-admin");
+import { generateTenDigitCode } from "../pos/index.js";
 // Hash a passwordss
 
 const { validateWebhookSignature } = require("../../utils/razorpay-utils");
@@ -2277,76 +2277,26 @@ const paymentsRouter = new Hono()
       const registrationToken = await DeviceToken.find({
         businessId: businessId,
       });
-      if (registrationToken.length > 0) {
-        for (const obj of registrationToken) {
-          if (obj.notification) {
-            sendPushNotification(obj.token, businessId, "customer", tableName);
-          }
-        }
-      }
 
       if (registrationToken.length > 0) {
-        for (const obj of registrationToken) {
-          if (obj.notification) {
-            const pushMessage = {
-              token: obj.token, // or use 'topic' if you're sending to a topic
-              notification: {
-                title: "Hi Captain !!",
-                body: `T-${tableName?.slice(-2)} : ${message}`,
-              },
-              android: {
-                notification: {
-                  channel_id: "custom_channel_id",
-                  sound: "order",
-                },
-              },
-            };
+        console.log("[waiterAlert:push:queue]", {
+          businessId,
+          tableName,
+          tokenCount: registrationToken.length,
+          title: "Hi Captain !!",
+          type: "CALL_CAPTAIN_ALERT",
+        });
 
-            console.log("[waiterAlert:push:send]", {
-              tokenTail: obj.token.slice(-12),
-              businessId,
-              tableName,
-              title: pushMessage.notification.title,
-              channelId: pushMessage.android.notification.channel_id,
-              sound: pushMessage.android.notification.sound,
-            });
-
-            admin
-              .messaging()
-              .send(pushMessage)
-              .then((response: unknown) => {
-                console.log("[waiterAlert:push:sent]", {
-                  tokenTail: obj.token.slice(-12),
-                  businessId,
-                  tableName,
-                  response,
-                });
-
-                return c.json({
-                  message: "FCM message sent successfully",
-                  err: false,
-                  data: response,
-                });
-              })
-              .catch((err: Error) => {
-                console.error("[waiterAlert:push:failed]", {
-                  tokenTail: obj.token.slice(-12),
-                  businessId,
-                  tableName,
-                  error: err instanceof Error ? err.message : String(err),
-                });
-
-                return c.json(
-                  {
-                    message: "Error sending FCM message",
-                    err: true,
-                    data: {},
-                  },
-                  400,
-                );
-              });
-          }
-        }
+        await sendPushToTokens(registrationToken, {
+          title: "Hi Captain !!",
+          body: `T-${tableName?.slice(-2)} : ${message}`,
+          data: {
+            type: "CALL_CAPTAIN_ALERT",
+            businessId,
+            tableName,
+            alertId: alert._id.toString(),
+          },
+        });
       }
 
       return respond(c, "Alert created successfully", false, 200, alert);
@@ -5374,10 +5324,12 @@ const paymentsRouter = new Hono()
       const { businessId, from, to } = c.req.query();
 
       // Safer date parsing (same pattern as salesDashboard)
-      const fromDate = !isNaN(Number(from))
+      const fromDate = !Number.isNaN(Number(from))
         ? Number(from)
         : startOfToday.getTime();
-      const toDate = !isNaN(Number(to)) ? Number(to) : endOfToday.getTime();
+      const toDate = !Number.isNaN(Number(to))
+        ? Number(to)
+        : endOfToday.getTime();
 
       const isToday = isTodayIST(fromDate);
       const dateRange = getISTDateRange(Date.now());

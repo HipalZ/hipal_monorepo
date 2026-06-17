@@ -268,14 +268,29 @@ const cartRouter = new Hono()
       });
 
       if (registrationToken.length > 0) {
-        await sendPushToTokens(registrationToken, {
-          title: "Please accept the order !!",
+        console.log("[cart:create:push:queue]", {
+          businessId: body.businessId,
+          tableName: body.tableName || "",
+          tokenCount: registrationToken.length,
+          title: "Shared cart request",
+          type: "CART_ORDER_ALERT",
+        });
+
+        const pushResults = await sendPushToTokens(registrationToken, {
+          title: "Shared cart request",
           body: `${body.tableName?.slice(-2)} `,
           data: {
             type: "CART_ORDER_ALERT",
             businessId: body.businessId,
             tableName: body.tableName || "",
           },
+        });
+
+        console.log("[cart:create:push:done]", {
+          businessId: body.businessId,
+          tableName: body.tableName || "",
+          successCount: pushResults.filter((result) => result.success).length,
+          failedCount: pushResults.filter((result) => !result.success).length,
         });
       }
 

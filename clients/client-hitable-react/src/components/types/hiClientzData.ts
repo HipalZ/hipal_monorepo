@@ -303,7 +303,6 @@ export interface IOutletInfo {
   serviceChargePercentage: number;
   isPosEnabled: boolean;
   shareCart: boolean;
-  notificationSound?: "order" | "alarm";
 }
 
 export interface OrderData {
