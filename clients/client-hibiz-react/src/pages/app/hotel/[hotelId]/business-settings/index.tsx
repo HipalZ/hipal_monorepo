@@ -22,7 +22,6 @@ const BusinessSettingsHotel = () => {
     const navigate = useNavigate()
     const businessData = useBusinessData((s) => s.outletInfo)
     const {updateBusinessSettingLoader, updateBusinessSetting} = useUpdateBusinessSetting()
-    const [settingsId, setSettingsId] = useState<string | null>(null)
 
     // Form state
     const [formData, setFormData] = useState({
@@ -32,7 +31,7 @@ const BusinessSettingsHotel = () => {
         endTime: "03:59",
         phoneNumber: businessData?.phone || "",
         googleMapsDirection: businessData?.location || "",
-        notificationSound: "order" as NotificationSound,
+        notificationSound: undefined as NotificationSound | undefined,
     })
 
     // Error state
@@ -51,7 +50,7 @@ const BusinessSettingsHotel = () => {
         return `${formattedHour}:${minutes} ${ampm}`
     }
 
-    const { isLoading: settingsLoading } = useQuery({
+    const { data: businessSettings, isLoading: settingsLoading, refetch: refetchBusinessSettings } = useQuery({
         queryKey: ["hotelBusinessSettings", businessData?.businessId],
         queryFn: async () => {
             const res = await apiRpc.settings[":businessId"].$get({
@@ -64,14 +63,11 @@ const BusinessSettingsHotel = () => {
             return response?.data ?? null
         },
         enabled: !!businessData?.businessId,
-        onSuccess: (settings) => {
-            setSettingsId(settings?._id || null)
-            setFormData((prev) => ({
-                ...prev,
-                notificationSound: settings?.notificationSound === "alarm" ? "alarm" : "order",
-            }))
-        }
     })
+
+    const selectedNotificationSound =
+        formData.notificationSound ??
+        (businessSettings?.notificationSound === "alarm" ? "alarm" : "order")
 
     // Handle input changes
 
@@ -137,28 +133,21 @@ const BusinessSettingsHotel = () => {
     const saveNotificationSound = async () => {
         if (!businessData?.businessId) return
 
-        if (settingsId) {
-            await apiRpc.settings.update[":settingsId"].$put({
-                param: {
-                    settingsId,
-                },
-                json: {
-                    notificationSound: formData.notificationSound,
-                },
-            })
-            return
-        }
-
-        const res = await apiRpc.settings.$post({
-            json: {
+        const res = await apiRpc.settings.notification_sound[":businessId"].$put({
+            param: {
                 businessId: businessData.businessId,
-                notificationSound: formData.notificationSound,
+            },
+            json: {
+                notificationSound: selectedNotificationSound,
             },
         })
         const response = await res.json()
-        if (res.status === 200 || res.status === 201) {
-            setSettingsId(response?.data?._id || null)
+        if (res.status !== 200 && res.status !== 201) {
+            toast.error(response?.message || "Failed to update notification sound")
+            return
         }
+
+        await refetchBusinessSettings()
     }
 
     if(updateBusinessSettingLoader || settingsLoading){
@@ -346,7 +335,7 @@ const BusinessSettingsHotel = () => {
                             <Label htmlFor="notificationSound">Hitable notification sound</Label>
                             <select
                                 id="notificationSound"
-                                value={formData.notificationSound}
+                                value={selectedNotificationSound}
                                 onChange={(e) => handleInputChange("notificationSound", e.target.value)}
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                             >
