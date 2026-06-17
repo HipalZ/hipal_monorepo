@@ -24,10 +24,13 @@ export const normalizeNotificationSound = (
 export const getNotificationChannelId = (
   sound: NotificationSound,
   group: NotificationChannelGroup = "service",
-) =>
-  group === "wakeUp"
+) => {
+  if (sound === "order") return "custom_channel_id";
+
+  return group === "wakeUp"
     ? `wake_up_call_${sound}_v1`
     : `service_alerts_${sound}_v1`;
+};
 
 export const resolveBusinessNotificationSound = async (
   businessId?: unknown,
