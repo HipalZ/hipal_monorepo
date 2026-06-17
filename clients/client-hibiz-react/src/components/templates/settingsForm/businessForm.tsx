@@ -36,7 +36,6 @@ const MemoBusinessForm: React.FC = () => {
     merchantId: null,
     accessKeyId: null,
     secretKey: null,
-    notificationSound: null,
     _id: null,
   });
 
@@ -152,19 +151,6 @@ const MemoBusinessForm: React.FC = () => {
           <TextInput ref={setRef('razorpayMerchantId')} id="merchantId" label="Merchant ID" maxLength={35} />
           <TextInput ref={setRef('razorpayKeyId')} id="accessKeyId" label="Access Key ID" maxLength={35} />
           <TextInput ref={setRef('razorpayKeySecret')} id="secretKey" label="Secret Key" maxLength={35} />
-        </FormSection>
-
-        <FormSection title="Alert Sound">
-          <SelectInput
-            ref={setRef('notificationSound')}
-            id="notificationSound"
-            label="Notification Sound"
-            options={[
-              { value: 'order', label: 'Order alert' },
-              { value: 'alarm', label: 'Alarm alert' },
-            ]}
-          />
-          <p className="text-xs text-gray-500">This sound will be used in the Hitable app for staff alerts.</p>
         </FormSection>
 
         <button className="bottom_btn col-span-1 md:col-span-2" type="submit">

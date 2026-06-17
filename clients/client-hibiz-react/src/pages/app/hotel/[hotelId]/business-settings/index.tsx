@@ -13,10 +13,6 @@ import { FaArrowLeft } from "react-icons/fa"
 import { useNavigate } from "react-router-dom"
 import { useUpdateBusinessSetting } from "@/hooks/hotel/useBusinessSettingHook"
 import LoadingSpinner from "@/components/atom/loadingSpinner"
-import { apiRpc } from "@hi/common"
-import { useQuery } from "@tanstack/react-query"
-
-type NotificationSound = "order" | "alarm";
 
 const BusinessSettingsHotel = () => {
     const navigate = useNavigate()
@@ -31,7 +27,6 @@ const BusinessSettingsHotel = () => {
         endTime: "03:59",
         phoneNumber: businessData?.phone || "",
         googleMapsDirection: businessData?.location || "",
-        notificationSound: undefined as NotificationSound | undefined,
     })
 
     // Error state
@@ -49,25 +44,6 @@ const BusinessSettingsHotel = () => {
         const formattedHour = hour % 12 || 12
         return `${formattedHour}:${minutes} ${ampm}`
     }
-
-    const { data: businessSettings, isLoading: settingsLoading, refetch: refetchBusinessSettings } = useQuery({
-        queryKey: ["hotelBusinessSettings", businessData?.businessId],
-        queryFn: async () => {
-            const res = await apiRpc.settings[":businessId"].$get({
-                param: {
-                    businessId: businessData?.businessId || "",
-                },
-            })
-            const response = await res.json()
-            if (res.status !== 200 && res.status !== 201) return null
-            return response?.data ?? null
-        },
-        enabled: !!businessData?.businessId,
-    })
-
-    const selectedNotificationSound =
-        formData.notificationSound ??
-        (businessSettings?.notificationSound === "alarm" ? "alarm" : "order")
 
     // Handle input changes
 
@@ -123,34 +99,13 @@ const BusinessSettingsHotel = () => {
         }
 
         await updateBusinessSetting(payload)
-        await saveNotificationSound()
     }
 
     const handleBack = () => {
         navigate(-1)
     }
 
-    const saveNotificationSound = async () => {
-        if (!businessData?.businessId) return
-
-        const res = await apiRpc.settings.notification_sound[":businessId"].$put({
-            param: {
-                businessId: businessData.businessId,
-            },
-            json: {
-                notificationSound: selectedNotificationSound,
-            },
-        })
-        const response = await res.json()
-        if (res.status !== 200 && res.status !== 201) {
-            toast.error(response?.message || "Failed to update notification sound")
-            return
-        }
-
-        await refetchBusinessSettings()
-    }
-
-    if(updateBusinessSettingLoader || settingsLoading){
+    if(updateBusinessSettingLoader){
         return <LoadingSpinner />
     }
 
@@ -324,27 +279,6 @@ const BusinessSettingsHotel = () => {
                                     placeholder="Enter Google Maps link or address"
                                 />
                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="space-y-4">
-                    <h2 className="text-2xl font-bold">Alert Sound</h2>
-                    <Card>
-                        <CardContent className="pt-6 space-y-3">
-                            <Label htmlFor="notificationSound">Hitable notification sound</Label>
-                            <select
-                                id="notificationSound"
-                                value={selectedNotificationSound}
-                                onChange={(e) => handleInputChange("notificationSound", e.target.value)}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            >
-                                <option value="order">Order alert</option>
-                                <option value="alarm">Alarm alert</option>
-                            </select>
-                            <p className="text-sm text-muted-foreground">
-                                This sound will play in the Hitable app when staff receive service and wake-up call alerts.
-                            </p>
                         </CardContent>
                     </Card>
                 </div>

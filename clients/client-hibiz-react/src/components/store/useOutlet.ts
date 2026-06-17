@@ -83,7 +83,6 @@ export interface BusinessFormState {
     merchantId: string;
     accessKeyId: string;
     secretKey: string;
-    notificationSound: "order" | "alarm";
     _id?: string;
   };
   setBusinessFormData: (
@@ -114,7 +113,6 @@ export const useBusinessFormStore = create<BusinessFormState>((set) => ({
     merchantId: "",
     accessKeyId: "",
     secretKey: "",
-    notificationSound: "order",
     _id: undefined,
   },
   setBusinessFormData: (key, value) =>

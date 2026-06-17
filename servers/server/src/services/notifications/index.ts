@@ -1,8 +1,7 @@
 import { DeviceToken } from "@hi/db-models";
 import {
-  getNotificationChannelId,
-  normalizeNotificationSound,
-  resolveBusinessNotificationOptions,
+  DEFAULT_NOTIFICATION_CHANNEL_ID,
+  DEFAULT_NOTIFICATION_SOUND,
   type NotificationChannelGroup,
 } from "./sound";
 
@@ -76,8 +75,8 @@ const sendExpoPush = async (target: PushTarget, payload: PushPayload) => {
       title: payload.title,
       body: payload.body,
       data: payload.data || {},
-      sound: payload.sound || "default",
-      channelId: payload.channelId || "service-alerts",
+      sound: DEFAULT_NOTIFICATION_SOUND,
+      channelId: DEFAULT_NOTIFICATION_CHANNEL_ID,
       priority: "high",
     }),
   });
@@ -90,7 +89,7 @@ const sendExpoPush = async (target: PushTarget, payload: PushPayload) => {
 };
 
 const sendFirebasePush = async (target: PushTarget, payload: PushPayload) => {
-  const sound = normalizeNotificationSound(payload.sound);
+  const sound = DEFAULT_NOTIFICATION_SOUND;
   const message = {
     token: target.token,
     notification: {
@@ -100,7 +99,7 @@ const sendFirebasePush = async (target: PushTarget, payload: PushPayload) => {
     data: payload.data,
     android: {
       notification: {
-        channel_id: payload.channelId || getNotificationChannelId(sound),
+        channel_id: DEFAULT_NOTIFICATION_CHANNEL_ID,
         sound,
       },
     },
@@ -131,18 +130,11 @@ export const sendPushToToken = async (
   payload: PushPayload,
 ): Promise<PushResult> => {
   const provider = resolveProvider(target);
-  const resolvedPayload = { ...payload };
-
-  if (!resolvedPayload.sound || !resolvedPayload.channelId) {
-    const businessId = payload.data?.businessId || target.businessId?.toString();
-    const options = await resolveBusinessNotificationOptions(
-      businessId,
-      payload.channelGroup,
-    );
-
-    resolvedPayload.sound = resolvedPayload.sound || options.sound;
-    resolvedPayload.channelId = resolvedPayload.channelId || options.channelId;
-  }
+  const resolvedPayload = {
+    ...payload,
+    sound: DEFAULT_NOTIFICATION_SOUND,
+    channelId: DEFAULT_NOTIFICATION_CHANNEL_ID,
+  };
 
   try {
     const response =
@@ -207,19 +199,11 @@ export const sendPushToTokens = async (
     (target): target is PushTarget =>
       target.notification !== false && typeof target.token === "string",
   );
-  const resolvedPayload = { ...payload };
-
-  if (!resolvedPayload.sound || !resolvedPayload.channelId) {
-    const businessId =
-      payload.data?.businessId || enabledTargets[0]?.businessId?.toString();
-    const options = await resolveBusinessNotificationOptions(
-      businessId,
-      payload.channelGroup,
-    );
-
-    resolvedPayload.sound = resolvedPayload.sound || options.sound;
-    resolvedPayload.channelId = resolvedPayload.channelId || options.channelId;
-  }
+  const resolvedPayload = {
+    ...payload,
+    sound: DEFAULT_NOTIFICATION_SOUND,
+    channelId: DEFAULT_NOTIFICATION_CHANNEL_ID,
+  };
 
   return Promise.all(
     enabledTargets.map((target) => sendPushToToken(target, resolvedPayload)),
