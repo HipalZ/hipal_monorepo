@@ -4,6 +4,7 @@ import {
   Banner,
   Business,
   BusinessPosConfig,
+  BusinessSettings,
   Category,
   Dish,
   LoyaltySettings,
