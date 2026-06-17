@@ -33,6 +33,7 @@ import type { FilterQuery } from "mongoose";
 import { Types } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import { syncHotelStayCompanions } from "../../services/hotelCompanions";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 import { endOfToday, startOfToday } from "../payments/index.js";
@@ -961,6 +962,15 @@ const roomRouter = new Hono()
         { upsert: true },
       );
 
+      await syncHotelStayCompanions({
+        businessId: roomExists?.businessId,
+        roomId,
+        roomSessionId: roomSession[0]._id,
+        userIds: [user._id],
+        source: requestData.source,
+        session,
+      });
+
       if (whatsAppConfig) {
         const businessInfo = await Business.findById(
           roomExists.businessId,
@@ -1585,6 +1595,13 @@ const roomRouter = new Hono()
           },
           { session },
         );
+
+        await syncHotelStayCompanions({
+          roomId: roomSession.roomId,
+          roomSessionId: roomSession._id,
+          userIds: [userId],
+          session,
+        });
 
         return respond(c, "Auth code verified", false, 200, {
           _id: roomSession._id,

@@ -1,15 +1,10 @@
-import {
-  Cart,
-  HotelAlert,
-  HotelAnalytics,
-  Reviews,
-} from "@hi/db-models";
-import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
-import { Types } from "mongoose";
-import { z } from "zod";
-import { stream } from "hono/streaming";
-import { respond } from "../../utils/response";
+import { Cart, HotelAlert, HotelAnalytics, Reviews } from '@hi/db-models';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import { stream } from 'hono/streaming';
+import { Types } from 'mongoose';
+import { z } from 'zod';
+import { respond } from '../../utils/response';
 
 // ─── Guest Experience CSV helpers ──────────────────────────────────────────
 // Bound on what the server will emit in one call. 92 days (~3 months) matches
@@ -19,39 +14,37 @@ const MAX_REPORT_RANGE_MS = 92 * 24 * 60 * 60 * 1000;
 const CSV_BATCH_FLUSH = 500;
 
 const CSV_HEADERS = [
-  "Guest Name",
-  "Guest Phone",
-  "Room No",
-  "Visit Count Till Date",
-  "Booking Source",
-  "Check-In Date Time",
-  "Check-Out Date Time",
-  "Service Requested",
-  "Order Items",
-  "Requested At",
-  "Accepted By Staff",
-  "Accepted At",
-  "Delivered By Staff",
-  "Delivered At",
-  "Acceptance Time",
-  "Delivery Time",
-  "Total Resolution Time",
-  "Escalated",
-  "Escalation Level",
-  "Crossed Escalation SLA",
-  "Service Rating",
-  "Review Feedback",
-  "Reviewed At",
+  'Guest Name',
+  'Guest Phone',
+  'Room No',
+  'Visit Count Till Date',
+  'Booking Source',
+  'Check-In Date Time',
+  'Check-Out Date Time',
+  'Companions',
+  'Companion Count',
+  'Record Type',
+  'Service Requested',
+  'Order Items',
+  'Requested At',
+  'Accepted By Staff',
+  'Accepted At',
+  'Delivered By Staff',
+  'Delivered At',
+  'Acceptance Time',
+  'Delivery Time',
+  'Total Resolution Time',
+  'Escalated',
+  'Escalation Level',
+  'Crossed Escalation SLA',
+  'Service Rating',
+  'Review Feedback',
+  'Reviewed At',
 ] as const;
 
 const escapeCsvCell = (value: unknown): string => {
-  const str = value === undefined || value === null ? "" : String(value);
-  if (
-    str.includes('"') ||
-    str.includes(",") ||
-    str.includes("\n") ||
-    str.includes("\r")
-  ) {
+  const str = value === undefined || value === null ? '' : String(value);
+  if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
     return `"${str.replace(/"/g, '""')}"`;
   }
   return str;
@@ -72,81 +65,84 @@ const getOrdinalDay = (day: number) => {
 };
 
 const formatDateTime = (timestamp?: number | null) => {
-  if (!timestamp) return "";
-  const parts = new Intl.DateTimeFormat("en-IN", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  if (!timestamp) return '';
+  const parts = new Intl.DateTimeFormat('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
     hour12: true,
   }).formatToParts(new Date(timestamp));
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((part) => part.type === type)?.value ?? "";
-  const day = Number(get("day"));
-  return `${getOrdinalDay(day)} ${get("month")} ${get("year")}, ${get("hour")}:${get("minute")} ${get("dayPeriod").toUpperCase()}`;
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? '';
+  const day = Number(get('day'));
+  return `${getOrdinalDay(day)} ${get('month')} ${get('year')}, ${get('hour')}:${get('minute')} ${get('dayPeriod').toUpperCase()}`;
 };
 
 const formatFilenameDate = (timestamp?: number) => {
-  if (!timestamp) return "unknown-date";
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
+  if (!timestamp) return 'unknown-date';
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
   }).formatToParts(new Date(timestamp));
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((part) => part.type === type)?.value ?? "";
-  return `${get("year")}-${get("month")}-${get("day")}`;
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? '';
+  return `${get('year')}-${get('month')}-${get('day')}`;
 };
 
 const getDurationLabel = (from?: number | null, to?: number | null) => {
-  if (!from || !to || to < from) return "";
+  if (!from || !to || to < from) return '';
   const totalMinutes = Math.round((to - from) / 60_000);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  return [hours ? `${hours}h` : "", minutes || !hours ? `${minutes}m` : ""]
-    .filter(Boolean)
-    .join(" ");
+  return [hours ? `${hours}h` : '', minutes || !hours ? `${minutes}m` : ''].filter(Boolean).join(' ');
 };
 
 const buildOrderItems = (cart?: any[]) => {
-  if (!cart?.length) return "";
+  if (!cart?.length) return '';
   return cart
     .map((item) => {
-      const dishName = item?.dish?.name || item?.name || "";
+      const dishName = item?.dish?.name || item?.name || '';
       const quantity = item?.quantity ?? 1;
       const price = item?.dish?.price;
-      return price !== undefined && price !== null
-        ? `${dishName} x${quantity} (Rs ${price})`
-        : `${dishName} x${quantity}`;
+      return price !== undefined && price !== null ? `${dishName} x${quantity} (Rs ${price})` : `${dishName} x${quantity}`;
     })
     .filter(Boolean)
-    .join(" | ");
+    .join(' | ');
 };
 
 const joinNames = (items?: { name?: string }[]) =>
-  items?.map((item) => item?.name).filter(Boolean).join(", ") || "";
+  items
+    ?.map((item) => item?.name)
+    .filter(Boolean)
+    .join(', ') || '';
 
-const staffName = (staff?: { name?: string } | null) => staff?.name || "";
+const staffName = (staff?: { name?: string } | null) => staff?.name || '';
 
-const servicesOverlap = (
-  a?: { name?: string }[],
-  b?: { name?: string }[],
-) => {
+const getCompanionGuests = (guests?: any[], primaryPhone?: string) =>
+  (guests || []).filter((guest) => {
+    if (!guest || typeof guest !== 'object') return false;
+    return !primaryPhone || guest.phone !== primaryPhone;
+  });
+
+const formatCompanions = (guests?: any[], primaryPhone?: string) =>
+  getCompanionGuests(guests, primaryPhone)
+    .map((guest) => [guest.name || 'Guest', guest.phone ? `(${guest.phone})` : ''].filter(Boolean).join(' '))
+    .join(' | ');
+
+const servicesOverlap = (a?: { name?: string }[], b?: { name?: string }[]) => {
   if (!a?.length || !b?.length) return false;
   const set = new Set(a.map((s) => s?.name?.toLowerCase()).filter(Boolean));
   return b.some((s) => set.has(s?.name?.toLowerCase()));
 };
 
-
-
 const timePeriods = [
-  { name: "Morning", start: 4, end: 10 },
-  { name: "Afternoon", start: 10, end: 16 },
-  { name: "Evening", start: 16, end: 22 },
-  { name: "Night", start: 22, end: 28 },
+  { name: 'Morning', start: 4, end: 10 },
+  { name: 'Afternoon', start: 10, end: 16 },
+  { name: 'Evening', start: 16, end: 22 },
+  { name: 'Night', start: 22, end: 28 },
 ];
 
 const getTimePeriod = (timestamp: number) => {
@@ -189,9 +185,9 @@ const hotelReportRouter = new Hono()
    *     dashboard only; client never calls it from an unauthed origin).
    */
   .get(
-    "/guest_experience_csv",
+    '/guest_experience_csv',
     zValidator(
-      "query",
+      'query',
       z.object({
         businessId: z.string().min(2).max(50),
         from: z.coerce.number().int().nonnegative(),
@@ -199,42 +195,63 @@ const hotelReportRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { businessId, from, to } = c.req.valid("query");
+      const { businessId, from, to } = c.req.valid('query');
 
       if (from >= to) {
-        return respond(c, "Invalid date range (from >= to)", true, 400, {});
+        return respond(c, 'Invalid date range (from >= to)', true, 400, {});
       }
       if (to - from > MAX_REPORT_RANGE_MS) {
-        return respond(
-          c,
-          `Date range exceeds ${MAX_REPORT_RANGE_MS / (24 * 60 * 60 * 1000)} days`,
-          true,
-          400,
-          {},
-        );
+        return respond(c, `Date range exceeds ${MAX_REPORT_RANGE_MS / (24 * 60 * 60 * 1000)} days`, true, 400, {});
       }
 
       // ── Step 1: alerts in range ─────────────────────────────────────────
       const alerts = await HotelAlert.find({
         businessId,
         createdAt: { $gte: from, $lte: to },
-        alertProgress: { $in: ["DELIVERED", "RESOLVED"] },
+        alertProgress: { $in: ['DELIVERED', 'RESOLVED'] },
       })
-        .populate({ path: "serviceIds", select: "name" })
-        .populate({ path: "createdBy", select: "name phone" })
-        .populate({ path: "acceptedBy", select: "name phone" })
-        .populate({ path: "deliveredBy", select: "name phone" })
-        .populate({ path: "roomId", select: "name" })
+        .populate({ path: 'serviceIds', select: 'name' })
+        .populate({ path: 'createdBy', select: 'name phone' })
+        .populate({ path: 'acceptedBy', select: 'name phone' })
+        .populate({ path: 'deliveredBy', select: 'name phone' })
+        .populate({ path: 'roomId', select: 'name' })
         .sort({ createdAt: 1 })
         .lean();
 
-      if (!alerts.length) {
-        return respond(
-          c,
-          "No guest experience data in range",
-          true,
-          404,
-          {},
+      const stays = await HotelAnalytics.find({
+        businessId,
+        $or: [{ checkIn: { $gte: from, $lte: to } }, { checkOut: { $gte: from, $lte: to } }],
+      })
+        .select('userId roomId source checkIn checkOut guestUserIds serviceIds')
+        .populate({ path: 'userId', select: 'name phone' })
+        .populate({ path: 'roomId', select: 'name' })
+        .populate({ path: 'guestUserIds', select: 'name phone' })
+        .sort({ checkIn: -1 })
+        .lean();
+
+      // Empty result is NOT a "route not found" — return a valid empty CSV
+      // with a 200 so the client can distinguish "we asked for a range with
+      // no data" from "the endpoint doesn't exist in the deployed image".
+      // Browsers / fetch consumers can still detect "nothing to show" by
+      // checking content length or the row count after parse.
+      if (!alerts.length && !stays.length) {
+        const filename = `guest_experience_report_${formatFilenameDate(from)}-to-${formatFilenameDate(to)}.csv`;
+        c.header('Content-Type', 'text/csv; charset=utf-8');
+        c.header('Content-Disposition', `attachment; filename="${filename}"`);
+        c.header('Cache-Control', 'no-store');
+        c.header('X-Hipalz-Report-Status', 'empty');
+        return c.body(
+          [
+            '﻿HOTEL GUEST EXPERIENCE REPORT',
+            `Date Range: ${formatDateTime(from)} to ${formatDateTime(to)}`,
+            `Generated At: ${formatDateTime(Date.now())}`,
+            'No guest experience data was recorded in this range.',
+            '--------------------------------------------',
+            '',
+            CSV_HEADERS.map(escapeCsvCell).join(','),
+            '',
+          ].join('\n'),
+          200,
         );
       }
 
@@ -243,32 +260,21 @@ const hotelReportRouter = new Hono()
         businessId,
         date: { $gte: from, $lte: to },
       })
-        .populate({ path: "userId", select: "name phone" })
-        .populate({ path: "roomId", select: "name" })
+        .populate({ path: 'userId', select: 'name phone' })
+        .populate({ path: 'roomId', select: 'name' })
         .populate({
-          path: "alertId",
-          select: "serviceIds",
-          populate: { path: "serviceIds", select: "name" },
+          path: 'alertId',
+          select: 'serviceIds',
+          populate: { path: 'serviceIds', select: 'name' },
         })
         .lean();
 
       // ── Step 3: stay context (most recent per phone) ───────────────────
-      const stays = await HotelAnalytics.find({
-        businessId,
-        $or: [
-          { checkIn: { $gte: from, $lte: to } },
-          { checkOut: { $gte: from, $lte: to } },
-        ],
-      })
-        .select("userId source checkIn checkOut")
-        .populate({ path: "userId", select: "phone" })
-        .sort({ checkIn: -1 })
-        .lean();
-
       type StayCtx = {
         source?: string;
         checkIn?: number;
         checkOut?: number;
+        guests?: any[];
       };
       const stayByPhone = new Map<string, StayCtx>();
       for (const stay of stays as any[]) {
@@ -280,6 +286,7 @@ const hotelReportRouter = new Hono()
             source: stay.source,
             checkIn: stay.checkIn,
             checkOut: stay.checkOut,
+            guests: stay.guestUserIds || [],
           });
         }
       }
@@ -290,15 +297,16 @@ const hotelReportRouter = new Hono()
         const id = a.createdBy?._id;
         if (id) userIdSet.add(String(id));
       }
+      for (const stay of stays as any[]) {
+        const id = stay.userId?._id;
+        if (id) userIdSet.add(String(id));
+      }
       const userObjectIds = Array.from(userIdSet)
         .filter((id) => Types.ObjectId.isValid(id))
         .map((id) => new Types.ObjectId(id));
 
       const visitAgg = userObjectIds.length
-        ? await HotelAnalytics.aggregate([
-            { $match: { userId: { $in: userObjectIds } } },
-            { $group: { _id: "$userId", count: { $sum: 1 } } },
-          ])
+        ? await HotelAnalytics.aggregate([{ $match: { userId: { $in: userObjectIds } } }, { $group: { _id: '$userId', count: { $sum: 1 } } }])
         : [];
 
       // Map by phone (matches the client expectation). We need the
@@ -309,6 +317,11 @@ const hotelReportRouter = new Hono()
         const phone = a.createdBy?.phone;
         if (uid && phone) phoneByUserId.set(String(uid), phone);
       }
+      for (const stay of stays as any[]) {
+        const uid = stay.userId?._id;
+        const phone = stay.userId?.phone;
+        if (uid && phone) phoneByUserId.set(String(uid), phone);
+      }
       const visitCountByPhone = new Map<string, number>();
       for (const row of visitAgg) {
         const phone = phoneByUserId.get(String(row._id));
@@ -317,78 +330,71 @@ const hotelReportRouter = new Hono()
 
       // ── Step 5: stream CSV ─────────────────────────────────────────────
       const filename = `guest_experience_report_${formatFilenameDate(from)}-to-${formatFilenameDate(to)}.csv`;
-      c.header("Content-Type", "text/csv; charset=utf-8");
-      c.header(
-        "Content-Disposition",
-        `attachment; filename="${filename}"`,
-      );
-      c.header("Cache-Control", "no-store");
+      c.header('Content-Type', 'text/csv; charset=utf-8');
+      c.header('Content-Disposition', `attachment; filename="${filename}"`);
+      c.header('Cache-Control', 'no-store');
 
       const findMatchingReview = (alert: any) => {
-        const alertId = alert?._id ? String(alert._id) : "";
+        const alertId = alert?._id ? String(alert._id) : '';
         const exact = reviews.find((r: any) => {
-          const rAlertId =
-            r.alertId && typeof r.alertId === "object" ? String(r.alertId._id) : "";
+          const rAlertId = r.alertId && typeof r.alertId === 'object' ? String(r.alertId._id) : '';
           return alertId && rAlertId === alertId;
         });
         if (exact) return exact;
         return reviews.find((r: any) => {
-          const user = r.userId && typeof r.userId === "object" ? r.userId : null;
-          const sameGuest =
-            user?.phone && user.phone === alert.createdBy?.phone;
-          const sameRoom =
-            r.roomId?.name && r.roomId.name === alert.roomId?.name;
-          const reviewAlert =
-            r.alertId && typeof r.alertId === "object" ? r.alertId : null;
-          const sameService = servicesOverlap(
-            alert.serviceIds,
-            reviewAlert?.serviceIds,
-          );
-          const afterRequest =
-            r.date && alert.createdAt ? r.date >= alert.createdAt : true;
+          const user = r.userId && typeof r.userId === 'object' ? r.userId : null;
+          const sameGuest = user?.phone && user.phone === alert.createdBy?.phone;
+          const sameRoom = r.roomId?.name && r.roomId.name === alert.roomId?.name;
+          const reviewAlert = r.alertId && typeof r.alertId === 'object' ? r.alertId : null;
+          const sameService = servicesOverlap(alert.serviceIds, reviewAlert?.serviceIds);
+          const afterRequest = r.date && alert.createdAt ? r.date >= alert.createdAt : true;
           return Boolean(sameGuest && sameRoom && sameService && afterRequest);
         });
       };
 
       return stream(c, async (s) => {
         // UTF-8 BOM so Excel opens the file with the right encoding.
-        await s.write("﻿");
+        await s.write('﻿');
 
         // Summary block, then a blank line, then headers.
         const uniqueGuests = new Set(
-          (alerts as any[])
-            .map((a) => a.createdBy?.phone)
-            .filter(Boolean),
+          [...(alerts as any[]).map((a) => a.createdBy?.phone), ...(stays as any[]).map((stay) => stay.userId?.phone)].filter(Boolean),
         ).size;
         const escalated = (alerts as any[]).filter((a) => a.isEscalated).length;
         const summary = [
-          "HOTEL GUEST EXPERIENCE REPORT",
+          'HOTEL GUEST EXPERIENCE REPORT',
           `Total Service Requests: ${alerts.length}`,
           `Unique Guests: ${uniqueGuests}`,
           `Escalated Requests: ${escalated}`,
           `Date Range: ${formatDateTime(from)} to ${formatDateTime(to)}`,
           `Generated At: ${formatDateTime(Date.now())}`,
-          "--------------------------------------------",
-        ].join("\n");
+          '--------------------------------------------',
+        ].join('\n');
         await s.write(`${summary}\n\n`);
-        await s.write(CSV_HEADERS.map(escapeCsvCell).join(",") + "\n");
+        await s.write(CSV_HEADERS.map(escapeCsvCell).join(',') + '\n');
 
         // Emit rows in batches. Building rows row-by-row keeps a single 80MB
         // string from ever existing in process memory for large reports.
         let buffer: string[] = [];
+        const phonesWithServiceRows = new Set<string>();
         for (const alert of alerts as any[]) {
-          const phone = alert.createdBy?.phone || "";
+          const phone = alert.createdBy?.phone || '';
+          if (phone) phonesWithServiceRows.add(phone);
           const review = findMatchingReview(alert);
           const stay = phone ? stayByPhone.get(phone) : undefined;
+          const companionGuests = getCompanionGuests(stay?.guests, phone);
 
           const row = [
-            alert.createdBy?.name || "Guest",
+            alert.createdBy?.name || 'Guest',
             phone,
-            alert.roomId?.name || "",
-            phone ? visitCountByPhone.get(phone) ?? "" : "",
-            stay?.source || "",
+            alert.roomId?.name || '',
+            phone ? (visitCountByPhone.get(phone) ?? '') : '',
+            stay?.source || '',
             formatDateTime(stay?.checkIn),
             formatDateTime(stay?.checkOut),
+            formatCompanions(stay?.guests, phone),
+            companionGuests.length,
+            'Service Request',
             joinNames(alert.serviceIds),
             buildOrderItems(alert.cart),
             formatDateTime(alert.createdAt),
@@ -399,33 +405,72 @@ const hotelReportRouter = new Hono()
             getDurationLabel(alert.createdAt, alert.acceptedAt),
             getDurationLabel(alert.acceptedAt, alert.deliveredAt),
             getDurationLabel(alert.createdAt, alert.deliveredAt),
-            alert.isEscalated ? "Yes" : "No",
-            alert.isEscalated ? alert.level ?? 0 : "",
-            alert.isEscalated ? "Yes" : "No",
-            (review as any)?.reviewRating ?? "",
-            (review as any)?.note ||
-              (review as any)?.improvementAreas?.filter(Boolean).join(", ") ||
-              "",
+            alert.isEscalated ? 'Yes' : 'No',
+            alert.isEscalated ? (alert.level ?? 0) : '',
+            alert.isEscalated ? 'Yes' : 'No',
+            (review as any)?.reviewRating ?? '',
+            (review as any)?.note || (review as any)?.improvementAreas?.filter(Boolean).join(', ') || '',
             formatDateTime((review as any)?.date),
           ]
             .map(escapeCsvCell)
-            .join(",");
+            .join(',');
 
           buffer.push(row);
           if (buffer.length >= CSV_BATCH_FLUSH) {
-            await s.write(buffer.join("\n") + "\n");
+            await s.write(buffer.join('\n') + '\n');
             buffer = [];
           }
         }
-        if (buffer.length) await s.write(buffer.join("\n") + "\n");
+        for (const stay of stays as any[]) {
+          const phone = stay.userId?.phone || '';
+          if (!phone || phonesWithServiceRows.has(phone)) continue;
+
+          const companionGuests = getCompanionGuests(stay.guestUserIds, phone);
+          const row = [
+            stay.userId?.name || 'Guest',
+            phone,
+            stay.roomId?.name || '',
+            visitCountByPhone.get(phone) ?? '',
+            stay.source || '',
+            formatDateTime(stay.checkIn),
+            formatDateTime(stay.checkOut),
+            formatCompanions(stay.guestUserIds, phone),
+            companionGuests.length,
+            'Room Scan / Stay',
+            joinNames(stay.serviceIds),
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ]
+            .map(escapeCsvCell)
+            .join(',');
+
+          buffer.push(row);
+          if (buffer.length >= CSV_BATCH_FLUSH) {
+            await s.write(buffer.join('\n') + '\n');
+            buffer = [];
+          }
+        }
+        if (buffer.length) await s.write(buffer.join('\n') + '\n');
       });
     },
   )
-
   .post(
-    "/fetch_escalated_reports",
+    '/fetch_escalated_reports',
     zValidator(
-      "json",
+      'json',
       z.object({
         businessId: z.string(),
         from: z.number().optional(),
@@ -444,25 +489,25 @@ const hotelReportRouter = new Hono()
           $lte: to,
         },
         alertProgress: {
-          $nin: ["MESSAGE", "REJECTED" /* Exclude non-service alerts */],
+          $nin: ['MESSAGE', 'REJECTED' /* Exclude non-service alerts */],
         },
       })
-        .populate("roomId", "_id name")
-        .populate("userId", "_id name phone")
-        .populate("serviceIds", "_id name")
-        .populate("createdBy", "_id name phone")
+        .populate('roomId', '_id name')
+        .populate('userId', '_id name phone')
+        .populate('serviceIds', '_id name')
+        .populate('createdBy', '_id name phone')
 
         .sort({ _id: -1 })
 
         .lean();
 
-      return respond(c, "All escalated reports", false, 200, escalatedReports);
+      return respond(c, 'All escalated reports', false, 200, escalatedReports);
     },
   )
   .post(
-    "/fetch_item_reports",
+    '/fetch_item_reports',
     zValidator(
-      "json",
+      'json',
       z.object({
         businessId: z.string(),
         page: z.number().optional().default(1),
@@ -491,14 +536,8 @@ const hotelReportRouter = new Hono()
         .limit(limit)
         .lean();
 
-      const dishCounts = new Map<
-        string,
-        { id: string; name: string; count: number }
-      >();
-      const timePeriodData = new Map<
-        string,
-        Map<string, { id: string; name: string; count: number }>
-      >();
+      const dishCounts = new Map<string, { id: string; name: string; count: number }>();
+      const timePeriodData = new Map<string, Map<string, { id: string; name: string; count: number }>>();
 
       // Initialize time period data
       for (const period of timePeriods) {
@@ -538,30 +577,20 @@ const hotelReportRouter = new Hono()
         .slice(0, 6);
 
       // Get top dish per time period
-      const timeBasedAnalytics = Array.from(timePeriodData.entries()).map(
-        ([timePeriod, dishes]) => {
-          const topDish = Array.from(dishes.values()).sort(
-            (a, b) => b.count - a.count,
-          )[0];
-          return {
-            timePeriod,
-            topDish: topDish || null,
-          };
-        },
-      );
+      const timeBasedAnalytics = Array.from(timePeriodData.entries()).map(([timePeriod, dishes]) => {
+        const topDish = Array.from(dishes.values()).sort((a, b) => b.count - a.count)[0];
+        return {
+          timePeriod,
+          topDish: topDish || null,
+        };
+      });
 
       const analytics = {
         topDishes,
         timeBasedAnalytics,
       };
 
-      return respond(
-        c,
-        "Top selling dishes retrieved successfully",
-        false,
-        200,
-        analytics,
-      );
+      return respond(c, 'Top selling dishes retrieved successfully', false, 200, analytics);
     },
   );
 

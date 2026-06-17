@@ -7,6 +7,7 @@ import {
 } from "@hi/db-models";
 import type { WhatsAppBusinessConfigType } from "@hi/db-models/src/validators";
 import axios from "axios";
+import { syncHotelStayCompanions } from "../../services/hotelCompanions";
 import { returnHotelBodyComponents } from "../../routes/hotel/rooms";
 import whatsAppApiBaseUrl from "../whatsAppApiBaseUrl/apiPaths";
 
@@ -156,6 +157,14 @@ async function roomQrHandler(
             roomStatus: "OCCUPIED",
           },
         );
+
+        await syncHotelStayCompanions({
+          businessId: whatsAppBusinessConfigData?.businessId,
+          roomId: roomInfo?._id,
+          roomSessionId: roomSession?._id,
+          userIds: [userId],
+          source: "whatsapp",
+        });
         roomQrShortUrl = `${roomQrShortUrl}?q=wa&id=${userId}&sessionId=${roomSession?._id}`;
 
         await sendWhatsAppTemplateForRoomQr(
@@ -184,6 +193,14 @@ async function roomQrHandler(
       },
       { upsert: true },
     );
+
+    await syncHotelStayCompanions({
+      businessId: whatsAppBusinessConfigData?.businessId,
+      roomId: roomInfo?._id,
+      roomSessionId: roomSession?._id,
+      userIds: [userId],
+      source: "whatsapp",
+    });
 
     roomQrShortUrl = `${roomQrShortUrl}?q=wa&id=${userId}&sessionId=${roomSession?._id}`;
 
