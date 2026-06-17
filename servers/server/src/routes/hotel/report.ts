@@ -26,6 +26,9 @@ const CSV_HEADERS = [
   "Booking Source",
   "Check-In Date Time",
   "Check-Out Date Time",
+  "Companions",
+  "Companion Count",
+  "Record Type",
   "Service Requested",
   "Order Items",
   "Requested At",
@@ -131,6 +134,21 @@ const joinNames = (items?: { name?: string }[]) =>
 
 const staffName = (staff?: { name?: string } | null) => staff?.name || "";
 
+const getCompanionGuests = (guests?: any[], primaryPhone?: string) =>
+  (guests || []).filter((guest) => {
+    if (!guest || typeof guest !== "object") return false;
+    return !primaryPhone || guest.phone !== primaryPhone;
+  });
+
+const formatCompanions = (guests?: any[], primaryPhone?: string) =>
+  getCompanionGuests(guests, primaryPhone)
+    .map((guest) =>
+      [guest.name || "Guest", guest.phone ? `(${guest.phone})` : ""]
+        .filter(Boolean)
+        .join(" "),
+    )
+    .join(" | ");
+
 const servicesOverlap = (
   a?: { name?: string }[],
   b?: { name?: string }[],
@@ -228,12 +246,26 @@ const hotelReportRouter = new Hono()
         .sort({ createdAt: 1 })
         .lean();
 
+      const stays = await HotelAnalytics.find({
+        businessId,
+        $or: [
+          { checkIn: { $gte: from, $lte: to } },
+          { checkOut: { $gte: from, $lte: to } },
+        ],
+      })
+        .select("userId roomId source checkIn checkOut guestUserIds serviceIds")
+        .populate({ path: "userId", select: "name phone" })
+        .populate({ path: "roomId", select: "name" })
+        .populate({ path: "guestUserIds", select: "name phone" })
+        .sort({ checkIn: -1 })
+        .lean();
+
       // Empty result is NOT a "route not found" — return a valid empty CSV
       // with a 200 so the client can distinguish "we asked for a range with
       // no data" from "the endpoint doesn't exist in the deployed image".
       // Browsers / fetch consumers can still detect "nothing to show" by
       // checking content length or the row count after parse.
-      if (!alerts.length) {
+      if (!alerts.length && !stays.length) {
         const filename = `guest_experience_report_${formatFilenameDate(from)}-to-${formatFilenameDate(to)}.csv`;
         c.header("Content-Type", "text/csv; charset=utf-8");
         c.header(
@@ -272,22 +304,11 @@ const hotelReportRouter = new Hono()
         .lean();
 
       // ── Step 3: stay context (most recent per phone) ───────────────────
-      const stays = await HotelAnalytics.find({
-        businessId,
-        $or: [
-          { checkIn: { $gte: from, $lte: to } },
-          { checkOut: { $gte: from, $lte: to } },
-        ],
-      })
-        .select("userId source checkIn checkOut")
-        .populate({ path: "userId", select: "phone" })
-        .sort({ checkIn: -1 })
-        .lean();
-
       type StayCtx = {
         source?: string;
         checkIn?: number;
         checkOut?: number;
+        guests?: any[];
       };
       const stayByPhone = new Map<string, StayCtx>();
       for (const stay of stays as any[]) {
@@ -299,6 +320,7 @@ const hotelReportRouter = new Hono()
             source: stay.source,
             checkIn: stay.checkIn,
             checkOut: stay.checkOut,
+            guests: stay.guestUserIds || [],
           });
         }
       }
@@ -307,6 +329,10 @@ const hotelReportRouter = new Hono()
       const userIdSet = new Set<string>();
       for (const a of alerts as any[]) {
         const id = a.createdBy?._id;
+        if (id) userIdSet.add(String(id));
+      }
+      for (const stay of stays as any[]) {
+        const id = stay.userId?._id;
         if (id) userIdSet.add(String(id));
       }
       const userObjectIds = Array.from(userIdSet)
@@ -326,6 +352,11 @@ const hotelReportRouter = new Hono()
       for (const a of alerts as any[]) {
         const uid = a.createdBy?._id;
         const phone = a.createdBy?.phone;
+        if (uid && phone) phoneByUserId.set(String(uid), phone);
+      }
+      for (const stay of stays as any[]) {
+        const uid = stay.userId?._id;
+        const phone = stay.userId?.phone;
         if (uid && phone) phoneByUserId.set(String(uid), phone);
       }
       const visitCountByPhone = new Map<string, number>();
@@ -375,8 +406,10 @@ const hotelReportRouter = new Hono()
 
         // Summary block, then a blank line, then headers.
         const uniqueGuests = new Set(
-          (alerts as any[])
-            .map((a) => a.createdBy?.phone)
+          [
+            ...(alerts as any[]).map((a) => a.createdBy?.phone),
+            ...(stays as any[]).map((stay) => stay.userId?.phone),
+          ]
             .filter(Boolean),
         ).size;
         const escalated = (alerts as any[]).filter((a) => a.isEscalated).length;
@@ -395,10 +428,16 @@ const hotelReportRouter = new Hono()
         // Emit rows in batches. Building rows row-by-row keeps a single 80MB
         // string from ever existing in process memory for large reports.
         let buffer: string[] = [];
+        const phonesWithServiceRows = new Set<string>();
         for (const alert of alerts as any[]) {
           const phone = alert.createdBy?.phone || "";
+          if (phone) phonesWithServiceRows.add(phone);
           const review = findMatchingReview(alert);
           const stay = phone ? stayByPhone.get(phone) : undefined;
+          const companionGuests = getCompanionGuests(
+            stay?.guests,
+            phone,
+          );
 
           const row = [
             alert.createdBy?.name || "Guest",
@@ -408,6 +447,9 @@ const hotelReportRouter = new Hono()
             stay?.source || "",
             formatDateTime(stay?.checkIn),
             formatDateTime(stay?.checkOut),
+            formatCompanions(stay?.guests, phone),
+            companionGuests.length,
+            "Service Request",
             joinNames(alert.serviceIds),
             buildOrderItems(alert.cart),
             formatDateTime(alert.createdAt),
@@ -426,6 +468,51 @@ const hotelReportRouter = new Hono()
               (review as any)?.improvementAreas?.filter(Boolean).join(", ") ||
               "",
             formatDateTime((review as any)?.date),
+          ]
+            .map(escapeCsvCell)
+            .join(",");
+
+          buffer.push(row);
+          if (buffer.length >= CSV_BATCH_FLUSH) {
+            await s.write(buffer.join("\n") + "\n");
+            buffer = [];
+          }
+        }
+        for (const stay of stays as any[]) {
+          const phone = stay.userId?.phone || "";
+          if (!phone || phonesWithServiceRows.has(phone)) continue;
+
+          const companionGuests = getCompanionGuests(
+            stay.guestUserIds,
+            phone,
+          );
+          const row = [
+            stay.userId?.name || "Guest",
+            phone,
+            stay.roomId?.name || "",
+            visitCountByPhone.get(phone) ?? "",
+            stay.source || "",
+            formatDateTime(stay.checkIn),
+            formatDateTime(stay.checkOut),
+            formatCompanions(stay.guestUserIds, phone),
+            companionGuests.length,
+            "Room Scan / Stay",
+            joinNames(stay.serviceIds),
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
           ]
             .map(escapeCsvCell)
             .join(",");
