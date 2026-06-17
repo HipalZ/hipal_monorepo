@@ -190,6 +190,49 @@ const settingsRouter = new Hono()
       }
     },
   )
+  .put(
+    "/notification_sound/:businessId",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    zValidator(
+      "json",
+      z.object({
+        notificationSound: z.enum(["order", "alarm"]),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const { notificationSound } = await c.req.json();
+
+      const updateSetting = await BusinessSettings.findOneAndUpdate(
+        { businessId },
+        { $set: { notificationSound } },
+        { new: true, upsert: true, setDefaultsOnInsert: true },
+      );
+
+      if (!updateSetting) {
+        return respond(c, "Error in updating notification sound", true, 400, {});
+      }
+
+      return respond(
+        c,
+        "Notification sound updated successfully",
+        false,
+        200,
+        updateSetting,
+      );
+    },
+  )
   .get(
     "/:businessId",
 
@@ -201,12 +244,16 @@ const settingsRouter = new Hono()
       pushToken(c);
       if (!existingSetting)
         return respond(c, "Setting not found", true, 404, {});
+      const settingsData = existingSetting.toObject();
       return respond(
         c,
         "Setting fetched successfully",
         false,
         200,
-        existingSetting,
+        {
+          ...settingsData,
+          notificationSound: settingsData.notificationSound || "order",
+        },
       );
     },
   )

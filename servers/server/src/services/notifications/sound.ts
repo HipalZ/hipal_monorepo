@@ -12,11 +12,14 @@ export const DEFAULT_NOTIFICATION_SOUND: NotificationSound = "order";
 
 export const normalizeNotificationSound = (
   sound?: unknown,
-): NotificationSound =>
-  typeof sound === "string" &&
-  VALID_NOTIFICATION_SOUNDS.has(sound as NotificationSound)
-    ? (sound as NotificationSound)
+): NotificationSound => {
+  if (typeof sound !== "string") return DEFAULT_NOTIFICATION_SOUND;
+
+  const normalizedSound = sound.replace(/\.mp3$/i, "");
+  return VALID_NOTIFICATION_SOUNDS.has(normalizedSound as NotificationSound)
+    ? (normalizedSound as NotificationSound)
     : DEFAULT_NOTIFICATION_SOUND;
+};
 
 export const getNotificationChannelId = (
   sound: NotificationSound,
