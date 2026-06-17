@@ -2472,16 +2472,23 @@ const whatsappRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+        businessId,
+      })
+        .select("whatsAppEnabled")
+        .lean();
+      const whatsAppEnabled = isWhatsAppConfigEnabled(whatsAppConfig);
+
       const waba = await WhatsAppWABA.findOne({
         businessId,
-      });
+      }).lean();
 
       if (!waba) {
         return c.json(
           {
             message: 'Waba not found',
             err: true,
-            data: {},
+            data: { whatsAppEnabled },
           },
           404,
         );
@@ -2489,7 +2496,10 @@ const whatsappRouter = new Hono()
       return c.json({
         message: 'waba found',
         err: false,
-        data: waba,
+        data: {
+          ...waba,
+          whatsAppEnabled,
+        },
       });
     },
   )

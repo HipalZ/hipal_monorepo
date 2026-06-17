@@ -13,10 +13,8 @@ import { FiInfo } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 // ─── WHATSAPP UNDER-REVIEW GATE ─────────────────────────────────────────────
-// While our Meta WhatsApp Business Account is under review, the entire
-// WhatsApp module is rendered as a single notice screen. Flip this back to
-// `false` once Meta clears the account; nothing else needs to change.
-const WHATSAPP_UNDER_REVIEW = false;
+// The WhatsApp module opens only when the WABA config has whatsAppEnabled=true.
+const WHATSAPP_DISABLED_MESSAGE = 'Your WhatsApp account is currently under meta review. Please contact the administrator to know update.';
 
 const PendingStatusStep = lazy(() => import('@/components/templates/whatsappTemplates/pendingStatus'));
 const WhatzappPayment = lazy(() => import('@/components/templates/whatsappTemplates/whatzappPayment'));
@@ -37,6 +35,7 @@ const MemoWhatzapp = () => {
   const whatzappFormEnabled = useWhatsapp((s) => s.whatzappFormEnabled);
   const businessData = useBusinessData((s) => s.businessData);
   const whatzappStatus = useWhatsappTempStore((s) => s.whatzappStatus);
+  const whatsAppEnabled = useWhatsappTempStore((s) => s.whatsAppEnabled);
   const setOpenAnalytics = useWhatsappTempStore((s) => s.setOpenAnalytics);
   const openAnalytics = useWhatsappTempStore((s) => s.openAnalytics);
   const setCreateEditFlow = useWhatsappTempStore((s) => s.setCreateEditFlow);
@@ -114,7 +113,11 @@ const MemoWhatzapp = () => {
     navigate,
   ]);
 
-  if (WHATSAPP_UNDER_REVIEW) {
+  if (isLoading || whatsAppEnabled === null) {
+    return <WhatsAppLoader />;
+  }
+
+  if (!whatsAppEnabled) {
     return (
       <main className="lg:max-w-full">
         <div className="whatzapp_gradient_background absolute top-20 z-50 w-full rounded-lg">
@@ -133,11 +136,12 @@ const MemoWhatzapp = () => {
               <h3 className="text-lg font-semibold">Application Update In Progress</h3>
             </div>
             <div className="px-6 py-5">
-              <p className="text-sm leading-relaxed text-gray-700">Your WhatsApp Business application is currently under review with Meta.</p>
+              <p className="text-sm leading-relaxed text-gray-700">{WHATSAPP_DISABLED_MESSAGE}</p>
               <p className="mt-3 text-sm leading-relaxed text-gray-700">
-                To continue using WhatsApp services, please reach out to your administrator to upgrade your application for security and policy
-                compliance.
+                Once enabled, campaign, template, chat, and WhatsApp automation actions will become available here.
               </p>
+              <p className="mt-4 text-sm font-medium text-gray-900">Thank you for your patience and cooperation.</p>
+              <p className="mt-3 text-xs italic text-gray-500">— Hipalz Team</p>
               <p className="mt-4 text-sm font-medium text-gray-900">Thank you for your patience and cooperation.</p>
               <p className="mt-3 text-xs italic text-gray-500">— Hipalz Team</p>
             </div>
