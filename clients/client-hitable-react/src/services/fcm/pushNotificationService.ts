@@ -3,6 +3,8 @@ import { PushNotifications } from "@capacitor/push-notifications";
 export type NotificationPermissionStatus = "granted" | "denied" | "prompt";
 
 export class PushNotificationService {
+  private listenersInitialized = false;
+
   /**
    * Check current permission status without prompting the user
    */
@@ -52,21 +54,17 @@ export class PushNotificationService {
 
   /**
    * Set up listeners for incoming push notifications.
-   * The pushNotificationReceived listener fires when the app is in foreground —
-   * we play a local sound here as a fallback for devices where FCM sound doesn't work.
+   * Native Android notification channels own push sounds. Do not play Web Audio
+   * here, otherwise one foreground push can produce two tones.
    */
-  initListeners(onNotificationReceived?: (title: string, body: string) => void) {
+  initListeners() {
+    if (this.listenersInitialized) return;
+    this.listenersInitialized = true;
+
     PushNotifications.addListener(
       "pushNotificationReceived",
       (notification) => {
         console.log("Push notification received:", notification);
-        // Callback for foreground sound fallback
-        if (onNotificationReceived) {
-          onNotificationReceived(
-            notification.title || "Alert",
-            notification.body || "",
-          );
-        }
       },
     );
 
