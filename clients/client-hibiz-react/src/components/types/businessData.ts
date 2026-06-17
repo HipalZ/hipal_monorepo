@@ -162,6 +162,7 @@ export interface IOutletInfo {
   isPosEnabled: boolean;
   shareCart: boolean;
   posWithOnlyMenu: boolean;
+  notificationSound?: "order" | "alarm";
 }
 
 export interface Order {

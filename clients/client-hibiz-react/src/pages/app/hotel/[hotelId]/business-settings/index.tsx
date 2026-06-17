@@ -13,11 +13,16 @@ import { FaArrowLeft } from "react-icons/fa"
 import { useNavigate } from "react-router-dom"
 import { useUpdateBusinessSetting } from "@/hooks/hotel/useBusinessSettingHook"
 import LoadingSpinner from "@/components/atom/loadingSpinner"
+import { apiRpc } from "@hi/common"
+import { useQuery } from "@tanstack/react-query"
+
+type NotificationSound = "order" | "alarm";
 
 const BusinessSettingsHotel = () => {
     const navigate = useNavigate()
     const businessData = useBusinessData((s) => s.outletInfo)
     const {updateBusinessSettingLoader, updateBusinessSetting} = useUpdateBusinessSetting()
+    const [settingsId, setSettingsId] = useState<string | null>(null)
 
     // Form state
     const [formData, setFormData] = useState({
@@ -27,6 +32,7 @@ const BusinessSettingsHotel = () => {
         endTime: "03:59",
         phoneNumber: businessData?.phone || "",
         googleMapsDirection: businessData?.location || "",
+        notificationSound: "order" as NotificationSound,
     })
 
     // Error state
@@ -45,7 +51,30 @@ const BusinessSettingsHotel = () => {
         return `${formattedHour}:${minutes} ${ampm}`
     }
 
+    const { isLoading: settingsLoading } = useQuery({
+        queryKey: ["hotelBusinessSettings", businessData?.businessId],
+        queryFn: async () => {
+            const res = await apiRpc.settings[":businessId"].$get({
+                param: {
+                    businessId: businessData?.businessId || "",
+                },
+            })
+            const response = await res.json()
+            if (res.status !== 200 && res.status !== 201) return null
+            return response?.data ?? null
+        },
+        enabled: !!businessData?.businessId,
+        onSuccess: (settings) => {
+            setSettingsId(settings?._id || null)
+            setFormData((prev) => ({
+                ...prev,
+                notificationSound: settings?.notificationSound === "alarm" ? "alarm" : "order",
+            }))
+        }
+    })
+
     // Handle input changes
+
     const handleInputChange = (field: string, value: string | boolean) => {
         setFormData({
             ...formData,
@@ -89,8 +118,6 @@ const BusinessSettingsHotel = () => {
             location: formData.googleMapsDirection,
         }
 
-        await updateBusinessSetting(payload)
-
         setErrors(newErrors)
 
         // Check if there are any errors
@@ -99,13 +126,42 @@ const BusinessSettingsHotel = () => {
             return
         }
 
+        await updateBusinessSetting(payload)
+        await saveNotificationSound()
     }
 
     const handleBack = () => {
         navigate(-1)
     }
 
-    if(updateBusinessSettingLoader){
+    const saveNotificationSound = async () => {
+        if (!businessData?.businessId) return
+
+        if (settingsId) {
+            await apiRpc.settings.update[":settingsId"].$put({
+                param: {
+                    settingsId,
+                },
+                json: {
+                    notificationSound: formData.notificationSound,
+                },
+            })
+            return
+        }
+
+        const res = await apiRpc.settings.$post({
+            json: {
+                businessId: businessData.businessId,
+                notificationSound: formData.notificationSound,
+            },
+        })
+        const response = await res.json()
+        if (res.status === 200 || res.status === 201) {
+            setSettingsId(response?.data?._id || null)
+        }
+    }
+
+    if(updateBusinessSettingLoader || settingsLoading){
         return <LoadingSpinner />
     }
 
@@ -283,6 +339,27 @@ const BusinessSettingsHotel = () => {
                     </Card>
                 </div>
 
+                <div className="space-y-4">
+                    <h2 className="text-2xl font-bold">Alert Sound</h2>
+                    <Card>
+                        <CardContent className="pt-6 space-y-3">
+                            <Label htmlFor="notificationSound">Hitable notification sound</Label>
+                            <select
+                                id="notificationSound"
+                                value={formData.notificationSound}
+                                onChange={(e) => handleInputChange("notificationSound", e.target.value)}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                                <option value="order">Order alert</option>
+                                <option value="alarm">Alarm alert</option>
+                            </select>
+                            <p className="text-sm text-muted-foreground">
+                                This sound will play in the Hitable app when staff receive service and wake-up call alerts.
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
+
                 <Separator />
 
                 <AdvancedBottomButton
@@ -310,4 +387,3 @@ const BusinessSettingsHotel = () => {
 }
 
 export default BusinessSettingsHotel
-

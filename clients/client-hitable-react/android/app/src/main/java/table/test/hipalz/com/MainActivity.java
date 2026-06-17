@@ -30,18 +30,44 @@ public class MainActivity extends BridgeActivity {
     private void createNotificationChannel() {
         createAlertChannel(
                 "custom_channel_id",
-                "Service Alerts",
-                "Alert notifications for room service requests"
+                "Service Alerts - Legacy",
+                "Legacy alert notifications for service requests",
+                "order"
         );
         createAlertChannel(
                 "wake_up_call_channel_v1",
+                "Wake-up Call Alerts - Legacy",
+                "Legacy wake-up call reminders for front office",
+                "order"
+        );
+        createAlertChannel(
+                "service_alerts_order_v1",
+                "Service Alerts",
+                "Alert notifications for service requests",
+                "order"
+        );
+        createAlertChannel(
+                "service_alerts_alarm_v1",
+                "Service Alerts - Alarm",
+                "Alarm-tone notifications for service requests",
+                "alarm"
+        );
+        createAlertChannel(
+                "wake_up_call_order_v1",
                 "Wake-up Call Alerts",
-                "Urgent wake-up call reminders for front office"
+                "Urgent wake-up call reminders for front office",
+                "order"
+        );
+        createAlertChannel(
+                "wake_up_call_alarm_v1",
+                "Wake-up Call Alerts - Alarm",
+                "Alarm-tone wake-up call reminders for front office",
+                "alarm"
         );
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void createAlertChannel(String channelId, CharSequence name, String description) {
+    private void createAlertChannel(String channelId, CharSequence name, String description, String soundName) {
         // IMPORTANCE_HIGH ensures heads-up popup + sound on all devices
         int importance = NotificationManager.IMPORTANCE_HIGH;
 
@@ -52,7 +78,7 @@ public class MainActivity extends BridgeActivity {
         channel.setBypassDnd(true);
 
         // Explicit AudioAttributes so OEM skins don't downgrade to silent
-        Uri soundUri = Uri.parse("android.resource://" + getPackageName() + "/raw/order");
+        Uri soundUri = Uri.parse("android.resource://" + getPackageName() + "/raw/" + soundName);
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION)

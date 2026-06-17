@@ -41,6 +41,7 @@ const admin = require("firebase-admin");
 
 const sendPushNotification = async (
   token: string,
+  businessId: string,
   hotelNo: string,
   serviceName: string,
 ) => {
@@ -51,6 +52,7 @@ const sendPushNotification = async (
       body: `${hotelNo} requires your attention for ${serviceName}. kindly respond to the alert!`,
       data: {
         type: "HOTEL_SERVICE_ALERT",
+        businessId,
         roomName: hotelNo,
         serviceName,
       },
@@ -60,6 +62,7 @@ const sendPushNotification = async (
 
 const sendPushNotificationForNotDeliverd = async (
   token: string,
+  businessId: string,
   hotelNo: string,
 ) => {
   const pushMessage = {
@@ -67,6 +70,11 @@ const sendPushNotificationForNotDeliverd = async (
     notification: {
       title: "Service Delivery Alert 🚨",
       body: `Heads up! ${hotelNo} has a service that wasn't delivered. Please check and resolve ASAP.`,
+    },
+    data: {
+      type: "HOTEL_SERVICE_DELIVERY_ALERT",
+      businessId,
+      roomName: hotelNo || "",
     },
     android: {
       notification: {
@@ -196,7 +204,7 @@ const scheduleAlertUpdate = (
           });
           registrationTokens.map(async (obj) => {
             if (obj.notification) {
-              await sendPushNotification(obj.token, roomName, serviceName);
+              await sendPushNotification(obj.token, businessId, roomName, serviceName);
             }
           });
 
@@ -207,6 +215,7 @@ const scheduleAlertUpdate = (
             alertId,
             l2Time || 0,
             2,
+            businessId,
             roomName,
             serviceName,
             filterL2ManagerIds,
@@ -362,7 +371,7 @@ const scheduleAlertUpdate = (
           });
           registrationTokens.map(async (obj) => {
             if (obj.notification) {
-              await sendPushNotification(obj.token, roomName, serviceName);
+              await sendPushNotification(obj.token, businessId, roomName, serviceName);
             }
           });
 
@@ -373,6 +382,7 @@ const scheduleAlertUpdate = (
             alertId,
             l2Time || 0,
             2,
+            businessId,
             roomName,
             serviceName,
             filterL2ManagerIds,
@@ -466,6 +476,7 @@ const scheduleLevel2Alert = (
   alertId: string,
   l2Time: number,
   nextLevel: number,
+  businessId: string,
   roomName: string,
   serviceName: string,
   l2ManagerIds: string[],
@@ -507,7 +518,7 @@ const scheduleLevel2Alert = (
         });
         registrationTokens.map(async (obj) => {
           if (obj.notification) {
-            await sendPushNotification(obj.token, roomName, serviceName);
+            await sendPushNotification(obj.token, businessId, roomName, serviceName);
           }
         });
       }
@@ -516,6 +527,7 @@ const scheduleLevel2Alert = (
         alertId,
         l3Time || 0,
         3,
+        businessId,
         roomName,
         serviceName,
         l3ManagerIds,
@@ -605,6 +617,7 @@ const scheduleLevel3Alert = (
   alertId: string,
   l3Time: number,
   nextLevel: number,
+  businessId: string,
   roomName: string,
   serviceName: string,
   l3ManagerIds: string[],
@@ -644,7 +657,7 @@ const scheduleLevel3Alert = (
         });
         registrationTokens.map(async (obj) => {
           if (obj.notification) {
-            await sendPushNotification(obj.token, roomName, serviceName);
+            await sendPushNotification(obj.token, businessId, roomName, serviceName);
           }
         });
       }
@@ -762,7 +775,7 @@ const scheduleAlert = (
       });
       for (const obj of registrationTokens) {
         if (obj.notification) {
-          await sendPushNotification(obj.token, roomName, serviceName);
+          await sendPushNotification(obj.token, businessId, roomName, serviceName);
         }
       }
     } catch (error) {
@@ -2246,7 +2259,11 @@ const hotelAlertRouter = new Hono()
       await Promise.all(
         registrationTokens.map(async (obj) => {
           if (obj.notification) {
-            await sendPushNotificationForNotDeliverd(obj.token, roomData?.name);
+            await sendPushNotificationForNotDeliverd(
+              obj.token,
+              roomData?.businessId?.toString() || "",
+              roomData?.name || "",
+            );
           }
         }),
       );

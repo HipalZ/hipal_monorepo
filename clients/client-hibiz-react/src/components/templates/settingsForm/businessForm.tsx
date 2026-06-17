@@ -36,6 +36,7 @@ const MemoBusinessForm: React.FC = () => {
     merchantId: null,
     accessKeyId: null,
     secretKey: null,
+    notificationSound: null,
     _id: null,
   });
 
@@ -153,6 +154,19 @@ const MemoBusinessForm: React.FC = () => {
           <TextInput ref={setRef('razorpayKeySecret')} id="secretKey" label="Secret Key" maxLength={35} />
         </FormSection>
 
+        <FormSection title="Alert Sound">
+          <SelectInput
+            ref={setRef('notificationSound')}
+            id="notificationSound"
+            label="Notification Sound"
+            options={[
+              { value: 'order', label: 'Order alert' },
+              { value: 'alarm', label: 'Alarm alert' },
+            ]}
+          />
+          <p className="text-xs text-gray-500">This sound will be used in the Hitable app for staff alerts.</p>
+        </FormSection>
+
         <button className="bottom_btn col-span-1 md:col-span-2" type="submit">
           Save
         </button>
@@ -191,24 +205,31 @@ const TextInput = React.forwardRef<HTMLInputElement, { id: string; label: string
   </div>
 ));
 
-const SelectInput = React.forwardRef<HTMLSelectElement, { id: string; label: string; options: string[] }>(({ id, label, options }, ref) => (
-  <div className="relative">
-    <select
-      ref={ref}
-      id={id}
-      className="peer mb-0 block w-full rounded-lg border border-black bg-white pb-4 pl-4 pr-4 pt-2 text-base focus:border-black focus:outline-none dark:border-gray-600 dark:text-white"
-    >
-      {options.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
-    <label
-      htmlFor={id}
-      className="scale-85 peer-focus:scale-85 absolute left-1 top-2 z-0 -translate-y-4 transform bg-white px-2 text-sm text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:px-2 peer-focus:text-black dark:bg-gray-900 dark:text-gray-400 peer-focus:dark:text-black"
-    >
-      {label}
-    </label>
-  </div>
-));
+const SelectInput = React.forwardRef<HTMLSelectElement, { id: string; label: string; options: Array<string | { value: string; label: string }> }>(
+  ({ id, label, options }, ref) => (
+    <div className="relative">
+      <select
+        ref={ref}
+        id={id}
+        className="peer mb-0 block w-full rounded-lg border border-black bg-white pb-4 pl-4 pr-4 pt-2 text-base focus:border-black focus:outline-none dark:border-gray-600 dark:text-white"
+      >
+        {options.map((option) => {
+          const value = typeof option === 'string' ? option : option.value;
+          const optionLabel = typeof option === 'string' ? option : option.label;
+
+          return (
+            <option key={value} value={value}>
+              {optionLabel}
+            </option>
+          );
+        })}
+      </select>
+      <label
+        htmlFor={id}
+        className="scale-85 peer-focus:scale-85 absolute left-1 top-2 z-0 -translate-y-4 transform bg-white px-2 text-sm text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:px-2 peer-focus:text-black dark:bg-gray-900 dark:text-gray-400 peer-focus:dark:text-black"
+      >
+        {label}
+      </label>
+    </div>
+  ),
+);

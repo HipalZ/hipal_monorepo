@@ -6,8 +6,6 @@ import { sendPushToTokens } from "../../../services/notifications";
 const WAKE_UP_ACK_REMINDER_MS = 2 * 60 * 1000;
 const MAX_WAKE_UP_ACK_REMINDERS = 2;
 const WAKE_UP_REMINDER_REPEAT_MS = 60 * 1000;
-const WAKE_UP_NOTIFICATION_CHANNEL_ID = "wake_up_call_channel_v1";
-const WAKE_UP_NOTIFICATION_SOUND = "order";
 
 type LeanWakeUpAlert = {
   _id: { toString: () => string };
@@ -83,8 +81,7 @@ async function wakeUpCallAckReminder(job: Job) {
   await sendPushToTokens(registrationTokens, {
     title: "Wake-up Call Awaiting Acknowledgement",
     body: `Please acknowledge room ${room.name}${guest?.name ? ` for ${guest.name}` : ""}.`,
-    sound: WAKE_UP_NOTIFICATION_SOUND,
-    channelId: WAKE_UP_NOTIFICATION_CHANNEL_ID,
+    channelGroup: "wakeUp",
     data: {
       type: "HOTEL_WAKEUP_ACK_REMINDER",
       businessId: alert.businessId.toString(),
@@ -136,15 +133,13 @@ async function wakeUpCallDue(job: Job) {
     alertId,
     roomName: room.name,
     tokenCount: registrationTokens.length,
-    channelId: WAKE_UP_NOTIFICATION_CHANNEL_ID,
-    sound: WAKE_UP_NOTIFICATION_SOUND,
+    channelGroup: "wakeUp",
   });
 
   await sendPushToTokens(registrationTokens, {
     title: "Wake-up Call Due Now",
     body: `Call room ${room.name}${guest?.name ? ` for ${guest.name}` : ""} now.`,
-    sound: WAKE_UP_NOTIFICATION_SOUND,
-    channelId: WAKE_UP_NOTIFICATION_CHANNEL_ID,
+    channelGroup: "wakeUp",
     data: {
       type: "HOTEL_WAKEUP_DUE",
       businessId: alert.businessId.toString(),

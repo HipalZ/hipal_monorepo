@@ -1,5 +1,5 @@
 import mongoose, { type Model } from "mongoose";
-import { RegisterType } from "../validators/businessSetting";
+import { NotificationSound, RegisterType } from "../validators/businessSetting";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 import type { BusinessSettingsType } from "../validators";
@@ -26,6 +26,12 @@ const businessSettingSchema = new mongoose.Schema<BusinessSettingsType>({
   razorpayKeyId: { type: String, required: false },
   razorpayKeySecret: { type: String, required: false },
   razorpayWebhookSecret: { type: String, required: false },
+  notificationSound: {
+    type: String,
+    enum: NotificationSound,
+    required: false,
+    default: "order",
+  },
   isActive: { type: Boolean, default: true },
 });
 

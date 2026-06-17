@@ -4,6 +4,7 @@ import { messaging } from "./clientApp";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { PushNotificationService } from "@/services/fcm/pushNotificationService";
 import { useLiteStore } from "@/components/store/useLiteStore";
+import { playSelectedNotificationSound } from "@/utils/notificationSound";
 
 const pushNotificationService = new PushNotificationService();
 
@@ -11,18 +12,6 @@ const pushNotificationService = new PushNotificationService();
  * Plays a local alert sound as fallback for devices where FCM notification
  * sound doesn't work. Uses the Web Audio API which works in Capacitor webview.
  */
-const playFallbackSound = () => {
-  try {
-    const audio = new Audio("/order.mp3");
-    audio.volume = 1.0;
-    audio.play().catch(() => {
-      // Autoplay blocked — nothing we can do, the native notification should handle it
-    });
-  } catch {
-    // Silently fail — this is just a fallback
-  }
-};
-
 export const usePushNotifications = () => {
   const { setNotificationStatus } = useLiteStore((s) => ({
     setNotificationStatus: s.setNotificationStatus,
@@ -49,7 +38,7 @@ export const usePushNotifications = () => {
           setPushToken(token);
           // Pass foreground sound fallback callback
           pushNotificationService.initListeners(() => {
-            playFallbackSound();
+            playSelectedNotificationSound();
           });
           setNotificationStatus(true);
         } else {
