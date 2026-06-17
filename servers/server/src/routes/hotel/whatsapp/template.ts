@@ -4,7 +4,10 @@ import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
 import { z } from "zod";
-import whatsAppApiBaseUrl from "../../../utils/whatsAppApiBaseUrl/apiPaths";
+import whatsAppApiBaseUrl, {
+  WHATSAPP_BUSINESS_DISABLED_MESSAGE,
+  isWhatsAppConfigEnabled,
+} from "../../../utils/whatsAppApiBaseUrl/apiPaths";
 
 interface AxiosError {
   response?: {
@@ -156,37 +159,60 @@ const whatsappTemplateRouter = new Hono()
           );
         }
 
-        const getWhatAppTemplate = await WhatAppTemplate.find({
+        if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+          return c.json(
+            {
+              message: WHATSAPP_BUSINESS_DISABLED_MESSAGE,
+              err: true,
+              data: {},
+            },
+            403,
+          );
+        }
+
+        const wabaId = whatsAppConfigData.whatsAppAccountId;
+
+        if (!wabaId) {
+          return c.json(
+            {
+              message: "WhatsApp Business Account ID missing in config",
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
+
+        const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${wabaId}/message_templates`;
+
+        const getWhatAppTemplate = await axios.get(url, {
+          headers: {
+            Authorization: `Bearer ${whatsAppConfigData.token}`,
+          },
+        });
+
+        const templatesArray = getWhatAppTemplate.data.data || [];
+
+        const localTemplates = await WhatAppTemplate.find({
           businessId,
-          isDeleted: false,
+          isDeleted: { $ne: true },
         })
           .select("templateId")
           .limit(30);
 
-        const templateIds = getWhatAppTemplate.map(
-          (template) => template.templateId,
+        const localTemplateIds = new Set(
+          localTemplates.map((template) => String(template.templateId)),
         );
 
-        const templatesArray = [];
-
-        for (const templateId of templateIds) {
-          const getWhatAppTemplate = await axios.get(
-            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${templateId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${whatsAppConfigData.token}`,
-              },
-            },
-          );
-
-          templatesArray.push(getWhatAppTemplate.data);
-        }
+        const syncedTemplates = templatesArray.filter((template: any) =>
+          localTemplateIds.has(String(template.id)),
+        );
 
         return c.json(
           {
             message: "fetched successfully",
             err: false,
-            data: templatesArray,
+            data: syncedTemplates,
           },
           200,
         );
