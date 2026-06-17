@@ -91,7 +91,7 @@ const sendExpoPush = async (target: PushTarget, payload: PushPayload) => {
 
 const sendFirebasePush = async (target: PushTarget, payload: PushPayload) => {
   const sound = normalizeNotificationSound(payload.sound);
-  return getFirebaseMessaging().send({
+  const message = {
     token: target.token,
     notification: {
       title: payload.title,
@@ -104,7 +104,18 @@ const sendFirebasePush = async (target: PushTarget, payload: PushPayload) => {
         sound,
       },
     },
+  };
+
+  console.log("[push:fcm:send]", {
+    tokenTail: target.token.slice(-12),
+    title: payload.title,
+    type: payload.data?.type,
+    businessId: payload.data?.businessId,
+    channelId: message.android.notification.channel_id,
+    sound: message.android.notification.sound,
   });
+
+  return getFirebaseMessaging().send(message);
 };
 
 const shouldDeleteToken = (error: string) =>

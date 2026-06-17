@@ -1886,7 +1886,7 @@ const paymentsRouter = new Hono()
       if (registrationToken.length > 0) {
         for (const obj of registrationToken) {
           if (obj.notification) {
-            sendPushNotification(obj.token, 'customer', tableName);
+            sendPushNotification(obj.token, businessId, 'customer', tableName);
           }
         }
       }
@@ -1908,10 +1908,26 @@ const paymentsRouter = new Hono()
               },
             };
 
+            console.log('[waiterAlert:push:send]', {
+              tokenTail: obj.token.slice(-12),
+              businessId,
+              tableName,
+              title: pushMessage.notification.title,
+              channelId: pushMessage.android.notification.channel_id,
+              sound: pushMessage.android.notification.sound,
+            });
+
             admin
               .messaging()
               .send(pushMessage)
               .then((response: unknown) => {
+                console.log('[waiterAlert:push:sent]', {
+                  tokenTail: obj.token.slice(-12),
+                  businessId,
+                  tableName,
+                  response,
+                });
+
                 return c.json({
                   message: 'FCM message sent successfully',
                   err: false,
@@ -1919,6 +1935,13 @@ const paymentsRouter = new Hono()
                 });
               })
               .catch((err: Error) => {
+                console.error('[waiterAlert:push:failed]', {
+                  tokenTail: obj.token.slice(-12),
+                  businessId,
+                  tableName,
+                  error: err instanceof Error ? err.message : String(err),
+                });
+
                 return c.json(
                   {
                     message: 'Error sending FCM message',

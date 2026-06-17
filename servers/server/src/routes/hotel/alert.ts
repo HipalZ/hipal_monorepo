@@ -54,9 +54,31 @@ const sendPushNotification = async (token: string, businessId: string, hotelNo: 
   };
 
   try {
+    const androidNotification = (pushMessage as any).android?.notification;
+
+    console.log('[hotelAlert:push:send]', {
+      tokenTail: token.slice(-12),
+      businessId,
+      roomName: hotelNo,
+      serviceName,
+      title: pushMessage.notification.title,
+      hasAndroidNotification: Boolean(androidNotification),
+      channelId: androidNotification?.channel_id,
+      sound: androidNotification?.sound,
+      note: 'raw hotel service payload',
+    });
+
     const response = await admin.messaging().send(pushMessage);
     return { success: true, response };
-  } catch (error) {}
+  } catch (error) {
+    console.error('[hotelAlert:push:failed]', {
+      tokenTail: token.slice(-12),
+      businessId,
+      roomName: hotelNo,
+      serviceName,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 };
 
 const sendPushNotificationForNotDeliverd = async (token: string, businessId: string, hotelNo: string) => {
@@ -80,9 +102,26 @@ const sendPushNotificationForNotDeliverd = async (token: string, businessId: str
   };
 
   try {
+    console.log('[hotelAlert:deliveryPush:send]', {
+      tokenTail: token.slice(-12),
+      businessId,
+      roomName: hotelNo,
+      title: pushMessage.notification.title,
+      type: pushMessage.data.type,
+      channelId: pushMessage.android.notification.channel_id,
+      sound: pushMessage.android.notification.sound,
+    });
+
     const response = await admin.messaging().send(pushMessage);
     return { success: true, response };
-  } catch (error) {}
+  } catch (error) {
+    console.error('[hotelAlert:deliveryPush:failed]', {
+      tokenTail: token.slice(-12),
+      businessId,
+      roomName: hotelNo,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 };
 
 const scheduleAlertUpdate = (
