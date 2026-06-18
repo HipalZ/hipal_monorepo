@@ -33,7 +33,10 @@ import type { FilterQuery } from "mongoose";
 import { Types } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { syncHotelStayCompanions } from "../../services/hotelCompanions";
+import {
+  syncHotelCompanionReadModel,
+  syncHotelStayCompanions,
+} from "../../services/hotelCompanions";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 import { endOfToday, startOfToday } from "../payments/index.js";
@@ -494,6 +497,11 @@ const roomRouter = new Hono()
 
     async (c) => {
       const { businessId, userId, roomId } = c.req.query();
+
+      await syncHotelCompanionReadModel({
+        businessId,
+        userId,
+      });
 
       const reviews = await Reviews.find({
         businessId,

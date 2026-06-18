@@ -14,6 +14,13 @@ type SyncHotelStayCompanionsArgs = {
   session?: ClientSession;
 };
 
+type SyncHotelCompanionReadModelArgs = {
+  businessId: string;
+  userId?: string;
+  from?: number;
+  to?: number;
+};
+
 const asIdString = (value: unknown) => {
   if (!value) return "";
   if (typeof value === "string") return value;
@@ -113,4 +120,78 @@ export const syncHotelStayCompanions = async ({
   );
 
   return companionIds;
+};
+
+export const syncHotelCompanionReadModel = async ({
+  businessId,
+  userId,
+  from,
+  to,
+}: SyncHotelCompanionReadModelArgs) => {
+  const roomQuery: Record<string, unknown> = {
+    businessId,
+    userIds: userId ? userId : { $exists: true, $ne: [] },
+  };
+
+  const activeRooms = await HotelRoom.find(roomQuery)
+    .select("_id")
+    .lean();
+
+  await Promise.all(
+    activeRooms.map((room) =>
+      syncHotelStayCompanions({
+        businessId,
+        roomId: room._id,
+        userIds: userId ? [userId] : [],
+      }),
+    ),
+  );
+
+  const analyticsQuery: Record<string, unknown> = {
+    businessId,
+    roomSessionId: { $ne: null },
+  };
+
+  if (userId) {
+    analyticsQuery.$or = [{ userId }, { guestUserIds: userId }];
+  }
+
+  if (typeof from === "number" || typeof to === "number") {
+    const range: Record<string, number> = {};
+    if (typeof from === "number") range.$gte = from;
+    if (typeof to === "number") range.$lte = to;
+    analyticsQuery.checkIn = range;
+  }
+
+  const analyticsRows = await HotelAnalytics.find(analyticsQuery)
+    .select("_id userId guestUserIds roomSessionId")
+    .lean();
+
+  const companionsBySession = new Map<string, Set<string>>();
+  for (const row of analyticsRows) {
+    const sessionId = asIdString(row.roomSessionId);
+    if (!sessionId) continue;
+
+    const ids = companionsBySession.get(sessionId) || new Set<string>();
+    const primaryUserId = asIdString(row.userId);
+    if (primaryUserId) ids.add(primaryUserId);
+    for (const guestId of row.guestUserIds || []) {
+      const id = asIdString(guestId);
+      if (id) ids.add(id);
+    }
+    companionsBySession.set(sessionId, ids);
+  }
+
+  await Promise.all(
+    Array.from(companionsBySession.entries()).map(([roomSessionId, ids]) =>
+      HotelAnalytics.updateMany(
+        { businessId, roomSessionId },
+        {
+          $addToSet: {
+            guestUserIds: { $each: Array.from(ids) },
+          },
+        },
+      ),
+    ),
+  );
 };

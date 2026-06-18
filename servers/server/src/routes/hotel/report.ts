@@ -1,15 +1,11 @@
-import {
-  Cart,
-  HotelAlert,
-  HotelAnalytics,
-  Reviews,
-} from "@hi/db-models";
-import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
-import { Types } from "mongoose";
-import { z } from "zod";
-import { stream } from "hono/streaming";
-import { respond } from "../../utils/response";
+import { Cart, HotelAlert, HotelAnalytics, Reviews } from '@hi/db-models';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import { stream } from 'hono/streaming';
+import { Types } from 'mongoose';
+import { z } from 'zod';
+import { syncHotelCompanionReadModel } from '../../services/hotelCompanions';
+import { respond } from '../../utils/response';
 
 // ─── Guest Experience CSV helpers ──────────────────────────────────────────
 // Bound on what the server will emit in one call. 92 days (~3 months) matches
@@ -233,6 +229,12 @@ const hotelReportRouter = new Hono()
       }
 
       // ── Step 1: alerts in range ─────────────────────────────────────────
+      await syncHotelCompanionReadModel({
+        businessId,
+        from,
+        to,
+      });
+
       const alerts = await HotelAlert.find({
         businessId,
         createdAt: { $gte: from, $lte: to },
