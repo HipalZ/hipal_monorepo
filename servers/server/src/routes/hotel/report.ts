@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { stream } from 'hono/streaming';
 import { Types } from 'mongoose';
 import { z } from 'zod';
+import { syncHotelCompanionReadModel } from '../../services/hotelCompanions';
 import { respond } from '../../utils/response';
 
 // ─── Guest Experience CSV helpers ──────────────────────────────────────────
@@ -205,6 +206,12 @@ const hotelReportRouter = new Hono()
       }
 
       // ── Step 1: alerts in range ─────────────────────────────────────────
+      await syncHotelCompanionReadModel({
+        businessId,
+        from,
+        to,
+      });
+
       const alerts = await HotelAlert.find({
         businessId,
         createdAt: { $gte: from, $lte: to },
