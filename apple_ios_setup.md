@@ -771,3 +771,27 @@ The iOS asset catalog originally contained Capacitor's default blue icon and spl
 - The iOS app icon is an opaque 1024×1024 PNG with the HiPal hand centered on white. iOS applies the device-specific corner mask.
 - All iOS splash image variants are 2732×2732, white, with the same HiPal hand centered.
 - Android resources were read as the design reference but were not modified.
+
+## 25. Production APNs credential mapping
+
+For the production Firebase Apple app with bundle ID `hiclient.hipalz.com`:
+
+- **Team ID:** `8W8H449W92`. This identifies PALTRIBE SOLUTIONS PRIVATE LIMITED and remains the same for the team's apps.
+- **Key ID:** the identifier shown by Apple for the newly registered production APNs authentication key. It is not the bundle ID, certificate ID, App Store ID, or Team ID.
+- **APNs key file:** the one-time downloaded `AuthKey_<KEY_ID>.p8` belonging to that Key ID.
+- **Environment:** Production.
+- **Scope/topic:** topic-specific for `hiclient.hipalz.com`.
+
+Upload the `.p8`, its matching Key ID, and Team ID `8W8H449W92` to Firebase **Project settings → Cloud Messaging → Apple app configuration → Production APNs authentication key** for `hiclient.hipalz.com`. Never commit or share the `.p8` file.
+
+## 26. Replace the test Firebase plist with production
+
+1. Open Firebase project `hipal-demo` and select **Project settings → General**.
+2. Under **Your apps**, select the production Apple app whose bundle ID is exactly `hiclient.hipalz.com`.
+3. Download its `GoogleService-Info.plist`.
+4. Replace the existing local test file at `clients/client-hitable-react/ios/App/App/GoogleService-Info.plist` with the downloaded production file. Keep the filename exactly `GoogleService-Info.plist`.
+5. Do not drag in a second Xcode reference. The project already references this path and includes it in the App target resources.
+6. Verify that the new plist reports `BUNDLE_ID = hiclient.hipalz.com` and `PROJECT_ID = hipal-demo`.
+7. In Xcode confirm the file has App target membership and appears exactly once under **Build Phases → Copy Bundle Resources**.
+
+The plist is ignored by Git and must remain uncommitted. After replacing it, run the production web build followed by an iOS-only Capacitor sync.
