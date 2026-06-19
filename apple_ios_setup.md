@@ -723,3 +723,51 @@ To export an `.ipa`:
 5. Keep automatic signing unless the team deliberately manages profiles manually, then export the signed `.ipa`.
 
 Development and Ad Hoc builds only run on devices included in the provisioning profile. For broader beta distribution, choose **TestFlight & App Store**, upload the archive, and assign it to TestFlight testers in App Store Connect.
+
+## 22. Install and validate the exported test IPA
+
+Deploy/restart the updated `test` backend before testing the exported app; otherwise the older server payload may still omit `aps.sound`.
+
+1. Delete the older `hitable-test` installation from the registered iPhone so the new native bundle and notification registration are unambiguous.
+2. Connect and unlock the iPhone.
+3. In Xcode, open **Window → Devices and Simulators**, select the iPhone, click the add button under **Installed Apps**, and select the exported `.ipa`.
+4. Launch the app, allow notifications, and log in against the test environment.
+5. Turn off Silent Mode and Focus, enable the app's notification Sounds option, and raise **Settings → Sounds & Haptics → Ringtone and Alerts**.
+6. Put the app in the background or lock the screen.
+7. Trigger a hotel alert from the test environment.
+8. Confirm the test-backend sender logs `iosSound: order.caf`, then confirm the iPhone displays the notification and plays the custom sound.
+
+Installing an IPA exported with Development/Release Testing signing only works on iPhones registered in the provisioning profile.
+
+## 23. Exported IPA receives no notifications: APNs environment mismatch
+
+The exported `App.ipa` was inspected directly. It contains:
+
+- Bundle ID `table.test.hipalz.com`.
+- An Ad Hoc provisioning profile for the PALTRIBE team.
+- `aps-environment = production`.
+- The matching `GoogleService-Info.plist`.
+- The bundled 4.68-second `order.caf`.
+
+The earlier Xcode Debug build used sandbox APNs, while Ad Hoc/Release Testing uses production APNs. The Apple topic-specific key originally uploaded to Firebase was created for Sandbox. A key from the wrong environment cannot deliver to the production APNs token, which explains why the exported IPA received neither a banner nor sound.
+
+Create a Production related APNs key for topic `table.test.hipalz.com`, securely record its new Key ID, download its one-time `.p8`, and upload it to the **production APNs authentication key** slot for this Firebase Apple app. Keep the existing Sandbox key for Debug testing. Do not use the development/production APNs certificate `.p12` sections.
+
+After Firebase accepts the Production key, the existing IPA does not need rebuilding because its provisioning, entitlement, Firebase configuration, and sound resource are already correct. Reinstalling the IPA is recommended to refresh notification registration and save a fresh production FCM token.
+
+## 24. Cable-free use, additional testers, and iOS branding
+
+After installation, the app does not need to remain connected to the Mac. Notifications and sound work over the internet through the test API, Firebase, and APNs. The installed Ad Hoc/Development build remains limited by its signing and provisioning validity.
+
+The first exported IPA contained only the originally registered iPhone. To test on another iPhone, either register that device's UDID and export a new Ad Hoc/Release Testing IPA whose profile includes it, or use TestFlight. TestFlight is preferred for multiple testers because their UDIDs do not need to be embedded in the IPA profile.
+
+The iOS notification sound is intentionally independent from Android:
+
+- Android requests `order` and resolves `android/app/src/main/res/raw/order.mp3`.
+- iOS requests the exact filename `order.caf` and loads it from the native app bundle.
+
+The iOS asset catalog originally contained Capacitor's default blue icon and splash. These were replaced using the existing HiPal hand artwork already used by the Android launcher:
+
+- The iOS app icon is an opaque 1024×1024 PNG with the HiPal hand centered on white. iOS applies the device-specific corner mask.
+- All iOS splash image variants are 2732×2732, white, with the same HiPal hand centered.
+- Android resources were read as the design reference but were not modified.
