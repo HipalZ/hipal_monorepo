@@ -1,6 +1,12 @@
 import { PushNotifications } from "@capacitor/push-notifications";
+import { FCM } from "@capacitor-community/fcm";
+import { Capacitor } from "@capacitor/core";
 
-export type NotificationPermissionStatus = "granted" | "denied" | "prompt";
+export type NotificationPermissionStatus =
+  | "granted"
+  | "denied"
+  | "prompt"
+  | "prompt-with-rationale";
 
 export class PushNotificationService {
   private listenersInitialized = false;
@@ -38,7 +44,18 @@ export class PushNotificationService {
       PushNotifications.register();
 
       return new Promise((resolve, reject) => {
-        PushNotifications.addListener("registration", (token) => {
+        PushNotifications.addListener("registration", async (token) => {
+          if (Capacitor.getPlatform() === "ios") {
+            try {
+              const result = await FCM.getToken();
+              resolve(result.token);
+            } catch (error) {
+              console.error("Unable to obtain the iOS FCM token:", error);
+              reject(error);
+            }
+            return;
+          }
+
           resolve(token.value);
         });
 

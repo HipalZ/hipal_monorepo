@@ -43,6 +43,7 @@ app.use(prettyJSON());
 // Single source of truth for trusted frontend origins. Both CORS and CSRF use
 // this list so they stay in sync (mismatches caused silent CSRF rejections).
 const ALLOWED_ORIGINS = [
+  "capacitor://localhost",
   "https://table.test.hipalz.com",
   "https://localhost/",
   "https://localhost",

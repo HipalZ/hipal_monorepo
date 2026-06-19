@@ -33,6 +33,7 @@ import type { FilterQuery } from "mongoose";
 import { Types } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import { DEFAULT_IOS_NOTIFICATION_SOUND } from "../../services/notifications/sound";
 import {
   syncHotelCompanionReadModel,
   syncHotelStayCompanions,
@@ -55,9 +56,19 @@ const sendPushNotification = async (token: string, hotelNo: string) => {
         sound: "order",
       },
     },
+    apns: {
+      payload: {
+        aps: { sound: DEFAULT_IOS_NOTIFICATION_SOUND },
+      },
+    },
   };
 
   try {
+    console.log("[hotelRoom:push:send]", {
+      tokenTail: token.slice(-12),
+      roomName: hotelNo,
+      iosSound: pushMessage.apns.payload.aps.sound,
+    });
     const response = await admin.messaging().send(pushMessage);
     return { success: true, response };
   } catch (error) {
@@ -1428,8 +1439,17 @@ const roomRouter = new Hono()
                     sound: "order",
                   },
                 },
+                apns: {
+                  payload: {
+                    aps: { sound: DEFAULT_IOS_NOTIFICATION_SOUND },
+                  },
+                },
               };
               try {
+                console.log("[hotelRoom:checkoutPush:send]", {
+                  tokenTail: obj.token.slice(-12),
+                  iosSound: pushMessage.apns.payload.aps.sound,
+                });
                 await admin.messaging().send(pushMessage);
               } catch (error) {
                 console.error("Error sending checkout push notification:", error);

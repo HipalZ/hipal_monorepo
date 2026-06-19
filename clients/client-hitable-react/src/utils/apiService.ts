@@ -3,6 +3,7 @@ import type { Alert } from "@/components/types/hiClientzData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import toast from "react-hot-toast";
 import { useErrorHandling } from "@/components/utils/helpers";
+import { Capacitor } from "@capacitor/core";
 interface SavePushTokenResponse {
   message: string;
   err: boolean;
@@ -27,6 +28,10 @@ export const usePushTokenApi = () => {
     }),
   );
   const businessId = selectedBiz?.businessId?._id;
+  const iosTokenMetadata =
+    Capacitor.getPlatform() === "ios"
+      ? ({ provider: "fcm", platform: "ios", app: "hitable" } as const)
+      : {};
   const savePushToken = async (): Promise<SavePushTokenResponse | null> => {
     try {
       const res = await apiRpc.users.save.token.$post({
@@ -34,6 +39,7 @@ export const usePushTokenApi = () => {
           registrationToken: pushToken,
           businessId,
           userId: captainData?._id,
+          ...iosTokenMetadata,
         },
       });
       if (res.status === 401) {
@@ -88,6 +94,10 @@ export const useUpdateNotifications = () => {
     }),
   );
   const businessId = selectedBiz?.businessId?._id;
+  const iosTokenMetadata =
+    Capacitor.getPlatform() === "ios"
+      ? ({ provider: "fcm", platform: "ios", app: "hitable" } as const)
+      : {};
   const updateNotificationsApi = async (
     notification: boolean,
   ): Promise<SavePushTokenResponse | null> => {
@@ -98,6 +108,7 @@ export const useUpdateNotifications = () => {
           notification,
           userId: captainData?._id,
           registrationToken: pushToken,
+          ...iosTokenMetadata,
         },
       });
       if (res.status === 401) {

@@ -40,6 +40,7 @@ import {
   sendPushToToken,
   sendPushToTokens,
 } from "../../services/notifications";
+import { DEFAULT_IOS_NOTIFICATION_SOUND } from "../../services/notifications/sound";
 const admin = require("firebase-admin");
 
 const sendPushNotification = async (
@@ -66,6 +67,11 @@ const sendPushNotification = async (
         sound: "order",
       },
     },
+    apns: {
+      payload: {
+        aps: { sound: DEFAULT_IOS_NOTIFICATION_SOUND },
+      },
+    },
   };
 
   try {
@@ -80,6 +86,7 @@ const sendPushNotification = async (
       hasAndroidNotification: Boolean(androidNotification),
       channelId: androidNotification?.channel_id,
       sound: androidNotification?.sound,
+      iosSound: pushMessage.apns.payload.aps.sound,
       note: "raw hotel service payload",
     });
 
@@ -118,6 +125,11 @@ const sendPushNotificationForNotDeliverd = async (
         sound: "order",
       },
     },
+    apns: {
+      payload: {
+        aps: { sound: DEFAULT_IOS_NOTIFICATION_SOUND },
+      },
+    },
   };
 
   try {
@@ -129,6 +141,7 @@ const sendPushNotificationForNotDeliverd = async (
       type: pushMessage.data.type,
       channelId: pushMessage.android.notification.channel_id,
       sound: pushMessage.android.notification.sound,
+      iosSound: pushMessage.apns.payload.aps.sound,
     });
 
     const response = await admin.messaging().send(pushMessage);

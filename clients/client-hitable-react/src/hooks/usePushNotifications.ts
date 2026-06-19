@@ -1,6 +1,5 @@
 import { useMemo, useRef, useCallback } from "react";
-import { getToken } from "firebase/messaging";
-import { messaging } from "./clientApp";
+import { Capacitor } from "@capacitor/core";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { PushNotificationService } from "@/services/fcm/pushNotificationService";
 import { useLiteStore } from "@/components/store/useLiteStore";
@@ -22,15 +21,14 @@ export const usePushNotifications = () => {
   const initializedRef = useRef(false);
 
   const platform = useMemo(() => {
-    const isAndroid = () => /Android/i.test(navigator.userAgent);
-    return isAndroid() ? "android" : "web";
+    return Capacitor.getPlatform() as "android" | "ios" | "web";
   }, []);
 
   const initializePushNotifications = async () => {
     if (initializedRef.current) return;
     setPlatform(platform);
     try {
-      if (platform === "android") {
+      if (platform === "android" || platform === "ios") {
         const token =
           await pushNotificationService.initializePushNotifications();
         if (token) {
@@ -43,6 +41,10 @@ export const usePushNotifications = () => {
       } else {
         const permission = await Notification.requestPermission();
         if (permission === "granted" && "serviceWorker" in navigator) {
+          const [{ getToken }, { messaging }] = await Promise.all([
+            import("firebase/messaging"),
+            import("./clientApp"),
+          ]);
           await navigator.serviceWorker.register("/firebase-messaging-sw.js");
           const serviceWorkerRegistration = await navigator.serviceWorker.ready;
           const token = await getToken(messaging, {
@@ -72,7 +74,7 @@ export const usePushNotifications = () => {
    */
   const recheckPermission = useCallback(async () => {
     try {
-      if (platform === "android") {
+      if (platform === "android" || platform === "ios") {
         const status = await pushNotificationService.checkPermissionStatus();
         const granted = status === "granted";
         setNotificationStatus(granted);

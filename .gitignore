@@ -3,6 +3,17 @@ node_modules
 clients/client-hibiz-react-copy/dist
 infra/*
 
+# Apple signing and APNs private material
+*.p8
+*.p12
+*.mobileprovision
+*.cer
+
+# Server credentials must be injected by the deployment environment.
+# This does not remove any copy that was already committed historically.
+**/service_account*.json
+**/service-account*.json
+
 
 
 scan_audit_beercartel.json
