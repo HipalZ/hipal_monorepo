@@ -1,4 +1,6 @@
 node_modules
+.DS_Store
+.expo/
 clients/client-hibiz-react-copy/dist
 infra/*
 
