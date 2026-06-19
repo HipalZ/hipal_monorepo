@@ -771,3 +771,105 @@ The iOS asset catalog originally contained Capacitor's default blue icon and spl
 - The iOS app icon is an opaque 1024×1024 PNG with the HiPal hand centered on white. iOS applies the device-specific corner mask.
 - All iOS splash image variants are 2732×2732, white, with the same HiPal hand centered.
 - Android resources were read as the design reference but were not modified.
+
+## 25. Sharing a test build with another iPhone
+
+Sending an `.ipa` through WhatsApp does not make it directly installable by tapping it on an iPhone. Apple still requires an authorized distribution method.
+
+### Recommended: TestFlight
+
+1. Create/select the App Store Connect app for the test bundle ID.
+2. Increment the iOS build number.
+3. In Xcode select **App → Any iOS Device (arm64)** and choose **Product → Archive**.
+4. In Organizer choose **Distribute App → TestFlight & App Store → Upload**.
+5. In App Store Connect open **TestFlight**, wait for processing, and add the tester by email.
+6. The tester installs Apple's TestFlight app and accepts the invitation. Their UDID is not required.
+
+### Ad Hoc IPA shared through WhatsApp
+
+1. Obtain the second iPhone's UDID.
+2. Register it under Apple Developer **Certificates, Identifiers & Profiles → Devices**.
+3. Ensure the Ad Hoc provisioning profile for `table.test.hipalz.com` includes both iPhones, or let Xcode regenerate it with automatic signing.
+4. Archive again and choose **Distribute App → Custom → Ad Hoc/Release Testing**.
+5. Export the new `.ipa`; the previous IPA only contains the devices present in its embedded profile.
+6. Send the `.ipa` as a WhatsApp document.
+7. The recipient downloads it to a Mac and installs it on the connected, registered iPhone using Apple Configurator or Xcode **Devices and Simulators**.
+
+For direct installation from a web link, an HTTPS-hosted IPA plus an OTA manifest is required; WhatsApp alone does not provide that installation flow.
+
+## 26. Distribute the test app to 10 people with TestFlight
+
+TestFlight is the recommended real-time testing method for ten external users. It does not require collecting their iPhone UDIDs, re-exporting an IPA for every new device, or publicly publishing the app in the App Store.
+
+### A. Prepare the test environment
+
+1. Keep the test bundle ID as `table.test.hipalz.com`.
+2. Push the approved test code and deploy/restart the test backend. Uploading the iOS build does not deploy the API server.
+3. Confirm the test API, login, Firebase production APNs key, push notification, and `order.caf` payload are active.
+4. In Xcode open `clients/client-hitable-react/ios/App/App.xcworkspace`.
+5. Select **TARGETS → App → General** and set **Version** to `1.0.0` and **Build** to `1`. Increase the Build number for every later TestFlight upload.
+
+Why: App Store Connect associates the uploaded build with its bundle ID and requires every uploaded build number to be unique.
+
+### B. Create the App Store Connect record
+
+1. Sign in to **App Store Connect → Apps** using the PALTRIBE developer account.
+2. Click **+ → New App**.
+3. Enter:
+   - Platform: **iOS**
+   - Name: a unique test name such as **HiTable Test**
+   - Primary language: the appropriate app language
+   - Bundle ID: `table.test.hipalz.com`
+   - SKU: `hitable-test-ios`
+   - User Access: **Full Access**
+4. Click **Create**.
+
+Why: Apple needs an App Store Connect record before Xcode can associate and upload the test build. Creating this record does not publish the app.
+
+### C. Archive and upload from Xcode
+
+1. At the top of Xcode select the **App** scheme and **Any iOS Device (arm64)**, not a simulator.
+2. Choose **Product → Archive**.
+3. In Organizer select the new archive and click **Distribute App**.
+4. In Xcode 26, choose **App Store Connect**, then continue with the upload workflow. Do not choose **TestFlight Internal Only**, because that build cannot be shared with the ten external testers.
+5. Keep **Automatically manage signing** selected and proceed through validation.
+6. Upload the build and wait for App Store Connect to finish processing it.
+
+Why: TestFlight distributes an Apple-processed build signed for TestFlight. Do not choose Development, Ad Hoc, or Release Testing for this ten-person workflow.
+
+### D. Configure TestFlight
+
+1. After Xcode reports **Uploaded**, open **App Store Connect → Apps → HiTable Test → TestFlight**. The build first shows as **Processing** and is not installable until processing finishes. Apple normally sends an email when the build is ready.
+2. For the current HiTable client, which uses normal HTTPS/TLS and Apple/Firebase platform security rather than implementing proprietary or independent encryption algorithms, select **None of the algorithms mentioned above** in the App Encryption Documentation dialog and save. Reassess this answer if custom cryptography, a VPN, encrypted messaging, or an independently bundled encryption implementation is added later.
+3. Add the beta description, feedback email, contact information, and **What to Test** instructions.
+4. Create an internal testing group if App Store Connect requires one before external groups.
+5. Under **External Testing**, create a group named **HiTable Testers**.
+6. Add the processed build to that group.
+7. Submit it for **TestFlight App Review** when prompted.
+
+Why: The ten testers are external testers because they are not App Store Connect team members. External builds may require Apple Beta App Review before invitations become active.
+
+### E. Invite and test with the 10 users
+
+1. After approval, add the ten testers by email or enable a controlled public invitation link.
+2. Each tester installs Apple's **TestFlight** app from the App Store.
+3. Each tester opens the invitation, accepts it, and installs **HiTable Test**.
+4. Ask each tester to allow notifications, log in, put the app in the background, and trigger the agreed hotel test flow.
+5. Verify login, foreground/background notifications, `order.caf` sound, notification taps, and normal app navigation.
+6. Collect feedback through TestFlight or the specified feedback channel.
+
+For later fixes, increment **Build** from `1` to `2`, archive, and upload again. Testers can then update through TestFlight. A TestFlight build is temporary beta software and does not make the app publicly searchable in the App Store.
+
+### F. Install the processed build on the owner's iPhone first
+
+When build `1` shows **Ready to Submit**, it cannot be downloaded directly from the App Store Connect webpage. It must be assigned to a TestFlight group.
+
+1. Click **Create Group** or the **+** beside **Internal Testing**.
+2. Name it **HiTable Internal** and create it.
+3. Add the App Store Connect account holder/admin as an internal tester.
+4. Add version `1.0`, build `1`, to the group if it is not added automatically.
+5. On the iPhone install Apple's **TestFlight** app from the App Store.
+6. Sign into TestFlight with the same Apple Account that was added as the internal tester.
+7. Open the invitation email or open TestFlight, then tap **Install** beside **Hiclient-test**.
+
+This internal installation is useful for the owner's immediate verification. The other ten people should be invited through an **External Testing** group because they are not App Store Connect team users.
