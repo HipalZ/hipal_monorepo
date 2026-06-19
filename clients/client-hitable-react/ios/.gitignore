@@ -4,6 +4,7 @@ App/output
 App/App/public
 DerivedData
 xcuserdata
+App/App.xcodeproj/project.xcworkspace/
 
 # Cordova plugins for Capacitor
 capacitor-cordova-ios-plugins
@@ -11,3 +12,17 @@ capacitor-cordova-ios-plugins
 # Generated Config files
 App/App/capacitor.config.json
 App/App/config.xml
+
+# Local Firebase configuration downloaded for this Apple bundle ID.
+# Restore it from Firebase Console after cloning the repository.
+App/App/GoogleService-Info.plist
+
+# Apple signing/APNs credentials must never be committed.
+*.p8
+*.p12
+*.mobileprovision
+*.cer
+
+# Local Xcode/macOS state
+*.xcuserstate
+.DS_Store

@@ -2,6 +2,7 @@ import { DeviceToken } from "@hi/db-models";
 import {
   DEFAULT_NOTIFICATION_CHANNEL_ID,
   DEFAULT_NOTIFICATION_SOUND,
+  DEFAULT_IOS_NOTIFICATION_SOUND,
   type NotificationChannelGroup,
 } from "./sound";
 
@@ -103,6 +104,13 @@ const sendFirebasePush = async (target: PushTarget, payload: PushPayload) => {
         sound,
       },
     },
+    apns: {
+      payload: {
+        aps: {
+          sound: DEFAULT_IOS_NOTIFICATION_SOUND,
+        },
+      },
+    },
   };
 
   console.log("[push:fcm:send]", {
@@ -112,6 +120,7 @@ const sendFirebasePush = async (target: PushTarget, payload: PushPayload) => {
     businessId: payload.data?.businessId,
     channelId: message.android.notification.channel_id,
     sound: message.android.notification.sound,
+    iosSound: message.apns.payload.aps.sound,
   });
 
   return getFirebaseMessaging().send(message);

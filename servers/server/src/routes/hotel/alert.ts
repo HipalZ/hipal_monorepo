@@ -25,18 +25,23 @@ import {
   hotelAlert,
   updateAlertCart,
   updateRoomChat,
-} from '@hi/db-models/src/validators';
-import { runInTransaction } from '@hi/utils';
-import { zValidator } from '@hono/zod-validator';
-import axios from 'axios';
-import { Hono } from 'hono';
-import { schedule } from 'node-cron';
-import { z } from 'zod';
-import { respond } from '../../utils/response';
-import whatsAppApiBaseUrl from '../../utils/whatsAppApiBaseUrl/apiPaths';
-import { endOfToday, startOfToday } from '../payments';
-import { returnHotelBodyComponents } from './rooms';
-const admin = require('firebase-admin');
+} from "@hi/db-models/src/validators";
+import { runInTransaction } from "@hi/utils";
+import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
+import { Hono } from "hono";
+import { schedule } from "node-cron";
+import { z } from "zod";
+import { respond } from "../../utils/response";
+import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
+import { endOfToday, startOfToday } from "../payments";
+import { returnHotelBodyComponents } from "./rooms";
+import {
+  sendPushToToken,
+  sendPushToTokens,
+} from "../../services/notifications";
+import { DEFAULT_IOS_NOTIFICATION_SOUND } from "../../services/notifications/sound";
+const admin = require("firebase-admin");
 
 const sendPushNotification = async (token: string, businessId: string, hotelNo: string, serviceName: string) => {
   const pushMessage = {
@@ -57,6 +62,11 @@ const sendPushNotification = async (token: string, businessId: string, hotelNo: 
         sound: 'order',
       },
     },
+    apns: {
+      payload: {
+        aps: { sound: DEFAULT_IOS_NOTIFICATION_SOUND },
+      },
+    },
   };
 
   try {
@@ -71,7 +81,8 @@ const sendPushNotification = async (token: string, businessId: string, hotelNo: 
       hasAndroidNotification: Boolean(androidNotification),
       channelId: androidNotification?.channel_id,
       sound: androidNotification?.sound,
-      note: 'raw hotel service payload',
+      iosSound: pushMessage.apns.payload.aps.sound,
+      note: "raw hotel service payload",
     });
 
     const response = await admin.messaging().send(pushMessage);
@@ -105,6 +116,11 @@ const sendPushNotificationForNotDeliverd = async (token: string, businessId: str
         sound: 'order',
       },
     },
+    apns: {
+      payload: {
+        aps: { sound: DEFAULT_IOS_NOTIFICATION_SOUND },
+      },
+    },
   };
 
   try {
@@ -116,6 +132,7 @@ const sendPushNotificationForNotDeliverd = async (token: string, businessId: str
       type: pushMessage.data.type,
       channelId: pushMessage.android.notification.channel_id,
       sound: pushMessage.android.notification.sound,
+      iosSound: pushMessage.apns.payload.aps.sound,
     });
 
     const response = await admin.messaging().send(pushMessage);
