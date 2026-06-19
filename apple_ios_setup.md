@@ -795,3 +795,42 @@ Upload the `.p8`, its matching Key ID, and Team ID `8W8H449W92` to Firebase **Pr
 7. In Xcode confirm the file has App target membership and appears exactly once under **Build Phases → Copy Bundle Resources**.
 
 The plist is ignored by Git and must remain uncommitted. After replacing it, run the production web build followed by an iOS-only Capacitor sync.
+
+## 27. Build and test against the live production environment
+
+Before archiving, deploy/restart the reviewed production backend changes so `https://api.hipalz.com` accepts `capacitor://localhost`, stores the iOS FCM token, and sends `aps.sound = order.caf`.
+
+From `clients/client-hitable-react`, generate the native production content:
+
+```bash
+bun install
+bun run build:production
+npx cap sync ios
+```
+
+Use the explicit `ios` argument. Do not run a platform-less sync or sync Android during this iOS release.
+
+Verify that `dist`, `ios/App/App/public`, and the generated native Capacitor configuration do not contain `api.test.hipalz.com`, `table.test.hipalz.com`, or `hitable-test`. Confirm the production plist has bundle ID `hiclient.hipalz.com` and project ID `hipal-demo`.
+
+### Recommended live test: TestFlight
+
+1. Open `ios/App/App.xcworkspace`.
+2. Confirm team PALTRIBE, bundle ID `hiclient.hipalz.com`, Push Notifications, version, and a unique build number.
+3. Select **Any iOS Device (arm64)** and choose **Product → Archive**.
+4. In Organizer choose **Distribute App → App Store Connect** and upload.
+5. Use the production App Store Connect record whose bundle ID is `hiclient.hipalz.com`.
+6. After processing, add the build to an internal TestFlight group.
+7. Install it from Apple's TestFlight app and test using a controlled production account.
+8. Verify login, production data, iOS token registration, locked/background notification delivery, `order.caf`, and notification taps.
+
+TestFlight and App Store builds use production APNs.
+
+### Optional downloadable IPA
+
+1. Archive the same production configuration.
+2. In Organizer choose **Distribute App → Release Testing**.
+3. Keep automatic signing and App Thinning set to **None**, then export.
+4. Xcode creates an export folder containing the `.ipa`.
+5. Install it on a registered iPhone through Xcode **Window → Devices and Simulators** or Apple Configurator.
+
+The Release Testing IPA uses live production configuration and production APNs, but it only installs on devices included in its provisioning profile. TestFlight is preferred for wider testing.
