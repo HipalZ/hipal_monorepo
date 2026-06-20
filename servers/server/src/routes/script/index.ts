@@ -3058,5 +3058,53 @@ const scriptRouter = new Hono()
         updatedCount: allUserAnalytics.length,
       });
     },
+  )
+  .post(
+    "/user-loyalty-data",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        pageNumber: z.number().min(1),
+        limit: z.number().min(1).max(5000),
+      }),
+    ),
+    async (c) => {
+      const { businessId, pageNumber, limit } = await c.req.json();
+
+      const loyaltyUsers = await UserReward.find({
+        loyaltyId: businessId,
+      })
+        .populate("userId", "name phone")
+        .lean();
+
+      const users = loyaltyUsers
+        .map((user) => ({
+          name: user.userId?.name || user.userName || "",
+          phone: user.userId?.phone || user.userPhone || "",
+          availableCoins: user.rewards || 0,
+        }))
+        .filter(
+          ({ name, phone }) =>
+            name.trim().length > 0 && /^\d{10}$/.test(String(phone).trim()),
+        );
+
+      const total = users.length;
+      const startIndex = (pageNumber - 1) * limit;
+      const paginatedUsers = users.slice(startIndex, startIndex + limit);
+
+      return c.json(
+        {
+          message: "Users data fetched successfully",
+          err: false,
+          page: pageNumber,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+          users: paginatedUsers,
+        },
+        200,
+      );
+    },
   );
 export default scriptRouter;
