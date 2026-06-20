@@ -47,6 +47,7 @@ type MiniUser = {
   phone: string;
   stays?: number;
   services?: number;
+  companions?: number;
   reviews?: number;
   lastVisit?: string;
   topSource?: string;
@@ -433,6 +434,13 @@ const MemoUserAnalytics = () => {
           (sum, row) => sum + (row.serviceIds?.length ?? 0),
           0,
         ),
+        companions: new Set(
+          userRows.flatMap((row) =>
+            (row.guestUserIds ?? []).filter(
+              (guestId) => guestId && guestId !== row.userId?._id,
+            ),
+          ),
+        ).size,
         reviews: userRows.reduce(
           (sum, row) => sum + (row.reviewIds?.length ?? 0),
           0,
@@ -648,25 +656,8 @@ const MemoUserAnalytics = () => {
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground">
-                  Stay Records
-                </p>
-                <p className="mt-1 text-3xl font-bold text-slate-900">
-                  {dashboardStats.totalStays}
-                </p>
-              </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
-                <BedDouble className="h-5 w-5" />
-              </div>
-            </div>
-            <p className="mt-3 text-xs text-muted-foreground">
-              {dashboardStats.activeStays} currently checked in
-            </p>
-          </div>
+        <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+
 
           <div className="rounded-lg border border-teal-200 bg-teal-50/80 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-center justify-between">
@@ -813,6 +804,7 @@ const MemoUserAnalytics = () => {
                     phone: user.phone,
                     stays: user.stays,
                     services: user.services,
+                    companions: user.companions,
                     reviews: user.reviews,
                     lastVisit: user.lastVisit,
                     topSource: user.topSource,

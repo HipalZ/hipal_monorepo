@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { User, Phone, ArrowRight, CalendarDays, Star, Wrench } from "lucide-react";
+import { User, Phone, ArrowRight, CalendarDays, Star, Wrench, Users } from "lucide-react";
 
 interface UserCardProps {
   user: {
@@ -9,6 +9,7 @@ interface UserCardProps {
     phone: string;
     stays?: number;
     services?: number;
+    companions?: number;
     reviews?: number;
     lastVisit?: string;
     topSource?: string;
@@ -55,7 +56,7 @@ export function UserCard({ user, onClick }: UserCardProps) {
           </span>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <div className="rounded-md bg-slate-50 px-2 py-2 text-center ring-1 ring-slate-100">
             <CalendarDays className="mx-auto mb-1 h-3.5 w-3.5 text-slate-600" />
             <div className="text-sm font-bold text-foreground">{user.stays ?? 0}</div>
@@ -65,6 +66,11 @@ export function UserCard({ user, onClick }: UserCardProps) {
             <Wrench className="mx-auto mb-1 h-3.5 w-3.5 text-rose-600" />
             <div className="text-sm font-bold text-foreground">{user.services ?? 0}</div>
             <div className="text-[10px] font-medium uppercase text-muted-foreground">Services</div>
+          </div>
+          <div className="rounded-md bg-teal-50 px-2 py-2 text-center ring-1 ring-teal-100">
+            <Users className="mx-auto mb-1 h-3.5 w-3.5 text-teal-700" />
+            <div className="text-sm font-bold text-foreground">{user.companions ?? 0}</div>
+            <div className="text-[10px] font-medium uppercase text-muted-foreground">Companions</div>
           </div>
           <div className="rounded-md bg-amber-50 px-2 py-2 text-center ring-1 ring-amber-100">
             <Star className="mx-auto mb-1 h-3.5 w-3.5 text-amber-600" />
