@@ -6,7 +6,7 @@ const petpoojaPosConfig = Object.freeze({
 });
 
 // Base URL for the API
-const posBaseUrl = "https://api.petpooja.com/V1/";
+const posBaseUrl = "https://pprestonlineapi.petpooja.com/V1/";
 
 // API endpoint paths
 const posApiPaths = Object.freeze({

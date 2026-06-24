@@ -2552,7 +2552,7 @@ const scriptRouter = new Hono()
       };
 
       const response = await axios.post(
-        "http://api.petpooja.com/V1/captainorders/request_bill",
+        "https://pprestonlineapi.petpooja.com/V1/captainorders/request_bill",
         payload,
         {
           headers: {
@@ -2589,7 +2589,7 @@ const scriptRouter = new Hono()
         };
 
         const response = await axios.post(
-          "http://api.petpooja.com/V1/captainorders/check_bill",
+          "https://pprestonlineapi.petpooja.com/V1/captainorders/check_bill",
           payload,
           {
             headers: {
@@ -2613,7 +2613,7 @@ const scriptRouter = new Hono()
           };
 
           const settleRes = await axios.post(
-            "http://api.petpooja.com/V1/captainorders/success_payment",
+            "https://pprestonlineapi.petpooja.com/V1/captainorders/success_payment",
             settlePayload,
             {
               headers: {
