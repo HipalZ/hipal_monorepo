@@ -1776,36 +1776,42 @@ const roomRouter = new Hono()
           {
             source,
           },
+          { new: true, session },
         );
 
         if (!roomSource) {
           return respond(c, "Room session not found", true, 404, {});
         }
 
-        const roomSession = await HotelRoomSession.findOne({
-          roomId,
-        });
+        const roomSession = await HotelRoomSession.findOneAndUpdate(
+          {
+            roomId,
+          },
+          {
+            source,
+          },
+          { new: true, session, sort: { checkIn: -1, date: -1 } },
+        );
 
         if (!roomSession) {
           return respond(c, "Room session not found", true, 404, {});
         }
 
-        await HotelAnalytics.findOneAndUpdate(
+        await HotelAnalytics.updateMany(
           {
             businessId: roomSource?.businessId,
             roomId: roomId,
-            userId: { $in: roomSource.userIds },
             roomSessionId: roomSession._id,
           },
           {
             source,
-            checkIn: Date.now(),
           },
-          { upsert: true },
+          { session },
         );
 
         return respond(c, "update ", false, 200, {
           _id: roomSource._id,
+          source: roomSource.source,
         });
       });
     },

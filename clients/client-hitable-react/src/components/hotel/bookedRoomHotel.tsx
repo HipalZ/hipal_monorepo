@@ -68,6 +68,12 @@ const MemoBookedRoomHotel = () => {
   });
   const updateSourceMutation = useMutation({
     mutationFn: updateSource,
+    onSuccess: (_data, variables: { source: string; roomId?: string }) => {
+      // Commit the displayed source only after the API confirms the save.
+      setSelectedSource(variables.source);
+      toast.success("Source updated");
+    },
+    onError: () => toast.error("Failed to update source"),
   }).mutateAsync;
 
   const handleCheckOut = async () => {
