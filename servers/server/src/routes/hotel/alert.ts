@@ -33,6 +33,10 @@ import { Hono } from "hono";
 import { schedule } from "node-cron";
 import { z } from "zod";
 import { respond } from "../../utils/response";
+import {
+  requireRoomOccupancy,
+  requireRoomOccupancyByChatReply,
+} from "../../utils/requireRoomOccupancy";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 import { endOfToday, startOfToday } from "../payments";
 import { returnHotelBodyComponents } from "./rooms";
@@ -1443,7 +1447,7 @@ const hotelAlertRouter = new Hono()
     },
   )
 
-  .post("/create_alert", zValidator("json", hotelAlert), async (c) => {
+  .post("/create_alert", zValidator("json", hotelAlert), requireRoomOccupancy, async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
@@ -1458,9 +1462,8 @@ const hotelAlertRouter = new Hono()
         avgDeliveryTime: 0,
         image: "",
       };
-      const roomData = await HotelRoom.findOne({
-        _id: requestData.roomId,
-      });
+      // Loaded + occupancy-verified by requireRoomOccupancy (no second query).
+      const roomData = c.get("hotelRoom");
       if (!roomData) {
         return respond(c, "Room not found", true, 404, {});
       }
@@ -2270,7 +2273,7 @@ const hotelAlertRouter = new Hono()
     },
   )
 
-  .post("/chat_complain", zValidator("json", updateRoomChat), async (c) => {
+  .post("/chat_complain", zValidator("json", updateRoomChat), requireRoomOccupancyByChatReply, async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
       const { roomChatReplyId } = await c.req.json();

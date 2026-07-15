@@ -1,5 +1,7 @@
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { expelIfSessionOut } from "./sessionGuard";
 
 interface IHotelRoomData {
   businessId: string;
@@ -35,6 +37,7 @@ interface CreateAlertPayload {
 }
 
 export const useCreateAlert = () => {
+  const router = useRouter();
   const {
     isPending: creatingAlert,
     mutateAsync: createAlert,
@@ -45,6 +48,7 @@ export const useCreateAlert = () => {
       const response = await apiRpc.hotel.alert.create_alert.$post({
         json: payload,
       });
+      if (expelIfSessionOut(response, router)) throw new Error("SESSION_OUT");
       return response.json();
     },
     onSuccess: (data, variables) => {
@@ -113,11 +117,13 @@ export const useGetAllChats = (payload: IHotelRoomData) => {
 
 export const useSendChat = () => {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { mutateAsync: sendChat, isPending: sendingChat } = useMutation({
     mutationFn: async (payload: any) => {
       const response = await apiRpc.hotel.alert.chat_complain.$post({
         json: payload,
       });
+      if (expelIfSessionOut(response, router)) throw new Error("SESSION_OUT");
       return response.json();
     },
     onSuccess: (data) => {
@@ -135,11 +141,13 @@ export const useSendChat = () => {
 
 export const useReviewChat = () => {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { mutateAsync: reviewChat, isPending: reviewingChat } = useMutation({
     mutationFn: async (payload: any) => {
       const response = await apiRpc.hotel.rooms.reviews.$post({
         json: payload,
       });
+      if (expelIfSessionOut(response, router)) throw new Error("SESSION_OUT");
       return response.json();
     },
     onSuccess: (data) => {

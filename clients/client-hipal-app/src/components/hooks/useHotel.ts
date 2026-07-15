@@ -1,9 +1,10 @@
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import useBusinessDetails from "../store/useBusinessDetails";
 import { useHotelTemp } from "../store/useHotelTemp";
+import { expelIfSessionOut } from "./sessionGuard";
 
 export const useGetAllRooms = () => {
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
@@ -29,6 +30,7 @@ export const useGetAllRooms = () => {
 
 export const useCheckoutRequest = () => {
   const room = useSearchParams()?.get("room");
+  const router = useRouter();
   const { setShowConfirmation, setIsSubmitting } = useHotelTemp();
   const triggerCheckoutRequest = async (payload: {
     userId: string;
@@ -48,6 +50,7 @@ export const useCheckoutRequest = () => {
         roomId: roomData?.data?._id,
       },
     });
+    if (expelIfSessionOut(response, router)) throw new Error("SESSION_OUT");
     if (!response.ok) throw new Error("Failed to send checkout request");
     return response.json();
   };
