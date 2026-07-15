@@ -35,6 +35,10 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { DEFAULT_IOS_NOTIFICATION_SOUND } from "../../services/notifications/sound";
 import {
+  requireRoomOccupancy,
+  requireRoomOccupancyByChatReply,
+} from "../../utils/requireRoomOccupancy";
+import {
   syncHotelCompanionReadModel,
   syncHotelStayCompanions,
 } from "../../services/hotelCompanions";
@@ -1358,13 +1362,15 @@ const roomRouter = new Hono()
   .post(
     "/check_out_request",
     zValidator("json", hotelRoomCheckOutRequest),
+    requireRoomOccupancy,
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
         const requestData = await c.req.json();
         const { roomId, userId } = requestData;
 
-        const roomExists = await HotelRoom.findOne({ _id: roomId });
+        // Loaded + occupancy-verified by requireRoomOccupancy (no second query).
+        const roomExists = c.get("hotelRoom");
         if (!roomExists) {
           return respond(c, "Room not found", true, 404, {});
         }
@@ -1660,6 +1666,7 @@ const roomRouter = new Hono()
         roomChatReplyId: z.string().min(2).max(50),
       }),
     ),
+    requireRoomOccupancyByChatReply,
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {

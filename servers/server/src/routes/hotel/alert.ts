@@ -25,23 +25,20 @@ import {
   hotelAlert,
   updateAlertCart,
   updateRoomChat,
-} from "@hi/db-models/src/validators";
-import { runInTransaction } from "@hi/utils";
-import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
-import { Hono } from "hono";
-import { schedule } from "node-cron";
-import { z } from "zod";
-import { respond } from "../../utils/response";
-import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
-import { endOfToday, startOfToday } from "../payments";
-import { returnHotelBodyComponents } from "./rooms";
-import {
-  sendPushToToken,
-  sendPushToTokens,
-} from "../../services/notifications";
-import { DEFAULT_IOS_NOTIFICATION_SOUND } from "../../services/notifications/sound";
-const admin = require("firebase-admin");
+} from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { zValidator } from '@hono/zod-validator';
+import axios from 'axios';
+import { Hono } from 'hono';
+import { schedule } from 'node-cron';
+import { z } from 'zod';
+import { DEFAULT_IOS_NOTIFICATION_SOUND } from '../../services/notifications/sound';
+import { requireRoomOccupancy, requireRoomOccupancyByChatReply } from '../../utils/requireRoomOccupancy';
+import { respond } from '../../utils/response';
+import whatsAppApiBaseUrl from '../../utils/whatsAppApiBaseUrl/apiPaths';
+import { endOfToday, startOfToday } from '../payments';
+import { returnHotelBodyComponents } from './rooms';
+const admin = require('firebase-admin');
 
 const sendPushNotification = async (token: string, businessId: string, hotelNo: string, serviceName: string) => {
   const pushMessage = {
@@ -82,7 +79,7 @@ const sendPushNotification = async (token: string, businessId: string, hotelNo: 
       channelId: androidNotification?.channel_id,
       sound: androidNotification?.sound,
       iosSound: pushMessage.apns.payload.aps.sound,
-      note: "raw hotel service payload",
+      note: 'raw hotel service payload',
     });
 
     const response = await admin.messaging().send(pushMessage);
@@ -1255,7 +1252,7 @@ const hotelAlertRouter = new Hono()
     },
   )
 
-  .post('/create_alert', zValidator('json', hotelAlert), async (c) => {
+  .post('/create_alert', zValidator('json', hotelAlert), requireRoomOccupancy, async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
@@ -1270,9 +1267,8 @@ const hotelAlertRouter = new Hono()
         avgDeliveryTime: 0,
         image: '',
       };
-      const roomData = await HotelRoom.findOne({
-        _id: requestData.roomId,
-      });
+      // Loaded + occupancy-verified by requireRoomOccupancy (no second query).
+      const roomData = c.get('hotelRoom');
       if (!roomData) {
         return respond(c, 'Room not found', true, 404, {});
       }
@@ -2005,7 +2001,7 @@ const hotelAlertRouter = new Hono()
     },
   )
 
-  .post('/chat_complain', zValidator('json', updateRoomChat), async (c) => {
+  .post('/chat_complain', zValidator('json', updateRoomChat), requireRoomOccupancyByChatReply, async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
       const { roomChatReplyId } = await c.req.json();
