@@ -102,7 +102,7 @@ const serviceRouter = new Hono()
         .populate({
           path: "serviceIds",
           select:
-            "name image availability avgAcceptanceTime avgCompletionTime sequence",
+            "name image availability avgAcceptanceTime avgCompletionTime avgDeliveryTime sequence",
           options: { sort: { sequence: 1, _id: 1 } },
         })
         .select("name image serviceIds sequence")

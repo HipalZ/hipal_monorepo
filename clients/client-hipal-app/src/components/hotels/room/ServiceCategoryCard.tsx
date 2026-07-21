@@ -24,6 +24,7 @@ import { useCartStore } from "@/components/store/useCartStore";
 import type { IMenuLayout } from "@/components/types/businessData";
 import { useScreenSize } from "@/components/hooks/useScreenSize";
 import { hasGuestContactDetails } from "./guestContactGuard";
+import ServiceEtaBadge from "./ServiceEtaBadge";
 
 // Lazy-loaded components
 const AlertCircle = dynamic(
@@ -70,26 +71,33 @@ const ServiceItem = memo(({ service, selected, onToggle, getInitial }: ServiceIt
       }}
     >
       {selected && (
-        <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+        <div className="absolute top-2 left-2 z-20 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
           <CheckIcon className="w-4 h-4 text-white" />
         </div>
       )}
       <div className="mb-3 text-center flex items-start justify-center">
-        {service.image ? (
-          <Image
-            src={service.image}
-            alt={service.name}
-            width={96}
-            height={96}
-            className="w-[110px] h-[100px]"
+        <div className="relative inline-flex">
+          {service.image ? (
+            <Image
+              src={service.image}
+              alt={service.name}
+              width={96}
+              height={96}
+              className="w-[110px] h-[100px]"
+            />
+          ) : (
+            <Avatar className="w-12 h-12 text-center flex items-start justify-center">
+              <AvatarFallback className="bg-primary text-base-100 text-lg font-semibold">
+                {getInitial(service.name)}
+              </AvatarFallback>
+            </Avatar>
+          )}
+          {/* Est. time-to-delivery, so the guest can check the expected wait before ordering */}
+          <ServiceEtaBadge
+            minutes={service.avgDeliveryTime}
+            className="absolute -top-2 -right-2 z-10"
           />
-        ) : (
-          <Avatar className="w-12 h-12 text-center flex items-start justify-center">
-            <AvatarFallback className="bg-primary text-base-100 text-lg font-semibold">
-              {getInitial(service.name)}
-            </AvatarFallback>
-          </Avatar>
-        )}
+        </div>
       </div>
       {service.availability === false && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">

@@ -9,6 +9,8 @@ export interface IService {
   image: string;
   availability?: boolean;
   sequence?: number;
+  /** Estimated "should be delivered by" time in minutes (already includes acceptance). */
+  avgDeliveryTime?: number;
 }
 
 export interface IServiceCategory {
