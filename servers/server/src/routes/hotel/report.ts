@@ -122,6 +122,34 @@ const joinNames = (items?: { name?: string }[]) =>
 
 const staffName = (staff?: { name?: string } | null) => staff?.name || '';
 
+// SLA analysis for the CSV — mirrors the client's computePerf so the download
+// matches the on-screen report. Standards come from each service's
+// avgAcceptanceTime / avgDeliveryTime (minutes); actuals from the timestamps.
+const round1 = (n: number) => Math.round(n * 10) / 10;
+
+const slaAnalysis = (alert: any) => {
+  const services = alert?.serviceIds ?? [];
+  const accSla = services.reduce((sum: number, s: any) => sum + (s?.avgAcceptanceTime ?? 0), 0);
+  const delSla = services.reduce((sum: number, s: any) => sum + (s?.avgDeliveryTime ?? 0), 0);
+  const totalSla = accSla + delSla;
+  const totalActual =
+    alert?.createdAt && alert?.deliveredAt && alert.deliveredAt >= alert.createdAt ? (alert.deliveredAt - alert.createdAt) / 60000 : null;
+
+  let performance = '';
+  if (totalSla > 0 && totalActual != null) {
+    const diff = totalSla - totalActual;
+    performance = diff >= 0 ? `Completed ${round1(diff)} min before SLA` : `Exceeded SLA by ${round1(-diff)} min`;
+  }
+
+  return {
+    stdAccept: accSla > 0 ? round1(accSla) : '',
+    stdDeliver: delSla > 0 ? round1(delSla) : '',
+    totalStd: totalSla > 0 ? round1(totalSla) : '',
+    totalActual: totalActual != null ? round1(totalActual) : '',
+    performance,
+  };
+};
+
 const getCompanionGuests = (guests?: any[], primaryPhone?: string) =>
   (guests || []).filter((guest) => {
     if (!guest || typeof guest !== 'object') return false;

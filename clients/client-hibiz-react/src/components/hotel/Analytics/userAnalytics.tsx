@@ -340,7 +340,12 @@ export default function StaffPerformanceDashboard({ data, isLoading }: StaffPerf
           </Card>
         </motion.div>
       </motion.div>
-      <PopUp hide show={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
+      <PopUp
+        hide
+        show={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        width="w-[96vw] max-w-[1400px]"
+      >
         <ServicesData servicesData={servicesData} setIsDialogOpen={setIsDialogOpen} />
       </PopUp>
     </div>

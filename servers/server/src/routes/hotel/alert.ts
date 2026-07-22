@@ -904,7 +904,10 @@ const hotelAlertRouter = new Hono()
       };
 
       const alerts = await HotelAlert.find(alertQuery)
-        .populate({ path: 'serviceIds', select: 'name' })
+        .populate({
+          path: 'serviceIds',
+          select: 'name avgAcceptanceTime avgDeliveryTime',
+        })
         .populate({ path: 'createdBy', select: 'name phone' })
         .populate({ path: 'acceptedBy', select: 'name phone' })
         .populate({ path: 'deliveredBy', select: 'name phone' })
@@ -1214,11 +1217,12 @@ const hotelAlertRouter = new Hono()
           $nin: ['MESSAGE', 'REJECTED' /* Exclude non-service alerts */],
         },
       })
+        .populate({ path: 'createdBy', select: 'name phone' })
         .populate({ path: 'acceptedBy', select: 'name phone' })
         .populate({ path: 'deliveredBy', select: 'name phone' })
         .populate({
           path: 'serviceIds',
-          select: 'name avgDeliveryTime avgAcceptanceTime',
+          select: 'name avgDeliveryTime avgAcceptanceTime avgCompletionTime',
         })
         .lean();
 

@@ -22,6 +22,8 @@ export default {
       fontFamily: {
         sans: ["var(--font-ubuntu)"],
         serif: ["Georgia", "serif"],
+        fraunces: ["Fraunces", "Georgia", "serif"],
+        inter: ["Inter", "system-ui", "sans-serif"],
         mono: ["Menlo", "monospace"],
         poppins: ["Poppins", "sans-serif"],
         roboto: ["Roboto", "sans-serif"],
