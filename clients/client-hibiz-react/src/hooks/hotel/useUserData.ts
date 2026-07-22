@@ -35,6 +35,7 @@ export interface UserAnalyticsData {
   analytics: AnalyticsItem[];
   sourcePercentages: SourcePercentages;
   userCount: number;
+  visitCountByPhone?: Record<string, number>;
 }
 
 export interface UserAnalyticsResponse {
