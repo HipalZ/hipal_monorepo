@@ -63,16 +63,16 @@ interface ServiceItemProps {
 const ServiceItem = memo(({ service, selected, onToggle, getInitial }: ServiceItemProps) => (
   <section>
     <Card
-      className={`relative p-0 transition-all duration-200 border-none shadow-none cursor-pointer hover:shadow-md ${
-        selected ? "border-primary shadow-md" : "border-gray-200 hover:border-gray-300"
+      className={`relative p-0 rounded-2xl border-none bg-transparent shadow-none transition-all duration-200 cursor-pointer ${
+        selected ? "" : "hover:bg-gray-50"
       } ${service.availability === false ? "opacity-50 cursor-not-allowed" : ""}`}
       onClick={() => {
         if (service.availability !== false) onToggle();
       }}
     >
       {selected && (
-        <div className="absolute top-2 left-2 z-20 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-          <CheckIcon className="w-4 h-4 text-white" />
+        <div className="absolute top-1 left-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-primary shadow-sm ring-2 ring-white">
+          <CheckIcon className="w-3 h-3 text-white" />
         </div>
       )}
       <div className="mb-3 text-center flex items-start justify-center">
@@ -274,17 +274,22 @@ function MemoServiceCategoryCard({
           ) : (
             <BottomPopUp hide show={servicePopup} onClose={closeServicePopup}>
               <div className="p-4 relative max-h-[90dvh] overflow-auto hide-scrollbar">
-                <h2 className="mb-4 text-xl font-bold text-primary">
-                  {formattedCategoryName} Assistance
-                </h2>
-
-                {hasSelectedServices && alertStatus === "idle" && (
-                  <div className="mb-4 p-2 bg-primary/10 rounded-lg">
-                    <p className="text-sm text-primary font-medium">
-                      {selectedServices.length} service{selectedServices.length !== 1 ? "s" : ""} selected
-                    </p>
-                  </div>
-                )}
+                {/* Header row is always present (title + count pill) so selecting
+                    a service never pushes the grid down — no layout shift. */}
+                <div className="mb-4 flex items-center justify-between gap-2">
+                  <h2 className="text-xl font-bold text-primary">
+                    {formattedCategoryName} Assistance
+                  </h2>
+                  {alertStatus === "idle" && (
+                    <span
+                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors duration-200 ${
+                        hasSelectedServices ? "bg-primary text-white" : "bg-gray-100 text-gray-400"
+                      }`}
+                    >
+                      {selectedServices.length} selected
+                    </span>
+                  )}
+                </div>
 
                 {isLoading ? (
                   <div className="flex items-center justify-center py-10"><LoadingSpinnerCircle /></div>

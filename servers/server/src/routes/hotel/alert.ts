@@ -1521,7 +1521,7 @@ const hotelAlertRouter = new Hono()
 
         const roomChatReply = new HotelRoomChatReply({
           action: false,
-          description: `Thanks for your patience. We’ve received your request and are working on it. It will be ready by ${formattedTime}.`,
+          description: `Thank you! We're preparing your request — it'll be ready by ${formattedTime}. 🙏`,
           roomChatId: roomChat._id,
           userId: userId,
           status: 'NORMAL',
@@ -1589,12 +1589,12 @@ const hotelAlertRouter = new Hono()
         const deliveredFast = timeTakenMins < avgCompletionTime;
 
         const deliveryAck = deliveredFast
-          ? `Great news — your service was delivered in just ${timeTakenMins} min, ahead of schedule! 🎉`
-          : `Your service has been successfully delivered in ${timeTakenMins} min.`;
+          ? `Delighted to serve you — delivered in just ${timeTakenMins} min, ahead of schedule! 🎉`
+          : `Delivered with care in ${timeTakenMins} min — thank you for your patience. 😊`;
 
         const roomChatReply = new HotelRoomChatReply({
           action: true,
-          description: `${deliveryAck} We hope everything is to your satisfaction. If something isn't right, please tap "Not Delivered" to raise a concern. Otherwise, we'd love to hear your feedback! 😊`,
+          description: `${deliveryAck} We hope everything's just right for you.`,
           roomChatId: roomChat._id,
           userId: userId,
           status: 'NORMAL',

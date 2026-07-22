@@ -41,6 +41,30 @@ export default {
         greatvibes: ["Great Vibes", "cursive"],
       },
       colors: {
+        // Guest Experience "boutique" report palette — semantic tokens so the
+        // report TSX uses names (text-report-muted) instead of raw hex values.
+        report: {
+          ink: "#241d24",
+          muted: "#7c7280",
+          faint: "#a99fae",
+          line: "#ece6ee",
+          "line-strong": "#ded5e2",
+          bg: "#f3f0f5",
+          soft: "#faf7fc",
+          accent: "#9c2f61",
+          "accent-soft": "#bd6791",
+          "accent-bg": "#f9e9f1",
+          "accent-line": "#ecc3d8",
+          good: "#3d7a17",
+          "good-bg": "#eaf4dc",
+          "good-line": "#cfe3b5",
+          bad: "#b23a2e",
+          "bad-bg": "#f8e6e2",
+          "bad-line": "#eecbc4",
+          warn: "#9a6207",
+          "warn-bg": "#f8ecd6",
+          "warn-line": "#efd8a6",
+        },
         primary: {
           DEFAULT: "var(--primary)",
           foreground: "var(--primary-foreground)",

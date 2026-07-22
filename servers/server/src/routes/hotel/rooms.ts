@@ -434,6 +434,10 @@ const roomRouter = new Hono()
           path: "userId",
           select: "name phone",
         })
+        .populate({
+          path: "guestUserIds",
+          select: "name phone",
+        })
         .lean();
 
       const uniqueByUser = Object.values(
@@ -447,6 +451,23 @@ const roomRouter = new Hono()
           {} as Record<string, (typeof filterAnalytics)[number]>,
         ),
       );
+
+      // Lifetime visit count per guest (all stays ever, keyed by phone) so the
+      // report can flag New / Repeat / VIP customers.
+      const visitAgg = await HotelAnalytics.aggregate([
+        { $match: { businessId: new Types.ObjectId(businessId) } },
+        { $group: { _id: "$userId", count: { $sum: 1 } } },
+      ]);
+      const countByUser = new Map<string, number>(
+        visitAgg.map((v: { _id: unknown; count: number }) => [String(v._id), v.count]),
+      );
+      const visitCountByPhone: Record<string, number> = {};
+      for (const entry of uniqueByUser) {
+        const phone = entry.userId?.phone;
+        if (phone) {
+          visitCountByPhone[phone] = countByUser.get(String(entry.userId?._id)) ?? 1;
+        }
+      }
 
       const analytics = await HotelAnalytics.find({
         businessId,
@@ -492,7 +513,7 @@ const roomRouter = new Hono()
 
       return respond(c, "Hotel analytics fetched successfully", false, 200, {
         analytics: uniqueByUser,
-
+        visitCountByPhone,
         sourcePercentages,
         userCount: Object.keys(userCount).length,
       });

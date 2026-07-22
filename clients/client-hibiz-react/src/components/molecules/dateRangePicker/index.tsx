@@ -203,9 +203,10 @@ const DateRangePicker = () => {
   const dateRangeDisplay = useMemo(() => {
     if (!startDate || !endDate) return null;
     return (
-      <center className="w-full bg-[#8C63FF30] py-1 text-sm font-semibold text-[#8C63FF] md:ml-4 md:w-[28rem] md:text-sm">
-        Selected: {fmtDateTime(startDate)} – {fmtDateTime(endDate)}
-      </center>
+      <div className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#8C63FF14] px-3 py-1 text-xs font-medium text-[#8C63FF]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#8C63FF]" />
+        {fmtDateTime(startDate)} – {fmtDateTime(endDate)}
+      </div>
     );
   }, [startDate, endDate]);
 
@@ -289,40 +290,40 @@ const DateRangePicker = () => {
 
   return (
     <div className="flex min-w-0 flex-col">
-      <div className="flex items-center space-x-2 pl-4 pt-4">
+      <div className="flex items-center space-x-2 pt-4">
         <div className="sticky top-0 overflow-hidden">
-          <div className="flex w-full max-w-[30rem] gap-2 overflow-x-auto text-nowrap px-4 md:max-w-full">
+          <div className="flex w-full max-w-[30rem] gap-2 overflow-x-auto text-nowrap md:max-w-full">
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'today' ? 'bg-black text-white' : 'bg-white'}`}
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors${selectedRange === 'today' ? 'border-[#8C63FF] bg-[#8C63FF] text-white shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:border-[#8C63FF] hover:text-[#8C63FF]'}`}
               onClick={() => quickPick('today')}
             >
               Today
             </button>
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'yesterday' ? 'bg-black text-white' : 'bg-white'}`}
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors${selectedRange === 'yesterday' ? 'border-[#8C63FF] bg-[#8C63FF] text-white shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:border-[#8C63FF] hover:text-[#8C63FF]'}`}
               onClick={() => quickPick('yesterday')}
             >
               Yesterday
             </button>
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'last7' ? 'bg-black text-white' : 'bg-white'}`}
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors${selectedRange === 'last7' ? 'border-[#8C63FF] bg-[#8C63FF] text-white shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:border-[#8C63FF] hover:text-[#8C63FF]'}`}
               onClick={() => quickPick('last7')}
             >
               Last 7 Days
             </button>
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'thisMonth' ? 'bg-black text-white' : 'bg-white'}`}
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors${selectedRange === 'thisMonth' ? 'border-[#8C63FF] bg-[#8C63FF] text-white shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:border-[#8C63FF] hover:text-[#8C63FF]'}`}
               onClick={() => quickPick('thisMonth')}
             >
               This Month
             </button>
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'custom' ? 'bg-black text-white' : 'bg-white'}`}
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors${selectedRange === 'custom' ? 'border-[#8C63FF] bg-[#8C63FF] text-white shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:border-[#8C63FF] hover:text-[#8C63FF]'}`}
               onClick={() => quickPick('custom')}
             >
               Custom
@@ -338,13 +339,14 @@ const DateRangePicker = () => {
               show={isCustomDate}
               onClose={() => setIsCustomDate(false)}
               width="w-full max-w-[48rem]"
-              height="h-[100dvh] md:h-[80dvh] lg:h-[30rem]"
+              height="h-[100dvh] md:h-[80dvh] lg:h-[35rem]"
               hide
             >
-              <h3 className="mt-4 text-center font-semibold">Pick your date &amp; time range</h3>
+              <h3 className="text-center text-base font-semibold text-slate-800">Pick your date &amp; time range</h3>
+              <p className="mt-0.5 text-center text-[11px] text-slate-400">Choose the exact start and end for your report window</p>
 
               {/* Checkbox: include extended billing time */}
-              <div className="mt-2 flex items-center justify-center gap-2">
+              <div className="mx-auto mt-1.5 flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
                 <input
                   id="useExtendedTime"
                   type="checkbox"
@@ -352,13 +354,33 @@ const DateRangePicker = () => {
                   checked={useExtendedTime}
                   onChange={handleToggleExtended}
                 />
-                <label htmlFor="useExtendedTime" className="text-xs text-slate-700">
+                <label htmlFor="useExtendedTime" className="cursor-pointer text-xs text-slate-600">
                   Include extended billing time (use extended closing)
                 </label>
               </div>
 
-              <div className="pt-6">
-                <div className="flex h-[90dvh] w-full flex-col gap-6 overflow-auto pb-[10rem] text-center lg:flex-row lg:items-start lg:justify-center">
+              <div className="gx-dtp pt-2">
+                {/* Scoped react-datepicker restyle — recolours to the picker's
+                    #8C63FF accent and softens borders. Confined to .gx-dtp so no
+                    other date picker in the app is affected. */}
+                <style>{`
+                  .gx-dtp .react-datepicker { border:1px solid #e7e1ec; border-radius:14px; box-shadow:0 8px 28px rgba(40,15,40,.10); font-family:inherit; overflow:hidden; }
+                  .gx-dtp .react-datepicker__header { background:#faf7fc; border-bottom:1px solid #efe9f3; padding-top:10px; }
+                  .gx-dtp .react-datepicker__current-month, .gx-dtp .react-datepicker-time__header { color:#2a2430; font-weight:600; font-size:.9rem; }
+                  .gx-dtp .react-datepicker__day-name { color:#a99fae; font-weight:500; }
+                  .gx-dtp .react-datepicker__day { color:#4a4152; border-radius:9px; transition:background .12s,color .12s; }
+                  .gx-dtp .react-datepicker__day:hover { background:#f1e8f8; color:#2a2430; }
+                  .gx-dtp .react-datepicker__day--selected, .gx-dtp .react-datepicker__day--keyboard-selected { background:#8C63FF!important; color:#fff!important; border-radius:9px; }
+                  .gx-dtp .react-datepicker__day--outside-month { color:#cfc7d6; }
+                  .gx-dtp .react-datepicker__day--disabled { color:#ddd7e3!important; }
+                  .gx-dtp .react-datepicker__time-container, .gx-dtp .react-datepicker__time-container .react-datepicker__time { border-left:1px solid #efe9f3; }
+                  .gx-dtp .react-datepicker__time-list-item { transition:background .12s; }
+                  .gx-dtp .react-datepicker__time-list-item:hover { background:#f1e8f8!important; }
+                  .gx-dtp .react-datepicker__time-list-item--selected { background:#8C63FF!important; color:#fff!important; font-weight:600; }
+                  .gx-dtp .react-datepicker__navigation-icon::before { border-color:#8C63FF; }
+                  .gx-dtp .react-datepicker__triangle { display:none; }
+                `}</style>
+                <div className="flex max-h-[calc(100dvh-10rem)] w-full flex-col items-center gap-3 overflow-auto pb-20 text-center lg:max-h-[22rem] lg:flex-row lg:items-start lg:justify-center">
                   {/* Start DateTime */}
                   <div>
                     <p className="mb-2 text-sm font-medium">Start</p>
@@ -370,6 +392,7 @@ const DateRangePicker = () => {
                         if (next > tempEnd) setValidationError('Start cannot be after End.');
                         else setValidationError('');
                       }}
+                      fixedHeight
                       showTimeSelect
                       timeIntervals={1}
                       timeCaption="Time"
@@ -391,6 +414,7 @@ const DateRangePicker = () => {
                         if (next < tempStart) setValidationError('End cannot be before Start.');
                         else setValidationError('');
                       }}
+                      fixedHeight
                       showTimeSelect
                       timeIntervals={1}
                       timeCaption="Time"
@@ -410,6 +434,7 @@ const DateRangePicker = () => {
                 {validationError && <p className="mt-2 text-sm font-medium text-red-600">{validationError}</p>}
 
                 <BottomButton
+                  colorGrad
                   buttons={[
                     {
                       text: 'Apply',
@@ -423,7 +448,7 @@ const DateRangePicker = () => {
         </div>
       </div>
 
-      <div className="mt-2 w-full max-w-[28rem] pl-8">{dateRangeDisplay}</div>
+      <div className="mt-2 w-full max-w-[28rem]">{dateRangeDisplay}</div>
     </div>
   );
 };
