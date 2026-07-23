@@ -42,7 +42,7 @@ const checkoutTaskRouter = new Hono()
    * 200, because the guest has already been checked out by this point.
    */
   .post("/trigger", zValidator("json", triggerCheckoutTasks), async (c) => {
-    const { businessId, roomId, triggeredBy, checkoutAt, guestName, guestPhone } = await c.req.json();
+    const { businessId, roomId, triggeredBy, checkoutAt, guests, guestName, guestPhone } = await c.req.json();
     // Shared with check_out, which raises the same tasks in-line so hitable
     // needs only one round-trip. See services/checkoutTasks/raise.ts.
     const { raised, tasks } = await raiseCheckoutTasks({
@@ -50,6 +50,7 @@ const checkoutTaskRouter = new Hono()
       roomId,
       triggeredBy,
       checkoutAt,
+      guests,
       guestName,
       guestPhone,
     });

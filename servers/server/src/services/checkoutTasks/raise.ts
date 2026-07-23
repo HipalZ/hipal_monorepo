@@ -7,10 +7,23 @@ import {
 import { pushToManagers, pushToStaff, whatsAppManagers } from "./notify";
 import { floorStaffFor } from "./routing";
 
+/** One occupant of the room at checkout time. */
+export type CheckoutGuest = {
+  userId?: string;
+  name?: string;
+  phone?: string;
+};
+
 export type RaiseCheckoutArgs = {
   businessId: string;
   roomId: string;
   triggeredBy?: string;
+  /**
+   * Every occupant in the room's own order — [0] primary, the rest companions.
+   * Preferred over guestName/guestPhone, which are kept for callers that only
+   * know the primary guest.
+   */
+  guests?: CheckoutGuest[];
   guestName?: string;
   guestPhone?: string;
   /** Caller-supplied so a retry lands on the same idempotency key. */
@@ -28,8 +41,22 @@ export type RaiseCheckoutArgs = {
 export const raiseCheckoutTasks = async (
   args: RaiseCheckoutArgs,
 ): Promise<{ raised: number; tasks: unknown[] }> => {
-  const { businessId, roomId, triggeredBy, guestName, guestPhone, checkoutAt } =
-    args;
+  const {
+    businessId,
+    roomId,
+    triggeredBy,
+    guests,
+    guestName,
+    guestPhone,
+    checkoutAt,
+  } = args;
+
+  // The primary guest is whoever the room lists first; the explicit
+  // guestName/guestPhone args stay as the fallback for older callers.
+  const occupants = guests ?? [];
+  const primary = occupants[0];
+  const primaryName = primary?.name ?? guestName;
+  const primaryPhone = primary?.phone ?? guestPhone;
 
   const group = await HotelCheckoutGroup.findOne({ businessId, isActive: true });
   if (!group || !group.services?.length) return { raised: 0, tasks: [] };
@@ -62,8 +89,9 @@ export const raiseCheckoutTasks = async (
         checkoutRef: ref,
         acceptMins: entry.acceptMins,
         completeMins: entry.completeMins,
-        guestName,
-        guestPhone,
+        guestName: primaryName,
+        guestPhone: primaryPhone,
+        guests: occupants,
         status: "PENDING",
         stage: audience.length ? "FLOOR" : "MANAGER",
         audienceStaffIds: audience,

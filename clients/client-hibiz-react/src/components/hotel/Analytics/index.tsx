@@ -18,16 +18,19 @@ const essentialCards = [
     ),
     href: 'unified-report',
   },
-  {
-    title: 'Guest Experience Report',
-    description: 'Guest, room, service, staff, escalation, rating and visit context',
-    icon: (
-      <div className="transform rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 p-3 shadow-lg transition-transform hover:scale-105">
-        <MdOutlineHotelClass className="h-8 w-8 text-white drop-shadow-md" />
-      </div>
-    ),
-    href: 'guest-service-journey',
-  },
+  // Hidden for now at the owner's request — to be revisited. The route and the
+  // guest-service-journey page itself are untouched, so restoring this card is
+  // all that is needed to bring it back.
+  // {
+  //   title: 'Guest Experience Report',
+  //   description: 'Guest, room, service, staff, escalation, rating and visit context',
+  //   icon: (
+  //     <div className="transform rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 p-3 shadow-lg transition-transform hover:scale-105">
+  //       <MdOutlineHotelClass className="h-8 w-8 text-white drop-shadow-md" />
+  //     </div>
+  //   ),
+  //   href: 'guest-service-journey',
+  // },
   {
     title: 'Service History',
     description: 'check the service histories',

@@ -1342,17 +1342,35 @@ const roomRouter = new Hono()
         // The room's own occupants, not requestData.userIds — that field is the
         // review selection, which is empty whenever nobody is ticked for a
         // review, and the report would then lose who actually stayed.
-        const departingGuestId =
-          roomExists.userIds?.[0] ?? requestData.userIds?.[0];
-        const guest = departingGuestId
-          ? await User.findById(departingGuestId).select("name phone").lean()
-          : null;
+        const occupantIds = (
+          roomExists.userIds?.length ? roomExists.userIds : requestData.userIds
+        )
+          ?.map(String)
+          .filter(Boolean) ?? [];
+
+        // Keep every occupant, in the room's order — [0] is the primary guest
+        // and the rest are companions, which the guest reports need. A find()
+        // does not preserve that order, so re-index by id.
+        const occupantDocs = occupantIds.length
+          ? await User.find({ _id: { $in: occupantIds } })
+              .select("name phone")
+              .lean()
+          : [];
+        const byId = new Map(occupantDocs.map((u) => [String(u._id), u]));
+        const guests = occupantIds
+          .map((id) => byId.get(id))
+          .filter((u): u is (typeof occupantDocs)[number] => Boolean(u))
+          .map((u) => ({
+            userId: String(u._id),
+            name: u.name,
+            phone: u.phone ? String(u.phone) : undefined,
+          }));
+
         await raiseCheckoutTasks({
           businessId: String(roomExists.businessId),
           roomId: String(roomId),
           triggeredBy: requestData.triggeredBy,
-          guestName: guest?.name,
-          guestPhone: guest?.phone ? String(guest.phone) : undefined,
+          guests,
         });
       } catch (error) {
         console.error("check_out: raising turnover tasks failed", error);

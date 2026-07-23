@@ -46,6 +46,21 @@ const hotelCheckoutTaskSchema = new mongoose.Schema<HotelCheckoutTaskType>({
   completeMins: { type: Number, required: true },
   guestName: { type: String, required: false },
   guestPhone: { type: String, required: false },
+  // Every occupant at checkout, in the room's own order: index 0 is the primary
+  // guest, the rest are companions. guestName/guestPhone above mirror guests[0]
+  // so existing readers keep working. Copied, not referenced — a later profile
+  // edit must not rewrite who this checkout recorded.
+  guests: {
+    type: [
+      {
+        _id: false,
+        userId: { type: ObjectId, required: false, ref: "User" },
+        name: { type: String, required: false },
+        phone: { type: String, required: false },
+      },
+    ],
+    default: [],
+  },
   status: { type: String, enum: checkoutTaskStatusEnum, default: "PENDING" },
   stage: { type: String, enum: checkoutTaskStageEnum, default: "FLOOR" },
   audienceStaffIds: { type: [ObjectId], default: [], ref: "User" },
