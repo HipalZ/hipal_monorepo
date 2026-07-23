@@ -37,6 +37,8 @@ export interface CheckoutTask {
   /** The guest who checked out — captured so the report shows who stayed. */
   guestName?: string;
   guestPhone?: string;
+  /** Every occupant at checkout, in room order: [0] primary, rest companions. */
+  guests?: Array<{ userId?: string; name?: string; phone?: string }>;
   createdAt: number;
   acceptDueAt: number;
   completeDueAt?: number;

@@ -23,6 +23,8 @@ export type UnifiedRow = {
    *  checkout row it's the departed guest, so we don't lose who was there. */
   guestName: string;
   guestPhone: string;
+  /** Companions who stayed alongside the primary guest — never the primary. */
+  companions: Array<{ name: string; phone: string }>;
   /** The staff member who did the work (completer, else accepter) — for filters/aggregates. */
   servicedBy: string;
   // Accepter and completer can differ, so both are captured.

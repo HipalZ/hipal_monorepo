@@ -249,6 +249,8 @@ const UnifiedReport = () => {
       'Operator (Staff)',
       'Guest Name',
       'Guest Number',
+      'Companions',
+      'Companion Names',
       'Visit Count Till Date',
       'Room',
       'Service Requested',
@@ -272,6 +274,8 @@ const UnifiedReport = () => {
         r.operatorName,
         r.guestName,
         r.guestPhone,
+        r.companions.length,
+        r.companions.map((c) => `${c.name}${c.phone ? ` (${c.phone})` : ''}`).join(' · '),
         r.visits ?? '',
         r.room,
         r.service,
@@ -579,6 +583,15 @@ const UnifiedReport = () => {
                             ) : null}
                           </div>
                           <div className="text-[11px] text-slate-400">{r.guestPhone || '—'}</div>
+                          {/* Companions who shared the stay — the primary is never listed here. */}
+                          {r.companions.length ? (
+                            <div
+                              className="text-[11px] text-slate-400"
+                              title={r.companions.map((c) => `${c.name}${c.phone ? ` (${c.phone})` : ''}`).join(', ')}
+                            >
+                              +{r.companions.length} companion{r.companions.length === 1 ? '' : 's'}
+                            </div>
+                          ) : null}
                         </td>
                         <td className={`${td} font-bold text-slate-900`}>{r.room}</td>
                         <td className={td}>

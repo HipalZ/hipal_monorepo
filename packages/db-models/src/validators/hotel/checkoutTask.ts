@@ -60,6 +60,16 @@ export const hotelCheckoutTask = z.object({
   // stayed, not just the front-office person who pressed checkout.
   guestName: z.string().optional(),
   guestPhone: z.string().optional(),
+  // Ordered occupant snapshot: [0] is the primary guest, the rest companions.
+  guests: z
+    .array(
+      z.object({
+        userId: ObjectIdSchema.optional(),
+        name: z.string().optional(),
+        phone: z.string().optional(),
+      }),
+    )
+    .default([]),
   status: z.enum(checkoutTaskStatusEnum).default("PENDING"),
   stage: z.enum(checkoutTaskStageEnum).default("FLOOR"),
   audienceStaffIds: z.array(ObjectIdSchema).default([]),
@@ -81,9 +91,20 @@ export const triggerCheckoutTasks = z.object({
   triggeredBy: ObjectIdSchema.optional(),
   /** Supplied by the caller so a retry produces the same idempotency key. */
   checkoutAt: z.number().optional(),
-  // The departing guest, captured client-side before checkout clears the room.
+  // The departing guest, captured before checkout clears the room. `guests`
+  // carries every occupant in order (primary first, then companions);
+  // guestName/guestPhone remain for callers that only know the primary.
   guestName: z.string().optional(),
   guestPhone: z.string().optional(),
+  guests: z
+    .array(
+      z.object({
+        userId: ObjectIdSchema.optional(),
+        name: z.string().optional(),
+        phone: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 
 export const actOnCheckoutTask = z.object({

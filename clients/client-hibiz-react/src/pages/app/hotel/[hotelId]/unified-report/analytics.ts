@@ -52,6 +52,8 @@ export const mapGuestAlert = (a: GuestAlert, index: number, visitsByPhone: Recor
     visits: a.createdBy?.phone ? visitsByPhone[a.createdBy.phone] ?? null : null,
     guestName: a.createdBy?.name || 'Guest',
     guestPhone: a.createdBy?.phone || '',
+    // Guest alerts carry only the requester; companions come from checkouts.
+    companions: [],
     servicedBy: a.deliveredBy?.name || a.acceptedBy?.name || '',
     acceptedByName: a.acceptedBy?.name || '',
     completedByName: a.deliveredBy?.name || '',
@@ -90,8 +92,11 @@ export const mapCheckoutTask = (t: CheckoutTask, index: number, visitsByPhone: R
     // Empty triggeredBy is a genuine "automatic" job, never a placeholder name.
     requesterKind: t.triggeredBy?.name ? 'FRONT_OFFICE' : 'AUTOMATIC',
     visits: t.guestPhone ? visitsByPhone[t.guestPhone] ?? null : null,
-    guestName: t.guestName || '',
-    guestPhone: t.guestPhone || '',
+    // guests[0] is the primary; fall back to the denormalised fields for tasks
+    // raised before the occupant snapshot existed.
+    guestName: t.guests?.[0]?.name || t.guestName || '',
+    guestPhone: t.guests?.[0]?.phone || t.guestPhone || '',
+    companions: (t.guests ?? []).slice(1).map((g) => ({ name: g.name || '', phone: g.phone || '' })),
     servicedBy: t.completedBy?.name || t.acceptedBy?.name || '',
     acceptedByName: t.acceptedBy?.name || '',
     completedByName: t.completedBy?.name || '',
