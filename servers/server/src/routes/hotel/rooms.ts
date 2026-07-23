@@ -1339,7 +1339,11 @@ const roomRouter = new Hono()
       // must never fail the checkout — the guest is already gone — and it stays
       // outside the transaction's session so a raise hiccup can't roll it back.
       try {
-        const departingGuestId = requestData.userIds?.[0];
+        // The room's own occupants, not requestData.userIds — that field is the
+        // review selection, which is empty whenever nobody is ticked for a
+        // review, and the report would then lose who actually stayed.
+        const departingGuestId =
+          roomExists.userIds?.[0] ?? requestData.userIds?.[0];
         const guest = departingGuestId
           ? await User.findById(departingGuestId).select("name phone").lean()
           : null;
