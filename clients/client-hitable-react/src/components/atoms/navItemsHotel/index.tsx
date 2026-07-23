@@ -9,11 +9,13 @@ const MemoNavItemsHotel = () => {
     selectedNavItem,
     setSelectedNavItem,
     hotelAlertsCount,
+    hotelCheckoutCount,
     hotelEscalationCount
   } = useHotelStore((s) => ({
     selectedNavItem: s.selectedNavItem,
     setSelectedNavItem: s.setSelectedNavItem,
     hotelAlertsCount: s.hotelAlertsCount,
+    hotelCheckoutCount: s.hotelCheckoutCount,
     hotelEscalationCount: s.hotelEscalationCount,
   }));
 
@@ -26,15 +28,17 @@ const MemoNavItemsHotel = () => {
 
   const handleCount = useCallback(
     (type: string) => {
-      if (type === NavItemsHotelEnum.Alerts && hotelAlertsCount > 0) {
-        return hotelAlertsCount;
+      // Alerts tab holds guest requests AND checkout turnover, so the badge counts both.
+      if (type === NavItemsHotelEnum.Alerts) {
+        const total = hotelAlertsCount + hotelCheckoutCount;
+        return total > 0 ? total : null;
       }
       if (type === NavItemsHotelEnum.Escalation && hotelEscalationCount > 0) {
         return hotelEscalationCount;
       }
       return null;
     },
-    [hotelAlertsCount, hotelEscalationCount],
+    [hotelAlertsCount, hotelCheckoutCount, hotelEscalationCount],
   );
 
   const navItems = hotelNavItems();

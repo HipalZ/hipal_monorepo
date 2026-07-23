@@ -111,6 +111,17 @@ export const useAlertsColors = () => {
           gradient: 'from-red-200/20 to-transparent',
           badge: 'bg-red-100',
         };
+      // A checked-out room being readied for the next guest. Distinct orange so
+      // it never reads as amber BOOKED. Derived from open checkout tasks — the
+      // room stays AVAILABLE in the DB, so booking is never blocked.
+      case 'CLEANING':
+        return {
+          dot: 'bg-orange-500',
+          text: 'text-orange-700',
+          border: 'border-orange-500',
+          gradient: 'from-orange-200/30 to-transparent',
+          badge: 'bg-orange-100',
+        };
       default:
         return {
           dot: 'bg-gray-500',

@@ -1,4 +1,5 @@
 import { useEscalatedAlerts, useRoomAlerts } from '@/hooks/useHotelApis';
+import { useCheckoutTaskCount } from '@/hooks/useCheckoutTasks';
 import { useUserToken } from '@hi/common/src/useUserToken';
 import { lazy, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -52,6 +53,8 @@ function App() {
   useRoomAlerts();
   // hotel escalated alerts api
   useEscalatedAlerts();
+  // room-turnover task count → Alerts nav badge
+  useCheckoutTaskCount();
 
   return (
     <main className="!lg:poppins relative">

@@ -44,6 +44,9 @@ export interface Service {
   image: string;
   _id: string;
   name: string;
+  /** SLA minutes — populated on alert feeds, absent elsewhere. */
+  avgAcceptanceTime?: number;
+  avgDeliveryTime?: number;
 }
 
 interface CreatedBy {

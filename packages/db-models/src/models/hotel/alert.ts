@@ -59,6 +59,14 @@ const hotelAlertSchema = new mongoose.Schema<HotelAlertType>({
     ref: "User",
   },
 
+  // Front-office staff who raised the request for the guest; null if the guest
+  // raised it themselves.
+  raisedByStaff: {
+    type: ObjectId,
+    required: false,
+    ref: "User",
+  },
+
   acceptedBy: {
     type: ObjectId,
     required: false,

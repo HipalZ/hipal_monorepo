@@ -800,6 +800,8 @@ const hotelAlertRouter = new Hono()
         'IS_ACCEPTED_AND_ESCALATION',
         'NON_ACCEPTED_AND_ESCALATION',
         'NOT_DELIVERED',
+        'IS_ACCEPTED_AND_ESCALATION',
+        'NON_ACCEPTED_AND_ESCALATION',
       ];
 
       const alertQuery: any = {
@@ -820,7 +822,10 @@ const hotelAlertRouter = new Hono()
 
       // Step 4: Fetch and populate alerts
       const populateFields = [
-        { path: 'serviceIds', select: 'name image' },
+        {
+          path: 'serviceIds',
+          select: 'name image avgAcceptanceTime avgDeliveryTime',
+        },
         { path: 'createdBy', select: 'name phone' },
         { path: 'acceptedBy', select: 'name phone' },
         { path: 'roomId', select: 'name' },
@@ -872,7 +877,10 @@ const hotelAlertRouter = new Hono()
         ...(levelData ? { level: levelData.level } : {}),
         serviceIds: { $in: serviceIds || [] },
       })
-        .populate({ path: 'serviceIds', select: 'name' })
+        .populate({
+          path: 'serviceIds',
+          select: 'name avgAcceptanceTime avgDeliveryTime',
+        })
         .populate({ path: 'createdBy', select: 'name phone' })
         .populate({ path: 'acceptedBy', select: 'name phone' })
         .populate({ path: 'roomId', select: 'name' })
@@ -1218,6 +1226,7 @@ const hotelAlertRouter = new Hono()
         },
       })
         .populate({ path: 'createdBy', select: 'name phone' })
+        .populate({ path: 'raisedByStaff', select: 'name phone' })
         .populate({ path: 'acceptedBy', select: 'name phone' })
         .populate({ path: 'deliveredBy', select: 'name phone' })
         .populate({
@@ -1289,6 +1298,8 @@ const hotelAlertRouter = new Hono()
           serviceIds: [serviceId],
           createdAt: Date.now(),
           createdBy: requestData.userId,
+          // Present only when front office raised it for the guest.
+          raisedByStaff: requestData.raisedByStaff || undefined,
           roomData,
         });
 

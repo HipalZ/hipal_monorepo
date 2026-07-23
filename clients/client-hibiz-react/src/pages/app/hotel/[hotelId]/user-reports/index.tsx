@@ -153,11 +153,17 @@ const getReviewAverage = (reviews: UserAnalyticsItemByUser["reviewIds"]) => {
 };
 
 const getCompanionCountFromIds = (
-  guestUserIds?: string[],
+  // The API returns populated objects, not bare id strings — so comparing the
+  // element directly to the id always failed (object !== string) and counted the
+  // guest themselves as a companion. Extract the id before comparing.
+  guestUserIds?: Array<{ _id?: string } | string> | null,
   primaryUserId?: string,
 ) => {
   if (!guestUserIds?.length) return 0;
-  return guestUserIds.filter((id) => id && id !== primaryUserId).length;
+  return guestUserIds.filter((g) => {
+    const id = typeof g === "string" ? g : g?._id;
+    return id && String(id) !== String(primaryUserId);
+  }).length;
 };
 
 const getCompanionGuests = (
@@ -434,12 +440,17 @@ const MemoUserAnalytics = () => {
           (sum, row) => sum + (row.serviceIds?.length ?? 0),
           0,
         ),
+        // Unique co-guests across all stays, excluding the guest themselves.
+        // guestUserIds are populated OBJECTS, so we must dedupe by their id —
+        // a Set of objects never dedupes (unique refs) and object !== id always
+        // held true, which is why a solo guest wrongly showed 1 companion.
         companions: new Set(
-          userRows.flatMap((row) =>
-            (row.guestUserIds ?? []).filter(
-              (guestId) => guestId && guestId !== row.userId?._id,
-            ),
-          ),
+          userRows.flatMap((row) => {
+            const primaryId = row.userId?._id;
+            return (row.guestUserIds ?? [])
+              .map((g) => (typeof g === "string" ? g : g?._id))
+              .filter((id): id is string => Boolean(id) && String(id) !== String(primaryId));
+          }),
         ).size,
         reviews: userRows.reduce(
           (sum, row) => sum + (row.reviewIds?.length ?? 0),

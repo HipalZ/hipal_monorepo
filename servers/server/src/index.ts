@@ -11,6 +11,7 @@ import { prettyJSON } from 'hono/pretty-json';
 import { secureHeaders } from 'hono/secure-headers';
 import { timeout } from 'hono/timeout';
 import { catchErrorHandler } from '../middleware/catchErrorHandler';
+import { startCheckoutTaskSweeper } from './queues/checkoutTaskSweeper';
 import { routes } from './routes';
 import { customTimeoutException } from './utils';
 
@@ -43,27 +44,27 @@ app.use(prettyJSON());
 // Single source of truth for trusted frontend origins. Both CORS and CSRF use
 // this list so they stay in sync (mismatches caused silent CSRF rejections).
 const ALLOWED_ORIGINS = [
-  "capacitor://localhost",
-  "https://table.test.hipalz.com",
-  "https://localhost/",
-  "https://localhost",
-  "https://biz.test.hipalz.com",
-  "https://hipal-test.hipalz.com",
-  "https://hipalz.com",
-  "https://hibiz.hipalz.com",
-  "https://hiclient.hipalz.com",
-  "https://www.table.test.hipalz.com",
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "http://localhost:3002",
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "http://localhost:3004",
-  "https://www.biz.test.hipalz.com",
-  "https://www.hipal-test.hipalz.com",
-  "https://www.hipalz.com",
-  "https://www.hibiz.hipalz.com",
-  "https://www.hiclient.hipalz.com",
+  'capacitor://localhost',
+  'https://table.test.hipalz.com',
+  'https://localhost/',
+  'https://localhost',
+  'https://biz.test.hipalz.com',
+  'https://hipal-test.hipalz.com',
+  'https://hipalz.com',
+  'https://hibiz.hipalz.com',
+  'https://hiclient.hipalz.com',
+  'https://www.table.test.hipalz.com',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3004',
+  'https://www.biz.test.hipalz.com',
+  'https://www.hipal-test.hipalz.com',
+  'https://www.hipalz.com',
+  'https://www.hibiz.hipalz.com',
+  'https://www.hiclient.hipalz.com',
 ];
 
 app.use(
@@ -86,6 +87,9 @@ app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
 
 (async () => {
   await connectDB();
+  // Escalation for room-checkout tasks. Sweeps the DB, so it recovers whatever
+  // was pending if the process restarts mid-window.
+  startCheckoutTaskSweeper();
 })();
 //////
 
