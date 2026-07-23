@@ -90,23 +90,32 @@ export const useCheckIn = () => {
 
 export const useCheckOut = () => {
   const { roomData, reviewUserIds, setOpenRoomModal, setReviewUserIds, setRoomData } = useHotelStore();
+  const staffUserId = useHiClientZ((s) => s.captainData?._id);
   const queryClient = useQueryClient();
   const checkOut = async () => {
+    // check_out now raises the configured turnover services itself, in the same
+    // round-trip — no separate /trigger call, so the room can't flash
+    // "available" before the cleaning overlay catches up. triggeredBy attributes
+    // those tasks to the front-office staffer who did the checkout.
     const response = await apiRpc.hotel.rooms.check_out.$post({
       json: {
         roomId: roomData._id,
         userIds: reviewUserIds,
+        triggeredBy: staffUserId,
       },
     });
     const res = await response.json();
     if (response.status === 200 || response.status === 201) {
-      queryClient.invalidateQueries({
-        queryKey: ['allRooms'],
-      });
+      queryClient.invalidateQueries({ queryKey: ['allRooms'] });
       setReviewUserIds([]);
       setRoomData({});
       toast.success('Guest checked out successfully');
       setOpenRoomModal(false);
+      // The server already raised any turnover tasks; refresh both feeds so the
+      // room turns "Cleaning" and the staff task list updates now, rather than
+      // waiting for the 30s poll.
+      queryClient.invalidateQueries({ queryKey: ['checkoutTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['checkoutTasksActive'] });
       return res.data;
     }
     if (response.status === 400) {
@@ -479,6 +488,8 @@ interface CreateAlertPayload {
   userId: string;
   roomId: string;
   cart?: any;
+  /** Staff who raised it on the guest's behalf; omitted when the guest self-raises. */
+  raisedByStaff?: string;
 }
 
 export const useCreateAlert = () => {

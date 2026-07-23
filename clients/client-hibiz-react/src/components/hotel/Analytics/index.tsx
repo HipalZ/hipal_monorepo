@@ -9,6 +9,16 @@ import { Link } from 'react-router-dom';
 
 const essentialCards = [
   {
+    title: 'Service Performance Report',
+    description: 'Unified: guest requests + checkout turnover, one SLA log with source and staff filters',
+    icon: (
+      <div className="transform rounded-full bg-gradient-to-br from-slate-700 to-slate-900 p-3 shadow-lg transition-transform hover:scale-105">
+        <IoAnalytics className="h-8 w-8 text-white drop-shadow-md" />
+      </div>
+    ),
+    href: 'unified-report',
+  },
+  {
     title: 'Guest Experience Report',
     description: 'Guest, room, service, staff, escalation, rating and visit context',
     icon: (

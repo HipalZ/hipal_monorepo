@@ -5,9 +5,9 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useAcknowledgeWakeUpAlert, useDismissMessageAlert, useEditAlertCart, useRespondAlerts } from '@/hooks/useHotelApis';
+import { formatRaised } from '@/hooks/useTime';
 import { useMutation } from '@tanstack/react-query';
-import { formatDistanceToNow } from 'date-fns';
-import { AlarmClock, CheckCheck, CheckCircle, ChevronLeft, Loader2, Phone, ShoppingCart, User, XCircle } from 'lucide-react';
+import { AlarmClock, AlertCircle, CheckCheck, CheckCircle, ChevronLeft, Clock, Loader2, Phone, ShoppingCart, User, XCircle } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
 import CommonBottomButton from '../atoms/bottomButton';
@@ -17,11 +17,27 @@ import { useHiClientZ } from '../store/useHiClientzData';
 import type { Alert, Cart } from '../types/hotelData';
 import { useAlertsColors } from '../utils/helpersHotel';
 import CartDetailsHotel from './cartDetailsHotel';
-import { RingClock } from './RingClock';
+import { SlaPanel } from './SlaPanel';
 
 export interface AlertCardProps {
   alert: Alert;
 }
+
+/** Status pill styling + icon, one lookup keyed by alertProgress. */
+const BADGES: Record<string, { cls: string; Icon: typeof AlertCircle }> = {
+  CREATED: { cls: 'bg-blue-50 text-blue-700 ring-blue-100', Icon: Clock },
+  ACCEPTED: { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-100', Icon: CheckCircle },
+  DELIVERED: { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-100', Icon: CheckCheck },
+  RESOLVED: { cls: 'bg-slate-100 text-slate-600 ring-slate-200', Icon: CheckCheck },
+  NON_ACCEPTED_AND_WARNING: { cls: 'bg-amber-50 text-amber-700 ring-amber-100', Icon: AlertCircle },
+  IS_ACCEPTED_AND_WARNING: { cls: 'bg-amber-50 text-amber-700 ring-amber-100', Icon: AlertCircle },
+  NON_ACCEPTED_AND_ESCALATION: { cls: 'bg-red-50 text-red-700 ring-red-100', Icon: AlertCircle },
+  IS_ACCEPTED_AND_ESCALATION: { cls: 'bg-red-50 text-red-700 ring-red-100', Icon: AlertCircle },
+  NOT_DELIVERED: { cls: 'bg-red-50 text-red-700 ring-red-100', Icon: AlertCircle },
+  REJECTED: { cls: 'bg-slate-100 text-slate-600 ring-slate-200', Icon: XCircle },
+  MESSAGE: { cls: 'bg-violet-50 text-violet-700 ring-violet-100', Icon: AlarmClock },
+};
+const FALLBACK_BADGE = { cls: 'bg-slate-100 text-slate-600 ring-slate-200', Icon: Clock };
 
 function parseWakeUpMessage(message?: string) {
   const cleanMessage = message?.replace('WAKE_UP_CALL::', '') || '';
@@ -126,9 +142,19 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const displayMessage = isWakeUpCallAlert
     ? `Requested wake-up call for ${wakeUpInfo?.displayTime || 'the selected time'}. Note: ${wakeUpInfo?.note || 'Wake-up call'}`
     : alert?.message;
-  const timeAgo = formatDistanceToNow(new Date(alert?.createdAt), {
-    addSuffix: true,
-  });
+  // A request isn't done until its slowest service is done, so the SLA runs
+  // against the largest on the alert. 0/0 → SlaPanel renders nothing (wake-up
+  // calls and plain messages have no service attached).
+  const services = alert?.serviceIds || [];
+  const acceptMins = services.reduce((max, service) => Math.max(max, service?.avgAcceptanceTime || 0), 0);
+  const deliverMins = services.reduce((max, service) => Math.max(max, service?.avgDeliveryTime || 0), 0);
+
+  // The header names the request; extra services collapse into a "+N more".
+  const serviceNames = services.map((service) => service?.name).filter(Boolean);
+  const primaryService = serviceNames[0] || (isWakeUpCallAlert ? 'Wake-up Call' : 'Message');
+  const extraServices = Math.max(0, serviceNames.length - 1);
+
+  const badge = (isWakeUpCallAlert ? BADGES.MESSAGE : BADGES[alert?.alertProgress]) ?? FALLBACK_BADGE;
 
   const PENDING_STATES = ['CREATED', 'NON_ACCEPTED_AND_WARNING', 'NON_ACCEPTED_AND_ESCALATION'];
   const ACCEPTED_STATES = ['ACCEPTED', 'IS_ACCEPTED_AND_WARNING', 'IS_ACCEPTED_AND_ESCALATION'];
@@ -164,48 +190,40 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     >
       {/* Primary information section */}
       <div className="p-4">
-        {/* Room number and time */}
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="flex items-center text-lg font-bold">Room {alert?.roomId?.name}</h3>
-          <RingClock createdAt={alert?.createdAt} />
+        {/* Room + what was requested */}
+        <div className="mb-2 flex items-start justify-between gap-3">
+          <h3 className="text-xl font-bold leading-tight">Room {alert?.roomId?.name}</h3>
+          <div className="min-w-0 text-right">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Request</div>
+            <div className="truncate font-bold leading-tight">{primaryService}</div>
+            {extraServices > 0 ? <div className="text-[11px] text-slate-500">+{extraServices} more</div> : null}
+          </div>
         </div>
-        <h1
-          className={`my-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-bold ${
-            isWakeUpCallDue
-              ? 'bg-red-100 text-red-900 ring-1 ring-red-200'
-              : isWakeUpCallAlert
-              ? 'bg-violet-100 text-violet-900 ring-1 ring-violet-200'
-              : 'bg-slate-100 text-slate-900'
-          }`}
-        >
-          {isWakeUpCallAlert && <AlarmClock className="h-4 w-4" />}
-          {getAlertLabel(alert?.alertProgress)}
-        </h1>
-        {/* Services */}
-        <div className="mb-3 flex flex-wrap gap-2">
-          {alert?.serviceIds.map((service) => (
-            <article key={service._id} className="inline-flex">
-              {service.image ? (
-                <div className="h-[100px] w-[100px] flex-shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
-                  <img
-                    src={service.image}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                </div>
-              ) : null}
-              <div key={service._id} className="group flex items-center gap-3 rounded-xl bg-white px-2 py-1.5 text-slate-900 transition-colors">
-                <span className="pr-1 text-base font-semibold">{service?.name}</span>
-              </div>
-            </article>
-          ))}
-          <h1 className={`text-sm ${isWakeUpCallAlert ? 'rounded-lg bg-violet-50 p-3 font-semibold text-violet-950' : ''}`}>
+
+        {/* Status + when it came in */}
+        <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${badge.cls}`}>
+            <badge.Icon className="h-3.5 w-3.5" />
+            {getAlertLabel(alert?.alertProgress)}
+          </span>
+          <span className="text-slate-300">·</span>
+          <span className="text-xs text-slate-500">Raised {formatRaised(alert?.createdAt)}</span>
+        </div>
+
+        <SlaPanel
+          createdAt={alert?.createdAt}
+          acceptedAt={alert?.acceptedAt}
+          deliveredAt={alert?.deliveredAt}
+          rejectedAt={alert?.rejectedAt}
+          acceptMins={acceptMins}
+          deliverMins={deliverMins}
+        />
+
+        {displayMessage ? (
+          <p className={`mt-3 text-sm ${isWakeUpCallAlert ? 'rounded-lg bg-violet-50 p-3 font-semibold text-violet-950' : 'text-slate-700'}`}>
             {displayMessage}
-          </h1>
-        </div>
+          </p>
+        ) : null}
 
         {/* Order details button */}
         {hasCart && (
@@ -256,9 +274,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
                       <span className="font-medium">{alert?.acceptedBy?.name}</span>
                     </div>
                     {isWakeUpCallAlert && (
-                      <p className="mt-1 text-xs text-gray-600">
-                        This staff member has confirmed they will remind the guest at the requested time.
-                      </p>
+                      <p className="mt-1 text-xs text-gray-600">This staff member has confirmed they will remind the guest at the requested time.</p>
                     )}
                   </div>
                 )}
@@ -304,7 +320,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
           {isWakeUpCallAlert && alert?.alertProgress === 'MESSAGE' && !isWakeUpAcknowledged ? (
             <Button
-              className="w-full rounded-md border border-emerald-700 !bg-emerald-600 !text-white font-semibold shadow-sm hover:!bg-emerald-700"
+              className="w-full rounded-md border border-emerald-700 !bg-emerald-600 font-semibold !text-white shadow-sm hover:!bg-emerald-700"
               onClick={async () => {
                 try {
                   await acknowledgeWakeUpAlert(alert?._id);
@@ -328,7 +344,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
           {isWakeUpCallAlert && isWakeUpCallDue ? (
             <Button
-              className="w-full rounded-md border border-emerald-900 !bg-emerald-700 !text-white font-semibold shadow-sm hover:!bg-emerald-800"
+              className="w-full rounded-md border border-emerald-900 !bg-emerald-700 font-semibold !text-white shadow-sm hover:!bg-emerald-800"
               onClick={async () => {
                 try {
                   await dismissAlert(alert?._id);

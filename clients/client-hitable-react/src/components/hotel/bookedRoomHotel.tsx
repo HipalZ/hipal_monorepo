@@ -6,6 +6,9 @@ import {
   Star,
   MessageCircleMore,
   ArrowRight,
+  ConciergeBell,
+  Loader2,
+  Plus,
 } from "lucide-react";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,7 +19,7 @@ import {
 import { useHotelStore } from "../store/useHotelStore";
 import { useMutation } from "@tanstack/react-query";
 import CommonBottomButton from "../atoms/bottomButton";
-import { memo, lazy, useCallback, useState } from "react";
+import { memo, lazy, useCallback, useEffect, useState } from "react";
 import useBusinessData from "../store/useBusinessData";
 import { Button } from "../ui/button";
 import { sources } from "./availableRoomHotel";
@@ -50,6 +53,24 @@ const MemoBookedRoomHotel = () => {
   const businessId = outletInfo?.businessId || "";
   const { categoriesLoading, categoriesData } =
     useGetServiceCategories(businessId);
+
+  // Seed the dropdown from the room's saved source when the modal opens or the
+  // room changes. Without this the select always started blank ("No source
+  // selected") even though the room already had a source stored.
+  useEffect(() => {
+    const saved = roomData?.source || "";
+    if (!saved) {
+      setSelectedSource("");
+      setIsCustomSource(false);
+      setCustomSource("");
+      return;
+    }
+    // A value not in the preset list is a custom source → "Other" + free text.
+    const isPreset = sources.includes(saved);
+    setSelectedSource(saved);
+    setIsCustomSource(!isPreset);
+    setCustomSource(isPreset ? "" : saved);
+  }, [roomData?._id, roomData?.source]);
 
   const handleSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -104,15 +125,30 @@ const MemoBookedRoomHotel = () => {
   const closeServices = useCallback(() => setShowServicePicker(false), []);
 
   const createAlertHiclient = async (serviceIds: string[]) => {
+    // Front office raises ON BEHALF OF THE GUEST, so the request carries the
+    // room's current occupant — not the staff member. The occupancy guard then
+    // passes (the guest is in the room) and the alert is attributed to the
+    // guest, exactly as if they'd raised it themselves. A staff id would be
+    // rejected as "not checked in to this room".
+    const guestId = roomData?.userIds?.[0]?._id;
+    if (!guestId) {
+      toast.error("No guest is registered in this room. Register a guest before raising a request.");
+      return;
+    }
     const result = await createAlert({
       serviceIds: serviceIds,
       businessId: businessId,
       roomId: roomData?._id || "",
-      userId: userData?._id || "",
+      userId: guestId,
+      // Attributed to the guest (userId), but we also record which staff member
+      // operated the front-office modal, so the report can show both.
+      raisedByStaff: userData?._id,
     });
     if (result.status === 200 || result.status === 201) {
-      toast.success("Alert created successfully");
+      toast.success("Request raised for the guest");
       closeServices();
+    } else {
+      toast.error(result?.data?.message || "Could not raise the request");
     }
   };
 
@@ -175,20 +211,34 @@ const MemoBookedRoomHotel = () => {
             <ArrowRight className="h-4 w-4" />
           </article>
 
-          {/* 🔽 NEW: Services button */}
-          <CardContent className="flex items-center gap-2 mx-4">
-            <Button
-              size="sm"
-              className="h-9 rounded-lg shadow-md text-white"
-              onClick={openServices}
-              disabled={!businessId || categoriesLoading}
-            >
-              Services
-            </Button>
-            {categoriesLoading && (
-              <span className="text-xs text-gray-500">Loading services…</span>
-            )}
-          </CardContent>
+          {/* Raise a service on the guest's behalf — a primary front-office
+              action, so it reads as a full-width CTA, not a small pill. */}
+          <button
+            type="button"
+            onClick={openServices}
+            disabled={!businessId || categoriesLoading}
+            aria-label="Raise a service request for this room"
+            className="group m-4 flex w-[calc(100%-2rem)] items-center gap-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 p-3.5 text-left text-white shadow-md transition-all hover:shadow-lg active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/20">
+              {categoriesLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <ConciergeBell className="h-5 w-5" />
+              )}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold leading-tight">
+                {categoriesLoading ? "Loading services…" : "Raise a service request"}
+              </span>
+              <span className="block text-xs text-white/80">
+                Order for the guest from the front desk
+              </span>
+            </span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 transition-transform group-hover:translate-x-0.5">
+              <Plus className="h-4 w-4" />
+            </span>
+          </button>
 
           {/* Guest Information */}
           <CardContent>

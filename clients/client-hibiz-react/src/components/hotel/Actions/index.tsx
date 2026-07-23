@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { ArrowLeft, Cog } from "lucide-react";
+import { ArrowLeft, Cog, LogOut } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -10,10 +10,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import HotelServices from "./Services";
+import CheckoutAutomation from "./CheckoutAutomation";
 
 // Define the service types
 type ServiceType =
   | "services"
+  | "checkout"
   | "rooms"
   | "restaurant"
   | "parking"
@@ -32,6 +34,18 @@ const serviceCards = [
       </div>
     ),
     color: "bg-rose-50 dark:bg-blue-950",
+  },
+  {
+    id: "checkout",
+    title: "Checkout Automation",
+    description:
+      "Raise cleaning and turnover services automatically when a room is checked out",
+    icon: (
+      <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-amber-400 to-amber-600 hover:scale-105">
+        <LogOut className="w-8 h-8 text-white drop-shadow-md" />
+      </div>
+    ),
+    color: "bg-amber-50 dark:bg-amber-950",
   },
 ];
 
@@ -79,6 +93,8 @@ const HotelActions = () => {
     switch (activeService) {
       case "services":
         return <HotelServices />;
+      case "checkout":
+        return <CheckoutAutomation />;
       default:
         return null;
     }

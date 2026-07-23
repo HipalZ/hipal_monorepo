@@ -1,6 +1,7 @@
 export * from "./alert";
 export * from "./amenities";
 export * from "./book";
+export * from "./checkoutTask";
 export * from "./hotelAnalytics";
 export * from "./hotelRoomType";
 export * from "./hotelServiceTemplateMapping";

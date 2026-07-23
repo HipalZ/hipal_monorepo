@@ -44,6 +44,10 @@ interface IHotelStore {
   hotelAlertsCount: number;
   setHotelAlertsCount: (value: number) => void;
 
+  // Open room-turnover tasks for this staff — folded into the Alerts nav badge.
+  hotelCheckoutCount: number;
+  setHotelCheckoutCount: (value: number) => void;
+
   isOpenChat: boolean;
   setIsOpenChat: (value: boolean) => void;
 
@@ -117,6 +121,9 @@ export const useHotelStore = create<IHotelStore>((set) => ({
 
   hotelAlertsCount: 0,
   setHotelAlertsCount: (value) => set({ hotelAlertsCount: value }),
+
+  hotelCheckoutCount: 0,
+  setHotelCheckoutCount: (value) => set({ hotelCheckoutCount: value }),
 
   isOpenChat: false,
   setIsOpenChat: (value) => set({ isOpenChat: value }),

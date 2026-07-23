@@ -59,7 +59,7 @@ export const ChatMessageHotel = ({
     <article className="flex justify-start mb-2">
       <Avatar className="h-8 w-8 mr-2 mt-1">
         <AvatarFallback className="bg-gray-200 text-gray-600">
-          {chat?.userId?.name.charAt(0)}
+          {chat?.userId?.name?.charAt(0) ?? "?"}
         </AvatarFallback>
       </Avatar>
       <div className="flex flex-col max-w-[75%]">
@@ -67,11 +67,17 @@ export const ChatMessageHotel = ({
           {chat?.userId?.name}
         </span>
         <div className="rounded-2xl px-3 pt-3 pb-1 bg-blue-600 text-white rounded-br-none">
-          {chat.alertId.serviceIds.map((service: Service) => (
-            <p key={service?._id} className="text-sm">
-              {service?.name}
-            </p>
-          ))}
+          {/* Not every chat is a service request — a plain message or wake-up
+              call has no linked alert, so guard against alertId being null. */}
+          {chat?.alertId?.serviceIds?.length ? (
+            chat.alertId.serviceIds.map((service: Service) => (
+              <p key={service?._id} className="text-sm">
+                {service?.name}
+              </p>
+            ))
+          ) : (
+            <p className="text-sm">{chat?.message || chat?.description || "Message"}</p>
+          )}
           <span className="text-[0.65rem] text-gray-300 mt-1 float-right">
             {formatHotelTime(chat?.date)}
           </span>
@@ -79,7 +85,7 @@ export const ChatMessageHotel = ({
       </div>
     </article>
     <article className="space-y-4">
-      {chat?.roomChatReplyIds.map((reply: RoomChatReply) => (
+      {chat?.roomChatReplyIds?.map((reply: RoomChatReply) => (
         <ChatReplyMessage
           key={reply._id}
           reply={reply}

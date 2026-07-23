@@ -33,6 +33,7 @@ import type { FilterQuery } from "mongoose";
 import { Types } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import { raiseCheckoutTasks } from "../../services/checkoutTasks/raise";
 import { DEFAULT_IOS_NOTIFICATION_SOUND } from "../../services/notifications/sound";
 import {
   requireRoomOccupancy,
@@ -1246,48 +1247,6 @@ const roomRouter = new Hono()
               console.error("Error sending message:", error.message);
             }
           }
-
-          // const res = await axios.post(
-          //   `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-          //   {
-          //     messaging_product: "whatsapp",
-          //     to: userData?.phone?.toString(),
-          //     type: "template",
-          //     template: {
-          //       name: "fi_thankyou_template",
-          //       language: { code: "en" },
-          //       components: [
-          //         {
-          //           type: "body",
-          //           parameters: [
-          //             {
-          //               type: "text",
-          //               text: userData?.name,
-          //             },
-
-          //             {
-          //               type: "text",
-          //               text: "hotel",
-          //             },
-          //             {
-          //               type: "text",
-          //               text: `${outletInfo?.placeUrl}`,
-          //             },
-          //           ],
-          //         },
-          //       ],
-          //     },
-          //   },
-          //   {
-          //     headers: {
-          //       Authorization: `Bearer ${whatsAppConfig.token}`,
-          //     },
-          //   },
-          // );
-
-          // if (res.status !== 200) {
-          //   throw new Error("Error sending message");
-          // }
         }
       }
 
@@ -1373,6 +1332,27 @@ const roomRouter = new Hono()
         },
       );
       await HotelRoomSession.deleteOne({ roomId }, { session });
+
+      // Raise the configured turnover tasks in the same round-trip, so hitable
+      // no longer needs a separate /trigger call (that second call was what let
+      // the room flash "available" before the cleaning overlay caught up). This
+      // must never fail the checkout — the guest is already gone — and it stays
+      // outside the transaction's session so a raise hiccup can't roll it back.
+      try {
+        const departingGuestId = requestData.userIds?.[0];
+        const guest = departingGuestId
+          ? await User.findById(departingGuestId).select("name phone").lean()
+          : null;
+        await raiseCheckoutTasks({
+          businessId: String(roomExists.businessId),
+          roomId: String(roomId),
+          triggeredBy: requestData.triggeredBy,
+          guestName: guest?.name,
+          guestPhone: guest?.phone ? String(guest.phone) : undefined,
+        });
+      } catch (error) {
+        console.error("check_out: raising turnover tasks failed", error);
+      }
 
       return respond(c, "Checked out successfully", false, 200, {
         _id: updatedRoom._id,

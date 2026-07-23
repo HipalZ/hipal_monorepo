@@ -41,6 +41,9 @@ export const hotelAlert = z.object({
   deliveredAt: z.number().optional(),
   rejectedAt: z.number().optional(),
   createdBy: ObjectIdSchema.optional(),
+  // The staff member who raised this on the guest's behalf (front-office modal).
+  // Absent when the guest raised it from their own device.
+  raisedByStaff: ObjectIdSchema.optional(),
   acceptedBy: ObjectIdSchema.optional(),
   deliveredBy: ObjectIdSchema.optional(),
   rejectedBy: ObjectIdSchema.optional(),

@@ -1,4 +1,4 @@
-import { BedDouble, BedSingle, Users, Search, X, Filter } from "lucide-react";
+import { BedDouble, BedSingle, Users, Search, X, Filter, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "../utils/helpers";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,12 @@ import {
 import { useAlertsColors } from "../utils/helpersHotel";
 import { useHiClientZ } from "../store/useHiClientzData";
 import { useParams } from "react-router-dom";
+import useBusinessData from "../store/useBusinessData";
+import { useCleaningRoomIds } from "@/hooks/useCheckoutTasks";
+import { useAlertsStore } from "../store/useAlertStore";
+
+/** Room label shown while a checked-out room is being readied. */
+const CLEANING_STATUS = "CLEANING";
 
 function MemoRoomsHotel() {
   const { hid: urlBusinessId } = useParams();
@@ -25,6 +31,28 @@ function MemoRoomsHotel() {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const { getStatusStyles } = useAlertsColors();
   const captainData = useHiClientZ((s) => s.captainData);
+
+  // Rooms with an open checkout task are shown as "Cleaning" without touching
+  // their stored roomStatus (which stays AVAILABLE, so booking still works).
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const cleaningRoomIds = useCleaningRoomIds(businessId);
+  const displayStatusOf = useCallback(
+    (room: RoomData) => (room?._id && cleaningRoomIds.has(room._id) ? CLEANING_STATUS : room.roomStatus),
+    [cleaningRoomIds],
+  );
+
+  // Active service requests per room, from the alert feed already polling in the
+  // background. The feed only returns live alerts, so a count here means the
+  // room has something open needing attention right now.
+  const alerts = useAlertsStore((s) => s.alerts);
+  const alertCountByRoom = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const alert of alerts ?? []) {
+      const id = alert?.roomId?._id;
+      if (id) map.set(id, (map.get(id) ?? 0) + 1);
+    }
+    return map;
+  }, [alerts]);
   const handleRoom = useCallback(
     (room: RoomData) => {
       // Check if any customRole matches the businessId and has the required role
@@ -65,7 +93,7 @@ function MemoRoomsHotel() {
         .includes(searchQuery.toLowerCase());
 
       const matchesStatus =
-        statusFilters.length === 0 || statusFilters.includes(room.roomStatus);
+        statusFilters.length === 0 || statusFilters.includes(displayStatusOf(room));
 
       return matchesSearch && matchesStatus;
     });
@@ -73,9 +101,9 @@ function MemoRoomsHotel() {
     return filtered?.sort(
       (a, b) => Number.parseInt(a.name) - Number.parseInt(b.name),
     );
-  }, [allRooms, searchQuery, statusFilters]);
+  }, [allRooms, searchQuery, statusFilters, displayStatusOf]);
 
-  const statusOptions = ["AVAILABLE", "OCCUPIED", "BOOKED", "MAINTENANCE"];
+  const statusOptions = ["AVAILABLE", "OCCUPIED", "BOOKED", "CLEANING", "MAINTENANCE"];
 
   if (isLoading) return <LoadingSpinner />;
 
@@ -186,7 +214,9 @@ function MemoRoomsHotel() {
       {/* Room cards grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-[5rem]">
         {filteredRooms?.map((room: RoomData) => {
-          const statusStyles = getStatusStyles(room.roomStatus);
+          const displayStatus = displayStatusOf(room);
+          const statusStyles = getStatusStyles(displayStatus);
+          const alertCount = room?._id ? alertCountByRoom.get(room._id) ?? 0 : 0;
           return (
             <section
               onClick={() => handleRoom(room)}
@@ -212,12 +242,24 @@ function MemoRoomsHotel() {
                   <h3 className="text-base font-medium text-gray-900 truncate pr-2">
                     {room?.name}
                   </h3>
-                  <div
-                    className={cn(
-                      "w-2.5 h-2.5 rounded-full",
-                      statusStyles?.dot,
+                  <div className="flex items-center gap-1.5">
+                    {/* Active service requests in this room — pulses to catch the eye */}
+                    {alertCount > 0 && (
+                      <span
+                        className="inline-flex items-center gap-0.5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm animate-pulse"
+                        title={`${alertCount} active service request${alertCount === 1 ? "" : "s"}`}
+                      >
+                        <BellRing className="h-2.5 w-2.5" />
+                        {alertCount}
+                      </span>
                     )}
-                  />
+                    <div
+                      className={cn(
+                        "w-2.5 h-2.5 rounded-full",
+                        statusStyles?.dot,
+                      )}
+                    />
+                  </div>
                 </div>
                 <article className="flex items-center justify-between">
                   <article className="flex items-center space-x-1.5">
@@ -241,7 +283,7 @@ function MemoRoomsHotel() {
                       statusStyles?.text,
                     )}
                   >
-                    {room?.roomStatus.toLowerCase()}
+                    {displayStatus.toLowerCase()}
                   </article>
                 </article>
               </article>

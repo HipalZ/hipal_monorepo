@@ -3,6 +3,7 @@ import hotelALertRouter from "./alert";
 import hotelAlarmRouter from "./alarm";
 import hotelAmenitiesRouter from "./amenities";
 import roomBookRouter from "./book";
+import checkoutTaskRouter from "./checkoutTask";
 import roomTypeRouter from "./hotelRoomType";
 import hotelServiceTemplateMappingRouter from "./hotelServiceTemplateMapping";
 import reportRouter from "./report";
@@ -25,6 +26,7 @@ const hotelRouter = new Hono()
   .route("/book", roomBookRouter)
   .route("/amenities", hotelAmenitiesRouter)
   .route("/alert", hotelALertRouter)
+  .route("/checkout_task", checkoutTaskRouter)
   .route("/room_type", roomTypeRouter)
   .route("/report", reportRouter)
   .route("/hotel_service_template_mapping", hotelServiceTemplateMappingRouter)

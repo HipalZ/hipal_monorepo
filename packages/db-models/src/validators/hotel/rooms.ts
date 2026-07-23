@@ -66,6 +66,9 @@ export const hotelRoomCheckIn = z.object({
 export const hotelRoomCheckOut = z.object({
   roomId: ObjectIdSchema,
   userIds: z.array(ObjectIdSchema).optional().default([]),
+  // Front-office staff who performed the checkout — attributed on the turnover
+  // tasks that check_out raises in-line. Optional so older callers still work.
+  triggeredBy: ObjectIdSchema.optional(),
 });
 
 export const hotelRoomCheckOutRequest = z.object({
