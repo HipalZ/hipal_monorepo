@@ -1,10 +1,45 @@
 // Pure mapping + aggregation for the unified report. No React, no fetching.
 
 import type { CheckoutTask } from '@/components/store/hotel/useCheckoutTasks';
+import type { reviewResponse } from '@/hooks/hotel/useReviewHook';
 import type { Source, UnifiedRow } from './model';
 
 const minutes = (from?: number | null, to?: number | null): number | null =>
   from && to && to >= from ? (to - from) / 60000 : null;
+
+// ── review matching ──────────────────────────────────────────────────────────
+// A review may link straight to an alert, or only to guest+room+service; try the
+// exact alertId link first, then a best-effort match after the request time.
+const servicesOverlap = (a?: Array<{ name?: string }>, b?: Array<{ name?: string }>): boolean => {
+  const names = new Set(a?.map((s) => s?.name?.toLowerCase()).filter(Boolean));
+  return Boolean(b?.some((s) => names.has(s?.name?.toLowerCase())));
+};
+
+const findReview = (a: GuestAlert, reviews: reviewResponse[]): reviewResponse | undefined => {
+  const exact = reviews.find((r) => {
+    const linked = typeof r.alertId === 'object' && r.alertId ? r.alertId._id : undefined;
+    return a._id && linked === a._id;
+  });
+  if (exact) return exact;
+  return reviews.find((r) => {
+    const user = typeof r.userId === 'object' && r.userId ? r.userId : null;
+    const sameGuest = user?.phone && user.phone === a.createdBy?.phone;
+    const sameRoom = r.roomId?.name && r.roomId.name === a.roomId?.name;
+    const reviewAlert = typeof r.alertId === 'object' && r.alertId ? r.alertId : null;
+    const sameService = servicesOverlap(a.serviceIds, reviewAlert?.serviceIds);
+    const afterRequest = r.date && a.createdAt ? r.date >= a.createdAt : true;
+    return Boolean(sameGuest && sameRoom && sameService && afterRequest);
+  });
+};
+
+/** Rating (1–5) + free-text feedback pulled off a matched review. */
+const reviewOf = (a: GuestAlert, reviews: reviewResponse[]): { rating: number | null; feedback: string } => {
+  const review = reviews.length ? findReview(a, reviews) : undefined;
+  return {
+    rating: review?.reviewRating ?? null,
+    feedback: review?.note || review?.improvementAreas?.filter(Boolean).join(', ') || '',
+  };
+};
 
 const floorOf = (room: string): string => {
   const digits = room.replace(/\D/g, '');
@@ -18,6 +53,8 @@ type GuestAlert = {
   acceptedAt?: number;
   deliveredAt?: number;
   isEscalated?: boolean;
+  // Escalation tier reached (1-based), same field the Escalation Report shows.
+  level?: number;
   alertProgress?: string;
   serviceIds?: Array<{ name?: string; avgAcceptanceTime?: number; avgDeliveryTime?: number }>;
   roomId?: { name?: string };
@@ -30,7 +67,13 @@ type GuestAlert = {
 const OPEN_GUEST = new Set(['CREATED', 'ACCEPTED', 'IS_ACCEPTED_AND_WARNING', 'NON_ACCEPTED_AND_WARNING', 'IS_ACCEPTED_AND_ESCALATION', 'NON_ACCEPTED_AND_ESCALATION']);
 
 /** A guest request → unified row. Accept leg + deliver leg = total SLA. */
-export const mapGuestAlert = (a: GuestAlert, index: number, visitsByPhone: Record<string, number> = {}): UnifiedRow => {
+export const mapGuestAlert = (
+  a: GuestAlert,
+  index: number,
+  visitsByPhone: Record<string, number> = {},
+  reviews: reviewResponse[] = [],
+): UnifiedRow => {
+  const { rating, feedback } = reviewOf(a, reviews);
   const services = a.serviceIds ?? [];
   const acceptSla = services.reduce((s, x) => s + (x.avgAcceptanceTime ?? 0), 0);
   const deliverSla = services.reduce((s, x) => s + (x.avgDeliveryTime ?? 0), 0);
@@ -66,13 +109,21 @@ export const mapGuestAlert = (a: GuestAlert, index: number, visitsByPhone: Recor
     verdict,
     onTime: verdict == null ? null : verdict >= 0,
     escalated: Boolean(a.isEscalated),
+    escalationLevel: a.isEscalated ? a.level ?? 1 : null,
     deliverMins,
     deliverSla,
     open: OPEN_GUEST.has(a.alertProgress ?? ''),
+    rating,
+    feedback,
   };
 };
 
 /** A checkout turnover job → unified row. Accept + complete = total SLA. */
+// The turnover ladder maps onto the same L1/L2/L3 tiers as the guest flow:
+// floor staff → all floors → manager. FLOOR is the initial offer, not an
+// escalation, so it carries no level.
+const STAGE_LEVEL: Record<string, number | null> = { FLOOR: null, ALL_FLOORS: 2, MANAGER: 3 };
+
 export const mapCheckoutTask = (t: CheckoutTask, index: number, visitsByPhone: Record<string, number> = {}): UnifiedRow => {
   const acceptMins = minutes(t.createdAt, t.acceptedAt);
   // The "complete" leg mirrors a guest's delivery leg: accepted → done.
@@ -81,6 +132,7 @@ export const mapCheckoutTask = (t: CheckoutTask, index: number, visitsByPhone: R
   const totalSla = t.acceptMins + t.completeMins;
   const verdict = totalMins != null ? totalSla - totalMins : null;
   const room = t.roomId?.name || '—';
+  const escalationLevel = STAGE_LEVEL[t.stage ?? 'FLOOR'] ?? null;
   return {
     id: t._id || `c-${index}`,
     source: 'CHECKOUT',
@@ -108,15 +160,28 @@ export const mapCheckoutTask = (t: CheckoutTask, index: number, visitsByPhone: R
     totalSla,
     verdict,
     onTime: verdict == null ? null : verdict >= 0,
-    escalated: Boolean(t.escalatedAt) || t.stage === 'MANAGER',
+    // Widening to all floors is itself an escalation, so L2+ counts as escalated.
+    escalated: Boolean(t.escalatedAt) || escalationLevel != null,
+    escalationLevel,
     deliverMins,
     deliverSla: t.completeMins,
     open: t.status === 'PENDING' || t.status === 'ACCEPTED',
+    // Nobody rates a room turnover after checkout — always blank for these.
+    rating: null,
+    feedback: '',
   };
 };
 
-export const buildRows = (alerts: GuestAlert[], tasks: CheckoutTask[], visitsByPhone: Record<string, number> = {}): UnifiedRow[] =>
-  [...alerts.map((a, i) => mapGuestAlert(a, i, visitsByPhone)), ...tasks.map((t, i) => mapCheckoutTask(t, i, visitsByPhone))].sort((a, b) => b.raisedAt - a.raisedAt);
+export const buildRows = (
+  alerts: GuestAlert[],
+  tasks: CheckoutTask[],
+  visitsByPhone: Record<string, number> = {},
+  reviews: reviewResponse[] = [],
+): UnifiedRow[] =>
+  [
+    ...alerts.map((a, i) => mapGuestAlert(a, i, visitsByPhone, reviews)),
+    ...tasks.map((t, i) => mapCheckoutTask(t, i, visitsByPhone)),
+  ].sort((a, b) => b.raisedAt - a.raisedAt);
 
 // ── aggregates ───────────────────────────────────────────────────────────────
 
@@ -136,6 +201,10 @@ export type Summary = {
   /** Second leg (accept → done). "Complete" not "deliver" — not every service
    *  hands over an item; some just finish a task. Spans both request types. */
   avgComplete: number | null;
+  /** Mean guest rating across reviewed requests; null when none reviewed. */
+  avgRating: number | null;
+  /** How many requests carry a rating — the base avgRating is drawn from. */
+  reviewed: number;
 };
 
 /**
@@ -147,6 +216,7 @@ export type Summary = {
 export const summarize = (rows: UnifiedRow[]): Summary => {
   const judged = rows.filter((r) => r.onTime != null);
   const onTime = judged.filter((r) => r.onTime).length;
+  const rated = rows.map((r) => r.rating).filter(isNum);
   return {
     total: rows.length,
     guest: rows.filter((r) => r.source === 'GUEST').length,
@@ -158,6 +228,8 @@ export const summarize = (rows: UnifiedRow[]): Summary => {
     onTimeRate: judged.length ? Math.round((onTime / judged.length) * 100) : null,
     avgAccept: mean(rows.map((r) => r.acceptMins).filter(isNum)),
     avgComplete: mean(rows.map((r) => r.deliverMins).filter(isNum)),
+    avgRating: rated.length ? Math.round(mean(rated)! * 10) / 10 : null,
+    reviewed: rated.length,
   };
 };
 

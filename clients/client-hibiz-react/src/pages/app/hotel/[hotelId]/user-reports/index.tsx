@@ -10,12 +10,14 @@ import {
     useCallback,
 } from "react";
 import {
+  ArrowRight,
+  BarChart3,
   CalendarDays,
-  BedDouble,
   Download,
   Inbox,
+  Phone,
   Search,
-  Sparkles,
+  Star,
   TrendingUp,
   Users,
   Wrench,
@@ -31,8 +33,6 @@ import {
 } from "@/hooks/hotel/useUserData";
 import useBusinessData from "@/components/store/useBusinessData";
 import { UserDetails } from "@/components/hotel/hotelUsers/UserDetails";
-import { SourcesDashboard } from "@/components/hotel/hotelUsers";
-import { UserCard } from "@/components/hotel/hotelUsers/UserCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -49,9 +49,18 @@ type MiniUser = {
   services?: number;
   companions?: number;
   reviews?: number;
+  totalVisits?: number;
   lastVisit?: string;
+  lastRoom?: string;
+  status?: "In House" | "Checked out";
   topSource?: string;
 };
+
+const surface =
+  "rounded-lg border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-18px_rgba(15,23,42,0.28)]";
+const th =
+  "border-b border-slate-200/80 bg-slate-50/80 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap";
+const td = "border-b border-slate-100 px-3 py-3 align-middle";
 
 const MAX_CUSTOMER_EXPORT_MONTHS = 3;
 
@@ -378,6 +387,7 @@ const MemoUserAnalytics = () => {
   const [selectedUser, setSelectedUser] = useState<MiniUser | null>(null);
 
   const [search, setSearch] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("ALL");
   const [isDownloading, setIsDownloading] = useState(false);
   const debouncedSearch = useDebounced(search, 300);
 
@@ -389,6 +399,7 @@ const MemoUserAnalytics = () => {
 
   const analytics = userAnalyticsData?.analytics ?? [];
   const sourcePercentages = userAnalyticsData?.sourcePercentages ?? {};
+  const visitCountByPhone = userAnalyticsData?.visitCountByPhone ?? {};
 
   const dashboardStats = useMemo(() => {
     const activeStays = analytics.filter((item) => !item.checkOut).length;
@@ -404,6 +415,13 @@ const MemoUserAnalytics = () => {
     const topSource =
       Object.entries(sourcePercentages).sort((a, b) => b[1] - a[1])[0]?.[0] ??
       "No source";
+    const avgVisits = Object.keys(visitCountByPhone).length
+      ? Math.round(
+          (Object.values(visitCountByPhone).reduce((sum, count) => sum + count, 0) /
+            Object.keys(visitCountByPhone).length) *
+            10,
+        ) / 10
+      : 0;
 
     return {
       totalStays: analytics.length,
@@ -411,8 +429,9 @@ const MemoUserAnalytics = () => {
       services,
       companions,
       topSource,
+      avgVisits,
     };
-  }, [analytics, sourcePercentages]);
+  }, [analytics, sourcePercentages, visitCountByPhone]);
 
   const uniqueUsers = useMemo<MiniUser[]>(() => {
     const groupedUsers = new Map<string, AnalyticsItem[]>();
@@ -425,6 +444,7 @@ const MemoUserAnalytics = () => {
 
     return Array.from(groupedUsers.entries()).map(([phone, userRows]) => {
       const firstUser = userRows[0]?.userId;
+      const latestRow = [...userRows].sort((a, b) => (b.checkIn || 0) - (a.checkIn || 0))[0];
       const sourceCounts = userRows.reduce<Record<string, number>>((acc, row) => {
         const source = row.source || "not-given";
         acc[source] = (acc[source] ?? 0) + 1;
@@ -456,25 +476,47 @@ const MemoUserAnalytics = () => {
           (sum, row) => sum + (row.reviewIds?.length ?? 0),
           0,
         ),
+        totalVisits: visitCountByPhone[phone] ?? userRows.length,
         lastVisit: formatExcelTimestamp(
           Math.max(...userRows.map((row) => row.checkIn || 0)),
         ),
+        lastRoom: latestRow?.roomId?.name ?? "",
+        status: latestRow?.checkOut ? "Checked out" : "In House",
         topSource:
           Object.entries(sourceCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ??
           "Guest User",
       };
     });
-  }, [analytics]);
+  }, [analytics, visitCountByPhone]);
 
   const filteredUsers = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();
-    if (!q) return uniqueUsers;
     return uniqueUsers.filter((u) => {
+      if (sourceFilter !== "ALL" && u.topSource !== sourceFilter) return false;
+      if (!q) return true;
       const name = (u.name || "").toLowerCase();
       const phone = (u.phone || "").toLowerCase();
       return name.includes(q) || phone.includes(q);
     });
-  }, [uniqueUsers, debouncedSearch]);
+  }, [uniqueUsers, debouncedSearch, sourceFilter]);
+
+  const sourceOptions = useMemo(
+    () => Object.keys(sourcePercentages).filter(Boolean).sort((a, b) => a.localeCompare(b)),
+    [sourcePercentages],
+  );
+
+  const sourceRows = useMemo(
+    () =>
+      Object.entries(sourcePercentages)
+        .filter(([, value]) => Number(value) > 0)
+        .sort((a, b) => b[1] - a[1]),
+    [sourcePercentages],
+  );
+
+  const topGuests = useMemo(
+    () => [...uniqueUsers].sort((a, b) => (b.totalVisits ?? 0) - (a.totalVisits ?? 0)).slice(0, 3),
+    [uniqueUsers],
+  );
 
   const filteredAnalytics = useMemo(() => {
     const allowedPhones = new Set(filteredUsers.map((user) => user.phone));
@@ -601,7 +643,7 @@ const MemoUserAnalytics = () => {
 
   if (selectedUser) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-teal-50/40 pb-20">
+      <main className="min-h-screen bg-slate-50 pb-20">
         <header className="linear_gradient_background">
           <MemoizedHeader title="User Analytics" onBack={goBack} />
         </header>
@@ -621,14 +663,14 @@ const MemoUserAnalytics = () => {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-teal-50/40 pb-20">
+    <main className="min-h-screen bg-slate-50 pb-20">
       <header className="linear_gradient_background">
         <MemoizedHeader title="User Analytics" onBack={goBack} />
       </header>
 
-      <div className="mx-auto max-w-7xl p-4 sm:p-6">
-        <div className="mb-5 rounded-lg border border-border/60 bg-white/85 p-3 shadow-sm backdrop-blur">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <div className="mx-auto max-w-[1400px] space-y-4 px-4 py-5 md:px-6">
+        <section className={`${surface} p-3`}>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <Suspense fallback={<div className="p-3">Loading date picker...</div>}>
               <DateRangePicker />
             </Suspense>
@@ -639,7 +681,7 @@ const MemoUserAnalytics = () => {
               onClick={handleDownloadCustomers}
               disabled={isDownloading || analytics.length === 0}
               title="Download customer report"
-              className="gap-2 bg-blue-600 text-white shadow-sm hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-600 lg:mt-1"
+              className="gap-2 rounded-lg bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 disabled:bg-slate-300 disabled:text-slate-600"
             >
               <Download className="h-4 w-4" />
               {isDownloading ? "Preparing Report..." : "Download Report"}
@@ -648,115 +690,166 @@ const MemoUserAnalytics = () => {
           <div
             className={`mt-3 flex items-start gap-2 rounded-md border px-3 py-2 text-xs ${
               canDownloadCustomerReport
-                ? "border-blue-100 bg-blue-50 text-blue-800"
+                ? "border-indigo-100 bg-indigo-50 text-indigo-800"
                 : "border-amber-200 bg-amber-50 text-amber-900"
             }`}
           >
             <CalendarDays className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
-              <p className="font-semibold">
-                Customer report downloads support up to {MAX_CUSTOMER_EXPORT_MONTHS} months at a time.
-              </p>
+              <p className="font-semibold">{customerReportRangeLabel}</p>
               <p className="mt-0.5">
-                Selected: {customerReportRangeLabel}
-                {!canDownloadCustomerReport
-                  ? " - download will ask you to select a shorter range."
-                  : " - ready to download."}
+                {canDownloadCustomerReport
+                  ? "CSV export is ready for this range."
+                  : `Choose ${MAX_CUSTOMER_EXPORT_MONTHS} months or less to export.`}
               </p>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {[
+            {
+              label: "Guests",
+              value: uniqueUsers.length,
+              sub: `${dashboardStats.totalStays} stay records`,
+              icon: Users,
+              tone: "text-indigo-700 bg-indigo-50 ring-indigo-100",
+            },
+            {
+              label: "Active Stays",
+              value: dashboardStats.activeStays,
+              sub: "currently checked in",
+              icon: CalendarDays,
+              tone: "text-emerald-700 bg-emerald-50 ring-emerald-100",
+            },
+            {
+              label: "Services",
+              value: dashboardStats.services,
+              sub: "requests in range",
+              icon: Wrench,
+              tone: "text-rose-700 bg-rose-50 ring-rose-100",
+            },
+            {
+              label: "Avg Visits",
+              value: dashboardStats.avgVisits || "-",
+              sub: "lifetime per guest",
+              icon: TrendingUp,
+              tone: "text-amber-700 bg-amber-50 ring-amber-100",
+            },
+            {
+              label: "Companions",
+              value: dashboardStats.companions,
+              sub: "co-guests in range",
+              icon: Users,
+              tone: "text-teal-700 bg-teal-50 ring-teal-100",
+            },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.label} className={`${surface} p-4`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{item.label}</p>
+                    <p className="mt-1 text-2xl font-bold tabular-nums text-slate-950">{item.value}</p>
+                  </div>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ring-1 ${item.tone}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                </div>
+                <p className="mt-3 border-t border-slate-100 pt-2 text-xs text-slate-500">{item.sub}</p>
+              </div>
+            );
+          })}
+        </section>
 
-
-          <div className="rounded-lg border border-teal-200 bg-teal-50/80 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-            <div className="flex items-center justify-between">
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+          <div className={`${surface} p-5 lg:col-span-2`}>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
-                <p className="text-xs font-semibold uppercase text-teal-700">
-                  Customers
-                </p>
-                <p className="mt-1 text-3xl font-bold text-teal-950">
-                  {uniqueUsers.length}
-                </p>
+                <h2 className="text-sm font-bold text-slate-950">Booking Sources</h2>
+                <p className="text-xs text-slate-500">{dashboardStats.topSource} leads this range</p>
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white text-teal-700 ring-1 ring-teal-100">
-                <Users className="h-5 w-5" />
-              </div>
+              <BarChart3 className="h-4 w-4 text-slate-400" />
             </div>
-            <p className="mt-3 text-xs text-teal-800/80">
-              {dashboardStats.companions} companions across stays
-            </p>
+            <div className="mt-4 space-y-3">
+              {sourceRows.length ? (
+                sourceRows.map(([source, percentage]) => (
+                  <button
+                    key={source}
+                    type="button"
+                    onClick={() => setSourceFilter(sourceFilter === source ? "ALL" : source)}
+                    className={`w-full rounded-md border px-3 py-2 text-left transition-colors ${
+                      sourceFilter === source ? "border-indigo-200 bg-indigo-50" : "border-slate-100 bg-slate-50/70 hover:bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3 text-xs">
+                      <span className="truncate font-semibold text-slate-700">{source}</span>
+                      <span className="font-bold tabular-nums text-slate-900">{Number(percentage).toFixed(1)}%</span>
+                    </div>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-white ring-1 ring-slate-100">
+                      <div className="h-full rounded-full bg-indigo-600" style={{ width: `${Math.min(Number(percentage), 100)}%` }} />
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="py-8 text-center text-sm text-slate-400">No source data in this range.</div>
+              )}
+            </div>
           </div>
 
-          <div className="rounded-lg border border-rose-200 bg-rose-50/80 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-            <div className="flex items-center justify-between">
+          <div className={`${surface} p-5 lg:col-span-3`}>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
-                <p className="text-xs font-semibold uppercase text-rose-700">
-                  Services
-                </p>
-                <p className="mt-1 text-3xl font-bold text-rose-950">
-                  {dashboardStats.services}
-                </p>
+                <h2 className="text-sm font-bold text-slate-950">Frequent Guests</h2>
+                <p className="text-xs text-slate-500">Highest lifetime visit count</p>
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white text-rose-700 ring-1 ring-rose-100">
-                <Wrench className="h-5 w-5" />
-              </div>
+              <Star className="h-4 w-4 text-amber-500" />
             </div>
-            <p className="mt-3 text-xs text-rose-800/80">
-              Requested services in selected range
-            </p>
-          </div>
-
-          <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase text-amber-700">
-                  Top Source
-                </p>
-                <p className="mt-1 truncate text-lg font-bold text-amber-950">
-                  {dashboardStats.topSource}
-                </p>
-              </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white text-amber-700 ring-1 ring-amber-100">
-                <TrendingUp className="h-5 w-5" />
-              </div>
+            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+              {topGuests.map((guest, index) => (
+                <button
+                  key={guest.phone}
+                  type="button"
+                  onClick={() => setSelectedUser(guest)}
+                  className="rounded-lg border border-slate-200 bg-white p-3 text-left transition-colors hover:border-indigo-200 hover:bg-indigo-50/40"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold capitalize text-slate-950">{guest.name}</p>
+                      <p className="text-xs text-slate-500">{guest.phone}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2 text-xs">
+                    <span className="text-slate-500">Visits</span>
+                    <span className="font-bold tabular-nums text-indigo-700">{guest.totalVisits ?? guest.stays ?? 0}</span>
+                  </div>
+                </button>
+              ))}
             </div>
-            <p className="mt-3 text-xs text-amber-800/80">
-              Highest booking source share
-            </p>
           </div>
-        </div>
+        </section>
 
-        <div className="mb-8">
-          <SourcesDashboard sourcePercentages={sourcePercentages} />
-        </div>
-
-        <div className="mb-6 rounded-lg border border-border/60 bg-white p-4 shadow-sm">
-          <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+        <section className={`${surface} overflow-hidden`}>
+          <div className="flex flex-col gap-3 border-b border-slate-100 p-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-500" />
-                <h2 className="text-xl font-semibold">User Directory</h2>
-                {uniqueUsers.length !== 0 && (
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                    {uniqueUsers.length}
-                  </span>
-                )}
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Search, inspect, and export customer stay data.
+              <h2 className="text-base font-bold text-slate-950">Guest Directory</h2>
+              <p className="text-xs text-slate-500">
+                {filteredUsers.length} of {uniqueUsers.length} guests
               </p>
             </div>
           </div>
 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="flex flex-col gap-2 border-b border-slate-100 p-4 sm:flex-row sm:items-center">
+            <div className="relative min-w-[240px] flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or phone…"
-              className="h-11 rounded-md border-border/70 bg-slate-50 pl-10 focus-visible:bg-white"
+              placeholder="Search name or phone"
+              className="h-10 rounded-lg border-slate-200 bg-slate-50 pl-10 pr-9 text-sm focus-visible:bg-white"
             />
 
             {search && (
@@ -764,68 +857,132 @@ const MemoUserAnalytics = () => {
                 type="button"
                 aria-label="Clear search"
                 onClick={() => setSearch("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-muted/70"
+                className="absolute right-2 top-1/2 rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
               >
-                <X className="w-4 h-4 text-muted-foreground" />
+                <X className="h-4 w-4" />
               </button>
             )}
           </div>
 
-          <div className="mt-2 text-xs text-muted-foreground">
-            {debouncedSearch
-              ? `Showing ${filteredUsers.length} result${
-                  filteredUsers.length === 1 ? "" : "s"
-                } for “${debouncedSearch}”`
-              : `Showing ${uniqueUsers.length} user${
-                  uniqueUsers.length === 1 ? "" : "s"
-                }`}
+            <select
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+              aria-label="Filter by source"
+              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+            >
+              <option value="ALL">All sources</option>
+              {sourceOptions.map((source) => (
+                <option key={source} value={source}>
+                  {source}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-
         {uniqueUsers.length === 0 ? (
-          <div className="py-16 flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-white/70 text-muted-foreground">
-            <Inbox className="w-8 h-8" />
+          <div className="flex flex-col items-center justify-center gap-2 py-16 text-slate-400">
+            <Inbox className="h-8 w-8" />
             <p className="font-medium">
               No users found for the selected range.
             </p>
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="py-16 flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-white/70 text-muted-foreground">
-            <Inbox className="w-8 h-8" />
+          <div className="flex flex-col items-center justify-center gap-2 py-16 text-slate-400">
+            <Inbox className="h-8 w-8" />
             <p className="font-medium">
-              No matches for{" "}
-              <span className="text-foreground">“{debouncedSearch}”</span>
+              No matches for <span className="text-slate-700">"{debouncedSearch || sourceFilter}"</span>
             </p>
-            <p className="text-xs">Try a different name or phone number.</p>
+            <p className="text-xs">Try a different name, phone number, or source.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredUsers.map((user) => (
-              <UserCard
-                key={user.phone}
-                user={
-                  {
-                    _id: user._id ?? "",
-                    // Highlight matches in the card title
-                    name: (
-                      <span className="capitalize">
-                        <Highlight text={user.name} query={debouncedSearch} />
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr>
+                  <th className={th}>Guest</th>
+                  <th className={th}>Visits</th>
+                  <th className={th}>Last stay</th>
+                  <th className={th}>Room</th>
+                  <th className={th}>Source</th>
+                  <th className={th}>Activity</th>
+                  <th className={th}>Status</th>
+                  <th className={`${th} text-right`}>Profile</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => (
+                  <tr
+                    key={user.phone}
+                    onClick={() => setSelectedUser(user)}
+                    className="cursor-pointer transition-colors hover:bg-slate-50"
+                  >
+                    <td className={td}>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold uppercase text-slate-700">
+                          {user.name?.[0] || "G"}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="truncate font-semibold capitalize text-slate-950">
+                            <Highlight text={user.name} query={debouncedSearch} />
+                          </div>
+                          <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
+                            <Phone className="h-3 w-3" />
+                            {user.phone}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={`${td} font-bold tabular-nums text-indigo-700`}>
+                      {user.totalVisits ?? user.stays ?? 0}
+                    </td>
+                    <td className={`${td} whitespace-nowrap text-slate-600`}>{user.lastVisit || "No date"}</td>
+                    <td className={`${td} font-semibold text-slate-900`}>{user.lastRoom ? `Room ${user.lastRoom}` : "-"}</td>
+                    <td className={td}>
+                      <span className="inline-flex max-w-[180px] truncate rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600">
+                        {user.topSource || "not-given"}
                       </span>
-                    ) as unknown as string,
-                    phone: user.phone,
-                    stays: user.stays,
-                    services: user.services,
-                    companions: user.companions,
-                    reviews: user.reviews,
-                    lastVisit: user.lastVisit,
-                    topSource: user.topSource,
-                  } as any
-                }
-                onClick={() => setSelectedUser(user)}
-              />
-            ))}
+                    </td>
+                    <td className={td}>
+                      <div className="flex flex-wrap gap-1.5 text-xs">
+                        <span className="rounded-md bg-rose-50 px-2 py-1 font-medium text-rose-700 ring-1 ring-rose-100">
+                          {user.services ?? 0} services
+                        </span>
+                        <span className="rounded-md bg-amber-50 px-2 py-1 font-medium text-amber-700 ring-1 ring-amber-100">
+                          {user.reviews ?? 0} reviews
+                        </span>
+                        <span className="rounded-md bg-teal-50 px-2 py-1 font-medium text-teal-700 ring-1 ring-teal-100">
+                          {user.companions ?? 0} companions
+                        </span>
+                      </div>
+                    </td>
+                    <td className={td}>
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                          user.status === "In House"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 bg-slate-50 text-slate-500"
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            user.status === "In House" ? "bg-emerald-500" : "bg-slate-400"
+                          }`}
+                        />
+                        {user.status}
+                      </span>
+                    </td>
+                    <td className={`${td} text-right`}>
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700">
+                        View
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
+        </section>
       </div>
     </main>
   );
