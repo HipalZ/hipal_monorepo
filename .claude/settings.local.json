@@ -75,7 +75,13 @@
       "Bash(unzip -p /c/Users/sanka/Desktop/hipal-mono/hipal_monorepo/clients/client-hitable-react/android/app/build/outputs/apk/debug/app-debug.apk assets/capacitor.config.json)",
       "Bash(timeout 90 bun build src/routes/hotel/rooms.ts --target=bun --outdir=/tmp/roomcheck)",
       "Bash(timeout 120 bun build src/routes/hotel/rooms.ts src/routes/hotel/checkoutTask.ts src/services/checkoutTasks/raise.ts --target=bun --outdir=/tmp/gcheck)",
-      "Bash(timeout 900 npx vite build)"
+      "Bash(timeout 900 npx vite build)",
+      "Bash(node -e \"console.log\\(Object.keys\\(require\\('./package.json'\\).dependencies\\).filter\\(d=>/firebase|razorpay|analytics|sentry|mixpanel|segment|gtag/i.test\\(d\\)\\).join\\(', '\\)||'none'\\)\")",
+      "Bash(xargs -I{} sh -c 'echo \"--- {} ---\"; cat {}')",
+      "Bash(node -e \"const s=require\\('fs'\\).readFileSync\\('nginx.conf','utf8'\\);const o=\\(s.match\\(/{/g\\)||[]\\).length,c=\\(s.match\\(/}/g\\)||[]\\).length;console.log\\(o===c?'balanced: '+o+' blocks':'UNBALANCED '+o+'/'+c\\)\")",
+      "Bash(curl -s --max-time 15 \"https://hibiz.hipalz.com/privacy\")",
+      "Bash(curl -sI --max-time 15 \"https://hibiz.hipalz.com/privacy\")",
+      "Bash(git rev-list *)"
     ]
   }
 }

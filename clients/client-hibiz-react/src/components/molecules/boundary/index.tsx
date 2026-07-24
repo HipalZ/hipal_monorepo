@@ -13,7 +13,7 @@ import { useNavigate, useLocation } from "react-router-dom";
  * but pasting the URL did and bounced you to /login. Apple's reviewer opens
  * the support URL cold, so /support has to survive a direct hit.
  */
-const PUBLIC_PATHS = ["/login", "/support", "/terms&conditions"];
+const PUBLIC_PATHS = ["/login", "/support", "/privacy", "/terms&conditions"];
 
 const isPublicPath = (pathname: string) => {
   // decodeURIComponent so an encoded "&" in /terms&conditions still matches.

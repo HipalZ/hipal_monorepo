@@ -55,5 +55,12 @@
 	<string>HiClientz uses the camera so staff can photograph completed work as proof of service.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>HiClientz lets staff attach existing photos as proof of completed work.</string>
+	<!--
+		Export compliance. The app's only encryption is HTTPS provided by iOS,
+		which is exempt, so declaring it here stops App Store Connect asking on
+		every upload. Revisit if the app ever ships its own crypto.
+	-->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

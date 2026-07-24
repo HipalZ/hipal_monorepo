@@ -160,7 +160,10 @@ export default function Support() {
           HiClientZ is provided to hospitality businesses under a commercial agreement. Staff accounts are issued by the
           property administrator.
         </p>
-        <p>
+        <p className="flex gap-4">
+          <a href="/privacy" className="underline underline-offset-4">
+            Privacy Policy
+          </a>
           <a href="/terms&conditions" className="underline underline-offset-4">
             Terms &amp; Conditions
           </a>
