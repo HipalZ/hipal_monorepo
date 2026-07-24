@@ -5,14 +5,16 @@ import { useCheckoutTaskHistory } from '@/components/store/hotel/useCheckoutTask
 import { useHistoryAlerts } from '@/components/store/hotel/useHotelApis';
 import useBusinessData from '@/components/store/useBusinessData';
 import useTimings from '@/components/store/useTimings';
+import { fetchReviews, type reviewResponse } from '@/hooks/hotel/useReviewHook';
 import { useUsersAnalyticsData } from '@/hooks/hotel/useUserData';
-import { ArrowLeft, Download, Search, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, ArrowLeft, CheckCircle2, Download, Search, Star, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { buildRows, groupBy, summarize, verdictText } from './analytics';
 import { ANY, activeTags, applyFilters, blankFilters, clearFilter, filterOptions, type UnifiedFilters } from './filters';
-import type { Source, UnifiedRow } from './model';
+import type { UnifiedRow } from './model';
 
 const PAGE_SIZES = [10, 25, 50, 100] as const;
 
@@ -57,6 +59,13 @@ const escalationCause = (r: UnifiedRow): string => {
   if (acceptLate) return 'acceptance delay';
   if (completeLate) return 'completion delay';
   return '';
+};
+
+const slaValueClass = (actual: number | null, sla: number): string => {
+  if (actual == null || sla <= 0) return 'text-slate-400';
+  if (actual > sla) return 'text-red-500';
+  if (actual >= sla * 0.8) return 'text-amber-600';
+  return 'text-emerald-600';
 };
 
 /**
@@ -137,18 +146,6 @@ const Bars = ({ title, subtitle, stats }: { title: string; subtitle: string; sta
   </div>
 );
 
-/** Request type — a guest service request vs a checkout turnover. */
-const SourceTag = ({ source }: { source: Source }) =>
-  source === 'GUEST' ? (
-    <span className="inline-block rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-indigo-700 ring-1 ring-indigo-100">
-      Service
-    </span>
-  ) : (
-    <span className="inline-block rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 ring-1 ring-amber-100">
-      Checkout
-    </span>
-  );
-
 /**
  * One report over both request types. Storage stays separate — this fetches
  * the guest alert history and the checkout task history and merges them into a
@@ -167,10 +164,19 @@ const UnifiedReport = () => {
   const { userAnalyticsData } = useUsersAnalyticsData({ businessId, from: String(from), to: String(to) });
   const visitsByPhone = userAnalyticsData?.visitCountByPhone ?? {};
 
+  // Per-request rating + written feedback. Guest requests only — a checkout
+  // turnover is never rated, so those rows stay blank.
+  const { data: reviews = [] } = useQuery({
+    queryKey: ['servicePerformanceReviews', businessId, from, to],
+    queryFn: () => fetchReviews({ businessId, from, to }) as unknown as Promise<reviewResponse[]>,
+    enabled: Boolean(businessId && from && to),
+    staleTime: 60_000,
+  });
+
   const [filters, setFilters] = useState<UnifiedFilters>(blankFilters);
   const setFilter = <K extends keyof UnifiedFilters>(key: K, value: UnifiedFilters[K]) => setFilters((prev) => ({ ...prev, [key]: value }));
 
-  const allRows = useMemo(() => buildRows(historyData as never[], tasks, visitsByPhone), [historyData, tasks, visitsByPhone]);
+  const allRows = useMemo(() => buildRows(historyData as never[], tasks, visitsByPhone, reviews), [historyData, tasks, visitsByPhone, reviews]);
   const options = useMemo(() => filterOptions(allRows), [allRows]);
   const rows = useMemo(() => applyFilters(allRows, filters), [allRows, filters]);
   const tags = activeTags(filters);
@@ -231,13 +237,12 @@ const UnifiedReport = () => {
     const summaryLines = [
       'SERVICE PERFORMANCE REPORT',
       `Total Requests: ${summary.total}`,
-      `Guest Requests: ${summary.guest}`,
-      `Checkout Turnover: ${summary.checkout}`,
       `Within SLA: ${summary.onTimeRate == null ? '—' : `${summary.onTimeRate}%`} (${summary.onTime} of ${summary.judged})`,
       `Still Open: ${summary.open}`,
       `Escalated: ${summary.escalated}`,
       `Avg Time to Accept (min): ${round(summary.avgAccept)}`,
       `Avg Time to Complete (min): ${round(summary.avgComplete)}`,
+      `Avg Rating: ${summary.avgRating == null ? '—' : `${summary.avgRating} (${summary.reviewed} review${summary.reviewed === 1 ? '' : 's'})`}`,
       `Date Range: ${dateTime(from)} to ${dateTime(to)}`,
       `Generated At: ${dateTime(Date.now())}`,
       '--------------------------------------------',
@@ -245,10 +250,8 @@ const UnifiedReport = () => {
 
     const head = [
       'Raised By',
-      'Requester Type',
       'Operator (Staff)',
       'Guest Name',
-      'Guest Number',
       'Companions',
       'Companion Names',
       'Visit Count Till Date',
@@ -265,15 +268,16 @@ const UnifiedReport = () => {
       'Total Standard SLA (min)',
       'SLA Performance',
       'Escalated',
+      'Escalation Level',
+      'Rating',
+      'Feedback',
     ];
 
     const bodyRows = rows.map((r: UnifiedRow) =>
       [
         r.requesterName,
-        r.requesterKind,
         r.operatorName,
         r.guestName,
-        r.guestPhone,
         r.companions.length,
         r.companions.map((c) => `${c.name}${c.phone ? ` (${c.phone})` : ''}`).join(' · '),
         r.visits ?? '',
@@ -290,6 +294,9 @@ const UnifiedReport = () => {
         r.totalSla,
         slaPerformance(r),
         r.escalated ? (escalationCause(r) ? `Yes — ${escalationCause(r)}` : 'Yes') : 'No',
+        r.escalationLevel != null ? `L${r.escalationLevel}` : '',
+        r.rating ?? '',
+        r.feedback,
       ]
         .map(cell)
         .join(','),
@@ -338,7 +345,7 @@ const UnifiedReport = () => {
         ) : (
           <>
             {/* KPIs — shared always; type-specific only when a single source is in view */}
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               <Kpi
                 label="Within SLA"
                 value={summary.onTimeRate == null ? '—' : summary.onTimeRate}
@@ -346,10 +353,24 @@ const UnifiedReport = () => {
                 tone={summary.onTimeRate == null ? undefined : summary.onTimeRate >= 80 ? 'text-emerald-600' : 'text-[#8a2f2f]'}
                 sub={summary.judged ? `${summary.onTime} of ${summary.judged} delivered` : 'no delivered requests'}
               />
-              <Kpi label="Requests" value={summary.total} sub={`${summary.guest} guest · ${summary.checkout} checkout`} />
+              <Kpi label="Requests" value={summary.total} sub="service activity in range" />
               <Kpi label="Avg time to accept" value={fmt(summary.avgAccept)} sub="from raise to a staff claim" />
               <Kpi label="Avg time to complete" value={fmt(summary.avgComplete)} sub="from accept to done" />
-
+              <Kpi
+                label="Avg rating"
+                value={summary.avgRating == null ? '—' : summary.avgRating}
+                unit={summary.avgRating == null ? undefined : '★'}
+                tone={
+                  summary.avgRating == null
+                    ? undefined
+                    : summary.avgRating >= 4
+                      ? 'text-emerald-600'
+                      : summary.avgRating >= 3
+                        ? 'text-amber-500'
+                        : 'text-[#8a2f2f]'
+                }
+                sub={summary.reviewed ? `${summary.reviewed} review${summary.reviewed === 1 ? '' : 's'}` : 'no reviews yet'}
+              />
               <Kpi
                 label="Escalated"
                 value={summary.escalated}
@@ -358,25 +379,9 @@ const UnifiedReport = () => {
               />
             </section>
 
-            {/* Filters — one cohesive bar; source segment lives here, not the header */}
+            {/* Filters — one cohesive bar for the owner-facing fields. */}
             <section className={`${card} space-y-3 p-3`}>
               <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
-                {/* Source segment */}
-                <div className="flex items-center gap-0.5 rounded-lg bg-slate-100 p-0.5">
-                  {(['ALL', 'GUEST', 'CHECKOUT'] as const).map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setFilter('source', s)}
-                      className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${filters.source === s ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-                    >
-                      {s === 'ALL' ? 'All' : s === 'GUEST' ? 'Service' : 'Checkout'}
-                    </button>
-                  ))}
-                </div>
-
-                <span className="mx-1 h-5 w-px bg-slate-200" />
-
                 <div className="relative min-w-[180px] flex-1">
                   <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                   <input
@@ -483,9 +488,7 @@ const UnifiedReport = () => {
               <div className="flex flex-col gap-3 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="font-fraunces text-base font-bold text-slate-900">Request log</h3>
-                  <p className="text-xs text-slate-500">
-                    Guest requests and checkout turnover together. Guest-only fields read “—” on checkout rows.
-                  </p>
+                  <p className="text-xs text-slate-500">Clear view of who raised it, who handled it, and whether each SLA leg was met.</p>
                 </div>
                 {/* Rows + paging at the TOP so you never scroll the whole table to reach them */}
                 {rows.length > 0 && (
@@ -542,10 +545,12 @@ const UnifiedReport = () => {
                       <th className={th}>Guest</th>
                       <th className={th}>Room</th>
                       <th className={th}>Service</th>
-                      <th className={th}>Handled by</th>
-                      <th className={th}>To accept</th>
-                      <th className={th}>To complete</th>
+                      <th className={th}>Accepted by</th>
+                      <th className={th}>Accepted at</th>
+                      <th className={th}>Completed by</th>
+                      <th className={th}>Completed at</th>
                       <th className={th}>Total</th>
+                      <th className={th}>Rating</th>
                       <th className={`${th} text-right`}>SLA result</th>
                     </tr>
                   </thead>
@@ -553,9 +558,7 @@ const UnifiedReport = () => {
                     {pageRows.map((r) => (
                       <tr key={`${r.source}-${r.id}`} className="hover:bg-slate-50">
                         {/* Identity: name + lifetime visits + kind. Deep guest detail lives in the Guest Experience report. */}
-                        {/* Who performed the action: the guest for a guest request, the
-                            front-office staff for a checkout. The CHECKOUT tag already says
-                            it's a checkout, so no redundant "checked out by" line. */}
+                        {/* Who performed the action: the guest, front-office staff, or automatic system. */}
                         <td className={td}>
                           <div className="font-semibold text-slate-900">
                             {r.requesterKind === 'AUTOMATIC' ? 'Automatic' : r.requesterName || '—'}
@@ -566,11 +569,9 @@ const UnifiedReport = () => {
                               </span>
                             ) : null}
                           </div>
-                          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                            <SourceTag source={r.source} />
-                            {/* A guest request raised by front office on the guest's behalf. */}
-                            {r.source === 'GUEST' && r.operatorName ? <span className="text-[11px] text-slate-400">via {r.operatorName}</span> : null}
-                          </div>
+                          {r.source === 'GUEST' && r.operatorName ? (
+                            <div className="mt-0.5 text-[11px] text-slate-400">via {r.operatorName}</div>
+                          ) : null}
                         </td>
                         {/* The guest staying — always shown, so a checkout tells you who was there. */}
                         <td className={td}>
@@ -582,57 +583,72 @@ const UnifiedReport = () => {
                               </span>
                             ) : null}
                           </div>
-                          <div className="text-[11px] text-slate-400">{r.guestPhone || '—'}</div>
-                          {/* Companions who shared the stay — the primary is never listed here. */}
-                          {r.companions.length ? (
-                            <div
-                              className="text-[11px] text-slate-400"
-                              title={r.companions.map((c) => `${c.name}${c.phone ? ` (${c.phone})` : ''}`).join(', ')}
-                            >
-                              +{r.companions.length} companion{r.companions.length === 1 ? '' : 's'}
-                            </div>
-                          ) : null}
                         </td>
                         <td className={`${td} font-bold text-slate-900`}>{r.room}</td>
                         <td className={td}>
                           <div className="font-medium text-slate-800">{r.service}</div>
                           <div className="text-xs text-slate-400">{clock(r.raisedAt)}</div>
                         </td>
-                        {/* Accepter and completer can be different people — show both. */}
+                        {/* Accepted by name */}
                         <td className={td}>
-                          <div>
-                            <span className="text-[11px] text-slate-400">Acc </span>
-                            {r.acceptedByName || <span className="text-slate-300">—</span>}
-                          </div>
-                          <div className="text-xs">
-                            <span className="text-slate-400">Done </span>
-                            <span className="text-slate-600">{r.completedByName || '—'}</span>
-                          </div>
+                          <div className="font-medium text-slate-800">{r.acceptedByName || <span className="text-slate-300">—</span>}</div>
                         </td>
                         <td className={td}>
-                          <div className="font-semibold tabular-nums">{fmt(r.acceptMins)}</div>
+                          <div className={`font-semibold tabular-nums ${slaValueClass(r.acceptMins, r.acceptSla)}`}>{fmt(r.acceptMins)}</div>
                           <div className="text-[11px] text-slate-400">SLA {r.acceptSla}m</div>
                         </td>
+                        {/* Completed by name */}
                         <td className={td}>
-                          <div className="font-semibold tabular-nums">{fmt(r.deliverMins)}</div>
+                          <div className="font-medium text-slate-600">{r.completedByName || '—'}</div>
+                        </td>
+                        <td className={td}>
+                          <div className={`font-semibold tabular-nums ${slaValueClass(r.deliverMins, r.deliverSla)}`}>{fmt(r.deliverMins)}</div>
                           <div className="text-[11px] text-slate-400">{r.deliverSla ? `SLA ${r.deliverSla}m` : '—'}</div>
                         </td>
                         <td className={td}>
-                          <div className="font-semibold tabular-nums">{fmt(r.totalMins)}</div>
+                          <div className={`font-semibold tabular-nums ${slaValueClass(r.totalMins, r.totalSla)}`}>{fmt(r.totalMins)}</div>
                           <div className="text-[11px] text-slate-400">SLA {r.totalSla}m</div>
+                        </td>
+                        {/* Guest's rating + feedback. Blank on checkout rows and unreviewed requests. */}
+                        <td className={`${td} max-w-[160px]`}>
+                          {r.rating != null ? (
+                            <>
+                              <span className="inline-flex items-center gap-1 font-semibold text-amber-500">
+                                <Star className="h-3.5 w-3.5 fill-current" />
+                                {r.rating}
+                              </span>
+                              {r.feedback ? (
+                                <div className="truncate text-[11px] text-slate-400" title={r.feedback}>
+                                  {r.feedback}
+                                </div>
+                              ) : null}
+                            </>
+                          ) : (
+                            <span className="text-[11px] text-slate-300">—</span>
+                          )}
                         </td>
                         {/* Outcome cluster: the SLA verdict, with escalation as the status that belongs beside it */}
                         <td className={`${td} text-right`}>
-                          <span
-                            className={`inline-flex whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold ${r.onTime == null ? 'border-slate-200 bg-slate-50 text-slate-500' : r.onTime ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-[#e3c4c4] bg-[#f7eded] text-[#8a2f2f]'}`}
-                          >
-                            {verdictText(r)}
-                          </span>
-                          {r.escalated ? (
-                            <div className="mt-1 text-[10px] font-bold text-[#8a2f2f]">
-                              Escalated{escalationCause(r) ? ` · ${escalationCause(r)}` : ''}
-                            </div>
-                          ) : null}
+                          <div className="flex flex-col items-end gap-1.5">
+                            <span
+                              className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                r.onTime == null ? (r.open ? 'text-amber-700' : 'text-slate-500') : r.onTime ? 'text-emerald-700' : 'text-rose-700'
+                              }`}
+                            >
+                              {r.onTime == null ? null : r.onTime ? (
+                                <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                              ) : (
+                                <AlertTriangle className="mr-1 h-3.5 w-3.5" />
+                              )}
+                              {verdictText(r)}
+                            </span>
+                            {r.escalated ? (
+                              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                Escalated{r.escalationLevel != null ? ` · L${r.escalationLevel}` : ''}
+                                {escalationCause(r) ? ` · ${escalationCause(r)}` : ''}
+                              </span>
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     ))}

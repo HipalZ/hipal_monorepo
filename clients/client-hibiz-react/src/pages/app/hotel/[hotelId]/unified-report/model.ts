@@ -43,8 +43,16 @@ export type UnifiedRow = {
   verdict: number | null;
   onTime: boolean | null;
   escalated: boolean;
+  /** How far it escalated: 1/2/3 → L1/L2/L3. null when it never escalated.
+   *  Guest rows read alert.level; checkout rows map the stage ladder
+   *  (FLOOR→L1, ALL_FLOORS→L2, MANAGER→L3), same as the Escalation Report. */
+  escalationLevel: number | null;
   /** Only guest rows carry a delivery leg; null for checkout. */
   deliverMins: number | null;
   deliverSla: number;
   open: boolean;
+  /** Guest's rating of the service (1–5), null when unreviewed or a checkout. */
+  rating: number | null;
+  /** Free-text review / improvement notes; '' when none. */
+  feedback: string;
 };
