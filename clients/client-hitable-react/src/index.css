@@ -36,6 +36,19 @@ body {
   user-select: none;
   font-family: var(--font-ubuntu);
   -webkit-touch-callout: none;
+  /* The Capacitor webview draws edge to edge, so on a notched iPhone the page
+     begins underneath the status bar. env() reports an inset only where the
+     device actually has one: it resolves to the 0px fallback on Android, on
+     non-notched iPhones and in the browser, so this pads iOS without moving a
+     single pixel anywhere else. */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* position: fixed anchors to the viewport, not to the padded body, so anything
+   pinned to the bottom has to clear the home indicator itself. */
+.fixed-bottom-safe {
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .hide-scrollbar {

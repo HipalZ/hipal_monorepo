@@ -45,5 +45,15 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!--
+		Required before the webview may open the camera or the photo library.
+		iOS terminates the app outright if a picker is presented without the
+		matching usage string, so these must ship in the build, not the web
+		bundle — a remote-loaded UI cannot add them later.
+	-->
+	<key>NSCameraUsageDescription</key>
+	<string>HiClientz uses the camera so staff can photograph completed work as proof of service.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>HiClientz lets staff attach existing photos as proof of completed work.</string>
 </dict>
 </plist>

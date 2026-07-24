@@ -123,7 +123,7 @@ const LoginMemo = () => {
         <button
           type="button"
           onClick={handleLogin}
-          className="on_active_bounce fixed bottom-6 z-50 w-[92%] max-w-[25rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem] text-white md:w-full"
+          className="on_active_bounce fixed-bottom-safe fixed z-50 w-[92%] max-w-[25rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem] text-white md:w-full"
         >
           Get Started
         </button>
