@@ -9,6 +9,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import type { CropperRef } from "../types/businessData";
 import { useExploreTemp } from "../store/useExploreTemp";
 
+const videoFileExtensions = new Set(["mp4"]);
+
+const fileExtension = (file: File) => file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "";
+
+const isVideoFile = (file: File) => file.type === "video/mp4" || videoFileExtensions.has(fileExtension(file));
+
 // Callbacks to handle navigation in the explore page
 export const useExploreNavigation = () => {
   const {
@@ -101,10 +107,10 @@ export const useImageChange = () => {
 
       const validImageTypes = ["image/png", "image/jpeg", "image/gif", "image/webp"];
       const isImage = validImageTypes.includes(file.type);
-      const isMp4Video = file.type === "video/mp4";
+      const isVideo = isVideoFile(file);
 
-      if (!isImage && !isMp4Video) {
-        toast.error("Use PNG, JPEG, GIF, WEBP, or MP4.");
+      if (!isImage && !isVideo) {
+        toast.error("Use PNG, JPEG, GIF, WEBP, or MP4 video.");
         return;
       }
 

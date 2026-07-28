@@ -26,6 +26,20 @@ const PopUp = lazy(() => import('@/components/atom/popUp'));
 const FooterSection = lazy(() => import('@/components/templates/explorePage/footerSection'));
 const UniquelyYoursSection = lazy(() => import('@/components/templates/explorePage/uniquelyYoursSection'));
 
+const bannerExtensionByMimeType: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'video/mp4': 'mp4',
+};
+
+const bannerExtensionFromFile = (file?: File | null, mediaType?: string) =>
+  file?.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') ||
+  bannerExtensionByMimeType[mediaType || ''] ||
+  mediaType?.split('/')[1]?.replace(/[^a-z0-9]/g, '') ||
+  'jpg';
+
 const MemoMainForm = () => {
   const { checkValidations } = useCheckValidations();
   const cropperRef = useRef<CropperRef>(null);
@@ -64,12 +78,12 @@ const MemoMainForm = () => {
     for (let i = 0; i < hotelBanners.length; i++) {
       const mediaPreview = hotelBanners[i];
       if (!mediaPreview) continue;
+      const slotType = hotelBannerSlots[i];
+      const selectedFile = slotType ? imageFiles[slotType] : null;
 
-      if (mediaPreview?.startsWith('data:image') || mediaPreview?.startsWith('data:video')) {
-        const slotType = hotelBannerSlots[i];
-        const selectedFile = slotType ? imageFiles[slotType] : null;
+      if (selectedFile || mediaPreview?.startsWith('data:image') || mediaPreview?.startsWith('data:video')) {
         const mediaType = selectedFile?.type || mediaPreview.match(/^data:([^;]+);base64,/)?.[1] || 'image/jpeg';
-        const extension = mediaType === 'video/mp4' ? 'mp4' : mediaType.split('/')[1] || 'jpg';
+        const extension = bannerExtensionFromFile(selectedFile, mediaType);
         const blob = await (await fetch(mediaPreview)).blob();
         const file = selectedFile || new File([blob], `hotel-banner.${extension}`, { type: mediaType });
         const url = await storeHotelBannerMediaAfterSave(file, mediaPreview);

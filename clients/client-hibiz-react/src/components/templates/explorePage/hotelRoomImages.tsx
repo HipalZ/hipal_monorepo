@@ -11,15 +11,23 @@ type Props = {
 const isVideoMedia = (url: string) => {
   if (!url) return false;
   if (url.startsWith("data:video")) return true;
-  return /\.(mp4)(?:$|\?)/i.test(url) || /video(?:\/|%2f)mp4/i.test(url);
+  return (
+    /\.(mp4)(?:$|[?#])/i.test(url) ||
+    /video(?:\/|%2f)[a-z0-9.+-]+/i.test(url)
+  );
 };
+
+const videoFileExtensions = new Set(["mp4"]);
+const fileExtension = (file?: File | null) => file?.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "";
+const isVideoFile = (file?: File | null) => Boolean(file?.type === "video/mp4" || videoFileExtensions.has(fileExtension(file)));
 
 const MemoHotelRoomImages = (props: Props) => {
   const { handleImageChange, img } = props;
   const firstImage = useRef<HTMLInputElement | null>(null);
   const secondImage = useRef<HTMLInputElement | null>(null);
   const thirdImage = useRef<HTMLInputElement | null>(null);
-  const { setImageFiles, setHotelBanners } = useExploreStore((s) => ({
+  const { imageFiles, setImageFiles, setHotelBanners } = useExploreStore((s) => ({
+    imageFiles: s.imageFiles,
     setImageFiles: s.setImageFiles,
     setHotelBanners: s.setHotelBanners,
   }));
@@ -40,8 +48,8 @@ const MemoHotelRoomImages = (props: Props) => {
     });
   };
 
-  const renderPreview = (src: string, alt: string, className: string) => {
-    if (isVideoMedia(src)) {
+  const renderPreview = (src: string, alt: string, className: string, type: "first" | "second" | "third") => {
+    if (isVideoMedia(src) || isVideoFile(imageFiles[type])) {
       return (
         <video
           src={src}
@@ -74,7 +82,7 @@ const MemoHotelRoomImages = (props: Props) => {
         />
         <label htmlFor="firstImage">
           {img?.first ? (
-            renderPreview(img.first, "First", "w-[200px] h-[200px] object-cover")
+            renderPreview(img.first, "First", "w-[200px] h-[200px] object-cover", "first")
           ) : (
             <PlusButton />
           )}
@@ -104,7 +112,7 @@ const MemoHotelRoomImages = (props: Props) => {
         />
         <label htmlFor="secondImage">
           {img?.second ? (
-            renderPreview(img.second, "Second", "w-[200px] h-[200px] object-cover")
+            renderPreview(img.second, "Second", "w-[200px] h-[200px] object-cover", "second")
           ) : (
             <PlusButton />
           )}
@@ -134,7 +142,7 @@ const MemoHotelRoomImages = (props: Props) => {
         />
         <label htmlFor="thirdImage">
           {img?.third ? (
-            renderPreview(img.third, "Third", "w-[200px] h-[200px] object-cover")
+            renderPreview(img.third, "Third", "w-[200px] h-[200px] object-cover", "third")
           ) : (
             <PlusButton />
           )}
