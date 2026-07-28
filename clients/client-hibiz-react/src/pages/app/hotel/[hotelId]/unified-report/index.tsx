@@ -37,6 +37,15 @@ const fmt = (m: number | null) => {
   if (min > 0) return `${min}m ${sec}s`;
   return `${sec}s`;
 };
+const fmtSlaResult = (m: number | null) => {
+  if (m == null) return 'â€”';
+  if (Math.abs(m) < 1 / 120) return 'on time';
+  return `${fmt(Math.abs(m))} ${m > 0 ? 'early' : 'late'}`;
+};
+const slaResultTone = (m: number | null) => {
+  if (m == null) return undefined;
+  return m >= 0 ? 'text-emerald-600' : 'text-[#8a2f2f]';
+};
 const clock = (ts: number) =>
   new Intl.DateTimeFormat('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -120,17 +129,24 @@ const Bars = ({ title, subtitle, stats }: { title: string; subtitle: string; sta
         <h3 className="font-fraunces text-base font-bold text-slate-900">{title}</h3>
         <p className="text-xs text-slate-500">{subtitle}</p>
       </div>
-      {stats.length > 0 ? <span className="shrink-0 text-[11px] tabular-nums text-slate-400">{stats.length}</span> : null}
+      {stats.length > 0 ? (
+        <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold tabular-nums text-slate-600">{stats.length} count</span>
+      ) : null}
     </div>
     {/* Fixed height with internal scroll — a long list must not push the log down. */}
     <div className="mt-3 max-h-[248px] space-y-2 overflow-y-auto pr-1">
       {stats.length ? (
         stats.map((s) => (
-          <div key={s.key} className="p-1.5">
-            <div className="flex items-center justify-between gap-2 text-xs">
-              <span className="truncate font-semibold text-slate-800">{s.key}</span>
-              <span className="shrink-0 font-bold tabular-nums text-slate-700">
-                {Math.round(s.pct)}% <span className="font-normal text-slate-400">· {s.total}</span>
+          <div key={s.key} className="rounded-lg p-2 transition-colors hover:bg-slate-50">
+            <div className="flex items-start justify-between gap-3 text-xs">
+              <span className="min-w-0 truncate font-semibold text-slate-800">
+                {s.key}{' '}
+                <span className="font-medium text-indigo-700">
+                  - {s.total} {s.total === 1 ? 'request' : 'requests'}
+                </span>
+              </span>
+              <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-sm font-bold tabular-nums text-slate-800 ring-1 ring-slate-200">
+                {Math.round(s.pct)}%
               </span>
             </div>
             <div className="mt-1 flex h-3 w-full overflow-hidden rounded-md bg-slate-100">
@@ -195,7 +211,7 @@ const UnifiedReport = () => {
   // Pagination — the log can hold a whole month, so it must not render every row.
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(25);
-  const resetKey = `${filters.source}|${rows.length}|${pageSize}`;
+  const resetKey = `${JSON.stringify(filters)}|${rows.length}|${pageSize}`;
   const [lastResetKey, setLastResetKey] = useState(resetKey);
   if (resetKey !== lastResetKey) {
     setLastResetKey(resetKey);
@@ -252,8 +268,7 @@ const UnifiedReport = () => {
       'Raised By',
       'Operator (Staff)',
       'Guest Name',
-      'Companions',
-      'Companion Names',
+      'Guest Phone',
       'Visit Count Till Date',
       'Room',
       'Service Requested',
@@ -278,8 +293,7 @@ const UnifiedReport = () => {
         r.requesterName,
         r.operatorName,
         r.guestName,
-        r.companions.length,
-        r.companions.map((c) => `${c.name}${c.phone ? ` (${c.phone})` : ''}`).join(' · '),
+        r.guestPhone,
         r.visits ?? '',
         r.room,
         r.service,
@@ -355,7 +369,12 @@ const UnifiedReport = () => {
               />
               <Kpi label="Requests" value={summary.total} sub="service activity in range" />
               <Kpi label="Avg time to accept" value={fmt(summary.avgAccept)} sub="from raise to a staff claim" />
-              <Kpi label="Avg time to complete" value={fmt(summary.avgComplete)} sub="from accept to done" />
+              <Kpi
+                label="Completion SLA"
+                value={fmtSlaResult(summary.avgCompleteSlaResult)}
+                tone={slaResultTone(summary.avgCompleteSlaResult)}
+                sub="avg result vs each service SLA"
+              />
               <Kpi
                 label="Avg rating"
                 value={summary.avgRating == null ? '—' : summary.avgRating}
@@ -404,6 +423,20 @@ const UnifiedReport = () => {
                     { value: 'late', label: 'Missed SLA' },
                     { value: 'open', label: 'Still open' },
                     { value: 'escalated', label: 'Escalated' },
+                  ]}
+                />
+                <Select
+                  label="Rating"
+                  value={filters.rating}
+                  onChange={(v) => setFilter('rating', v as UnifiedFilters['rating'])}
+                  options={[
+                    { value: 'all', label: 'All ratings' },
+                    { value: '5', label: '5 star' },
+                    { value: '4', label: '4 star' },
+                    { value: '3', label: '3 star' },
+                    { value: '2', label: '2 star' },
+                    { value: '1', label: '1 star' },
+                    { value: 'unrated', label: 'No rating' },
                   ]}
                 />
                 {showGuest ? (
@@ -583,6 +616,7 @@ const UnifiedReport = () => {
                               </span>
                             ) : null}
                           </div>
+                          {r.guestPhone ? <div className="mt-0.5 text-xs tabular-nums text-slate-400">{r.guestPhone}</div> : null}
                         </td>
                         <td className={`${td} font-bold text-slate-900`}>{r.room}</td>
                         <td className={td}>
