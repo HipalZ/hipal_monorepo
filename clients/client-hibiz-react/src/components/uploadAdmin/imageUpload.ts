@@ -87,6 +87,33 @@ const extensionByMimeType: Record<string, string> = {
   "video/mp4": "mp4",
 }
 
+const videoFileExtensions = new Set(["mp4"])
+const mimeTypeByExtension: Record<string, string> = {
+  mp4: "video/mp4",
+}
+
+const safeExtensionFromFile = (file: File) => {
+  const fromMime = extensionByMimeType[file.type]
+  if (fromMime) return fromMime
+
+  const fromName = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "")
+  if (fromName) return fromName
+
+  if (file.type.startsWith("image/")) return file.type.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "img"
+  if (file.type.startsWith("video/")) return file.type.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "mp4"
+  return "bin"
+}
+
+const isVideoFile = (file: File) => {
+  const extension = safeExtensionFromFile(file)
+  return file.type === "video/mp4" || videoFileExtensions.has(extension)
+}
+
+const effectiveMimeType = (file: File) => {
+  if (file.type) return file.type
+  return mimeTypeByExtension[safeExtensionFromFile(file)] || "application/octet-stream"
+}
+
 export async function storeHotelBannerMediaAfterSave(
   media: File,
   mediaPreview: string | null,
@@ -103,14 +130,17 @@ export async function storeHotelBannerMediaAfterSave(
     return null
   }
 
-  if (!hotelBannerMediaTypes.includes(media.type)) {
+  const isHotelBannerImage = hotelBannerMediaTypes.includes(media.type)
+  const isHotelBannerVideo = isVideoFile(media)
+
+  if (!isHotelBannerImage && !isHotelBannerVideo) {
     console.error("Invalid hotel banner media type:", media.type)
     toast.error(`Invalid file type: ${media.name}. Use an image or MP4 video.`)
     return null
   }
 
   const mediaId = crypto.randomUUID()
-  const extension = extensionByMimeType[media.type] || media.name.split(".").pop() || "bin"
+  const extension = safeExtensionFromFile(media)
   setIsLoading?.(true)
 
   try {
@@ -129,7 +159,7 @@ export async function storeHotelBannerMediaAfterSave(
       array[i] = blobBin.charCodeAt(i)
     }
 
-    const file = new Blob([array], { type: media.type })
+    const file = new Blob([array], { type: effectiveMimeType(media) })
     const formData = new FormData()
     formData.append("fileData", file)
     formData.append("fileName", `${mediaId}.${extension}`)
