@@ -1,7 +1,6 @@
 import PlusButton from "@/components/atom/plusButton";
 import { memo, useRef, type ChangeEvent } from "react";
 import { FaTimes } from "react-icons/fa";
-import { handleClick } from "@/components/utils/helper";
 import { useExploreStore } from "@/components/store/useExploreStore";
 
 type Props = {
@@ -9,28 +8,53 @@ type Props = {
   img: { first: string; second: string; third: string };
 };
 
+const isVideoMedia = (url: string) => {
+  if (!url) return false;
+  if (url.startsWith("data:video")) return true;
+  return /\.(mp4)(?:$|\?)/i.test(url) || /video(?:\/|%2f)mp4/i.test(url);
+};
+
 const MemoHotelRoomImages = (props: Props) => {
   const { handleImageChange, img } = props;
   const firstImage = useRef<HTMLInputElement | null>(null);
   const secondImage = useRef<HTMLInputElement | null>(null);
   const thirdImage = useRef<HTMLInputElement | null>(null);
-  const { setImageFiles } = useExploreStore((s) => ({
+  const { setImageFiles, setHotelBanners } = useExploreStore((s) => ({
     setImageFiles: s.setImageFiles,
+    setHotelBanners: s.setHotelBanners,
   }));
 
   const handleRemoveImage = (type: "first" | "second" | "third") => {
     setImageFiles((prev) => ({ ...prev, [type]: null }));
 
-    const refMap = {
-      first: firstImage,
-      second: secondImage,
-      third: thirdImage,
-    };
+    const imageTypeToIndex = {
+      first: 0,
+      second: 1,
+      third: 2,
+    } as const;
 
-    const ref = refMap[type];
-    if (ref?.current) {
-      ref.current.click();
+    setHotelBanners((prev) => {
+      const updated = Array.isArray(prev) ? [...prev] : ["", "", ""];
+      updated[imageTypeToIndex[type]] = "";
+      return updated;
+    });
+  };
+
+  const renderPreview = (src: string, alt: string, className: string) => {
+    if (isVideoMedia(src)) {
+      return (
+        <video
+          src={src}
+          className={className}
+          muted
+          loop
+          playsInline
+          controls
+        />
+      );
     }
+
+    return <img src={src} alt={alt} className={className} />;
   };
 
   return (
@@ -38,16 +62,19 @@ const MemoHotelRoomImages = (props: Props) => {
       <article className="relative col-span-1 row-span-2 border border-1 rounded-xl lg:w-[200px] lg:h-[200px] overflow-hidden">
         <input
           ref={firstImage}
-          onClick={(e) => handleClick(e, firstImage)}
+          onClick={(e) => {
+            e.currentTarget.value = "";
+          }}
           type="file"
           id="firstImage"
           style={{ display: "none" }}
           onChange={handleImageChange}
           data-type="first"
+          accept="image/*,video/mp4"
         />
         <label htmlFor="firstImage">
           {img?.first ? (
-            <img src={img?.first} alt="First" className="w-[200px] h-[200px]" />
+            renderPreview(img.first, "First", "w-[200px] h-[200px] object-cover")
           ) : (
             <PlusButton />
           )}
@@ -65,20 +92,19 @@ const MemoHotelRoomImages = (props: Props) => {
       <article className="relative border border-1 rounded-xl lg:w-[200px] lg:h-[200px] overflow-hidden">
         <input
           ref={secondImage}
-          onClick={(e) => handleClick(e, secondImage)}
+          onClick={(e) => {
+            e.currentTarget.value = "";
+          }}
           type="file"
           id="secondImage"
           style={{ display: "none" }}
           onChange={handleImageChange}
           data-type="second"
+          accept="image/*,video/mp4"
         />
         <label htmlFor="secondImage">
           {img?.second ? (
-            <img
-              src={img?.second}
-              alt="Second"
-              className="w-[200px] h-[200px]"
-            />
+            renderPreview(img.second, "Second", "w-[200px] h-[200px] object-cover")
           ) : (
             <PlusButton />
           )}
@@ -96,16 +122,19 @@ const MemoHotelRoomImages = (props: Props) => {
       <article className="relative border border-1 rounded-xl lg:w-[200px] lg:h-[200px] overflow-hidden">
         <input
           ref={thirdImage}
-          onClick={(e) => handleClick(e, thirdImage)}
+          onClick={(e) => {
+            e.currentTarget.value = "";
+          }}
           type="file"
           id="thirdImage"
           style={{ display: "none" }}
           onChange={handleImageChange}
           data-type="third"
+          accept="image/*,video/mp4"
         />
         <label htmlFor="thirdImage">
           {img?.third ? (
-            <img src={img?.third} alt="Third" className="w-[200px] h-[200px]" />
+            renderPreview(img.third, "Third", "w-[200px] h-[200px] object-cover")
           ) : (
             <PlusButton />
           )}

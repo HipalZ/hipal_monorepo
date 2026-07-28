@@ -70,3 +70,88 @@ export async function storeImageAfterSave(
     return null
   }
 }
+
+const hotelBannerMediaTypes = [
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+]
+
+const extensionByMimeType: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "video/mp4": "mp4",
+}
+
+export async function storeHotelBannerMediaAfterSave(
+  media: File,
+  mediaPreview: string | null,
+  setIsLoading?: (loading: boolean) => void,
+) {
+  if (!media || !mediaPreview) {
+    console.error("Missing media or preview")
+    return null
+  }
+
+  const maxSize = 10 * 1024 * 1024
+  if (media.size > maxSize) {
+    toast.error("File size exceeds 10MB.")
+    return null
+  }
+
+  if (!hotelBannerMediaTypes.includes(media.type)) {
+    console.error("Invalid hotel banner media type:", media.type)
+    toast.error(`Invalid file type: ${media.name}. Use an image or MP4 video.`)
+    return null
+  }
+
+  const mediaId = crypto.randomUUID()
+  const extension = extensionByMimeType[media.type] || media.name.split(".").pop() || "bin"
+  setIsLoading?.(true)
+
+  try {
+    const base64Index = mediaPreview.indexOf(",")
+
+    if (base64Index === -1) {
+      console.error("Invalid media preview format")
+      return null
+    }
+
+    const base64Data = mediaPreview.split(",")[1]
+    const blobBin = atob(base64Data)
+    const array = new Uint8Array(blobBin.length)
+
+    for (let i = 0; i < blobBin.length; i++) {
+      array[i] = blobBin.charCodeAt(i)
+    }
+
+    const file = new Blob([array], { type: media.type })
+    const formData = new FormData()
+    formData.append("fileData", file)
+    formData.append("fileName", `${mediaId}.${extension}`)
+    formData.append("bucketName", "assets")
+
+    const response = await axios.post("https://storage.test.hipalz.com/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+
+    if (response.status === 201 || response.status === 200) {
+      setIsLoading?.(false)
+      return response.data.url
+    }
+
+    console.error("Upload failed with status:", response.status)
+    return null
+  } catch (error) {
+    console.error("Failed to store hotel banner media:", error)
+    setIsLoading?.(false)
+    toast.error("Failed to upload media. Please check the file format.")
+    return null
+  }
+}
