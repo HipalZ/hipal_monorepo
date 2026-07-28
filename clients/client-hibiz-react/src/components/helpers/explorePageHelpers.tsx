@@ -8,7 +8,6 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import type { CropperRef } from "../types/businessData";
 import { useExploreTemp } from "../store/useExploreTemp";
-import { storeImageAfterSave } from "../uploadAdmin/imageUpload";
 
 // Callbacks to handle navigation in the explore page
 export const useExploreNavigation = () => {
@@ -65,13 +64,11 @@ export const useImageChange = () => {
     setShowCropper,
     setImageFiles,
     setHotelBanners,
-    hotelBanners,
   } = useExploreStore((s) => ({
     setCropping: s.setCropping,
     setShowCropper: s.setShowCropper,
     setImageFiles: s.setImageFiles,
     setHotelBanners: s.setHotelBanners,
-    hotelBanners: s.hotelBanners,
   }));
 
   const handleImageChange = useCallback(
@@ -89,7 +86,7 @@ export const useImageChange = () => {
         reader.onloadend = () => {
           setCropping({ image: reader.result, type });
           setShowCropper(true);
-          setImageFiles({ [type]: file });
+          setImageFiles({ [type]: file } as Partial<ImageFiles>);
         };
       }
     },
@@ -102,9 +99,19 @@ export const useImageChange = () => {
       const file = event.target.files?.[0];
       if (!file || !type) return;
 
-      const maxSize = 3 * 1024 * 1024;
+      const validImageTypes = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+      const isImage = validImageTypes.includes(file.type);
+      const isMp4Video = file.type === "video/mp4";
+
+      if (!isImage && !isMp4Video) {
+        toast.error("Use PNG, JPEG, GIF, WEBP, or MP4.");
+        return;
+      }
+
+      const maxSize = 10 * 1024 * 1024;
+
       if (file.size > maxSize) {
-        toast.error("Image size exceeds 3MB.");
+        toast.error("File size exceeds 10MB.");
         return;
       }
 
@@ -122,6 +129,7 @@ export const useImageChange = () => {
         if (!preview) return;
 
         const index = imageTypeToIndex[type];
+        setImageFiles({ [type]: file } as Partial<ImageFiles>);
         setHotelBanners((prev) => {
           const current = Array.isArray(prev) ? prev : ["", "", ""];
           const updated = [...current];
@@ -130,7 +138,7 @@ export const useImageChange = () => {
         });
       };
     },
-    [setHotelBanners],
+    [setHotelBanners, setImageFiles],
   );
 
   return { handleImageChange, imageUploadUrl };

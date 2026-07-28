@@ -6,7 +6,7 @@ import useBusinessData from '@/components/store/useBusinessData';
 import { useExploreStore } from '@/components/store/useExploreStore';
 import { useExploreTemp } from '@/components/store/useExploreTemp';
 import type { CropperRef, IBizPayload } from '@/components/types/businessData';
-import { storeImageAfterSave } from '@/components/uploadAdmin/imageUpload';
+import { storeHotelBannerMediaAfterSave } from '@/components/uploadAdmin/imageUpload';
 import { filterPayload } from '@/components/utils/helper';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { apiRpc } from '@hi/common';
@@ -39,6 +39,7 @@ const MemoMainForm = () => {
   const setShowCropper = useExploreStore((s) => s.setShowCropper);
   const hotelBanners = useExploreStore((s) => s.hotelBanners);
   const setHotelBanners = useExploreStore((s) => s.setHotelBanners);
+  const imageFiles = useExploreStore((s) => s.imageFiles);
   const setIsLoading = useExploreTemp((s) => s.setIsLoading);
   const socialMediaLinks = useExploreTemp((s) => s.socialMediaLinks);
   const handleEnvelope = useApiErrorHandler().handleEnvelope;
@@ -52,22 +53,29 @@ const MemoMainForm = () => {
 
   const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!businessId && !hotelId) return;
+    const resolvedBusinessId = businessId || hotelId;
+    if (!resolvedBusinessId) return;
     const { bannerExplore, logoExplore, footerExplore, categoryTopBanner } = await checkValidations();
 
-    // Upload base64 previews in hotelBanners
+    // Upload local hotel carousel previews before saving URL list.
     const uploadedHotelBanners: string[] = [];
+    const hotelBannerSlots = ['first', 'second', 'third'] as const;
 
     for (let i = 0; i < hotelBanners.length; i++) {
-      const base64 = hotelBanners[i];
+      const mediaPreview = hotelBanners[i];
+      if (!mediaPreview) continue;
 
-      if (base64?.startsWith('data:image')) {
-        const fileType = base64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
-        const blob = await (await fetch(base64)).blob();
-        const file = new File([blob], 'hotel-banner.jpg', { type: fileType });
-        const url = await storeImageAfterSave(file, base64);
+      if (mediaPreview?.startsWith('data:image') || mediaPreview?.startsWith('data:video')) {
+        const slotType = hotelBannerSlots[i];
+        const selectedFile = slotType ? imageFiles[slotType] : null;
+        const mediaType = selectedFile?.type || mediaPreview.match(/^data:([^;]+);base64,/)?.[1] || 'image/jpeg';
+        const extension = mediaType === 'video/mp4' ? 'mp4' : mediaType.split('/')[1] || 'jpg';
+        const blob = await (await fetch(mediaPreview)).blob();
+        const file = selectedFile || new File([blob], `hotel-banner.${extension}`, { type: mediaType });
+        const url = await storeHotelBannerMediaAfterSave(file, mediaPreview);
 
         const finalUrl = url || '';
+        if (!finalUrl) return;
 
         setHotelBanners((prev) => {
           const updated = [...prev];
@@ -75,9 +83,9 @@ const MemoMainForm = () => {
           return updated;
         });
 
-        uploadedHotelBanners.push(finalUrl);
+        if (finalUrl) uploadedHotelBanners.push(finalUrl);
       } else {
-        uploadedHotelBanners.push(base64);
+        uploadedHotelBanners.push(mediaPreview);
       }
     }
 
@@ -96,7 +104,7 @@ const MemoMainForm = () => {
     }));
 
     const payload: IBizPayload = {
-      businessId: businessId || hotelId,
+      businessId: resolvedBusinessId,
       logoUrl: logoExplore,
       specialBannerUrl: bannerExplore,
       endBannerUrl: footerExplore,
@@ -109,10 +117,13 @@ const MemoMainForm = () => {
       hotelBanners: uploadedHotelBanners,
     };
 
-    const filteredPayload = filterPayload(payload);
+    const filteredPayload = {
+      ...filterPayload(payload),
+      hotelBanners: uploadedHotelBanners,
+    };
     setIsLoading(true);
 
-    let res: { status: number };
+    let res: { status: number } | undefined;
 
     if (bizInfo?._id === '') {
       res = await apiRpc.businesses.outletInfo.$post({ json: filteredPayload });
@@ -122,7 +133,7 @@ const MemoMainForm = () => {
       const outletInfo = await apiRpc.businesses.outletInfo.update[':businessId'].$put({
         json: filteredPayload,
         param: {
-          businessId: businessId || hotelId,
+          businessId: resolvedBusinessId,
         },
       });
 

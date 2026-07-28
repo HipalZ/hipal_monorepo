@@ -155,6 +155,7 @@ export interface IOutletInfo {
   fixCloseTime: string;
   fixOpenTime: string;
   outLetType: string;
+  hotelBanners?: string[];
   placeId: string;
   placeUrl: string;
   gstPercentage: number;
@@ -539,6 +540,7 @@ export interface IBizPayload {
   avgPricingForTwo?: string;
   isCustomTime?: boolean;
   address?: string;
+  hotelBanners?: string[];
 }
 
 export interface IBannerPayload {

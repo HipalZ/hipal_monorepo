@@ -87,6 +87,7 @@ export const outLetInfoSchema = z.object({
     .min(10)
     .max(100)
     .optional(),
+  hotelBanners: z.array(z.string()).optional(),
   hoteBanners: z.array(z.string()).optional(),
   logoUrl: z
     .string()

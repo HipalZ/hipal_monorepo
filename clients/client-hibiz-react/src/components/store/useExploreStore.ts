@@ -83,7 +83,7 @@ export type ImagePreviews = {
 };
 
 export type SetImageFilesFunction = (
-  update: (prev: ImageFiles) => ImageFiles,
+  update: Partial<ImageFiles> | ((prev: ImageFiles) => ImageFiles),
 ) => void;
 export type SetImagePreviewsFunction = (
   update: (prev: ImagePreviews) => ImagePreviews,
@@ -265,9 +265,12 @@ export const useExploreStore = create(
           img: typeof previews === "function" ? previews(state.img) : previews,
         })),
       imageFiles: { banner: null, logo: null, footer: null } as ImageFiles,
-      setImageFiles: (files: Partial<ImageFiles>) =>
+      setImageFiles: (files) =>
         set((state) => ({
-          imageFiles: { ...state.imageFiles, ...files },
+          imageFiles:
+            typeof files === "function"
+              ? files(state.imageFiles)
+              : { ...state.imageFiles, ...files },
         })),
 
       toggleBizInfo: false,
