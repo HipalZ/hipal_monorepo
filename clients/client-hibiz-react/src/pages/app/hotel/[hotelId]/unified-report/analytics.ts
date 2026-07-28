@@ -201,6 +201,8 @@ export type Summary = {
   /** Second leg (accept → done). "Complete" not "deliver" — not every service
    *  hands over an item; some just finish a task. Spans both request types. */
   avgComplete: number | null;
+  /** Completion performance against each row's own SLA. Positive = early, negative = late. */
+  avgCompleteSlaResult: number | null;
   /** Mean guest rating across reviewed requests; null when none reviewed. */
   avgRating: number | null;
   /** How many requests carry a rating — the base avgRating is drawn from. */
@@ -217,6 +219,10 @@ export const summarize = (rows: UnifiedRow[]): Summary => {
   const judged = rows.filter((r) => r.onTime != null);
   const onTime = judged.filter((r) => r.onTime).length;
   const rated = rows.map((r) => r.rating).filter(isNum);
+  const completionSlaResults = rows
+    .filter((r) => r.deliverMins != null && r.deliverSla > 0)
+    .map((r) => r.deliverSla - r.deliverMins!)
+    .filter(isNum);
   return {
     total: rows.length,
     guest: rows.filter((r) => r.source === 'GUEST').length,
@@ -228,6 +234,7 @@ export const summarize = (rows: UnifiedRow[]): Summary => {
     onTimeRate: judged.length ? Math.round((onTime / judged.length) * 100) : null,
     avgAccept: mean(rows.map((r) => r.acceptMins).filter(isNum)),
     avgComplete: mean(rows.map((r) => r.deliverMins).filter(isNum)),
+    avgCompleteSlaResult: mean(completionSlaResults),
     avgRating: rated.length ? Math.round(mean(rated)! * 10) / 10 : null,
     reviewed: rated.length,
   };
