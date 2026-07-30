@@ -18,8 +18,11 @@ const isVideoMedia = (url: string) => {
 };
 
 const videoFileExtensions = new Set(["mp4"]);
-const fileExtension = (file?: File | null) => file?.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "";
-const isVideoFile = (file?: File | null) => Boolean(file?.type === "video/mp4" || videoFileExtensions.has(fileExtension(file)));
+const isFileLike = (file?: File | null): file is File =>
+  Boolean(file && typeof file.name === "string" && typeof file.type === "string");
+const fileExtension = (file?: File | null) =>
+  isFileLike(file) ? file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "" : "";
+const isVideoFile = (file?: File | null) => Boolean(isFileLike(file) && (file.type === "video/mp4" || videoFileExtensions.has(fileExtension(file))));
 
 const MemoHotelRoomImages = (props: Props) => {
   const { handleImageChange, img } = props;
