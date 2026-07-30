@@ -34,8 +34,11 @@ const bannerExtensionByMimeType: Record<string, string> = {
   'video/mp4': 'mp4',
 };
 
+const isFileLike = (file?: File | null): file is File =>
+  Boolean(file && typeof file.name === 'string' && typeof file.type === 'string');
+
 const bannerExtensionFromFile = (file?: File | null, mediaType?: string) =>
-  file?.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') ||
+  (isFileLike(file) ? file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') : '') ||
   bannerExtensionByMimeType[mediaType || ''] ||
   mediaType?.split('/')[1]?.replace(/[^a-z0-9]/g, '') ||
   'jpg';
@@ -79,7 +82,7 @@ const MemoMainForm = () => {
       const mediaPreview = hotelBanners[i];
       if (!mediaPreview) continue;
       const slotType = hotelBannerSlots[i];
-      const selectedFile = slotType ? imageFiles[slotType] : null;
+      const selectedFile = slotType && isFileLike(imageFiles[slotType]) ? imageFiles[slotType] : null;
 
       if (selectedFile || mediaPreview?.startsWith('data:image') || mediaPreview?.startsWith('data:video')) {
         const mediaType = selectedFile?.type || mediaPreview.match(/^data:([^;]+);base64,/)?.[1] || 'image/jpeg';
