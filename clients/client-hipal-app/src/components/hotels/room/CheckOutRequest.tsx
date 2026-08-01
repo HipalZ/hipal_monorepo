@@ -141,14 +141,6 @@ const MemoCheckOutRequest = ({
                   </p>
                   {/* Action Buttons */}
                   <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => setShowConfirmation(false)}
-                      disabled={isSubmitting}
-                    >
-                      Not Yet
-                    </Button>
                     <CommonBottomButton
                       fixed={true}
                       maxWidth="30rem"

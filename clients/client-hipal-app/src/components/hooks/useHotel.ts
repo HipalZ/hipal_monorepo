@@ -1,7 +1,6 @@
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "react-toastify";
 import useBusinessDetails from "../store/useBusinessDetails";
 import { useHotelTemp } from "../store/useHotelTemp";
 import { expelIfSessionOut } from "./sessionGuard";
@@ -31,7 +30,7 @@ export const useGetAllRooms = () => {
 export const useCheckoutRequest = () => {
   const room = useSearchParams()?.get("room");
   const router = useRouter();
-  const { setShowConfirmation, setIsSubmitting } = useHotelTemp();
+  const { setIsSubmitting } = useHotelTemp();
   const triggerCheckoutRequest = async (payload: {
     userId: string;
     businessId: string;
@@ -57,15 +56,10 @@ export const useCheckoutRequest = () => {
 
   const { mutateAsync: checkoutRequest } = useMutation({
     mutationFn: triggerCheckoutRequest,
-    onSuccess: (data) => {
-      toast.success(data?.message || "Checkout request sent successfully");
+    // Success/error UX is owned by the caller (the checkout modal in
+    // ChatCardSection) — the hook only resets the shared submitting flag.
+    onSettled: () => {
       setIsSubmitting(false);
-      setShowConfirmation(false);
-    },
-    onError: () => {
-      toast.error("Failed to send checkout request");
-      setIsSubmitting(false);
-      setShowConfirmation(false);
     },
   });
 

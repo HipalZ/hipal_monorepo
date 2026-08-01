@@ -56,7 +56,7 @@ type GuestAlert = {
   // Escalation tier reached (1-based), same field the Escalation Report shows.
   level?: number;
   alertProgress?: string;
-  serviceIds?: Array<{ name?: string; avgAcceptanceTime?: number; avgDeliveryTime?: number }>;
+  serviceIds?: Array<{ name?: string; avgAcceptanceTime?: number; avgCompletionTime?: number; avgDeliveryTime?: number }>;
   roomId?: { name?: string };
   createdBy?: { name?: string; phone?: string };
   raisedByStaff?: { name?: string };
@@ -76,7 +76,7 @@ export const mapGuestAlert = (
   const { rating, feedback } = reviewOf(a, reviews);
   const services = a.serviceIds ?? [];
   const acceptSla = services.reduce((s, x) => s + (x.avgAcceptanceTime ?? 0), 0);
-  const deliverSla = services.reduce((s, x) => s + (x.avgDeliveryTime ?? 0), 0);
+  const deliverSla = services.reduce((s, x) => s + (x.avgCompletionTime ?? x.avgDeliveryTime ?? 0), 0);
   const totalSla = acceptSla + deliverSla;
   const acceptMins = minutes(a.createdAt, a.acceptedAt);
   const deliverMins = minutes(a.acceptedAt, a.deliveredAt);

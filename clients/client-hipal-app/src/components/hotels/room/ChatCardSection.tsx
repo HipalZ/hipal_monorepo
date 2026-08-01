@@ -19,7 +19,6 @@ import { updateTheme } from "@/components/utils/themes";
 import { useGetServiceCategories } from "@/components/hooks/useServicesHotel";
 import type { IService } from "@/components/hooks/useServicesHotel";
 import { Skeleton } from "@/components/ui/skeleton";
-import CleaningImg from "@/assets/hotel/clean_room.jpg";
 import CheckoutImg from "@/assets/hotel/checkout.jpeg";
 import {
   useCreateAlert,
@@ -30,6 +29,7 @@ import { toast } from "react-toastify";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { hasGuestContactDetails } from "./guestContactGuard";
+import CheckoutStatusPopup from "./CheckoutStatusPopup";
 import { useUserToken } from "@hi/common/src/useUserToken";
 
 interface QuickService extends IService {
@@ -64,6 +64,22 @@ const ChatCardSection = ({
   const [serviceRequestStatus, setServiceRequestStatus] =
     useState<ServiceRequestStatus>("idle");
 
+  // Checkout modal: switched to the success view after the request is sent.
+  const [checkoutRequestSent, setCheckoutRequestSent] = useState(false);
+  // True when the room already had an active checkout request (backend guard).
+  const [checkoutAlreadyInProgress, setCheckoutAlreadyInProgress] =
+    useState(false);
+  const [checkoutEtaMinutes, setCheckoutEtaMinutes] = useState<number | null>(
+    null,
+  );
+
+  const handleCloseCheckout = useCallback(() => {
+    setShowConfirmation(false);
+    setCheckoutRequestSent(false);
+    setCheckoutAlreadyInProgress(false);
+    setCheckoutEtaMinutes(null);
+  }, [setShowConfirmation]);
+
   // Hooks for service request
   const query = useSearchParams();
   const room = query.get("room");
@@ -75,51 +91,27 @@ const ChatCardSection = ({
     mutationFn: checkoutRequest,
   });
 
-  // Extract specific services from categories data
-  const quickServices = useMemo(() => {
+  // Quick actions come from the system "Quick Actions" service category —
+  // fully managed by the business in hibiz (names, times, images, order).
+  const quickServices: QuickService[] = useMemo(() => {
     if (!categoriesData || categoriesLoading) return [];
 
-    const services: QuickService[] = [];
+    const quickActionsCategory = categoriesData.find(
+      (category) => category.systemKey === "QUICK_ACTIONS",
+    );
+    if (!quickActionsCategory) return [];
 
-    // Find specific services by name with proper images
-    const targetServices = [
-      { name: "Get Water", subTitle: undefined, fallbackImage: null }, // Will use backend image
-      {
-        name: "Room Cleaning",
-        subTitle: "in 10 mins",
-        fallbackImage: CleaningImg,
-      },
-      { name: "Get Towel", subTitle: undefined, fallbackImage: null }, // Will use backend image
-    ];
-
-    // Search through all categories for these services using for...of
-    for (const category of categoriesData) {
-      for (const service of category.serviceIds) {
-        const targetService = targetServices.find((target) =>
-          service.name.toLowerCase().includes(target.name.toLowerCase()),
-        );
-
-        if (targetService && services.length < 3) {
-          services.push({
-            ...service,
-            subTitle: targetService.subTitle,
-            // Use backend image if available, otherwise use fallback
-            image: service.image || targetService.fallbackImage,
-          });
-        }
-      }
-    }
-
-    // Add checkout as the 4th item
-    services.push({
-      _id: "checkout",
-      name: "Checkout",
-      availability: true,
-      isCheckout: true,
-      image: CheckoutImg,
-    });
-
-    return services;
+    return quickActionsCategory.serviceIds
+      .filter((service) => service.availability !== false)
+      .map((service) =>
+        service.systemKey === "CHECKOUT"
+          ? {
+              ...service,
+              isCheckout: true,
+              image: CheckoutImg as unknown as string,
+            }
+          : { ...service, image: service.image || "" },
+      );
   }, [categoriesData, categoriesLoading]);
 
   const onChatClick = () => {
@@ -138,6 +130,8 @@ const ChatCardSection = ({
     }
 
     if (service.isCheckout) {
+      setCheckoutRequestSent(false);
+      setCheckoutAlreadyInProgress(false);
       setShowConfirmation(true);
     } else {
       // Open service request modal for other services
@@ -218,10 +212,23 @@ const ChatCardSection = ({
     }
 
     setIsSubmitting(true);
-    mutateAsync({
-      userId: userDetails?._id,
-      businessId: businessId,
-    });
+    try {
+      const result = (await mutateAsync({
+        userId: userDetails?._id,
+        businessId: businessId,
+      })) as
+        | { data?: { alreadyRequested?: boolean; etaMinutes?: number } }
+        | undefined;
+      // Switch the checkout modal to its success view (ETA shown there).
+      setCheckoutAlreadyInProgress(Boolean(result?.data?.alreadyRequested));
+      setCheckoutEtaMinutes(result?.data?.etaMinutes ?? null);
+      setCheckoutRequestSent(true);
+    } catch (error) {
+      console.error("Error sending checkout request:", error);
+      toast.error("Could not send checkout request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Loading skeleton for quick services
@@ -234,6 +241,12 @@ const ChatCardSection = ({
   );
 
   const isServiceLoading = gettingRoomLoader || creatingAlert;
+
+  // Resolution time of the Checkout service (set in hibiz), shown as the ETA.
+  const checkoutCompletionMins =
+    checkoutEtaMinutes ||
+    quickServices.find((service) => service.isCheckout)?.avgCompletionTime ||
+    15;
 
   return (
     <>
@@ -252,13 +265,12 @@ const ChatCardSection = ({
 
             <div className="grid grid-cols-4 gap-x-3 gap-y-3">
               {quickServices.map((service) => {
-                let serviceImage = DummyImage;
-
-                if (service.isCheckout) {
-                  serviceImage = CheckoutImg;
-                } else if (service.image) {
-                  serviceImage = service.image;
-                }
+                // No backend image → show the service name as a text tile
+                // instead of a dummy photo (checkout always has its own image).
+                const hasImage = service.isCheckout || Boolean(service.image);
+                const serviceImage = service.isCheckout
+                  ? CheckoutImg
+                  : service.image;
 
                 return (
                   <article
@@ -269,14 +281,24 @@ const ChatCardSection = ({
                   >
                     {/* Uniform image tile */}
                     <div className="relative h-[78px] w-[78px] overflow-hidden rounded-[24px] border border-white bg-white shadow-[0_6px_16px_rgba(0,0,0,0.04)] ring-1 ring-[#E9E4DC]/40 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] group-active:scale-95">
-                      <Image
-                        src={serviceImage || "/placeholder.svg"}
-                        alt={service.name}
-                        fill
-                        className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.1]"
-                      />
+                      {hasImage ? (
+                        <>
+                          <Image
+                            src={serviceImage || "/placeholder.svg"}
+                            alt={service.name}
+                            fill
+                            className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.1]"
+                          />
 
-                      <div className="absolute inset-0 rounded-[24px] ring-1 ring-inset ring-white/30" />
+                          <div className="absolute inset-0 rounded-[24px] ring-1 ring-inset ring-white/30" />
+                        </>
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#F5F2EE] to-[#E9E4DC] p-2">
+                          <span className="line-clamp-3 text-center text-[0.7rem] font-semibold leading-tight text-[#6B625A] font-poppins">
+                            {service.name}
+                          </span>
+                        </div>
+                      )}
 
                       {!service.availability && !service.isCheckout && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[24px] bg-white/70 backdrop-blur-[2px]">
@@ -467,29 +489,76 @@ const ChatCardSection = ({
         hide
         height="auto"
         show={showConfirmation}
-        onClose={() => !isSubmitting && setShowConfirmation(false)}
+        onClose={() => !isSubmitting && handleCloseCheckout()}
       >
         <AnimatePresence mode="wait">
           {isPending ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="p-6 pt-8 text-center"
+            >
+              <LoadingSpinnerCircle />
+              <p className="mt-4 font-poppins text-sm text-gray-500">
+                Sending your checkout request...
+              </p>
+            </motion.div>
+          ) : checkoutRequestSent ? (
             <motion.div
               key="success"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="p-6 text-center !poppins-regular"
+              className="relative overflow-hidden p-6 pt-8 text-center"
             >
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
-                </div>
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-green-100/80 to-transparent"
+                aria-hidden
+              />
+              <div className="relative flex justify-center">
+                <motion.div
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 18 }}
+                  className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 shadow-[0_10px_24px_rgba(22,163,74,0.35)]"
+                >
+                  <CheckCircle
+                    className="h-9 w-9 text-white"
+                    strokeWidth={2.2}
+                  />
+                  <motion.span
+                    className="absolute inset-0 rounded-full ring-4 ring-green-300/60"
+                    animate={{ opacity: [0.9, 0], scale: [1, 1.3] }}
+                    transition={{ duration: 1.4, ease: "easeOut" }}
+                  />
+                </motion.div>
               </div>
-              <h2 className="text-xl !poppins-regular font-semibold text-green-600 mb-2">
-                Request Sent!
+              <h2 className="relative mt-5 font-poppins text-[1.35rem] font-semibold tracking-tight text-gray-900">
+                {checkoutAlreadyInProgress
+                  ? "Checkout In Progress"
+                  : "Request Sent!"}
               </h2>
-              <p className="text-gray-600 !poppins-regular">
-                The help desk has been notified and will process your checkout
-                request.
+              <p className="relative mx-auto mt-2 max-w-[16rem] font-poppins text-sm leading-relaxed text-gray-500">
+                {checkoutAlreadyInProgress
+                  ? "Your checkout request is already with the front office."
+                  : "Your checkout request has been sent to the front office."}
               </p>
+              <div className="relative mt-5 rounded-2xl bg-green-50/80 px-4 py-3.5 ring-1 ring-green-100">
+                <div className="flex items-center justify-center gap-1.5 font-poppins text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-green-700/80">
+                  Please visit the front office within
+                </div>
+                <p className="mt-0.5 font-poppins text-lg font-bold text-green-700">
+                  {checkoutCompletionMins} minutes
+                </p>
+              </div>
+              <Button
+                className="relative mt-6 h-11 w-full rounded-2xl bg-gradient-to-r from-green-500 to-green-600 font-poppins text-[0.95rem] font-semibold text-white shadow-[0_8px_20px_rgba(22,163,74,0.3)] hover:from-green-600 hover:to-green-700 active:scale-[0.98]"
+                onClick={handleCloseCheckout}
+              >
+                Done
+              </Button>
             </motion.div>
           ) : (
             <motion.div
@@ -497,59 +566,66 @@ const ChatCardSection = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="relative"
+              className="relative overflow-hidden p-6 pt-8 text-center"
             >
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-blue-100/70 to-transparent"
+                aria-hidden
+              />
               <Button
                 variant="secondary"
-                onClick={() => !isSubmitting && setShowConfirmation(false)}
-                className="absolute right-4 top-4 text-black hover:text-gray-600 rounded-xl"
+                onClick={() => !isSubmitting && handleCloseCheckout()}
+                className="absolute right-4 top-4 z-10 h-8 w-8 rounded-full bg-transparent p-0 text-gray-400 shadow-none hover:bg-gray-100 hover:text-gray-600"
                 disabled={isSubmitting}
               >
-                <X color="red" />
+                <X className="h-4 w-4" />
               </Button>
-              <CardContent className="p-0">
-                <div className="p-6 text-center">
-                  {/* Icon */}
-                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <BellDot className="w-8 h-8 text-primary" />
-                  </div>
-                  {/* Title */}
-                  <h2 className="text-xl font-normal text-gray-900 mb-2 inter">
-                    Request to Check Out?
-                  </h2>
-                  <p className="text-gray-600 mb-6 inter text-sm">
-                    We'll notify staff to prepare your checkout
-                  </p>
-                  {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1 bg-transparent"
-                      onClick={() => setShowConfirmation(false)}
-                      disabled={isSubmitting}
-                    >
-                      Not Yet
-                    </Button>
-                    <CommonBottomButton
-                      fixed={true}
-                      maxWidth="30rem"
-                      buttons={[
-                        {
-                          text: "Swipe To Checkout",
-                          onClick: confirmCheckout,
-                          className: "w-full rounded-xl h-[2.5rem] !poppins-regular",
-                          swipe: true,
-                          disable: isSubmitting,
-                        },
-                      ]}
+              <CardContent className="p-5">
+                <div className="relative flex justify-center">
+                  <motion.div
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 320, damping: 18 }}
+                    className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-[0_10px_24px_rgba(37,99,235,0.35)]"
+                  >
+                    <BellDot
+                      className="h-9 w-9 text-white"
+                      strokeWidth={2.2}
                     />
-                  </div>
+                  </motion.div>
+                </div>
+                <h2 className="relative mt-5 font-poppins text-[1.35rem] font-semibold tracking-tight text-gray-900">
+                  Request to Check Out?
+                </h2>
+                <p className="relative mx-auto mt-2 max-w-[16rem] font-poppins text-sm leading-relaxed text-gray-500">
+                  We'll notify the front office staff to prepare your checkout.
+                </p>
+                <div className="relative mt-6 flex items-center gap-3 h-2">
+                  <CommonBottomButton
+                    fixed={true}
+                    maxWidth="30rem"
+                    buttons={[
+                      {
+                        text: "Swipe To Checkout",
+                        onClick: confirmCheckout,
+                        className:
+                          "h-11 w-full rounded-2xl font-poppins text-[0.95rem] font-semibold shadow-[0_8px_20px_rgba(37,99,235,0.3)]",
+                        swipe: true,
+                        disable: isSubmitting,
+                      },
+                    ]}
+                  />
                 </div>
               </CardContent>
             </motion.div>
           )}
         </AnimatePresence>
       </BottomPopUp>
+
+      <CheckoutStatusPopup
+        businessId={businessId}
+        roomName={room || "hipalz"}
+      />
     </>
   );
 };

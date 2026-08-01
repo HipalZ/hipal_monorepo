@@ -137,21 +137,24 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const isWakeUpCallDue = isWakeUpCallAlert && alert?.alertProgress === 'NOT_DELIVERED';
   const isWakeUpAcknowledged = isWakeUpCallAlert && Boolean(alert?.acceptedBy);
   const wakeUpInfo = isWakeUpCallAlert ? parseWakeUpMessage(alert?.message) : null;
+  const isCheckoutRequest = !isWakeUpCallAlert && (alert?.message?.startsWith('CHECKOUT_REQUEST::') ?? false);
   const guestName = wakeUpInfo?.guestName || alert?.createdBy?.name || '';
   const guestPhone = wakeUpInfo?.guestPhone || alert?.createdBy?.phone || '';
   const displayMessage = isWakeUpCallAlert
     ? `Requested wake-up call for ${wakeUpInfo?.displayTime || 'the selected time'}. Note: ${wakeUpInfo?.note || 'Wake-up call'}`
-    : alert?.message;
+    : isCheckoutRequest
+      ? alert.message.slice('CHECKOUT_REQUEST::'.length)
+      : alert?.message;
   // A request isn't done until its slowest service is done, so the SLA runs
   // against the largest on the alert. 0/0 → SlaPanel renders nothing (wake-up
   // calls and plain messages have no service attached).
   const services = alert?.serviceIds || [];
   const acceptMins = services.reduce((max, service) => Math.max(max, service?.avgAcceptanceTime || 0), 0);
-  const deliverMins = services.reduce((max, service) => Math.max(max, service?.avgDeliveryTime || 0), 0);
+  const deliverMins = services.reduce((max, service) => Math.max(max, service?.avgCompletionTime ?? service?.avgDeliveryTime ?? 0), 0);
 
   // The header names the request; extra services collapse into a "+N more".
   const serviceNames = services.map((service) => service?.name).filter(Boolean);
-  const primaryService = serviceNames[0] || (isWakeUpCallAlert ? 'Wake-up Call' : 'Message');
+  const primaryService = serviceNames[0] || (isWakeUpCallAlert ? 'Wake-up Call' : isCheckoutRequest ? 'Checkout' : 'Message');
   const extraServices = Math.max(0, serviceNames.length - 1);
 
   const badge = (isWakeUpCallAlert ? BADGES.MESSAGE : BADGES[alert?.alertProgress]) ?? FALLBACK_BADGE;

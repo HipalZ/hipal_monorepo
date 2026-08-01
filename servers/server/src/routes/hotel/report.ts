@@ -30,13 +30,13 @@ const CSV_HEADERS = [
   "Requested At",
   "Accepted By Staff",
   "Accepted At",
-  "Delivered By Staff",
-  "Delivered At",
+  "Completed By Staff",
+  "Completed At",
   "Acceptance Time",
-  "Delivery Time",
-  "Total Resolution Time",
+  "Fulfillment Time",
+  "Total Time",
   "Standard Acceptance Time (min)",
-  "Standard Delivery Time (min)",
+  "Fulfillment SLA (min)",
   "Total Standard SLA (min)",
   "Total Actual Time (min)",
   "SLA Performance",
@@ -147,7 +147,8 @@ const slaAnalysis = (alert: any) => {
     0,
   );
   const delSla = services.reduce(
-    (sum: number, s: any) => sum + (s?.avgDeliveryTime ?? 0),
+    (sum: number, s: any) =>
+      sum + (s?.avgCompletionTime ?? s?.avgDeliveryTime ?? 0),
     0,
   );
   const totalSla = accSla + delSla;
@@ -286,7 +287,7 @@ const hotelReportRouter = new Hono()
       })
         .populate({
           path: "serviceIds",
-          select: "name avgAcceptanceTime avgDeliveryTime",
+          select: "name avgAcceptanceTime avgCompletionTime avgDeliveryTime",
         })
         .populate({ path: "createdBy", select: "name phone" })
         .populate({ path: "acceptedBy", select: "name phone" })

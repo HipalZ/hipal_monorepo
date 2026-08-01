@@ -386,7 +386,7 @@ const HotelServices = () => {
 
   const cmpError =
     response !== null && resolution !== null && resolution <= response
-      ? "Completion time must be greater than acceptance time"
+        ? "Fulfillment time must be greater than response time"
       : "";
 
   const bothEmpty = response === null && resolution === null;
@@ -514,7 +514,7 @@ const HotelServices = () => {
             </div>
             <div className="flex-1 flex items-center gap-1.5 px-3 py-2">
               <Timer className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-              <span className="text-xs text-muted-foreground">Resolve</span>
+              <span className="text-xs text-muted-foreground">Fulfill</span>
               <span className="ml-auto text-xs font-medium tabular-nums">
                 {fmtDuration(service.avgCompletionTime)}
               </span>
@@ -525,7 +525,7 @@ const HotelServices = () => {
           {hasTimingIssue && (
             <div className="px-3 pb-2 pt-0">
               <p className="text-[11px] text-rose-500">
-                ⚠ Resolve time should exceed response time
+                ⚠ Fulfillment time should exceed response time
               </p>
             </div>
           )}
@@ -795,10 +795,10 @@ const HotelServices = () => {
                   </p>
                 </div>
 
-                {/* Resolution Time */}
+                {/* Fulfillment Time */}
                 <div className="w-[45%]">
                   <Label htmlFor="resolutionMin" className="text-sm font-medium">
-                    Resolution Time (min)
+                    Fulfillment Time (min)
                   </Label>
                   <div className="relative mt-1">
                     <Input
@@ -818,8 +818,16 @@ const HotelServices = () => {
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Time to fully complete the service.
+                    Time to complete after staff accepts.
                   </p>
+                </div>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-muted-foreground">
+                <div className="mb-1 font-semibold text-slate-700">SLA terms</div>
+                <div className="grid gap-1 sm:grid-cols-3">
+                  <span>Response: raised to accepted</span>
+                  <span>Fulfillment: accepted to completed</span>
+                  <span>Total SLA: response + fulfillment</span>
                 </div>
               </div>
               <div className="space-y-3">
@@ -834,7 +842,7 @@ const HotelServices = () => {
                 </p>
                 {!canSave && (
                   <Label className="text-sm font-medium text-rose-500">
-                    Note: Response Time should be less than Resolution Time.
+                    Note: Response Time should be less than Fulfillment Time.
                   </Label>
                 )}
               </div>

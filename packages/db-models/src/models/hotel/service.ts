@@ -17,6 +17,8 @@ const hotelServiceSchema = new Schema<HotelServiceType>({
   avgAcceptanceTime: { type: Number, default: 2 },
   avgDeliveryTime: { type: Number, default: 3 },
   sequence: { type: Number, default: 0 },
+  // Rename-proof identifier for system-managed services (e.g. "CHECKOUT").
+  systemKey: { type: String, required: false },
 });
 
 const hotelServiceCategorySchema = new Schema<HotelServiceCategoryType>({
@@ -26,6 +28,8 @@ const hotelServiceCategorySchema = new Schema<HotelServiceCategoryType>({
   image: { type: String },
   serviceIds: [{ type: ObjectId, ref: "hotelservice" }],
   sequence: { type: Number, default: 0 },
+  // Rename-proof identifier for system-managed categories ("QUICK_ACTIONS").
+  systemKey: { type: String, required: false },
 });
 
 const HotelService: Model<HotelServiceType> = mongoose.model<HotelServiceType>(

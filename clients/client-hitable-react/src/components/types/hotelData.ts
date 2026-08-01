@@ -46,6 +46,7 @@ export interface Service {
   name: string;
   /** SLA minutes — populated on alert feeds, absent elsewhere. */
   avgAcceptanceTime?: number;
+  avgCompletionTime?: number;
   avgDeliveryTime?: number;
 }
 

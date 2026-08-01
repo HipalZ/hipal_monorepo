@@ -135,6 +135,13 @@ const GuestServiceJourney = () => {
         {/* ── OVERVIEW ─────────────────────────────────────────────── */}
         {tab === 'overview' && (
           <>
+            <div className={cx(card, 'mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-xs text-report-muted')}>
+              <span className="font-semibold text-report-ink">SLA terms</span>
+              <span>Response: raised to accepted</span>
+              <span>Fulfillment: accepted to completed</span>
+              <span>Total: raised to completed</span>
+            </div>
+
             <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
               <KpiCard
                 hero
@@ -158,7 +165,7 @@ const GuestServiceJourney = () => {
                 sub={summary.avgAcceptSla == null ? 'no SLA set' : `SLA target ${formatMins(summary.avgAcceptSla)}`}
               />
               <DurationKpi
-                label="Avg time to deliver"
+                label="Avg fulfillment time"
                 mins={summary.avgDeliver}
                 sub={summary.avgDeliverSla == null ? 'no SLA set' : `SLA target ${formatMins(summary.avgDeliverSla)}`}
               />
@@ -191,7 +198,7 @@ const GuestServiceJourney = () => {
                 </div>
                 <div className="border-report-line mt-3.5 border-t pt-2.5">
                   <MiniStat label="Accept-stage misses" value={donut.acceptMisses} />
-                  <MiniStat label="Delivery-stage misses" value={donut.deliverMisses} />
+                  <MiniStat label="Fulfillment misses" value={donut.deliverMisses} />
                   <MiniStat label="Escalations" value={summary.breaches} tone={summary.breaches ? 'text-report-bad' : 'text-report-good'} last />
                 </div>
               </div>
@@ -427,9 +434,9 @@ const GuestServiceJourney = () => {
                         onSort={log.toggleSort}
                         numeric
                       />
-                      <SortableHeader label="Delivered by" sortKey="deliveredBy" activeKey={log.sortKey} dir={log.sortDir} onSort={log.toggleSort} />
+                      <SortableHeader label="Completed by" sortKey="deliveredBy" activeKey={log.sortKey} dir={log.sortDir} onSort={log.toggleSort} />
                       <SortableHeader
-                        label="Time to deliver"
+                        label="Fulfillment time"
                         sortKey="deliverMins"
                         activeKey={log.sortKey}
                         dir={log.sortDir}
@@ -437,7 +444,7 @@ const GuestServiceJourney = () => {
                         numeric
                       />
                       <SortableHeader
-                        label="Deliver vs SLA"
+                        label="Fulfillment vs SLA"
                         sortKey="deliverDelta"
                         activeKey={log.sortKey}
                         dir={log.sortDir}

@@ -37,6 +37,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { ensureQuickActionDefaults } from "../../services/hotel/quickActions";
 import { pushToken } from "../../services/token";
 import { respond } from "../../utils/response";
 import { convertToHsl } from "../../utils/theme";
@@ -90,6 +91,10 @@ const businessesRouter = new Hono()
           },
           { new: true, upsert: true },
         );
+      }
+
+      if (business.businessType === "HOTEL") {
+        await ensureQuickActionDefaults(business._id.toString());
       }
 
       return respond(c, "business created", false, 201, business);
