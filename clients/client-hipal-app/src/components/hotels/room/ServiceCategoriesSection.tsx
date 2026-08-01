@@ -8,7 +8,7 @@ import housekeeping from "@/assets/hotel/housekeeping.jpeg";
 import maintainance from "@/assets/hotel/maintainace.jpeg";
 import frontoffice from "@/assets/hotel/frontoffice.jpeg";
 import type { IMenuLayout } from "@/components/types/businessData";
-import { HomeIcon, MessageCircle, Search } from "lucide-react";
+import { BedDouble, MessageCircle, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHotelTemp } from "@/components/store/useHotelTemp";
 import { useLogin } from "@/components/store/useLogin";
@@ -88,6 +88,7 @@ export default function ServiceCategoriesSection({
   }, [browsableCategories, config]);
 
   const hasCategories = Boolean(browsableCategories.length);
+  const displayRoom = room && room !== "hipalz";
 
   return (
     <div className="relative">
@@ -97,20 +98,21 @@ export default function ServiceCategoriesSection({
           <div className="absolute -left-3 top-1 bottom-1 w-1 bg-[#A79F97]/30 rounded-full" />
           
           <div className="flex flex-col gap-1">
-            <span className="poppins-regular text-[1.25rem] leading-none tracking-tight text-[#A79F97]">
-              Hello {userDetails?.name ? userDetails.name.split(' ')[0] : "Guest"},
+            <span className="poppins-regular text-[1.25rem] leading-none tracking-tight text-black">
+              Hello {userDetails?.name ? userDetails.name.split(' ')[0] : "Guest"}
             </span>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="poppins-semibold text-[1.05rem] leading-none tracking-tight text-[#4A433D]">
+              <span className="poppins-semibold text-[1rem] leading-none tracking-tight text-[#A79F97]">
                 Guest Support
               </span>
-              <span className="h-1 w-1 rounded-full bg-[#E9E4DC]" />
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F5F2EE]/50 px-2.5 py-1 ring-1 ring-[#E9E4DC]/60 shadow-sm transition-all duration-300 hover:bg-[#F5F2EE]">
-                <HomeIcon size={12} className="text-[#A79F97]" />
-                <span className="poppins-bold text-[0.85rem] leading-none text-[#4A433D]">
-                  {room}
-                </span>
-              </div>
+              {displayRoom && (
+                <>
+                  <span className="h-1 w-1 rounded-full bg-[#D8C9BB]" />
+                  <span className="inline-flex items-center gap-1 text-[1rem] font-medium leading-none text-[#A79F97]">
+                    <span>Room {room}</span>
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </section>

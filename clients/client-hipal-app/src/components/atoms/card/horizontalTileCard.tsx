@@ -15,6 +15,7 @@ import MemoFoodType from "../foodType";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useTableData from "@/components/store/useTableData";
 import { CiImageOn } from "react-icons/ci";
+import PrepDeliveryTimeBadge from "@/components/atoms/prepDeliveryTimeBadge";
 interface HorizontalDishCardProps {
   dishData: DishType;
   primaryColor?: string;
@@ -105,10 +106,16 @@ const HorizontalTileCard = ({
                 .join(" | ")}
             </p>
           )}
+          <div className="mt-1.5">
+            <PrepDeliveryTimeBadge
+              minutes={dishData?.avgPrepTime}
+              color={primaryColor}
+            />
+          </div>
           <button
           type="button"
           onClick={onReadMore}
-          className="mt-1 text-xs underline"
+          className="mt-1 block text-xs underline"
           style={{ color: primaryColor }}
         >
           Read more

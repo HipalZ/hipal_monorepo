@@ -235,7 +235,7 @@ const MemoDishForm = () => {
                 </div>
               </Background>
               <label className="font-semibold opacity-50" htmlFor="avgPrepTime">
-                Average Preparation Time (mins)
+                Prep / Delivery Time (mins)
               </label>
               <Background>
                 <div className="relative">

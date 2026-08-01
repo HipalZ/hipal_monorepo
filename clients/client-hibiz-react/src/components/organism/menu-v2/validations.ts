@@ -32,6 +32,7 @@ export const DishFormSchema = z
     // Price rules: if portions exist, basePrice is ignored/calculated
     price: z.number().min(0).optional(),
     portions: z.array(PortionSchema).optional(),
+    avgPrepTime: z.number().min(0).max(1440).optional(),
 
     description: z.string().optional(),
 

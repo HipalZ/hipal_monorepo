@@ -94,7 +94,8 @@ export const dishSchema = z.object({
     .number({
       message: "avgPrepTime is required",
     })
-
+    .min(0)
+    .max(1440)
     .optional()
     .default(0),
   dishTypes: z.array(
@@ -323,7 +324,7 @@ export const updateDishSchema = z
     menuId: ObjectIdSchema.optional(),
     gst: z.coerce.number().optional(),
     timings: z.array(timingSchema).optional(),
-    avgPrepTime: z.coerce.number().optional().default(0),
+    avgPrepTime: z.coerce.number().min(0).max(1440).optional().default(0),
   })
   .strict();
 

@@ -110,8 +110,10 @@ export function buildDishPayload(
     payload.timings = existingDish.timings;
   }
 
-  // avgPrepTime is required
-  payload.avgPrepTime = existingDish?.avgPrepTime || 0;
+  payload.avgPrepTime = Math.max(
+    0,
+    Number(formData.avgPrepTime ?? existingDish?.avgPrepTime ?? 0),
+  );
 
   return payload;
 }

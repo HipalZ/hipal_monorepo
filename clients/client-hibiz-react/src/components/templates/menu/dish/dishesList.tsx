@@ -140,7 +140,7 @@ const MemoListOfDishes = () => {
                 <TableHead>Price</TableHead>
                 <TableHead>Visibility</TableHead>
                 <TableHead>Availability</TableHead>
-                <TableHead>Avg Prep Time</TableHead>
+                <TableHead>Prep / Delivery</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
