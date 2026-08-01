@@ -219,6 +219,7 @@ export const DraftOpsRepository = {
         ? {
             name: beforeDish.name,
             price: beforeDish.price,
+            avgPrepTime: beforeDish.avgPrepTime,
             description: beforeDish.description,
             availability: beforeDish.availability,
             visibility: beforeDish.visibility,
@@ -270,6 +271,7 @@ export const DraftOpsRepository = {
         const before = {
           name: dish.name,
           price: dish.price,
+          avgPrepTime: dish.avgPrepTime,
           description: dish.description,
           availability: dish.availability,
           visibility: dish.visibility,

@@ -7,7 +7,7 @@
 
 import FoodType from '@/components/atom/FoodType';
 import { Switch } from '@/components/ui/switch';
-import { Edit, Plus } from 'lucide-react';
+import { Bike, Edit, Plus } from 'lucide-react';
 import { memo } from 'react';
 import '../styles/brutalist.css';
 import type { MenuDish } from '../types';
@@ -51,6 +51,15 @@ export const DishRow = memo(function DishRow({
         <div className="brutal-body" style={{ fontWeight: 700, textTransform: 'uppercase' }}>
           {dish.name}
         </div>
+        {Number(dish.avgPrepTime) > 0 && (
+          <div className="mt-1 inline-flex max-w-full items-center gap-1.5 border border-black bg-amber-100 px-2 py-1 text-[0.625rem] font-bold text-amber-950 shadow-[2px_2px_0_#000000]">
+            <Bike className="h-3 w-3 shrink-0" />
+            <span className="shrink-0">DELIVERY WITHIN :</span>
+            <span className="shrink-0 rounded-sm bg-white px-1 py-0.5">
+              {dish.avgPrepTime} MIN
+            </span>
+          </div>
+        )}
         {selectedMenuId !== 'ALL' && displayPrice !== dish.price && (
           <div className="brutal-body" style={{ fontSize: '0.6875rem', color: '#FF4444', fontWeight: 700 }}>
             OVERRIDDEN

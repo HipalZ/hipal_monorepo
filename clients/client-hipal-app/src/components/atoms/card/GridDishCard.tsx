@@ -15,6 +15,7 @@ import { useCart } from "@/components/store/useCart";
 import Image from "next/image";
 import foodImage from "@/assets/food.png";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import PrepDeliveryTimeBadge from "@/components/atoms/prepDeliveryTimeBadge";
 
 interface GridDishCardProps {
   dishData: DishType;
@@ -131,6 +132,11 @@ const GridDishCard = ({
               ? portions?.[0]?.price.toFixed(2)
               : dishData?.price.toFixed(2)}
           </p>
+          <PrepDeliveryTimeBadge
+            minutes={dishData?.avgPrepTime}
+            className="mt-2"
+            color={primaryColor}
+          />
 
           {dishData.description && (
             <p className="mt-1 text-xs text-gray-500 line-clamp-3 h-[3rem]">

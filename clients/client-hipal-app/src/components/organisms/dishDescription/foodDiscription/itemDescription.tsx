@@ -10,6 +10,7 @@ import type { IDish } from "@/components/types/businessData";
 import { isEmpty } from "lodash-es";
 import { MdMenuBook } from "react-icons/md";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import PrepDeliveryTimeBadge from "@/components/atoms/prepDeliveryTimeBadge";
 
 function MemoIndividualItemDescription() {
   const { isSelectedDish: dishData, setSelectedDish } = useActiveClass();
@@ -49,6 +50,7 @@ function MemoIndividualItemDescription() {
       >
         {dishData?.name || ""}
       </div>
+      <PrepDeliveryTimeBadge minutes={dishData?.avgPrepTime} className="mt-2" />
 
       {dishData?.description && (
         <div className="mt-2 text-xs leading-3 text-[#000000]">

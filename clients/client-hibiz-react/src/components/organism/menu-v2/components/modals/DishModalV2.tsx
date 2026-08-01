@@ -89,6 +89,7 @@ export const DishModalV2 = memo(function DishModalV2({
       dishType: 'VEG',
       kitchenId: '', // Default or first available
       price: 0,
+      avgPrepTime: 0,
       description: '',
       availability: true,
       visibility: true,
@@ -178,6 +179,7 @@ export const DishModalV2 = memo(function DishModalV2({
           dishType: (dish.dishType as any) || 'VEG',
           kitchenId: dish.kitchenId || '',
           price: dish.price || 0,
+          avgPrepTime: dish.avgPrepTime || 0,
           description: dish.description || '',
           availability: dish.availability ?? true,
           visibility: dish.visibility ?? true,
@@ -201,6 +203,7 @@ export const DishModalV2 = memo(function DishModalV2({
           dishType: 'VEG',
           kitchenId: '',
           price: 0,
+          avgPrepTime: 0,
           availability: true,
           visibility: true,
           portions: [],
@@ -541,6 +544,21 @@ export const DishModalV2 = memo(function DishModalV2({
                       <Label className="brutal-label">BASE PRICE (₹) {portions?.length > 0 && '(AUTO-CALCULATED)'}</Label>
                       <Input type="number" {...register('price', { valueAsNumber: true })} className="brutal-input" readOnly={portions?.length > 0} />
                       {errors.price && <span className="text-xs font-bold text-red-600">{errors.price.message}</span>}
+                    </div>
+
+                    <div className="mb-4">
+                      <Label className="brutal-label">DELIVERY WITHIN (MIN)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={1440}
+                        placeholder="e.g. 20"
+                        {...register('avgPrepTime', {
+                          setValueAs: (value) => (value === '' ? 0 : Number(value)),
+                        })}
+                        className="brutal-input"
+                      />
+                      {errors.avgPrepTime && <span className="text-xs font-bold text-red-600">{errors.avgPrepTime.message}</span>}
                     </div>
 
                     {/* Portions List */}

@@ -10,6 +10,7 @@ import { IoFastFoodSharp } from "react-icons/io5";
 import type { DishType } from "@hi/db-models/src/validators";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import PrepDeliveryTimeBadge from "@/components/atoms/prepDeliveryTimeBadge";
 
 function FoodDescription({ dishData }: { dishData: DishType }) {
   const isAvailable = dishData?.availability;
@@ -50,6 +51,9 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
                 {currencySymbol} {Number(price).toLocaleString("en-IN")}
               </span>
             )}
+          </div>
+          <div className="w-full mt-1">
+            <PrepDeliveryTimeBadge minutes={dishData?.avgPrepTime} />
           </div>
         </div>
         {dishData?.description && (

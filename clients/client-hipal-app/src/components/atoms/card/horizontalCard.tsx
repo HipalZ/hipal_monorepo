@@ -14,6 +14,7 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import Image from "next/image";
 import useTableData from "@/components/store/useTableData";
 import { CiImageOn } from "react-icons/ci";
+import PrepDeliveryTimeBadge from "@/components/atoms/prepDeliveryTimeBadge";
 
 interface HorizontalDishCardProps {
   dishData: DishType;
@@ -118,6 +119,11 @@ const HorizontalCard = ({
               ? portions?.[0]?.price.toFixed(2)
               : dishData?.price.toFixed(2)}
           </p>
+          <PrepDeliveryTimeBadge
+            minutes={dishData?.avgPrepTime}
+            className={compactLayout ? "mt-1" : "mt-2"}
+            color={primaryColor}
+          />
           {dishData.description && (
             <p
               className={cn(
