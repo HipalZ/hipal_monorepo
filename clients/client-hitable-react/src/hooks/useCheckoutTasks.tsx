@@ -19,6 +19,9 @@ export interface CheckoutTask {
   acceptDueAt: number;
   completeDueAt?: number;
   acceptedAt?: number;
+  cancelledAt?: number;
+  cancelledBy?: { _id: string; name?: string };
+  cancelReason?: string;
   escalatedAt?: number;
 }
 
@@ -97,7 +100,27 @@ export const useCheckoutTaskActions = (businessId?: string, userId?: string) => 
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Could not complete'),
   });
 
-  return { accept, complete };
+  const reject = useMutation({
+    mutationFn: async ({ taskId, reasonOfRejection }: { taskId: string; reasonOfRejection: string }) => {
+      const res = await apiRpc.hotel.checkout_task.cancel.$post({
+        json: { taskId, userId: userId as string, reasonOfRejection },
+      });
+      const json = await res.json();
+      if (res.status !== 200) throw new Error(json?.message || 'Could not reject');
+      return json?.data;
+    },
+    onSuccess: () => {
+      toast.success('Task rejected');
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: ['checkoutTasksActive', businessId] });
+    },
+    onError: (e: unknown) => {
+      toast.error(e instanceof Error ? e.message : 'Could not reject');
+      invalidate();
+    },
+  });
+
+  return { accept, complete, reject };
 };
 
 /**

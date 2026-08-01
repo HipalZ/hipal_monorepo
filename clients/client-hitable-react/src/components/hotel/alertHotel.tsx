@@ -23,7 +23,7 @@ const MemoAlertHotel = () => {
   const userId = useHiClientZ((s) => s.captainData?._id);
 
   const { tasks } = useMyCheckoutTasks(businessId, userId);
-  const { accept, complete } = useCheckoutTaskActions(businessId, userId);
+  const { accept, complete, reject } = useCheckoutTaskActions(businessId, userId);
 
   // Stable order by when it was raised. Sorting by the live deadline made a card
   // jump the instant you accepted it (its deadline flips from accept→complete),
@@ -49,9 +49,10 @@ const MemoAlertHotel = () => {
               <CheckoutTaskCard
                 key={task._id}
                 task={task}
-                busy={accept.isPending || complete.isPending}
+                busy={accept.isPending || complete.isPending || reject.isPending}
                 onAccept={() => accept.mutate(task._id)}
                 onComplete={() => complete.mutate(task._id)}
+                onReject={(reason) => reject.mutate({ taskId: task._id, reasonOfRejection: reason })}
               />
             ))}
           </div>

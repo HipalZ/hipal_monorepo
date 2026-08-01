@@ -80,6 +80,9 @@ export const hotelCheckoutTask = z.object({
   acceptedBy: ObjectIdSchema.optional(),
   completedAt: z.number().optional(),
   completedBy: ObjectIdSchema.optional(),
+  cancelledAt: z.number().optional(),
+  cancelledBy: ObjectIdSchema.optional(),
+  cancelReason: z.string().max(500).optional(),
   escalatedAt: z.number().optional(),
   overdueNotifiedAt: z.number().optional(),
   triggeredBy: ObjectIdSchema.optional(),
@@ -110,6 +113,7 @@ export const triggerCheckoutTasks = z.object({
 export const actOnCheckoutTask = z.object({
   taskId: ObjectIdSchema,
   userId: ObjectIdSchema,
+  reasonOfRejection: z.string().min(1).max(500).optional(),
 });
 
 export type HotelCheckoutGroupType = z.infer<typeof hotelCheckoutGroup>;
