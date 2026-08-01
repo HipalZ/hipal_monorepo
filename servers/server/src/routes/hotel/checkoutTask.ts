@@ -122,12 +122,19 @@ const checkoutTaskRouter = new Hono()
 
   .post(
     "/cancel",
-    zValidator("json", z.object({ taskId: z.string().min(24).max(24) })),
+    zValidator("json", actOnCheckoutTask),
     async (c) => {
-      const { taskId } = await c.req.json();
+      const { taskId, userId, reasonOfRejection } = await c.req.json();
       const task = await HotelCheckoutTask.findOneAndUpdate(
         { _id: taskId, status: { $in: ["PENDING", "ACCEPTED"] } },
-        { $set: { status: "CANCELLED" } },
+        {
+          $set: {
+            status: "CANCELLED",
+            cancelledAt: Date.now(),
+            cancelledBy: userId,
+            cancelReason: reasonOfRejection || "not specified",
+          },
+        },
         { new: true },
       );
       if (!task) return respond(c, "Task already closed", true, 409, {});

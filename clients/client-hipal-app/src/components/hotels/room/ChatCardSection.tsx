@@ -72,12 +72,16 @@ const ChatCardSection = ({
   const [checkoutEtaMinutes, setCheckoutEtaMinutes] = useState<number | null>(
     null,
   );
+  const [checkoutAcceptedMessage, setCheckoutAcceptedMessage] = useState<
+    string | null
+  >(null);
 
   const handleCloseCheckout = useCallback(() => {
     setShowConfirmation(false);
     setCheckoutRequestSent(false);
     setCheckoutAlreadyInProgress(false);
     setCheckoutEtaMinutes(null);
+    setCheckoutAcceptedMessage(null);
   }, [setShowConfirmation]);
 
   // Hooks for service request
@@ -132,6 +136,7 @@ const ChatCardSection = ({
     if (service.isCheckout) {
       setCheckoutRequestSent(false);
       setCheckoutAlreadyInProgress(false);
+      setCheckoutAcceptedMessage(null);
       setShowConfirmation(true);
     } else {
       // Open service request modal for other services
@@ -222,6 +227,7 @@ const ChatCardSection = ({
       // Switch the checkout modal to its success view (ETA shown there).
       setCheckoutAlreadyInProgress(Boolean(result?.data?.alreadyRequested));
       setCheckoutEtaMinutes(result?.data?.etaMinutes ?? null);
+      setCheckoutAcceptedMessage(null);
       setCheckoutRequestSent(true);
     } catch (error) {
       console.error("Error sending checkout request:", error);
@@ -247,6 +253,15 @@ const ChatCardSection = ({
     checkoutEtaMinutes ||
     quickServices.find((service) => service.isCheckout)?.avgCompletionTime ||
     15;
+
+  const handleAcceptedCheckoutReply = useCallback(
+    (reply: { description: string }) => {
+      if (!showConfirmation || !checkoutRequestSent) return false;
+      setCheckoutAcceptedMessage(reply.description);
+      return true;
+    },
+    [checkoutRequestSent, showConfirmation],
+  );
 
   return (
     <>
@@ -553,6 +568,16 @@ const ChatCardSection = ({
                   {checkoutCompletionMins} minutes
                 </p>
               </div>
+              {checkoutAcceptedMessage && (
+                <div className="relative mt-3 rounded-2xl bg-blue-50/80 px-4 py-3 text-left ring-1 ring-blue-100">
+                  <p className="font-poppins text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-blue-700/80">
+                    Front office accepted
+                  </p>
+                  <p className="mt-1 font-poppins text-sm leading-relaxed text-blue-900">
+                    {checkoutAcceptedMessage}
+                  </p>
+                </div>
+              )}
               <Button
                 className="relative mt-6 h-11 w-full rounded-2xl bg-gradient-to-r from-green-500 to-green-600 font-poppins text-[0.95rem] font-semibold text-white shadow-[0_8px_20px_rgba(22,163,74,0.3)] hover:from-green-600 hover:to-green-700 active:scale-[0.98]"
                 onClick={handleCloseCheckout}
@@ -625,6 +650,7 @@ const ChatCardSection = ({
       <CheckoutStatusPopup
         businessId={businessId}
         roomName={room || "hipalz"}
+        onAcceptedReply={handleAcceptedCheckoutReply}
       />
     </>
   );

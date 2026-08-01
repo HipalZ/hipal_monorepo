@@ -34,6 +34,17 @@ const readDismissed = (): string[] => {
   }
 };
 
+const rememberDismissed = (replyId: string) => {
+  if (typeof window === "undefined") return;
+  const dismissed = readDismissed();
+  if (!dismissed.includes(replyId)) {
+    window.localStorage.setItem(
+      DISMISS_KEY,
+      JSON.stringify([...dismissed, replyId]),
+    );
+  }
+};
+
 /**
  * Watches the (already polled) room chat for front-office replies to the
  * guest's checkout request and surfaces the latest one as a popup — e.g.
@@ -43,9 +54,11 @@ const readDismissed = (): string[] => {
 const CheckoutStatusPopup = ({
   businessId,
   roomName,
+  onAcceptedReply,
 }: {
   businessId: string;
   roomName: string;
+  onAcceptedReply?: (reply: ChatReply) => boolean;
 }) => {
   const { chatData } = useGetAllChats({ businessId, roomName });
   const [activeReply, setActiveReply] = useState<ChatReply | null>(null);
@@ -61,20 +74,24 @@ const CheckoutStatusPopup = ({
     if (!replies.length) return;
 
     const latest = replies.reduce((a, b) => (a.date > b.date ? a : b));
-    if (!dismissed.includes(latest._id)) {
-      setActiveReply(latest);
+    if (dismissed.includes(latest._id)) return;
+
+    const isLatestDeclined = latest.status === "WARNING";
+    const isLatestAccepted =
+      !isLatestDeclined && latest.description?.startsWith(ACCEPT_PREFIX);
+
+    if (isLatestAccepted && onAcceptedReply?.(latest)) {
+      rememberDismissed(latest._id);
+      setActiveReply(null);
+      return;
     }
-  }, [chatData]);
+
+    setActiveReply(latest);
+  }, [chatData, onAcceptedReply]);
 
   const dismiss = () => {
-    if (activeReply && typeof window !== "undefined") {
-      const dismissed = readDismissed();
-      if (!dismissed.includes(activeReply._id)) {
-        window.localStorage.setItem(
-          DISMISS_KEY,
-          JSON.stringify([...dismissed, activeReply._id]),
-        );
-      }
+    if (activeReply) {
+      rememberDismissed(activeReply._id);
     }
     setActiveReply(null);
   };
