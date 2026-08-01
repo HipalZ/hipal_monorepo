@@ -8,6 +8,7 @@ export type ServiceRef = {
   _id?: string;
   name?: string;
   avgAcceptanceTime?: number;
+  avgCompletionTime?: number;
   avgDeliveryTime?: number;
 };
 
@@ -28,7 +29,8 @@ export type AlertItem = {
 
 /**
  * SLA performance for a single request. Standards come from each service's
- * avgAcceptanceTime / avgDeliveryTime (minutes); actuals from the timestamps.
+ * avgAcceptanceTime / avgCompletionTime (minutes); actuals from the timestamps.
+ * avgDeliveryTime is kept as a fallback for older service records.
  * A positive delta means the stage finished AHEAD of its SLA (early / good).
  */
 export type ServicePerf = {

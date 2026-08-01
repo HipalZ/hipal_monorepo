@@ -14,6 +14,7 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { ensureQuickActionDefaults } from "../../services/hotel/quickActions";
 import { respond } from "../../utils/response";
 
 const serviceRouter = new Hono()
@@ -94,6 +95,11 @@ const serviceRouter = new Hono()
 
     async (c) => {
       const { businessId } = c.req.query();
+
+      // Lazily seeds the "Quick Actions" category + default services for
+      // businesses that don't have them yet (idempotent).
+      await ensureQuickActionDefaults(businessId);
+
       const categories = await HotelServiceCategory.find({
         businessId,
         availability: true,
@@ -102,10 +108,10 @@ const serviceRouter = new Hono()
         .populate({
           path: "serviceIds",
           select:
-            "name image availability avgAcceptanceTime avgCompletionTime avgDeliveryTime sequence",
+            "name image availability avgAcceptanceTime avgCompletionTime avgDeliveryTime sequence systemKey",
           options: { sort: { sequence: 1, _id: 1 } },
         })
-        .select("name image serviceIds sequence")
+        .select("name image serviceIds sequence systemKey")
         .lean();
 
       return respond(c, "All service categories", false, 200, categories);

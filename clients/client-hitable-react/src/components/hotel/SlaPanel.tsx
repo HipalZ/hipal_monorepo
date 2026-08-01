@@ -1,4 +1,4 @@
-import { Clock, Truck, UserCheck } from 'lucide-react';
+import { CheckCircle2, Clock, UserCheck } from 'lucide-react';
 import { memo } from 'react';
 import { formatClock, useNow } from '../../hooks/useTime';
 
@@ -67,7 +67,8 @@ const Cell = memo(function Cell({
 const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, rejectedAt, acceptMins, deliverMins }: SlaPanelProps) {
   const started = new Date(createdAt).getTime();
   const acceptMs = (acceptMins || 0) * 60_000;
-  const totalMs = acceptMs + (deliverMins || 0) * 60_000;
+  const fulfillMs = (deliverMins || 0) * 60_000;
+  const totalMs = acceptMs + fulfillMs;
 
   const closed = Boolean(deliveredAt || rejectedAt);
   const now = useNow(!closed);
@@ -76,29 +77,29 @@ const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, re
   if (!totalMs) return null;
 
   const acceptLeftMs = started + acceptMs - now;
-  const totalLeftMs = started + totalMs - now;
+  const fulfillLeftMs = (acceptedAt || started + acceptMs) + fulfillMs - now;
 
   // The leg currently being raced decides the panel's colour.
-  const activeLeftMs = acceptedAt ? totalLeftMs : acceptLeftMs;
-  const activeWindow = acceptedAt ? totalMs : acceptMs;
+  const activeLeftMs = acceptedAt ? fulfillLeftMs : acceptLeftMs;
+  const activeWindow = acceptedAt ? fulfillMs : acceptMs;
   const fraction = activeWindow ? activeLeftMs / activeWindow : 0;
 
   const head = ((): { tone: ToneKey; title: string; value: string } => {
     if (deliveredAt) {
-      const vsSla = deliveredAt - started - totalMs;
+      const vsSla = acceptedAt ? deliveredAt - acceptedAt - fulfillMs : deliveredAt - started - totalMs;
       const late = vsSla > 0;
       return {
         tone: late ? 'late' : 'good',
-        title: late ? 'Delivered Late' : 'Delivered On Time',
+        title: late ? 'Completed Late' : 'Completed On Time',
         value: `${late ? '+' : '-'}${formatClock(vsSla)}`,
       };
     }
     if (rejectedAt) return { tone: 'idle', title: 'Rejected', value: formatClock(rejectedAt - started) };
     const tone: ToneKey = activeLeftMs <= 0 ? 'late' : fraction <= NEARLY_DUE ? 'near' : 'ok';
-    const stage = acceptedAt ? 'Delivery' : 'Acceptance';
+    const stage = acceptedAt ? 'Fulfillment' : 'Acceptance';
     return {
       tone,
-      title: activeLeftMs <= 0 ? `${stage} Overdue` : acceptedAt ? 'Delivery In Progress' : 'Awaiting Acceptance',
+      title: activeLeftMs <= 0 ? `${stage} Overdue` : acceptedAt ? 'Fulfillment In Progress' : 'Awaiting Acceptance',
       value: remainingText(activeLeftMs),
     };
   })();
@@ -109,8 +110,8 @@ const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, re
   const acceptTook = acceptedAt ? acceptedAt - started : null;
   const acceptTone: ToneKey = acceptTook !== null ? (acceptTook > acceptMs ? 'late' : 'good') : acceptLeftMs <= 0 ? 'late' : 'ok';
 
-  const deliverTook = deliveredAt ? deliveredAt - started : null;
-  const deliverTone: ToneKey = deliverTook !== null ? (deliverTook > totalMs ? 'late' : 'good') : totalLeftMs <= 0 ? 'late' : head.tone;
+  const deliverTook = deliveredAt && acceptedAt ? deliveredAt - acceptedAt : null;
+  const deliverTone: ToneKey = !acceptedAt ? 'idle' : deliverTook !== null ? (deliverTook > fulfillMs ? 'late' : 'good') : fulfillLeftMs <= 0 ? 'late' : head.tone;
 
   return (
     <div className={`rounded-xl border p-3 ${tone.panel}`}>
@@ -132,11 +133,11 @@ const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, re
           chipTone={TONES[acceptTone].chip}
         />
         <Cell
-          label="Completion"
-          icon={<Truck className="h-3 w-3" />}
-          value={deliverTook !== null ? formatClock(deliverTook) : remainingText(totalLeftMs)}
+          label="Fulfillment"
+          icon={<CheckCircle2 className="h-3 w-3" />}
+          value={!acceptedAt ? formatClock(fulfillMs) : deliverTook !== null ? formatClock(deliverTook) : remainingText(fulfillLeftMs)}
           valueTone={TONES[deliverTone].text}
-          chip={`SLA: ${(acceptMins || 0) + (deliverMins || 0)}m`}
+          chip={acceptedAt ? `SLA: ${deliverMins || 0}m` : 'After accept'}
           chipTone={TONES[deliverTone].chip}
         />
       </div>

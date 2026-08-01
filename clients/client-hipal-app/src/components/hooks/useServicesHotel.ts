@@ -9,8 +9,12 @@ export interface IService {
   image: string;
   availability?: boolean;
   sequence?: number;
+  /** Rename-proof id for system services (e.g. "CHECKOUT"). */
+  systemKey?: string;
   /** Estimated "should be delivered by" time in minutes (already includes acceptance). */
   avgDeliveryTime?: number;
+  /** Resolution/completion time in minutes — shown to the guest as the ETA. */
+  avgCompletionTime?: number;
 }
 
 export interface IServiceCategory {
@@ -20,6 +24,8 @@ export interface IServiceCategory {
   serviceIds: IService[];
   description?: string;
   sequence?: number;
+  /** Rename-proof id for system categories (e.g. "QUICK_ACTIONS"). */
+  systemKey?: string;
 }
 
 export const useGetServiceCategories = (businessId?: string) => {

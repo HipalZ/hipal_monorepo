@@ -30,11 +30,16 @@ const CSV_HEADERS = [
   'Requested At',
   'Accepted By Staff',
   'Accepted At',
-  'Delivered By Staff',
-  'Delivered At',
+  'Completed By Staff',
+  'Completed At',
   'Acceptance Time',
-  'Delivery Time',
-  'Total Resolution Time',
+  'Fulfillment Time',
+  'Total Time',
+  'Standard Acceptance Time (min)',
+  'Fulfillment SLA (min)',
+  'Total Standard SLA (min)',
+  'Total Actual Time (min)',
+  'SLA Performance',
   'Escalated',
   'Escalation Level',
   'Crossed Escalation SLA',
@@ -130,7 +135,7 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 const slaAnalysis = (alert: any) => {
   const services = alert?.serviceIds ?? [];
   const accSla = services.reduce((sum: number, s: any) => sum + (s?.avgAcceptanceTime ?? 0), 0);
-  const delSla = services.reduce((sum: number, s: any) => sum + (s?.avgDeliveryTime ?? 0), 0);
+  const delSla = services.reduce((sum: number, s: any) => sum + (s?.avgCompletionTime ?? s?.avgDeliveryTime ?? 0), 0);
   const totalSla = accSla + delSla;
   const totalActual =
     alert?.createdAt && alert?.deliveredAt && alert.deliveredAt >= alert.createdAt ? (alert.deliveredAt - alert.createdAt) / 60000 : null;
@@ -245,7 +250,10 @@ const hotelReportRouter = new Hono()
         createdAt: { $gte: from, $lte: to },
         alertProgress: { $in: ['DELIVERED', 'RESOLVED'] },
       })
-        .populate({ path: 'serviceIds', select: 'name' })
+        .populate({
+          path: 'serviceIds',
+          select: 'name avgAcceptanceTime avgCompletionTime avgDeliveryTime',
+        })
         .populate({ path: 'createdBy', select: 'name phone' })
         .populate({ path: 'acceptedBy', select: 'name phone' })
         .populate({ path: 'deliveredBy', select: 'name phone' })

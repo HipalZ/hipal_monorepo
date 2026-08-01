@@ -56,6 +56,7 @@ const defaultHotelOptions = [
   { label: 'roomNumber', value: '402' },
   { label: 'staffName', value: 'John' },
   { label: 'chatLink', value: 'https://business name.com' },
+  { label: 'checkoutEtaTime', value: '10:15 AM' },
   { label: 'googleReviewLink', value: 'Review Link' },
   { label: 'serviceRejectionReason', value: 'Maintainance Issue' },
 ];

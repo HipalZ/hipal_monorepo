@@ -257,7 +257,7 @@ const UnifiedReport = () => {
       `Still Open: ${summary.open}`,
       `Escalated: ${summary.escalated}`,
       `Avg Time to Accept (min): ${round(summary.avgAccept)}`,
-      `Avg Time to Complete (min): ${round(summary.avgComplete)}`,
+      `Avg Fulfillment Time (min): ${round(summary.avgComplete)}`,
       `Avg Rating: ${summary.avgRating == null ? '—' : `${summary.avgRating} (${summary.reviewed} review${summary.reviewed === 1 ? '' : 's'})`}`,
       `Date Range: ${dateTime(from)} to ${dateTime(to)}`,
       `Generated At: ${dateTime(Date.now())}`,
@@ -277,8 +277,8 @@ const UnifiedReport = () => {
       'Requested At',
       'Acceptance Time (min)',
       'Standard Acceptance Time (min)',
-      'Completion Time (min)',
-      'Standard Completion Time (min)',
+      'Fulfillment Time (min)',
+      'Fulfillment SLA (min)',
       'Total Time (min)',
       'Total Standard SLA (min)',
       'SLA Performance',
@@ -359,18 +359,25 @@ const UnifiedReport = () => {
         ) : (
           <>
             {/* KPIs — shared always; type-specific only when a single source is in view */}
+            <section className={`${card} flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-xs text-slate-500`}>
+              <span className="font-semibold text-slate-700">SLA terms</span>
+              <span>Response: raised to accepted</span>
+              <span>Fulfillment: accepted to completed</span>
+              <span>Total: raised to completed</span>
+            </section>
+
             <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               <Kpi
                 label="Within SLA"
                 value={summary.onTimeRate == null ? '—' : summary.onTimeRate}
                 unit={summary.onTimeRate == null ? undefined : '%'}
                 tone={summary.onTimeRate == null ? undefined : summary.onTimeRate >= 80 ? 'text-emerald-600' : 'text-[#8a2f2f]'}
-                sub={summary.judged ? `${summary.onTime} of ${summary.judged} delivered` : 'no delivered requests'}
+                sub={summary.judged ? `${summary.onTime} of ${summary.judged} completed` : 'no completed requests'}
               />
               <Kpi label="Requests" value={summary.total} sub="service activity in range" />
               <Kpi label="Avg time to accept" value={fmt(summary.avgAccept)} sub="from raise to a staff claim" />
               <Kpi
-                label="Completion SLA"
+                label="Fulfillment SLA"
                 value={fmtSlaResult(summary.avgCompleteSlaResult)}
                 tone={slaResultTone(summary.avgCompleteSlaResult)}
                 sub="avg result vs each service SLA"

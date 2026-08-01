@@ -169,7 +169,7 @@ const MemoHistoryHotel = () => {
         'Completed By': item?.deliveredBy?.name || '',
         'Completed At': formatExcelTimestamp(item?.deliveredAt),
         'Completion Time After Acceptance (Min)': getTimeDifferenceInMinutes(item?.acceptedAt, item?.deliveredAt),
-        'Total Resolution Time (Min)': getTimeDifferenceInMinutes(item?.createdAt, item?.deliveredAt),
+        'Total Time (Min)': getTimeDifferenceInMinutes(item?.createdAt, item?.deliveredAt),
       }));
 
       const uniqueGuests = new Set(curatedServiceRows.map((row) => row['Guest Name']).filter(Boolean)).size;

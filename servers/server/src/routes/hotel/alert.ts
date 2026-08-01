@@ -144,7 +144,7 @@ const sendPushNotificationForNotDeliverd = async (token: string, businessId: str
   }
 };
 
-const scheduleAlertUpdate = (
+export const scheduleAlertUpdate = (
   alertId: string,
   avgTime: number,
   businessId: string,
@@ -720,7 +720,7 @@ const scheduleLevel3Alert = (
 
 const PUSH_INTERVAL_MS = 59 * 1000;
 
-const scheduleAlert = (businessId: string, roomName: string, alertId: string, serviceName: string, validStaffIds: string[]) => {
+export const scheduleAlert = (businessId: string, roomName: string, alertId: string, serviceName: string, validStaffIds: string[]) => {
   const intervalId = setInterval(async () => {
     try {
       const alertData = await HotelAlert.findById(alertId).select('alertProgress').lean();
@@ -820,11 +820,20 @@ const hotelAlertRouter = new Hono()
         ],
       };
 
+      // Checkout requests route to front office by room assignment, not by
+      // service membership, so surface them regardless of role.serviceIds.
+      if (role === 'FRONT_OFFICE') {
+        alertQuery.$or.push({
+          alertProgress: { $in: activeStatuses },
+          message: { $regex: '^CHECKOUT_REQUEST::' },
+        });
+      }
+
       // Step 4: Fetch and populate alerts
       const populateFields = [
         {
           path: 'serviceIds',
-          select: 'name image avgAcceptanceTime avgDeliveryTime',
+          select: 'name image avgAcceptanceTime avgCompletionTime avgDeliveryTime',
         },
         { path: 'createdBy', select: 'name phone' },
         { path: 'acceptedBy', select: 'name phone' },
@@ -879,7 +888,7 @@ const hotelAlertRouter = new Hono()
       })
         .populate({
           path: 'serviceIds',
-          select: 'name avgAcceptanceTime avgDeliveryTime',
+          select: 'name avgAcceptanceTime avgCompletionTime avgDeliveryTime',
         })
         .populate({ path: 'createdBy', select: 'name phone' })
         .populate({ path: 'acceptedBy', select: 'name phone' })
@@ -914,7 +923,7 @@ const hotelAlertRouter = new Hono()
       const alerts = await HotelAlert.find(alertQuery)
         .populate({
           path: 'serviceIds',
-          select: 'name avgAcceptanceTime avgDeliveryTime',
+          select: 'name avgAcceptanceTime avgCompletionTime avgDeliveryTime',
         })
         .populate({ path: 'createdBy', select: 'name phone' })
         .populate({ path: 'acceptedBy', select: 'name phone' })
@@ -1011,7 +1020,7 @@ const hotelAlertRouter = new Hono()
         .populate({ path: 'deliveredBy', select: 'name phone' })
         .populate({
           path: 'serviceIds',
-          select: 'name avgDeliveryTime avgAcceptanceTime',
+          select: 'name avgCompletionTime avgDeliveryTime avgAcceptanceTime',
         })
         .lean();
 
@@ -1023,7 +1032,7 @@ const hotelAlertRouter = new Hono()
         let n = 0;
         for (const s of serviceIds) {
           aSum += Number(s?.avgAcceptanceTime ?? 0);
-          dSum += Number(s?.avgDeliveryTime ?? 0);
+          dSum += Number(s?.avgCompletionTime ?? s?.avgDeliveryTime ?? 0);
           n += 1;
         }
         return {
@@ -1530,9 +1539,13 @@ const hotelAlertRouter = new Hono()
           timeZone: 'Asia/Kolkata',
         });
 
+        const isCheckoutRequest = alert.message?.startsWith('CHECKOUT_REQUEST::') ?? false;
+
         const roomChatReply = new HotelRoomChatReply({
           action: false,
-          description: `Thank you! We're preparing your request — it'll be ready by ${formattedTime}. 🙏`,
+          description: isCheckoutRequest
+            ? `Please visit the front office by ${formattedTime}. 🙏`
+            : `Thank you! We're preparing your request — it'll be ready by ${formattedTime}. 🙏`,
           roomChatId: roomChat._id,
           userId: userId,
           status: 'NORMAL',
@@ -1599,9 +1612,11 @@ const hotelAlertRouter = new Hono()
         const avgCompletionTime = service?.avgCompletionTime || 15;
         const deliveredFast = timeTakenMins < avgCompletionTime;
 
-        const deliveryAck = deliveredFast
-          ? `Delighted to serve you — delivered in just ${timeTakenMins} min, ahead of schedule! 🎉`
-          : `Delivered with care in ${timeTakenMins} min — thank you for your patience. 😊`;
+        const deliveryAck = alert.message?.startsWith('CHECKOUT_REQUEST::')
+          ? `Your checkout is complete — thank you for staying with us! 🙏`
+          : deliveredFast
+            ? `Delighted to serve you — delivered in just ${timeTakenMins} min, ahead of schedule! 🎉`
+            : `Delivered with care in ${timeTakenMins} min — thank you for your patience. 😊`;
 
         const roomChatReply = new HotelRoomChatReply({
           action: true,

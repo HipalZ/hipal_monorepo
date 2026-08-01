@@ -8,6 +8,7 @@ import {
   HotelRoomChatReply,
   HotelRoomSession,
   HotelRoomType,
+  HotelService,
   HotelServiceTemplateMapping,
   HotelZone,
   OutLetInfo,
@@ -34,11 +35,13 @@ import { Types } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { raiseCheckoutTasks } from "../../services/checkoutTasks/raise";
+import { ensureQuickActionDefaults } from "../../services/hotel/quickActions";
 import { DEFAULT_IOS_NOTIFICATION_SOUND } from "../../services/notifications/sound";
 import {
   requireRoomOccupancy,
   requireRoomOccupancyByChatReply,
 } from "../../utils/requireRoomOccupancy";
+import { scheduleAlert, scheduleAlertUpdate } from "./alert";
 import {
   syncHotelCompanionReadModel,
   syncHotelStayCompanions,
@@ -119,6 +122,7 @@ export const hotelTemplateBodySequence = async (
   googleReviewLink: string,
   serviceRejectionReason: string,
   phone: string,
+  checkoutEtaTime?: string,
 ) => {
   const ans = [];
 
@@ -149,14 +153,14 @@ export const hotelTemplateBodySequence = async (
       value = googleReviewLink?.toString();
     } else if (variable === "serviceRejectionReason") {
       value = serviceRejectionReason?.toString();
+    } else if (variable === "checkoutEtaTime") {
+      value = checkoutEtaTime?.toString();
     }
 
-    if (value !== undefined) {
-      ans.push({
-        type: "text",
-        text: value,
-      });
-    }
+    ans.push({
+      type: "text",
+      text: value ?? "",
+    });
   }
 
   return ans;
@@ -177,6 +181,7 @@ export const returnHotelBodyComponents = async (
   serviceRejectionReason: string,
   phone: string,
   imageUrl?: string,
+  checkoutEtaTime?: string,
 ) => {
   // return components for the body
   const parameters = await hotelTemplateBodySequence(
@@ -193,6 +198,7 @@ export const returnHotelBodyComponents = async (
     googleReviewLink,
     serviceRejectionReason,
     phone,
+    checkoutEtaTime,
   );
 
   const components = [];
@@ -1415,13 +1421,63 @@ const roomRouter = new Hono()
           return respond(c, "User not found", true, 404, {});
         }
 
+        // The system Checkout quick action carries the guest-facing checkout
+        // ETA minutes. systemKey keeps this stable even if admins rename it.
+        await ensureQuickActionDefaults(roomExists.businessId.toString());
+        const checkoutService = await HotelService.findOne({
+          businessId: roomExists.businessId,
+          systemKey: "CHECKOUT",
+        }).lean();
+        const checkoutCompletionMinutes =
+          checkoutService?.avgCompletionTime || 15;
+        const checkoutEtaTime = new Date(
+          Date.now() + checkoutCompletionMinutes * 60 * 1000,
+        ).toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+          timeZone: "Asia/Kolkata",
+        });
+
+        // One active checkout request per room: re-taps, double-taps and
+        // companions all land on the existing request instead of creating
+        // duplicate alerts/chats/escalations. Once front office closes it
+        // (DELIVERED/REJECTED), a new request is allowed.
+        const existingCheckoutRequest = await HotelAlert.findOne({
+          roomId: roomExists._id,
+          message: { $regex: "^CHECKOUT_REQUEST::" },
+          alertProgress: {
+            $in: [
+              "CREATED",
+              "ACCEPTED",
+              "NON_ACCEPTED_AND_WARNING",
+              "NON_ACCEPTED_AND_ESCALATION",
+              "IS_ACCEPTED_AND_WARNING",
+              "IS_ACCEPTED_AND_ESCALATION",
+              "NOT_DELIVERED",
+            ],
+          },
+        })
+          .select("_id alertProgress")
+          .lean();
+
+        if (existingCheckoutRequest) {
+          return respond(c, "Checkout request already in progress", false, 200, {
+            alreadyRequested: true,
+            _id: existingCheckoutRequest._id,
+            alertProgress: existingCheckoutRequest.alertProgress,
+            etaMinutes: checkoutCompletionMinutes,
+          });
+        }
+
         const alert = new HotelAlert({
           businessId: roomExists.businessId,
           userId: userData._id,
           roomId: roomExists._id,
-          message: `Customer ${userData.name} has requested to check out of room ${roomExists.name}`,
+          ...(checkoutService ? { serviceIds: [checkoutService._id] } : {}),
+          message: `CHECKOUT_REQUEST::Customer ${userData.name} has requested to check out of room ${roomExists.name}`,
           createdAt: Date.now(),
-          alertProgress: "MESSAGE",
+          alertProgress: "CREATED",
           createdBy: userId,
         });
 
@@ -1429,6 +1485,22 @@ const roomRouter = new Hono()
 
         if (!alert) {
           throw new Error("Error creating alert");
+        }
+
+        // accept_alert writes guest-facing replies onto this chat.
+        const roomChat = new HotelRoomChat({
+          alertId: alert._id,
+          userId: userId,
+          authCode: roomExists.authCode,
+          roomId: roomExists._id,
+          date: Date.now(),
+          description: "Checkout request created",
+        });
+
+        await roomChat.save({ session });
+
+        if (!roomChat) {
+          throw new Error("Failed to create room chat");
         }
 
         // Send push notification to frontoffice staff assigned to this room
@@ -1454,8 +1526,13 @@ const roomRouter = new Hono()
             notification: true,
           });
 
-          for (const obj of registrationTokens) {
-            if (obj.notification) {
+          // Parallel + fire-and-forget: FCM latency/outages must never block
+          // or fail the checkout request (errors are logged, not thrown).
+          const pushTargets = registrationTokens.filter(
+            (obj) => obj.notification,
+          );
+          void Promise.allSettled(
+            pushTargets.map((obj) => {
               const pushMessage = {
                 token: obj.token,
                 notification: {
@@ -1474,17 +1551,81 @@ const roomRouter = new Hono()
                   },
                 },
               };
-              try {
-                console.log("[hotelRoom:checkoutPush:send]", {
-                  tokenTail: obj.token.slice(-12),
-                  iosSound: pushMessage.apns.payload.aps.sound,
-                });
-                await admin.messaging().send(pushMessage);
-              } catch (error) {
-                console.error("Error sending checkout push notification:", error);
+              console.log("[hotelRoom:checkoutPush:send]", {
+                tokenTail: obj.token.slice(-12),
+                iosSound: pushMessage.apns.payload.aps.sound,
+              });
+              return admin.messaging().send(pushMessage);
+            }),
+          ).then(async (results) => {
+            // FCM-rejected tokens are dead (uninstalled/expired) — prune them
+            // so future pushes only target live devices.
+            const staleTokenIds: unknown[] = [];
+            results.forEach((result, index) => {
+              if (result.status !== "rejected") return;
+              console.error(
+                "Error sending checkout push notification:",
+                result.reason,
+              );
+              const code =
+                result.reason?.code || result.reason?.errorInfo?.code;
+              if (
+                code === "messaging/registration-token-not-registered" ||
+                code === "messaging/invalid-argument"
+              ) {
+                staleTokenIds.push(pushTargets[index]?._id);
               }
+            });
+            if (staleTokenIds.length > 0) {
+              await DeviceToken.deleteMany({
+                _id: { $in: staleTokenIds },
+              }).catch((error) =>
+                console.error("Error pruning stale device tokens:", error),
+              );
+              console.log(
+                `[hotelRoom:checkoutPush:prune] removed ${staleTokenIds.length} stale token(s)`,
+              );
             }
+          });
+        }
+
+        // Same timers as create_alert: warning/escalation at the service's
+        // acceptance/completion minutes, plus a re-ping until accepted.
+        if (checkoutService && frontofficeIds.length > 0) {
+          const avgCompletionTime = checkoutService.avgCompletionTime || 0;
+          const avgAcceptanceTime = checkoutService.avgAcceptanceTime || 0;
+
+          if (avgCompletionTime > 0) {
+            scheduleAlertUpdate(
+              alert._id.toString(),
+              avgCompletionTime,
+              roomExists.businessId.toString(),
+              roomExists.name,
+              checkoutService.name,
+              frontofficeIds,
+              roomExists.staffIds,
+              checkoutService._id.toString(),
+            );
+
+            scheduleAlertUpdate(
+              alert._id.toString(),
+              avgAcceptanceTime,
+              roomExists.businessId.toString(),
+              roomExists.name,
+              checkoutService.name,
+              frontofficeIds,
+              roomExists.staffIds,
+              checkoutService._id.toString(),
+            );
           }
+
+          scheduleAlert(
+            roomExists.businessId.toString(),
+            roomExists.name,
+            alert._id.toString(),
+            checkoutService.name,
+            frontofficeIds,
+          );
         }
 
         if (whatsAppConfig) {
@@ -1537,12 +1678,14 @@ const roomRouter = new Hono()
               roomExists?.name as string,
               "authCode",
               userData?.name as string,
-              "get towel",
-              userData?.name as string,
+              checkoutService?.name || "Checkout",
+              "Front Office",
               "https://chatlink.com",
               outLetInfo?.placeUrl as string,
               "serviceRejectionReason",
               userData?.phone as string,
+              undefined,
+              checkoutEtaTime,
             );
 
             const payload = {
@@ -1562,11 +1705,12 @@ const roomRouter = new Hono()
               },
             };
 
-            try {
-              const respo = await axios.post(url, payload, axiosConfig);
-            } catch (error) {
-              console.error("Error sending message:", error);
-            }
+            // Fire-and-forget: WhatsApp latency must not block the response.
+            void axios
+              .post(url, payload, axiosConfig)
+              .catch((error) =>
+                console.error("Error sending message:", error),
+              );
           }
 
           // const res = await axios.post(
@@ -1615,6 +1759,7 @@ const roomRouter = new Hono()
 
         return respond(c, "request send successfully", false, 200, {
           _id: alert._id,
+          etaMinutes: checkoutCompletionMinutes,
         });
       });
     },

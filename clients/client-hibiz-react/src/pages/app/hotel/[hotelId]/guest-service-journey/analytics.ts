@@ -110,7 +110,7 @@ const minutesBetween = (from?: number | null, to?: number | null): number | null
 export const computePerf = (alert: AlertItem): ServicePerf => {
   const services = alert.serviceIds ?? [];
   const acceptSla = services.reduce((sum, s) => sum + (s?.avgAcceptanceTime ?? 0), 0);
-  const deliverSla = services.reduce((sum, s) => sum + (s?.avgDeliveryTime ?? 0), 0);
+  const deliverSla = services.reduce((sum, s) => sum + (s?.avgCompletionTime ?? s?.avgDeliveryTime ?? 0), 0);
   const acceptMins = minutesBetween(alert.createdAt, alert.acceptedAt);
   const deliverMins = minutesBetween(alert.acceptedAt, alert.deliveredAt);
   const totalActual = minutesBetween(alert.createdAt, alert.deliveredAt);

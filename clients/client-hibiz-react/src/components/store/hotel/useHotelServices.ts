@@ -10,6 +10,7 @@ export interface IService {
   availability?: boolean;
   avgCompletionTime?: number;
   avgAcceptanceTime?: number;
+  avgDeliveryTime?: number;
   sequence?: number;
 }
 export interface ICategoryPayload {
@@ -33,6 +34,9 @@ interface UpdateServicePayload {
   businessId: string;
   availability: boolean;
   serviceId: string;
+  avgAcceptanceTime?: number;
+  avgCompletionTime?: number;
+  avgDeliveryTime?: number;
 }
 
 export interface IServicePayload {
@@ -40,6 +44,9 @@ export interface IServicePayload {
   businessId: string;
   availability: boolean;
   categoryId: string;
+  avgAcceptanceTime?: number;
+  avgCompletionTime?: number;
+  avgDeliveryTime?: number;
 }
 
 export const useGetServiceCategories = (businessId?: string) => {

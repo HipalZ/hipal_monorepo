@@ -61,11 +61,21 @@ export default function ServiceCategoriesSection({
     setIsOpenChat((v) => !v);
   }, [setIsOpenChat]);
 
+  // Quick Actions is a system category rendered separately as quick-action
+  // tiles — it must not appear as a regular browsing category.
+  const browsableCategories = useMemo(
+    () =>
+      (categoriesData || []).filter(
+        (cat) => cat.systemKey !== "QUICK_ACTIONS",
+      ),
+    [categoriesData],
+  );
+
   // Memoize the data transformation and filtering
   const { primary, others } = useMemo(() => {
-    if (!categoriesData) return { primary: [], others: [] };
+    if (!browsableCategories.length) return { primary: [], others: [] };
 
-    const transformed = categoriesData
+    const transformed = browsableCategories
       .map((cat) => ({
         ...cat,
         name: config.nameMap[cat.name] || cat.name,
@@ -75,9 +85,9 @@ export default function ServiceCategoriesSection({
       primary: transformed.filter((cat) => config.primaryKeys.includes(cat.name)),
       others: transformed.filter((cat) => !config.primaryKeys.includes(cat.name)),
     };
-  }, [categoriesData, config]);
+  }, [browsableCategories, config]);
 
-  const hasCategories = Boolean(categoriesData?.length);
+  const hasCategories = Boolean(browsableCategories.length);
 
   return (
     <div className="relative">
@@ -180,7 +190,7 @@ export default function ServiceCategoriesSection({
         show={showSearchModal}
         onClose={handleCloseSearch}
         businessId={businessId}
-        categories={categoriesData ?? []}
+        categories={browsableCategories}
       />
     </div>
   );
