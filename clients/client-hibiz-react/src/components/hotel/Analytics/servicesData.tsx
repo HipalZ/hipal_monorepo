@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { getCartItemLineTotal } from '@/components/utils/cartPricing';
 import { formatDistanceToNow } from 'date-fns';
 import { CheckCircle, Clock, Package, Timer } from 'lucide-react';
 import { memo } from 'react';
@@ -16,7 +17,7 @@ interface Alert {
   deliveredAt: number;
   isEscalated: boolean;
   level: number;
-  cart?: Array<{ quantity: number; dish: { name: string; price: number } }>;
+  cart?: Array<{ quantity: number; dish: { name: string; price: number }; portion?: { name?: string; price?: number } | null; extras?: Array<{ price?: number; quantity?: number }> }>;
 }
 
 interface Props {
@@ -111,7 +112,7 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
                                 <span>
                                   • {item.quantity}x {item.dish.name}
                                 </span>
-                                <span className="font-medium">₹{item.dish.price}</span>
+                                <span className="font-medium">₹{getCartItemLineTotal(item)}</span>
                               </li>
                             ))}
                           </ul>

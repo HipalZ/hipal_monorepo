@@ -24,7 +24,7 @@ export type AlertItem = {
   createdBy?: { _id?: string; name?: string; phone?: string };
   acceptedBy?: StaffRef;
   deliveredBy?: StaffRef;
-  cart?: Array<{ quantity?: number; name?: string; dish?: { name?: string; price?: number } }>;
+  cart?: Array<{ quantity?: number; name?: string; dish?: { name?: string; price?: number }; portion?: { name?: string; price?: number } | null }>;
 };
 
 /**

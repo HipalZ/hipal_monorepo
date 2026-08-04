@@ -2,6 +2,7 @@
 // No React here — everything is deterministic and unit-testable.
 
 import type { reviewResponse } from '@/hooks/hotel/useReviewHook';
+import { getCartItemUnitPrice } from '@/components/utils/cartPricing';
 import { formatDateTime } from './format';
 import type { AlertItem, Companion, GuestImportance, RequestRow, RequestSortKey, ServicePerf } from './model';
 
@@ -141,7 +142,7 @@ const orderItemsLabel = (cart?: AlertItem['cart']): string =>
     ?.map((item) => {
       const name = item?.dish?.name || item?.name || '';
       const qty = item?.quantity ?? 1;
-      const price = item?.dish?.price;
+      const price = getCartItemUnitPrice(item);
       return price != null ? `${name} x${qty} (Rs ${price})` : `${name} x${qty}`;
     })
     .filter(Boolean)
