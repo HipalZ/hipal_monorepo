@@ -1,12 +1,13 @@
 "use client";
 
-import { ArrowLeft, MenuIcon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { MenuItemSkeleton } from "./MenuItemSkeleton";
 import { useGetAllRestaurantMenu } from "@/components/hooks/useGetAllRestaurantMenu";
 import DishesList from "@/components/organisms/category/dishesList";
 import MenuBannerPage from "@/components/organisms/menuBanner";
 import LiveCartHotel from "./LiveCartForRestaurant";
 import type { IMenuLayout } from "@/components/types/businessData";
+import { useSearch } from "@/components/store/useSearch";
 
 interface ILinkHotels {
   _id: string;
@@ -26,12 +27,20 @@ export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
   const { menuLoading, menuData } = useGetAllRestaurantMenu(
     restaurant._id as string,
   );
+  const { setIsSearchActive, setSearchText } = useSearch();
+
+  const handleBack = () => {
+    setSearchText("");
+    setIsSearchActive(false);
+    onBack();
+  };
+
   return (
     <div className="relative">
       <div className="flex items-center mb-4">
         <button
           type="button"
-          onClick={onBack}
+          onClick={handleBack}
           className="p-1 mr-2 rounded-full hover:bg-gray-100"
         >
           <ArrowLeft className="w-5 h-5 text-h-primary" />

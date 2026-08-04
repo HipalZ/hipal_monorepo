@@ -8,6 +8,7 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useTableData from "@/components/store/useTableData";
 import Table from "@/assets/cart/Table.png";
 import Image from "next/image";
+import { Search } from "lucide-react";
 
 function Header({
   categories,
@@ -18,7 +19,13 @@ function Header({
   primaryColor: string;
   secondaryColor: string;
 }) {
-  const { isSearchActive, showHeader } = useSearch();
+  const {
+    isSearchActive,
+    setIsSearchActive,
+    setSearchText,
+    setShowHeader,
+    showHeader,
+  } = useSearch();
   const { hiCode } = useTableData();
 
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
@@ -49,6 +56,12 @@ function Header({
     return null;
   }
 
+  const openDishSearch = () => {
+    setSearchText("");
+    setIsSearchActive(true);
+    setShowHeader(true);
+  };
+
   return (
     <motion.div
       style={{
@@ -76,12 +89,28 @@ function Header({
         </h3>
         {outletInfo?.outLetType !== "OTHER" && (
           <motion.div
-            className="mt-2 mr-2"
+            className="mt-2 flex w-full items-center gap-2 px-2"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.3 }}
           >
-            <QuickFilter />
+            <div className="min-w-0 flex-1 overflow-x-auto hide-scrollbar">
+              <QuickFilter />
+            </div>
+            <button
+              type="button"
+              onClick={openDishSearch}
+              aria-label="Search dishes"
+              className="flex shrink-0 items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-1 text-sm font-semibold text-black"
+              style={{
+                color: primaryColor,
+                borderColor: `${primaryColor}30`,
+              }}
+              disabled={isSearchActive}
+            >
+              <Search className="h-4 w-4" />
+              <span>Search</span>
+            </button>
           </motion.div>
         )}
       </div>
