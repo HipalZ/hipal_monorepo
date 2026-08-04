@@ -2,7 +2,7 @@
 // No React here — everything is deterministic and unit-testable.
 
 import type { reviewResponse } from '@/hooks/hotel/useReviewHook';
-import { getCartItemUnitPrice } from '@/components/utils/cartPricing';
+import { getCartItemLineTotal, getCartItemUnitPrice } from '@/components/utils/cartPricing';
 import { formatDateTime } from './format';
 import type { AlertItem, Companion, GuestImportance, RequestRow, RequestSortKey, ServicePerf } from './model';
 
@@ -142,8 +142,17 @@ const orderItemsLabel = (cart?: AlertItem['cart']): string =>
     ?.map((item) => {
       const name = item?.dish?.name || item?.name || '';
       const qty = item?.quantity ?? 1;
-      const price = getCartItemUnitPrice(item);
-      return price != null ? `${name} x${qty} (Rs ${price})` : `${name} x${qty}`;
+      const portionName = item?.portion?.name ? ` - ${item.portion.name}` : '';
+      const extrasLabel =
+        item?.extras
+          ?.map((extra) => `${extra?.name}${extra?.quantity && extra.quantity > 1 ? ` x${extra.quantity}` : ''}`)
+          .filter(Boolean)
+          .join(', ') || '';
+      const unitPrice = getCartItemUnitPrice(item);
+      const lineTotal = getCartItemLineTotal(item);
+      return unitPrice != null
+        ? `${name}${portionName}${extrasLabel ? ` + ${extrasLabel}` : ''} x${qty} @ Rs ${unitPrice} = Rs ${lineTotal}`
+        : `${name}${portionName}${extrasLabel ? ` + ${extrasLabel}` : ''} x${qty}`;
     })
     .filter(Boolean)
     .join(' | ') || '';

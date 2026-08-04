@@ -184,7 +184,7 @@ const QuickFilter = () => {
 
   return (
     <div>
-      <section className="flex px-2 space-x-2 text-sm justify-evenly text-nowrap">
+      <section className="flex px-2 space-x-2 text-sm justify-between text-nowrap">
         {outletInfo?.veg && (
           <FilterOption
             isActive={isActiveDishType.toLowerCase() === "veg"}
