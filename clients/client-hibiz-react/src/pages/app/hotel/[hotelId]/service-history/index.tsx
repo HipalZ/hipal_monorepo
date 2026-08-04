@@ -7,6 +7,7 @@ import { useHistoryAlerts } from '@/components/store/hotel/useHotelApis';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getCartItemUnitPrice } from '@/components/utils/cartPricing';
 import { ChevronDown, ChevronUp, Clock, Download, Home, Package, Search, User } from 'lucide-react';
 import { memo, useCallback, useMemo, useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -90,7 +91,7 @@ const MemoHistoryHotel = () => {
       .map((item) => {
         const dishName = item?.dish?.name || '';
         const quantity = item?.quantity ?? 1;
-        const price = item?.dish?.price;
+        const price = getCartItemUnitPrice(item);
 
         if (price !== undefined && price !== null) {
           return `${dishName} x${quantity} (₹${price})`;

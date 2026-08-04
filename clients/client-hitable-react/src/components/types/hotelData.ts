@@ -110,7 +110,7 @@ export interface Alert {
   createdBy: CreatedBy;
   acceptedBy: AcceptedBy;
   roomId: Room;
-  cart: string[];
+  cart: Cart[];
   __v: number;
   acceptedAt: number;
   deliveredAt: number;
@@ -149,7 +149,13 @@ export interface RoomChatReply {
 
 export interface Cart {
   id: string;
-  portion: string | null;
+  portion: {
+    name: string;
+    price: number;
+    default?: boolean;
+    portionTypes?: string[];
+    _id?: string;
+  } | null;
   extras: any[];
   quantity: number;
   dish: {

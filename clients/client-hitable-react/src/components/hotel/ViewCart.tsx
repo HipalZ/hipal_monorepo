@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ShoppingCart } from 'lucide-react';
 import { useHotelStore } from '../store/useHotelStore';
 import { lazy, memo } from "react";
+import { getCartItemExtrasTotal, getCartItemLineTotal, getCartItemUnitPrice } from "../utils/cartPricing";
 
 const FoodType = lazy(() => import("../atoms/dishType"));
 
@@ -22,14 +23,9 @@ const MemoViewCart = () => {
             {/* Cart Items */}
             <div className="px-4 py-2">
                 {cartData?.map((item) => {
-                    const dishPrice = item?.dish?.price || 0;
-                    const portionPrice = item?.portion?.price || 0;
-                    const extrasPrice = item?.extras?.reduce(
-                        (acc, extra) => acc + (extra.price || 0) * (extra.quantity || 1),
-                        0
-                    );
-
-                    const totalPrice = (dishPrice + portionPrice + extrasPrice) * item.quantity;
+                    const unitPrice = getCartItemUnitPrice(item);
+                    const extrasPrice = getCartItemExtrasTotal(item);
+                    const totalPrice = getCartItemLineTotal(item);
 
                     return (
                         <div key={item?.id} className="py-2 border-b last:border-b-0 border-gray-100">
@@ -65,7 +61,7 @@ const MemoViewCart = () => {
                             <div className="flex items-center justify-between mt-1">
                                 <div className="flex items-center">
                                     <span className="text-xs text-gray-500">
-                                        ₹{dishPrice + portionPrice + extrasPrice} × {item.quantity}
+                                        ₹{unitPrice + extrasPrice} × {item.quantity}
                                     </span>
                                 </div>
                             </div>

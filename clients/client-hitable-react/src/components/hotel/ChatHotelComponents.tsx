@@ -18,6 +18,7 @@ import type {
   Service,
 } from "../types/hotelData";
 import FoodType from "../atoms/dishType";
+import { getCartItemLineTotal, getCartItemUnitPrice } from "../utils/cartPricing";
 
 export const ChatHeader = ({
   hotelName,
@@ -183,7 +184,7 @@ const ChatReplyMessage = ({
 
 const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
   const totalPrice = cart.reduce(
-    (sum, item) => sum + item.dish.price * item.quantity,
+    (sum, item) => sum + getCartItemLineTotal(item),
     0,
   );
   return (
@@ -230,14 +231,14 @@ const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
                 )}
               </div>
               <div className={"text-right text-gray-900"}>
-                ₹{item?.dish?.price * item?.quantity}
+                ₹{getCartItemLineTotal(item)}
               </div>
             </div>
 
             <div className="flex items-center justify-between mt-1">
               <div className="flex items-center">
                 <span className={"text-xs text-gray-500"}>
-                  ₹{item?.dish?.price} × {item?.quantity}
+                  ₹{getCartItemUnitPrice(item)} × {item?.quantity}
                 </span>
               </div>
               <span className="text-sm font-medium">Qty: {item?.quantity}</span>

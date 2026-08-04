@@ -4,6 +4,7 @@ import { ShoppingCart, Trash2 } from "lucide-react";
 import FoodType from "../atoms/dishType";
 import { memo } from "react";
 import type { Cart } from "../types/hotelData";
+import { getCartItemLineTotal, getCartItemUnitPrice } from "../utils/cartPricing";
 
 interface CartDetailsHotelProps {
     localCart: Cart[]
@@ -17,7 +18,7 @@ const MemoCartDetailsHotel = ({ localCart, setLocalCart, readOnly }: CartDetails
         setLocalCart(updatedCart)
     }
 
-    const totalPrice = localCart.reduce((sum, item) => sum + item.dish.price * item.quantity, 0)
+    const totalPrice = localCart.reduce((sum, item) => sum + getCartItemLineTotal(item), 0)
 
     return (
         <motion.div
@@ -57,13 +58,13 @@ const MemoCartDetailsHotel = ({ localCart, setLocalCart, readOnly }: CartDetails
                                         </div>
                                     )}
                                 </div>
-                                <div className="text-right text-gray-900">₹{item?.dish?.price * item?.quantity}</div>
+                                <div className="text-right text-gray-900">₹{getCartItemLineTotal(item)}</div>
                             </div>
 
                             <div className="flex items-center justify-between mt-1">
                                 <div className="flex items-center">
                                     <span className="text-xs text-gray-500">
-                                        ₹{item?.dish?.price} × {item?.quantity}
+                                        ₹{getCartItemUnitPrice(item)} × {item?.quantity}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">

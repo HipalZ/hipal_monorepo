@@ -51,7 +51,13 @@ export interface FilterType {
 
 export interface Cart {
   id: string;
-  portion: string | null;
+  portion: {
+    name: string;
+    price: number;
+    default?: boolean;
+    portionTypes?: string[];
+    _id?: string;
+  } | null;
   extras: any[];
   quantity: number;
   dish: {
