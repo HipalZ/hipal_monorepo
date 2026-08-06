@@ -19,7 +19,10 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
-    body: payload.notification.body,
+    body: payload.notification?.body || "You have a new staff alert.",
+    data: payload.data || {},
+    icon: "/app-icon-192.png",
+    badge: "/app-icon-192.png",
   };
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
