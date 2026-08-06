@@ -10,6 +10,7 @@ import CommonBottomButton from "@/components/atoms/bottomButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { useLogin } from "@/components/store/useLogin";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { hasGuestContactDetails } from "./guestContactGuard";
@@ -37,6 +38,8 @@ type WakeUpRequest = {
 interface HotelAlarmReminderProps {
   businessId: string;
   room?: string;
+  triggerClassName?: string;
+  triggerLabel?: string;
 }
 
 const MAX_ACTIVE_REQUESTS = 1;
@@ -65,7 +68,7 @@ function getWakeUpTimeLabel(request: WakeUpRequest) {
 
 function isActiveWakeUp(request: WakeUpRequest) {
   return ["REQUESTED", "ACKNOWLEDGED", "DUE"].includes(
-    request.status || "REQUESTED",
+    request.status || "REQUESTED"
   );
 }
 
@@ -81,7 +84,12 @@ function getStatusLabel(request: WakeUpRequest) {
   return "Waiting for front office acknowledgement.";
 }
 
-export default function HotelAlarmReminder({ businessId, room }: HotelAlarmReminderProps) {
+export default function HotelAlarmReminder({
+  businessId,
+  room,
+  triggerClassName,
+  triggerLabel,
+}: HotelAlarmReminderProps) {
   const userDetails = useLogin((s) => s.userDetails);
   const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
   const [showPopup, setShowPopup] = useState(false);
@@ -90,7 +98,9 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
   const [note, setNote] = useState("Remind Me");
   const [saving, setSaving] = useState(false);
   const canFetchWakeUps =
-    showPopup && hasGuestContactDetails(userDetails) && Boolean(businessId && room);
+    showPopup &&
+    hasGuestContactDetails(userDetails) &&
+    Boolean(businessId && room);
 
   const resetForm = useCallback(() => {
     const nextHour = new Date(Date.now() + 60 * 60 * 1000);
@@ -121,7 +131,7 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
         guestName: userDetails?.name || "Guest",
         guestPhone: userDetails?.phone || "",
         roomName: room || "",
-        triggerAt: request.triggerAt,
+        triggerAt: request.triggerAt || "",
         note: request.note,
         notifyFrontOffice: true,
       },
@@ -130,12 +140,14 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
     return response.json();
   };
 
-  const { data: requests = [], refetch: refetchWakeUps } = useQuery({
+  const { data: requests = [], refetch: refetchWakeUps } = useQuery<
+    WakeUpRequest[]
+  >({
     queryKey: ["hotel-wake-up-calls", businessId, room, userDetails?._id],
     enabled: canFetchWakeUps,
     refetchInterval: canFetchWakeUps ? 10000 : false,
     refetchIntervalInBackground: false,
-    queryFn: async () => {
+    queryFn: async (): Promise<WakeUpRequest[]> => {
       const response = await apiRpc.hotel.alarm.active.$get({
         query: {
           businessId,
@@ -149,7 +161,7 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
         return [];
       }
 
-      return result.data.map((item: WakeUpRequest) => ({
+      return (result.data as WakeUpRequest[]).map((item) => ({
         id: item.id,
         note: item.note || "Wake-up call",
         wakeUpAt: item.wakeUpAt,
@@ -165,13 +177,18 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
   });
 
   const activeRequests = requests.filter(isActiveWakeUp);
-  const historyRequests = requests.filter((request) => !isActiveWakeUp(request));
+  const historyRequests = requests.filter(
+    (request) => !isActiveWakeUp(request)
+  );
 
   const handleConfirm = async () => {
     if (!requireGuestDetails()) return;
 
     const triggerAt = new Date(`${wakeDate}T${wakeTime}`);
-    if (Number.isNaN(triggerAt.getTime()) || triggerAt.getTime() <= Date.now()) {
+    if (
+      Number.isNaN(triggerAt.getTime()) ||
+      triggerAt.getTime() <= Date.now()
+    ) {
       toast.error("Please select a future wake-up call time");
       return;
     }
@@ -212,11 +229,15 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
       <Button
         type="button"
         onClick={handleOpen}
-        size="icon"
+        size={triggerLabel ? "default" : "icon"}
         aria-label="Request wake-up call"
-        className="relative h-11 w-11 rounded-full border border-white/70 bg-black text-white shadow-[0_6px_14px_rgba(0,0,0,0.18)] transition-all duration-300 hover:scale-[1.05] hover:bg-[#1F1F1F] active:scale-95"
+        className={cn(
+          "relative h-11 w-11 rounded-full border border-white/70 bg-black text-white shadow-[0_6px_14px_rgba(0,0,0,0.18)] transition-all duration-300 hover:scale-[1.05] hover:bg-[#1F1F1F] active:scale-95",
+          triggerClassName
+        )}
       >
         <AlarmClock size={18} />
+        {triggerLabel && <span>{triggerLabel}</span>}
         {activeRequests.length > 0 && (
           <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-[#E85D3A] px-1 text-[0.68rem] font-bold leading-none">
             {activeRequests.length}
@@ -224,7 +245,12 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
         )}
       </Button>
 
-      <BottomPopUp show={showPopup} onClose={() => setShowPopup(false)} height="auto">
+      <BottomPopUp
+        show={showPopup}
+        hide
+        onClose={() => setShowPopup(false)}
+        height="auto"
+      >
         <div className="max-h-[88dvh] overflow-y-auto px-5 pb-24 pt-5 poppins">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div>
@@ -259,7 +285,9 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
               </p>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="wake-date" className="poppins text-[#111111]">Date</Label>
+                  <Label htmlFor="wake-date" className="poppins text-[#111111]">
+                    Date
+                  </Label>
                   <Input
                     id="wake-date"
                     type="date"
@@ -270,7 +298,9 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="wake-time" className="poppins text-[#111111]">Time</Label>
+                  <Label htmlFor="wake-time" className="poppins text-[#111111]">
+                    Time
+                  </Label>
                   <Input
                     id="wake-time"
                     type="time"
@@ -283,7 +313,9 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="wake-note" className="poppins text-[#111111]">Wake-up note</Label>
+              <Label htmlFor="wake-note" className="poppins text-[#111111]">
+                Wake-up note
+              </Label>
               <Input
                 id="wake-note"
                 value={note}
@@ -299,7 +331,8 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
                 Front office will be notified
               </p>
               <p className="mt-1 poppins text-[0.76rem] leading-relaxed text-[#6B625A]">
-                They can track, acknowledge, and mark the wake-up call as informed.
+                They can track, acknowledge, and mark the wake-up call as
+                informed.
               </p>
             </div>
 
@@ -317,10 +350,16 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
                       <p className="poppins text-[0.85rem] font-semibold text-[#2F2924]">
                         {getWakeUpTimeLabel(request)}
                       </p>
-                      <p className="poppins text-[0.75rem] text-[#6B625A]">{request.note}</p>
+                      <p className="poppins text-[0.75rem] text-[#6B625A]">
+                        {request.note}
+                      </p>
                       <p
                         className={`mt-1 poppins text-[0.72rem] font-semibold ${
-                          request.status === "DUE" ? "text-[#C2410C]" : request.acceptedBy?.name ? "text-[#198754]" : "text-[#A46A23]"
+                          request.status === "DUE"
+                            ? "text-[#C2410C]"
+                            : request.acceptedBy?.name
+                            ? "text-[#198754]"
+                            : "text-[#A46A23]"
                         }`}
                       >
                         {getStatusLabel(request)}
@@ -344,7 +383,9 @@ export default function HotelAlarmReminder({ businessId, room }: HotelAlarmRemin
                     <p className="poppins text-[0.85rem] font-semibold text-[#2F2924]">
                       {getWakeUpTimeLabel(request)}
                     </p>
-                    <p className="poppins text-[0.75rem] text-[#6B625A]">{request.note}</p>
+                    <p className="poppins text-[0.75rem] text-[#6B625A]">
+                      {request.note}
+                    </p>
                     <p className="mt-1 poppins text-[0.72rem] font-semibold text-[#198754]">
                       {getStatusLabel(request)}
                     </p>

@@ -53,11 +53,8 @@ export const DishRow = memo(function DishRow({
         </div>
         {Number(dish.avgPrepTime) > 0 && (
           <div className="mt-1 inline-flex max-w-full items-center gap-1.5 border border-black bg-amber-100 px-2 py-1 text-[0.625rem] font-bold text-amber-950 shadow-[2px_2px_0_#000000]">
-            <Bike className="h-3 w-3 shrink-0" />
-            <span className="shrink-0">DELIVERY WITHIN :</span>
-            <span className="shrink-0 rounded-sm bg-white px-1 py-0.5">
-              {dish.avgPrepTime} MIN
-            </span>
+            <span className="shrink-0">Delivery Within :</span>
+            <span className="shrink-0 rounded-sm bg-white px-1 py-0.5">{dish.avgPrepTime} MIN</span>
           </div>
         )}
         {selectedMenuId !== 'ALL' && displayPrice !== dish.price && (

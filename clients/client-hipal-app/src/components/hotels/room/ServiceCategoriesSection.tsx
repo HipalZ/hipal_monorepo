@@ -3,17 +3,14 @@ import { useGetServiceCategories } from "@/components/hooks/useServicesHotel";
 import ServiceCategoryCard from "./ServiceCategoryCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import orderfood from "@/assets/hotel/orderfood.jpeg";
-import { motion } from "framer-motion";
 import housekeeping from "@/assets/hotel/housekeeping.jpeg";
 import maintainance from "@/assets/hotel/maintainace.jpeg";
 import frontoffice from "@/assets/hotel/frontoffice.jpeg";
 import type { IMenuLayout } from "@/components/types/businessData";
-import { BedDouble, MessageCircle, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useHotelTemp } from "@/components/store/useHotelTemp";
+import { Search } from "lucide-react";
 import { useLogin } from "@/components/store/useLogin";
 import SearchModal from "./SearchModal";
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import HotelAlarmReminder from "./HotelAlarmReminder";
 
 interface ServiceCategoriesSectionProps {
@@ -27,63 +24,68 @@ export default function ServiceCategoriesSection({
   menuId,
   room,
 }: ServiceCategoriesSectionProps) {
-  const { categoriesLoading, categoriesData } = useGetServiceCategories(businessId);
-  const setIsOpenChat = useHotelTemp((s) => s.setIsOpenChat);
+  const { categoriesLoading, categoriesData } =
+    useGetServiceCategories(businessId);
   const userDetails = useLogin((s) => s.userDetails);
   const [showSearchModal, setShowSearchModal] = useState(false);
 
   // Memoize static configuration objects to prevent unnecessary re-renders
-  const config = useMemo(() => ({
-    categoryImages: {
-      FOOD: orderfood,
-      HOUSE_KEEPING: housekeeping,
-      FRONT_OFFICE: frontoffice,
-      OTHERS: maintainance,
-    },
-    categoryDescriptions: {
-      FOOD: "Order Delicious Food",
-      FRONT_OFFICE: "24*7 Support",
-      HOUSE_KEEPING: "cleaning services",
-      OTHERS: "Repairs & fixes",
-    },
-    nameMap: {
-      FOOD: "ORDER_FOOD",
-      MAINTENANCE: "MAINTAINANCE",
-    } as Record<string, string>,
-    primaryKeys: ["ORDER_FOOD", "HOUSE_KEEPING", "MAINTAINANCE", "FRONT_OFFICE"],
-  }), []);
+  const config = useMemo(
+    () => ({
+      categoryImages: {
+        FOOD: orderfood,
+        HOUSE_KEEPING: housekeeping,
+        FRONT_OFFICE: frontoffice,
+        OTHERS: maintainance,
+      },
+      categoryDescriptions: {
+        FOOD: "Order Delicious Food",
+        FRONT_OFFICE: "24*7 Support",
+        HOUSE_KEEPING: "cleaning services",
+        OTHERS: "Repairs & fixes",
+      },
+      nameMap: {
+        FOOD: "ORDER_FOOD",
+        MAINTENANCE: "MAINTAINANCE",
+      } as Record<string, string>,
+      primaryKeys: [
+        "ORDER_FOOD",
+        "HOUSE_KEEPING",
+        "MAINTAINANCE",
+        "FRONT_OFFICE",
+      ],
+    }),
+    []
+  );
 
   // Stable callbacks for UI actions
   const handleOpenSearch = useCallback(() => setShowSearchModal(true), []);
   const handleCloseSearch = useCallback(() => setShowSearchModal(false), []);
-  
-  const toggleChat = useCallback(() => {
-    setIsOpenChat((v) => !v);
-  }, [setIsOpenChat]);
 
   // Quick Actions is a system category rendered separately as quick-action
   // tiles — it must not appear as a regular browsing category.
   const browsableCategories = useMemo(
     () =>
-      (categoriesData || []).filter(
-        (cat) => cat.systemKey !== "QUICK_ACTIONS",
-      ),
-    [categoriesData],
+      (categoriesData || []).filter((cat) => cat.systemKey !== "QUICK_ACTIONS"),
+    [categoriesData]
   );
 
   // Memoize the data transformation and filtering
   const { primary, others } = useMemo(() => {
     if (!browsableCategories.length) return { primary: [], others: [] };
 
-    const transformed = browsableCategories
-      .map((cat) => ({
-        ...cat,
-        name: config.nameMap[cat.name] || cat.name,
-      }));
+    const transformed = browsableCategories.map((cat) => ({
+      ...cat,
+      name: config.nameMap[cat.name] || cat.name,
+    }));
 
     return {
-      primary: transformed.filter((cat) => config.primaryKeys.includes(cat.name)),
-      others: transformed.filter((cat) => !config.primaryKeys.includes(cat.name)),
+      primary: transformed.filter((cat) =>
+        config.primaryKeys.includes(cat.name)
+      ),
+      others: transformed.filter(
+        (cat) => !config.primaryKeys.includes(cat.name)
+      ),
     };
   }, [browsableCategories, config]);
 
@@ -92,55 +94,40 @@ export default function ServiceCategoriesSection({
 
   return (
     <div className="relative">
-      <div className="mb-6 flex items-start justify-between px-1">
-        <section className="flex flex-col gap-2.5 relative">
-          {/* Subtle Vertical Accent */}
-          <div className="absolute -left-3 top-1 bottom-1 w-1 bg-[#A79F97]/30 rounded-full" />
-          
-          <div className="flex flex-col gap-1">
-            <span className="poppins-regular text-[1.25rem] leading-none tracking-tight text-black">
-              Hello {userDetails?.name ? userDetails.name.split(' ')[0] : "Guest"}
-            </span>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="poppins-semibold text-[1rem] leading-none tracking-tight text-[#A79F97]">
-                Guest Support
-              </span>
-              {displayRoom && (
-                <>
-                  <span className="h-1 w-1 rounded-full bg-[#D8C9BB]" />
-                  <span className="inline-flex items-center gap-1 text-[1rem] font-medium leading-none text-[#A79F97]">
-                    <span>Room {room}</span>
-                  </span>
-                </>
-              )}
-            </div>
+      <div className="mb-5 flex items-center justify-between gap-3 px-1 pt-1">
+        <section className="min-w-0">
+          <h1 className="inter truncate text-[1.08rem] font-semibold leading-tight text-[#211915]">
+            Hello {userDetails?.name ? userDetails.name.split(" ")[0] : "Guest"}
+          </h1>
+          <span className="font-medium inter text-[#927567] text-sm">Guest Support</span>
+          <div className="mt-1.5 flex min-w-0 items-center gap-2 whitespace-nowrap text-[0.78rem] leading-none">
+            {displayRoom && (
+              <>
+                <span className="inter font-bold text-[#3B302B]">
+                  Room {room}
+                </span>
+                <span className="h-1 w-1 rounded-full bg-[#D4C3B8]" />
+              </>
+            )}
           </div>
         </section>
 
-        <div className="flex items-center gap-2">
-          <HotelAlarmReminder businessId={businessId} room={room} />
+        <div className="flex shrink-0 items-center gap-1.5">
+          <HotelAlarmReminder
+            businessId={businessId}
+            room={room}
+            triggerLabel="Wake-up call"
+            triggerClassName="h-8 w-auto rounded-full border-0 bg-[#7B2C4C] px-2.5 text-[0.72rem] font-semibold text-white shadow-none hover:scale-100 hover:bg-[#7B2C4C] active:scale-[0.98] focus-visible:ring-[#B24A74]/20"
+          />
 
-          <Button
+          <button
+            type="button"
             onClick={handleOpenSearch}
-            size="icon"
-            className="h-11 w-11 rounded-full border border-white/60 bg-[#E85D3A] text-white shadow-[0_6px_14px_rgba(232,93,58,0.22)] transition-all duration-300 hover:scale-[1.05] hover:bg-[#D95332] active:scale-95"
+            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-full border-0 bg-[#7B2C4C] px-2.5 text-[0.72rem] text-white transition-all duration-200 hover:bg-[#ECE5DF] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B24A74]/20"
           >
-            <Search size={18} />
-          </Button>
-
-          <Button
-            onClick={toggleChat}
-            size="icon"
-            className="relative h-11 w-11 rounded-full border border-white/60 bg-[#178A43] text-white shadow-[0_6px_14px_rgba(23,138,67,0.18)] transition-all duration-300 hover:scale-[1.05] hover:bg-[#147B3B] active:scale-95"
-          >
-            <MessageCircle size={18} />
-            <motion.span
-              className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#22C55E]"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.3 }}
-            />
-          </Button>
+            <Search className="h-3.5 w-3.5" />
+            Search
+          </button>
         </div>
       </div>
 
@@ -161,8 +148,14 @@ export default function ServiceCategoriesSection({
                 <ServiceCategoryCard
                   category={{
                     ...category,
-                    image: config.categoryImages[category.name as keyof typeof config.categoryImages] || orderfood,
-                    description: config.categoryDescriptions[category.name as keyof typeof config.categoryDescriptions] || "",
+                    image:
+                      config.categoryImages[
+                        category.name as keyof typeof config.categoryImages
+                      ] || orderfood,
+                    description:
+                      config.categoryDescriptions[
+                        category.name as keyof typeof config.categoryDescriptions
+                      ] || "",
                   }}
                   businessId={businessId}
                   menuId={menuId}
