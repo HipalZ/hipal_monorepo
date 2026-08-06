@@ -21,8 +21,8 @@ messaging.onBackgroundMessage((payload) => {
   const notificationOptions = {
     body: payload.notification?.body || "You have a new staff alert.",
     data: payload.data || {},
-    icon: "/android-chrome-192x192.png",
-    badge: "/android-chrome-192x192.png",
+    icon: "/app-icon-192.png",
+    badge: "/app-icon-192.png",
   };
   self.registration.showNotification(notificationTitle, notificationOptions);
 });

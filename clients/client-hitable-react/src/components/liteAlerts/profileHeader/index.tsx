@@ -9,7 +9,6 @@ import { useUserToken } from '@hi/common/src/useUserToken';
 import { LaptopMinimalCheck } from 'lucide-react';
 import { memo, useCallback, useState } from 'react';
 import { AiOutlineLogout } from 'react-icons/ai';
-import { FiDownload } from 'react-icons/fi';
 import { LuBellOff, LuBellRing } from 'react-icons/lu';
 import { RxDashboard } from 'react-icons/rx';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -66,13 +65,6 @@ const ProfileHeader = () => {
         <MenuItems className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
           <div className="absolute right-8 top-[-10px] h-4 w-4 rotate-45 border-l-2 border-t-2 border-gray-200 bg-white" />
           <div className="px-1 py-1">
-            <MenuItem>
-              {({ focus }) => (
-                <a href="https://assets.hipalz.com/hiclient-share-cart.apk" className={cn(defaultClass, focus ? 'bg-gray-100' : '')}>
-                  <FiDownload className="mr-2 text-blue-500" size={20} /> Download App
-                </a>
-              )}
-            </MenuItem>
             {businessId ? (
               <MenuItem>
                 {({ focus }) => (

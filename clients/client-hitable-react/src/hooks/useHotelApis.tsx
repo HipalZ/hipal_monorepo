@@ -132,8 +132,8 @@ export type UseRoomAlertsResult = UseQueryResult<Alert[], unknown> & {
 
 /**
  * Play alert sound via Web Audio API.
- * Used as fallback when FCM push notification sound doesn't work,
- * or when device doesn't support FCM at all (no Google Play Services).
+ * Used as fallback when FCM push notification sound doesn't work
+ * or when the device does not support FCM.
  */
 export const useRoomAlerts = (): UseRoomAlertsResult => {
   const outletType = useBusinessData((s) => s.outletInfo?.outLetType);

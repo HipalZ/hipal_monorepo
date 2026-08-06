@@ -1,4 +1,3 @@
-import smartPhone from '@/assets//img/smartphone.png';
 import bookmarkAfter from '@/assets/svg/bookmarkAfter.svg';
 import bookmarkBefore from '@/assets/svg/bookmarkBefore.svg';
 import ProfileHeader from '@/components/liteAlerts/profileHeader';
@@ -8,7 +7,6 @@ import { useLiteStore } from '@/components/store/useLiteStore';
 import type { CustomRole } from '@/components/types/hiClientzData';
 import { apiRpc } from '@hi/common';
 import { memo } from 'react';
-import { FiDownload } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 const BusinessesMemo = memo(() => {
@@ -53,21 +51,6 @@ const BusinessesMemo = memo(() => {
         <h1 className="text-2xl font-bold text-gray-800">Hello, {captainData?.name?.split(' ')[0] || 'Captain'}!</h1> {/* Simplified greeting */}
         <ProfileHeader />
       </header>
-      <article className="mx-5 mt-4 flex items-center gap-4 overflow-hidden rounded-xl p-4 shadow-lg" style={{ backgroundColor: '#4C4DDC' }}>
-        <img src={smartPhone} alt="Smartphone Promotion" width={80} loading="lazy" className="flex-shrink-0" />
-        <article className="flex-grow space-y-1 text-white">
-          <h1 className="text-lg font-semibold leading-snug">Experience Better & Faster Service with our Android App</h1>
-          <a
-            href="https://assets.hipalz.com/hiclient-share-cart.apk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-indigo-700 transition duration-200 hover:bg-gray-100 hover:shadow-md"
-            aria-label="Download the Android Application"
-          >
-            <FiDownload size={16} /> <span>Download App</span>
-          </a>
-        </article>
-      </article>
       {/* 🏢 Businesses List Section */}
       <section className="mx-4 mt-8 sm:mx-6 lg:mx-8">
   <h2 className="mb-5 text-xl font-bold text-gray-800">Your Businesses</h2>
