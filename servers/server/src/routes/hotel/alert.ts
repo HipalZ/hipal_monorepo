@@ -1294,7 +1294,14 @@ const hotelAlertRouter = new Hono()
         image: '',
       };
       // Loaded + occupancy-verified by requireRoomOccupancy (no second query).
-      const roomData = c.get('hotelRoom');
+      const roomData = c.get('hotelRoom') as
+        | {
+            _id: { toString(): string };
+            authCode?: string;
+            name: string;
+            staffIds: string[];
+          }
+        | undefined;
       if (!roomData) {
         return respond(c, 'Room not found', true, 404, {});
       }
@@ -1416,6 +1423,7 @@ const hotelAlertRouter = new Hono()
           type: 'HOTEL_SERVICE_ALERT',
           businessId: requestData.businessId,
           roomId: roomData._id.toString(),
+          roomName: roomData.name,
           serviceName: serviceData?.name || '',
         },
       });
