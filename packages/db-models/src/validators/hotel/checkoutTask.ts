@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { ObjectIdSchema } from "../common";
+import { z } from 'zod';
+import { ObjectIdSchema } from '../common';
 
 /**
  * Room-checkout automation.
@@ -12,20 +12,20 @@ import { ObjectIdSchema } from "../common";
 /** A service in the checkout group, with the SLA this module applies to it. */
 export const checkoutGroupService = z.object({
   serviceId: ObjectIdSchema,
-  acceptMins: z.number().min(1).max(120).default(2),
-  completeMins: z.number().min(1).max(600).default(45),
+  acceptMins: z.number().positive().max(120).default(2),
+  completeMins: z.number().positive().max(600).default(45),
 });
 
 export const hotelCheckoutGroup = z.object({
   businessId: ObjectIdSchema,
-  name: z.string().min(1).max(60).default("Room checkout"),
+  name: z.string().min(1).max(60).default('Room checkout'),
   isActive: z.boolean().default(true),
   services: z.array(checkoutGroupService).default([]),
   /** How long the floor's own staff get before the task widens or escalates. */
-  floorWindowMins: z.number().min(1).max(120).default(2),
+  floorWindowMins: z.number().positive().max(120).default(2),
   /** Off by default: work stays with the floor, then goes to the manager. */
   widenToOtherFloors: z.boolean().default(false),
-  otherFloorsWindowMins: z.number().min(1).max(120).default(2),
+  otherFloorsWindowMins: z.number().positive().max(120).default(2),
   notifyManager: z.boolean().default(true),
 });
 
@@ -33,15 +33,10 @@ export const upsertHotelCheckoutGroup = hotelCheckoutGroup.partial().extend({
   businessId: ObjectIdSchema,
 });
 
-export const checkoutTaskStatusEnum = [
-  "PENDING",
-  "ACCEPTED",
-  "COMPLETED",
-  "CANCELLED",
-] as const;
+export const checkoutTaskStatusEnum = ['PENDING', 'ACCEPTED', 'COMPLETED', 'CANCELLED'] as const;
 
 /** Who the task is currently being offered to. */
-export const checkoutTaskStageEnum = ["FLOOR", "ALL_FLOORS", "MANAGER"] as const;
+export const checkoutTaskStageEnum = ['FLOOR', 'ALL_FLOORS', 'MANAGER'] as const;
 
 export const hotelCheckoutTask = z.object({
   businessId: ObjectIdSchema,
@@ -70,8 +65,8 @@ export const hotelCheckoutTask = z.object({
       }),
     )
     .default([]),
-  status: z.enum(checkoutTaskStatusEnum).default("PENDING"),
-  stage: z.enum(checkoutTaskStageEnum).default("FLOOR"),
+  status: z.enum(checkoutTaskStatusEnum).default('PENDING'),
+  stage: z.enum(checkoutTaskStageEnum).default('FLOOR'),
   audienceStaffIds: z.array(ObjectIdSchema).default([]),
   createdAt: z.number(),
   acceptDueAt: z.number(),

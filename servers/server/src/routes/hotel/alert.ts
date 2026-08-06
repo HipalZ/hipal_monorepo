@@ -32,6 +32,7 @@ import axios from 'axios';
 import { Hono } from 'hono';
 import { schedule } from 'node-cron';
 import { z } from 'zod';
+import { sendPushToToken, sendPushToTokens } from '../../services/notifications';
 import { DEFAULT_IOS_NOTIFICATION_SOUND } from '../../services/notifications/sound';
 import { requireRoomOccupancy, requireRoomOccupancyByChatReply } from '../../utils/requireRoomOccupancy';
 import { respond } from '../../utils/response';
@@ -39,6 +40,9 @@ import whatsAppApiBaseUrl from '../../utils/whatsAppApiBaseUrl/apiPaths';
 import { endOfToday, startOfToday } from '../payments';
 import { returnHotelBodyComponents } from './rooms';
 const admin = require('firebase-admin');
+
+const oneTimeCronExpression = (runTime: Date) =>
+  `${runTime.getSeconds()} ${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${runTime.getMonth() + 1} *`;
 
 const sendPushNotification = async (token: string, businessId: string, hotelNo: string, serviceName: string) => {
   const pushMessage = {
@@ -158,7 +162,7 @@ export const scheduleAlertUpdate = (
     // Calculate the run time: current time + avgTime minutes
 
     const runTime = new Date(Date.now() + avgTime * 60 * 1000);
-    const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${runTime.getMonth() + 1} *`;
+    const cronExpression = oneTimeCronExpression(runTime);
 
     schedule(cronExpression, async () => {
       const alertData = await HotelAlert.findById(alertId).populate({
@@ -495,7 +499,7 @@ const scheduleLevel2Alert = (
 ) => {
   if (l2Time > 0) {
     const runTime = new Date(Date.now() + l2Time * 60 * 1000);
-    const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${runTime.getMonth() + 1} *`;
+    const cronExpression = oneTimeCronExpression(runTime);
 
     schedule(cronExpression, async () => {
       const alertData = await HotelAlert.findById(alertId).populate({
@@ -613,7 +617,7 @@ const scheduleLevel3Alert = (
 ) => {
   if (l3Time > 0) {
     const runTime = new Date(Date.now() + l3Time * 60 * 1000);
-    const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${runTime.getMonth() + 1} *`;
+    const cronExpression = oneTimeCronExpression(runTime);
 
     schedule(cronExpression, async () => {
       const alertData = await HotelAlert.findById(alertId).populate({
@@ -1405,13 +1409,16 @@ const hotelAlertRouter = new Hono()
       });
 
       // Step 3: Send push notifications
-      await Promise.all(
-        registrationTokens.map(async (obj) => {
-          if (obj.notification) {
-            await sendPushNotification(obj.token, requestData.businessId, roomData.name, serviceData?.name);
-          }
-        }),
-      );
+      await sendPushToTokens(registrationTokens, {
+        title: 'Room Attention Required',
+        body: `${roomData.name} requires your attention for ${serviceData?.name}. kindly respond to the alert!`,
+        data: {
+          type: 'HOTEL_SERVICE_ALERT',
+          businessId: requestData.businessId,
+          roomId: roomData._id.toString(),
+          serviceName: serviceData?.name || '',
+        },
+      });
 
       const roomSession = await HotelRoomSession.findOne({
         roomId: roomData._id,

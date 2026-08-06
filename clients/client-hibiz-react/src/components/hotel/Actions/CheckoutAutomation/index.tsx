@@ -1,17 +1,11 @@
 import LoadingSpinner from '@/components/atom/loadingSpinner';
+import { DEFAULT_GROUP, serviceIdOf, useCheckoutGroup, useSaveCheckoutGroup, type CheckoutGroup } from '@/components/store/hotel/useCheckoutTasks';
+import { useGetServiceCategories } from '@/components/store/hotel/useHotelServices';
+import useBusinessData from '@/components/store/useBusinessData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import useBusinessData from '@/components/store/useBusinessData';
-import { useGetServiceCategories } from '@/components/store/hotel/useHotelServices';
-import {
-  DEFAULT_GROUP,
-  serviceIdOf,
-  useCheckoutGroup,
-  useSaveCheckoutGroup,
-  type CheckoutGroup,
-} from '@/components/store/hotel/useCheckoutTasks';
 import { AlertTriangle, ArrowRight, CheckCircle2, Clock, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -25,6 +19,67 @@ const numberInput = 'h-10 border-slate-200 text-sm focus:ring-2 focus:ring-indig
 const chipBase = 'rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors';
 const chipOn = 'border-indigo-600 bg-indigo-600 text-white';
 const chipOff = 'border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-slate-900';
+
+type DurationUnit = 'min' | 'sec';
+
+const durationToDisplay = (minutes: number, unit: DurationUnit) => {
+  const value = unit === 'sec' ? minutes * 60 : minutes;
+  return Number(value.toFixed(2)).toString();
+};
+
+const unitForDuration = (minutes: number): DurationUnit => (minutes > 0 && minutes < 1 ? 'sec' : 'min');
+
+const toMinutes = (value: string, unit: DurationUnit) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return null;
+  return Number((unit === 'sec' ? numeric / 60 : numeric).toFixed(4));
+};
+
+const formatDuration = (minutes: number) => {
+  const totalSeconds = Math.round(minutes * 60);
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const mins = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return seconds ? `${mins}m ${seconds}s` : `${mins}m`;
+};
+
+const DurationInput = ({
+  value,
+  maxMins,
+  className,
+  onChange,
+}: {
+  value: number;
+  maxMins: number;
+  className: string;
+  onChange: (minutes: number) => void;
+}) => {
+  const [unit, setUnit] = useState<DurationUnit>(() => unitForDuration(value));
+  const displayValue = durationToDisplay(value, unit);
+
+  const commit = (raw: string, selectedUnit = unit) => {
+    const minutes = toMinutes(raw, selectedUnit);
+    if (minutes == null) return;
+    onChange(Math.min(maxMins, minutes));
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input type="text" inputMode="decimal" className={className} value={displayValue} onChange={(e) => commit(e.target.value)} />
+      <select
+        value={unit}
+        onChange={(e) => {
+          const nextUnit = e.target.value as DurationUnit;
+          setUnit(nextUnit);
+        }}
+        className="h-9 rounded-md border border-slate-200 bg-white px-2 text-sm text-slate-600"
+      >
+        <option value="min">min</option>
+        <option value="sec">sec</option>
+      </select>
+    </div>
+  );
+};
 
 /**
  * Room checkout automation.
@@ -55,13 +110,9 @@ const CheckoutAutomation = () => {
     });
   }, [group, businessId]);
 
-  const selected = useMemo(
-    () => new Map(form.services.map((s) => [serviceIdOf(s), s] as const)),
-    [form.services],
-  );
+  const selected = useMemo(() => new Map(form.services.map((s) => [serviceIdOf(s), s] as const)), [form.services]);
 
-  const setField = <K extends keyof CheckoutGroup>(key: K, value: CheckoutGroup[K]) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
+  const setField = <K extends keyof CheckoutGroup>(key: K, value: CheckoutGroup[K]) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const toggleService = (serviceId: string) =>
     setForm((prev) => {
@@ -97,8 +148,8 @@ const CheckoutAutomation = () => {
   if (isLoading || categoriesLoading) return <LoadingSpinner />;
 
   const ladder = form.widenToOtherFloors
-    ? `floor staff ${form.floorWindowMins}m → all floors ${form.otherFloorsWindowMins}m → manager`
-    : `floor staff ${form.floorWindowMins}m → manager`;
+    ? `floor staff ${formatDuration(form.floorWindowMins)} → all floors ${formatDuration(form.otherFloorsWindowMins)} → manager`
+    : `floor staff ${formatDuration(form.floorWindowMins)} → manager`;
 
   return (
     <div className="font-inter space-y-4 pb-8 text-slate-800">
@@ -112,8 +163,7 @@ const CheckoutAutomation = () => {
           <div>
             <h3 className={sectionTitle}>Room checkout automation</h3>
             <p className={`${sectionSub} mt-0.5`}>
-              When reception checks a room out, these services are raised automatically for the staff assigned to that
-              floor.
+              When reception checks a room out, these services are raised automatically for the staff assigned to that floor.
             </p>
           </div>
         </div>
@@ -125,9 +175,7 @@ const CheckoutAutomation = () => {
             <Switch id="ca-active" checked={form.isActive} onCheckedChange={(v) => setField('isActive', v)} />
           </div>
           <Button
-            onClick={() =>
-              save.mutate({ ...form, businessId, services: form.services.map((s) => ({ ...s, serviceId: serviceIdOf(s) })) })
-            }
+            onClick={() => save.mutate({ ...form, businessId, services: form.services.map((s) => ({ ...s, serviceId: serviceIdOf(s) })) })}
             disabled={save.isPending || !businessId}
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
@@ -144,26 +192,19 @@ const CheckoutAutomation = () => {
           <div className="w-44">
             <Label className={fieldLabel}>Floor staff get</Label>
             <div className="mt-1 flex items-center gap-2">
-              <Input
-                type="number"
-                min={1}
-                max={120}
+              <DurationInput
                 className={numberInput}
                 value={form.floorWindowMins}
-                onChange={(e) => setField('floorWindowMins', Math.max(1, Number(e.target.value) || 1))}
+                maxMins={120}
+                onChange={(minutes) => setField('floorWindowMins', minutes)}
               />
-              <span className="text-sm text-slate-500">min</span>
             </div>
           </div>
 
           <ArrowRight className="mb-2 h-4 w-4 text-slate-300" />
 
           <div className="flex items-center gap-2 pb-2">
-            <Switch
-              id="ca-widen"
-              checked={form.widenToOtherFloors}
-              onCheckedChange={(v) => setField('widenToOtherFloors', v)}
-            />
+            <Switch id="ca-widen" checked={form.widenToOtherFloors} onCheckedChange={(v) => setField('widenToOtherFloors', v)} />
             <Label htmlFor="ca-widen" className="text-sm font-semibold">
               Then offer it to other floors
             </Label>
@@ -173,15 +214,12 @@ const CheckoutAutomation = () => {
             <div className="w-44">
               <Label className={fieldLabel}>Other floors get</Label>
               <div className="mt-1 flex items-center gap-2">
-                <Input
-                  type="number"
-                  min={1}
-                  max={120}
+                <DurationInput
                   className={numberInput}
                   value={form.otherFloorsWindowMins}
-                  onChange={(e) => setField('otherFloorsWindowMins', Math.max(1, Number(e.target.value) || 1))}
+                  maxMins={120}
+                  onChange={(minutes) => setField('otherFloorsWindowMins', minutes)}
                 />
-                <span className="text-sm text-slate-500">min</span>
               </div>
             </div>
           ) : null}
@@ -189,11 +227,7 @@ const CheckoutAutomation = () => {
           <ArrowRight className="mb-2 h-4 w-4 text-slate-300" />
 
           <div className="flex items-center gap-2 pb-2">
-            <Switch
-              id="ca-mgr"
-              checked={form.notifyManager}
-              onCheckedChange={(v) => setField('notifyManager', v)}
-            />
+            <Switch id="ca-mgr" checked={form.notifyManager} onCheckedChange={(v) => setField('notifyManager', v)} />
             <Label htmlFor="ca-mgr" className="text-sm font-semibold">
               WhatsApp the manager
             </Label>
@@ -227,38 +261,30 @@ const CheckoutAutomation = () => {
 
         {form.services.length ? (
           <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Selected · {form.services.length}
-            </div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Selected · {form.services.length}</div>
             {form.services.map((s) => {
               const id = serviceIdOf(s);
               return (
                 <div key={id} className="flex flex-wrap items-center gap-3 rounded-lg bg-white p-3 ring-1 ring-slate-200">
                   <CheckCircle2 className="h-[18px] w-[18px] shrink-0 text-emerald-600" />
-                  <span className="min-w-[140px] flex-1 text-[15px] font-semibold text-slate-900">
-                    {nameById.get(id) || 'Service'}
-                  </span>
+                  <span className="min-w-[140px] flex-1 text-[15px] font-semibold text-slate-900">{nameById.get(id) || 'Service'}</span>
                   <div className="flex items-center gap-2">
                     <Label className={fieldLabel}>Accept in</Label>
-                    <Input
-                      type="number"
-                      min={1}
+                    <DurationInput
                       className="h-9 w-[70px] border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/30"
                       value={s.acceptMins}
-                      onChange={(e) => setSla(id, 'acceptMins', Math.max(1, Number(e.target.value) || 1))}
+                      maxMins={120}
+                      onChange={(minutes) => setSla(id, 'acceptMins', minutes)}
                     />
-                    <span className="text-sm text-slate-500">min</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Label className={fieldLabel}>Complete in</Label>
-                    <Input
-                      type="number"
-                      min={1}
+                    <DurationInput
                       className="h-9 w-[70px] border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/30"
                       value={s.completeMins}
-                      onChange={(e) => setSla(id, 'completeMins', Math.max(1, Number(e.target.value) || 1))}
+                      maxMins={600}
+                      onChange={(minutes) => setSla(id, 'completeMins', minutes)}
                     />
-                    <span className="text-sm text-slate-500">min</span>
                   </div>
                   <Button size="sm" variant="ghost" className="text-sm font-semibold text-[#8a2f2f]" onClick={() => toggleService(id)}>
                     Remove
@@ -282,12 +308,7 @@ const CheckoutAutomation = () => {
                 {cat.serviceIds.map((svc) => {
                   const on = selected.has(svc._id);
                   return (
-                    <button
-                      key={svc._id}
-                      type="button"
-                      onClick={() => toggleService(svc._id)}
-                      className={`${chipBase} ${on ? chipOn : chipOff}`}
-                    >
+                    <button key={svc._id} type="button" onClick={() => toggleService(svc._id)} className={`${chipBase} ${on ? chipOn : chipOff}`}>
                       {svc.name}
                     </button>
                   );
