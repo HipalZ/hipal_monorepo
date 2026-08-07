@@ -46,23 +46,17 @@ const MemoHistoryHotel = () => {
     );
   }, [historyData, searchTerm]);
 
-  const getTimeDifference = (start: number, end: number) => {
+  const getTimeDifference = (start?: number, end?: number) => {
     if (!start || !end) return '-';
 
-    const diffMs = end - start;
-    const diffMins = Math.round(diffMs / 60000);
+    const seconds = Math.max(0, Math.round((end - start) / 1000));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
 
-    if (diffMins >= 1440) {
-      const diffDays = Math.floor(diffMins / 1440);
-      return `${diffDays} day${diffDays > 1 ? 's' : ''}`;
-    }
-
-    if (diffMins >= 60) {
-      const diffHours = Math.floor(diffMins / 60);
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''}`;
-    }
-
-    return `${diffMins} minute${diffMins > 1 ? 's' : ''}`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    if (minutes > 0) return `${minutes}m ${remainingSeconds}s`;
+    return `${seconds}s`;
   };
 
   const getTimeDifferenceInMinutes = (start?: number, end?: number) => {
