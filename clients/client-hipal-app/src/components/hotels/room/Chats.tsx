@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
 import { useLogin } from "../../store/useLogin";
+import { toast } from "react-toastify";
 
 const ChatHeader = dynamic(
     () => import("./ChatHotelComponents").then((mod) => mod.ChatHeader),
@@ -47,17 +48,27 @@ const Chats = ({
         router.back();
     }, [router]);
 
-    const handleActionClick = (chatReplyId: string, action: string) => {
-        setUserResponses((prev) => ({
-            ...prev,
-            [chatReplyId]: action,
-        }));
+    const handleActionClick = async (chatReplyId: string, action: string) => {
         if (action === ActionType.NotDelivered) {
-            sendChat({
-                roomChatReplyId: chatReplyId,
-            });
+            try {
+                await sendChat({
+                    roomChatReplyId: chatReplyId,
+                    userId: userDetails?._id || "",
+                });
+                setUserResponses((prev) => ({
+                    ...prev,
+                    [chatReplyId]: action,
+                }));
+            } catch (error) {
+                console.error("Error sending not delivered complaint:", error);
+                toast.error("Unable to report this as not delivered. Please try again.");
+            }
         }
         if (action === ActionType.ReviewAndThanks) {
+            setUserResponses((prev) => ({
+                ...prev,
+                [chatReplyId]: action,
+            }));
             setOpenReview(true);
             setSelectedReplyId(chatReplyId);
         }

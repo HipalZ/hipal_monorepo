@@ -124,7 +124,11 @@ export const useSendChat = () => {
         json: payload,
       });
       if (expelIfSessionOut(response, router)) throw new Error("SESSION_OUT");
-      return response.json();
+      const result = await response.json();
+      if (!response.ok || result?.err) {
+        throw new Error(result?.message || "Unable to send complaint");
+      }
+      return result;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({
