@@ -8,6 +8,7 @@ import BottomPopUp from "@/components/atoms/bottomPopUp";
 import type { HotelWelcomeCardProps } from "./RoomWelcome";
 import type { RoomChat } from "@/components/types/hotelTypes";
 import { useLogin } from "../../store/useLogin";
+import { toast } from "react-toastify";
 
 const MemoChatHotel = ({
     hotelName,
@@ -31,17 +32,27 @@ const MemoChatHotel = ({
         setIsOpenChat(false);
     }, [setIsOpenChat]);
 
-    const handleActionClick = (chatReplyId: string, action: string) => {
-        setUserResponses((prev) => ({
-            ...prev,
-            [chatReplyId]: action,
-        }));
+    const handleActionClick = async (chatReplyId: string, action: string) => {
         if (action === ActionType.NotDelivered) {
-            sendChat({
-                roomChatReplyId: chatReplyId,
-            });
+            try {
+                await sendChat({
+                    roomChatReplyId: chatReplyId,
+                    userId: userDetails?._id || "",
+                });
+                setUserResponses((prev) => ({
+                    ...prev,
+                    [chatReplyId]: action,
+                }));
+            } catch (error) {
+                console.error("Error sending not delivered complaint:", error);
+                toast.error("Unable to report this as not delivered. Please try again.");
+            }
         }
         if (action === ActionType.ReviewAndThanks) {
+            setUserResponses((prev) => ({
+                ...prev,
+                [chatReplyId]: action,
+            }));
             setOpenReview(true);
             setSelectedReplyId(chatReplyId);
         }
