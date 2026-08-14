@@ -26,7 +26,6 @@ function PrepDeliveryTimeBadge({
       style={color ? { color } : undefined}
       aria-label={`Delivery within ${displayMinutes} minutes`}
     >
-      <Bike className="h-4 w-4 shrink-0 text-current" aria-hidden="true" />
       <span className="truncate text-xs font-medium text-current opacity-80">
         Delivery within :
       </span>
