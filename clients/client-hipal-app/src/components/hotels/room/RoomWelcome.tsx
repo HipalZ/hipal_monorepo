@@ -21,6 +21,7 @@ export interface HotelWelcomeCardProps {
   customLink?: string;
   userID?: string;
   sessionId?: string;
+  contactPhone?: string;
 }
 
 export default function HotelWelcomeCard({

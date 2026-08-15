@@ -39,7 +39,10 @@ export interface IRoomProps {
 export interface Service {
   _id: string;
   name: string;
+  image?: string;
   avgCompletionTime?: number;
+  avgDeliveryTime?: number;
+  avgAcceptanceTime?: number;
 }
 
 export interface RoomChatReply {
@@ -51,6 +54,7 @@ export interface RoomChatReply {
   description: string;
   roomChatId: string;
   complainIds: any[];
+  reviewRating?: number;
 }
 
 interface Alert {
@@ -60,6 +64,8 @@ interface Alert {
   acceptedAt?: number;
   createdAt?: number;
   deliveredAt?: number;
+  rejectedAt?: number;
+  message?: string;
 }
 
 export interface Cart {
@@ -73,6 +79,7 @@ export interface Cart {
     name: string;
     categoryIds: string[];
     price: number;
+    avgPrepTime?: number;
     visibility: boolean;
     availability: true;
     dishTypes: string[];
@@ -106,6 +113,9 @@ export interface ChatHeaderProps {
   logo: string;
   room: string;
   onClose: () => void;
+  title?: string;
+  subtitle?: string;
+  contactPhone?: string;
 }
 
 export interface ChatMessageHotelProps {
@@ -115,6 +125,7 @@ export interface ChatMessageHotelProps {
   openReview: boolean;
   selectedReplyId: string;
   handleReviewSubmit: (userId: string, rating: number) => void;
+  actionSubmittingId?: string;
 }
 
 export interface ChatReplyMessageProps {
@@ -125,4 +136,5 @@ export interface ChatReplyMessageProps {
   openReview: boolean;
   selectedReplyId: string;
   handleReviewSubmit: (userId: string, rating: number) => void;
+  actionSubmittingId?: string;
 }

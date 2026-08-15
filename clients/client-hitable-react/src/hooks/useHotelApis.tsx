@@ -506,22 +506,38 @@ export const useUpdateSource = () => {
 type EditAlertCartPayload = {
   alertId: string;
   cart: Cart[];
+  removedItems?: {
+    id: string;
+    name: string;
+    quantity: number;
+    reason: string;
+  }[];
 };
 
 export const useEditAlertCart = () => {
+  const queryClient = useQueryClient();
+  const userId = useHiClientZ((s) => s.captainData?._id);
   const editAlertCart = async (payload: EditAlertCartPayload) => {
     const response = await apiRpc.hotel.alert.edit_alert_cart.$put({
-      json: payload,
+      json: {
+        ...payload,
+        ...(userId ? { userId } : {}),
+      },
     });
-    return response.json();
+    const res = await response.json();
+    if (response.status !== 200 && response.status !== 201) {
+      throw new Error(res.message || "Failed to edit alert cart");
+    }
+    return res;
   };
   const { mutateAsync: editCart, isPending: editingCart } = useMutation({
     mutationFn: editAlertCart,
     onSuccess: () => {
-      toast.success("cart edited successfully");
+      queryClient.invalidateQueries({ queryKey: ["roomAlerts"] });
+      toast.success("Order updated successfully");
     },
-    onError: () => {
-      toast.error("Failed to edit alert cart");
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to edit alert cart");
     },
   });
 

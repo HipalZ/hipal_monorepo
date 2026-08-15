@@ -28,6 +28,7 @@ const hotelRoomChatReplySchema = new Schema<HotelRoomChatReplyType>({
   date: { type: Number, default: Date.now() },
   description: { type: String, required: true },
   roomChatId: { type: ObjectId, required: true, ref: "hotelroomchat" },
+  reviewRating: { type: Number, required: false, min: 1, max: 5 },
 });
 
 // Hotel Room Chat Complain Schema

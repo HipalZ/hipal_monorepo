@@ -1,4 +1,5 @@
 "use client";
+import { useGetAllLinkRestautants } from "@/components/hooks/useHotelRoom";
 import { useGetServiceCategories } from "@/components/hooks/useServicesHotel";
 import ServiceCategoryCard from "./ServiceCategoryCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +32,8 @@ export default function ServiceCategoriesSection({
 }: ServiceCategoriesSectionProps) {
   const { categoriesLoading, categoriesData } =
     useGetServiceCategories(businessId);
+  const { fetchingRestaurants, restaurantData } =
+    useGetAllLinkRestautants(businessId);
   const userDetails = useLogin((s) => s.userDetails);
   const hotelData = useHotelBusinessData((s) => s.hotelData);
   const router = useRouter();
@@ -39,8 +42,12 @@ export default function ServiceCategoriesSection({
   const [showSearchModal, setShowSearchModal] = useState(false);
   const suppressSearchAutoOpenRef = useRef(false);
   const setIsOpenChat = useHotelTemp((s) => s.setIsOpenChat);
-  const phone =
-    contactPhone || hotelData?.phone || hotelData?.phoneNumber || "";
+  const hotelPhoneNumber = (
+    hotelData as typeof hotelData & {
+      phoneNumber?: string;
+    }
+  )?.phoneNumber;
+  const phone = contactPhone || hotelData?.phone || hotelPhoneNumber || "";
 
   // Memoize static configuration objects to prevent unnecessary re-renders
   const config = useMemo(
@@ -110,12 +117,24 @@ export default function ServiceCategoriesSection({
     setShowSearchModal(shouldOpenSearch);
   }, [searchParams]);
 
+  const linkedRestaurants = restaurantData ?? [];
+  const hasLinkedRestaurants = linkedRestaurants.length > 0;
+  const quickActionTileClass =
+    "relative inline-flex h-12 min-w-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl border border-white/75 bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(248,241,233,0.72))] text-[#6F2146] shadow-[0_10px_24px_rgba(45,32,24,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-[#E6D9CE]/70 backdrop-blur transition-all duration-200 before:pointer-events-none before:absolute before:inset-x-2 before:top-0 before:h-px before:bg-white/90 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(45,32,24,0.11),inset_0_1px_0_rgba(255,255,255,0.9)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8F2555]/20";
+  const quickActionLabelClass =
+    "text-[0.64rem] font-semibold leading-none tracking-normal";
+
   // Quick Actions is a system category rendered separately as quick-action
   // tiles - it must not appear as a regular browsing category.
   const browsableCategories = useMemo(
     () =>
-      (categoriesData || []).filter((cat) => cat.systemKey !== "QUICK_ACTIONS"),
-    [categoriesData]
+      (categoriesData || []).filter((cat) => {
+        if (cat.systemKey === "QUICK_ACTIONS") return false;
+        const mappedName = config.nameMap[cat.name] || cat.name;
+        if (!hasLinkedRestaurants && mappedName === "ORDER_FOOD") return false;
+        return true;
+      }),
+    [categoriesData, config.nameMap, hasLinkedRestaurants]
   );
 
   // Memoize the data transformation and filtering
@@ -137,28 +156,58 @@ export default function ServiceCategoriesSection({
     };
   }, [browsableCategories, config]);
 
-  const hasCategories = Boolean(browsableCategories.length);
+  const { orderFoodCategory, primaryWithoutOrderFood } = useMemo(
+    () => ({
+      orderFoodCategory: primary.find((cat) => cat.name === "ORDER_FOOD"),
+      primaryWithoutOrderFood: primary.filter(
+        (cat) => cat.name !== "ORDER_FOOD"
+      ),
+    }),
+    [primary]
+  );
+  const displayPrimary = useMemo(() => {
+    if (!hasLinkedRestaurants) return primaryWithoutOrderFood;
+    return [
+      orderFoodCategory ?? {
+        _id: "linked-order-food",
+        name: "ORDER_FOOD",
+        serviceIds: [],
+        image: orderfood,
+        description: config.categoryDescriptions.FOOD,
+      },
+      ...primaryWithoutOrderFood,
+    ];
+  }, [
+    config.categoryDescriptions.FOOD,
+    hasLinkedRestaurants,
+    orderFoodCategory,
+    primaryWithoutOrderFood,
+  ]);
+  const hasCategories = Boolean(displayPrimary.length || others.length);
   const displayRoom = room && room !== "hipalz";
 
   return (
     <div className="relative plus-jakarta-font">
-      <div className="mb-5 space-y-3 px-1 pt-1">
-        <section className="min-w-0">
-          <h1 className="truncate text-[1.18rem] font-bold leading-tight tracking-normal text-[#211915]">
+      <div className="mb-5 space-y-3 px-2 pt-1">
+        <section className="flex min-w-0 items-start justify-between gap-4">
+        {/* Guest greeting */}
+        <div className="min-w-0">
+          <h1 className="truncate text-[1.55rem] leading-[1.08] tracking-normal text-[#211915]">
             Hello {userDetails?.name ? userDetails.name.split(" ")[0] : "Guest"}
           </h1>
-          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[0.74rem] leading-none tracking-normal text-[#8A756B]">
-            {displayRoom && (
-              <>
-                <span className="font-semibold text-[#3B302B]">
-                  Room {room}
-                </span>
-                <span className="h-1 w-1 rounded-full bg-[#D4C3B8]" />
-              </>
-            )}
-            <span className="font-medium">Guest support</span>
-          </div>
-        </section>
+
+          <span className="mt-1.5 block text-[0.9rem] leading-[1.15] tracking-normal text-[#72635D]">
+            Guest support
+          </span>
+        </div>
+
+        {/* Room number */}
+        {displayRoom && (
+          <span className="shrink-0 pt-1 text-[1rem] font-semibold leading-[1.15] text-[#7B2C4C]">
+            Room {room}
+          </span>
+        )}
+      </section>
 
         <div className="grid grid-cols-4 gap-2">
           <button
@@ -166,47 +215,40 @@ export default function ServiceCategoriesSection({
             onClick={handleCall}
             disabled={!phone}
             aria-label="Call hotel"
-            className="inline-flex h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border border-[#E5DAD2] bg-white text-[#3B302B] shadow-[0_6px_16px_rgba(72,49,37,0.06)] transition-all duration-200 active:scale-[0.98] disabled:opacity-45"
+            className={`${quickActionTileClass} disabled:opacity-45`}
           >
             <Phone className="h-4 w-4" strokeWidth={2.2} />
-            <span className="text-[0.64rem] font-semibold leading-none tracking-normal">
-              Call
-            </span>
+            <span className={quickActionLabelClass}>Call</span>
           </button>
           <HotelAlarmReminder
             businessId={businessId}
             room={room}
             triggerLabel="Wake-up"
-            triggerClassName="h-12 w-full flex-col gap-1 rounded-2xl border border-[#7B2C4C] bg-[#7B2C4C] px-1 text-[0.64rem] font-semibold text-white shadow-[0_8px_18px_rgba(123,44,76,0.18)] hover:scale-100 hover:bg-[#7B2C4C] active:scale-[0.98] focus-visible:ring-[#B24A74]/20 [&>svg]:h-4 [&>svg]:w-4 [&>span]:leading-none [&>span]:tracking-normal"
+            triggerClassName={`${quickActionTileClass} w-full px-1 text-[0.64rem] font-semibold hover:scale-100 [&>svg]:h-4 [&>svg]:w-4 [&>span]:leading-none [&>span]:tracking-normal`}
           />
 
           <button
             type="button"
             onClick={handleOpenSearch}
-            className="inline-flex h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border border-[#E5DAD2] bg-white text-[#3B302B] shadow-[0_6px_16px_rgba(72,49,37,0.06)] transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B24A74]/20"
+            className={quickActionTileClass}
           >
             <Search className="h-4 w-4" strokeWidth={2.2} />
-            <span className="text-[0.64rem] font-semibold leading-none tracking-normal">
-              Search
-            </span>
+            <span className={quickActionLabelClass}>Search</span>
           </button>
           <button
             type="button"
             onClick={handleOpenChat}
             aria-label="Open service chat"
-            className="inline-flex h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border border-[#E5DAD2] bg-white text-[#3B302B] shadow-[0_6px_16px_rgba(72,49,37,0.06)] transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B24A74]/20"
+            className={quickActionTileClass}
           >
             <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
-            <span className="text-[0.64rem] font-semibold leading-none tracking-normal">
-              Chat
-            </span>
+            <span className={quickActionLabelClass}>Chat</span>
           </button>
         </div>
       </div>
 
-      {categoriesLoading ? (
+      {categoriesLoading || fetchingRestaurants ? (
         <section className="space-y-4">
-          <h2 className="text-xl font-bold">Our Services</h2>
           <div className="grid grid-cols-2 gap-4">
             {[...Array(4)].map((_, index) => (
               <Skeleton key={index} className="w-full h-[160px] rounded-xl" />
@@ -216,7 +258,7 @@ export default function ServiceCategoriesSection({
       ) : hasCategories ? (
         <section className="flex justify-center">
           <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-4 mt-2 w-full">
-            {primary.map((category) => (
+            {displayPrimary.map((category) => (
               <div key={category._id} className="w-full aspect-square">
                 <ServiceCategoryCard
                   category={{

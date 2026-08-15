@@ -39,6 +39,13 @@ const BADGES: Record<string, { cls: string; Icon: typeof AlertCircle }> = {
 };
 const FALLBACK_BADGE = { cls: 'bg-slate-100 text-slate-600 ring-slate-200', Icon: Clock };
 
+type RemovedCartItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  reason: string;
+};
+
 function parseWakeUpMessage(message?: string) {
   const cleanMessage = message?.replace('WAKE_UP_CALL::', '') || '';
   const match = cleanMessage.match(/^(.*?) \((.*?)\) requested a wake-up call for (.*?)\. Note: (.*)$/);
@@ -68,7 +75,8 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const [customReason, setCustomReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localCart, setLocalCart] = useState<Cart[]>(alert?.cart || []);
-  const { editCart } = useEditAlertCart();
+  const [removedCartItems, setRemovedCartItems] = useState<RemovedCartItem[]>([]);
+  const { editCart, editingCart } = useEditAlertCart();
 
   const rejectionReasons = [
     { id: 'out_of_stock', label: 'Item out of stock' },
@@ -114,21 +122,40 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     handleAction(alert?._id, 'REJECTED', finalReason);
   };
 
-  // API mutation for updating the cart
-  const { isPending } = useMutation({
-    mutationFn: editCart,
-  });
+  const handleCartItemRemoved = useCallback((item: Cart, reason: string) => {
+    setRemovedCartItems((items) => [
+      ...items.filter((removedItem) => removedItem.id !== item.id),
+      {
+        id: item.id,
+        name: item?.dish?.name || 'Item',
+        quantity: item?.quantity || 1,
+        reason,
+      },
+    ]);
+  }, []);
 
-  const updateCart = (alertId: string) => {
-    editCart({
-      alertId: alertId,
-      cart: localCart,
-    });
-    setShowOrderDetails(null);
+  const updateCart = async (alertId: string) => {
+    if (!removedCartItems.length) {
+      toast.error('Please remove at least one item before updating');
+      return;
+    }
+
+    try {
+      await editCart({
+        alertId,
+        cart: localCart,
+        removedItems: removedCartItems,
+      });
+      setRemovedCartItems([]);
+      setShowOrderDetails(null);
+    } catch {
+      // The mutation hook already displays the failure toast.
+    }
   };
 
   const cancelChanges = () => {
-    setLocalCart(alert?.cart);
+    setLocalCart(alert?.cart || []);
+    setRemovedCartItems([]);
     setShowOrderDetails(null);
   };
 
@@ -149,12 +176,16 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   // against the largest on the alert. 0/0 → SlaPanel renders nothing (wake-up
   // calls and plain messages have no service attached).
   const services = alert?.serviceIds || [];
-  const acceptMins = services.reduce((max, service) => Math.max(max, service?.avgAcceptanceTime || 0), 0);
-  const deliverMins = services.reduce((max, service) => Math.max(max, service?.avgCompletionTime ?? service?.avgDeliveryTime ?? 0), 0);
+  const serviceAcceptMins = services.reduce((max, service) => Math.max(max, service?.avgAcceptanceTime || 0), 0);
+  const serviceDeliverMins = services.reduce((max, service) => Math.max(max, service?.avgCompletionTime ?? service?.avgDeliveryTime ?? 0), 0);
+  const foodPrepMins = hasCart ? alert.cart.reduce((max, item) => Math.max(max, item?.dish?.avgPrepTime || 0), 0) : 0;
+  const foodDeliverMins = hasCart ? foodPrepMins || 30 : 0;
+  const acceptMins = serviceAcceptMins || (hasCart ? 2 : 0);
+  const deliverMins = hasCart ? foodDeliverMins : serviceDeliverMins;
 
   // The header names the request; extra services collapse into a "+N more".
   const serviceNames = services.map((service) => service?.name).filter(Boolean);
-  const primaryService = serviceNames[0] || (isWakeUpCallAlert ? 'Wake-up Call' : isCheckoutRequest ? 'Checkout' : 'Message');
+  const primaryService = serviceNames[0] || (hasCart ? 'Food Order' : isWakeUpCallAlert ? 'Wake-up Call' : isCheckoutRequest ? 'Checkout' : 'Message');
   const extraServices = Math.max(0, serviceNames.length - 1);
 
   const badge = (isWakeUpCallAlert ? BADGES.MESSAGE : BADGES[alert?.alertProgress]) ?? FALLBACK_BADGE;
@@ -197,19 +228,17 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
         <div className="mb-2 flex items-start justify-between gap-3">
           <h3 className="text-xl font-bold leading-tight">Room {alert?.roomId?.name}</h3>
           <div className="min-w-0 text-right">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Request</div>
             <div className="truncate font-bold leading-tight">{primaryService}</div>
             {extraServices > 0 ? <div className="text-[11px] text-slate-500">+{extraServices} more</div> : null}
           </div>
         </div>
 
         {/* Status + when it came in */}
-        <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${badge.cls}`}>
             <badge.Icon className="h-3.5 w-3.5" />
             {getAlertLabel(alert?.alertProgress)}
           </span>
-          <span className="text-slate-300">·</span>
           <span className="text-xs text-slate-500">Raised {formatRaised(alert?.createdAt)}</span>
         </div>
 
@@ -227,7 +256,6 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             {displayMessage}
           </p>
         ) : null}
-
         {/* Order details button */}
         {hasCart && (
           <Button size="sm" variant="outline" className="w-full bg-indigo-400 text-white" onClick={() => setShowOrderDetails(alert._id)}>
@@ -239,7 +267,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
         {/* Secondary information in accordion */}
         <Accordion type="single" collapsible className="mb-3">
           <AccordionItem value="guest-info" className="border-b-0">
-            <AccordionTrigger className="py-2 text-sm font-medium text-gray-900">Guest Information</AccordionTrigger>
+            <AccordionTrigger className="py-2 text-sm font-medium text-gray-900">Guest Info</AccordionTrigger>
             <AccordionContent>
               <div className="rounded-md bg-gray-50 p-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -415,7 +443,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
             {hasCart ? (
               <div className="space-y-3 p-4">
-                <CartDetailsHotel localCart={localCart} setLocalCart={setLocalCart} readOnly={false} />
+                <CartDetailsHotel localCart={localCart} setLocalCart={setLocalCart} readOnly={false} onItemRemoved={handleCartItemRemoved} />
               </div>
             ) : (
               <div className="py-6 text-center">
@@ -439,7 +467,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
                 onClick: () => updateCart(alert?._id),
                 hide: alert?.alertProgress === 'MESSAGE',
                 className: 'rounded-lg shadow-md text-white',
-                disable: isPending,
+                disable: editingCart || !removedCartItems.length,
               },
             ]}
           />

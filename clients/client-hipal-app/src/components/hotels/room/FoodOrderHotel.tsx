@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import {
@@ -9,8 +10,6 @@ import {
   useGetAllLinkRestautants,
 } from "@/components/hooks/useHotelRoom";
 import toast from "react-hot-toast";
-import LoadingSpinnerCircle from "@/components/atoms/loader";
-import type { IService } from "@/components/hooks/useServicesHotel";
 import { RestaurantListView } from "./RestaurantListView";
 import { MenuView } from "./MenuView";
 import { useCartStore } from "@/components/store/useCartStore";
@@ -27,7 +26,6 @@ interface FoodOrderPopupProps {
   businessId: string;
   room: string;
   userId: string;
-  services: IService[];
   menuId?: IMenuLayout;
 }
 
@@ -48,7 +46,6 @@ export default function FoodOrderPopup({
   businessId,
   room,
   userId,
-  services,
   menuId,
 }: FoodOrderPopupProps) {
   // State
@@ -56,9 +53,10 @@ export default function FoodOrderPopup({
   const [selectedRestaurant, setSelectedRestaurant] =
     useState<ILinkHotels | null>(null);
   const [currentView, setCurrentView] = useState<ViewType>("restaurants");
+  const [isMenuContentLoading, setIsMenuContentLoading] = useState(false);
 
   // Hooks
-  const { gettingRoomLoader, roomPayload } = useHotelRoomData();
+  const { roomPayload } = useHotelRoomData();
   const { creatingAlert, createAlert } = useCreateAlert();
   const { fetchingRestaurants, restaurantData } = useGetAllLinkRestautants(
     businessId
@@ -97,6 +95,7 @@ export default function FoodOrderPopup({
       } else {
         setSelectedRestaurant(restaurant);
         setCurrentView("menu");
+        setIsMenuContentLoading(true);
       }
     },
     [selectedRestaurant]
@@ -108,6 +107,7 @@ export default function FoodOrderPopup({
 
     setSelectedRestaurant(soleRestaurant);
     setCurrentView("menu");
+    setIsMenuContentLoading(true);
   }, [hasSingleRestaurant, selectedRestaurant, show, soleRestaurant]);
 
   // Handle back to restaurants list
@@ -119,6 +119,7 @@ export default function FoodOrderPopup({
       return;
     }
     setCurrentView("restaurants");
+    setIsMenuContentLoading(false);
     setCartEmpty();
     setShowCart(false);
   }, [hasSingleRestaurant, onClose, setCartEmpty, setShowCart]);
@@ -146,13 +147,15 @@ export default function FoodOrderPopup({
       }
 
       await createAlert({
-        serviceIds: [services?.[0]?._id],
+        serviceIds: [],
         businessId,
         userId: userDetails?._id || userId,
         roomId,
         cart: sanitizedCart,
       });
 
+      setCartEmpty();
+      setShowCart(false);
       setOrderStatus("success");
     } catch (error) {
       console.error("Error placing food order:", error);
@@ -165,35 +168,44 @@ export default function FoodOrderPopup({
     room,
     createAlert,
     userId,
-    services,
     sanitizedCart,
     setCheckLogin,
+    setCartEmpty,
+    setShowCart,
     userDetails,
   ]);
 
-  // Loading state
-  const isLoading =
-    fetchingRestaurants ||
-    gettingRoomLoader ||
-    creatingAlert ||
-    orderStatus === "loading";
+  useEffect(() => {
+    if (!show || orderStatus !== "success") return;
+
+    const timer = window.setTimeout(() => {
+      setOrderStatus("idle");
+      setCurrentView("menu");
+      setIsMenuContentLoading(false);
+    }, 3200);
+
+    return () => window.clearTimeout(timer);
+  }, [orderStatus, show]);
+
+  const isInitialLoading = fetchingRestaurants;
+  const isSubmittingOrder = creatingAlert || orderStatus === "loading";
+  const shouldShowBottomActions =
+    orderStatus !== "success" && !isInitialLoading && !isMenuContentLoading;
 
   // Render content based on current state
   const renderContent = () => {
-    if (isLoading) {
-      return <LoadingSpinnerCircle />;
-    }
-
     if (orderStatus === "success") {
       return <SuccessView restaurant={activeRestaurant} />;
     }
+
     if (shouldShowMenu && activeRestaurant) {
       return (
         <MenuView
           restaurant={activeRestaurant}
           onBack={handleBackToRestaurants}
-          isLoading={false}
+          isLoading={isInitialLoading}
           menuId={menuId}
+          onMenuLoadingChange={setIsMenuContentLoading}
         />
       );
     }
@@ -203,7 +215,7 @@ export default function FoodOrderPopup({
         restaurants={linkedRestaurants}
         selectedRestaurant={selectedRestaurant}
         onSelectRestaurant={handleSelectRestaurant}
-        isLoading={fetchingRestaurants}
+        isLoading={isInitialLoading}
       />
     );
   };
@@ -211,30 +223,41 @@ export default function FoodOrderPopup({
   return (
     <BottomPopUp hide show={show} onClose={onClose} manageHistory={false}>
       <section className="relative h-full overflow-auto hide-scrollbar pb-36">
-        {renderContent()}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={orderStatus === "success" ? "success" : currentView}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+          >
+            {renderContent()}
+          </motion.div>
+        </AnimatePresence>
       </section>
 
-      <CommonBottomButton
-        fixed={true}
-        buttons={[
-          {
-            text: currentView === "menu" ? "Back" : "Cancel",
-            onClick: currentView === "menu" ? handleBackToRestaurants : onClose,
-            className: "rounded-md pl-3",
-            isBackButton: true,
-            disable: isLoading,
-          },
-          {
-            text: orderStatus === "success" ? "Back to room" : "Place Orders",
-            onClick: orderStatus === "success" ? onClose : handlePlaceOrder,
-            className: "w-full rounded-md",
-            disable:
-              isLoading ||
-              cart?.length === 0 ||
-              (!activeRestaurant && orderStatus !== "success"),
-          },
-        ]}
-      />
+      {shouldShowBottomActions && (
+        <CommonBottomButton
+          fixed={true}
+          buttons={[
+            {
+              text: currentView === "menu" ? "Back" : "Cancel",
+              onClick:
+                currentView === "menu" ? handleBackToRestaurants : onClose,
+              className: "rounded-md pl-3",
+              isBackButton: true,
+              disable: isSubmittingOrder,
+            },
+            {
+              text: isSubmittingOrder ? "Placing order..." : "Place Order",
+              onClick: handlePlaceOrder,
+              className: "w-full rounded-md",
+              disable:
+                isSubmittingOrder || cart?.length === 0 || !activeRestaurant,
+            },
+          ]}
+        />
+      )}
     </BottomPopUp>
   );
 }

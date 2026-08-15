@@ -4,10 +4,10 @@ import React, { memo, useCallback, useMemo } from "react";
 import { useSearch } from "@/components/store/useSearch";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
 import { useActiveClass } from "@/components/store/useActiveClass";
-import { FaChevronDown } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import type { DishType } from "@hi/db-models/src/validators";
+import { Search, X } from "lucide-react";
 
 const normalizeSearchValue = (value?: string | number | null) =>
   String(value ?? "")
@@ -123,7 +123,15 @@ const getDishFuzzyScore = (dish: DishType, searchText: string) => {
   return matchedScore;
 };
 
-const MemoSearchPanelCom = ({ allDishes }: { allDishes: DishType[] }) => {
+const MemoSearchPanelCom = ({
+  allDishes,
+  primaryColor,
+  secondaryColor,
+}: {
+  allDishes: DishType[];
+  primaryColor: string;
+  secondaryColor: string;
+}) => {
   const { searchText, setSearchText, setIsSearchActive, isSearchActive } =
     useSearch();
   const { isActiveDishType } = useActiveClass();
@@ -230,40 +238,57 @@ const MemoSearchPanelCom = ({ allDishes }: { allDishes: DishType[] }) => {
     <AnimatePresence>
       {isSearchActive && (
         <motion.div
+          className="plus-jakarta-font px-4 pb-28 pt-3"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
           exit="exit"
         >
           <motion.div
-            className="flex items-center gap-2 mb-4 ml-2 mr-4 text-base"
+            className="flex items-center gap-2 rounded-2xl bg-white/95 p-2 text-base shadow-sm ring-1 ring-black/10"
             variants={itemVariants}
           >
+            <Search
+              className="ml-2 h-5 w-5 shrink-0"
+              style={{ color: primaryColor }}
+            />
             <input
               type="search"
-              className="w-[100%] px-4 py-2 text-base border border-gray-300 rounded-md"
+              className="h-11 min-w-0 flex-1 bg-transparent px-1 text-[0.95rem] font-semibold text-slate-900 outline-none placeholder:text-slate-400"
               placeholder="Search for items..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
+              autoFocus
             />
-            <FaChevronDown onClick={handleBack} className="cursor-pointer" />
+            <button
+              type="button"
+              onClick={handleBack}
+              aria-label="Close search"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition hover:bg-slate-200 active:scale-95"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </motion.div>
           <motion.div
-            className="mt-4 overflow-y-auto max-h-[95dvh] min-h-[95dvh]"
+            className="mt-4 max-h-[calc(100dvh-12rem)] min-h-[calc(100dvh-12rem)] space-y-3 overflow-y-auto pr-1"
             variants={itemVariants}
           >
             {filteredDishes.length > 0 ? (
               filteredDishes.map((dish, index) => (
                 <motion.div
                   key={`${dish._id}-${index}`}
-                  className="py-2 border-b cursor-pointer"
+                  className="overflow-hidden rounded-2xl bg-white/95 shadow-sm ring-1 ring-black/5"
                   variants={itemVariants}
                 >
-                  <HorizontalCard dishData={dish} />
+                  <HorizontalCard
+                    dishData={dish}
+                    primaryColor={primaryColor}
+                    secondaryColor={secondaryColor}
+                  />
                 </motion.div>
               ))
             ) : (
-              <div className="px-4 py-10 text-center text-sm text-gray-500">
+              <div className="rounded-2xl bg-white/80 px-4 py-10 text-center text-sm font-medium text-slate-500 ring-1 ring-black/5">
                 No dishes found
               </div>
             )}
@@ -278,7 +303,8 @@ const MemoSearchPanelCom = ({ allDishes }: { allDishes: DishType[] }) => {
                 {
                   text: "Back",
                   onClick: handleBack,
-                  className: "bg-[#00000080] text-white text-base",
+                  className:
+                    "bg-[#111111] text-white text-base rounded-[1.25rem]",
                 },
               ]
             }

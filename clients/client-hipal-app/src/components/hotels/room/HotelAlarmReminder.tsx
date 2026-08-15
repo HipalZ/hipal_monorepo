@@ -232,14 +232,14 @@ export default function HotelAlarmReminder({
         size={triggerLabel ? "default" : "icon"}
         aria-label="Request wake-up call"
         className={cn(
-          "relative h-11 w-11 rounded-full border border-white/70 bg-black text-white shadow-[0_6px_14px_rgba(0,0,0,0.18)] transition-all duration-300 hover:scale-[1.05] hover:bg-[#1F1F1F] active:scale-95 plus-jakarta-font tracking-normal",
+          "relative h-11 w-11 rounded-full border border-white/70 text-white transition-all duration-300 hover:scale-[1.05] active:scale-95 plus-jakarta-font tracking-normal",
           triggerClassName
         )}
       >
         <AlarmClock size={18} />
         {triggerLabel && <span>{triggerLabel}</span>}
         {activeRequests.length > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-[#E85D3A] px-1 text-[0.68rem] font-bold leading-none">
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white px-1 text-[0.68rem] font-bold leading-none">
             {activeRequests.length}
           </span>
         )}
@@ -252,13 +252,10 @@ export default function HotelAlarmReminder({
         height="auto"
         manageHistory={false}
       >
-        <div className="max-h-[86dvh] overflow-y-auto px-5 pb-24 pt-5 plus-jakarta-font tracking-normal">
+        <div className="max-h-[86dvh] overflow-y-auto px-5 pb-24 pt-5 poppins-regular tracking-normal">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div>
-              <p className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#A79F97]">
-                Front-office request
-              </p>
-              <h2 className="mt-1 text-[1.25rem] font-extrabold leading-tight tracking-normal text-[#2F2924]">
+              <h2 className="mt-1 text-[1.25rem] leading-tight tracking-normal text-[#2F2924]">
                 Wake-up call
               </h2>
               <p className="mt-1 text-[0.82rem] font-medium leading-relaxed tracking-normal text-[#6B625A]">
