@@ -76,7 +76,7 @@ const FilterOption = ({
         color: isActive ? color : "#000000",
       }}
       className={cn(
-        "flex justify-start items-center px-2 rounded-md py-1 border",
+        "flex justify-start items-center px-2 rounded-md py-1 border"
       )}
       onClick={onClick}
     >
@@ -147,12 +147,12 @@ const QuickFilter = () => {
       setActiveDishType(str);
       setIsModalOpen(false);
     },
-    [setActiveDishType, isActiveDishType],
+    [setActiveDishType, isActiveDishType]
   );
   const activeIcon = (
     <div className="flex items-center">
       {["veg", "nonveg", "non_veg", "egg"].includes(
-        isActiveDishType?.replace(/[^a-zA-Z ]/g, "").toLowerCase(),
+        isActiveDishType?.replace(/[^a-zA-Z ]/g, "").toLowerCase()
       ) ? (
         <div className="flex items-center">
           <RiEqualizerLine size={20} />
@@ -201,14 +201,6 @@ const QuickFilter = () => {
             label="Non Veg"
           />
         )}
-        {outletInfo?.egg && (
-          <FilterOption
-            isActive={isActiveDishType.toLowerCase() === "egg"}
-            onClick={() => handleFilter("EGG")}
-            color="#D2C903"
-            label="Egg"
-          />
-        )}
         <button
           type="button"
           onClick={openModal}
@@ -230,6 +222,14 @@ const QuickFilter = () => {
                   onClick={() => handleFilter("VEGAN")}
                   color="#02614b"
                   label="Vegan"
+                />
+              )}
+              {outletInfo?.egg && (
+                <FilterOption
+                  isActive={isActiveDishType.toLowerCase() === "egg"}
+                  onClick={() => handleFilter("EGG")}
+                  color="#D2C903"
+                  label="Egg"
                 />
               )}
 

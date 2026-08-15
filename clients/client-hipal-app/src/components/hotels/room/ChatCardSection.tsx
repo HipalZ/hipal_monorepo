@@ -1,9 +1,9 @@
 "use client";
 
 import { useHotelTemp } from "@/components/store/useHotelTemp";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, CheckCircle, X, BellDot } from "lucide-react";
+import { CheckCircle, X, BellDot } from "lucide-react";
 import DummyImage from "@/assets/hotel/small.png";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -24,8 +24,8 @@ import {
   useCreateAlert,
   useHotelRoomData,
 } from "@/components/hooks/useHotelRoom";
-import { useSearchParams } from "next/navigation";
-import { toast } from "react-toastify";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { hasGuestContactDetails } from "./guestContactGuard";
@@ -42,13 +42,18 @@ type ServiceRequestStatus = "idle" | "loading" | "success" | "error";
 const ChatCardSection = ({
   businessId,
   themeData,
-}: { businessId: string; themeData: IThemes }) => {
+}: {
+  businessId: string;
+  themeData: IThemes;
+}) => {
   const { categoriesLoading, categoriesData } =
     useGetServiceCategories(businessId);
-  const { setIsOpenChat, isOpenChat } = useHotelTemp();
+  const setIsOpenChat = useHotelTemp((s) => s.setIsOpenChat);
   const userDetails = useLogin((s) => s.userDetails);
   const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
   const accessToken = useUserToken.getState().accessToken;
+  const router = useRouter();
+  const pathname = usePathname();
   const {
     isSubmitting,
     setIsSubmitting,
@@ -59,10 +64,12 @@ const ChatCardSection = ({
   // Service request modal states
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [selectedService, setSelectedService] = useState<QuickService | null>(
-    null,
+    null
   );
   const [serviceRequestStatus, setServiceRequestStatus] =
     useState<ServiceRequestStatus>("idle");
+  const suppressQuickServiceAutoOpenRef = useRef(false);
+  const suppressCheckoutAutoOpenRef = useRef(false);
 
   // Checkout modal: switched to the success view after the request is sent.
   const [checkoutRequestSent, setCheckoutRequestSent] = useState(false);
@@ -70,7 +77,7 @@ const ChatCardSection = ({
   const [checkoutAlreadyInProgress, setCheckoutAlreadyInProgress] =
     useState(false);
   const [checkoutEtaMinutes, setCheckoutEtaMinutes] = useState<number | null>(
-    null,
+    null
   );
   const [checkoutAcceptedMessage, setCheckoutAcceptedMessage] = useState<
     string | null
@@ -95,13 +102,13 @@ const ChatCardSection = ({
     mutationFn: checkoutRequest,
   });
 
-  // Quick actions come from the system "Quick Actions" service category —
+  // Quick actions come from the system "Quick Actions" service category -
   // fully managed by the business in hibiz (names, times, images, order).
   const quickServices: QuickService[] = useMemo(() => {
     if (!categoriesData || categoriesLoading) return [];
 
     const quickActionsCategory = categoriesData.find(
-      (category) => category.systemKey === "QUICK_ACTIONS",
+      (category) => category.systemKey === "QUICK_ACTIONS"
     );
     if (!quickActionsCategory) return [];
 
@@ -114,13 +121,19 @@ const ChatCardSection = ({
               isCheckout: true,
               image: CheckoutImg as unknown as string,
             }
-          : { ...service, image: service.image || "" },
+          : { ...service, image: service.image || "" }
       );
   }, [categoriesData, categoriesLoading]);
 
-  const onChatClick = () => {
-    setIsOpenChat(!isOpenChat);
-  };
+  const replacePopupParam = useCallback(
+    (key: string, value?: string) => {
+      const params = new URLSearchParams(query.toString());
+      if (value) params.set(key, value);
+      else params.delete(key);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, query, router]
+  );
 
   useEffect(() => {
     updateTheme(themeData);
@@ -128,34 +141,67 @@ const ChatCardSection = ({
 
   const handleSelectService = (service: QuickService) => {
     if (!accessToken || !hasGuestContactDetails(userDetails)) {
-      toast.info("Please add your name and phone number to continue.");
+      toast("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
     }
 
     if (service.isCheckout) {
+      suppressCheckoutAutoOpenRef.current = false;
       setCheckoutRequestSent(false);
       setCheckoutAlreadyInProgress(false);
       setCheckoutAcceptedMessage(null);
+      replacePopupParam("checkout", "1");
       setShowConfirmation(true);
     } else {
       // Open service request modal for other services
+      suppressQuickServiceAutoOpenRef.current = false;
       setSelectedService(service);
       setShowServiceModal(true);
       setServiceRequestStatus("idle");
+      replacePopupParam("quickService", service._id);
     }
   };
 
   const handleCloseServiceModal = useCallback(() => {
+    suppressQuickServiceAutoOpenRef.current = true;
+    replacePopupParam("quickService");
     setShowServiceModal(false);
     setSelectedService(null);
     setServiceRequestStatus("idle");
-  }, []);
+  }, [replacePopupParam]);
+
+  useEffect(() => {
+    setIsOpenChat(query.get("chat") === "1");
+
+    const shouldOpenCheckout = query.get("checkout") === "1";
+    if (!shouldOpenCheckout) {
+      suppressCheckoutAutoOpenRef.current = false;
+    }
+    if (shouldOpenCheckout && !suppressCheckoutAutoOpenRef.current) {
+      setShowConfirmation(true);
+    }
+
+    const quickServiceId = query.get("quickService");
+    if (!quickServiceId) {
+      suppressQuickServiceAutoOpenRef.current = false;
+      return;
+    }
+    if (suppressQuickServiceAutoOpenRef.current || quickServices.length === 0)
+      return;
+
+    const service = quickServices.find((item) => item._id === quickServiceId);
+    if (!service) return;
+
+    setSelectedService(service);
+    setShowServiceModal(true);
+    setServiceRequestStatus("idle");
+  }, [query, quickServices, setIsOpenChat, setShowConfirmation]);
 
   const handleConfirmServiceRequest = useCallback(async () => {
     if (!selectedService) return;
     if (!accessToken || !hasGuestContactDetails(userDetails)) {
-      toast.info("Please add your name and phone number to continue.");
+      toast("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
     }
@@ -183,11 +229,6 @@ const ChatCardSection = ({
 
       setServiceRequestStatus("success");
       toast.success(`${selectedService.name} request sent successfully`);
-
-      // Auto-close after success
-      setTimeout(() => {
-        handleCloseServiceModal();
-      }, 1500);
     } catch (error) {
       console.error("Error creating service request:", error);
       setServiceRequestStatus("error");
@@ -201,7 +242,6 @@ const ChatCardSection = ({
     room,
     roomPayload,
     createAlert,
-    handleCloseServiceModal,
     accessToken,
   ]);
 
@@ -209,9 +249,18 @@ const ChatCardSection = ({
     setServiceRequestStatus("idle");
   }, []);
 
+  useEffect(() => {
+    if (serviceRequestStatus !== "success") return;
+
+    const timer = window.setTimeout(() => {
+      handleCloseServiceModal();
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [handleCloseServiceModal, serviceRequestStatus]);
+
   const confirmCheckout = async () => {
     if (!accessToken || !hasGuestContactDetails(userDetails)) {
-      toast.info("Please add your name and phone number to continue.");
+      toast("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
     }
@@ -246,7 +295,8 @@ const ChatCardSection = ({
     </section>
   );
 
-  const isServiceLoading = gettingRoomLoader || creatingAlert;
+  const isServiceLoading =
+    gettingRoomLoader || creatingAlert || serviceRequestStatus === "loading";
 
   // Resolution time of the Checkout service (set in hibiz), shown as the ETA.
   const checkoutCompletionMins =
@@ -260,7 +310,7 @@ const ChatCardSection = ({
       setCheckoutAcceptedMessage(reply.description);
       return true;
     },
-    [checkoutRequestSent, showConfirmation],
+    [checkoutRequestSent, showConfirmation]
   );
 
   return (
@@ -343,42 +393,13 @@ const ChatCardSection = ({
         </>
       )}
 
-      <div
-        onClick={onChatClick}
-        onKeyDown={onChatClick}
-        className="mx-4 mt-2 mb-4 bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.08)] px-4 py-4 flex items-center cursor-pointer transition hover:shadow-xl active:scale-[0.98]"
-        role="button"
-        tabIndex={0}
-        aria-label="Open chat"
-      >
-        <div className="flex-1">
-          <p className="font-light text-h-primary text-xs poppins mb-1">
-            Track Your Service Requests
-          </p>
-          <h1 className="font-semibold text-h-primary text-base poppins">
-            Click to view
-          </h1>
-        </div>
-    <Button
-      size="icon"
-      className="relative h-11 w-11 rounded-full border border-white/60 bg-[#178A43] text-white shadow-[0_6px_14px_rgba(23,138,67,0.24)] transition-all duration-200 hover:scale-[1.03] hover:bg-[#147B3B]"
-    >
-      <MessageCircle size={18} />
-      <motion.span
-        className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border border-white bg-[#22C55E]"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
-      />
-    </Button>
-      </div>
-
       {/* Service Request Modal */}
       <BottomPopUp
         hide
         height="auto"
         show={showServiceModal}
         onClose={() => !isServiceLoading && handleCloseServiceModal()}
+        manageHistory={false}
       >
         <AnimatePresence mode="wait">
           {serviceRequestStatus === "success" ? (
@@ -395,22 +416,11 @@ const ChatCardSection = ({
                 </div>
               </div>
               <h2 className="text-xl font-semibold text-green-600 mb-2">
-                Request Sent!
+                Request sent
               </h2>
               <p className="text-gray-600">
                 Your {selectedService?.name} request has been sent to the staff.
               </p>
-            </motion.div>
-          ) : serviceRequestStatus === "loading" ? (
-            <motion.div
-              key="service-loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="p-6 text-center"
-            >
-              <LoadingSpinnerCircle />
-              <p className="mt-4 text-gray-600">Sending your request...</p>
             </motion.div>
           ) : (
             <motion.div
@@ -480,14 +490,15 @@ const ChatCardSection = ({
                           text:
                             serviceRequestStatus === "error"
                               ? "Try Again"
-                              : `Swipe for ${selectedService?.name}`,
+                              : `Request ${selectedService?.name}`,
                           onClick:
                             serviceRequestStatus === "error"
                               ? handleRetryServiceRequest
                               : handleConfirmServiceRequest,
                           className: "w-full rounded-xl h-[2.5rem]",
-                          swipe: serviceRequestStatus !== "error",
                           disable: isServiceLoading,
+                          isLoading:
+                            serviceRequestStatus === "loading" || creatingAlert,
                         },
                       ]}
                     />
@@ -504,7 +515,14 @@ const ChatCardSection = ({
         hide
         height="auto"
         show={showConfirmation}
-        onClose={() => !isSubmitting && handleCloseCheckout()}
+        manageHistory={false}
+        onClose={() => {
+          if (!isSubmitting) {
+            suppressCheckoutAutoOpenRef.current = true;
+            replacePopupParam("checkout");
+            handleCloseCheckout();
+          }
+        }}
       >
         <AnimatePresence mode="wait">
           {isPending ? (
@@ -553,7 +571,7 @@ const ChatCardSection = ({
               <h2 className="relative mt-5 font-poppins text-[1.35rem] font-semibold tracking-tight text-gray-900">
                 {checkoutAlreadyInProgress
                   ? "Checkout In Progress"
-                  : "Request Sent!"}
+                  : "Request sent"}
               </h2>
               <p className="relative mx-auto mt-2 max-w-[16rem] font-poppins text-sm leading-relaxed text-gray-500">
                 {checkoutAlreadyInProgress
@@ -580,7 +598,11 @@ const ChatCardSection = ({
               )}
               <Button
                 className="relative mt-6 h-11 w-full rounded-2xl bg-gradient-to-r from-green-500 to-green-600 font-poppins text-[0.95rem] font-semibold text-white shadow-[0_8px_20px_rgba(22,163,74,0.3)] hover:from-green-600 hover:to-green-700 active:scale-[0.98]"
-                onClick={handleCloseCheckout}
+                onClick={() => {
+                  suppressCheckoutAutoOpenRef.current = true;
+                  replacePopupParam("checkout");
+                  handleCloseCheckout();
+                }}
               >
                 Done
               </Button>
@@ -599,7 +621,13 @@ const ChatCardSection = ({
               />
               <Button
                 variant="secondary"
-                onClick={() => !isSubmitting && handleCloseCheckout()}
+                onClick={() => {
+                  if (!isSubmitting) {
+                    suppressCheckoutAutoOpenRef.current = true;
+                    replacePopupParam("checkout");
+                    handleCloseCheckout();
+                  }
+                }}
                 className="absolute right-4 top-4 z-10 h-8 w-8 rounded-full bg-transparent p-0 text-gray-400 shadow-none hover:bg-gray-100 hover:text-gray-600"
                 disabled={isSubmitting}
               >
@@ -613,10 +641,7 @@ const ChatCardSection = ({
                     transition={{ type: "spring", stiffness: 320, damping: 18 }}
                     className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-[0_10px_24px_rgba(37,99,235,0.35)]"
                   >
-                    <BellDot
-                      className="h-9 w-9 text-white"
-                      strokeWidth={2.2}
-                    />
+                    <BellDot className="h-9 w-9 text-white" strokeWidth={2.2} />
                   </motion.div>
                 </div>
                 <h2 className="relative mt-5 font-poppins text-[1.35rem] font-semibold tracking-tight text-gray-900">
@@ -631,11 +656,10 @@ const ChatCardSection = ({
                     maxWidth="30rem"
                     buttons={[
                       {
-                        text: "Swipe To Checkout",
+                        text: "Request checkout",
                         onClick: confirmCheckout,
                         className:
                           "h-11 w-full rounded-2xl font-poppins text-[0.95rem] font-semibold shadow-[0_8px_20px_rgba(37,99,235,0.3)]",
-                        swipe: true,
                         disable: isSubmitting,
                       },
                     ]}

@@ -10,7 +10,7 @@ import {
   useSearchParams,
 } from "next/navigation";
 import { type ChangeEvent, useCallback, useMemo } from "react";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { _useAllBusiness } from "../store/useAllBusiness";
 import useBusinessDetails from "../store/useBusinessDetails";
 import { useCartStore } from "../store/useCartStore";
@@ -72,7 +72,7 @@ export const usePayments = () => {
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
   const businessId = _useAllBusiness(
-    (state) => state.data.outletInfo?.businessId,
+    (state) => state.data.outletInfo?.businessId
   );
   // for pos and non pos finalAmount varies
   const finalAmount = useMemo(() => {
@@ -112,7 +112,7 @@ export const usePayments = () => {
     async (response: any) => {
       console.log("claimedCoins", claimedCoins);
       let coinsObtained = Math.round(
-        finalAmountForReward * (loyaltySetting?.setCashBackPercentage / 100),
+        finalAmountForReward * (loyaltySetting?.setCashBackPercentage / 100)
       );
       const netCoinz = -claimedCoins + coinsObtained;
       setIsLoading(true);
@@ -150,7 +150,7 @@ export const usePayments = () => {
         finalReward = calculateHelperReward(
           existingCoins,
           coinsObtained,
-          loyaltySetting?.rewardLimit,
+          loyaltySetting?.rewardLimit
         )?.finalReward;
       } else if (
         (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
@@ -160,7 +160,7 @@ export const usePayments = () => {
         finalReward = calculateHelperReward(
           existingCoins,
           coinsObtained,
-          loyaltySetting?.rewardLimit,
+          loyaltySetting?.rewardLimit
         )?.finalReward;
       }
       console.log("finalReward", finalReward);
@@ -174,8 +174,8 @@ export const usePayments = () => {
         // setIsLoading(false);
         return router.push(
           `/${customLink}/review?amount=${finalAmount}&mode=online&claim=${Math.round(
-            finalReward,
-          )}&orderId=${orderId}`,
+            finalReward
+          )}&orderId=${orderId}`
         );
       }
       toast.error("Payment failed");
@@ -199,7 +199,7 @@ export const usePayments = () => {
       setTableName,
       router,
       customLink,
-    ],
+    ]
   );
   // payment success
   const handlePaymentSuccess = useCallback(
@@ -216,7 +216,7 @@ export const usePayments = () => {
       setRazorPayOrderId,
       setRazorPayPaymentId,
       sendPaymentResponse,
-    ],
+    ]
   );
   // payment dismiss
   const handlePaymentDismiss = useCallback(() => {
@@ -284,7 +284,7 @@ export const usePayments = () => {
       channelId,
       availedCoupon?.cashbackAvailable,
       setRazorPayOrderId,
-    ],
+    ]
   );
   // create order
   const handleCreateOrder = useCallback(
@@ -303,7 +303,7 @@ export const usePayments = () => {
 
       if (isLoading) {
         return toast.error(
-          "Please wait for the previous transaction to complete",
+          "Please wait for the previous transaction to complete"
         );
       }
 
@@ -328,7 +328,7 @@ export const usePayments = () => {
       setIsLoading,
       setRazorPayPaymentId,
       setRazorPaySignature,
-    ],
+    ]
   );
   // create razorpay options
   const creatingRazorPayOptions = async (orderId: string) => {
@@ -448,7 +448,7 @@ export const usePayments = () => {
     }
     if (isLoading) {
       return toast.error(
-        "Please wait for the previous transaction to complete",
+        "Please wait for the previous transaction to complete"
       );
     }
     console.log("handleCreateOfflineOrder called", billData);
@@ -505,17 +505,17 @@ export const usePayments = () => {
         finalReward = calculateHelperReward(
           existingCoins,
           coinsObtained,
-          loyaltySetting?.rewardLimit,
+          loyaltySetting?.rewardLimit
         ).finalReward;
       }
       toast.success(
-        "We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment.",
+        "We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment."
       );
       resetTableData();
       router.push(
         `/${customLink}/review?amount=${finalAmount}&mode=offline&claim=${Math.round(
-          finalReward,
-        )}&orderId=${response?.data?.order_id}`,
+          finalReward
+        )}&orderId=${response?.data?.order_id}`
       );
     }
   }, [
@@ -598,7 +598,7 @@ export const useHandleMode = () => {
       claimedCoins,
       claimCouponz,
       tips,
-    ],
+    ]
   );
   return {
     handleMode,
@@ -623,7 +623,7 @@ export const useGetBill = () => {
 
   function pickSelectedVariantFromPayment(
     payment: BillData | BillData[],
-    selected?: BillData | null,
+    selected?: BillData | null
   ): BillData | null {
     if (!payment) return null;
 
@@ -639,11 +639,11 @@ export const useGetBill = () => {
 
     const match =
       payment.find(
-        (p) => selVariantId && normalize(p.variantId) === selVariantId,
+        (p) => selVariantId && normalize(p.variantId) === selVariantId
       ) ??
       payment.find((p) => selBillId && normalize(p.billId) === selBillId) ??
       payment.find(
-        (p) => selVariantNum != null && p.variantName === selVariantNum,
+        (p) => selVariantNum != null && p.variantName === selVariantNum
       );
 
     return match ?? payment[0] ?? null;
@@ -716,7 +716,7 @@ export const useDisplayValue = () => {
   function getDisplayValue(
     billValue: number,
     claimedCoins: number,
-    claimCouponz: number,
+    claimCouponz: number
   ): number {
     if (claimedCoins > 0) {
       return claimedCoins;
@@ -801,7 +801,7 @@ export const useBillSummary = () => {
       setTips,
       addTipsMutation,
       outletInfo?.isPosEnabled,
-    ],
+    ]
   );
 
   const handleCustomTip = useCallback(
@@ -810,7 +810,7 @@ export const useBillSummary = () => {
       setCustomTip(value);
       setTips(Number(value));
     },
-    [setCustomTip, setTips],
+    [setCustomTip, setTips]
   );
 
   const handleSaveTip = useCallback(async () => {
@@ -921,7 +921,7 @@ export const usePlaceOrder = () => {
     const handleApiResponse = async (
       response,
       successMessage,
-      errorMessage,
+      errorMessage
     ) => {
       try {
         const res = await response.json();
@@ -993,7 +993,7 @@ export const usePlaceOrder = () => {
         await handleApiResponse(
           response,
           "Cart shared successfully",
-          "Failed to share cart",
+          "Failed to share cart"
         );
       } catch (error) {
         console.error("Error placing non-POS order:", error);

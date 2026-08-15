@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { usePaymentStore } from "../store/usePaymentStore";
 import { useCouponz } from "../store/useCouponz";
 import useCouponTemp from "../store/useCouponTemp";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { useCallback } from "react";
 import { flushSync } from "react-dom";
 
@@ -54,7 +54,7 @@ export const useMerchantDetails = (businessId: string) => {
       setApplyCouponz(false);
     } else if (res.status === 404) {
       toast.error(
-        "Online Pay is not available for this business, pay through offline mode",
+        "Online Pay is not available for this business, pay through offline mode"
       );
     }
 

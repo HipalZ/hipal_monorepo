@@ -1,7 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
-import { memo, useMemo } from "react";
-import type { CategoryType } from "@hi/db-models/src/validators";
+import { memo, useEffect, useMemo } from "react";
+import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
 import SubTypes from "@/components/molecules/categoryTypes/subTypes";
 import { useSearch } from "@/components/store/useSearch";
@@ -11,7 +11,7 @@ import { useDishesStore } from "@/components/store/useDishesStore";
 
 const EdgeFlow = dynamic(() => import("./EdgeFlow"));
 const MainTypes = dynamic(
-  () => import("@/components/molecules/categoryTypes/mainTypes"),
+  () => import("@/components/molecules/categoryTypes/mainTypes")
 );
 const CollapseMenu = dynamic(() => import("./CollapseMenu"));
 
@@ -63,7 +63,7 @@ const DishesList = ({
       const orderedSubTypes = Array.from(uniqueSubCategoryIds)
         .map((subCatId: string) => {
           return childCategory.find(
-            (childCat: CategoryType) => childCat._id === subCatId,
+            (childCat: CategoryType) => childCat._id === subCatId
           );
         })
         .filter((cat): cat is CategoryType => Boolean(cat));
@@ -73,10 +73,11 @@ const DishesList = ({
     return childCategory?.filter(hasVisibleDishes);
   }, [childCategory, parentCategory]);
 
-  useMemo(() => {
+  useEffect(() => {
     const allDishes = childCategory
       .filter((category) => category.dishIds && category.dishIds.length > 0)
-      .flatMap((category) => category.dishIds || []);
+      .flatMap((category) => category.dishIds || [])
+      .filter((dish) => typeof dish !== "string") as unknown as DishType[];
     setDishes(allDishes);
   }, [childCategory, setDishes]);
 

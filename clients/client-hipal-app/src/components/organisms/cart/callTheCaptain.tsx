@@ -2,11 +2,19 @@ import { memo, useCallback } from "react";
 import { useCallTheCaptain } from "@/components/hooks/useCartHook";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useLogin } from "@/components/store/useLogin";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import useTableData from "@/components/store/useTableData";
 import { cn } from "@/components/utils/helpers";
 
-const MemoCallTheCaptain = ({ messageToSend, messageDisplay, className }: { messageToSend?: string, messageDisplay?: string, className?: string }) => {
+const MemoCallTheCaptain = ({
+  messageToSend,
+  messageDisplay,
+  className,
+}: {
+  messageToSend?: string;
+  messageDisplay?: string;
+  className?: string;
+}) => {
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const userDetails = useLogin((s) => s.userDetails);
   const tableName = useTableData((s) => s.tableName);
@@ -28,13 +36,23 @@ const MemoCallTheCaptain = ({ messageToSend, messageDisplay, className }: { mess
     };
 
     mutate(payload);
-  }, [businessId, tableName, userDetails?.name, userDetails._id, mutate, messageToSend]);
+  }, [
+    businessId,
+    tableName,
+    userDetails?.name,
+    userDetails._id,
+    mutate,
+    messageToSend,
+  ]);
   return (
     <button
       type="button"
       onClick={callTheWaiter}
       disabled={isPending}
-      className={cn("text-gray-500 bg-[#FFFFFF] w-full border border-[#cacaca] text-sm px-4 py-3 rounded-md", className)}
+      className={cn(
+        "text-gray-500 bg-[#FFFFFF] w-full border border-[#cacaca] text-sm px-4 py-3 rounded-md",
+        className
+      )}
     >
       {messageDisplay ? messageDisplay : "Need help from Captain"}
     </button>

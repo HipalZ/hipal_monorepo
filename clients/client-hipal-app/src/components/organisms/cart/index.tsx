@@ -6,7 +6,7 @@ import { MdOutlineShoppingCart } from "react-icons/md";
 import { memo, useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { useCallTheCaptain } from "@/components/hooks/useCartHook";
 import { useCart } from "@/components/store/useCart";
 import { useCartStore } from "@/components/store/useCartStore";
@@ -34,7 +34,7 @@ const CartItem = dynamic(() => import("./cartItem"), {
 });
 const CommonBottomButton = dynamic(
   () => import("@/components/atoms/bottomButton"),
-  { ssr: false },
+  { ssr: false }
 );
 const CartWarning = dynamic(() => import("./cartWarning"), { ssr: false });
 const ShareCartButtons = dynamic(() => import("./shareCartButtons"), {
@@ -43,7 +43,7 @@ const ShareCartButtons = dynamic(() => import("./shareCartButtons"), {
 // const HistoryCartItems = dynamic(() => import("./historyItem"), { ssr: false });
 const ItemDescriptionPopup = dynamic(
   () => import("@/components/atoms/dishDescription/itemDescription"),
-  { ssr: false },
+  { ssr: false }
 );
 const HiCodeValidate = dynamic(() => import("./hicodeValidate"), {
   ssr: false,
@@ -150,7 +150,7 @@ const Cart = () => {
     const handleApiResponse = async (
       response,
       successMessage,
-      errorMessage,
+      errorMessage
     ) => {
       try {
         const res = await response.json();
@@ -231,7 +231,7 @@ const Cart = () => {
         await handleApiResponse(
           response,
           "Cart shared successfully",
-          "Failed to share cart",
+          "Failed to share cart"
         );
       } catch (error) {
         console.error("Error placing non-POS order:", error);
@@ -415,7 +415,7 @@ const Cart = () => {
   return (
     <div
       className={cn(
-        "overflow-y-auto h-[100dvh] hide-scrollbar text-[#000000] bg-[#ffffff] relative",
+        "overflow-y-auto h-[100dvh] hide-scrollbar text-[#000000] bg-[#ffffff] relative"
       )}
     >
       {cartPage === "cart" && (
@@ -482,7 +482,7 @@ const Cart = () => {
                       type="button"
                       className={cn(
                         "w-full flex justify-center items-center gap-2 py-3 rounded-lg border border-gray-300",
-                        "text-sm font-medium text-white bg-black shadow-sm",
+                        "text-sm font-medium text-white bg-black shadow-sm"
                       )}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}

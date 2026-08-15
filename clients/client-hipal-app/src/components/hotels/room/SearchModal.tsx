@@ -19,7 +19,7 @@ import {
   useCreateAlert,
   useHotelRoomData,
 } from "@/components/hooks/useHotelRoom";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import dynamic from "next/dynamic";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
@@ -28,19 +28,32 @@ import { hasGuestContactDetails } from "./guestContactGuard";
 // Lazy-loaded components
 const AlertCircle = dynamic(
   () => import("lucide-react").then((mod) => ({ default: mod.AlertCircle })),
-  { ssr: false },
-);
-const CheckCircle = dynamic(
-  () => import("lucide-react").then((mod) => ({ default: mod.CheckCircle })),
-  { ssr: false },
+  { ssr: false }
 );
 const CheckIcon = dynamic(
   () => import("lucide-react").then((mod) => ({ default: mod.Check })),
-  { ssr: false },
+  { ssr: false }
 );
 
 // Types
 type AlertStatus = "idle" | "loading" | "success" | "error";
+
+const SERVICE_ACTION_COLOR = "#111111";
+const SERVICE_ACTION_TEXT_COLOR = "#ffffff";
+
+const formatRaisedServicesToast = (serviceNames: string[]) => {
+  if (serviceNames.length === 0) {
+    return "Service request raised.";
+  }
+
+  if (serviceNames.length === 1) {
+    return `${serviceNames[0]} service request raised.`;
+  }
+
+  const lastServiceName = serviceNames[serviceNames.length - 1];
+  const servicePrefix = serviceNames.slice(0, -1).join(", ");
+  return `${servicePrefix} and ${lastServiceName} service requests raised.`;
+};
 
 interface SearchModalProps {
   show: boolean;
@@ -57,28 +70,17 @@ interface SearchResultItemProps {
   getInitial: (name: string) => string;
 }
 
-// Status components
-const SuccessState = () => (
-  <div className="flex flex-col items-center justify-center py-10">
-    <CheckCircle className="w-16 h-16 mb-4 text-green-500" />
-    <h3 className="text-xl font-semibold text-primary">Request Sent!</h3>
-    <p className="mt-2 text-center text-gray-500">
-      Your service request has been sent successfully.
-    </p>
-  </div>
-);
-
 const ErrorState = ({ onRetry }: { onRetry: () => void }) => (
   <div className="flex flex-col items-center justify-center py-10">
     <AlertCircle className="w-16 h-16 mb-4 text-red-500" />
-    <h3 className="text-xl font-semibold text-h-primary">Request Failed</h3>
+    <h3 className="text-xl font-semibold text-[#111111]">Request Failed</h3>
     <p className="mt-2 text-center text-gray-500 mb-4">
       There was an error sending your request. Please try again.
     </p>
     <button
       type="button"
       onClick={onRetry}
-      className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+      className="rounded-md bg-[#111111] px-4 py-2 text-white transition-colors hover:bg-neutral-800"
     >
       Try Again
     </button>
@@ -101,7 +103,7 @@ const SearchResultItem = ({
   <Card
     className={`cursor-pointer transition-all duration-200 relative ${
       selected
-        ? "border-primary shadow-md bg-primary/5"
+        ? "border-[#111111] bg-neutral-50 shadow-md ring-1 ring-[#111111]/10"
         : "border-gray-200 hover:border-gray-300 hover:shadow-md"
     } ${service.availability === false ? "opacity-50 cursor-not-allowed" : ""}`}
     onClick={() => {
@@ -114,7 +116,7 @@ const SearchResultItem = ({
       <div className="flex items-center gap-3">
         {/* Selection indicator */}
         {selected && (
-          <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+          <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#111111]">
             <CheckIcon className="w-3 h-3 text-white" />
           </div>
         )}
@@ -131,7 +133,7 @@ const SearchResultItem = ({
             />
           ) : (
             <Avatar className="w-10 h-10">
-              <AvatarFallback className="bg-primary text-white text-sm font-semibold">
+              <AvatarFallback className="bg-[#111111] text-white text-sm font-semibold">
                 {getInitial(service.name)}
               </AvatarFallback>
             </Avatar>
@@ -181,8 +183,9 @@ export default function SearchModal({
   const { creatingAlert, createAlert } = useCreateAlert();
 
   // Derived state
-  const isLoading = gettingRoomLoader || creatingAlert;
+  const isLoading = gettingRoomLoader;
   const hasSelectedServices = selectedServices.length > 0;
+  const maxSelectableServices = 2;
 
   // Flatten all services from all categories for searching
   const allServices = useMemo(() => {
@@ -190,6 +193,7 @@ export default function SearchModal({
 
     for (const category of categories) {
       for (const service of category.serviceIds) {
+        if (service.availability === false) continue;
         services.push({
           service,
           categoryName: category.name,
@@ -219,26 +223,45 @@ export default function SearchModal({
     });
   }, [searchQuery, allServices]);
 
+  const selectedServiceNames = useMemo(
+    () =>
+      allServices
+        .filter(({ service }) => selectedServices.includes(service._id))
+        .map(({ service }) => service.name),
+    [allServices, selectedServices]
+  );
+
   // Service selection handlers
-  const handleServiceToggle = useCallback((serviceId: string) => {
-    setSelectedServices((prev) => {
-      if (prev.includes(serviceId)) {
-        return prev.filter((id) => id !== serviceId);
+  const handleServiceToggle = useCallback(
+    (serviceId: string) => {
+      if (
+        !selectedServices.includes(serviceId) &&
+        selectedServices.length >= maxSelectableServices
+      ) {
+        toast("You can request up to 2 services at a time.");
+        return;
       }
-      return [...prev, serviceId];
-    });
-  }, []);
+
+      setSelectedServices((prev) => {
+        if (prev.includes(serviceId)) {
+          return prev.filter((id) => id !== serviceId);
+        }
+        return [...prev, serviceId];
+      });
+    },
+    [maxSelectableServices, selectedServices]
+  );
 
   const isSelected = useCallback(
     (serviceId: string) => selectedServices.includes(serviceId),
-    [selectedServices],
+    [selectedServices]
   );
 
   // Alert creation handler
   const handleConfirmSelection = async () => {
     if (!hasSelectedServices) return;
     if (!accessToken || !hasGuestContactDetails(userDetails)) {
-      toast.info("Please add your name and phone number to continue.");
+      toast("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
     }
@@ -247,12 +270,13 @@ export default function SearchModal({
       setAlertStatus("loading");
 
       // Get room data
-      const roomData = await roomPayload({
+      const roomData = (await roomPayload({
         businessId,
         roomName: room || "hipalz",
-      });
+      })) as { data?: { _id?: string } };
 
-      if (!roomData?.data?._id) {
+      const roomId = roomData?.data?._id;
+      if (!roomId) {
         throw new Error("Could not find room data");
       }
 
@@ -261,16 +285,12 @@ export default function SearchModal({
         serviceIds: selectedServices,
         businessId,
         userId: userDetails?._id || "",
-        roomId: roomData.data._id,
+        roomId,
       });
 
-      setAlertStatus("success");
-      toast.success("Request sent successfully");
-
-      // Auto-close after success
-      setTimeout(() => {
-        handleClose();
-      }, 1500);
+      toast.success(formatRaisedServicesToast(selectedServiceNames));
+      setAlertStatus("idle");
+      setSelectedServices([]);
     } catch (error) {
       console.error("Error creating alert:", error);
       setAlertStatus("error");
@@ -294,11 +314,11 @@ export default function SearchModal({
   }, [onClose]);
 
   return (
-    <BottomPopUp show={show} onClose={handleClose} hide>
+    <BottomPopUp show={show} onClose={handleClose} hide manageHistory={false}>
       <div className="p-4 max-h-[90dvh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-primary">Search Services</h2>
+          <h2 className="text-xl font-bold text-[#111111]">Search Services</h2>
           <button
             type="button"
             onClick={handleClose}
@@ -320,7 +340,7 @@ export default function SearchModal({
             placeholder="Search for services..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4 py-3 text-black border-gray-300 focus:border-primary focus:ring-primary"
+            className="pl-10 pr-4 py-3 text-black border-gray-300 focus:border-[#111111] focus:ring-[#111111]"
             autoFocus
             disabled={alertStatus === "loading"}
           />
@@ -328,8 +348,8 @@ export default function SearchModal({
 
         {/* Selected Services Counter */}
         {hasSelectedServices && alertStatus === "idle" && (
-          <div className="mb-4 p-2 bg-primary/10 rounded-lg">
-            <p className="text-sm text-primary font-medium">
+          <div className="mb-4 rounded-lg bg-neutral-100 p-2">
+            <p className="text-sm font-medium text-neutral-950">
               {selectedServices.length} service
               {selectedServices.length !== 1 ? "s" : ""} selected
             </p>
@@ -338,10 +358,8 @@ export default function SearchModal({
 
         {/* Search Results */}
         <div className="flex-1 overflow-auto hide-scrollbar mb-20">
-          {isLoading ? (
+          {isLoading && alertStatus === "idle" ? (
             <LoadingState />
-          ) : alertStatus === "success" ? (
-            <SuccessState />
           ) : alertStatus === "error" ? (
             <ErrorState onRetry={handleRetry} />
           ) : !searchQuery.trim() ? (
@@ -385,31 +403,30 @@ export default function SearchModal({
         </div>
 
         {/* Bottom Action Buttons */}
-        {alertStatus !== "success" && (
-          <CommonBottomButton
-            fixed={true}
-            buttons={[
-              {
-                text: "Cancel",
-                onClick: handleClose,
-                className: "rounded-md pl-3",
-                isBackButton: true,
-                disable: alertStatus === "loading",
-              },
-              {
-                text:
-                  alertStatus === "error" ? "Try Again" : "Request Services",
-                onClick:
-                  alertStatus === "error"
-                    ? handleRetry
-                    : handleConfirmSelection,
-                className: "w-full rounded-md",
-                disable: !hasSelectedServices || alertStatus === "loading",
-                swipe: hasSelectedServices && alertStatus === "idle",
-              },
-            ]}
-          />
-        )}
+        <CommonBottomButton
+          fixed={true}
+          buttons={[
+            {
+              text: "Cancel",
+              onClick: handleClose,
+              className: "rounded-md pl-3",
+              isBackButton: true,
+              color: SERVICE_ACTION_COLOR,
+              textColor: SERVICE_ACTION_TEXT_COLOR,
+              disable: alertStatus === "loading",
+            },
+            {
+              text: alertStatus === "error" ? "Try Again" : "Request Services",
+              onClick:
+                alertStatus === "error" ? handleRetry : handleConfirmSelection,
+              className: "w-full rounded-md",
+              color: SERVICE_ACTION_COLOR,
+              textColor: SERVICE_ACTION_TEXT_COLOR,
+              disable: !hasSelectedServices || alertStatus === "loading",
+              isLoading: alertStatus === "loading" || creatingAlert,
+            },
+          ]}
+        />
       </div>
     </BottomPopUp>
   );

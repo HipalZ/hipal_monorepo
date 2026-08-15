@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { memo, useCallback, useState } from "react";
 import { motion } from "framer-motion";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useLogin } from "@/components/store/useLogin";
 import useTableData from "@/components/store/useTableData";
@@ -23,12 +23,17 @@ const MemoHiCodeValidate = (props: IValidate) => {
   const accessToken = useUserToken.getState().accessToken;
   const { placeOrder, isOpenMyOrders } = props;
   const { setShowCart, setCartPage, setHiCodePopupBeforeBill } = useCart();
-  const { setHiCodePopup, hiCodeUser, setHiCode: saveInPersist, tableName } = useTableData();
+  const {
+    setHiCodePopup,
+    hiCodeUser,
+    setHiCode: saveInPersist,
+    tableName,
+  } = useTableData();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const userDetails = useLogin((state) => state.userDetails);
   const setDirection = useLogin((state) => state.setDirection);
   const { setCheckLogin } = usePaymentStore();
-  const placeholders = ['C', 'O', 'D', 'E'];
+  const placeholders = ["C", "O", "D", "E"];
   // State to manage each digit of the HiCode
   const [hiCodeDigits, setHiCodeDigits] = useState(["", "", "", ""]);
   const [error, setError] = useState(false);
@@ -48,7 +53,10 @@ const MemoHiCodeValidate = (props: IValidate) => {
   };
 
   // Handle backspace to delete and move focus backward
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) => {
     if (e.key === "Backspace" && !hiCodeDigits[index] && index > 0) {
       const prevInput = document.getElementById(`digit-${index - 1}`);
       prevInput?.focus();
@@ -89,7 +97,7 @@ const MemoHiCodeValidate = (props: IValidate) => {
           setCartPage("order");
           setShowCart(true);
           setHiCodePopupBeforeBill(false);
-          console.log('triggered here')
+          console.log("triggered here");
           return;
         }
         setHiCodePopup(false);
@@ -116,7 +124,13 @@ const MemoHiCodeValidate = (props: IValidate) => {
       className="relative flex flex-col items-center justify-center p-6 bg-white"
     >
       <ConfettiHeader direction="top" />
-      <Image src={CartFriend} alt="cart-friend" width={300} height={135} className="mt-8" />
+      <Image
+        src={CartFriend}
+        alt="cart-friend"
+        width={300}
+        height={135}
+        className="mt-8"
+      />
       {hiCodeUser?.phone ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -128,19 +142,27 @@ const MemoHiCodeValidate = (props: IValidate) => {
             Ordering with friends?
           </h3>
           <p className="text-sm text-gray-500">
-            Your table <span className="text-lg font-semibold">{tableName}</span> is already occupied!
+            Your table{" "}
+            <span className="text-lg font-semibold">{tableName}</span> is
+            already occupied!
           </p>
           <div className="flex items-center gap-4 pl-2 mt-4 text-left text-[#000000]">
             <article className="bg-[#6A35FF30] p-2 rounded-xl">
               <MdPerson size={28} className="text-[#6A35FF]" />
             </article>
             <span className="text-sm text-gray-500">
-              The table admin is <span className="text-base font-semibold">{hiCodeUser?.name}</span> with number {maskPhoneNumber(hiCodeUser?.phone)}
+              The table admin is{" "}
+              <span className="text-base font-semibold">
+                {hiCodeUser?.name}
+              </span>{" "}
+              with number {maskPhoneNumber(hiCodeUser?.phone)}
             </span>
           </div>
         </motion.div>
       ) : (
-        <h3 className="mb-4 text-2xl font-bold text-gray-800 space-grotesk-700">Enter 4 Digit HiCode</h3>
+        <h3 className="mb-4 text-2xl font-bold text-gray-800 space-grotesk-700">
+          Enter 4 Digit HiCode
+        </h3>
       )}
       <div className="flex justify-center gap-4 mb-4">
         {hiCodeDigits.map((digit, index) => (
@@ -158,7 +180,11 @@ const MemoHiCodeValidate = (props: IValidate) => {
         ))}
       </div>
       {error && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full pt-2 text-red-600">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="w-full pt-2 text-red-600"
+        >
           Please enter a valid 4-digit code
         </motion.div>
       )}

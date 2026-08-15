@@ -8,7 +8,7 @@ import {
   useCallback,
   memo,
 } from "react";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import Welcome from "@/assets/login/waveHand.png";
 import WelcomeOTP from "@/assets/login/otp.png";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
@@ -39,7 +39,7 @@ const MemoCombinedLogin = () => {
   const [showOtpScreen, setShowOtpScreen] = useState(false);
   const [loading, setLoading] = useState(false);
   const inputRefs = Array.from({ length: 4 }, () =>
-    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null)
   );
   const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
   const {
@@ -137,7 +137,7 @@ const MemoCombinedLogin = () => {
 
   const handleKeyDown = (
     index: number,
-    e: React.KeyboardEvent<HTMLInputElement>,
+    e: React.KeyboardEvent<HTMLInputElement>
   ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       const newOtp = [...otp];
@@ -272,7 +272,7 @@ const MemoCombinedLogin = () => {
           <section
             className={cn(
               showOtpScreen ? "float-right" : "float-left",
-              "bg-inherit w-[5rem] h-[5rem] rounded-lg flex items-center justify-center -mt-[4.5rem] p-1 shadow-xl overflow-hidden",
+              "bg-inherit w-[5rem] h-[5rem] rounded-lg flex items-center justify-center -mt-[4.5rem] p-1 shadow-xl overflow-hidden"
             )}
           >
             <Image
@@ -376,8 +376,8 @@ const MemoCombinedLogin = () => {
                     sanitizePhoneInput(
                       e.target.value,
                       phone,
-                      e.nativeEvent as InputEvent,
-                    ),
+                      e.nativeEvent as InputEvent
+                    )
                   )
                 }
                 className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"

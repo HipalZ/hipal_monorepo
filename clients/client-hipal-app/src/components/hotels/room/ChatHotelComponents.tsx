@@ -2,7 +2,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ShoppingCart, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import {
+  ChevronLeft,
+  ShoppingCart,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   actionOptions,
   ActionType,
@@ -19,6 +26,36 @@ import type {
 } from "@/components/types/hotelTypes";
 import MemoFoodType from "@/components/atoms/foodType";
 
+const formatCountdown = (milliseconds: number) => {
+  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+};
+
+const formatDuration = (milliseconds: number) => {
+  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+  if (totalSeconds < 60) return `${totalSeconds} sec`;
+
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return seconds > 0 ? `${minutes} min ${seconds} sec` : `${minutes} min`;
+};
+
+const useNow = (enabled: boolean) => {
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [enabled]);
+
+  return now;
+};
+
 /* ─────────────────────────── Chat Header ─────────────────────────── */
 
 export const ChatHeader = ({
@@ -32,9 +69,9 @@ export const ChatHeader = ({
       variant="ghost"
       size="icon"
       onClick={onClose}
-      className="h-8 w-8 rounded-full hover:bg-slate-100 transition-colors shrink-0"
+      className="h-9 w-9 rounded-full border border-slate-200 bg-white text-slate-900 shadow-sm hover:bg-slate-100 transition-colors shrink-0"
     >
-      <ChevronLeft className="h-4 w-4 text-slate-600" />
+      <ChevronLeft className="h-5 w-5 text-slate-900" />
     </Button>
     <article className="flex items-center gap-3 flex-1 min-w-0">
       <Avatar className="h-9 w-9 border-2 border-slate-100 shadow-sm shrink-0">
@@ -64,7 +101,11 @@ interface StatusBadgeProps {
   isWarning: boolean;
 }
 
-const StatusBadge = ({ isInProgress, isDelivered, isWarning }: StatusBadgeProps) => {
+const StatusBadge = ({
+  isInProgress,
+  isDelivered,
+  isWarning,
+}: StatusBadgeProps) => {
   if (isInProgress)
     return (
       <span className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-[9px] font-bold px-2.5 py-[3px] rounded-full uppercase tracking-widest shadow-sm">
@@ -124,7 +165,10 @@ export const ChatMessageHotel = ({
           <div className="relative rounded-[20px] rounded-br-[5px] px-4 py-3.5 bg-gradient-to-br from-[#4F46E5] via-[#4338CA] to-[#3730A3] text-white shadow-[0_8px_24px_rgba(79,70,229,0.30)] min-w-[180px] border border-indigo-400/20">
             <div className="flex flex-col gap-1">
               {chat.alertId.serviceIds.map((service: Service) => (
-                <p key={service?._id} className="text-[14px] font-semibold leading-snug tracking-tight">
+                <p
+                  key={service?._id}
+                  className="text-[14px] font-semibold leading-snug tracking-tight"
+                >
                   {service?.name}
                 </p>
               ))}
@@ -186,20 +230,30 @@ const ChatReplyMessage = ({
 
   // Status badges only shown on the latest reply — older ones are plain history
   const isInProgress = isLatest && chat?.alertId?.alertProgress === "ACCEPTED";
-  const isDelivered  = isLatest && chat?.alertId?.alertProgress === "DELIVERED";
+  const isDelivered = isLatest && chat?.alertId?.alertProgress === "DELIVERED";
+  const now = useNow(isInProgress);
+  const acceptedAt =
+    chat?.alertId?.acceptedAt || chat?.alertId?.createdAt || chat?.date;
+  const acceptedDisplayAt = chat?.alertId?.acceptedAt;
+  const deliveredAt =
+    chat?.alertId?.deliveredAt || (isDelivered ? reply?.date : undefined);
 
   /* ETA — computed only when the progress bar will actually render */
   let remainingMinutes = 0;
   let progressPercent = 0;
+  let remainingMs = 0;
+  let expectedAt = 0;
 
   if (isInProgress) {
-    const acceptedAt = chat?.alertId?.acceptedAt || chat?.alertId?.createdAt || chat?.date;
     const avgMins = chat?.alertId?.serviceIds?.[0]?.avgCompletionTime || 15;
     const totalMs = avgMins * 60 * 1000;
-    const expectedAt = acceptedAt + totalMs;
-    const remaining = Math.max(0, expectedAt - Date.now());
-    remainingMinutes = Math.ceil(remaining / 60000);
-    progressPercent = Math.min(100, Math.max(0, ((totalMs - remaining) / totalMs) * 100));
+    expectedAt = acceptedAt + totalMs;
+    remainingMs = Math.max(0, expectedAt - now);
+    remainingMinutes = Math.ceil(remainingMs / 60000);
+    progressPercent = Math.min(
+      100,
+      Math.max(0, ((totalMs - remainingMs) / totalMs) * 100)
+    );
   }
 
   /* Bubble theme */
@@ -232,7 +286,9 @@ const ChatReplyMessage = ({
         </span>
 
         {/* Bubble */}
-        <article className={`${bubbleTheme} rounded-[20px] rounded-bl-[5px] p-4 border shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden`}>
+        <article
+          className={`${bubbleTheme} rounded-[20px] rounded-bl-[5px] p-4 border shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden`}
+        >
           {/* Decorative shimmer */}
           <div className="pointer-events-none absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-white/40 to-transparent" />
 
@@ -247,9 +303,11 @@ const ChatReplyMessage = ({
             )}
 
             {/* Message text — purely from backend */}
-            <p className={`text-[13.5px] leading-[1.6] font-normal tracking-[-0.01em] ${
-              isWarning ? "text-red-700" : "text-slate-700"
-            }`}>
+            <p
+              className={`text-[13.5px] leading-[1.6] font-normal tracking-[-0.01em] ${
+                isWarning ? "text-red-700" : "text-slate-700"
+              }`}
+            >
               {reply?.description}
             </p>
 
@@ -258,14 +316,24 @@ const ChatReplyMessage = ({
               <div className="mt-1 bg-slate-50 rounded-2xl p-3 border border-slate-100/80 shadow-inner">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-widest">
-                    Estimated Arrival
+                    Completion ETA {formatHotelTime(expectedAt)}
                   </span>
-                  <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full ${
-                    remainingMinutes > 0
-                      ? "bg-blue-50 text-blue-600"
-                      : "bg-emerald-50 text-emerald-600 animate-pulse"
-                  }`}>
-                    {remainingMinutes > 0 ? `~${remainingMinutes} min away` : "Arriving now ✨"}
+                  <span
+                    className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full ${
+                      remainingMinutes > 0
+                        ? "bg-blue-50 text-blue-600"
+                        : "bg-emerald-50 text-emerald-600 animate-pulse"
+                    }`}
+                  >
+                    {remainingMinutes > 0
+                      ? `~${remainingMinutes} min away`
+                      : "Arriving now ✨"}
+                  </span>
+                </div>
+                <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-slate-600">
+                  <span>Reverse timer</span>
+                  <span>
+                    {remainingMs > 0 ? formatCountdown(remainingMs) : "0:00"}
                   </span>
                 </div>
                 {/* Track */}
@@ -279,6 +347,25 @@ const ChatReplyMessage = ({
                     <div className="absolute inset-y-0 right-0 w-3 bg-white/30 animate-pulse rounded-full" />
                   </motion.div>
                 </div>
+              </div>
+            )}
+
+            {isLatest && acceptedDisplayAt && (
+              <div className="rounded-2xl border border-slate-100 bg-white/70 p-3 text-[11px] text-slate-500">
+                <div className="flex items-center justify-between gap-3">
+                  <span>Accepted</span>
+                  <span className="font-semibold text-slate-700">
+                    {formatHotelTime(acceptedDisplayAt)}
+                  </span>
+                </div>
+                {isDelivered && deliveredAt && (
+                  <div className="mt-1.5 flex items-center justify-between gap-3 border-t border-slate-100 pt-1.5">
+                    <span>Completion time for service</span>
+                    <span className="font-semibold text-slate-700">
+                      {formatDuration(deliveredAt - acceptedDisplayAt)}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -304,10 +391,11 @@ const ChatReplyMessage = ({
                     }`}
                   >
                     <span>{option.text}</span>
-                    {isNegative
-                      ? <XCircle className="h-4 w-4 opacity-70" />
-                      : <CheckCircle2 className="h-4 w-4 opacity-70" />
-                    }
+                    {isNegative ? (
+                      <XCircle className="h-4 w-4 opacity-70" />
+                    ) : (
+                      <CheckCircle2 className="h-4 w-4 opacity-70" />
+                    )}
                   </motion.button>
                 );
               })}
@@ -340,7 +428,9 @@ const ChatReplyMessage = ({
                       key={option?.id}
                       whileHover={{ scale: 1.18, y: -3 }}
                       whileTap={{ scale: 0.92 }}
-                      onClick={() => handleReviewSubmit(reply?.userId?._id, option?.value)}
+                      onClick={() =>
+                        handleReviewSubmit(reply?.userId?._id, option?.value)
+                      }
                       className="flex flex-col items-center gap-1.5 p-3 rounded-[16px] hover:bg-white transition-all cursor-pointer flex-1 outline-none group focus:ring-2 focus:ring-indigo-100"
                       aria-label={option?.id}
                     >
@@ -367,7 +457,7 @@ const ChatReplyMessage = ({
 const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.dish.price * item.quantity,
-    0,
+    0
   );
   return (
     <motion.div
@@ -379,7 +469,9 @@ const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
       {/* Header */}
       <div className="bg-gradient-to-r from-[#1E1B4B] to-[#312E81] text-white px-4 py-3 flex items-center gap-2.5">
         <ShoppingCart className="h-4 w-4 text-indigo-300 shrink-0" />
-        <span className="font-semibold text-[13px] tracking-tight">Order Summary</span>
+        <span className="font-semibold text-[13px] tracking-tight">
+          Cart updates ({cart.length} item{cart.length === 1 ? "" : "s"})
+        </span>
       </div>
 
       {/* Items */}
@@ -404,12 +496,17 @@ const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
                 )}
                 {item?.extras?.length > 0 && (
                   <p className="text-[10px] mt-1.5 text-slate-500 leading-relaxed">
-                    <span className="font-semibold text-slate-600">Add-ons: </span>
+                    <span className="font-semibold text-slate-600">
+                      Add-ons:{" "}
+                    </span>
                     {item.extras.map((extra, index) => (
                       <span key={extra.id}>
                         {extra.name}
                         {extra.quantity > 1 && (
-                          <span className="text-slate-400"> ×{extra.quantity}</span>
+                          <span className="text-slate-400">
+                            {" "}
+                            ×{extra.quantity}
+                          </span>
                         )}
                         {index !== item.extras.length - 1 && ", "}
                       </span>
@@ -435,8 +532,12 @@ const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
 
       {/* Total */}
       <div className="px-4 py-3 bg-white border-t border-slate-100 flex justify-between items-center">
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Total</span>
-        <span className="text-[15px] font-bold text-indigo-600">₹{totalPrice}</span>
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+          Total
+        </span>
+        <span className="text-[15px] font-bold text-indigo-600">
+          ₹{totalPrice}
+        </span>
       </div>
     </motion.div>
   );

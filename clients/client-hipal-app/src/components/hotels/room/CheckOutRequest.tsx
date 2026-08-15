@@ -13,13 +13,16 @@ import type { IThemes } from "@/components/types/businessData";
 import { updateTheme } from "@/components/utils/themes";
 import { CardContent } from "@/components/ui/card";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { hasGuestContactDetails } from "./guestContactGuard";
 
 const MemoCheckOutRequest = ({
   businessId,
   themeData,
-}: { businessId: string; themeData: IThemes }) => {
+}: {
+  businessId: string;
+  themeData: IThemes;
+}) => {
   const userDetails = useLogin((s) => s.userDetails);
   const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
   const {
@@ -36,7 +39,7 @@ const MemoCheckOutRequest = ({
   });
   const proceedToCheckout = () => {
     if (!hasGuestContactDetails(userDetails)) {
-      toast.info("Please add your name and phone number to continue.");
+      toast("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
     }
@@ -45,7 +48,7 @@ const MemoCheckOutRequest = ({
 
   const confirmCheckout = async () => {
     if (!hasGuestContactDetails(userDetails)) {
-      toast.info("Please add your name and phone number to continue.");
+      toast("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
     }
@@ -85,6 +88,7 @@ const MemoCheckOutRequest = ({
         height="auto"
         show={showConfirmation}
         onClose={() => !isSubmitting && setShowConfirmation(false)}
+        manageHistory={false}
       >
         <AnimatePresence mode="wait">
           {isSuccess ? (
@@ -101,7 +105,7 @@ const MemoCheckOutRequest = ({
                 </div>
               </div>
               <h2 className="text-xl font-semibold text-green-600 mb-2">
-                Request Sent!
+                Request sent
               </h2>
               <p className="text-gray-600">
                 The help desk has been notified and will process your checkout
@@ -146,10 +150,9 @@ const MemoCheckOutRequest = ({
                       maxWidth="30rem"
                       buttons={[
                         {
-                          text: "Swipe To Checkout",
+                          text: "Request checkout",
                           onClick: confirmCheckout,
                           className: "w-full rounded-xl h-[2.5rem]",
-                          swipe: true,
                           disable: isSubmitting,
                         },
                       ]}

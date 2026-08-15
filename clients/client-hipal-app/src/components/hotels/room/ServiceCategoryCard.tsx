@@ -1,5 +1,5 @@
-"use client";;
-import { useState, useCallback, memo, useMemo } from "react";
+"use client";
+import { useState, useCallback, memo, useMemo, useEffect, useRef } from "react";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import type {
@@ -15,9 +15,9 @@ import {
   useCreateAlert,
   useHotelRoomData,
 } from "@/components/hooks/useHotelRoom";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import dynamic from "next/dynamic";
 import { useCartStore } from "@/components/store/useCartStore";
@@ -29,28 +29,44 @@ import ServiceEtaBadge from "./ServiceEtaBadge";
 // Lazy-loaded components
 const AlertCircle = dynamic(
   () => import("lucide-react").then((mod) => ({ default: mod.AlertCircle })),
-  { ssr: false },
-);
-const CheckCircle = dynamic(
-  () => import("lucide-react").then((mod) => ({ default: mod.CheckCircle })),
-  { ssr: false },
+  { ssr: false }
 );
 const CheckIcon = dynamic(
   () => import("lucide-react").then((mod) => ({ default: mod.Check })),
-  { ssr: false },
+  { ssr: false }
 );
 const FoodOrderPopup = dynamic(() => import("./FoodOrderHotel"), {
   loading: () => <LoadingSpinnerCircle />,
   ssr: false,
 });
 
+const SERVICE_ACTION_COLOR = "#111111";
+const SERVICE_ACTION_TEXT_COLOR = "#ffffff";
+const SERVICE_MUTED_PILL = "bg-neutral-100 text-neutral-500";
+const SERVICE_SELECTED_PILL = "bg-[#111111] text-white shadow-sm";
+
 type AlertStatus = "idle" | "loading" | "success" | "error";
+
+const formatRaisedServicesToast = (serviceNames: string[]) => {
+  if (serviceNames.length === 0) {
+    return "Service request raised.";
+  }
+
+  if (serviceNames.length === 1) {
+    return `${serviceNames[0]} service request raised.`;
+  }
+
+  const lastServiceName = serviceNames[serviceNames.length - 1];
+  const servicePrefix = serviceNames.slice(0, -1).join(", ");
+  return `${servicePrefix} and ${lastServiceName} service requests raised.`;
+};
 
 interface ServiceCategoryCardProps {
   category: IServiceCategory;
   className?: string;
   businessId: string;
   menuId?: IMenuLayout;
+  room?: string;
 }
 
 interface ServiceItemProps {
@@ -60,58 +76,62 @@ interface ServiceItemProps {
   getInitial: (name: string) => string;
 }
 
-const ServiceItem = memo(({ service, selected, onToggle, getInitial }: ServiceItemProps) => (
-  <section>
-    <Card
-      className={`relative p-0 rounded-2xl border-none bg-transparent shadow-none transition-all duration-200 cursor-pointer ${
-        selected ? "" : "hover:bg-gray-50"
-      } ${service.availability === false ? "opacity-50 cursor-not-allowed" : ""}`}
-      onClick={() => {
-        if (service.availability !== false) onToggle();
-      }}
-    >
-      {selected && (
-        <div className="absolute top-1 left-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-primary shadow-sm ring-2 ring-white">
-          <CheckIcon className="w-3 h-3 text-white" />
-        </div>
-      )}
-      <div className="mb-3 text-center flex items-start justify-center">
-        <div className="relative inline-flex">
-          {service.image ? (
-            <Image
-              src={service.image}
-              alt={service.name}
-              width={96}
-              height={96}
-              className="w-[110px] h-[100px]"
+const ServiceItem = memo(
+  ({ service, selected, onToggle, getInitial }: ServiceItemProps) => (
+    <section>
+      <Card
+        className={`relative p-0 rounded-2xl border-none bg-transparent shadow-none transition-all duration-200 cursor-pointer ${
+          selected ? "" : "hover:bg-gray-50"
+        } ${
+          service.availability === false ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+        onClick={() => {
+          if (service.availability !== false) onToggle();
+        }}
+      >
+        {selected && (
+          <div className="absolute left-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-[#111111] shadow-sm ring-2 ring-white">
+            <CheckIcon className="w-3 h-3 text-white" />
+          </div>
+        )}
+        <div className="mb-3 text-center flex items-start justify-center">
+          <div className="relative inline-flex">
+            {service.image ? (
+              <Image
+                src={service.image}
+                alt={service.name}
+                width={96}
+                height={96}
+                className="w-[110px] h-[100px]"
+              />
+            ) : (
+              <Avatar className="w-12 h-12 text-center flex items-start justify-center">
+                <AvatarFallback className="bg-[#111111] text-white text-lg font-semibold">
+                  {getInitial(service.name)}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            {/* Est. time-to-delivery, so the guest can check the expected wait before ordering */}
+            <ServiceEtaBadge
+              minutes={service.avgDeliveryTime}
+              className="absolute -top-2 -right-2 z-10"
             />
-          ) : (
-            <Avatar className="w-12 h-12 text-center flex items-start justify-center">
-              <AvatarFallback className="bg-primary text-base-100 text-lg font-semibold">
-                {getInitial(service.name)}
-              </AvatarFallback>
-            </Avatar>
-          )}
-          {/* Est. time-to-delivery, so the guest can check the expected wait before ordering */}
-          <ServiceEtaBadge
-            minutes={service.avgDeliveryTime}
-            className="absolute -top-2 -right-2 z-10"
-          />
+          </div>
         </div>
+        {service.availability === false && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
+            <span className="text-xs font-medium text-white bg-red-500 px-2 py-1 rounded">
+              Unavailable
+            </span>
+          </div>
+        )}
+      </Card>
+      <div className="text-center poppins-regular py-2 font-medium cursor-pointer text-black text-xs leading-tight">
+        {service.name}
       </div>
-      {service.availability === false && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
-          <span className="text-xs font-medium text-white bg-red-500 px-2 py-1 rounded">
-            Unavailable
-          </span>
-        </div>
-      )}
-    </Card>
-    <div className="text-center poppins-regular py-2 font-medium cursor-pointer text-black text-xs leading-tight">
-      {service.name}
-    </div>
-  </section>
-));
+    </section>
+  )
+);
 ServiceItem.displayName = "ServiceItem";
 
 function MemoServiceCategoryCard({
@@ -119,16 +139,20 @@ function MemoServiceCategoryCard({
   className = "",
   businessId,
   menuId,
+  room: roomFromProps,
 }: ServiceCategoryCardProps) {
   const [servicePopup, setServicePopup] = useState<boolean>(false);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [alertStatus, setAlertStatus] = useState<AlertStatus>("idle");
+  const suppressAutoOpenRef = useRef(false);
 
   const accessToken = useUserToken.getState().accessToken;
   const { setCheckLogin } = usePaymentStore();
   const userDetails = useLogin((s) => s.userDetails);
   const query = useSearchParams();
-  const room = query.get("room");
+  const router = useRouter();
+  const pathname = usePathname();
+  const room = roomFromProps || query.get("room") || "";
   const { gettingRoomLoader, roomPayload } = useHotelRoomData();
   const { creatingAlert, createAlert } = useCreateAlert();
   const { setCartEmpty } = useCartStore();
@@ -146,8 +170,47 @@ function MemoServiceCategoryCard({
     return name === "food" || name === "order_food";
   }, [category.name]);
 
-  const isLoading = gettingRoomLoader || creatingAlert;
+  const isLoading = gettingRoomLoader;
   const hasSelectedServices = selectedServices.length > 0;
+  const maxSelectableServices = 2;
+  const selectedServiceNames = useMemo(
+    () =>
+      category.serviceIds
+        .filter((service) => selectedServices.includes(service._id))
+        .map((service) => service.name),
+    [category.serviceIds, selectedServices]
+  );
+
+  useEffect(() => {
+    const shouldOpen = query.get("serviceCategory") === category._id;
+    if (!shouldOpen) {
+      suppressAutoOpenRef.current = false;
+    }
+    if (shouldOpen && suppressAutoOpenRef.current) return;
+    if (
+      shouldOpen &&
+      !servicePopup &&
+      accessToken &&
+      hasGuestContactDetails(userDetails)
+    ) {
+      setServicePopup(true);
+      setSelectedServices([]);
+      setAlertStatus("idle");
+    }
+    if (!shouldOpen && servicePopup) {
+      setServicePopup(false);
+      setSelectedServices([]);
+      setAlertStatus("idle");
+      setCartEmpty();
+    }
+  }, [
+    accessToken,
+    category._id,
+    query,
+    servicePopup,
+    setCartEmpty,
+    userDetails,
+  ]);
 
   const openServicePopup = useCallback(() => {
     if (!accessToken) {
@@ -155,63 +218,105 @@ function MemoServiceCategoryCard({
       return;
     }
     if (!hasGuestContactDetails(userDetails)) {
-      toast.info("Please add your name and phone number to continue.");
+      toast("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
     }
+    const params = new URLSearchParams(query.toString());
+    params.set("serviceCategory", category._id);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     setServicePopup(true);
     setSelectedServices([]);
     setAlertStatus("idle");
-  }, [accessToken, setCheckLogin, userDetails]);
+  }, [
+    accessToken,
+    category._id,
+    pathname,
+    query,
+    router,
+    setCheckLogin,
+    userDetails,
+  ]);
 
   const closeServicePopup = useCallback(() => {
+    suppressAutoOpenRef.current = true;
+    const params = new URLSearchParams(query.toString());
+    params.delete("serviceCategory");
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     setServicePopup(false);
     setSelectedServices([]);
     setAlertStatus("idle");
     setCartEmpty();
-  }, [setCartEmpty]);
+  }, [pathname, query, router, setCartEmpty]);
 
-  const handleServiceToggle = useCallback((serviceId: string) => {
-    setSelectedServices((prev) =>
-      prev.includes(serviceId) ? prev.filter((id) => id !== serviceId) : [...prev, serviceId]
-    );
-  }, []);
+  const handleServiceToggle = useCallback(
+    (serviceId: string) => {
+      if (
+        !selectedServices.includes(serviceId) &&
+        selectedServices.length >= maxSelectableServices
+      ) {
+        toast("You can request up to 2 services at a time.");
+        return;
+      }
+
+      setSelectedServices((prev) => {
+        if (prev.includes(serviceId))
+          return prev.filter((id) => id !== serviceId);
+        return [...prev, serviceId];
+      });
+    },
+    [maxSelectableServices, selectedServices]
+  );
 
   const handleConfirmSelection = useCallback(async () => {
     if (!hasSelectedServices) return;
     if (!hasGuestContactDetails(userDetails)) {
-      toast.info("Please add your name and phone number to continue.");
+      toast("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
     }
     try {
       setAlertStatus("loading");
-      const roomData = await roomPayload({
+      const roomData = (await roomPayload({
         businessId,
         roomName: room || "hipalz",
-      });
+      })) as { data?: { _id?: string } };
 
-      if (!roomData?.data?._id) throw new Error("Could not find room data");
+      const roomId = roomData?.data?._id;
+      if (!roomId) throw new Error("Could not find room data");
 
       await createAlert({
         serviceIds: selectedServices,
         businessId,
         userId: userDetails?._id || "",
-        roomId: roomData.data._id,
+        roomId,
       });
 
-      setAlertStatus("success");
-      toast.success("Request sent successfully");
-      setTimeout(closeServicePopup, 1500);
+      toast.success(formatRaisedServicesToast(selectedServiceNames));
+      setAlertStatus("idle");
+      setSelectedServices([]);
     } catch (error) {
       setAlertStatus("error");
       toast.error("Error sending request. Please try again.");
     }
-  }, [businessId, closeServicePopup, createAlert, hasSelectedServices, room, roomPayload, selectedServices, setCheckLogin, userDetails]);
+  }, [
+    businessId,
+    createAlert,
+    hasSelectedServices,
+    room,
+    roomPayload,
+    selectedServices,
+    selectedServiceNames,
+    setCheckLogin,
+    userDetails,
+  ]);
 
   const handleRetry = useCallback(() => setAlertStatus("idle"), []);
 
-  const getInitial = useCallback((name: string) => name.charAt(0).toUpperCase(), []);
+  const getInitial = useCallback(
+    (name: string) => name.charAt(0).toUpperCase(),
+    []
+  );
 
   // Optimized: isSelected check should be memoized to avoid re-renders in ServiceItem
   const isSelected = useCallback(
@@ -220,22 +325,36 @@ function MemoServiceCategoryCard({
   );
 
   // Optimized: Memoize the button configuration to prevent CommonBottomButton re-renders
-  const footerButtons = useMemo(() => [
-    {
-      text: "Cancel",
-      onClick: closeServicePopup,
-      className: "rounded-md pl-3",
-      isBackButton: true,
-      disable: alertStatus === "loading",
-    },
-    {
-      text: alertStatus === "error" ? "Try Again" : "Confirm",
-      onClick: alertStatus === "error" ? handleRetry : handleConfirmSelection,
-      className: "w-full rounded-md",
-      disable: !hasSelectedServices || alertStatus === "loading",
-      swipe: hasSelectedServices && alertStatus === "idle",
-    },
-  ], [alertStatus, closeServicePopup, handleRetry, handleConfirmSelection, hasSelectedServices]);
+  const footerButtons = useMemo(
+    () => [
+      {
+        text: "Cancel",
+        onClick: closeServicePopup,
+        className: "rounded-md pl-3",
+        isBackButton: true,
+        color: SERVICE_ACTION_COLOR,
+        textColor: SERVICE_ACTION_TEXT_COLOR,
+        disable: alertStatus === "loading",
+      },
+      {
+        text: alertStatus === "error" ? "Try Again" : "Confirm",
+        onClick: alertStatus === "error" ? handleRetry : handleConfirmSelection,
+        className: "w-full rounded-md",
+        color: SERVICE_ACTION_COLOR,
+        textColor: SERVICE_ACTION_TEXT_COLOR,
+        disable: !hasSelectedServices || alertStatus === "loading",
+        isLoading: alertStatus === "loading" || creatingAlert,
+      },
+    ],
+    [
+      alertStatus,
+      closeServicePopup,
+      handleRetry,
+      handleConfirmSelection,
+      hasSelectedServices,
+      creatingAlert,
+    ]
+  );
 
   return (
     <>
@@ -254,10 +373,10 @@ function MemoServiceCategoryCard({
         <div className="absolute inset-0 rounded-[28px] ring-1 ring-inset ring-white/20" />
 
         <CardContent className="relative z-20 p-3">
-        <h3 className="max-w-[60%] text-sm md:text-base leading-[1.05] tracking-[-0.04em] text-white line-clamp-2">
-          {formattedCategoryName}
-        </h3>
-      </CardContent>
+          <h3 className="max-w-[60%] text-sm md:text-base leading-[1.05] tracking-[-0.04em] text-white line-clamp-2">
+            {formattedCategoryName}
+          </h3>
+        </CardContent>
       </Card>
       {servicePopup && (
         <>
@@ -272,18 +391,25 @@ function MemoServiceCategoryCard({
               menuId={menuId}
             />
           ) : (
-            <BottomPopUp hide show={servicePopup} onClose={closeServicePopup}>
+            <BottomPopUp
+              hide
+              show={servicePopup}
+              onClose={closeServicePopup}
+              manageHistory={false}
+            >
               <div className="p-4 relative max-h-[90dvh] overflow-auto hide-scrollbar">
                 {/* Header row is always present (title + count pill) so selecting
-                    a service never pushes the grid down — no layout shift. */}
+                    a service never pushes the grid down - no layout shift. */}
                 <div className="mb-4 flex items-center justify-between gap-2">
-                  <h2 className="text-xl font-bold text-primary">
+                  <h2 className="text-xl font-bold text-[#111111]">
                     {formattedCategoryName} Assistance
                   </h2>
                   {alertStatus === "idle" && (
                     <span
                       className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors duration-200 ${
-                        hasSelectedServices ? "bg-primary text-white" : "bg-gray-100 text-gray-400"
+                        hasSelectedServices
+                          ? SERVICE_SELECTED_PILL
+                          : SERVICE_MUTED_PILL
                       }`}
                     >
                       {selectedServices.length} selected
@@ -291,38 +417,39 @@ function MemoServiceCategoryCard({
                   )}
                 </div>
 
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-10"><LoadingSpinnerCircle /></div>
-                ) : alertStatus === "success" ? (
-                  <div className="flex flex-col items-center justify-center py-10">
-                    <CheckCircle className="w-16 h-16 mb-4 text-green-500" />
-                    <h3 className="text-xl font-semibold text-primary">Request Sent!</h3>
+                {isLoading && alertStatus === "idle" ? (
+                  <div className="flex items-center justify-center py-10">
+                    <LoadingSpinnerCircle />
                   </div>
                 ) : alertStatus === "error" ? (
                   <div className="flex flex-col items-center justify-center py-10">
                     <AlertCircle className="w-16 h-16 mb-4 text-red-500" />
-                    <button onClick={handleRetry} className="px-4 py-2 bg-primary text-white rounded-md">Try Again</button>
+                    <button
+                      onClick={handleRetry}
+                      className="rounded-md bg-[#111111] px-4 py-2 text-white transition-colors hover:bg-neutral-800"
+                    >
+                      Try Again
+                    </button>
                   </div>
                 ) : (
                   <div className="mb-20 grid grid-cols-3 gap-4">
-                    {category.serviceIds.map((service) => (
-                      service.availability && (
-                        <ServiceItem
-                          key={service._id}
-                          service={service}
-                          selected={isSelected(service._id)}
-                          onToggle={() => handleServiceToggle(service._id)}
-                          getInitial={getInitial}
-                        />
-                      )
-                    ))}
+                    {category.serviceIds.map(
+                      (service) =>
+                        service.availability && (
+                          <ServiceItem
+                            key={service._id}
+                            service={service}
+                            selected={isSelected(service._id)}
+                            onToggle={() => handleServiceToggle(service._id)}
+                            getInitial={getInitial}
+                          />
+                        )
+                    )}
                   </div>
                 )}
               </div>
 
-              {alertStatus !== "success" && (
-                <CommonBottomButton fixed buttons={footerButtons} />
-              )}
+              <CommonBottomButton fixed buttons={footerButtons} />
             </BottomPopUp>
           )}
         </>
@@ -330,5 +457,5 @@ function MemoServiceCategoryCard({
     </>
   );
 }
-const ServiceCategoryCard = memo(MemoServiceCategoryCard)
-export default ServiceCategoryCard
+const ServiceCategoryCard = memo(MemoServiceCategoryCard);
+export default ServiceCategoryCard;

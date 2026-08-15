@@ -1,16 +1,17 @@
 import { getBusinessData } from "@/apis/commonApis";
 import { getThemeSettings } from "@/apis/hotel";
-import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import ExploreSkelton from "@/components/atoms/progressBar/exploreLoader";
+import HotelLogoLoader from "@/components/hotels/room/HotelLogoLoader";
 import QuickCard from "@/components/hotels/room/QuickCard";
 
 import type { BusinessDetails } from "@/components/types/businessData";
 import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
 
 export const dynamics = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 export async function generateMetadata({
-  params,
   searchParams,
 }: {
   params: { businessId: string };
@@ -18,99 +19,68 @@ export async function generateMetadata({
 }) {
   const room = typeof searchParams.room === "string" ? searchParams.room : "";
 
-  const businessData = (await getBusinessData(
-    params.businessId,
-  )) as BusinessDetails;
-
-  if (!businessData) {
-    return {
-      title: room ? `Checkin - ${room}` : "Checkin",
-      description: room
-        ? `Checkin page for ${room}`
-        : "Checkin page for businesses",
-    };
-  }
-
-  const { name, description, logoUrl } = businessData;
-  const metaDescription = description || "Welcome to our business offerings!";
-  const titleWithRoom = room ? `${name} - ${room}` : name;
-
   return {
-    title: titleWithRoom,
-    description: metaDescription,
-    icons: {
-      icon: logoUrl,
-    },
-    openGraph: {
-      title: titleWithRoom,
-      description: metaDescription,
-      images: [
-        {
-          url: logoUrl || "https://example.com/fallback-image.jpg",
-          width: 1200,
-          height: 630,
-          alt: name,
-        },
-      ],
-      type: "website",
-    },
+    title: room ? `Checkin - ${room}` : "Checkin",
+    description: room
+      ? `Checkin page for ${room}`
+      : "Checkin page for businesses",
   };
 }
 
 const HotelBackgroundContainer = dynamic(
   () =>
     import("@/components/atoms/WidthWrapper").then(
-      (mod) => mod.HotelBackgroundContainer,
+      (mod) => mod.HotelBackgroundContainer
     ),
   {
-    loading: () => <SkeletonLoader height={200} />,
-  },
+    loading: () => <ExploreSkelton />,
+  }
 );
 
 const ViewPortContainer = dynamic(
   () =>
     import("@/components/atoms/WidthWrapper").then(
-      (mod) => mod.ViewPortContainer,
+      (mod) => mod.ViewPortContainer
     ),
   {
-    loading: () => <SkeletonLoader height={200} />,
-  },
+    loading: () => <ExploreSkelton />,
+  }
 );
 
 const RoomCard = dynamic(() => import("@/components/hotels/room/RoomNumber"), {
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <HotelLogoLoader />,
 });
 
 const HotelWelcomeCard = dynamic(
   () => import("@/components/hotels/room/RoomWelcome"),
   {
-    loading: () => <SkeletonLoader height={200} />,
-  },
+    loading: () => <HotelLogoLoader />,
+  }
 );
 
 const ChatHotel = dynamic(() => import("@/components/hotels/room/ChatHotel"), {
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <HotelLogoLoader />,
 });
 
 const CheckOutRequest = dynamic(
   () => import("@/components/hotels/room/CheckOutRequest"),
   {
-    loading: () => <SkeletonLoader height={200} />,
-  },
+    loading: () => <HotelLogoLoader />,
+  }
 );
 
 const ServiceCategoriesSection = dynamic(
   () => import("@/components/hotels/room/ServiceCategoriesSection"),
   {
-    loading: () => <SkeletonLoader height={100} />,
-  },
+    loading: () => <HotelLogoLoader />,
+  }
 );
 
 const ChatCardSection = dynamic(
   () => import("@/components/hotels/room/ChatCardSection"),
   {
-    loading: () => <SkeletonLoader height={200} />,
-  },
+    loading: () => <HotelLogoLoader />,
+  }
 );
 
 const page = async ({
@@ -121,12 +91,16 @@ const page = async ({
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
   const businessData = (await getBusinessData(
-    params.businessId,
+    params.businessId
   )) as BusinessDetails;
+  if (businessData.outLetType !== "HOTEL") {
+    redirect("/not-allowed");
+  }
   const room =
     typeof searchParams.room === "string" ? searchParams.room : "hipalz";
   const userId = typeof searchParams.id === "string" ? searchParams.id : "";
-  const sessionId = typeof searchParams.sessionId === "string" ? searchParams.sessionId : "";
+  const sessionId =
+    typeof searchParams.sessionId === "string" ? searchParams.sessionId : "";
   const themeData = await getThemeSettings(businessData?.businessId);
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
@@ -163,6 +137,7 @@ const page = async ({
             menuId={businessData?.menuId}
             businessId={businessData.businessId}
             room={room}
+            contactPhone={businessData.phone || businessData.phoneNumber}
           />
         </section>
         <ChatCardSection

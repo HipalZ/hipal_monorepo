@@ -132,7 +132,9 @@ const MemoBookedRoomHotel = () => {
     // rejected as "not checked in to this room".
     const guestId = roomData?.userIds?.[0]?._id;
     if (!guestId) {
-      toast.error("No guest is registered in this room. Register a guest before raising a request.");
+      toast.error(
+        "No guest is registered in this room. Register a guest before raising a request."
+      );
       return;
     }
     const result = await createAlert({
@@ -229,7 +231,9 @@ const MemoBookedRoomHotel = () => {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-bold leading-tight">
-                {categoriesLoading ? "Loading services…" : "Raise a service request"}
+                {categoriesLoading
+                  ? "Loading services…"
+                  : "Raise a service request"}
               </span>
               <span className="block text-xs text-white/80">
                 Order for the guest from the front desk
@@ -306,7 +310,6 @@ const MemoBookedRoomHotel = () => {
                 onClick: handleCheckOut,
                 className: "rounded-lg shadow-md text-white",
                 disable: isPending,
-                swipe: true,
               },
             ]}
           />

@@ -69,11 +69,11 @@ export const useLinkRestaurantToHotel = () => {
             if (data.status === 400 || data.status === 401) {
                 setError(extraData?.error?.issues[0]?.message)
                 setOpenErrorModal(true)
-                return toast.error("Failed to link restaurant")
+                return toast.error("Failed to save restaurant links")
             }
             if (data.status === 200 || data.status === 201) {
                 queryClient.invalidateQueries({ queryKey: ['getLinkedRestaurant', variables.businessId] })
-                return toast.success("Restaurant linked successfully")
+                return toast.success("Restaurant links saved successfully")
             }
         },
         onError: (error) => {

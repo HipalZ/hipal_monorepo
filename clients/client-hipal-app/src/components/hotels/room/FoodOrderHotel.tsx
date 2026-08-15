@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import {
@@ -8,7 +8,7 @@ import {
   useCreateAlert,
   useGetAllLinkRestautants,
 } from "@/components/hooks/useHotelRoom";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import type { IService } from "@/components/hooks/useServicesHotel";
 import { RestaurantListView } from "./RestaurantListView";
@@ -28,7 +28,7 @@ interface FoodOrderPopupProps {
   room: string;
   userId: string;
   services: IService[];
-  menuId: IMenuLayout;
+  menuId?: IMenuLayout;
 }
 
 interface ILinkHotels {
@@ -56,22 +56,28 @@ export default function FoodOrderPopup({
   const [selectedRestaurant, setSelectedRestaurant] =
     useState<ILinkHotels | null>(null);
   const [currentView, setCurrentView] = useState<ViewType>("restaurants");
-  const [menuLoading, setMenuLoading] = useState(false);
 
   // Hooks
   const { gettingRoomLoader, roomPayload } = useHotelRoomData();
   const { creatingAlert, createAlert } = useCreateAlert();
   const { fetchingRestaurants, restaurantData } = useGetAllLinkRestautants(
-    businessId,
-  ) as {
+    businessId
+  ) as unknown as {
     fetchingRestaurants: boolean;
-    restaurantData: ILinkHotels[];
+    restaurantData: ILinkHotels[] | undefined;
   };
 
   const { cart, setCartEmpty } = useCartStore();
   const { setShowCart } = useCart();
   const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
   const userDetails = useLogin((s) => s.userDetails);
+  const linkedRestaurants = restaurantData ?? [];
+  const hasSingleRestaurant = linkedRestaurants.length === 1;
+  const soleRestaurant = hasSingleRestaurant ? linkedRestaurants[0] : null;
+  const activeRestaurant = selectedRestaurant ?? soleRestaurant ?? null;
+  const shouldShowMenu =
+    currentView === "menu" ||
+    (!!show && !!soleRestaurant && !selectedRestaurant);
 
   const sanitizedCart = useMemo(() => {
     return cart.map(({ dish, ...item }) => {
@@ -86,36 +92,41 @@ export default function FoodOrderPopup({
       if (selectedRestaurant?._id === restaurant._id) {
         // If already selected, toggle menu view
         setCurrentView((prev) =>
-          prev === "restaurants" ? "menu" : "restaurants",
+          prev === "restaurants" ? "menu" : "restaurants"
         );
       } else {
         setSelectedRestaurant(restaurant);
         setCurrentView("menu");
-
-        // Simulate menu loading
-        setMenuLoading(true);
-        setTimeout(() => {
-          setMenuLoading(false);
-        }, 1000);
-
-        // Here you would call your API to get the restaurant menu
-        console.log("Fetching menu for restaurant:", restaurant._id);
       }
     },
-    [selectedRestaurant],
+    [selectedRestaurant]
   );
+
+  useEffect(() => {
+    if (!show || !hasSingleRestaurant || selectedRestaurant || !soleRestaurant)
+      return;
+
+    setSelectedRestaurant(soleRestaurant);
+    setCurrentView("menu");
+  }, [hasSingleRestaurant, selectedRestaurant, show, soleRestaurant]);
 
   // Handle back to restaurants list
   const handleBackToRestaurants = useCallback(() => {
+    if (hasSingleRestaurant) {
+      setCartEmpty();
+      setShowCart(false);
+      onClose();
+      return;
+    }
     setCurrentView("restaurants");
     setCartEmpty();
     setShowCart(false);
-  }, [setCartEmpty, setShowCart]);
+  }, [hasSingleRestaurant, onClose, setCartEmpty, setShowCart]);
 
   // Handle order submission
   const handlePlaceOrder = useCallback(async () => {
     if (!hasGuestContactDetails(userDetails)) {
-      toast.info("Please add your name and phone number to continue.");
+      toast("Please add your name and phone number to continue.");
       setCheckLogin(true);
       return;
     }
@@ -124,12 +135,13 @@ export default function FoodOrderPopup({
       setOrderStatus("loading");
 
       // Get room data
-      const roomData = await roomPayload({
+      const roomData = (await roomPayload({
         businessId,
         roomName: room || "hipalz",
-      });
+      })) as { data?: { _id?: string } };
 
-      if (!roomData?.data?._id) {
+      const roomId = roomData?.data?._id;
+      if (!roomId) {
         throw new Error("Could not find room data");
       }
 
@@ -137,7 +149,7 @@ export default function FoodOrderPopup({
         serviceIds: [services?.[0]?._id],
         businessId,
         userId: userDetails?._id || userId,
-        roomId: roomData.data._id,
+        roomId,
         cart: sanitizedCart,
       });
 
@@ -173,26 +185,14 @@ export default function FoodOrderPopup({
     }
 
     if (orderStatus === "success") {
-      return <SuccessView restaurant={selectedRestaurant} />;
+      return <SuccessView restaurant={activeRestaurant} />;
     }
-    const onlyOneRestaurant =
-      restaurantData && restaurantData.length === 1 && !selectedRestaurant;
-
-    if (onlyOneRestaurant) {
-      const sole = restaurantData[0];
-      setSelectedRestaurant(sole);
-      setCurrentView("menu");
-      setMenuLoading(true);
-      setTimeout(() => setMenuLoading(false), 1000);
-      return <LoadingSpinnerCircle />;
-    }
-
-    if (currentView === "menu" && selectedRestaurant) {
+    if (shouldShowMenu && activeRestaurant) {
       return (
         <MenuView
-          restaurant={selectedRestaurant}
+          restaurant={activeRestaurant}
           onBack={handleBackToRestaurants}
-          isLoading={menuLoading}
+          isLoading={false}
           menuId={menuId}
         />
       );
@@ -200,7 +200,7 @@ export default function FoodOrderPopup({
 
     return (
       <RestaurantListView
-        restaurants={restaurantData}
+        restaurants={linkedRestaurants}
         selectedRestaurant={selectedRestaurant}
         onSelectRestaurant={handleSelectRestaurant}
         isLoading={fetchingRestaurants}
@@ -209,7 +209,7 @@ export default function FoodOrderPopup({
   };
 
   return (
-    <BottomPopUp hide show={show} onClose={onClose}>
+    <BottomPopUp hide show={show} onClose={onClose} manageHistory={false}>
       <section className="relative h-full overflow-auto hide-scrollbar pb-36">
         {renderContent()}
       </section>
@@ -231,7 +231,7 @@ export default function FoodOrderPopup({
             disable:
               isLoading ||
               cart?.length === 0 ||
-              (!selectedRestaurant && orderStatus !== "success"),
+              (!activeRestaurant && orderStatus !== "success"),
           },
         ]}
       />

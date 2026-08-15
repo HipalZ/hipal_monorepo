@@ -18,7 +18,7 @@ import CardSection from "@/components/atoms/cardSection";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
 import { useErrorHandling } from "@/utils/helper";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
 import Link from "next/link";
 const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
@@ -37,7 +37,7 @@ const RefferalCouponz = dynamic(() => import("../newPayment/refferalCouponz"), {
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   const { errorText } = useErrorHandling();
-  const router = useRouter()
+  const router = useRouter();
   const userName = useLogin((s) => s.userDetails.name);
   const [HiCode, setHiCode] = useState();
   const { userDetails, setUserCoinZ } = useLogin((s) => ({
@@ -144,7 +144,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   });
   const goBack = () => {
     return router.back();
-  }
+  };
 
   return (
     <main

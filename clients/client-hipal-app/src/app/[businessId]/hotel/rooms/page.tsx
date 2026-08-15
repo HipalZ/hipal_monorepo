@@ -3,6 +3,7 @@ import { getBusinessData } from "@/apis/commonApis";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import type { BusinessDetails } from "@/components/types/businessData";
 import { getRoomTypes } from "@/apis/hotel";
+import { redirect } from "next/navigation";
 // import { DisplayRoomTypes } from "@/components/hotels/room/DisplayRoomsHotel"
 
 export const dynamics = "force-dynamic";
@@ -15,7 +16,7 @@ export async function generateMetadata({
   params: { businessId: string };
 }) {
   const businessData = (await getBusinessData(
-    params.businessId,
+    params.businessId
   )) as BusinessDetails;
   const { name, description, logoUrl } = businessData;
   const metaDescription = description || "Welcome to our business offerings!";
@@ -52,21 +53,21 @@ export async function generateMetadata({
 const HotelBackgroundContainer = dynamic(
   () =>
     import("@/components/atoms/WidthWrapper").then(
-      (mod) => mod.HotelBackgroundContainer,
+      (mod) => mod.HotelBackgroundContainer
     ),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const ViewPortContainer = dynamic(
   () =>
     import("@/components/atoms/WidthWrapper").then(
-      (mod) => mod.ViewPortContainer,
+      (mod) => mod.ViewPortContainer
     ),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const NavBarHotel = dynamic(
@@ -74,33 +75,32 @@ const NavBarHotel = dynamic(
     import("@/components/hotels/NavBarHotel").then((mod) => mod.NavBarHotel),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const ResponsiveImage = dynamic(
   () => import("@/components/hotels/room/RoomTopSection"),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const DisplayRoomTypes = dynamic(
   () =>
     import("@/components/hotels/room/DisplayRoomsHotel").then(
-      (mod) => mod.DisplayRoomTypes,
+      (mod) => mod.DisplayRoomTypes
     ),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
-const Room = async ({
-  params,
-}: {
-  params: { businessId: string };
-}) => {
+const Room = async ({ params }: { params: { businessId: string } }) => {
   const data = await getRoomTypes(params.businessId);
   const { business, roomTypes } = data;
+  if (business?.outLetType !== "HOTEL") {
+    redirect("/not-allowed");
+  }
 
   return (
     <HotelBackgroundContainer>

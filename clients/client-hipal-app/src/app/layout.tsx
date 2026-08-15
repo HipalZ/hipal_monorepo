@@ -1,26 +1,27 @@
 import type { Metadata } from "next";
-import { Ubuntu } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
+import QueryComponent from "@/components/atoms/queryComponent";
 import Loading from "./loading";
 import "./globals.css";
 // import AutoLoginWrapper from "@/components/AutoLoginWrapper.jsx";
 const DynamicThemes = dynamic(
   () => import("@/components/atoms/dynamicThemes"),
-  { ssr: false },
+  { ssr: false }
 );
 const DynamicScanPage = dynamic(
   () => import("@/components/atoms/dynamicScanPage"),
   {
     ssr: false,
-  },
+  }
 );
 
 const AutoLoginWrapper = dynamic(
   () => import("@/components/AutoLoginWrapper"),
   {
     ssr: false,
-  },
+  }
 );
 
 const VisitPing = dynamic(() => import("@/components/VisitPing"), {
@@ -30,42 +31,37 @@ const DynamicInternetConnection = dynamic(
   () => import("@/components/atoms/internetConnection"),
   {
     ssr: false,
-  },
+  }
 );
 
 const DynamicToast = dynamic(
   () => import("@/components/atoms/toastContainer"),
-  { ssr: false },
+  { ssr: false }
 );
-const DynamicQueryComponent = dynamic(
-  () => import("@/components/atoms/queryComponent"),
-  { ssr: false },
-);
-
 const GoogleAnalytics = dynamic(
   () => import("@/components/atoms/dynamicGoogleAnalytics"),
-  { ssr: false },
+  { ssr: false }
 );
 
 const DynamicCombinedLogin = dynamic(
   () => import("@/components/atoms/dynamicCombinedLogin"),
   {
     ssr: false,
-  },
+  }
 );
 
 const DynamicSessionOut = dynamic(
   () => import("@/components/atoms/sessionTimedOut"),
   {
     ssr: false,
-  },
+  }
 );
 
 const ErrorPopupComponent = dynamic(
   () => import("@/components/atoms/ErrorPopup"),
   {
     ssr: false,
-  },
+  }
 );
 
 export const metadata: Metadata = {
@@ -73,7 +69,8 @@ export const metadata: Metadata = {
     default: "Hipal App - Menu Application for Businesses",
     template: "%s | Hipal App",
   },
-  description: "Menu Application for Businesses - Transform your business with HipalZ's digital menu solution. Improve customer engagement, streamline operations, and enhance your business presence.",
+  description:
+    "Menu Application for Businesses - Transform your business with HipalZ's digital menu solution. Improve customer engagement, streamline operations, and enhance your business presence.",
   keywords: [
     "digital menu",
     "business menu app",
@@ -87,7 +84,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Paltribe Solutions PVT Ltd" }],
   creator: "HipalZ",
   publisher: "Paltribe Solutions PVT Ltd",
-  
+
   // Open Graph metadata for social sharing
   openGraph: {
     type: "website",
@@ -95,7 +92,8 @@ export const metadata: Metadata = {
     url: "https://hipalz.com",
     siteName: "Hipal App",
     title: "Hipal App - Menu Application for Businesses",
-    description: "Menu Application for Businesses - Transform your business with HipalZ's digital menu solution. Improve customer engagement, streamline operations, and enhance your business presence.",
+    description:
+      "Menu Application for Businesses - Transform your business with HipalZ's digital menu solution. Improve customer engagement, streamline operations, and enhance your business presence.",
     images: [
       {
         url: "/android-chrome-512x512.png",
@@ -156,9 +154,10 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
-const ubuntu = Ubuntu({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "700"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
 export default function RootLayout({
@@ -166,10 +165,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-
   return (
     <html lang="en">
       <head>
+        <style
+          dangerouslySetInnerHTML={{
+            __html:
+              "html,body{min-height:100%;background:#F8F4EF!important;}#root{min-height:100dvh;background:#F8F4EF;}",
+          }}
+        />
         <meta
           name="facebook-domain-verification"
           content="1kbkpz82zpbnb9b7vusp4insjirtu8"
@@ -209,20 +213,20 @@ export default function RootLayout({
         <GoogleAnalytics />
       </head>
 
-      <body className={`${ubuntu.className}`}>
+      <body className={`${plusJakartaSans.className}`}>
         <Suspense fallback={<Loading />}>
           <section className="relative !z-[9999]">
             {/* <DynamicInternetConnection /> */}
             <DynamicToast />
           </section>
-          <DynamicQueryComponent>
+          <QueryComponent>
             <div id="root">
               {children}
               <AutoLoginWrapper />
               <VisitPing />
               <DynamicCombinedLogin />
             </div>
-          </DynamicQueryComponent>
+          </QueryComponent>
           <DynamicScanPage />
           <DynamicSessionOut />
           <DynamicThemes />

@@ -74,7 +74,7 @@ export const useGetAllLinkRestautants = (businessId: string) => {
         query: {
           businessId: businessId,
         },
-      },
+      }
     );
     const res = await response.json();
     return res.data ?? ([] as ILinkHotels[]);
@@ -89,7 +89,10 @@ export const useGetAllLinkRestautants = (businessId: string) => {
   return { fetchingRestaurants, restaurantData };
 };
 
-export const useGetAllChats = (payload: IHotelRoomData) => {
+export const useGetAllChats = (
+  payload: IHotelRoomData,
+  options?: { enabled?: boolean; refetchInterval?: number | false }
+) => {
   const getChats = async () => {
     const roomResponse = await apiRpc.hotel.rooms.fetch_room.$get({
       query: payload,
@@ -108,8 +111,8 @@ export const useGetAllChats = (payload: IHotelRoomData) => {
   const { data: chatData } = useQuery({
     queryKey: ["getChats", payload],
     queryFn: getChats,
-    enabled: !!payload.roomName,
-    refetchInterval: 10000,
+    enabled: (options?.enabled ?? true) && !!payload.roomName,
+    refetchInterval: options?.refetchInterval ?? false,
   });
 
   return { chatData };
