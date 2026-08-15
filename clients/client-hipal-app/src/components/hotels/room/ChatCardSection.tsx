@@ -62,6 +62,7 @@ const ChatCardSection = ({
   } = useHotelTemp();
 
   // Service request modal states
+  const [isMounted, setIsMounted] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [selectedService, setSelectedService] = useState<QuickService | null>(
     null
@@ -134,6 +135,10 @@ const ChatCardSection = ({
     },
     [pathname, query, router]
   );
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     updateTheme(themeData);
@@ -312,6 +317,10 @@ const ChatCardSection = ({
     },
     [checkoutRequestSent, showConfirmation]
   );
+
+  if (!isMounted) {
+    return <>{renderLoadingSkeleton()}</>;
+  }
 
   return (
     <>

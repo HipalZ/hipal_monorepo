@@ -49,16 +49,26 @@ export const useShareRoom = () => {
 }
 
 export enum ActionType {
-  NotDelivered = "Not delivered",
-  ReviewAndThanks = "Review & Thanks",
+  NotDelivered = "NOT_DELIVERED",
+  ReviewAndThanks = "REVIEW_AND_THANKS",
   Delivered = "Delivered",
   ESCALATION = "Escalation",
   WARNING = "WARNING",
 }
 
 export const actionOptions = [
-  { id: "not-delivered", text: ActionType.NotDelivered },
-  { id: "review", text: ActionType.ReviewAndThanks },
+  {
+    id: "not-delivered",
+    label: "Report an issue",
+    helper: "Tell staff this is still pending",
+    value: ActionType.NotDelivered,
+  },
+  {
+    id: "review",
+    label: "Rate this service",
+    helper: "Share quick feedback",
+    value: ActionType.ReviewAndThanks,
+  },
 ];
 
 export const reviewOptions = [
@@ -66,7 +76,6 @@ export const reviewOptions = [
   { id: "Good", text: "😊", value: 3 },
   { id: "Great", text: "😍", value: 5 },
 ]
-
 export const formatHotelTime = (timestamp: number) => {
   return format(new Date(timestamp), "h:mm a");
 };

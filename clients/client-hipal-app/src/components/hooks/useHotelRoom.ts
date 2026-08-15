@@ -2,10 +2,15 @@ import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { expelIfSessionOut } from "./sessionGuard";
+import type { RoomChat } from "@/components/types/hotelTypes";
 
 interface IHotelRoomData {
   businessId: string;
   roomName: string;
+}
+
+interface HotelRoomLookup {
+  _id: string;
 }
 
 export const useHotelRoomData = () => {
@@ -84,6 +89,8 @@ export const useGetAllLinkRestautants = (businessId: string) => {
     queryKey: ["getAllLinkRestautants", businessId],
     queryFn: getLinkRestaurant,
     enabled: !!businessId,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
   });
 
   return { fetchingRestaurants, restaurantData };
@@ -93,25 +100,45 @@ export const useGetAllChats = (
   payload: IHotelRoomData,
   options?: { enabled?: boolean; refetchInterval?: number | false }
 ) => {
-  const getChats = async () => {
+  const isEnabled = (options?.enabled ?? true) && !!payload.roomName;
+
+  const getRoom = async (): Promise<HotelRoomLookup | null> => {
+    if (!payload.businessId || !payload.roomName) return null;
+
     const roomResponse = await apiRpc.hotel.rooms.fetch_room.$get({
       query: payload,
     });
-    if (!roomResponse.ok) return [];
+    if (!roomResponse.ok) return null;
     const roomData = await roomResponse.json();
+    return (roomData?.data as HotelRoomLookup | undefined) ?? null;
+  };
+
+  const { data: roomData } = useQuery<HotelRoomLookup | null>({
+    queryKey: ["hotelRoom", payload.businessId, payload.roomName],
+    queryFn: getRoom,
+    enabled: isEnabled,
+    staleTime: Infinity,
+    gcTime: 30 * 60 * 1000,
+  });
+
+  const roomId = roomData?._id;
+
+  const getChats = async (): Promise<RoomChat[]> => {
+    if (!roomId) return [];
+
     const response = await apiRpc.hotel.alert.room_chat.$get({
       query: {
-        roomId: roomData?.data?._id,
+        roomId,
       },
     });
     const res = await response.json();
-    return res.data;
+    return (res.data as RoomChat[] | undefined) ?? [];
   };
 
-  const { data: chatData } = useQuery({
-    queryKey: ["getChats", payload],
+  const { data: chatData = [] } = useQuery<RoomChat[]>({
+    queryKey: ["getChats", payload.businessId, roomId],
     queryFn: getChats,
-    enabled: (options?.enabled ?? true) && !!payload.roomName,
+    enabled: isEnabled && !!roomId,
     refetchInterval: options?.refetchInterval ?? false,
   });
 

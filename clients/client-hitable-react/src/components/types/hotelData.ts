@@ -164,6 +164,7 @@ export interface Cart {
     name: string;
     categoryIds: string[];
     price: number;
+    avgPrepTime?: number;
     visibility: boolean;
     availability: true;
     dishTypes: string[];

@@ -64,7 +64,19 @@ export const acceptHotelAlert = z.object({
 
 export const updateAlertCart = z.object({
   alertId: ObjectIdSchema,
+  userId: ObjectIdSchema.optional(),
   cart: z.array(z.object({})),
+  removedItems: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        name: z.string().min(1).max(120),
+        quantity: z.number().positive(),
+        reason: z.string().min(1).max(200),
+      }),
+    )
+    .optional()
+    .default([]),
 });
 
 export type HotelAlertType = z.infer<typeof hotelAlert>;

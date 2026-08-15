@@ -13,6 +13,7 @@ const MemoBottomPopUp = ({
   bottomCross,
   height,
   manageHistory = true,
+  surfaceClassName,
 }: {
   children: React.ReactNode;
   show: boolean;
@@ -22,6 +23,7 @@ const MemoBottomPopUp = ({
   bottomCross?: boolean;
   height?: string;
   manageHistory?: boolean;
+  surfaceClassName?: string;
 }) => {
   const transitions = useTransition(show, {
     from: { transform: "translateY(100%)", opacity: 0 },
@@ -79,7 +81,8 @@ const MemoBottomPopUp = ({
             className={cn(
               "relative w-full max-w-md shadow-md h-[100dvh]",
               !hide && "rounded-t-[1rem]",
-              linearGradTheme ? "background-gradient" : "bg-[#ffffff]"
+              surfaceClassName ||
+                (linearGradTheme ? "background-gradient" : "bg-[#ffffff]")
             )}
             onClick={(e) => e.stopPropagation()}
           >

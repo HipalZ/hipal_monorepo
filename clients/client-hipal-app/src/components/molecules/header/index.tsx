@@ -77,17 +77,17 @@ function Header({
       transition={{ duration: 0.3, ease: "easeInOut" }}
     >
       <div className="relative flex flex-col items-start justify-between w-full overflow-hidden">
-        <h3 className="flex items-center justify-end w-full px-2 text-3xl">
-          {hiCode && (
-            <h5 className="flex items-center gap-2 text-xl font-semibold opacity-80">
+        {hiCode && (
+          <div className="flex w-full items-center justify-end px-2 text-3xl">
+            <div className="flex items-center gap-2 text-xl font-semibold opacity-80">
               <Image src={Table} width={24} height={24} alt="Table" />
               <span className="text-sm">
                 Table Code <b className="text-base">{hiCode}</b>
               </span>
-            </h5>
-          )}
-        </h3>
-        {outletInfo?.outLetType !== "OTHER" && (
+            </div>
+          </div>
+        )}
+        {outletInfo?.outLetType !== "OTHER" && !isSearchActive && (
           <motion.div
             className="mt-2 flex w-full items-center gap-2 px-2"
             initial={{ opacity: 0, y: -20 }}
@@ -122,7 +122,11 @@ function Header({
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <SearchPanelCom allDishes={allDishes} />
+            <SearchPanelCom
+              allDishes={allDishes}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
+            />
           </motion.div>
         )}
       </AnimatePresence>

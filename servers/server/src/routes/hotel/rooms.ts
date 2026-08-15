@@ -1846,14 +1846,8 @@ const roomRouter = new Hono()
         const requestData = await c.req.json();
         const { businessId, userId, reviewRating } = requestData;
 
-        const roomChatReply = await HotelRoomChatReply.findOneAndUpdate(
-          {
-            _id: requestData.roomChatReplyId,
-          },
-          {
-            action: false,
-            status: "NORMAL",
-          }
+        const roomChatReply = await HotelRoomChatReply.findById(
+          requestData.roomChatReplyId
         );
 
         if (!roomChatReply) {
@@ -1867,12 +1861,42 @@ const roomRouter = new Hono()
           return respond(c, "Room chat not found", true, 404, {});
         }
 
+        const existingReview = await Reviews.findOne({
+          alertId: roomChat.alertId,
+          userId,
+        }).select("_id");
+
+        if (existingReview || roomChatReply.action === false) {
+          await HotelRoomChatReply.findByIdAndUpdate(
+            requestData.roomChatReplyId,
+            {
+              action: false,
+              status: "NORMAL",
+            },
+            { session }
+          );
+
+          return respond(c, "Feedback already recorded", false, 200, {
+            _id: existingReview?._id,
+            alreadyReviewed: true,
+          });
+        }
+
+        await HotelRoomChatReply.findByIdAndUpdate(
+          requestData.roomChatReplyId,
+          {
+            action: false,
+            status: "NORMAL",
+          },
+          { session }
+        );
+
         const ratingReply =
           Number(reviewRating) <= 2
-            ? "Sorry we missed the mark. We will work on this."
+            ? "We are sorry this did not feel right. Thank you for telling us - our team will review this and improve."
             : Number(reviewRating) >= 5
-            ? "Thank you. We are glad you enjoyed the service."
-            : "Thank you for your feedback.";
+            ? "Thank you for the lovely feedback. We are delighted we could make this comfortable for you."
+            : "Thank you for your feedback. We appreciate you helping us improve your stay.";
 
         const newChatReply = new HotelRoomChatReply({
           action: false,
@@ -1881,6 +1905,7 @@ const roomRouter = new Hono()
           userId: roomChatReply.userId,
           status: "NORMAL",
           date: Date.now(),
+          reviewRating,
         });
         newChatReply.description = ratingReply;
         await newChatReply.save({ session });

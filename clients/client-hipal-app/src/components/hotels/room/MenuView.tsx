@@ -2,7 +2,6 @@
 
 import { ArrowLeft } from "lucide-react";
 import { useEffect } from "react";
-import { MenuItemSkeleton } from "./MenuItemSkeleton";
 import { useGetAllRestaurantMenu } from "@/components/hooks/useGetAllRestaurantMenu";
 import DishesList from "@/components/organisms/category/dishesList";
 import MenuBannerPage from "@/components/organisms/menuBanner";
@@ -10,6 +9,7 @@ import LiveCartHotel from "./LiveCartForRestaurant";
 import type { IMenuLayout, TimingType } from "@/components/types/businessData";
 import { useSearch } from "@/components/store/useSearch";
 import { useActiveClass } from "@/components/store/useActiveClass";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ILinkHotels {
   _id: string;
@@ -23,6 +23,7 @@ interface MenuViewProps {
   onBack: () => void;
   isLoading: boolean;
   menuId?: IMenuLayout;
+  onMenuLoadingChange?: (isLoading: boolean) => void;
 }
 
 const DEFAULT_MENU_LAYOUT: IMenuLayout = {
@@ -43,7 +44,12 @@ const EMPTY_TIMINGS: TimingType = {
   dishIds: [],
 };
 
-export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
+export const MenuView = ({
+  restaurant,
+  onBack,
+  isLoading,
+  onMenuLoadingChange,
+}: MenuViewProps) => {
   const { menuLoading, menuData } = useGetAllRestaurantMenu(
     restaurant._id as string
   );
@@ -72,6 +78,10 @@ export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
     setSearchText,
   ]);
 
+  useEffect(() => {
+    onMenuLoadingChange?.(isLoading || menuLoading);
+  }, [isLoading, menuLoading, onMenuLoadingChange]);
+
   const handleBack = () => {
     setSearchText("");
     setIsSearchActive(false);
@@ -99,11 +109,33 @@ export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
       </div>
 
       {isLoading || menuLoading ? (
-        <div className="mb-20 space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <MenuItemSkeleton key={i} />
-          ))}
-        </div>
+        <section className="space-y-4 px-1 pb-24">
+          <Skeleton className="h-36 w-full rounded-2xl" />
+          <div className="flex gap-2 overflow-hidden">
+            {[...Array(4)].map((_, index) => (
+              <Skeleton
+                key={index}
+                className="h-9 min-w-[86px] rounded-full"
+              />
+            ))}
+          </div>
+          <div className="space-y-3">
+            {[...Array(5)].map((_, index) => (
+              <div
+                key={index}
+                className="flex gap-3 rounded-2xl border border-slate-100 bg-white p-3 shadow-sm"
+              >
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4 rounded-full" />
+                  <Skeleton className="h-3 w-1/3 rounded-full" />
+                  <Skeleton className="h-3 w-full rounded-full" />
+                  <Skeleton className="h-3 w-2/3 rounded-full" />
+                </div>
+                <Skeleton className="h-24 w-24 rounded-xl" />
+              </div>
+            ))}
+          </div>
+        </section>
       ) : (
         <>
           <MenuBannerPage

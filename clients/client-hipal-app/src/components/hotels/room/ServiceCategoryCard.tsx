@@ -25,6 +25,7 @@ import type { IMenuLayout } from "@/components/types/businessData";
 import { useScreenSize } from "@/components/hooks/useScreenSize";
 import { hasGuestContactDetails } from "./guestContactGuard";
 import ServiceEtaBadge from "./ServiceEtaBadge";
+import HotelLogoLoader from "./HotelLogoLoader";
 
 // Lazy-loaded components
 const AlertCircle = dynamic(
@@ -36,7 +37,19 @@ const CheckIcon = dynamic(
   { ssr: false }
 );
 const FoodOrderPopup = dynamic(() => import("./FoodOrderHotel"), {
-  loading: () => <LoadingSpinnerCircle />,
+  loading: () => (
+    <BottomPopUp
+      hide
+      show
+      onClose={() => undefined}
+      manageHistory={false}
+      surfaceClassName="bg-transparent shadow-none"
+    >
+      <section className="flex min-h-dvh items-center justify-center bg-white/10 px-6">
+        <HotelLogoLoader ringColorClassName="border-t-[#2563EB]" />
+      </section>
+    </BottomPopUp>
+  ),
   ssr: false,
 });
 
@@ -387,7 +400,6 @@ function MemoServiceCategoryCard({
               businessId={businessId}
               room={room || ""}
               userId={userDetails?._id || ""}
-              services={category.serviceIds}
               menuId={menuId}
             />
           ) : (

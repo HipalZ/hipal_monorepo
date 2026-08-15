@@ -1,14 +1,13 @@
 import { getBusinessData } from "@/apis/commonApis";
 import { getThemeSettings } from "@/apis/hotel";
-import ExploreSkelton from "@/components/atoms/progressBar/exploreLoader";
+import HotelCheckinFooter from "@/components/hotels/room/HotelCheckinFooter";
+import HotelCheckinLoader from "@/components/hotels/room/HotelCheckinLoader";
 import HotelLogoLoader from "@/components/hotels/room/HotelLogoLoader";
-import QuickCard from "@/components/hotels/room/QuickCard";
 
 import type { BusinessDetails } from "@/components/types/businessData";
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 
-export const dynamics = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 export async function generateMetadata({
@@ -33,7 +32,7 @@ const HotelBackgroundContainer = dynamic(
       (mod) => mod.HotelBackgroundContainer
     ),
   {
-    loading: () => <ExploreSkelton />,
+    loading: () => <HotelCheckinLoader />,
   }
 );
 
@@ -43,7 +42,7 @@ const ViewPortContainer = dynamic(
       (mod) => mod.ViewPortContainer
     ),
   {
-    loading: () => <ExploreSkelton />,
+    loading: () => <HotelCheckinLoader />,
   }
 );
 
@@ -102,6 +101,10 @@ const page = async ({
   const sessionId =
     typeof searchParams.sessionId === "string" ? searchParams.sessionId : "";
   const themeData = await getThemeSettings(businessData?.businessId);
+  const contactPhone =
+    businessData.phone ||
+    (businessData as BusinessDetails & { phoneNumber?: string }).phoneNumber;
+
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
       <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[5rem] bg-gradient-to-br from-[#FEB67680] via-[#FEB67610] to-[#f3ede710]">
@@ -130,6 +133,7 @@ const page = async ({
           logo={businessData.logoUrl}
           room={room}
           businessId={businessData.businessId}
+          contactPhone={contactPhone}
         />
 
         <section className="p-4">
@@ -137,13 +141,14 @@ const page = async ({
             menuId={businessData?.menuId}
             businessId={businessData.businessId}
             room={room}
-            contactPhone={businessData.phone || businessData.phoneNumber}
+            contactPhone={contactPhone}
           />
         </section>
         <ChatCardSection
           themeData={themeData}
           businessId={businessData.businessId}
         />
+        <HotelCheckinFooter socialMediaLinks={businessData.socialMediaLinks} />
       </ViewPortContainer>
     </HotelBackgroundContainer>
   );

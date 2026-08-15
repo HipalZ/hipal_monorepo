@@ -141,6 +141,15 @@ const getRestaurantCategories = async (
 
 export const useGetAllRestaurantMenu = (businessId: string) => {
   const fetchRestaurantMenu = async (): Promise<RestaurantMenuPayload> => {
+    const timingPromise = apiRpc["menu-banner"].explore[":businessId"]
+      .$get({
+        param: {
+          businessId,
+        },
+      })
+      .then((response) => response.json())
+      .catch(() => null);
+
     const menuData =
       (await getActiveRestaurantMenu(businessId)) ??
       (await getMenuWithoutTableName(businessId));
@@ -155,12 +164,7 @@ export const useGetAllRestaurantMenu = (businessId: string) => {
       categories = await getRestaurantCategories(businessId);
     }
 
-    const response = await apiRpc["menu-banner"].explore[":businessId"].$get({
-      param: {
-        businessId: businessId,
-      },
-    });
-    const timingData = await response.json();
+    const timingData = await timingPromise;
 
     return {
       parentCategories: categories.parentCategories,
@@ -180,7 +184,8 @@ export const useGetAllRestaurantMenu = (businessId: string) => {
     queryKey: ["getRestaurantMenu", businessId],
     queryFn: fetchRestaurantMenu,
     enabled: !!businessId,
-    staleTime: 1000 * 60,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
   });
 
   return { menuLoading, menuData, refetchMenu };

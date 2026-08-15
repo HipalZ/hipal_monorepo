@@ -19,6 +19,7 @@ export const hotelRoomChatReply = z.object({
   date: z.number().optional(),
   description: z.string().min(1).max(200),
   roomChatId: ObjectIdSchema,
+  reviewRating: z.number().min(1).max(5).optional(),
 });
 
 export const updateRoomChat = z.object({

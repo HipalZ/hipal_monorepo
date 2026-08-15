@@ -66,17 +66,18 @@ const FilterOption = ({
   label: string;
   isNone?: boolean;
 }) => {
-  const newColor = `${color}15`;
+  const chipColor = color || "#211915";
+  const newColor = `${chipColor}15`;
   return (
     <button
       type="button"
       style={{
         backgroundColor: isActive ? newColor : "#ffffff",
-        borderColor: isActive ? color : "",
-        color: isActive ? color : "#000000",
+        borderColor: isActive ? chipColor : "",
+        color: isActive ? chipColor : "#000000",
       }}
       className={cn(
-        "flex justify-start items-center px-2 rounded-md py-1 border"
+        "flex h-8 shrink-0 items-center justify-start rounded-xl border px-3 py-1.5 shadow-[0_4px_12px_rgba(39,30,24,0.04)] transition active:scale-[0.98]"
       )}
       onClick={onClick}
     >
@@ -85,7 +86,7 @@ const FilterOption = ({
       ) : (
         <div
           className="w-4 h-4 p-[0.125rem] border-2 rounded-sm"
-          style={{ borderColor: color }}
+          style={{ borderColor: chipColor }}
         >
           {!isNone ? (
             <>
@@ -94,13 +95,13 @@ const FilterOption = ({
                   style={{
                     borderLeft: "4px solid transparent",
                     borderRight: "4px solid transparent",
-                    borderBottom: `8px solid ${color}`,
+                    borderBottom: `8px solid ${chipColor}`,
                   }}
                 />
               ) : (
                 <div
                   className="w-[0.5rem] h-[0.5rem] rounded-full"
-                  style={{ backgroundColor: color }}
+                  style={{ backgroundColor: chipColor }}
                 />
               )}
             </>
@@ -109,8 +110,8 @@ const FilterOption = ({
       )}
       <div
         style={{
-          color: isActive ? color : undefined,
-          borderColor: isActive ? color : "black",
+          color: isActive ? chipColor : undefined,
+          borderColor: isActive ? chipColor : "black",
         }}
         className="ml-1 text-[0.75rem] flex items-center justify-center capitalize"
       >
@@ -149,64 +150,37 @@ const QuickFilter = () => {
     },
     [setActiveDishType, isActiveDishType]
   );
-  const activeIcon = (
-    <div className="flex items-center">
-      {["veg", "nonveg", "non_veg", "egg"].includes(
-        isActiveDishType?.replace(/[^a-zA-Z ]/g, "").toLowerCase()
-      ) ? (
-        <div className="flex items-center">
-          <RiEqualizerLine size={20} />
-          <span className="ml-1">Filter</span>
-        </div>
-      ) : (
-        <>
-          {foodTypeIcons[
-            isActiveDishType
-              ?.replace(/[^a-zA-Z ]/g, "")
-              .toLowerCase() as keyof typeof foodTypeIcons
-          ] || <RiEqualizerLine size={20} />}
-          <span className="ml-1 capitalize">
-            {isActiveDishType.replace(/[^a-zA-Z ]/g, " ").toLowerCase()}
-          </span>
-        </>
-      )}
-      {isActiveDishType !== "all" && (
-        <HiX
-          onClick={(e) => {
-            e.stopPropagation();
-            handleFilter("all");
-          }}
-          className="ml-1"
-        />
-      )}
-    </div>
-  );
-
   return (
     <div>
-      <section className="flex px-2 space-x-2 text-sm justify-between text-nowrap">
-        {outletInfo?.veg && (
-          <FilterOption
-            isActive={isActiveDishType.toLowerCase() === "veg"}
-            onClick={() => handleFilter("VEG")}
-            color="#55CB1E"
-            label="Veg"
-          />
-        )}
-        {outletInfo?.nonVeg && (
-          <FilterOption
-            isActive={isActiveDishType.toLowerCase() === "non_veg"}
-            onClick={() => handleFilter("NON_VEG")}
-            color="#804000"
-            label="Non Veg"
-          />
-        )}
+      <section className="flex items-center gap-2 overflow-x-auto px-2 text-sm text-nowrap hide-scrollbar">
+        <FilterOption
+          isActive={isActiveDishType.toLowerCase() === "veg"}
+          onClick={() => handleFilter("VEG")}
+          color="#178A4A"
+          label="Veg"
+        />
+        <FilterOption
+          isActive={isActiveDishType.toLowerCase() === "non_veg"}
+          onClick={() => handleFilter("NON_VEG")}
+          color="#A2382B"
+          label="Non Veg"
+        />
         <button
           type="button"
           onClick={openModal}
-          className="px-2 py-1 ml-2 text-xs font-semibold text-black bg-white border border-gray-200 rounded-md"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-xl border border-[#E2D7CA] bg-white px-3 py-1.5 text-xs font-semibold text-[#211915] shadow-[0_4px_12px_rgba(39,30,24,0.04)] transition active:scale-[0.98]"
         >
-          {activeIcon}
+          <RiEqualizerLine size={18} />
+          Filter All
+          {isActiveDishType !== "all" && (
+            <HiX
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFilter("all");
+              }}
+              className="ml-0.5"
+            />
+          )}
         </button>
       </section>
       {isModalOpen && (

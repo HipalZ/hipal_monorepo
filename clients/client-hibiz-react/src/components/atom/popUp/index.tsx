@@ -1,5 +1,11 @@
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogOverlay } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/components/utils/helper';
 import type { ReactNode } from 'react';
 import { HiX } from 'react-icons/hi';
@@ -12,9 +18,21 @@ interface PopUpProps {
   width?: string;
   height?: string;
   rightTopBack?: boolean;
+  title?: string;
+  description?: string;
 }
 
-export default function PopUp({ children, show, onClose, hide, width, height, rightTopBack }: PopUpProps) {
+export default function PopUp({
+  children,
+  show,
+  onClose,
+  hide,
+  width,
+  height,
+  rightTopBack,
+  title,
+  description,
+}: PopUpProps) {
   return (
     // ✅ do NOT close from onOpenChange
     <Dialog open={show} onOpenChange={() => {}}>
@@ -33,6 +51,13 @@ export default function PopUp({ children, show, onClose, hide, width, height, ri
         // ✅ optional: also block ESC close
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
+        <DialogTitle className="sr-only">
+          {title || 'Popup dialog'}
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          {description || 'Complete the action in this popup.'}
+        </DialogDescription>
+
         {!hide && !rightTopBack && (
           <div className="absolute -top-8 left-1/2 z-50 -translate-x-1/2">
             <HiX className="cursor-pointer rounded-full bg-white p-2 text-4xl text-black" onClick={onClose} />

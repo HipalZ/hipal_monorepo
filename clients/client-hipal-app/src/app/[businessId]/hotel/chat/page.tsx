@@ -5,7 +5,7 @@ import type { BusinessDetails } from "@/components/types/businessData";
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 
-export const dynamics = "force-dynamic";
+export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 export async function generateMetadata({
@@ -59,8 +59,10 @@ const page = async ({
   }
   const room =
     typeof searchParams.room === "string" ? searchParams.room : "hipalz";
-  const userId = typeof searchParams.id === "string" ? searchParams.id : "";
-  console.log("userId", userId);
+  const contactPhone =
+    businessData.phone ||
+    (businessData as BusinessDetails & { phoneNumber?: string }).phoneNumber;
+
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
       <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[1rem]">
@@ -70,6 +72,7 @@ const page = async ({
           room={room}
           businessId={businessData.businessId}
           customLink={params.businessId}
+          contactPhone={contactPhone}
         />
       </ViewPortContainer>
     </HotelBackgroundContainer>

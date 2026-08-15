@@ -357,6 +357,8 @@ const HotelStaffMain = () => {
           rightTopBack
           onClose={handleCloseEscalationModal}
           height="h-[100dvh] lg:h-[90dvh]"
+          title="Assign staff to escalation"
+          description="Choose escalation levels and handoff timings for the selected hotel staff member."
         >
           <EscalationAssignmentModal
             isOpen={escalationModalOpen}
@@ -373,6 +375,8 @@ const HotelStaffMain = () => {
           rightTopBack
           onClose={() => setBulkModalOpen(false)}
           height="h-[100dvh] lg:h-[90dvh]"
+          title="Add staff to escalation"
+          description="Select multiple hotel staff members and add them to an escalation level."
         >
           <BulkEscalationAssignmentPanel
             onClose={() => setBulkModalOpen(false)}

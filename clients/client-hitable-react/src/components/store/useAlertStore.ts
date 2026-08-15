@@ -189,7 +189,11 @@ function filterAlerts(
     // Search filter
     const roomName = alert.roomId.name.toLowerCase()
     const guestName = alert.createdBy?.name.toLowerCase() || ""
-    const serviceNames = alert.serviceIds.map((s) => s.name.toLowerCase()).join(" ")
+    const isFoodOrder = alert.cart && alert.cart.length > 0
+    const serviceNames = [
+      ...alert.serviceIds.map((s) => s.name.toLowerCase()),
+      ...(isFoodOrder ? ["food order"] : []),
+    ].join(" ")
     const searchLower = searchQuery.toLowerCase()
     
     const matchesSearch =
