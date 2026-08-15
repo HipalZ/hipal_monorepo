@@ -5,7 +5,7 @@ import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { calculateDiscount, ICouponPage } from "@/components/utils/helpers";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import confetti from "canvas-confetti";
 import { apiRpc } from "@hi/common";
 import { useLogin } from "@/components/store/useLogin";
@@ -32,14 +32,14 @@ const AlertToRemove = dynamic(
   () => import("@/components/atoms/alertToRemove"),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const ApplyCouponDatePopup = dynamic(
   () => import("@/components/templates/newPayment/datePopup"),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const MemoApplyCouponz = () => {
@@ -129,14 +129,14 @@ const MemoApplyCouponz = () => {
         const day = new Date().toLocaleString("en-US", { weekday: "long" });
         if (
           !coupon?.conditions?.availability?.customDays.includes(
-            day?.toLowerCase(),
+            day?.toLowerCase()
           )
         ) {
-          return toast.info("Coupon is not available today");
+          return toast("Coupon is not available today");
         }
       }
       if (coupon?.conditions?.billValue > billValue)
-        return toast.info("Bill value is less than coupon value");
+        return toast("Bill value is less than coupon value");
 
       if (claimedCoins > 0) {
         setSelectedCouponState(coupon);
@@ -146,7 +146,7 @@ const MemoApplyCouponz = () => {
 
       await applyCouponLogic(coupon);
     },
-    [billValue, claimedCoins, setShowAlert, setSelectedCouponState],
+    [billValue, claimedCoins, setShowAlert, setSelectedCouponState]
   );
 
   const replaceLoyalty = useCallback(async () => {
@@ -164,10 +164,10 @@ const MemoApplyCouponz = () => {
   const replacePosLoyalty = useCallback(async () => {
     setClaimedCoins(0);
     setShowAlert(false);
-    const payload ={
+    const payload = {
       businessId: businessId,
       tableName: tableName,
-    }
+    };
     if (billData?.variantId) {
       payload.variantId = billData.variantId;
     }
@@ -184,7 +184,7 @@ const MemoApplyCouponz = () => {
     async (coupon) => {
       // Check if bill value is less than coupon value
       if (coupon?.conditions?.billValue > billValue)
-        return toast.info("Bill value is less than coupon value");
+        return toast("Bill value is less than coupon value");
       let response: any;
       const requiredFields = coupon?.conditions?.requiredFields || [];
       const requiresDobOrSpecialDay =
@@ -204,7 +204,7 @@ const MemoApplyCouponz = () => {
         setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
         setDirection("payment");
         setCouponOccasion(
-          requiredFields.includes("dob") ? "dob" : "specialday",
+          requiredFields.includes("dob") ? "dob" : "specialday"
         );
         setShowPopup(true);
         setAvailedCoupon(coupon);
@@ -220,7 +220,7 @@ const MemoApplyCouponz = () => {
       const { discountValue, resetClaimedCoins } = calculateDiscount(
         coupon,
         billValue,
-        claimedCoins,
+        claimedCoins
       );
       if (outletInfo?.isPosEnabled) {
         const payload = {
@@ -264,7 +264,7 @@ const MemoApplyCouponz = () => {
       setClaimedCoins,
       setApplyCouponz,
       setAvailedCoupon,
-    ],
+    ]
   );
 
   const removeCoupon = useCallback(async () => {
@@ -297,7 +297,7 @@ const MemoApplyCouponz = () => {
       const { discountValue, resetClaimedCoins } = calculateDiscount(
         availedCoupon,
         billValue,
-        claimedCoins,
+        claimedCoins
       );
 
       setClaimCouponz(discountValue);

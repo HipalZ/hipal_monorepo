@@ -1,13 +1,15 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
+import { useEffect } from "react";
 import { MenuItemSkeleton } from "./MenuItemSkeleton";
 import { useGetAllRestaurantMenu } from "@/components/hooks/useGetAllRestaurantMenu";
 import DishesList from "@/components/organisms/category/dishesList";
 import MenuBannerPage from "@/components/organisms/menuBanner";
 import LiveCartHotel from "./LiveCartForRestaurant";
-import type { IMenuLayout } from "@/components/types/businessData";
+import type { IMenuLayout, TimingType } from "@/components/types/businessData";
 import { useSearch } from "@/components/store/useSearch";
+import { useActiveClass } from "@/components/store/useActiveClass";
 
 interface ILinkHotels {
   _id: string;
@@ -20,19 +22,67 @@ interface MenuViewProps {
   restaurant: ILinkHotels;
   onBack: () => void;
   isLoading: boolean;
-  menuId: IMenuLayout;
+  menuId?: IMenuLayout;
 }
+
+const DEFAULT_MENU_LAYOUT: IMenuLayout = {
+  _id: "",
+  menuType: 2,
+  categoryLayout: 2,
+  cardLayout: 1,
+  primaryColor: "#000000",
+  secondaryColor: "#ffffff",
+};
+
+const EMPTY_TIMINGS: TimingType = {
+  _id: "",
+  name: "",
+  businessId: "",
+  isPublished: false,
+  heading: "",
+  dishIds: [],
+};
 
 export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
   const { menuLoading, menuData } = useGetAllRestaurantMenu(
-    restaurant._id as string,
+    restaurant._id as string
   );
   const { setIsSearchActive, setSearchText } = useSearch();
+  const {
+    setActiveCategory,
+    setActiveChildCategory,
+    setActiveDishType,
+    setActiveParentCategory,
+  } = useActiveClass();
+
+  useEffect(() => {
+    setSearchText("");
+    setIsSearchActive(false);
+    setActiveDishType("all");
+    setActiveCategory("");
+    setActiveChildCategory("");
+    setActiveParentCategory("");
+  }, [
+    restaurant._id,
+    setActiveCategory,
+    setActiveChildCategory,
+    setActiveDishType,
+    setActiveParentCategory,
+    setIsSearchActive,
+    setSearchText,
+  ]);
 
   const handleBack = () => {
     setSearchText("");
     setIsSearchActive(false);
     onBack();
+  };
+
+  const restaurantMenu = menuData ?? {
+    parentCategories: [],
+    childCategories: [],
+    timings: EMPTY_TIMINGS,
+    menuData: DEFAULT_MENU_LAYOUT,
   };
 
   return (
@@ -57,14 +107,14 @@ export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
       ) : (
         <>
           <MenuBannerPage
-            timings={menuData?.timings}
-            childCategory={menuData?.childCategories || []}
+            timings={restaurantMenu.timings}
+            childCategory={restaurantMenu.childCategories}
           />
           <DishesList
-            parentCategory={menuData?.parentCategories || []}
-            childCategory={menuData?.childCategories || []}
-            timings={menuData?.timings}
-            menuLayout={menuData?.menuData}
+            parentCategory={restaurantMenu.parentCategories}
+            childCategory={restaurantMenu.childCategories}
+            timings={restaurantMenu.timings}
+            menuLayout={restaurantMenu.menuData}
           />
           <LiveCartHotel />
         </>

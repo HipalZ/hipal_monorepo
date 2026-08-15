@@ -1,4 +1,4 @@
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 /**
  * The hotel guest APIs return 403 when the acting user is no longer a current
@@ -13,7 +13,7 @@ import { toast } from "react-toastify";
  */
 export const expelIfSessionOut = (
   response: { status: number },
-  router: { push: (href: string) => void },
+  router: { push: (href: string) => void }
 ): boolean => {
   if (response.status === 403) {
     toast.error("Session expired. Please check in again.");

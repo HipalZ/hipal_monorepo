@@ -6,7 +6,7 @@ import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useLogin } from "@/components/store/useLogin";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { useReview } from "@/components/store/useReview";
 import dynamic from "next/dynamic";
 import { calculateRating, cn } from "@/components/utils/helpers";
@@ -67,12 +67,13 @@ const MemoReviewPage = () => {
   const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
   const searchParams = useSearchParams();
   const orderId = searchParams?.get("orderId");
-  const { userDetails, googleReviewCount, reviewPopup, setReviewPopup } = useLogin((s) => ({
-    userDetails: s.userDetails,
-    googleReviewCount: s.googleReviewCount,
-    reviewPopup: s.reviewPopup,
-    setReviewPopup: s.setReviewPopup,
-  }));
+  const { userDetails, googleReviewCount, reviewPopup, setReviewPopup } =
+    useLogin((s) => ({
+      userDetails: s.userDetails,
+      googleReviewCount: s.googleReviewCount,
+      reviewPopup: s.reviewPopup,
+      setReviewPopup: s.setReviewPopup,
+    }));
   const {
     description,
     showSuggestions,
@@ -161,7 +162,7 @@ const MemoReviewPage = () => {
 
   const skipUserReview = useCallback(() => {
     if (googleReviewCount === 0) {
-      setShowGoogleReview(true)
+      setShowGoogleReview(true);
     } else {
       router.push(`/${customLink}/explore`);
       flushSync(() => setShowGoogleReview(false));
@@ -209,7 +210,7 @@ const MemoReviewPage = () => {
             selectedEmoji !== null && orderId
               ? "bg-black"
               : "opacity-50 pointer-events-none bg-gray-500",
-            "bottom_btn text-sm h-10",
+            "bottom_btn text-sm h-10"
           )}
         >
           Continue

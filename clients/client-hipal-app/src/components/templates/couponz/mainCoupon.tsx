@@ -11,7 +11,7 @@ import useCouponTemp from "@/components/store/useCouponTemp";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import useTableData from "@/components/store/useTableData";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 const Couponz = dynamic(() => import("./singleCoupon"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -31,7 +31,7 @@ const TermsAndConditions = dynamic(
   () => import("@/components/atoms/termsAndConditions"),
   {
     loading: () => <LoadingSpinnerCircle />,
-  },
+  }
 );
 
 const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {

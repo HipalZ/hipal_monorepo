@@ -14,11 +14,11 @@ import ellipse from "@/assets/svg/ellipse.svg";
 import { apiRpc } from "@hi/common";
 import { useParams, useRouter } from "next/navigation";
 import { useErrorHandling } from "@/utils/helper";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 const BackButton = dynamic(() => import("@/components/atoms/backButton"));
 const BottomButton = dynamic(
-  () => import("@/components/molecules/bottomButton"),
+  () => import("@/components/molecules/bottomButton")
 );
 
 const LoyaltyId = ({ data }: { data: IBusinessData }) => {

@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { useGetUserDetails, useSaveUserDetails } from "../hooks/useUserDetails";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import SpinnerSection from "../atoms/sectionSpinner/index";
 
 const leadFormSchema = z.object({

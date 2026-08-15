@@ -136,20 +136,6 @@ export default function RoomCard({
         ))}
       </Splide>
       <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/50 via-transparent to-transparent z-20" />
-      {/* <div className="poppins-regular absolute bottom-2 left-2 bg-white rounded-xl px-4 !font-semibold py-[0.5rem] text-sm shadow-lg text-[#000000] z-50">
-        {roomNumber}
-      </div> */}
-      {logoUrl && (
-        <div className="absolute top-2 left-2 z-50">
-          <ShimmerImage
-            src={logoUrl}
-            alt="Logo"
-            width={40}
-            height={40}
-            className="rounded-lg shadow-md object-contain bg-white p-1"
-          />
-        </div>
-      )}
       {
         <BottomPopUp
           height="30rem"

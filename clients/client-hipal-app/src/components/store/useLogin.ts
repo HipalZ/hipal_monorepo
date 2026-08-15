@@ -1,5 +1,5 @@
 import { apiRpc } from "@hi/common";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -121,6 +121,6 @@ export const useLogin = create(
     {
       name: "useLogin",
       storage: createJSONStorage(() => localStorage),
-    },
-  ),
+    }
+  )
 );

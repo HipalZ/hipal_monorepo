@@ -3,6 +3,7 @@ import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import Chats from "@/components/hotels/room/Chats";
 import type { BusinessDetails } from "@/components/types/businessData";
 import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
 
 export const dynamics = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -15,17 +16,16 @@ export async function generateMetadata({
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
   const room = typeof searchParams.room === "string" ? searchParams.room : "";
-
   const businessData = (await getBusinessData(
-    params.businessId,
+    params.businessId
   )) as BusinessDetails;
 
   if (!businessData) {
     return {
-      title: room ? `Checkin - ${room}` : "Checkin",
+      title: room ? `Hotel chat - ${room}` : "Hotel chat",
       description: room
-        ? `Checkin page for ${room}`
-        : "Checkin page for businesses",
+        ? `Hotel chat page for ${room}`
+        : "Hotel chat page for businesses",
     };
   }
 
@@ -58,21 +58,21 @@ export async function generateMetadata({
 const HotelBackgroundContainer = dynamic(
   () =>
     import("@/components/atoms/WidthWrapper").then(
-      (mod) => mod.HotelBackgroundContainer,
+      (mod) => mod.HotelBackgroundContainer
     ),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const ViewPortContainer = dynamic(
   () =>
     import("@/components/atoms/WidthWrapper").then(
-      (mod) => mod.ViewPortContainer,
+      (mod) => mod.ViewPortContainer
     ),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const page = async ({
@@ -83,11 +83,16 @@ const page = async ({
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
   const businessData = (await getBusinessData(
-    params.businessId,
+    params.businessId
   )) as BusinessDetails;
+
+  if (businessData.outLetType !== "HOTEL") {
+    redirect("/not-allowed");
+  }
+
   const room =
     typeof searchParams.room === "string" ? searchParams.room : "hipalz";
-  const userId = typeof searchParams.id === "string" ? searchParams.id : "";
+
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
       <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[1rem]">
@@ -96,6 +101,7 @@ const page = async ({
           logo={businessData.logoUrl}
           room={room}
           businessId={businessData.businessId}
+          customLink={params.businessId}
         />
       </ViewPortContainer>
     </HotelBackgroundContainer>

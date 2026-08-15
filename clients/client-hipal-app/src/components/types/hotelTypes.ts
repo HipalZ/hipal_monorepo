@@ -59,26 +59,27 @@ interface Alert {
   serviceIds: Service[];
   acceptedAt?: number;
   createdAt?: number;
+  deliveredAt?: number;
 }
 
 export interface Cart {
-  id: string
-  portion: string | null
-  extras: any[]
-  quantity: number
+  id: string;
+  portion: string | null;
+  extras: any[];
+  quantity: number;
   dish: {
     types: FOOD_TYPES[];
-    _id: string
-    name: string
-    categoryIds: string[]
-    price: number
-    visibility: boolean
-    availability: true
-    dishTypes: string[]
-    images: string[]
-    portions: any[]
-    description: string
-  }
+    _id: string;
+    name: string;
+    categoryIds: string[];
+    price: number;
+    visibility: boolean;
+    availability: true;
+    dishTypes: string[];
+    images: string[];
+    portions: any[];
+    description: string;
+  };
 }
 
 export interface RoomChat {

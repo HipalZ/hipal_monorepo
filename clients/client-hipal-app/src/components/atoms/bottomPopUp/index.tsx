@@ -12,6 +12,7 @@ const MemoBottomPopUp = ({
   linearGradTheme,
   bottomCross,
   height,
+  manageHistory = true,
 }: {
   children: React.ReactNode;
   show: boolean;
@@ -20,6 +21,7 @@ const MemoBottomPopUp = ({
   linearGradTheme?: boolean;
   bottomCross?: boolean;
   height?: string;
+  manageHistory?: boolean;
 }) => {
   const transitions = useTransition(show, {
     from: { transform: "translateY(100%)", opacity: 0 },
@@ -28,35 +30,35 @@ const MemoBottomPopUp = ({
     config: { tension: 250, friction: 30 },
   });
   useEffect(() => {
-    if (show) {
-      const originalHash = window.location.hash;
+    if (!show || !manageHistory) return;
 
-      window.location.hash = "#popup";
+    const originalHash = window.location.hash;
 
-      const handleHashChange = () => {
-        if (window.location.hash !== "#popup") {
-          onClose();
+    window.location.hash = "#popup";
+
+    const handleHashChange = () => {
+      if (window.location.hash !== "#popup") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+
+      if (window.location.hash === "#popup") {
+        if (originalHash) {
+          window.location.hash = originalHash;
+        } else {
+          history.pushState(
+            "",
+            document.title,
+            window.location.pathname + window.location.search
+          );
         }
-      };
-
-      window.addEventListener("hashchange", handleHashChange);
-      return () => {
-        window.removeEventListener("hashchange", handleHashChange);
-
-        if (window.location.hash === "#popup") {
-          if (originalHash) {
-            window.location.hash = originalHash;
-          } else {
-            history.pushState(
-              "",
-              document.title,
-              window.location.pathname + window.location.search,
-            );
-          }
-        }
-      };
-    }
-  }, []);
+      }
+    };
+  }, [manageHistory, onClose, show]);
 
   if (!show) return null;
 
@@ -77,7 +79,7 @@ const MemoBottomPopUp = ({
             className={cn(
               "relative w-full max-w-md shadow-md h-[100dvh]",
               !hide && "rounded-t-[1rem]",
-              linearGradTheme ? "background-gradient" : "bg-[#ffffff]",
+              linearGradTheme ? "background-gradient" : "bg-[#ffffff]"
             )}
             onClick={(e) => e.stopPropagation()}
           >
@@ -101,7 +103,7 @@ const MemoBottomPopUp = ({
             )}
           </animated.div>
         </animated.div>
-      ),
+      )
   );
 
   return createPortal(popupContent, document.body);

@@ -25,14 +25,14 @@ import { useLogin } from "@/components/store/useLogin";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { useErrorHandling } from "@/utils/helper";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { Button } from "@/components/ui/button";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
   const currencySymbol = useBusinessDetails(
-    (s) => s.businessDetails?.currencySymbol,
+    (s) => s.businessDetails?.currencySymbol
   );
   const { errorText } = useErrorHandling();
   const { couponId, channelId } = useParams();
@@ -43,14 +43,14 @@ const MemoCouponz = () => {
       displayTermsAndConditions: s.displayTermsAndConditions,
       openTc: s.openTc,
       setIsLoading: s.setIsLoading,
-    }),
+    })
   );
   const { setCurrentPage, setCouponOccasion, selectedCoupon } = useCouponz(
     (s) => ({
       setCurrentPage: s.setCurrentPage,
       setCouponOccasion: s.setCouponOccasion,
       selectedCoupon: s.selectedCoupon,
-    }),
+    })
   );
 
   const { logoUrl, name, businessId } = useBusinessDetails((s) => ({
@@ -144,7 +144,7 @@ const MemoCouponz = () => {
 
   const endTime = useMemo(() => {
     return formatTime(
-      selectedCoupon?.conditions?.availability?.endTime || 23.5,
+      selectedCoupon?.conditions?.availability?.endTime || 23.5
     );
   }, [selectedCoupon]);
 
@@ -169,7 +169,7 @@ const MemoCouponz = () => {
       className={cn(
         `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
         `text-[${selectedCoupon?.bgColour || "#9267EC"}]`,
-        "h-[100vh] overflow-y-auto pb-[10rem] relative",
+        "h-[100vh] overflow-y-auto pb-[10rem] relative"
       )}
     >
       <button
@@ -206,7 +206,7 @@ const MemoCouponz = () => {
         <h1
           className={cn(
             getTextColor(selectedCoupon?.bgColour),
-            "mx-12 mt-2 text-xl bungee-inline",
+            "mx-12 mt-2 text-xl bungee-inline"
           )}
         >
           {selectedCoupon?.name || "Coupon"}
@@ -241,7 +241,7 @@ const MemoCouponz = () => {
             <p className="text-left">
               {getAvailabilityText(
                 selectedCoupon?.conditions?.availability?.when,
-                selectedCoupon?.conditions?.availability?.customDays || [],
+                selectedCoupon?.conditions?.availability?.customDays || []
               ).map((text, index, array) => (
                 <React.Fragment key={text}>
                   {text}
@@ -263,7 +263,7 @@ const MemoCouponz = () => {
             className="w-full col-span-2 mt-2"
             style={{
               backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-                `${selectedCoupon?.bgColour || "#9267EC"}`,
+                `${selectedCoupon?.bgColour || "#9267EC"}`
               )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
@@ -274,7 +274,7 @@ const MemoCouponz = () => {
           <h6 className="col-span-2 text-3xl text-center text-black space-grotesk-700">
             {formatDiscount(
               selectedCoupon?.config?.value,
-              selectedCoupon?.config?.discountType,
+              selectedCoupon?.config?.discountType
             )}{" "}
             OFF
             <p className="text-xs">
@@ -287,13 +287,13 @@ const MemoCouponz = () => {
             <div
               className={cn(
                 `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
-                "absolute w-8 h-8 rounded-full -left-4 bottom-16",
+                "absolute w-8 h-8 rounded-full -left-4 bottom-16"
               )}
             />
             <div
               className={cn(
                 `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
-                "absolute w-8 h-8 rounded-full -right-4 bottom-16",
+                "absolute w-8 h-8 rounded-full -right-4 bottom-16"
               )}
             />
           </div>
@@ -332,7 +332,7 @@ const MemoCouponz = () => {
       <center
         className={cn(
           getTextColor(selectedCoupon?.bgColour),
-          "fixed bottom-2 -translate-x-1/2 left-1/2 text-sm",
+          "fixed bottom-2 -translate-x-1/2 left-1/2 text-sm"
         )}
       >
         Powered by HipalZ

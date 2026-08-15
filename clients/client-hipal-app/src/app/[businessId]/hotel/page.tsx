@@ -6,6 +6,7 @@ import type {
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { getInfoForHotel, getThemeSettings } from "@/apis/hotel";
 import { getBusinessData } from "@/apis/commonApis";
+import { redirect } from "next/navigation";
 
 export const dynamics = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -15,31 +16,31 @@ export const fetchCache = "force-no-store";
 const HotelBackgroundContainer = dynamic(
   () =>
     import("@/components/atoms/WidthWrapper").then(
-      (mod) => mod.HotelBackgroundContainer,
+      (mod) => mod.HotelBackgroundContainer
     ),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const ViewPortContainer = dynamic(
   () =>
     import("@/components/atoms/WidthWrapper").then(
-      (mod) => mod.ViewPortContainer,
+      (mod) => mod.ViewPortContainer
     ),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const TopSectionOfHotel = dynamic(
   () =>
     import("@/components/hotels/TopSection").then(
-      (mod) => mod.TopSectionOfHotel,
+      (mod) => mod.TopSectionOfHotel
     ),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const HotelInfoSection = dynamic(
@@ -47,24 +48,24 @@ const HotelInfoSection = dynamic(
     import("@/components/hotels/HotelInfo").then((mod) => mod.HotelInfoSection),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const BannerSectionHotels = dynamic(
   () => import("@/components/hotels/BannerSectionHotels"),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 const BottomBtnHotel = dynamic(
   () =>
     import("@/components/hotels/BottomBtnHotel").then(
-      (mod) => mod.BottomBtnHotel,
+      (mod) => mod.BottomBtnHotel
     ),
   {
     loading: () => <SkeletonLoader height={200} />,
-  },
+  }
 );
 
 export async function generateMetadata({
@@ -73,7 +74,7 @@ export async function generateMetadata({
   params: { businessId: string };
 }) {
   const businessData = (await getBusinessData(
-    params.businessId,
+    params.businessId
   )) as BusinessDetails;
   const { name, description, logoUrl } = businessData;
   const metaDescription = description || "Welcome to our business offerings!";
@@ -119,6 +120,9 @@ async function getHotelData(businessId: string) {
 const Hotel = async ({ params }: { params: { businessId: string } }) => {
   const data = (await getHotelData(params.businessId)) as IBusinessData;
   const { business, banners } = data;
+  if (business?.outLetType !== "HOTEL") {
+    redirect("/not-allowed");
+  }
   const themeData = await getThemeSettings(business?.businessId);
 
   return (
