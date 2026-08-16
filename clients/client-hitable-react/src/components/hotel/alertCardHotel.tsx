@@ -25,17 +25,17 @@ export interface AlertCardProps {
 
 /** Status pill styling + icon, one lookup keyed by alertProgress. */
 const BADGES: Record<string, { cls: string; Icon: typeof AlertCircle }> = {
-  CREATED: { cls: 'bg-blue-50 text-blue-700 ring-blue-100', Icon: Clock },
-  ACCEPTED: { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-100', Icon: CheckCircle },
-  DELIVERED: { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-100', Icon: CheckCheck },
-  RESOLVED: { cls: 'bg-slate-100 text-slate-600 ring-slate-200', Icon: CheckCheck },
-  NON_ACCEPTED_AND_WARNING: { cls: 'bg-amber-50 text-amber-700 ring-amber-100', Icon: AlertCircle },
-  IS_ACCEPTED_AND_WARNING: { cls: 'bg-amber-50 text-amber-700 ring-amber-100', Icon: AlertCircle },
-  NON_ACCEPTED_AND_ESCALATION: { cls: 'bg-red-50 text-red-700 ring-red-100', Icon: AlertCircle },
-  IS_ACCEPTED_AND_ESCALATION: { cls: 'bg-red-50 text-red-700 ring-red-100', Icon: AlertCircle },
-  NOT_DELIVERED: { cls: 'bg-red-50 text-red-700 ring-red-100', Icon: AlertCircle },
-  REJECTED: { cls: 'bg-slate-100 text-slate-600 ring-slate-200', Icon: XCircle },
-  MESSAGE: { cls: 'bg-violet-50 text-violet-700 ring-violet-100', Icon: AlarmClock },
+  CREATED: { cls: 'text-blue-700 ring-blue-100', Icon: Clock },
+  ACCEPTED: { cls: 'text-emerald-700 ring-emerald-100', Icon: CheckCircle },
+  DELIVERED: { cls: 'text-emerald-700 ring-emerald-100', Icon: CheckCheck },
+  RESOLVED: { cls: 'text-slate-600 ring-slate-200', Icon: CheckCheck },
+  NON_ACCEPTED_AND_WARNING: { cls: 'text-amber-700 ring-amber-100', Icon: AlertCircle },
+  IS_ACCEPTED_AND_WARNING: { cls: 'text-amber-700 ring-amber-100', Icon: AlertCircle },
+  NON_ACCEPTED_AND_ESCALATION: { cls: 'text-red-700 ring-red-100', Icon: AlertCircle },
+  IS_ACCEPTED_AND_ESCALATION: { cls: 'text-red-700 ring-red-100', Icon: AlertCircle },
+  NOT_DELIVERED: { cls: 'text-red-700 ring-red-100', Icon: AlertCircle },
+  REJECTED: { cls: 'text-slate-600 ring-slate-200', Icon: XCircle },
+  MESSAGE: { cls: 'text-violet-700 ring-violet-100', Icon: AlarmClock },
 };
 const FALLBACK_BADGE = { cls: 'bg-slate-100 text-slate-600 ring-slate-200', Icon: Clock };
 
@@ -185,7 +185,8 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
   // The header names the request; extra services collapse into a "+N more".
   const serviceNames = services.map((service) => service?.name).filter(Boolean);
-  const primaryService = serviceNames[0] || (hasCart ? 'Food Order' : isWakeUpCallAlert ? 'Wake-up Call' : isCheckoutRequest ? 'Checkout' : 'Message');
+  const primaryService =
+    serviceNames[0] || (hasCart ? 'Food Order' : isWakeUpCallAlert ? 'Wake-up Call' : isCheckoutRequest ? 'Checkout' : 'Message');
   const extraServices = Math.max(0, serviceNames.length - 1);
 
   const badge = (isWakeUpCallAlert ? BADGES.MESSAGE : BADGES[alert?.alertProgress]) ?? FALLBACK_BADGE;
@@ -193,6 +194,9 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const PENDING_STATES = ['CREATED', 'NON_ACCEPTED_AND_WARNING', 'NON_ACCEPTED_AND_ESCALATION'];
   const ACCEPTED_STATES = ['ACCEPTED', 'IS_ACCEPTED_AND_WARNING', 'IS_ACCEPTED_AND_ESCALATION'];
   const CLOSED_STATES = ['REJECTED', 'DELIVERED'];
+  const ESCALATION_STATES = ['NON_ACCEPTED_AND_ESCALATION', 'IS_ACCEPTED_AND_ESCALATION'];
+  const isEscalatedAlert = ESCALATION_STATES.includes(alert?.alertProgress ?? '');
+  const escalationLevel = isEscalatedAlert ? alert?.level || 1 : null;
 
   const isPendingState = (p?: string) => PENDING_STATES.includes(p ?? '');
   const isAcceptedState = (p?: string) => ACCEPTED_STATES.includes(p ?? '');
@@ -235,10 +239,17 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
         {/* Status + when it came in */}
         <div className="mb-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${badge.cls}`}>
-            <badge.Icon className="h-3.5 w-3.5" />
-            {getAlertLabel(alert?.alertProgress)}
-          </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${badge.cls}`}>
+              <badge.Icon className="h-3.5 w-3.5" />
+              {getAlertLabel(alert?.alertProgress)}
+            </span>
+            {escalationLevel ? (
+              <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700 ring-1 ring-red-100">
+                L{escalationLevel}
+              </span>
+            ) : null}
+          </div>
           <span className="text-xs text-slate-500">Raised {formatRaised(alert?.createdAt)}</span>
         </div>
 

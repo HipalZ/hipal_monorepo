@@ -1,29 +1,16 @@
-import {
-  HotelAlert,
-  HotelService,
-  HotelServiceCategory,
-  User,
-} from "@hi/db-models";
-import {
-  hotelService,
-  hotelServiceCategory,
-  updateHotelService,
-} from "@hi/db-models/src/validators";
-import { runInTransaction } from "@hi/utils";
-import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
-import mongoose from "mongoose";
-import { z } from "zod";
-import { ensureQuickActionDefaults } from "../../services/hotel/quickActions";
-import { respond } from "../../utils/response";
+import { HotelAlert, HotelService, HotelServiceCategory, User } from '@hi/db-models';
+import { hotelService, hotelServiceCategory, updateHotelService } from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import mongoose from 'mongoose';
+import { z } from 'zod';
+import { ensureQuickActionDefaults } from '../../services/hotel/quickActions';
+import { respond } from '../../utils/response';
 
-const keepAvailableServices = <T extends { serviceIds?: unknown[] }>(
-  category: T
-) => ({
+const keepAvailableServices = <T extends { serviceIds?: unknown[] }>(category: T) => ({
   ...category,
-  serviceIds: (category.serviceIds || []).filter(
-    (service: any) => service?.availability !== false
-  ),
+  serviceIds: (category.serviceIds || []).filter((service: any) => service?.availability !== false),
 });
 
 const bulkUpdateHotelServiceTimings = z.object({
@@ -35,19 +22,19 @@ const bulkUpdateHotelServiceTimings = z.object({
         avgAcceptanceTime: z.number().positive(),
         avgCompletionTime: z.number().positive(),
         avgDeliveryTime: z.number().positive().optional(),
-      })
+      }),
     )
     .min(1),
 });
 
 const serviceRouter = new Hono()
   .get(
-    "/fetch_service",
+    '/fetch_service',
     zValidator(
-      "query",
+      'query',
       z.object({
         serviceId: z.string().min(2).max(50),
-      })
+      }),
     ),
 
     async (c) => {
@@ -55,19 +42,17 @@ const serviceRouter = new Hono()
 
       const service = await HotelService.findById(serviceId).lean();
 
-      return service
-        ? respond(c, "Service details", false, 200, service)
-        : respond(c, "Service not found", true, 404, {});
-    }
+      return service ? respond(c, 'Service details', false, 200, service) : respond(c, 'Service not found', true, 404, {});
+    },
   )
 
   .get(
-    "/fetch_services",
+    '/fetch_services',
     zValidator(
-      "query",
+      'query',
       z.object({
         businessId: z.string(),
-      })
+      }),
     ),
 
     async (c) => {
@@ -78,17 +63,17 @@ const serviceRouter = new Hono()
         .sort({ sequence: 1 })
         .lean();
 
-      return respond(c, "All services ", false, 200, services);
-    }
+      return respond(c, 'All services ', false, 200, services);
+    },
   )
 
   .get(
-    "/fetch_services_categories",
+    '/fetch_services_categories',
     zValidator(
-      "query",
+      'query',
       z.object({
         businessId: z.string(),
-      })
+      }),
     ),
 
     async (c) => {
@@ -98,31 +83,29 @@ const serviceRouter = new Hono()
       })
         .sort({ sequence: 1 })
         .populate({
-          path: "serviceIds",
-          select: "name image availability sequence",
+          path: 'serviceIds',
+          select: 'name image availability sequence',
           options: { sort: { sequence: 1 } },
         })
         .lean();
 
       return respond(
         c,
-        "All services ",
+        'All services ',
         false,
         200,
-        services
-          .map(keepAvailableServices)
-          .filter((category) => category.serviceIds.length > 0)
+        services.map(keepAvailableServices).filter((category) => category.serviceIds.length > 0),
       );
-    }
+    },
   )
 
   .get(
-    "/fetch_service_category",
+    '/fetch_service_category',
     zValidator(
-      "query",
+      'query',
       z.object({
         businessId: z.string(),
-      })
+      }),
     ),
 
     async (c) => {
@@ -138,31 +121,22 @@ const serviceRouter = new Hono()
       })
         .sort({ sequence: 1, _id: 1 })
         .populate({
-          path: "serviceIds",
-          select:
-            "name image availability avgAcceptanceTime avgCompletionTime avgDeliveryTime sequence systemKey",
+          path: 'serviceIds',
+          select: 'name image availability avgAcceptanceTime avgCompletionTime avgDeliveryTime sequence systemKey',
           options: { sort: { sequence: 1, _id: 1 } },
         })
-        .select("name image serviceIds sequence systemKey")
+        .select('name image serviceIds sequence systemKey')
         .lean();
 
-      const availableCategories = categories
-        .map(keepAvailableServices)
-        .filter((category) => category.serviceIds.length > 0);
+      const availableCategories = categories.map(keepAvailableServices).filter((category) => category.serviceIds.length > 0);
 
-      return respond(
-        c,
-        "All service categories",
-        false,
-        200,
-        availableCategories
-      );
-    }
+      return respond(c, 'All service categories', false, 200, availableCategories);
+    },
   )
 
   .post(
-    "/add_category",
-    zValidator("json", hotelServiceCategory),
+    '/add_category',
+    zValidator('json', hotelServiceCategory),
 
     async (c) => {
       //@ts-ignore
@@ -177,7 +151,7 @@ const serviceRouter = new Hono()
         });
 
         if (categoryExists) {
-          return respond(c, "Category service already exists", true, 409, {});
+          return respond(c, 'Category service already exists', true, 409, {});
         }
 
         const [category] = await HotelServiceCategory.create([requestData], {
@@ -185,19 +159,19 @@ const serviceRouter = new Hono()
         });
 
         if (!category) {
-          throw new Error("Category not created");
+          throw new Error('Category not created');
         }
 
-        return respond(c, "Category created", false, 201, {
+        return respond(c, 'Category created', false, 201, {
           _id: category._id,
         });
       });
-    }
+    },
   )
 
   .post(
-    "/add_service",
-    zValidator("json", hotelService),
+    '/add_service',
+    zValidator('json', hotelService),
 
     async (c) => {
       //@ts-ignore
@@ -211,27 +185,48 @@ const serviceRouter = new Hono()
         });
 
         if (serviceExists) {
-          return respond(c, "Service already exists", true, 409, {});
+          return respond(c, 'Service already exists', true, 409, {});
         }
 
         const [service] = await HotelService.create([requestData], { session });
 
         if (!service) {
-          throw new Error("Service not created");
+          throw new Error('Service not created');
         }
 
-        await HotelServiceCategory.findOneAndUpdate(
-          { _id: requestData.categoryId },
-          { $push: { serviceIds: service._id } },
-          { session }
+        await HotelServiceCategory.findOneAndUpdate({ _id: requestData.categoryId }, { $push: { serviceIds: service._id } }, { session });
+
+        await User.updateMany(
+          {
+            customRole: {
+              $elemMatch: {
+                businessId: requestData.businessId,
+                isDeleted: { $ne: true },
+              },
+            },
+          },
+          {
+            $addToSet: {
+              'customRole.$[role].serviceIds': service._id,
+            },
+          },
+          {
+            session,
+            arrayFilters: [
+              {
+                'role.businessId': new mongoose.Types.ObjectId(requestData.businessId),
+                'role.isDeleted': { $ne: true },
+              },
+            ],
+          },
         );
 
-        return respond(c, "Service created", false, 201, { _id: service._id });
+        return respond(c, 'Service created', false, 201, { _id: service._id });
       });
-    }
+    },
   )
 
-  .put("/edit_service", zValidator("json", updateHotelService), async (c) => {
+  .put('/edit_service', zValidator('json', updateHotelService), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
@@ -245,7 +240,7 @@ const serviceRouter = new Hono()
         });
 
         if (serviceExists) {
-          return respond(c, "Service already exists", true, 409, {});
+          return respond(c, 'Service already exists', true, 409, {});
         }
       }
 
@@ -253,143 +248,120 @@ const serviceRouter = new Hono()
         serviceIds: serviceId,
         businessId: requestData.businessId,
         alertProgress: {
-          $nin: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
+          $nin: ['RESOLVED', 'MESSAGE', 'DELIVERED', 'REJECTED'],
         },
       });
 
       if (isServiceActive) {
-        return respond(
-          c,
-          "Service is active and cannot be edited",
-          true,
-          409,
-          {}
-        );
+        return respond(c, 'Service is active and cannot be edited', true, 409, {});
       }
 
-      const updatedService = await HotelService.findOneAndUpdate(
-        { _id: serviceId },
-        { $set: requestData },
-        { session, new: true }
-      );
+      const updatedService = await HotelService.findOneAndUpdate({ _id: serviceId }, { $set: requestData }, { session, new: true });
 
       if (!updatedService) {
-        return respond(c, "Service not found or not updated", true, 404, {});
+        return respond(c, 'Service not found or not updated', true, 404, {});
       }
 
-      return respond(c, "Service updated successfully", false, 200, {
+      return respond(c, 'Service updated successfully', false, 200, {
         _id: updatedService._id,
       });
     });
   })
 
-  .put(
-    "/bulk_update_timings",
-    zValidator("json", bulkUpdateHotelServiceTimings),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session) => {
-        const { businessId, services } = await c.req.json();
+  .put('/bulk_update_timings', zValidator('json', bulkUpdateHotelServiceTimings), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session) => {
+      const { businessId, services } = await c.req.json();
 
-        const rowsByName = new Map<
-          string,
-          {
-            serviceName: string;
-            avgAcceptanceTime: number;
-            avgCompletionTime: number;
-            avgDeliveryTime?: number;
-          }
-        >();
-
-        for (const row of services) {
-          rowsByName.set(row.serviceName.trim().toLowerCase(), {
-            ...row,
-            serviceName: row.serviceName.trim(),
-          });
+      const rowsByName = new Map<
+        string,
+        {
+          serviceName: string;
+          avgAcceptanceTime: number;
+          avgCompletionTime: number;
+          avgDeliveryTime?: number;
         }
+      >();
 
-        const existingServices = await HotelService.find({ businessId })
-          .select("_id name")
-          .lean();
-
-        const serviceByName = new Map(
-          existingServices.map((service) => [
-            service.name.trim().toLowerCase(),
-            service,
-          ])
-        );
-
-        const matchedServiceIds: string[] = [];
-        const notFound: string[] = [];
-
-        for (const [serviceName, row] of rowsByName) {
-          const service = serviceByName.get(serviceName);
-          if (!service) {
-            notFound.push(row.serviceName);
-            continue;
-          }
-          matchedServiceIds.push(service._id.toString());
-        }
-
-        const activeServiceIds = await HotelAlert.distinct("serviceIds", {
-          businessId,
-          serviceIds: { $in: matchedServiceIds },
-          alertProgress: {
-            $nin: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
-          },
+      for (const row of services) {
+        rowsByName.set(row.serviceName.trim().toLowerCase(), {
+          ...row,
+          serviceName: row.serviceName.trim(),
         });
-        const activeServiceIdSet = new Set(
-          activeServiceIds.map((id) => id.toString())
-        );
+      }
 
-        const skippedActive: string[] = [];
-        const bulkOps = [];
+      const existingServices = await HotelService.find({ businessId }).select('_id name').lean();
 
-        for (const [serviceName, row] of rowsByName) {
-          const service = serviceByName.get(serviceName);
-          if (!service) continue;
+      const serviceByName = new Map(existingServices.map((service) => [service.name.trim().toLowerCase(), service]));
 
-          const serviceId = service._id.toString();
-          if (activeServiceIdSet.has(serviceId)) {
-            skippedActive.push(service.name);
-            continue;
-          }
+      const matchedServiceIds: string[] = [];
+      const notFound: string[] = [];
 
-          bulkOps.push({
-            updateOne: {
-              filter: { _id: service._id, businessId },
-              update: {
-                $set: {
-                  avgAcceptanceTime: row.avgAcceptanceTime,
-                  avgCompletionTime: row.avgCompletionTime,
-                  avgDeliveryTime: row.avgDeliveryTime ?? row.avgCompletionTime,
-                },
+      for (const [serviceName, row] of rowsByName) {
+        const service = serviceByName.get(serviceName);
+        if (!service) {
+          notFound.push(row.serviceName);
+          continue;
+        }
+        matchedServiceIds.push(service._id.toString());
+      }
+
+      const activeServiceIds = await HotelAlert.distinct('serviceIds', {
+        businessId,
+        serviceIds: { $in: matchedServiceIds },
+        alertProgress: {
+          $nin: ['RESOLVED', 'MESSAGE', 'DELIVERED', 'REJECTED'],
+        },
+      });
+      const activeServiceIdSet = new Set(activeServiceIds.map((id) => id.toString()));
+
+      const skippedActive: string[] = [];
+      const bulkOps = [];
+
+      for (const [serviceName, row] of rowsByName) {
+        const service = serviceByName.get(serviceName);
+        if (!service) continue;
+
+        const serviceId = service._id.toString();
+        if (activeServiceIdSet.has(serviceId)) {
+          skippedActive.push(service.name);
+          continue;
+        }
+
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: service._id, businessId },
+            update: {
+              $set: {
+                avgAcceptanceTime: row.avgAcceptanceTime,
+                avgCompletionTime: row.avgCompletionTime,
+                avgDeliveryTime: row.avgDeliveryTime ?? row.avgCompletionTime,
               },
             },
-          });
-        }
-
-        if (bulkOps.length) {
-          await HotelService.bulkWrite(bulkOps, { session });
-        }
-
-        return respond(c, "Service timings updated", false, 200, {
-          updated: bulkOps.length,
-          notFound,
-          skippedActive,
+          },
         });
+      }
+
+      if (bulkOps.length) {
+        await HotelService.bulkWrite(bulkOps, { session });
+      }
+
+      return respond(c, 'Service timings updated', false, 200, {
+        updated: bulkOps.length,
+        notFound,
+        skippedActive,
       });
-    }
-  )
+    });
+  })
 
   .delete(
-    "/delete_services",
+    '/delete_services',
     zValidator(
-      "json",
+      'json',
       z.object({
         serviceIds: z.array(z.string().min(2).max(26)),
         businessId: z.string().min(2).max(26),
-      })
+      }),
     ),
     async (c) => {
       //@ts-ignore
@@ -402,15 +374,15 @@ const serviceRouter = new Hono()
           businessId: businessId,
         });
 
-        return respond(c, "Services deleted successfully", false, 200, {});
+        return respond(c, 'Services deleted successfully', false, 200, {});
       });
-    }
+    },
   )
   // single service delete
   .delete(
-    "/delete_service/:serviceId",
-    zValidator("param", z.object({ serviceId: z.string().min(24).max(24) })),
-    zValidator("json", z.object({ businessId: z.string().min(24).max(24) })),
+    '/delete_service/:serviceId',
+    zValidator('param', z.object({ serviceId: z.string().min(24).max(24) })),
+    zValidator('json', z.object({ businessId: z.string().min(24).max(24) })),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
@@ -422,52 +394,39 @@ const serviceRouter = new Hono()
           businessId: requestData.businessId,
           alertProgress: {
             $exists: true,
-            $nin: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
+            $nin: ['RESOLVED', 'MESSAGE', 'DELIVERED', 'REJECTED'],
           },
         });
         if (isServiceActive) {
-          return respond(
-            c,
-            "Service is active and cannot be deleted",
-            true,
-            409,
-            {}
-          );
+          return respond(c, 'Service is active and cannot be deleted', true, 409, {});
         }
 
-        const { deletedCount } = await HotelService.deleteOne(
-          { _id: serviceId, businessId },
-          { session }
-        );
+        const { deletedCount } = await HotelService.deleteOne({ _id: serviceId, businessId }, { session });
 
         if (!deletedCount) {
-          return respond(c, "Service not found", true, 404, {});
+          return respond(c, 'Service not found', true, 404, {});
         }
 
         // pull serviceIds from user models
-        await User.updateMany(
-          { "customRole.serviceIds": serviceId },
-          { $pull: { "customRole.$[].serviceIds": serviceId } },
-          { session }
-        );
+        await User.updateMany({ 'customRole.serviceIds': serviceId }, { $pull: { 'customRole.$[].serviceIds': serviceId } }, { session });
 
-        return respond(c, "Services deleted successfully", false, 200, {});
+        return respond(c, 'Services deleted successfully', false, 200, {});
       });
-    }
+    },
   )
 
   .post(
-    "/update_category_sequence",
+    '/update_category_sequence',
     zValidator(
-      "json",
+      'json',
       z.object({
         sequences: z.array(
           z.object({
             id: z.string(),
             sequence: z.number(),
-          })
+          }),
         ),
-      })
+      }),
     ),
     async (c) => {
       const { sequences } = await c.req.json();
@@ -481,16 +440,16 @@ const serviceRouter = new Hono()
 
       await HotelServiceCategory.bulkWrite(bulkOps);
 
-      return respond(c, "Category sequences updated", false, 200, {});
-    }
+      return respond(c, 'Category sequences updated', false, 200, {});
+    },
   )
   .get(
-    "/get_category_sequence",
+    '/get_category_sequence',
     zValidator(
-      "query",
+      'query',
       z.object({
         businessId: z.string().min(24).max(24),
-      })
+      }),
     ),
     async (c) => {
       const { businessId } = c.req.query();
@@ -498,22 +457,22 @@ const serviceRouter = new Hono()
         businessId,
         availability: true,
       }).sort({ sequence: 1 });
-      return respond(c, "Category sequences", false, 200, { categories });
-    }
+      return respond(c, 'Category sequences', false, 200, { categories });
+    },
   )
 
   .post(
-    "/update_service_sequence",
+    '/update_service_sequence',
     zValidator(
-      "json",
+      'json',
       z.object({
         sequences: z.array(
           z.object({
             id: z.string(),
             sequence: z.number(),
-          })
+          }),
         ),
-      })
+      }),
     ),
     async (c) => {
       const { sequences } = await c.req.json();
@@ -527,8 +486,8 @@ const serviceRouter = new Hono()
 
       await HotelService.bulkWrite(bulkOps);
 
-      return respond(c, "Service sequences updated", false, 200, {});
-    }
+      return respond(c, 'Service sequences updated', false, 200, {});
+    },
   );
 
 export default serviceRouter;

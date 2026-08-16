@@ -1,19 +1,17 @@
-"use client";
-import dynamic from "next/dynamic";
-import { memo, useEffect, useMemo } from "react";
-import type { CategoryType, DishType } from "@hi/db-models/src/validators";
-import { cn } from "@hi/common";
-import SubTypes from "@/components/molecules/categoryTypes/subTypes";
-import { useSearch } from "@/components/store/useSearch";
-import type { IMenuLayout, TimingType } from "@/components/types/businessData";
-import Header from "@/components/molecules/header";
-import { useDishesStore } from "@/components/store/useDishesStore";
+'use client';
+import SubTypes from '@/components/molecules/categoryTypes/subTypes';
+import Header from '@/components/molecules/header';
+import { useDishesStore } from '@/components/store/useDishesStore';
+import { useSearch } from '@/components/store/useSearch';
+import type { IMenuLayout, TimingType } from '@/components/types/businessData';
+import { cn } from '@hi/common';
+import type { CategoryType, DishType } from '@hi/db-models/src/validators';
+import dynamic from 'next/dynamic';
+import { memo, useEffect, useMemo } from 'react';
 
-const EdgeFlow = dynamic(() => import("./EdgeFlow"));
-const MainTypes = dynamic(
-  () => import("@/components/molecules/categoryTypes/mainTypes")
-);
-const CollapseMenu = dynamic(() => import("./CollapseMenu"));
+const EdgeFlow = dynamic(() => import('./EdgeFlow'));
+const MainTypes = dynamic(() => import('@/components/molecules/categoryTypes/mainTypes'));
+const CollapseMenu = dynamic(() => import('./CollapseMenu'));
 
 interface IDishesProps {
   childCategory: CategoryType[];
@@ -22,15 +20,11 @@ interface IDishesProps {
   menuLayout: IMenuLayout;
 }
 
-const DishesList = ({
-  childCategory,
-  parentCategory,
-  menuLayout,
-}: IDishesProps) => {
+const DishesList = ({ childCategory, parentCategory, menuLayout }: IDishesProps) => {
   const { isSearchActive } = useSearch();
 
-  const primaryColor = menuLayout?.primaryColor || "#000000";
-  const secondaryColor = menuLayout?.secondaryColor || "#ffffff";
+  const primaryColor = menuLayout?.primaryColor || '#000000';
+  const secondaryColor = menuLayout?.secondaryColor || '#ffffff';
 
   const categoryLayout = menuLayout?.categoryLayout;
   const isEdgeLayout = categoryLayout === 1;
@@ -42,11 +36,7 @@ const DishesList = ({
 
   const subTypes = useMemo(() => {
     const hasVisibleDishes = (category: CategoryType): boolean => {
-      return (
-        category.hierarchy === "CHILD" &&
-        category.dishIds &&
-        category.dishIds.length > 0
-      );
+      return category.hierarchy === 'CHILD' && category.dishIds && category.dishIds.length > 0;
     };
 
     if (parentCategory && parentCategory.length > 0) {
@@ -62,9 +52,7 @@ const DishesList = ({
 
       const orderedSubTypes = Array.from(uniqueSubCategoryIds)
         .map((subCatId: string) => {
-          return childCategory.find(
-            (childCat: CategoryType) => childCat._id === subCatId
-          );
+          return childCategory.find((childCat: CategoryType) => childCat._id === subCatId);
         })
         .filter((cat): cat is CategoryType => Boolean(cat));
 
@@ -77,40 +65,26 @@ const DishesList = ({
     const allDishes = childCategory
       .filter((category) => category.dishIds && category.dishIds.length > 0)
       .flatMap((category) => category.dishIds || [])
-      .filter((dish) => typeof dish !== "string") as unknown as DishType[];
+      .filter((dish) => typeof dish !== 'string') as unknown as DishType[];
     setDishes(allDishes);
   }, [childCategory, setDishes]);
 
   return (
     <>
-      <section className={cn("sticky z-50 text-[#000000] bg-white top-0")}>
-        <Header
-          categories={childCategory}
-          primaryColor={primaryColor}
-          secondaryColor={secondaryColor}
-        />
+      <section className={cn('sticky top-0 z-50 bg-white text-[#000000]')}>
+        <Header categories={childCategory} primaryColor={primaryColor} secondaryColor={secondaryColor} />
       </section>
 
       {isClassicLayout && (
         <>
           {!isSearchActive && (
-            <SubTypes
-              childCategory={subTypes}
-              primaryColor={primaryColor}
-              secondaryColor={secondaryColor}
-              isHorizontalCard={!isHorizontalCard}
-            />
+            <SubTypes childCategory={subTypes} primaryColor={primaryColor} secondaryColor={secondaryColor} isHorizontalCard={!isHorizontalCard} />
           )}
         </>
       )}
 
       {isEdgeLayout && (
-        <EdgeFlow
-          childCategory={subTypes}
-          isHorizontalCard={!isHorizontalCard}
-          primaryColor={primaryColor}
-          secondaryColor={secondaryColor}
-        />
+        <EdgeFlow childCategory={subTypes} isHorizontalCard={!isHorizontalCard} primaryColor={primaryColor} secondaryColor={secondaryColor} />
       )}
 
       {isCollapseLayout && (
@@ -123,12 +97,7 @@ const DishesList = ({
       )}
 
       {!isCollapseLayout && (
-        <MainTypes
-          parentCategory={parentCategory || []}
-          childCategory={subTypes || []}
-          primaryColor={primaryColor}
-          secondaryColor={secondaryColor}
-        />
+        <MainTypes parentCategory={parentCategory || []} childCategory={subTypes || []} primaryColor={primaryColor} secondaryColor={secondaryColor} />
       )}
     </>
   );

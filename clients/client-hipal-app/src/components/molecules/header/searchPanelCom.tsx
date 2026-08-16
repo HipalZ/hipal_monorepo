@@ -81,9 +81,10 @@ const getDishSearchValues = (dish: DishType) => {
   };
 
   const tagNames =
-    searchableDish.tags?.map((tag) =>
-      typeof tag === "string" ? tag : tag?.name || "",
-    ) || [];
+    searchableDish.tags?.map((tag) => {
+      if (typeof tag === "string") return tag;
+      return (tag as { name?: string })?.name || "";
+    }) || [];
 
   return [
     dish.name,
@@ -197,43 +198,6 @@ const MemoSearchPanelCom = ({
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   };
 
-  // useEffect(() => {
-  //   if (isSearchActive) {
-  //     // Store whatever hash was originally in the URL
-  //     const originalHash = window.location.hash;
-
-  //     // Set the hash to indicate the Search is open
-  //     window.location.hash = "#search";
-
-  //     const handleHashChange = () => {
-  //       // If we detect the user navigated away from #search, close the Search
-  //       if (window.location.hash !== "#search") {
-  //         setIsSearchActive(false);
-  //       }
-  //     };
-
-  //     window.addEventListener("hashchange", handleHashChange);
-
-  //     // Cleanup: remove listener and restore old hash if still on #search
-  //     return () => {
-  //       window.removeEventListener("hashchange", handleHashChange);
-
-  //       if (window.location.hash === "#search") {
-  //         if (originalHash) {
-  //           window.location.hash = originalHash;
-  //         } else {
-  //           // Remove the hash entirely
-  //           history.pushState(
-  //             "",
-  //             document.title,
-  //             window.location.pathname + window.location.search,
-  //           );
-  //         }
-  //       }
-  //     };
-  //   }
-  // }, [isSearchActive, setIsSearchActive]);
-
   return (
     <AnimatePresence>
       {isSearchActive && (
@@ -284,6 +248,7 @@ const MemoSearchPanelCom = ({
                     dishData={dish}
                     primaryColor={primaryColor}
                     secondaryColor={secondaryColor}
+                    noDescription
                   />
                 </motion.div>
               ))

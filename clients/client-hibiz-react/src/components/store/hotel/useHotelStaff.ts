@@ -1,5 +1,5 @@
-import type { IHotel_Roll, IHotelRoll } from "@/hooks/useHotelStaff";
-import { create } from "zustand";
+import type { IHotel_Roll, IHotelRoll } from '@/hooks/useHotelStaff';
+import { create } from 'zustand';
 
 export interface IService {
   serviceIds?: {
@@ -22,6 +22,7 @@ export interface IStaffMember {
     role: string;
     nickName?: string;
     serviceIds: string[];
+    restaurantIds?: string[];
     _id: string;
   }[];
 }
@@ -32,6 +33,7 @@ export interface StaffRole {
   permissionGroupIds: string[];
   permissionIds: string[];
   serviceIds: string[];
+  restaurantIds?: string[];
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -119,9 +121,7 @@ export const useStaffDataStore = create<IStaffData>((set, get) => ({
 
   updateStaff: (staffId, updates) =>
     set((state) => ({
-      staffList: state.staffList.map((staff) =>
-        staff._id === staffId ? { ...staff, ...updates } : staff,
-      ),
+      staffList: state.staffList.map((staff) => (staff._id === staffId ? { ...staff, ...updates } : staff)),
     })),
 
   deleteStaff: (staffId) =>
@@ -138,15 +138,11 @@ export const useStaffDataStore = create<IStaffData>((set, get) => ({
       const newAssignments = [...state.roomStaffAssignments];
 
       roomIds.forEach((roomId) => {
-        const existingAssignment = newAssignments.find(
-          (a) => a.roomId === roomId,
-        );
+        const existingAssignment = newAssignments.find((a) => a.roomId === roomId);
 
         if (existingAssignment) {
           // Add new staff to existing room assignment
-          const uniqueStaffIds = [
-            ...new Set([...existingAssignment.staffIds, ...staffIds]),
-          ];
+          const uniqueStaffIds = [...new Set([...existingAssignment.staffIds, ...staffIds])];
           existingAssignment.staffIds = uniqueStaffIds;
         } else {
           // Create new room assignment
@@ -168,9 +164,7 @@ export const useStaffDataStore = create<IStaffData>((set, get) => ({
           roomIds.includes(assignment.roomId)
             ? {
                 ...assignment,
-                staffIds: assignment.staffIds.filter(
-                  (id) => !staffIds.includes(id),
-                ),
+                staffIds: assignment.staffIds.filter((id) => !staffIds.includes(id)),
               }
             : assignment,
         )
@@ -179,21 +173,15 @@ export const useStaffDataStore = create<IStaffData>((set, get) => ({
 
   getStaffByRoom: (roomId) => {
     const state = get();
-    const assignment = state.roomStaffAssignments.find(
-      (a) => a.roomId === roomId,
-    );
+    const assignment = state.roomStaffAssignments.find((a) => a.roomId === roomId);
     if (!assignment) return [];
 
-    return state.staffList.filter((staff) =>
-      assignment.staffIds.includes(staff._id),
-    );
+    return state.staffList.filter((staff) => assignment.staffIds.includes(staff._id));
   },
 
   getRoomsByStaff: (staffId) => {
     const state = get();
-    return state.roomStaffAssignments
-      .filter((assignment) => assignment.staffIds.includes(staffId))
-      .map((assignment) => assignment.roomId);
+    return state.roomStaffAssignments.filter((assignment) => assignment.staffIds.includes(staffId)).map((assignment) => assignment.roomId);
   },
 
   setSelectedRooms: (roomIds) => set({ selectedRooms: roomIds }),
@@ -201,16 +189,12 @@ export const useStaffDataStore = create<IStaffData>((set, get) => ({
 
   toggleRoomSelection: (roomId) =>
     set((state) => ({
-      selectedRooms: state.selectedRooms.includes(roomId)
-        ? state.selectedRooms.filter((id) => id !== roomId)
-        : [...state.selectedRooms, roomId],
+      selectedRooms: state.selectedRooms.includes(roomId) ? state.selectedRooms.filter((id) => id !== roomId) : [...state.selectedRooms, roomId],
     })),
 
   toggleStaffSelection: (staffId) =>
     set((state) => ({
-      selectedStaff: state.selectedStaff.includes(staffId)
-        ? state.selectedStaff.filter((id) => id !== staffId)
-        : [...state.selectedStaff, staffId],
+      selectedStaff: state.selectedStaff.includes(staffId) ? state.selectedStaff.filter((id) => id !== staffId) : [...state.selectedStaff, staffId],
     })),
 
   clearSelections: () => set({ selectedRooms: [], selectedStaff: [] }),
@@ -240,6 +224,9 @@ interface StaffFormState {
   selectedRole: IHotel_Roll | null;
   selectedServices: IService[];
   setSelectedServices: (value: IService[]) => void;
+  selectedRestaurants: string[];
+  setSelectedRestaurants: (value: string[]) => void;
+  toggleRestaurant: (restaurantId: string) => void;
 
   // Form state
   currentStep: number;
@@ -260,14 +247,14 @@ interface StaffFormState {
   setEditServiceIds: (value: string[]) => void;
 
   // Actions
-  setPersonalInfo: (info: Partial<StaffFormState["personalInfo"]>) => void;
+  setPersonalInfo: (info: Partial<StaffFormState['personalInfo']>) => void;
   setSelectedRole: (role: IHotel_Roll | null) => void;
   toggleService: (service: IService) => void;
   setCurrentStep: (step: number) => void;
   resetForm: () => void;
   validateCurrentStep: () => boolean;
   clearErrors: () => void;
-  setError: (field: keyof StaffFormState["errors"], message: string) => void;
+  setError: (field: keyof StaffFormState['errors'], message: string) => void;
   setEditMode: (isEdit: boolean) => void;
   setEditStaffId: (id: string | null) => void;
   initializeFormForEdit: (staff: IStaffMember) => void;
@@ -277,26 +264,34 @@ interface StaffFormState {
 const useStaffStore = create<StaffFormState>((set, get) => ({
   // Initial state
   personalInfo: {
-    name: "",
-    phone: "",
-    nickname: "",
-    password: "",
+    name: '',
+    phone: '',
+    nickname: '',
+    password: '',
   },
   selectedRole: null,
   selectedServices: [],
   setSelectedServices: (value) => set({ selectedServices: value }),
+  selectedRestaurants: [],
+  setSelectedRestaurants: (value) => set({ selectedRestaurants: value }),
+  toggleRestaurant: (restaurantId) =>
+    set((state) => ({
+      selectedRestaurants: state.selectedRestaurants.includes(restaurantId)
+        ? state.selectedRestaurants.filter((id) => id !== restaurantId)
+        : [...state.selectedRestaurants, restaurantId],
+    })),
   currentStep: 1,
   errors: {
-    name: "",
-    phone: "",
-    password: "",
-    role: "",
+    name: '',
+    phone: '',
+    password: '',
+    role: '',
   },
 
   staffModal: false,
   setStaffModal: (value) => set({ staffModal: value }),
 
-  editRoleStr: "",
+  editRoleStr: '',
   setEditRoleStr: (value: IHotelRoll) => set({ editRoleStr: value }),
 
   editServiceIds: [],
@@ -312,15 +307,11 @@ const useStaffStore = create<StaffFormState>((set, get) => ({
 
   toggleService: (service) =>
     set((state) => {
-      const isSelected = state.selectedServices.some(
-        (s) => s._id === service._id,
-      );
+      const isSelected = state.selectedServices.some((s) => s._id === service._id);
 
       if (isSelected) {
         return {
-          selectedServices: state.selectedServices.filter(
-            (s) => s._id !== service._id,
-          ),
+          selectedServices: state.selectedServices.filter((s) => s._id !== service._id),
         };
       } else {
         return {
@@ -334,35 +325,29 @@ const useStaffStore = create<StaffFormState>((set, get) => ({
   resetForm: () =>
     set({
       personalInfo: {
-        name: "",
-        phone: "",
-        nickname: "",
-        password: "",
+        name: '',
+        phone: '',
+        nickname: '',
+        password: '',
       },
-      editRoleStr: "",
+      editRoleStr: '',
       editServiceIds: [],
       isEditMode: false,
       editStaffId: null,
       selectedRole: null,
       selectedServices: [],
+      selectedRestaurants: [],
       currentStep: 1,
       errors: {
-        name: "",
-        phone: "",
-        password: "",
-        role: "",
+        name: '',
+        phone: '',
+        password: '',
+        role: '',
       },
     }),
 
   validateCurrentStep: () => {
-    const {
-      currentStep,
-      personalInfo,
-      selectedRole,
-      clearErrors,
-      setError,
-      isEditMode,
-    } = get();
+    const { currentStep, personalInfo, selectedRole, clearErrors, setError, isEditMode } = get();
 
     // Clear previous errors
     clearErrors();
@@ -372,23 +357,23 @@ const useStaffStore = create<StaffFormState>((set, get) => ({
       let isValid = true;
 
       if (!personalInfo.name.trim()) {
-        setError("name", "Name is required");
+        setError('name', 'Name is required');
         isValid = false;
       }
 
       if (!personalInfo.phone.trim()) {
-        setError("phone", "Phone number is required");
+        setError('phone', 'Phone number is required');
         isValid = false;
       } else if (!/^\d{10}$/.test(personalInfo.phone)) {
-        setError("phone", "Phone number must be 10 digits");
+        setError('phone', 'Phone number must be 10 digits');
         isValid = false;
       }
 
       if (!personalInfo.password.trim() && !isEditMode) {
-        setError("password", "Password is required");
+        setError('password', 'Password is required');
         isValid = false;
       } else if (personalInfo.password.length < 4 && !isEditMode) {
-        setError("password", "Password must be at least 4 characters");
+        setError('password', 'Password must be at least 4 characters');
         isValid = false;
       }
 
@@ -397,7 +382,7 @@ const useStaffStore = create<StaffFormState>((set, get) => ({
 
     if (currentStep === 2) {
       if (!selectedRole) {
-        setError("role", "Please select a role");
+        setError('role', 'Please select a role');
         return false;
       }
       return true;
@@ -409,10 +394,10 @@ const useStaffStore = create<StaffFormState>((set, get) => ({
   clearErrors: () =>
     set({
       errors: {
-        name: "",
-        phone: "",
-        password: "",
-        role: "",
+        name: '',
+        phone: '',
+        password: '',
+        role: '',
       },
     }),
 
@@ -437,8 +422,8 @@ const useStaffStore = create<StaffFormState>((set, get) => ({
       personalInfo: {
         name: staff.name,
         phone: staff.phone,
-        nickname: customRole.nickName || "",
-        password: "",
+        nickname: customRole.nickName || '',
+        password: '',
       },
       currentStep: 1,
     });

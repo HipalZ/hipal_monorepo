@@ -1,11 +1,6 @@
-import { create } from "zustand";
-import {
-  type Alert,
-  type Cart,
-  NavItemsHotelEnum,
-  type RoomData,
-} from "../types/hotelData";
-import type { SortOption } from "../utils/helpersHotel";
+import { create } from 'zustand';
+import { type Cart, NavItemsHotelEnum, type RoomData } from '../types/hotelData';
+import type { SortOption } from '../utils/helpersHotel';
 
 interface IHotelStore {
   // nav items toggling
@@ -59,12 +54,6 @@ interface IHotelStore {
 
   openCartModal: boolean;
   setOpenCartModal: (value: boolean) => void;
-
-  hotelEscalationCount: number;
-  setHotelEscalationCount: (value: number) => void;
-
-  escalatedData: Alert[];
-  setEscalatedData: (value: Alert[]) => void;
 }
 
 export const useHotelStore = create<IHotelStore>((set) => ({
@@ -77,10 +66,10 @@ export const useHotelStore = create<IHotelStore>((set) => ({
   openRoomModal: false,
   setOpenRoomModal: (value) => set({ openRoomModal: value }),
 
-  guestName: "",
+  guestName: '',
   setGuestName: (value) => set({ guestName: value }),
 
-  phoneNumber: "",
+  phoneNumber: '',
   setPhoneNumber: (value) => set({ phoneNumber: value }),
 
   reviewUserIds: [],
@@ -113,10 +102,10 @@ export const useHotelStore = create<IHotelStore>((set) => ({
   isFilterOpen: false,
   setIsFilterOpen: (value) => set({ isFilterOpen: value }),
 
-  searchHistory: "",
+  searchHistory: '',
   setSearchHistory: (value) => set({ searchHistory: value }),
 
-  sortByHistory: "newest",
+  sortByHistory: 'newest',
   setSortByHistory: (value) => set({ sortByHistory: value }),
 
   hotelAlertsCount: 0,
@@ -128,7 +117,7 @@ export const useHotelStore = create<IHotelStore>((set) => ({
   isOpenChat: false,
   setIsOpenChat: (value) => set({ isOpenChat: value }),
 
-  selectedSource: "",
+  selectedSource: '',
   setSelectedSource: (value) => set({ selectedSource: value }),
 
   cartData: [],
@@ -136,10 +125,4 @@ export const useHotelStore = create<IHotelStore>((set) => ({
 
   openCartModal: false,
   setOpenCartModal: (value) => set({ openCartModal: value }),
-
-  hotelEscalationCount: 0,
-  setHotelEscalationCount: (value) => set({ hotelEscalationCount: value }),
-
-  escalatedData: [],
-  setEscalatedData: (value) => set({ escalatedData: value }),
 }));

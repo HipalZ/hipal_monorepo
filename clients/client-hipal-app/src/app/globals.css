@@ -5,46 +5,46 @@
 /* @import "tailwindcss"; */
 /* @import "tw-animate-css"; */
 
-@import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Montserrat&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap');
 
 body {
-  font-family: "Darker Grotesque Variable", sans-serif;
+  font-family: 'Darker Grotesque Variable', sans-serif;
 }
 
 .bungee-inline {
-  font-family: "Bungee Inline", sans-serif;
+  font-family: 'Bungee Inline', sans-serif;
   font-weight: 400;
   font-style: normal;
 }
 
 .font-play {
-  font-family: "Playfair Display", serif;
+  font-family: 'Playfair Display', serif;
 }
 
 .montserrat-400 {
-  font-family: "Montserrat", serif;
+  font-family: 'Montserrat', serif;
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
 }
 
 .dotgothic16-regular {
-  font-family: "DotGothic16", sans-serif;
+  font-family: 'DotGothic16', sans-serif;
   font-weight: 400;
   font-style: normal;
 }
 
 .space-grotesk-700 {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
 }
 /* Add this inside your global CSS file, e.g., styles/globals.css */
 .notch::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 50%;
   left: 50%;
@@ -95,6 +95,8 @@ body {
   --h-b2: #f1f5f9;
   --h-b3: #e2e8f0;
   --h-bc: #0f172a;
+  --hotel-action-bg: #111111;
+  --hotel-action-fg: #ffffff;
 
   --btn-border: 1px solid rgba(255, 255, 255, 0.2);
   --btn-bg: transparent;
@@ -102,18 +104,9 @@ body {
   --btn-text-color: #f4f4f4;
   --shine-degree: 120deg;
   --shine-color: rgba(255, 255, 255, 0.52);
-  --shine-effect: linear-gradient(
-    var(--shine-degree),
-    transparent,
-    var(--shine-color),
-    transparent
-  );
-  --font-family-darker-grotesque: "Darker Grotesque", sans-serif;
-  --gradient-background: linear-gradient(
-    to right,
-    #c53293 -4.88%,
-    #4990fb 90.05%
-  );
+  --shine-effect: linear-gradient(var(--shine-degree), transparent, var(--shine-color), transparent);
+  --font-family-darker-grotesque: 'Darker Grotesque', sans-serif;
+  --gradient-background: linear-gradient(to right, #c53293 -4.88%, #4990fb 90.05%);
   color: #fff;
   --radius: 0.75rem;
 }
@@ -157,6 +150,8 @@ body {
 }
 
 .dark {
+  --hotel-action-bg: #ffffff;
+  --hotel-action-fg: #111111;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.145 0 0);
@@ -270,7 +265,9 @@ body {
 }
 
 .plus-jakarta-font {
-  font-family: Plus Jakarta Sans, sans-serif;
+  font-family:
+    Plus Jakarta Sans,
+    sans-serif;
 }
 
 .hipal-hot-toast {
@@ -283,7 +280,8 @@ body {
   font-weight: 600 !important;
   line-height: 1.35 !important;
   letter-spacing: 0 !important;
-  box-shadow: 0 1rem 2.5rem rgba(15, 23, 42, 0.14),
+  box-shadow:
+    0 1rem 2.5rem rgba(15, 23, 42, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(1rem) saturate(150%);
 }
@@ -292,7 +290,8 @@ body {
   border-color: rgba(255, 255, 255, 0.12) !important;
   background: rgba(17, 24, 39, 0.94) !important;
   color: #f9fafb !important;
-  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.36),
+  box-shadow:
+    0 1rem 2.5rem rgba(0, 0, 0, 0.36),
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -309,20 +308,20 @@ body {
 }
 
 .syne-font {
-  font-family: "Syne", sans-serif;
+  font-family: 'Syne', sans-serif;
 }
 
 .syne-font-semibold {
-  font-family: "Syne", sans-serif;
+  font-family: 'Syne', sans-serif;
   font-weight: 500;
 }
 .syne-font-bold {
-  font-family: "Syne", sans-serif;
+  font-family: 'Syne', sans-serif;
   font-weight: 600;
 }
 
 .syne-font-black {
-  font-family: "Syne", sans-serif;
+  font-family: 'Syne', sans-serif;
   font-weight: 800;
 }
 
@@ -362,7 +361,9 @@ body {
   white-space: nowrap;
   width: 0;
   height: auto;
-  animation: typing 1.5s steps(30, end) forwards, 2s stay 1.5s forwards;
+  animation:
+    typing 1.5s steps(30, end) forwards,
+    2s stay 1.5s forwards;
 }
 .animation-bounce {
   animation: bounce 1.5s linear;
@@ -428,9 +429,7 @@ body::-webkit-scrollbar {
 }
 
 .splide__pagination .is-active {
-  background-color: var(
-    --primary-focus
-  ); /* Replace with the actual color value or variable for bg-primary-focus */
+  background-color: var(--primary-focus); /* Replace with the actual color value or variable for bg-primary-focus */
 }
 
 #specialOffers .splide__slide ~ .is-active {
@@ -471,7 +470,7 @@ body {
   /* font-family: 'Montserrat', sans-serif; Uncomment and adjust as needed */
 }
 
-input[type="password"] {
+input[type='password'] {
   font-size: large;
   font-family: Verdana, sans-serif;
   letter-spacing: 0.0625rem;
@@ -485,21 +484,18 @@ input[type="password"] {
 * {
   -webkit-touch-callout: none; /* prevent call out to copy image, etc when tap to hold */
   -webkit-text-size-adjust: none; /* prevent webkit from resizing text to fit */
-  -webkit-tap-highlight-color: rgba(
-    0,
-    0,
-    0,
-    0
-  ); /* prevent tap highlight color / shadow */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0); /* prevent tap highlight color / shadow */
   -webkit-user-select: none; /* prevent copy paste, to allow, change 'none' to 'text' */
 }
 
 .tilted-card:hover {
   box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 .tilted-card:before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   right: 0;
@@ -825,7 +821,7 @@ input[type="password"] {
   color: #ccc;
 }
 .rate:not(:checked) > label:before {
-  content: "★ ";
+  content: '★ ';
 }
 .rate > input:checked ~ label {
   color: #ffc83b;
@@ -854,32 +850,27 @@ input[type="password"] {
 
 @keyframes flip {
   from {
-    transform: perspective(400px) scale3d(1, 1, 1) translate3d(0, 0, 0)
-      rotate3d(0, 1, 0, -360deg);
+    transform: perspective(400px) scale3d(1, 1, 1) translate3d(0, 0, 0) rotate3d(0, 1, 0, -360deg);
     animation-timing-function: ease-out;
   }
 
   40% {
-    transform: perspective(400px) scale3d(1, 1, 1) translate3d(0, 0, 150px)
-      rotate3d(0, 1, 0, -190deg);
+    transform: perspective(400px) scale3d(1, 1, 1) translate3d(0, 0, 150px) rotate3d(0, 1, 0, -190deg);
     animation-timing-function: ease-out;
   }
 
   50% {
-    transform: perspective(400px) scale3d(1, 1, 1) translate3d(0, 0, 150px)
-      rotate3d(0, 1, 0, -170deg);
+    transform: perspective(400px) scale3d(1, 1, 1) translate3d(0, 0, 150px) rotate3d(0, 1, 0, -170deg);
     animation-timing-function: ease-in;
   }
 
   80% {
-    transform: perspective(400px) scale3d(0.95, 0.95, 0.95) translate3d(0, 0, 0)
-      rotate3d(0, 1, 0, 0deg);
+    transform: perspective(400px) scale3d(0.95, 0.95, 0.95) translate3d(0, 0, 0) rotate3d(0, 1, 0, 0deg);
     animation-timing-function: ease-in;
   }
 
   to {
-    transform: perspective(400px) scale3d(1, 1, 1) translate3d(0, 0, 0)
-      rotate3d(0, 1, 0, 0deg);
+    transform: perspective(400px) scale3d(1, 1, 1) translate3d(0, 0, 0) rotate3d(0, 1, 0, 0deg);
     animation-timing-function: ease-in;
   }
 }
@@ -914,7 +905,7 @@ input[type="password"] {
 }
 
 .shine-effect {
-  background: "#000000";
+  background: '#000000';
   background-size: 250% 100%;
   animation: shine 2s infinite ease-out;
   pointer-events: none;
@@ -944,7 +935,7 @@ input[type="password"] {
 }
 
 .custom-list li::before {
-  content: "•";
+  content: '•';
   position: absolute;
   left: 0;
   color: #000000;
@@ -953,7 +944,7 @@ input[type="password"] {
 }
 
 .custom-list-color li::before {
-  content: "•";
+  content: '•';
   color: #fff;
   position: absolute;
   left: 0;
@@ -1057,18 +1048,13 @@ input[type="password"] {
 }
 
 .shine::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 25%;
   left: -100%;
   height: 50%;
   width: 50%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.8) 50%,
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8) 50%, transparent);
   animation: shine-effect 2s infinite;
   -webkit-animation: shine-effect 2s infinite;
   -moz-animation: shine-effect 2s infinite;
@@ -1076,18 +1062,13 @@ input[type="password"] {
 }
 
 .shine2::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 25%;
   left: -100%;
   height: 50%;
   width: 50%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.8) 50%,
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8) 50%, transparent);
   animation: shine-effect 2s infinite;
   -webkit-animation: shine-effect 2s infinite;
   -moz-animation: shine-effect 2s infinite;
@@ -1271,7 +1252,7 @@ input[type="password"] {
   grid-template-rows: 1fr;
   gap: 2px 4px;
   grid-auto-flow: row;
-  grid-template-areas: "first";
+  grid-template-areas: 'first';
   width: 100%;
   max-width: 30rem;
   height: 220px;
@@ -1290,7 +1271,7 @@ input[type="password"] {
   grid-template-rows: 1fr;
   gap: 2px 4px;
   grid-auto-flow: row;
-  grid-template-areas: "first second";
+  grid-template-areas: 'first second';
   width: 100%;
   max-width: 30rem;
   height: 220px;
@@ -1315,8 +1296,8 @@ input[type="password"] {
   gap: 2px 4px;
   grid-auto-flow: row;
   grid-template-areas:
-    "first second"
-    "third second";
+    'first second'
+    'third second';
   width: 100%;
   max-width: 30rem;
   height: 220px;
@@ -1347,8 +1328,8 @@ input[type="password"] {
   gap: 2px 4px;
   grid-auto-flow: row;
   grid-template-areas:
-    "first first second"
-    "third fourth second";
+    'first first second'
+    'third fourth second';
   width: 100%;
   max-width: 30rem;
   height: 220px;
@@ -1374,8 +1355,8 @@ input[type="password"] {
   gap: 2px 4px;
   grid-auto-flow: row;
   grid-template-areas:
-    "second first fifth"
-    "second third fourth";
+    'second first fifth'
+    'second third fourth';
   width: 100%;
   max-width: 30rem;
   height: 220px;
@@ -1401,8 +1382,8 @@ input[type="password"] {
   gap: 2px 4px;
   grid-auto-flow: row;
   grid-template-areas:
-    "first fifth second second"
-    "third third fourth sixth";
+    'first fifth second second'
+    'third third fourth sixth';
   width: 100%;
   max-width: 30rem;
   height: 220px;
@@ -1460,11 +1441,7 @@ input[type="password"] {
 
   background: -moz-linear-gradient(to right, #c53293 -24.88%, #4990fb 90.05%);
 
-  background: -webkit-linear-gradient(
-    to right,
-    #c53293 -24.88%,
-    #4990fb 90.05%
-  );
+  background: -webkit-linear-gradient(to right, #c53293 -24.88%, #4990fb 90.05%);
 
   filter: progid: DXImageTransform.Microsoft.gradient( startColorstr="#C53293", endColorstr="#4990FB", GradientType=1 );
   -webkit-text-fill-color: transparent;
@@ -1932,8 +1909,8 @@ input[type="password"] {
   gap: 16px 16px;
   grid-auto-flow: row;
   grid-template-areas:
-    "first first fourth fourth fifth sixth"
-    "first first sec sec third third";
+    'first first fourth fourth fifth sixth'
+    'first first sec sec third third';
   width: 1200px;
   height: 600px;
 }
@@ -2272,17 +2249,17 @@ input[type="password"] {
 }
 
 .inter {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
 }
 .poppins-regular {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-weight: 400;
   font-style: normal;
 }
 .poppins {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-style: normal;
 }
 
@@ -2408,7 +2385,7 @@ input[type="password"] {
 
 .circle-left::before,
 .circle-right::after {
-  content: "";
+  content: '';
   position: absolute;
   width: 50%;
   height: 110%;
@@ -2419,12 +2396,12 @@ input[type="password"] {
 
 .circle-left::before {
   left: -3px;
-  background-color: "bg-base-100"; /* Adjust to match the background color */
+  background-color: 'bg-base-100'; /* Adjust to match the background color */
 }
 
 .circle-right::after {
   right: -3px;
-  background-color: "bg-base-100"; /* Adjust to match the background color */
+  background-color: 'bg-base-100'; /* Adjust to match the background color */
 }
 
 .background-gradient {
@@ -2459,12 +2436,7 @@ input[type="password"] {
   transform: translate(-50%, -50%);
   padding: 12px 48px;
   color: #ffffff;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.8) 50%,
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8) 50%, transparent);
   background-size: 200%;
   animation: shine-effect 1s infinite linear;
   animation-fill-mode: forwards;
@@ -2529,18 +2501,13 @@ input[type="password"] {
   text-decoration: none;
 }
 .new-btn-shine::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 25%;
   left: -100%;
   width: 50%;
   height: 50%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.8) 50%,
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8) 50%, transparent);
   animation: new-btn-shine 2s infinite;
   -webkit-animation: new-btn-shine 2s infinite;
   -moz-animation: new-btn-shine 2s infinite;
@@ -2629,13 +2596,7 @@ input[type="password"] {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    to right,
-    #f0f0f0 0%,
-    #e0e0e0 20%,
-    #f0f0f0 40%,
-    #f0f0f0 100%
-  );
+  background: linear-gradient(to right, #f0f0f0 0%, #e0e0e0 20%, #f0f0f0 40%, #f0f0f0 100%);
   background-size: 200% 100%;
   animation: shimmerAnimation 1.5s infinite linear;
   border-radius: 1rem;
@@ -2744,7 +2705,7 @@ input[type="password"] {
   width: 2rem;
   height: 0.5rem;
   border-radius: 50%;
-  content: "";
+  content: '';
 }
 
 .embla-_dot--selected:after {
@@ -2771,7 +2732,7 @@ input[type="password"] {
 }
 
 .whatzapp-color {
-  background-color: "#075E54";
+  background-color: '#075E54';
 }
 
 .splide__arrow {

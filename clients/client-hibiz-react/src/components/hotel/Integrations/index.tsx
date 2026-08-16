@@ -1,28 +1,21 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { memo } from "react";
-import { FaWhatsapp } from "react-icons/fa";
-import { FaRegCreditCard } from "react-icons/fa6";
-import { RiCouponLine } from "react-icons/ri";
-import { Link } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { memo } from 'react';
+import { FaWhatsapp } from 'react-icons/fa';
+import { FaRegCreditCard } from 'react-icons/fa6';
+import { RiCouponLine } from 'react-icons/ri';
+import { Link } from 'react-router-dom';
 
 const MemoIntegrations = () => {
   const integrationCards = [
     {
-      title: "Whatsapp",
-      description: "Manage your hotel whatsapp marketing and campaigns",
+      title: 'Whatsapp',
+      description: 'Manage your hotel whatsapp marketing and campaigns',
       icon: (
-        <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-emerald-400 to-green-600 hover:scale-105">
-          <FaWhatsapp className="w-8 h-8 text-white drop-shadow-md" />
+        <div className="transform rounded-full bg-gradient-to-br from-emerald-400 to-green-600 p-3 shadow-lg transition-transform hover:scale-105">
+          <FaWhatsapp className="h-8 w-8 text-white drop-shadow-md" />
         </div>
       ),
-      href: "whatsapp",
+      href: 'whatsapp',
     },
     // {
     //   title: "Loyalty",
@@ -46,37 +39,27 @@ const MemoIntegrations = () => {
     // },
   ];
   return (
-    <>
-      <h2 className="px-4 mt-6 xl:mt-0 mb-6 text-3xl font-bold xl:px-0">
-        Integrations
-      </h2>
-      <div className="grid grid-cols-1 gap-4 px-4 xl:px-0 md:grid-cols-2 lg:grid-cols-3 pb-[3rem]">
+    <main className="mt-2 min-h-screen rounded-lg pb-28">
+      <h2 className="mb-6 mt-6 px-4 text-3xl font-bold xl:mt-0 xl:px-0">Integrations</h2>
+      <div className="grid grid-cols-1 gap-4 px-4 pb-[3rem] md:grid-cols-2 lg:grid-cols-3 xl:px-0">
         {integrationCards.map((card, index) => (
-          <Link
-            to={`${card.href}`}
-            key={index?.toString()}
-            className="block h-full"
-          >
-            <Card className="relative h-full transition-all hover:shadow-md hover:border-primary/50">
-              <CardHeader className="pb-2 h-[7rem]">
-                <CardTitle className="absolute top-4 left-4">
-                  {card.icon}
-                </CardTitle>
-                <CardTitle className="pb-4 text-xl ml-[4rem]">
-                  {card.title}
-                </CardTitle>
+          <Link to={`${card.href}`} key={index?.toString()} className="block h-full">
+            <Card className="hover:border-primary/50 relative h-full transition-all hover:shadow-md">
+              <CardHeader className="h-[7rem] pb-2">
+                <CardTitle className="absolute left-4 top-4">{card.icon}</CardTitle>
+                <CardTitle className="ml-[4rem] pb-4 text-xl">{card.title}</CardTitle>
               </CardHeader>
               <CardContent className="h-[3rem]">
                 <CardDescription>{card.description}</CardDescription>
               </CardContent>
               <CardFooter className="pt-2">
-                <span className="text-sm text-primary">Configure →</span>
+                <span className="text-primary text-sm">Configure →</span>
               </CardFooter>
             </Card>
           </Link>
         ))}
       </div>
-    </>
+    </main>
   );
 };
 

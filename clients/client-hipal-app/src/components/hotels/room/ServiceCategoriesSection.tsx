@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useGetAllLinkRestautants } from "@/components/hooks/useHotelRoom";
 import { useGetServiceCategories } from "@/components/hooks/useServicesHotel";
 import ServiceCategoryCard from "./ServiceCategoryCard";
@@ -120,7 +120,7 @@ export default function ServiceCategoriesSection({
   const linkedRestaurants = restaurantData ?? [];
   const hasLinkedRestaurants = linkedRestaurants.length > 0;
   const quickActionTileClass =
-    "relative inline-flex h-12 min-w-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl border border-white/75 bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(248,241,233,0.72))] text-[#6F2146] shadow-[0_10px_24px_rgba(45,32,24,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-[#E6D9CE]/70 backdrop-blur transition-all duration-200 before:pointer-events-none before:absolute before:inset-x-2 before:top-0 before:h-px before:bg-white/90 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(45,32,24,0.11),inset_0_1px_0_rgba(255,255,255,0.9)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8F2555]/20";
+    "relative inline-flex h-12 min-w-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl border border-white/25 px-1 text-white shadow-[0_12px_26px_rgba(45,32,24,0.14),inset_0_1px_0_rgba(255,255,255,0.22)] ring-1 ring-white/20 transition-all duration-200 before:pointer-events-none before:absolute before:inset-x-2 before:top-0 before:h-px before:bg-white/35 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(45,32,24,0.18),inset_0_1px_0_rgba(255,255,255,0.24)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2";
   const quickActionLabelClass =
     "text-[0.64rem] font-semibold leading-none tracking-normal";
 
@@ -188,26 +188,27 @@ export default function ServiceCategoriesSection({
 
   return (
     <div className="relative plus-jakarta-font">
-      <div className="mb-5 space-y-3 px-2 pt-1">
+      <div className="space-y-3 px-2 pt-1">
         <section className="flex min-w-0 items-start justify-between gap-4">
-        {/* Guest greeting */}
-        <div className="min-w-0">
-          <h1 className="truncate text-[1.55rem] leading-[1.08] tracking-normal text-[#211915]">
-            Hello {userDetails?.name ? userDetails.name.split(" ")[0] : "Guest"}
-          </h1>
+          {/* Guest greeting */}
+          <div className="min-w-0">
+            <h1 className="truncate text-[1.25rem] leading-[1.08] tracking-normal text-[#211915]">
+              Hello{" "}
+              {userDetails?.name ? userDetails.name.split(" ")[0] : "Guest"}
+            </h1>
 
-          <span className="mt-1.5 block text-[0.9rem] leading-[1.15] tracking-normal text-[#72635D]">
-            Guest support
-          </span>
-        </div>
+            <span className="mt-1.5 block text-[0.9rem] leading-[1.15] tracking-normal text-[#72635D]">
+              Guest support
+            </span>
+          </div>
 
-        {/* Room number */}
-        {displayRoom && (
-          <span className="shrink-0 pt-1 text-[1rem] font-semibold leading-[1.15] text-[#7B2C4C]">
-            Room {room}
-          </span>
-        )}
-      </section>
+          {/* Room number */}
+          {displayRoom && (
+            <span className="shrink-0 pt-1 text-[0.9rem] font-semibold leading-[1.15] text-[#7B2C4C]">
+              Room {room}
+            </span>
+          )}
+        </section>
 
         <div className="grid grid-cols-4 gap-2">
           <button
@@ -215,7 +216,7 @@ export default function ServiceCategoriesSection({
             onClick={handleCall}
             disabled={!phone}
             aria-label="Call hotel"
-            className={`${quickActionTileClass} disabled:opacity-45`}
+            className={`${quickActionTileClass} bg-[#38A978]/75 focus-visible:ring-[#38A978]/25 disabled:opacity-45`}
           >
             <Phone className="h-4 w-4" strokeWidth={2.2} />
             <span className={quickActionLabelClass}>Call</span>
@@ -224,13 +225,13 @@ export default function ServiceCategoriesSection({
             businessId={businessId}
             room={room}
             triggerLabel="Wake-up"
-            triggerClassName={`${quickActionTileClass} w-full px-1 text-[0.64rem] font-semibold hover:scale-100 [&>svg]:h-4 [&>svg]:w-4 [&>span]:leading-none [&>span]:tracking-normal`}
+            triggerClassName={`${quickActionTileClass} !h-12 w-full !rounded-2xl bg-[#B64B78]/75 !px-1 !text-white !shadow-[0_12px_26px_rgba(45,32,24,0.14),inset_0_1px_0_rgba(255,255,255,0.22)] !ring-white/20 text-[0.64rem] font-semibold hover:scale-100 focus-visible:ring-[#B64B78]/25 [&>svg]:h-4 [&>svg]:w-4 [&>span]:leading-none [&>span]:tracking-normal`}
           />
 
           <button
             type="button"
             onClick={handleOpenSearch}
-            className={quickActionTileClass}
+            className={`${quickActionTileClass} bg-[#4B8EEB]/75 focus-visible:ring-[#4B8EEB]/25`}
           >
             <Search className="h-4 w-4" strokeWidth={2.2} />
             <span className={quickActionLabelClass}>Search</span>
@@ -239,7 +240,7 @@ export default function ServiceCategoriesSection({
             type="button"
             onClick={handleOpenChat}
             aria-label="Open service chat"
-            className={quickActionTileClass}
+            className={`${quickActionTileClass} bg-[#8E68C8]/75 focus-visible:ring-[#8E68C8]/25`}
           >
             <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
             <span className={quickActionLabelClass}>Chat</span>
@@ -257,7 +258,7 @@ export default function ServiceCategoriesSection({
         </section>
       ) : hasCategories ? (
         <section className="flex justify-center">
-          <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-4 mt-2 w-full">
+          <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-4 w-full py-6">
             {displayPrimary.map((category) => (
               <div key={category._id} className="w-full aspect-square">
                 <ServiceCategoryCard

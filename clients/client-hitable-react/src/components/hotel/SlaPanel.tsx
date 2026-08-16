@@ -74,22 +74,13 @@ const Cell = memo(function Cell({
       </div>
       <div className="flex items-center justify-between gap-2">
         <span className={`min-w-0 text-sm font-bold tabular-nums ${valueTone}`}>{value}</span>
-        <span className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${chipTone}`}>{chip}</span>
       </div>
       {helper ? <div className="mt-1 text-[10px] font-medium text-slate-400">{helper}</div> : null}
     </div>
   );
 });
 
-const ProgressRing = memo(function ProgressRing({
-  percent,
-  toneKey,
-  overdue,
-}: {
-  percent: number;
-  toneKey: ToneKey;
-  overdue: boolean;
-}) {
+const ProgressRing = memo(function ProgressRing({ percent, toneKey, overdue }: { percent: number; toneKey: ToneKey; overdue: boolean }) {
   const size = 68;
   const stroke = 6;
   const radius = (size - stroke) / 2;
@@ -218,27 +209,22 @@ const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, re
           <Clock className="h-4 w-4" />
           {head.title}
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums ${tone.chip}`}>
-          SLA: {activeSlaLabel}
-        </span>
+        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums ${tone.chip}`}>SLA: {activeSlaLabel}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <Cell
           label="Acceptance"
           icon={<UserCheck className="h-3 w-3" />}
-          value={acceptTook !== null ? `Accepted in ${formatClock(acceptTook)}` : `SLA: ${acceptMins || 0}m`}
+          value={acceptTook !== null && `Accepted in ${formatClock(acceptTook)}`}
           valueTone={TONES[acceptTone].text}
-          chip={acceptTook !== null ? (acceptTone === 'late' ? 'Late' : 'Accepted') : acceptLeftMs <= 0 ? 'Overdue' : remainingText(acceptLeftMs)}
           chipTone={TONES[acceptTone].chip}
-          helper={acceptTook === null ? `SLA target ${formatTargetTime(started + acceptMs)}` : undefined}
         />
         <Cell
           label="Fulfillment"
           icon={<CheckCircle2 className="h-3 w-3" />}
           value={!acceptedAt ? `SLA: ${deliverMins || 0}m` : deliverTook !== null ? formatClock(deliverTook) : remainingText(fulfillLeftMs)}
           valueTone={TONES[deliverTone].text}
-          chip={acceptedAt ? `SLA: ${deliverMins || 0}m` : 'After accept'}
           chipTone={TONES[deliverTone].chip}
         />
       </div>
@@ -247,18 +233,13 @@ const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, re
         <div className={`mt-3 rounded-xl border bg-white/70 p-3 ${activeOverdue ? 'border-red-100' : 'border-white/80'}`}>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <div className={`mb-1 flex items-center gap-1.5 text-xs font-semibold ${tone.text}`}>
-                <Clock className="h-3.5 w-3.5" />
-                {timerLabel}
-              </div>
+              <div className={`mb-1 flex items-center gap-1.5 text-xs font-semibold ${tone.text}`}>{timerLabel}</div>
               <div className={`flex items-end gap-1 font-bold tabular-nums ${tone.text}`}>
                 <span className="text-[1.7rem] leading-none">{timer.mins}</span>
                 <span className="pb-0.5 text-[1.05rem] leading-none">:</span>
                 <span className="text-[1.7rem] leading-none">{timer.secs}</span>
               </div>
-              <div className="mt-1 text-[10px] font-semibold text-slate-500">
-                Target {formatTargetTime(activeTarget)}
-              </div>
+              <div className="mt-1 text-[10px] font-semibold text-slate-500">Target {formatTargetTime(activeTarget)}</div>
             </div>
             <ProgressRing percent={ringPercent} toneKey={head.tone} overdue={activeOverdue} />
           </div>

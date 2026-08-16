@@ -1,8 +1,8 @@
-import { useState, useCallback } from "react";
-import useStaffStore from "@/components/store/hotel/useHotelStaff";
-import toast from "react-hot-toast";
-import { useAddStaffToHotel, useUpdateStaffToHotel } from "./useHotelStaff";
-import useBusinessData from "@/components/store/useBusinessData";
+import useStaffStore from '@/components/store/hotel/useHotelStaff';
+import useBusinessData from '@/components/store/useBusinessData';
+import { useCallback, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useAddStaffToHotel, useUpdateStaffToHotel } from './useHotelStaff';
 
 export const useStaffSubmission = () => {
   const { addStaff, addStaffLoader } = useAddStaffToHotel();
@@ -10,17 +10,11 @@ export const useStaffSubmission = () => {
   const businessId = useBusinessData((state) => state.businessData?._id);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {
-    isEditMode,
-    editStaffId,
-    personalInfo,
-    selectedRole,
-    selectedServices,
-    resetForm,
-  } = useStaffStore((state) => ({
+  const { isEditMode, editStaffId, personalInfo, selectedRole, selectedServices, selectedRestaurants, resetForm } = useStaffStore((state) => ({
     personalInfo: state.personalInfo,
     selectedRole: state.selectedRole,
     selectedServices: state.selectedServices,
+    selectedRestaurants: state.selectedRestaurants,
     resetForm: state.resetForm,
     isEditMode: state.isEditMode,
     editStaffId: state.editStaffId,
@@ -35,10 +29,11 @@ export const useStaffSubmission = () => {
           name: personalInfo.name,
           phone: personalInfo.phone,
           ...(personalInfo.nickname && { nickName: personalInfo.nickname }),
-          role: selectedRole?.role || "FRONT_OFFICE",
+          role: selectedRole?.role || 'FRONT_OFFICE',
           serviceIds: selectedServices.map((service) => service._id),
+          restaurantIds: selectedRestaurants,
           businessId: businessId as string,
-          staffId: editStaffId || "",
+          staffId: editStaffId || '',
         };
         await updateStaff(payload);
       } else {
@@ -47,30 +42,21 @@ export const useStaffSubmission = () => {
           phone: personalInfo.phone,
           password: personalInfo.password,
           ...(personalInfo.nickname && { nickName: personalInfo.nickname }),
-          role: selectedRole?.role || "FRONT_OFFICE",
+          role: selectedRole?.role || 'FRONT_OFFICE',
           serviceIds: selectedServices.map((service) => service._id),
+          restaurantIds: selectedRestaurants,
           businessId: businessId as string,
         };
 
         await addStaff(payload);
       }
     } catch (error) {
-      console.error("Error adding staff:", error);
-      toast.error("Failed to add staff");
+      console.error('Error adding staff:', error);
+      toast.error('Failed to add staff');
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    personalInfo,
-    selectedRole,
-    selectedServices,
-    resetForm,
-    businessId,
-    isEditMode,
-    editStaffId,
-    addStaff,
-    updateStaff,
-  ]);
+  }, [personalInfo, selectedRole, selectedServices, selectedRestaurants, resetForm, businessId, isEditMode, editStaffId, addStaff, updateStaff]);
 
   return {
     addStaffLoader,

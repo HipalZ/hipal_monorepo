@@ -53,12 +53,12 @@ export default function HotelCheckinFooter({
   if (links.length === 0) return null;
 
   return (
-    <footer className="px-4 pb-7 pt-2 plus-jakarta-font">
+    <footer className="px-2 pb-7 pt-2 plus-jakarta-font">
       <div className="rounded-2xl bg-white/50 px-4 py-4 text-center backdrop-blur-md">
         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[#8A756B]">
           Follow us on
         </p>
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+        <div className="mt-3 flex items-center justify-around gap-3">
           {links.map(({ icon, iconKey, url }) => (
             <a
               key={`${iconKey}-${url}`}

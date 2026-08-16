@@ -1,11 +1,11 @@
-import { memo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Users, Check } from "lucide-react";
-import useFloorFormStore from "@/components/store/hotel/useFloorStore";
-import { useStaffDataStore } from "@/components/store/hotel/useHotelStaff";
-import useBusinessData from "@/components/store/useBusinessData";
-import { findRole } from "@/components/utils/helper";
+import useFloorFormStore from '@/components/store/hotel/useFloorStore';
+import { useStaffDataStore } from '@/components/store/hotel/useHotelStaff';
+import useBusinessData from '@/components/store/useBusinessData';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { findBusinessRole } from '@/components/utils/helper';
+import { Check, Users } from 'lucide-react';
+import { memo } from 'react';
 
 const StaffPreviewStep: React.FC = () => {
   const { selectedStaffIds } = useFloorFormStore();
@@ -14,10 +14,10 @@ const StaffPreviewStep: React.FC = () => {
 
   return (
     <Card>
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="space-y-3 p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 font-medium text-primary">
-            <Users className="w-4 h-4" />
+          <div className="text-primary flex items-center gap-2 font-medium">
+            <Users className="h-4 w-4" />
             <h3>Assigned Staff</h3>
           </div>
           <Badge variant="outline" className="px-2 py-0.5">
@@ -27,24 +27,20 @@ const StaffPreviewStep: React.FC = () => {
 
         <div className="pl-6">
           {staffData.length > 0 ? (
-            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+            <div className="max-h-[200px] space-y-2 overflow-y-auto pr-2">
               {staffData.map((staff) => {
                 const isSelected = selectedStaffIds.includes(staff._id);
                 return (
                   <div
                     key={staff._id}
-                    className={`flex items-center justify-between p-2 rounded-md ${
-                      isSelected ? "bg-muted/50" : "bg-transparent"
-                    }`}
+                    className={`flex items-center justify-between rounded-md p-2 ${isSelected ? 'bg-muted/50' : 'bg-transparent'}`}
                   >
                     <div className="flex items-center gap-2">
-                      {isSelected && (
-                        <Check className="h-3.5 w-3.5 text-primary" />
-                      )}
+                      {isSelected && <Check className="text-primary h-3.5 w-3.5" />}
                       <span className="font-medium">{staff.name}</span>
-                      {staff.customRole && staff.customRole.length > 0 && (
+                      {findBusinessRole(staff.customRole, businessId) && (
                         <Badge variant="outline" className="text-xs">
-                          {findRole(staff.customRole, businessId)}
+                          {findBusinessRole(staff.customRole, businessId)?.role.replace(/_/g, ' ')}
                         </Badge>
                       )}
                     </div>
@@ -53,9 +49,7 @@ const StaffPreviewStep: React.FC = () => {
               })}
             </div>
           ) : (
-            <span className="text-sm text-muted-foreground">
-              No staff available
-            </span>
+            <span className="text-muted-foreground text-sm">No staff available</span>
           )}
         </div>
       </CardContent>

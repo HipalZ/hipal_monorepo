@@ -2,7 +2,7 @@ import { getBusinessData } from "@/apis/commonApis";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import Chats from "@/components/hotels/room/Chats";
 import type { BusinessDetails } from "@/components/types/businessData";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export async function generateMetadata({
   };
 }
 
-const HotelBackgroundContainer = dynamic(
+const HotelBackgroundContainer = nextDynamic(
   () =>
     import("@/components/atoms/WidthWrapper").then(
       (mod) => mod.HotelBackgroundContainer
@@ -34,7 +34,7 @@ const HotelBackgroundContainer = dynamic(
   }
 );
 
-const ViewPortContainer = dynamic(
+const ViewPortContainer = nextDynamic(
   () =>
     import("@/components/atoms/WidthWrapper").then(
       (mod) => mod.ViewPortContainer

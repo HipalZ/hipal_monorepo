@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { ObjectIdSchema } from "./common";
+import { z } from 'zod';
+import { ObjectIdSchema } from './common';
 
 export const CustomRole = z.object({
   businessId: ObjectIdSchema,
@@ -11,6 +11,7 @@ export const CustomRole = z.object({
   isDeleted: z.boolean().optional().default(false),
   nickName: z.string().optional(),
   serviceIds: z.array(ObjectIdSchema).optional(),
+  restaurantIds: z.array(ObjectIdSchema).optional(),
 });
 
 export const UserAttrs = z.object({

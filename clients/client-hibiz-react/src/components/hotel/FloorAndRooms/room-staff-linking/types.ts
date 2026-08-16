@@ -16,7 +16,7 @@ export type StaffDoc = {
   name: string;
   phone?: string;
   nickName?: string;
-  customRole?: { role: string }[];
+  customRole?: { businessId?: string; role: string }[];
 };
 
 export type GroupedPreview = Array<{

@@ -291,6 +291,12 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Boolean,
     default: true,
   },
+  orderEditWindowMinutes: {
+    type: Number,
+    default: 2,
+    min: 0,
+    max: 120,
+  },
   currencyCode: {
     type: String,
     enum: CurrencyCode,

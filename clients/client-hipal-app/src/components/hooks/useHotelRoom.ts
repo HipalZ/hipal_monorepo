@@ -66,6 +66,36 @@ export const useCreateAlert = () => {
 
   return { creatingAlert, createAlert, alertError, alertSuccess };
 };
+
+interface EditGuestFoodOrderPayload {
+  alertId: string;
+  userId: string;
+  cart: any[];
+}
+
+export const useEditGuestFoodOrder = () => {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const { mutateAsync: editGuestFoodOrder, isPending: editingGuestFoodOrder } =
+    useMutation({
+      mutationFn: async (payload: EditGuestFoodOrderPayload) => {
+        const response = await (apiRpc.hotel.alert as any).guest_edit_alert_cart.$put({
+          json: payload,
+        });
+        if (expelIfSessionOut(response, router)) throw new Error("SESSION_OUT");
+        const result = await response.json();
+        if (!response.ok || result?.err) {
+          throw new Error(result?.message || "Unable to update order");
+        }
+        return result;
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["getChats"] });
+      },
+    });
+
+  return { editGuestFoodOrder, editingGuestFoodOrder };
+};
 export interface ILinkHotels {
   _id: string;
   name: string;

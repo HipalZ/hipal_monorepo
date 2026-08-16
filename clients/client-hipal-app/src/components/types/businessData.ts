@@ -179,6 +179,7 @@ export interface IOutlet {
   isPosEnabled: boolean;
   shareCart?: boolean;
   birthdayCampaign?: boolean;
+  orderEditWindowMinutes?: number;
   currencySymbol: string;
   currencyCode: string;
 }
