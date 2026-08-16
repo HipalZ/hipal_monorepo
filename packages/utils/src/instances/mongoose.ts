@@ -32,6 +32,7 @@ const connectDB = async () => {
     return conn;
   } catch (e) {
     console.error(e);
+    throw e;
   }
 };
 

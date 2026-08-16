@@ -924,6 +924,7 @@ export interface WhatsAppTemplateButton {
   type: string;
   text: string;
   url?: string; // Optional, only applies to URL button
+  example?: string[]; // Optional, only applies to dynamic URL button
   phone_number?: string; // Optional, only applies to PHONE_NUMBER button
 }
 
@@ -939,6 +940,7 @@ export interface WhatsAppTemplatePayload {
   components: WhatsAppTemplateComponent[];
   imageUrl?: string; // Optional, only applies if imageUrl is present
   bodyVariableSequence: string[];
+  buttonVariableSequence?: string[];
 }
 
 export interface CropperRef {

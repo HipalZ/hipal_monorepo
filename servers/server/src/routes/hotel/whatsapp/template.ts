@@ -29,6 +29,7 @@ const whatsappTemplateRouter = new Hono()
         bodyVariableSequence,
         headerVariableSequence,
         footerVariableSequence,
+        buttonVariableSequence,
         businessId,
       } = requestData;
       const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
@@ -91,6 +92,7 @@ const whatsappTemplateRouter = new Hono()
             bodyVariableSequence,
             headerVariableSequence,
             footerVariableSequence,
+            buttonVariableSequence,
             businessId,
             date: Date.now(),
             templateName: requestData?.name,
@@ -246,7 +248,8 @@ const whatsappTemplateRouter = new Hono()
 
     async (c) => {
       const { templateId } = c.req.param();
-      const { businessId } = await c.req.json();
+      const requestData = await c.req.json();
+      const { businessId } = requestData;
 
       const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
         businessId,
@@ -263,8 +266,6 @@ const whatsappTemplateRouter = new Hono()
         );
       }
 
-      const requestData = await c.req.json();
-
       try {
         const updateWhatAppTemplate = await axios.post(
           `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${templateId}`,
@@ -275,6 +276,16 @@ const whatsappTemplateRouter = new Hono()
             headers: {
               Authorization: `Bearer ${whatsAppConfigData.token}`,
             },
+          },
+        );
+
+        await WhatAppTemplate.findOneAndUpdate(
+          { templateId, businessId },
+          {
+            bodyVariableSequence: requestData.bodyVariableSequence || [],
+            headerVariableSequence: requestData.headerVariableSequence || [],
+            footerVariableSequence: requestData.footerVariableSequence || [],
+            buttonVariableSequence: requestData.buttonVariableSequence || [],
           },
         );
 

@@ -40,6 +40,7 @@ export const whatAppTemplateSchema = z.object({
   headerVariableSequence: z.array(z.string().min(1).max(100)).default([]),
   bodyVariableSequence: z.array(z.string().min(1).max(100)).default([]),
   footerVariableSequence: z.array(z.string().min(1).max(100)).default([]),
+  buttonVariableSequence: z.array(z.string().min(1).max(100)).default([]),
   isDeleted: z.boolean().default(false),
   templateName: z.string().min(3).max(100).optional(),
   languageCode: z.string().min(3).max(100).optional(),
@@ -132,7 +133,7 @@ export const buttonUrlTypeSchema = z
   .object({
     type: z.string().min(3).max(100).default("URL"),
     text: z.string().min(3).max(800),
-    url: z.string().min(3).max(100).url(),
+    url: z.string().min(3).max(500),
     example: z.array(z.string().min(3).max(100)).optional(),
   })
   .optional();

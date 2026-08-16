@@ -58,7 +58,14 @@ const buildButton = ({
   switch (actionType) {
     case ActionType.VisitWebsite: {
       const finalUrl = httpsUrl(url);
-      if (label && finalUrl) return { type: 'URL', text: label, url: finalUrl };
+      if (label && finalUrl) {
+        return {
+          type: 'URL',
+          text: label,
+          url: finalUrl,
+          ...(finalUrl.includes('{{') ? { example: ['A9xK2'] } : {}),
+        };
+      }
       break;
     }
 
@@ -231,6 +238,9 @@ const MemoTemplateTerms = () => {
     if (secondButton) buttons.push(secondButton);
 
     if (buttons.length > 0) components.push({ type: 'BUTTONS', buttons });
+    const buttonVariableSequence = buttons
+      .filter((button) => button.type === 'URL' && button.url?.includes('{{'))
+      .map((_, index) => `button${index + 1}`);
 
     // Only send `imageUrl` if we have a real HTTPS URL — never base64 or a
     // blob: URL (those are local-only and would be useless on the backend).
@@ -247,6 +257,7 @@ const MemoTemplateTerms = () => {
       components,
       ...(safeImageUrl ? { imageUrl: safeImageUrl } : {}),
       ...(Array.isArray(bodyVariableSequence) ? { bodyVariableSequence } : {}),
+      ...(buttonVariableSequence.length ? { buttonVariableSequence } : {}),
     };
     try {
       if (templateId?.length > 0) {

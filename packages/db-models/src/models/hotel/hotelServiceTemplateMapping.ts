@@ -23,6 +23,19 @@ const hotelServiceTemplateMappingSchema =
       required: true,
       ref: "Business",
     },
+    buttonMappings: {
+      type: [
+        {
+          index: { type: Number, required: true },
+          target: {
+            type: String,
+            enum: ["none", "roomLink", "chatLink", "reviewLink"],
+            default: "none",
+          },
+        },
+      ],
+      default: [],
+    },
   });
 
 const HotelServiceTemplateMapping: Model<HotelServiceTemplateMappingType> =
