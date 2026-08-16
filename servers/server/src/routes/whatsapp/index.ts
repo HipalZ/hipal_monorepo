@@ -557,6 +557,7 @@ const whatsappRouter = new Hono()
           bodyVariableSequence,
           headerVariableSequence,
           footerVariableSequence,
+          buttonVariableSequence,
           businessId,
         } = requestData;
         const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
@@ -624,6 +625,7 @@ const whatsappRouter = new Hono()
               bodyVariableSequence,
               headerVariableSequence,
               footerVariableSequence,
+              buttonVariableSequence,
               businessId,
               date: Date.now(),
               templateName: requestData?.name,
@@ -789,6 +791,9 @@ const whatsappRouter = new Hono()
           { templateId: templateid, businessId },
           {
             bodyVariableSequence: requestData.bodyVariableSequence || [],
+            headerVariableSequence: requestData.headerVariableSequence || [],
+            footerVariableSequence: requestData.footerVariableSequence || [],
+            buttonVariableSequence: requestData.buttonVariableSequence || [],
           },
         );
 

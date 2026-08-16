@@ -10,6 +10,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import { buildBackendUrl } from "../../utils/backendBaseUrl";
 import { setShortUrl } from "../../utils/cacheHelper";
 //
 const surlRouter = new Hono()
@@ -26,9 +27,7 @@ const surlRouter = new Hono()
       const { q, id, sessionId } = c.req.query();
       const queryParams = c.req.query();
 
-      const shortUrl = `https://api.test.hipalz.com/surl/${urlCode}`;
-
-      const result = await UrlModel.findOne({ shortUrl: shortUrl });
+      const result = await UrlModel.findOne({ urlCode });
 
       if (!result) {
         return c.json(
@@ -108,7 +107,16 @@ const surlRouter = new Hono()
           404,
         );
       }
-      if (!q) {
+
+      const isStoredWhatsAppRoomLink = result.shortUrlType === "ROOM_SESSION" || (() => {
+        try {
+          return new URL(result.longUrl).searchParams.get("q") === "wa";
+        } catch {
+          return false;
+        }
+      })();
+
+      if (!q && !isStoredWhatsAppRoomLink) {
         const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
           businessId: result.businessId,
         });
@@ -177,7 +185,15 @@ const surlRouter = new Hono()
           404,
         );
       }
-      if (!q) {
+      const isStoredWhatsAppRoomLink = result.shortUrlType === "ROOM_SESSION" || (() => {
+        try {
+          return new URL(result.longUrl).searchParams.get("q") === "wa";
+        } catch {
+          return false;
+        }
+      })();
+
+      if (!q && !isStoredWhatsAppRoomLink) {
         const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
           businessId: result.businessId,
         });
@@ -270,7 +286,7 @@ const surlRouter = new Hono()
       if (!findLongUrl) {
         const createShortUrl = await UrlModel.create({
           longUrl: longUrl,
-          shortUrl: `https://api.test.hipalz.com/surl/${uniqueOrderId}`,
+          shortUrl: buildBackendUrl(`/surl/${uniqueOrderId}`),
           urlCode: uniqueOrderId,
           businessId: businessId,
         });

@@ -35,6 +35,11 @@ const whatAppTemplateSchema = new mongoose.Schema<WhatAppTemplateType>(
       required: true,
       default: [],
     },
+    buttonVariableSequence: {
+      type: [String],
+      required: true,
+      default: [],
+    },
 
     headerVariableSequence: {
       type: [String],

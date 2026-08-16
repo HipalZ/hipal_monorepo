@@ -31,6 +31,10 @@ export type LinkedTemplate = {
   serviceName: string;
   businessId: string;
   templateId: string;
+  buttonMappings?: Array<{
+    index: number;
+    target: "none" | "roomLink" | "chatLink" | "reviewLink";
+  }>;
 };
 
 type service = {
@@ -54,6 +58,30 @@ const LinkTemplatePopup = (props: Props) => {
       .replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
+  const getTemplateUrlButtons = (templateName: string) => {
+    const template = allTemplates.find((item) => item.name === templateName);
+    const buttonsComponent = template?.components?.find(
+      (component) => component.type === "BUTTONS",
+    );
+
+    return (
+      buttonsComponent?.buttons
+        ?.map((button, index) => ({ ...button, index }))
+        .filter((button) => button.type === "URL") || []
+    );
+  };
+
+  const getSelectedTemplateName = (serviceName: string) => {
+    const linkedTemplate = linkedTemplates.find(
+      (item) => item.serviceName === serviceName,
+    );
+    return (
+      allTemplates.find(
+        (template) => String(template.id) === String(linkedTemplate?.templateId),
+      )?.name || ""
+    );
+  };
+
   const handleTemplateChange = (serviceName: string, templateName: string) => {
     setLinkedTemplates((prev) => {
       const updatedTemplates = [...prev];
@@ -64,23 +92,62 @@ const LinkTemplatePopup = (props: Props) => {
       const templateId =
         allTemplates.find((template) => template.name === templateName)?.id ||
         "";
+      const urlButtons = getTemplateUrlButtons(templateName);
+      const buttonMappings = urlButtons.map((button, index) => ({
+        index: button.index,
+        target:
+          serviceName === "welcome" && index === 0
+            ? ("roomLink" as const)
+            : ("none" as const),
+      }));
 
       if (index >= 0) {
         updatedTemplates[index] = {
           serviceName,
           businessId,
           templateId,
+          buttonMappings,
         };
       } else {
         updatedTemplates.push({
           serviceName,
           businessId,
           templateId,
+          buttonMappings,
         });
       }
 
       return updatedTemplates;
     });
+  };
+
+  const handleButtonMappingChange = (
+    serviceName: string,
+    buttonIndex: number,
+    target: "none" | "roomLink" | "chatLink" | "reviewLink",
+  ) => {
+    setLinkedTemplates((prev) =>
+      prev.map((item) => {
+        if (item.serviceName !== serviceName) return item;
+
+        const mappings = item.buttonMappings || [];
+        const existingIndex = mappings.findIndex(
+          (mapping) => mapping.index === buttonIndex,
+        );
+        const nextMappings = [...mappings];
+
+        if (existingIndex >= 0) {
+          nextMappings[existingIndex] = { index: buttonIndex, target };
+        } else {
+          nextMappings.push({ index: buttonIndex, target });
+        }
+
+        return {
+          ...item,
+          buttonMappings: nextMappings,
+        };
+      }),
+    );
   };
 
   const handleSave = async () => {
@@ -121,35 +188,106 @@ const LinkTemplatePopup = (props: Props) => {
         <CardContent>
           <div className="grid gap-6">
             {Array.isArray(serviceNames)
-              ? serviceNames.map((service: service) => (
-                  <div
-                    key={service.serviceName}
-                    className="grid grid-cols-3 items-center gap-4"
-                  >
-                    <Label htmlFor={service.serviceName}>
-                      {formatServiceName(service.serviceName)}
-                    </Label>
-                    <Select
-                      onValueChange={(value) =>
-                        handleTemplateChange(service.serviceName, value)
-                      }
+              ? serviceNames.map((service: service) => {
+                  const selectedTemplateName = getSelectedTemplateName(
+                    service.serviceName,
+                  );
+                  const urlButtons = selectedTemplateName
+                    ? getTemplateUrlButtons(selectedTemplateName)
+                    : [];
+                  const linkedTemplate = linkedTemplates.find(
+                    (item) => item.serviceName === service.serviceName,
+                  );
+
+                  return (
+                    <div
+                      key={service.serviceName}
+                      className="space-y-3 rounded-lg border border-gray-100 p-3"
                     >
-                      <SelectTrigger
-                        id={service.serviceName}
-                        className="col-span-2"
-                      >
-                        <SelectValue placeholder="Select a template..." />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60 overflow-y-auto">
-                        {allTemplates?.map((template) => (
-                          <SelectItem key={template?.id} value={template?.name}>
-                            {template?.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ))
+                      <div className="grid grid-cols-3 items-center gap-4">
+                        <Label htmlFor={service.serviceName}>
+                          {formatServiceName(service.serviceName)}
+                        </Label>
+                        <Select
+                          onValueChange={(value) =>
+                            handleTemplateChange(service.serviceName, value)
+                          }
+                        >
+                          <SelectTrigger
+                            id={service.serviceName}
+                            className="col-span-2"
+                          >
+                            <SelectValue placeholder="Select a template..." />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            {allTemplates?.map((template) => (
+                              <SelectItem
+                                key={template?.id}
+                                value={template?.name}
+                              >
+                                {template?.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {urlButtons.length > 0 && (
+                        <div className="ml-[33%] space-y-2 rounded-md bg-gray-50 p-3">
+                          <p className="text-xs font-medium text-gray-500">
+                            Map template URL buttons
+                          </p>
+                          {urlButtons.map((button) => {
+                            const currentTarget =
+                              linkedTemplate?.buttonMappings?.find(
+                                (mapping) => mapping.index === button.index,
+                              )?.target || "none";
+
+                            return (
+                              <div
+                                key={`${service.serviceName}-${button.index}`}
+                                className="grid grid-cols-2 items-center gap-3"
+                              >
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-medium text-gray-800">
+                                    {button.text || `Button ${button.index + 1}`}
+                                  </p>
+                                  <p className="truncate text-xs text-gray-500">
+                                    {button.url}
+                                  </p>
+                                </div>
+                                <Select
+                                  value={currentTarget}
+                                  onValueChange={(value) =>
+                                    handleButtonMappingChange(
+                                      service.serviceName,
+                                      button.index,
+                                      value as
+                                        | "none"
+                                        | "roomLink"
+                                        | "chatLink"
+                                        | "reviewLink",
+                                    )
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Choose link" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">None</SelectItem>
+                                    <SelectItem value="roomLink">
+                                      Room link
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               : null}
           </div>
         </CardContent>

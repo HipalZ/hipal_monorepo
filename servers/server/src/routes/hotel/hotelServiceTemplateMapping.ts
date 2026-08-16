@@ -31,6 +31,7 @@ const hotelServiceTemplateMappingRouter = new Hono()
                 $set: {
                   isActive: item.isActive,
                   templateId: item.templateId,
+                  buttonMappings: item.buttonMappings || [],
                 },
               },
               { session, upsert: true },
@@ -169,15 +170,23 @@ const hotelServiceTemplateMappingRouter = new Hono()
       return runInTransaction(async (session) => {
         const { serviceTemplateMappingId } = c.req.param();
         const requestData = await c.req.json();
+        const updatePayload = {
+          ...(requestData.isActive !== undefined
+            ? { isActive: requestData.isActive }
+            : {}),
+          ...(requestData.templateId !== undefined
+            ? { templateId: requestData.templateId }
+            : {}),
+          ...(requestData.buttonMappings !== undefined
+            ? { buttonMappings: requestData.buttonMappings }
+            : {}),
+        };
 
         const serviceTemplateMapping =
           await HotelServiceTemplateMapping.findByIdAndUpdate(
             serviceTemplateMappingId,
             {
-              $set: {
-                isActive: requestData.isActive,
-                templateId: requestData.templateId,
-              },
+              $set: updatePayload,
             },
             { new: true, session },
           );

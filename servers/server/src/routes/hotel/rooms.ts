@@ -37,6 +37,7 @@ import { z } from "zod";
 import { raiseCheckoutTasks } from "../../services/checkoutTasks/raise";
 import { ensureQuickActionDefaults } from "../../services/hotel/quickActions";
 import { DEFAULT_IOS_NOTIFICATION_SOUND } from "../../services/notifications/sound";
+import { buildBackendUrl } from "../../utils/backendBaseUrl";
 import {
   requireRoomOccupancy,
   requireRoomOccupancyByChatReply,
@@ -717,7 +718,7 @@ const roomRouter = new Hono()
         const shortUrl = await UrlModel.create({
           longUrl,
           businessId: requestData.businessId,
-          shortUrl: `https://api.test.hipalz.com/surl/r/${uniqueOrderId}`,
+          shortUrl: buildBackendUrl(`/surl/r/${uniqueOrderId}`),
           urlCode: uniqueOrderId,
           shortUrlType: "ROOM",
         });
@@ -888,7 +889,7 @@ const roomRouter = new Hono()
           const shortUrl = await UrlModel.create({
             longUrl,
             businessId: requestData.businessId,
-            shortUrl: `https://api.test.hipalz.com/surl/r/${uniqueOrderId}`,
+            shortUrl: buildBackendUrl(`/surl/r/${uniqueOrderId}`),
             urlCode: uniqueOrderId,
             shortUrlType: "ROOM",
           });
@@ -1338,6 +1339,20 @@ const roomRouter = new Hono()
           session,
         }
       );
+      if (removeSession?._id) {
+        await UrlModel.deleteMany(
+          {
+            businessId: roomExists.businessId,
+            shortUrlType: "ROOM_SESSION",
+            longUrl: {
+              $regex: new RegExp(
+                `[?&]sessionId=${String(removeSession._id)}(?:&|$)`
+              ),
+            },
+          },
+          { session }
+        );
+      }
       await HotelRoomSession.deleteOne({ roomId }, { session });
 
       // Raise the configured turnover tasks in the same round-trip, so hitable
