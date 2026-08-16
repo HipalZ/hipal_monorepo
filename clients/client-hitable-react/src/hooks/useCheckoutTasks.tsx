@@ -32,7 +32,7 @@ export const useMyCheckoutTasks = (businessId?: string, userId?: string) => {
   const { data, isLoading, refetch } = useQuery({
     queryKey: [TASKS_KEY, businessId, userId],
     enabled: Boolean(businessId && userId),
-    refetchInterval: 3000,
+    refetchInterval: 1000,
     queryFn: async (): Promise<CheckoutTask[]> => {
       const res = await apiRpc.hotel.checkout_task.my_tasks.$get({
         query: { businessId: businessId as string, userId: userId as string },

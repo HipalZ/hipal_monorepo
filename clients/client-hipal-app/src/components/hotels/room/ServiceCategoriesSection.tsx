@@ -120,9 +120,17 @@ export default function ServiceCategoriesSection({
   const linkedRestaurants = restaurantData ?? [];
   const hasLinkedRestaurants = linkedRestaurants.length > 0;
   const quickActionTileClass =
-    "relative inline-flex h-12 min-w-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl border border-white/25 px-1 text-white shadow-[0_12px_26px_rgba(45,32,24,0.14),inset_0_1px_0_rgba(255,255,255,0.22)] ring-1 ring-white/20 transition-all duration-200 before:pointer-events-none before:absolute before:inset-x-2 before:top-0 before:h-px before:bg-white/35 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(45,32,24,0.18),inset_0_1px_0_rgba(255,255,255,0.24)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2";
+    "relative inline-flex h-12 min-w-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl border bg-white px-1 shadow-[0_10px_22px_rgba(45,32,24,0.08)] ring-1 ring-black/[0.03] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(45,32,24,0.12)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 disabled:opacity-45";
   const quickActionLabelClass =
     "text-[0.64rem] font-semibold leading-none tracking-normal";
+  const quickActionColors = {
+    call: "border-[#BFE6D5] text-[#2F956E] hover:bg-[#F2FBF7] focus-visible:ring-[#38A978]/20",
+    wakeup:
+      "border-[#E8C2D2] text-[#A33D68] hover:bg-[#FFF5F9] focus-visible:ring-[#B64B78]/20",
+    search:
+      "border-[#C7DAF7] text-[#3E7ED7] hover:bg-[#F4F8FF] focus-visible:ring-[#4B8EEB]/20",
+    chat: "border-[#D8C8EF] text-[#7B58B8] hover:bg-[#F8F4FF] focus-visible:ring-[#8E68C8]/20",
+  };
 
   // Quick Actions is a system category rendered separately as quick-action
   // tiles - it must not appear as a regular browsing category.
@@ -216,7 +224,7 @@ export default function ServiceCategoriesSection({
             onClick={handleCall}
             disabled={!phone}
             aria-label="Call hotel"
-            className={`${quickActionTileClass} bg-[#38A978]/75 focus-visible:ring-[#38A978]/25 disabled:opacity-45`}
+            className={`${quickActionTileClass} ${quickActionColors.call}`}
           >
             <Phone className="h-4 w-4" strokeWidth={2.2} />
             <span className={quickActionLabelClass}>Call</span>
@@ -225,13 +233,13 @@ export default function ServiceCategoriesSection({
             businessId={businessId}
             room={room}
             triggerLabel="Wake-up"
-            triggerClassName={`${quickActionTileClass} !h-12 w-full !rounded-2xl bg-[#B64B78]/75 !px-1 !text-white !shadow-[0_12px_26px_rgba(45,32,24,0.14),inset_0_1px_0_rgba(255,255,255,0.22)] !ring-white/20 text-[0.64rem] font-semibold hover:scale-100 focus-visible:ring-[#B64B78]/25 [&>svg]:h-4 [&>svg]:w-4 [&>span]:leading-none [&>span]:tracking-normal`}
+            triggerClassName={`${quickActionTileClass} ${quickActionColors.wakeup} !h-12 w-full !rounded-2xl !px-1 text-[0.64rem] font-semibold hover:scale-100 [&>svg]:h-4 [&>svg]:w-4 [&>span]:leading-none [&>span]:tracking-normal`}
           />
 
           <button
             type="button"
             onClick={handleOpenSearch}
-            className={`${quickActionTileClass} bg-[#4B8EEB]/75 focus-visible:ring-[#4B8EEB]/25`}
+            className={`${quickActionTileClass} ${quickActionColors.search}`}
           >
             <Search className="h-4 w-4" strokeWidth={2.2} />
             <span className={quickActionLabelClass}>Search</span>
@@ -240,7 +248,7 @@ export default function ServiceCategoriesSection({
             type="button"
             onClick={handleOpenChat}
             aria-label="Open service chat"
-            className={`${quickActionTileClass} bg-[#8E68C8]/75 focus-visible:ring-[#8E68C8]/25`}
+            className={`${quickActionTileClass} ${quickActionColors.chat}`}
           >
             <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
             <span className={quickActionLabelClass}>Chat</span>

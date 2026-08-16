@@ -4,6 +4,7 @@ export * from "./book";
 export * from "./checkoutTask";
 export * from "./hotelAnalytics";
 export * from "./hotelRoomType";
+export * from "./notificationJob";
 export * from "./hotelServiceTemplateMapping";
 export * from "./roomChat";
 export * from "./rooms";

@@ -12,6 +12,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { timeout } from 'hono/timeout';
 import { catchErrorHandler } from '../middleware/catchErrorHandler';
 import { startCheckoutTaskSweeper } from './queues/checkoutTaskSweeper';
+import { startHotelNotificationSweeper } from './queues/hotelNotificationSweeper';
 import { routes } from './routes';
 import { customTimeoutException } from './utils';
 
@@ -90,6 +91,7 @@ app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
   // Escalation for room-checkout tasks. Sweeps the DB, so it recovers whatever
   // was pending if the process restarts mid-window.
   startCheckoutTaskSweeper();
+  startHotelNotificationSweeper();
 })();
 //////
 

@@ -36,6 +36,8 @@ const deviceTokenSchema = new mongoose.Schema<DeviceTokenType>({
   },
 });
 
+deviceTokenSchema.index({ businessId: 1, userId: 1, notification: 1 });
+
 const DeviceToken: Model<DeviceTokenType> = mongoose.model<DeviceTokenType>(
   "DeviceToken",
   deviceTokenSchema,
