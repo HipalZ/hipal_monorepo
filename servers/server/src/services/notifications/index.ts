@@ -97,14 +97,18 @@ const sendFirebasePush = async (target: PushTarget, payload: PushPayload) => {
       title: payload.title,
       body: payload.body,
     },
-    data: payload.data,
+    data: payload.data || {},
     android: {
+      priority: "high",
       notification: {
         channel_id: DEFAULT_NOTIFICATION_CHANNEL_ID,
         sound,
       },
     },
     apns: {
+      headers: {
+        "apns-priority": "10",
+      },
       payload: {
         aps: {
           sound: DEFAULT_IOS_NOTIFICATION_SOUND,

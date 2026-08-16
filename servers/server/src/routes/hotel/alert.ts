@@ -4,6 +4,7 @@ import {
   DeviceToken,
   HotelAlert,
   HotelAnalytics,
+  HotelNotificationJob,
   HotelRoom,
   HotelRoomChat,
   HotelRoomChatComplain,
@@ -1531,26 +1532,35 @@ const hotelAlertRouter = new Hono()
         }
 
         scheduleAlert(requestData.businessId, roomData.name, alert._id.toString(), serviceData?.name, validStaffIds);
-      }
-      // Step 2: Get device tokens only for those staff
-      const registrationTokens = await DeviceToken.find({
-        businessId: requestData.businessId,
-        userId: { $in: validStaffIds },
-        notification: true,
-      });
 
-      // Step 3: Send push notifications
-      await sendPushToTokens(registrationTokens, {
-        title: 'Room Attention Required',
-        body: `${roomData.name} requires your attention for ${serviceData?.name}. kindly respond to the alert!`,
-        data: {
-          type: 'HOTEL_SERVICE_ALERT',
-          businessId: requestData.businessId,
-          roomId: roomData._id.toString(),
-          roomName: roomData.name,
-          serviceName: serviceData?.name || '',
-        },
-      });
+        const now = Date.now();
+        await HotelNotificationJob.create(
+          [
+            {
+              businessId: requestData.businessId,
+              alertId: alert._id,
+              targetUserIds: validStaffIds,
+              title: 'Room Attention Required',
+              body: `${roomData.name} requires your attention for ${serviceData?.name}. kindly respond to the alert!`,
+              data: {
+                type: 'HOTEL_SERVICE_ALERT',
+                businessId: String(requestData.businessId),
+                roomId: roomData._id.toString(),
+                roomName: roomData.name,
+                serviceName: serviceData?.name || '',
+              },
+              status: 'PENDING',
+              attempts: 0,
+              maxAttempts: 8,
+              nextAttemptAt: now,
+              createdAt: now,
+              updatedAt: now,
+              expiresAt: new Date(now + 36 * 60 * 60 * 1000),
+            },
+          ],
+          { session },
+        );
+      }
 
       const roomSession = await HotelRoomSession.findOne({
         roomId: roomData._id,

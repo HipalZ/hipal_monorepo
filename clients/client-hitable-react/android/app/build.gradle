@@ -46,6 +46,7 @@ dependencies {
     implementation platform("com.google.firebase:firebase-bom:33.3.0")
     implementation "com.google.firebase:firebase-messaging"
     implementation "com.google.firebase:firebase-analytics"
+    implementation "androidx.concurrent:concurrent-futures:1.2.0"
 }
 
 apply from: 'capacitor.build.gradle'

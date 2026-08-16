@@ -1,5 +1,6 @@
 import { connectDB } from "@hi/utils";
 import { startCheckoutTaskSweeper } from "./queues/checkoutTaskSweeper";
+import { startHotelNotificationSweeper } from "./queues/hotelNotificationSweeper";
 import { prometheus } from "@hono/prometheus";
 import { swaggerUI } from "@hono/swagger-ui";
 import { Hono } from "hono";
@@ -91,6 +92,7 @@ app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404));
   // Escalation for room-checkout tasks. Sweeps the DB, so it recovers whatever
   // was pending if the process restarts mid-window.
   startCheckoutTaskSweeper();
+  startHotelNotificationSweeper();
 })();
 
 app.route("/", routes);

@@ -5,6 +5,7 @@ export * from "./checkoutTask";
 export * from "./hotelAnalytics";
 export * from "./hotelRoomType";
 export * from "./hotelServiceTemplateMapping";
+export * from "./notificationJob";
 export * from "./roomChat";
 export * from "./rooms";
 export * from "./roomSession";
