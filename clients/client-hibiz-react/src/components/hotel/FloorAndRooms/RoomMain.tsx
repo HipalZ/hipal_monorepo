@@ -1,35 +1,29 @@
-import { createRoot } from "react-dom/client";
-import { memo, useCallback, useMemo, useState } from "react";
-import { Bed, Plus, Search, Filter, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
-import PopUp from "@/components/atom/popUp";
-import { useRoomStore } from "@/components/store/hotel/useRoomStore";
-import useRoomFormStore from "@/components/store/hotel/useRoomFormStore";
-import NewRoomCreation from "./AddRoom";
-import { useFloorStore } from "@/components/store/hotel/useFloorStore";
-import { useStaffDataStore } from "@/components/store/hotel/useHotelStaff";
-import RoomTypeSection from "./RoomTypeSection";
-import { EmptyState, RoomCard } from "./RoomComponants";
-import { toPng } from "html-to-image";
-import QRCode from "react-qr-code";
-import type { IHotelRoom } from "@/hooks/hotel/useRoomHook";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
+import AdvancedBottomButton from '@/components/atom/bottomButton/advancedBottomButton';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import PopUp from '@/components/atom/popUp';
+import { useFloorStore } from '@/components/store/hotel/useFloorStore';
+import { useStaffDataStore } from '@/components/store/hotel/useHotelStaff';
+import useRoomFormStore from '@/components/store/hotel/useRoomFormStore';
+import { useRoomStore } from '@/components/store/hotel/useRoomStore';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { IHotelRoom } from '@/hooks/hotel/useRoomHook';
+import { toPng } from 'html-to-image';
+import { Bed, Download, Filter, Plus, Search } from 'lucide-react';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import QRCode from 'react-qr-code';
+import NewRoomCreation from './AddRoom';
+import { EmptyState, RoomCard } from './RoomComponants';
+import RoomTypeSection from './RoomTypeSection';
 
 const RoomMain = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterFloor, setFilterFloor] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterFloor, setFilterFloor] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
@@ -54,50 +48,45 @@ const RoomMain = () => {
   const staffData = useStaffDataStore((state) => state.staffData);
 
   // Get room form actions
-  const { setEditMode, setEditRoomId, initializeFormForEdit } =
-    useRoomFormStore((state) => ({
-      setEditMode: state.setEditMode,
-      setEditRoomId: state.setEditRoomId,
-      initializeFormForEdit: state.initializeFormForEdit,
-    }));
+  const { setEditMode, setEditRoomId, initializeFormForEdit } = useRoomFormStore((state) => ({
+    setEditMode: state.setEditMode,
+    setEditRoomId: state.setEditRoomId,
+    initializeFormForEdit: state.initializeFormForEdit,
+  }));
 
   // Filter rooms based on search query and filters
   const filteredRoomData = useMemo(() => {
     if (!roomData) return [];
 
     return roomData.filter((room) => {
-      const matchesSearch =
-        searchQuery === "" ||
-        room.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = searchQuery === '' || room.name.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesType =
-        filterType === "all" || room.roomTypeId === filterType;
+      const matchesType = filterType === 'all' || room.roomTypeId === filterType;
 
-      const matchesStatus =
-        filterStatus === "all" || room.roomStatus === filterStatus;
+      const matchesStatus = filterStatus === 'all' || room.roomStatus === filterStatus;
 
-      const matchesFloor = filterFloor === "all" || room.zoneId === filterFloor;
+      const matchesFloor = filterFloor === 'all' || room.zoneId === filterFloor;
 
       return matchesSearch && matchesType && matchesStatus && matchesFloor;
     });
   }, [roomData, searchQuery, filterType, filterStatus, filterFloor]);
 
-  // Group rooms by room type
-  const roomsByType = useMemo(() => {
+  // Group rooms by floor by default. Room type remains available through filters.
+  const roomsByFloor = useMemo(() => {
     const grouped: Record<string, any[]> = {};
 
-    if (filteredRoomData && roomTypesData) {
+    if (filteredRoomData) {
       filteredRoomData.forEach((room) => {
-        const roomTypeId = room.roomTypeId || "";
-        if (!grouped[roomTypeId]) {
-          grouped[roomTypeId] = [];
+        const floorId = room.zoneId || '';
+        if (!grouped[floorId]) {
+          grouped[floorId] = [];
         }
-        grouped[roomTypeId].push(room);
+        grouped[floorId].push(room);
       });
     }
 
     return grouped;
-  }, [filteredRoomData, roomTypesData]);
+  }, [filteredRoomData]);
 
   const handleAddRoom = useCallback(() => {
     setEditMode(false);
@@ -115,19 +104,13 @@ const RoomMain = () => {
         setOpenAddRoomModal(true);
       }
     },
-    [
-      roomData,
-      setEditMode,
-      setEditRoomId,
-      initializeFormForEdit,
-      setOpenAddRoomModal,
-    ],
+    [roomData, setEditMode, setEditRoomId, initializeFormForEdit, setOpenAddRoomModal],
   );
 
   const getFloorName = useCallback(
     (floorId: string) => {
       const floor = floorData.find((f) => f._id === floorId);
-      return floor ? floor.name : "Unassigned";
+      return floor ? floor.name : 'Unassigned';
     },
     [floorData],
   );
@@ -149,49 +132,46 @@ const RoomMain = () => {
   }, []);
 
   const resetFilters = useCallback(() => {
-    setSearchQuery("");
-    setFilterType("all");
-    setFilterStatus("all");
-    setFilterFloor("all");
+    setSearchQuery('');
+    setFilterType('all');
+    setFilterStatus('all');
+    setFilterFloor('all');
   }, []);
 
   const totalFilteredRooms = useMemo(() => {
-    return Object.values(roomsByType).reduce(
-      (total, rooms) => total + rooms.length,
-      0,
-    );
-  }, [roomsByType]);
+    return Object.values(roomsByFloor).reduce((total, rooms) => total + rooms.length, 0);
+  }, [roomsByFloor]);
 
   const downloadQRCodeImage = async (room: IHotelRoom) => {
     if (!room?.downLoadLink) return;
 
-    const container = document.createElement("div");
-    container.style.position = "absolute";
-    container.style.top = "-10000px";
-    container.style.left = "-10000px";
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.top = '-10000px';
+    container.style.left = '-10000px';
     document.body.appendChild(container);
 
     const root = createRoot(container);
     root.render(
       <div
         style={{
-          padding: "20px",
-          background: "white",
-          border: "1px solid #ccc",
-          display: "inline-block",
+          padding: '20px',
+          background: 'white',
+          border: '1px solid #ccc',
+          display: 'inline-block',
         }}
       >
         <QRCode value={room.downLoadLink} size={1080} />
         <div
           className="capitalise"
           style={{
-            textAlign: "center",
-            marginTop: "40px",
-            fontSize: "80px",
-            fontWeight: "bold",
+            textAlign: 'center',
+            marginTop: '40px',
+            fontSize: '80px',
+            fontWeight: 'bold',
           }}
         >
-          {room.name || "Qr"}
+          {room.name || 'Qr'}
         </div>
       </div>,
     );
@@ -201,13 +181,13 @@ const RoomMain = () => {
     try {
       if (container.firstChild) {
         const dataUrl = await toPng(container.firstChild as HTMLElement);
-        const link = document.createElement("a");
+        const link = document.createElement('a');
         link.download = `${room.name}.png`;
         link.href = dataUrl;
         link.click();
       }
     } catch (error) {
-      console.error("Failed to generate QR code image:", error);
+      console.error('Failed to generate QR code image:', error);
     } finally {
       root.unmount();
       document.body.removeChild(container);
@@ -234,10 +214,7 @@ const RoomMain = () => {
     }, 500);
   };
 
-  const downloadSingleQRCode = async (
-    e: React.MouseEvent<HTMLButtonElement>,
-    roomId: string,
-  ) => {
+  const downloadSingleQRCode = async (e: React.MouseEvent<HTMLButtonElement>, roomId: string) => {
     const room = roomData.find((room) => room._id === roomId);
     if (room) {
       e.stopPropagation();
@@ -246,26 +223,17 @@ const RoomMain = () => {
   };
 
   return (
-    <div className="px-4 py-8 mx-auto pb-[10rem]">
-      <div className="flex flex-col mb-6 space-y-4">
+    <div className="mx-auto px-4 py-8 pb-[10rem]">
+      <div className="mb-6 flex flex-col space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Rooms</h2>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleFilters}
-              className="flex items-center gap-1"
-            >
-              <Filter className="w-4 h-4" />
+            <Button variant="outline" size="sm" onClick={toggleFilters} className="flex items-center gap-1">
+              <Filter className="h-4 w-4" />
               <span>Filters</span>
-              {(filterType !== "all" ||
-                filterStatus !== "all" ||
-                filterFloor !== "all") && (
-                <Badge className="flex items-center justify-center w-5 h-5 p-0 ml-1">
-                  {(filterType !== "all" ? 1 : 0) +
-                    (filterStatus !== "all" ? 1 : 0) +
-                    (filterFloor !== "all" ? 1 : 0)}
+              {(filterType !== 'all' || filterStatus !== 'all' || filterFloor !== 'all') && (
+                <Badge className="ml-1 flex h-5 w-5 items-center justify-center p-0">
+                  {(filterType !== 'all' ? 1 : 0) + (filterStatus !== 'all' ? 1 : 0) + (filterFloor !== 'all' ? 1 : 0)}
                 </Badge>
               )}
             </Button>
@@ -273,19 +241,14 @@ const RoomMain = () => {
         </div>
 
         <div className="relative">
-          <Search className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search rooms by name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4"
-          />
+          <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
+          <Input placeholder="Search rooms by name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 pr-4" />
           {searchQuery && (
             <Button
               variant="ghost"
               size="sm"
-              className="absolute p-0 transform -translate-y-1/2 right-2 top-1/2 h-7 w-7"
-              onClick={() => setSearchQuery("")}
+              className="absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 transform p-0"
+              onClick={() => setSearchQuery('')}
             >
               ×
             </Button>
@@ -293,7 +256,7 @@ const RoomMain = () => {
         </div>
 
         {showFilters && (
-          <div className="grid grid-cols-1 gap-3 p-4 border rounded-lg md:grid-cols-3 bg-muted/20">
+          <div className="bg-muted/20 grid grid-cols-1 gap-3 rounded-lg border p-4 md:grid-cols-3">
             <div className="space-y-1">
               <label className="text-sm font-medium">Room Type</label>
               <Select value={filterType} onValueChange={setFilterType}>
@@ -304,7 +267,7 @@ const RoomMain = () => {
                   <SelectItem value="all">All Types</SelectItem>
                   {roomTypesData?.map((type) => (
                     <SelectItem key={type._id} value={type._id}>
-                      {type.roomType.replace(/_/g, " ")}
+                      {type.roomType.replace(/_/g, ' ')}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -356,14 +319,10 @@ const RoomMain = () => {
         )}
 
         {/* Results count */}
-        {(searchQuery ||
-          filterType !== "all" ||
-          filterStatus !== "all" ||
-          filterFloor !== "all") && (
+        {(searchQuery || filterType !== 'all' || filterStatus !== 'all' || filterFloor !== 'all') && (
           <div className="flex items-center justify-between">
             <Badge variant="outline" className="px-2 py-1">
-              {totalFilteredRooms} {totalFilteredRooms === 1 ? "room" : "rooms"}{" "}
-              found
+              {totalFilteredRooms} {totalFilteredRooms === 1 ? 'room' : 'rooms'} found
             </Badge>
             {totalFilteredRooms === 0 && (
               <Button variant="link" size="sm" onClick={resetFilters}>
@@ -374,42 +333,29 @@ const RoomMain = () => {
         )}
       </div>
 
-      {roomData &&
-        roomData.length > 0 &&
-        roomData.some((type) => type?.downLoadLink) && (
-          <div className="flex justify-end mt-4 mb-4">
-            <Button
-              variant="outline"
-              onClick={() => downloadAllQRCodes(roomData)}
-              className="flex items-center gap-1"
-            >
-              <Download className="w-4 h-4" />
-              All QR Codes
-            </Button>
-          </div>
-        )}
+      {roomData && roomData.length > 0 && roomData.some((type) => type?.downLoadLink) && (
+        <div className="mb-4 mt-4 flex justify-end">
+          <Button variant="outline" onClick={() => downloadAllQRCodes(roomData)} className="flex items-center gap-1">
+            <Download className="h-4 w-4" />
+            All QR Codes
+          </Button>
+        </div>
+      )}
 
       {isDownloading && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
             <h3 className="mb-4 text-xl font-semibold">Downloading QR Codes</h3>
             <div className="mb-4">
-              <div className="w-full h-2 bg-gray-200 rounded-full">
-                <div
-                  className="h-full transition-all duration-300 bg-purple-600 rounded-full"
-                  style={{ width: `${downloadProgress}%` }}
-                ></div>
+              <div className="h-2 w-full rounded-full bg-gray-200">
+                <div className="h-full rounded-full bg-purple-600 transition-all duration-300" style={{ width: `${downloadProgress}%` }}></div>
               </div>
-              <p className="mt-1 text-sm text-right text-gray-600">
-                {downloadProgress}%
-              </p>
+              <p className="mt-1 text-right text-sm text-gray-600">{downloadProgress}%</p>
             </div>
             <div className="flex items-center justify-center">
               <LoadingSpinner />
               <p className="ml-3 text-gray-600">
-                {downloadProgress < 100
-                  ? `Downloading QR code ${currentDownloadIndex + 1}...`
-                  : "Download complete!"}
+                {downloadProgress < 100 ? `Downloading QR code ${currentDownloadIndex + 1}...` : 'Download complete!'}
               </p>
             </div>
           </div>
@@ -419,11 +365,11 @@ const RoomMain = () => {
       {roomData && roomData.length > 0 ? (
         totalFilteredRooms > 0 ? (
           <div>
-            {roomTypesData?.map((roomType) => (
+            {floorData.map((floor) => (
               <RoomTypeSection
-                key={roomType._id}
-                roomType={roomType}
-                rooms={roomsByType[roomType._id] || []}
+                key={floor._id}
+                title={floor.name}
+                rooms={roomsByFloor[floor._id] || []}
                 onEditRoom={handleEditRoom}
                 getFloorName={getFloorName}
                 getStaffNames={getStaffNames}
@@ -431,21 +377,20 @@ const RoomMain = () => {
               />
             ))}
 
-            {/* Rooms without a room type */}
-            {roomsByType[""] && roomsByType[""].length > 0 && (
+            {/* Rooms without a floor */}
+            {roomsByFloor[''] && roomsByFloor[''].length > 0 && (
               <div className="mb-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="p-2 rounded-full bg-primary/10">
-                    <Bed className="w-5 h-5 text-primary" />
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="bg-primary/10 rounded-full p-2">
+                    <Bed className="text-primary h-5 w-5" />
                   </div>
-                  <h2 className="text-xl font-bold">Other Rooms</h2>
+                  <h2 className="text-xl font-bold">Unassigned Rooms</h2>
                   <Badge variant="outline" className="ml-2">
-                    {roomsByType[""].length}{" "}
-                    {roomsByType[""].length === 1 ? "Room" : "Rooms"}
+                    {roomsByFloor[''].length} {roomsByFloor[''].length === 1 ? 'Room' : 'Rooms'}
                   </Badge>
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {roomsByType[""].map((room) => (
+                  {roomsByFloor[''].map((room) => (
                     <RoomCard
                       key={room._id}
                       room={room}
@@ -461,16 +406,11 @@ const RoomMain = () => {
           </div>
         ) : (
           <div className="py-10 text-center">
-            <div className="p-4 mx-auto rounded-full bg-muted w-fit">
-              <Search className="w-8 h-8 text-muted-foreground" />
+            <div className="bg-muted mx-auto w-fit rounded-full p-4">
+              <Search className="text-muted-foreground h-8 w-8" />
             </div>
-            <h3 className="mt-4 text-lg font-medium">
-              No rooms match your search
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Try adjusting your search or filters to find what you're looking
-              for
-            </p>
+            <h3 className="mt-4 text-lg font-medium">No rooms match your search</h3>
+            <p className="text-muted-foreground mt-2 text-sm">Try adjusting your search or filters to find what you're looking for</p>
             <Button variant="outline" className="mt-4" onClick={resetFilters}>
               Clear Filters
             </Button>
@@ -480,14 +420,7 @@ const RoomMain = () => {
         <EmptyState onAddRoom={handleAddRoom} />
       )}
 
-      <PopUp
-        width="w-[30rem]"
-        rightTopBack
-        hide
-        height="h-[100dvh] lg:h-[80dvh]"
-        show={openAddRoomModal}
-        onClose={() => setOpenAddRoomModal(false)}
-      >
+      <PopUp width="w-[30rem]" rightTopBack hide height="h-[100dvh] lg:h-[80dvh]" show={openAddRoomModal} onClose={() => setOpenAddRoomModal(false)}>
         <NewRoomCreation onClose={() => setOpenAddRoomModal(false)} />
       </PopUp>
 
@@ -496,10 +429,10 @@ const RoomMain = () => {
         maxWidth="30rem"
         buttons={[
           {
-            text: "Add Room",
+            text: 'Add Room',
             onClick: handleAddRoom,
-            icon: <Plus className="w-4 h-4 mr-2" />,
-            className: "pl-3 rounded-md w-full",
+            icon: <Plus className="mr-2 h-4 w-4" />,
+            className: 'pl-3 rounded-md w-full',
           },
         ]}
       />

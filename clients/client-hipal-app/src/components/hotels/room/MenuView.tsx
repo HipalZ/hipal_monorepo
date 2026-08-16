@@ -10,6 +10,7 @@ import type { IMenuLayout, TimingType } from "@/components/types/businessData";
 import { useSearch } from "@/components/store/useSearch";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import { Skeleton } from "@/components/ui/skeleton";
+import InstructionPopup from "./InstructionPopup";
 
 interface ILinkHotels {
   _id: string;
@@ -149,6 +150,7 @@ export const MenuView = ({
             menuLayout={restaurantMenu.menuData}
           />
           <LiveCartHotel />
+          <InstructionPopup />
         </>
       )}
     </div>

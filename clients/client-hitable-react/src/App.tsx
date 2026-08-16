@@ -1,9 +1,10 @@
-import { useEscalatedAlerts, useRoomAlerts } from '@/hooks/useHotelApis';
 import { useCheckoutTaskCount } from '@/hooks/useCheckoutTasks';
+import { useRoomAlerts } from '@/hooks/useHotelApis';
 import { useUserToken } from '@hi/common/src/useUserToken';
 import { lazy, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SpinnerMemo from './components/atoms/loadingSpinner';
+import InstallAppBanner from './components/pwa/InstallAppBanner';
 import useBusinessData from './components/store/useBusinessData';
 import { useHiClientZ } from './components/store/useHiClientzData';
 import { useLiteStore } from './components/store/useLiteStore';
@@ -51,8 +52,6 @@ function App() {
   useCartsPoll();
   // hotel alerts api
   useRoomAlerts();
-  // hotel escalated alerts api
-  useEscalatedAlerts();
   // room-turnover task count → Alerts nav badge
   useCheckoutTaskCount();
 

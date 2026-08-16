@@ -1,9 +1,9 @@
-import useBusinessData from "@/components/store/useBusinessData";
-import { useError } from "@/components/store/useError";
-import type { IOutletInfo } from "@/components/types/businessData";
-import { apiRpc } from "@hi/common";
-import { useMutation } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import useBusinessData from '@/components/store/useBusinessData';
+import { useError } from '@/components/store/useError';
+import type { IOutletInfo } from '@/components/types/businessData';
+import { apiRpc } from '@hi/common';
+import { useMutation } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 
 interface BusinessSettingPayload {
   businessId: string;
@@ -12,21 +12,22 @@ interface BusinessSettingPayload {
   address?: string;
   tags?: string[];
   avgPricingForTwo?: number;
-  billingEndTime?: string;
-  billingStartTime?: string;
   branchName?: string;
   brandName?: string;
+  endBillTime?: number;
   endBannerUrl?: string;
   footerDescription?: string;
   fssai?: string;
   gst?: string;
   logoUrl?: string;
+  orderEditWindowMinutes?: number;
   phone?: string;
   specialBannerUrl?: string;
+  startBillTime?: number;
 }
 
 const getBusinessInfo = async (id: string) => {
-  const res = await apiRpc.businesses.outletInfo[":businessId"].$get({
+  const res = await apiRpc.businesses.outletInfo[':businessId'].$get({
     param: {
       businessId: id,
     },
@@ -38,12 +39,24 @@ const getBusinessInfo = async (id: string) => {
   }
 };
 
+const getBusinessSettingErrorMessage = (data: unknown) => {
+  if (typeof data !== 'object' || data === null) return 'Something went wrong';
+
+  const responseData = data as {
+    message?: string;
+    error?: {
+      issues?: Array<{
+        message?: string;
+      }>;
+    };
+  };
+
+  return responseData.error?.issues?.[0]?.message || responseData.message || 'Something went wrong';
+};
+
 export const useSaveBusinessSetting = () => {
   const { setError, setOpenErrorModal } = useError();
-  const {
-    isPending: saveBusinessSettingLoader,
-    mutateAsync: saveBusinessSetting,
-  } = useMutation({
+  const { isPending: saveBusinessSettingLoader, mutateAsync: saveBusinessSetting } = useMutation({
     mutationFn: async (payload: BusinessSettingPayload) => {
       const response = await apiRpc.businesses.outletInfo.$post({
         json: payload,
@@ -53,13 +66,13 @@ export const useSaveBusinessSetting = () => {
     onSuccess: async (data, variables) => {
       const extraData = await data.json();
       if (data.status === 400 || data.status === 401) {
-        setError(extraData?.error?.issues[0]?.message);
+        setError(getBusinessSettingErrorMessage(extraData));
         setOpenErrorModal(true);
-        return toast.error("Failed to save business setting");
+        return toast.error('Failed to save business setting');
       }
       if (data.status === 200 || data.status === 201) {
         getBusinessInfo(variables.businessId);
-        toast.success("Business setting saved successfully");
+        toast.success('Business setting saved successfully');
         return;
       }
     },
@@ -74,14 +87,9 @@ export const useSaveBusinessSetting = () => {
 
 export const useUpdateBusinessSetting = () => {
   const { setError, setOpenErrorModal } = useError();
-  const {
-    isPending: updateBusinessSettingLoader,
-    mutateAsync: updateBusinessSetting,
-  } = useMutation({
+  const { isPending: updateBusinessSettingLoader, mutateAsync: updateBusinessSetting } = useMutation({
     mutationFn: async (payload: BusinessSettingPayload) => {
-      const response = await apiRpc.businesses.outletInfo.update[
-        ":businessId"
-      ].$put({
+      const response = await apiRpc.businesses.outletInfo.update[':businessId'].$put({
         param: {
           businessId: payload.businessId,
         },
@@ -92,13 +100,13 @@ export const useUpdateBusinessSetting = () => {
     onSuccess: async (data, variables) => {
       const extraData = await data.json();
       if (data.status === 400 || data.status === 401) {
-        setError(extraData?.error?.issues[0]?.message);
+        setError(getBusinessSettingErrorMessage(extraData));
         setOpenErrorModal(true);
-        return toast.error("Failed to update business setting");
+        return toast.error('Failed to update business setting');
       }
       if (data.status === 200 || data.status === 201) {
         getBusinessInfo(variables.businessId);
-        toast.success("Business setting updated successfully");
+        toast.success('Business setting updated successfully');
         return;
       }
     },

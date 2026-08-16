@@ -1,24 +1,20 @@
-"use client";
+'use client';
 
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
-import CommonBottomButton from "@/components/atoms/bottomButton";
-import {
-  useHotelRoomData,
-  useCreateAlert,
-  useGetAllLinkRestautants,
-} from "@/components/hooks/useHotelRoom";
-import toast from "react-hot-toast";
-import { RestaurantListView } from "./RestaurantListView";
-import { MenuView } from "./MenuView";
-import { useCartStore } from "@/components/store/useCartStore";
-import { useCart } from "@/components/store/useCart";
-import { SuccessView } from "./SuccessView";
-import type { IMenuLayout } from "@/components/types/businessData";
-import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { useLogin } from "@/components/store/useLogin";
-import { hasGuestContactDetails } from "./guestContactGuard";
+import CommonBottomButton from '@/components/atoms/bottomButton';
+import BottomPopUp from '@/components/atoms/bottomPopUp';
+import { useCreateAlert, useGetAllLinkRestautants, useHotelRoomData } from '@/components/hooks/useHotelRoom';
+import { useCart } from '@/components/store/useCart';
+import { useCartStore } from '@/components/store/useCartStore';
+import { useLogin } from '@/components/store/useLogin';
+import { usePaymentStore } from '@/components/store/usePaymentStore';
+import type { IMenuLayout } from '@/components/types/businessData';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
+import { hasGuestContactDetails } from './guestContactGuard';
+import { MenuView } from './MenuView';
+import { RestaurantListView } from './RestaurantListView';
+import { SuccessView } from './SuccessView';
 
 interface FoodOrderPopupProps {
   show: boolean;
@@ -37,30 +33,20 @@ interface ILinkHotels {
 }
 
 // View types
-type ViewType = "restaurants" | "menu";
-type OrderStatus = "idle" | "loading" | "success" | "error";
+type ViewType = 'restaurants' | 'menu';
+type OrderStatus = 'idle' | 'loading' | 'success' | 'error';
 
-export default function FoodOrderPopup({
-  show,
-  onClose,
-  businessId,
-  room,
-  userId,
-  menuId,
-}: FoodOrderPopupProps) {
+export default function FoodOrderPopup({ show, onClose, businessId, room, userId, menuId }: FoodOrderPopupProps) {
   // State
-  const [orderStatus, setOrderStatus] = useState<OrderStatus>("idle");
-  const [selectedRestaurant, setSelectedRestaurant] =
-    useState<ILinkHotels | null>(null);
-  const [currentView, setCurrentView] = useState<ViewType>("restaurants");
+  const [orderStatus, setOrderStatus] = useState<OrderStatus>('idle');
+  const [selectedRestaurant, setSelectedRestaurant] = useState<ILinkHotels | null>(null);
+  const [currentView, setCurrentView] = useState<ViewType>('restaurants');
   const [isMenuContentLoading, setIsMenuContentLoading] = useState(false);
 
   // Hooks
   const { roomPayload } = useHotelRoomData();
   const { creatingAlert, createAlert } = useCreateAlert();
-  const { fetchingRestaurants, restaurantData } = useGetAllLinkRestautants(
-    businessId
-  ) as unknown as {
+  const { fetchingRestaurants, restaurantData } = useGetAllLinkRestautants(businessId) as unknown as {
     fetchingRestaurants: boolean;
     restaurantData: ILinkHotels[] | undefined;
   };
@@ -73,40 +59,43 @@ export default function FoodOrderPopup({
   const hasSingleRestaurant = linkedRestaurants.length === 1;
   const soleRestaurant = hasSingleRestaurant ? linkedRestaurants[0] : null;
   const activeRestaurant = selectedRestaurant ?? soleRestaurant ?? null;
-  const shouldShowMenu =
-    currentView === "menu" ||
-    (!!show && !!soleRestaurant && !selectedRestaurant);
+  const shouldShowMenu = currentView === 'menu' || (!!show && !!soleRestaurant && !selectedRestaurant);
 
   const sanitizedCart = useMemo(() => {
     return cart.map(({ dish, ...item }) => {
       const { recommendationIds, addOnIds, ...sanitizedDish } = dish;
-      return { ...item, dish: sanitizedDish };
+      return {
+        ...item,
+        restaurantId: activeRestaurant?._id,
+        dish: {
+          ...sanitizedDish,
+          businessId: sanitizedDish.businessId || activeRestaurant?._id || '',
+          restaurantId: activeRestaurant?._id,
+        },
+      };
     });
-  }, [cart]);
+  }, [activeRestaurant?._id, cart]);
 
   // Handle restaurant selection
   const handleSelectRestaurant = useCallback(
     (restaurant: ILinkHotels) => {
       if (selectedRestaurant?._id === restaurant._id) {
         // If already selected, toggle menu view
-        setCurrentView((prev) =>
-          prev === "restaurants" ? "menu" : "restaurants"
-        );
+        setCurrentView((prev) => (prev === 'restaurants' ? 'menu' : 'restaurants'));
       } else {
         setSelectedRestaurant(restaurant);
-        setCurrentView("menu");
+        setCurrentView('menu');
         setIsMenuContentLoading(true);
       }
     },
-    [selectedRestaurant]
+    [selectedRestaurant],
   );
 
   useEffect(() => {
-    if (!show || !hasSingleRestaurant || selectedRestaurant || !soleRestaurant)
-      return;
+    if (!show || !hasSingleRestaurant || selectedRestaurant || !soleRestaurant) return;
 
     setSelectedRestaurant(soleRestaurant);
-    setCurrentView("menu");
+    setCurrentView('menu');
     setIsMenuContentLoading(true);
   }, [hasSingleRestaurant, selectedRestaurant, show, soleRestaurant]);
 
@@ -118,7 +107,7 @@ export default function FoodOrderPopup({
       onClose();
       return;
     }
-    setCurrentView("restaurants");
+    setCurrentView('restaurants');
     setIsMenuContentLoading(false);
     setCartEmpty();
     setShowCart(false);
@@ -127,23 +116,23 @@ export default function FoodOrderPopup({
   // Handle order submission
   const handlePlaceOrder = useCallback(async () => {
     if (!hasGuestContactDetails(userDetails)) {
-      toast("Please add your name and phone number to continue.");
+      toast('Please add your name and phone number to continue.');
       setCheckLogin(true);
       return;
     }
 
     try {
-      setOrderStatus("loading");
+      setOrderStatus('loading');
 
       // Get room data
       const roomData = (await roomPayload({
         businessId,
-        roomName: room || "hipalz",
+        roomName: room || 'hipalz',
       })) as { data?: { _id?: string } };
 
       const roomId = roomData?.data?._id;
       if (!roomId) {
-        throw new Error("Could not find room data");
+        throw new Error('Could not find room data');
       }
 
       await createAlert({
@@ -156,31 +145,20 @@ export default function FoodOrderPopup({
 
       setCartEmpty();
       setShowCart(false);
-      setOrderStatus("success");
+      setOrderStatus('success');
     } catch (error) {
-      console.error("Error placing food order:", error);
-      setOrderStatus("error");
-      toast.error("Failed to place your order. Please try again.");
+      console.error('Error placing food order:', error);
+      setOrderStatus('error');
+      toast.error('Failed to place your order. Please try again.');
     }
-  }, [
-    roomPayload,
-    businessId,
-    room,
-    createAlert,
-    userId,
-    sanitizedCart,
-    setCheckLogin,
-    setCartEmpty,
-    setShowCart,
-    userDetails,
-  ]);
+  }, [roomPayload, businessId, room, createAlert, userId, sanitizedCart, setCheckLogin, setCartEmpty, setShowCart, userDetails]);
 
   useEffect(() => {
-    if (!show || orderStatus !== "success") return;
+    if (!show || orderStatus !== 'success') return;
 
     const timer = window.setTimeout(() => {
-      setOrderStatus("idle");
-      setCurrentView("menu");
+      setOrderStatus('idle');
+      setCurrentView('menu');
       setIsMenuContentLoading(false);
     }, 3200);
 
@@ -188,13 +166,12 @@ export default function FoodOrderPopup({
   }, [orderStatus, show]);
 
   const isInitialLoading = fetchingRestaurants;
-  const isSubmittingOrder = creatingAlert || orderStatus === "loading";
-  const shouldShowBottomActions =
-    orderStatus !== "success" && !isInitialLoading && !isMenuContentLoading;
+  const isSubmittingOrder = creatingAlert || orderStatus === 'loading';
+  const shouldShowBottomActions = orderStatus !== 'success' && !isInitialLoading && !isMenuContentLoading;
 
   // Render content based on current state
   const renderContent = () => {
-    if (orderStatus === "success") {
+    if (orderStatus === 'success') {
       return <SuccessView restaurant={activeRestaurant} />;
     }
 
@@ -222,14 +199,14 @@ export default function FoodOrderPopup({
 
   return (
     <BottomPopUp hide show={show} onClose={onClose} manageHistory={false}>
-      <section className="relative h-full overflow-auto hide-scrollbar pb-36">
+      <section className="hide-scrollbar relative h-full overflow-auto pb-36">
         <AnimatePresence mode="wait">
           <motion.div
-            key={orderStatus === "success" ? "success" : currentView}
+            key={orderStatus === 'success' ? 'success' : currentView}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.28, ease: "easeOut" }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
           >
             {renderContent()}
           </motion.div>
@@ -241,19 +218,17 @@ export default function FoodOrderPopup({
           fixed={true}
           buttons={[
             {
-              text: currentView === "menu" ? "Back" : "Cancel",
-              onClick:
-                currentView === "menu" ? handleBackToRestaurants : onClose,
-              className: "rounded-md pl-3",
+              text: currentView === 'menu' ? 'Back' : 'Cancel',
+              onClick: currentView === 'menu' ? handleBackToRestaurants : onClose,
+              className: 'rounded-md pl-3',
               isBackButton: true,
               disable: isSubmittingOrder,
             },
             {
-              text: isSubmittingOrder ? "Placing order..." : "Place Order",
+              text: isSubmittingOrder ? 'Placing order...' : 'Place Order',
               onClick: handlePlaceOrder,
-              className: "w-full rounded-md",
-              disable:
-                isSubmittingOrder || cart?.length === 0 || !activeRestaurant,
+              className: 'w-full rounded-md',
+              disable: isSubmittingOrder || cart?.length === 0 || !activeRestaurant,
             },
           ]}
         />

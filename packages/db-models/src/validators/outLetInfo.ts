@@ -167,6 +167,7 @@ export const outLetInfoSchema = z.object({
   nonAlcohol: z.boolean().optional().default(true),
   addButton: z.boolean().optional().default(true),
   placeOrderButton: z.boolean().optional().default(true),
+  orderEditWindowMinutes: z.coerce.number().min(0).max(120).optional().default(2),
   currencyCode: z.enum(CurrencyCode).optional(),
   currencySymbol: z.enum(CurrencyCodeSymbol).optional(),
   shareCart: z.boolean().optional().default(false),

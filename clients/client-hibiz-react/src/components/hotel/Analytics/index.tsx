@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { memo } from 'react';
 import { GrGraphQl } from 'react-icons/gr';
 import { IoAnalytics } from 'react-icons/io5';
-import { MdOutlineHotelClass, MdOutlineManageHistory } from 'react-icons/md';
+import { MdOutlineManageHistory } from 'react-icons/md';
 import { SlPeople } from 'react-icons/sl';
 import { VscFeedback } from 'react-icons/vsc';
 import { Link } from 'react-router-dom';
@@ -95,7 +95,7 @@ const essentialCards = [
 
 const MemoAnalyticsCards = () => {
   return (
-    <>
+    <main className="mt-2">
       <h2 className="mb-6 mt-6 px-4 text-3xl font-bold xl:mt-0 xl:px-0">Analytics</h2>
       <div className="grid grid-cols-1 gap-4 px-4 pb-[3rem] md:grid-cols-2 lg:grid-cols-3 xl:px-0">
         {essentialCards.map((card, index) => (
@@ -115,7 +115,7 @@ const MemoAnalyticsCards = () => {
           </Link>
         ))}
       </div>
-    </>
+    </main>
   );
 };
 

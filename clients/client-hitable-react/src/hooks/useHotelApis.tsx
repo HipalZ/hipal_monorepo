@@ -1,22 +1,16 @@
-import { useAlertsStore } from "@/components/store/useAlertStore";
-import useBusinessData from "@/components/store/useBusinessData";
-import { useHiClientZ } from "@/components/store/useHiClientzData";
-import { useHotelStore } from "@/components/store/useHotelStore";
-import useTimings from "@/components/store/useTimings";
-import type { Alert, Cart } from "@/components/types/hotelData";
-import { apiRpc } from "@hi/common";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type UseQueryOptions,
-  type UseQueryResult,
-} from "@tanstack/react-query";
-import { useMemo, useRef } from "react";
-import toast from "react-hot-toast";
-import { useParams } from "react-router-dom";
-import { useError } from "../components/store/useError";
-import { playSelectedNotificationSound } from "@/utils/notificationSound";
+import { useAlertsStore } from '@/components/store/useAlertStore';
+import useBusinessData from '@/components/store/useBusinessData';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
+import { useHotelStore } from '@/components/store/useHotelStore';
+import useTimings from '@/components/store/useTimings';
+import type { Alert, Cart } from '@/components/types/hotelData';
+import { playSelectedNotificationSound } from '@/utils/notificationSound';
+import { apiRpc } from '@hi/common';
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
+import { useRef } from 'react';
+import toast from 'react-hot-toast';
+import { useParams } from 'react-router-dom';
+import { useError } from '../components/store/useError';
 interface IHotelRoomData {
   businessId: string;
   roomName: string;
@@ -41,7 +35,7 @@ export const useGetAllRooms = () => {
     data: allRooms,
     refetch: refetchRoomsData,
   } = useQuery({
-    queryKey: ["allRooms", businessId],
+    queryKey: ['allRooms', businessId],
     queryFn: getRooms,
     enabled: !!businessId,
   });
@@ -57,8 +51,8 @@ export const useGetRoom = (roomId: string) => {
     });
     const res = await response.json();
     if (response.status === 200 || response.status === 201) {
-      setGuestName(res?.data?.userIds?.[0]?.name || "");
-      setPhoneNumber(res?.data?.userIds?.[0]?.phone || "");
+      setGuestName(res?.data?.userIds?.[0]?.name || '');
+      setPhoneNumber(res?.data?.userIds?.[0]?.phone || '');
       setRoomData(res?.data || {});
       return res.data;
     }
@@ -68,16 +62,7 @@ export const useGetRoom = (roomId: string) => {
 
 export const useCheckIn = () => {
   const queryClient = useQueryClient();
-  const {
-    roomData,
-    setOpenRoomModal,
-    guestName,
-    phoneNumber,
-    setGuestName,
-    setPhoneNumber,
-    selectedSource,
-    setSelectedSource,
-  } = useHotelStore();
+  const { roomData, setOpenRoomModal, guestName, phoneNumber, setGuestName, setPhoneNumber, selectedSource, setSelectedSource } = useHotelStore();
   const checkIn = async () => {
     const response = await apiRpc.hotel.rooms.check_in.$post({
       json: {
@@ -90,12 +75,12 @@ export const useCheckIn = () => {
     const res = await response.json();
     if (response.status === 200 || response.status === 201) {
       queryClient.invalidateQueries({
-        queryKey: ["allRooms"],
+        queryKey: ['allRooms'],
       });
-      toast.success("Guest registered successfully");
-      setGuestName("");
-      setPhoneNumber("");
-      setSelectedSource("");
+      toast.success('Guest registered successfully');
+      setGuestName('');
+      setPhoneNumber('');
+      setSelectedSource('');
       setOpenRoomModal(false);
       return res.data;
     }
@@ -104,13 +89,7 @@ export const useCheckIn = () => {
 };
 
 export const useCheckOut = () => {
-  const {
-    roomData,
-    reviewUserIds,
-    setOpenRoomModal,
-    setReviewUserIds,
-    setRoomData,
-  } = useHotelStore();
+  const { roomData, reviewUserIds, setOpenRoomModal, setReviewUserIds, setRoomData } = useHotelStore();
   const staffUserId = useHiClientZ((s) => s.captainData?._id);
   const queryClient = useQueryClient();
   const checkOut = async () => {
@@ -127,16 +106,16 @@ export const useCheckOut = () => {
     });
     const res = await response.json();
     if (response.status === 200 || response.status === 201) {
-      queryClient.invalidateQueries({ queryKey: ["allRooms"] });
+      queryClient.invalidateQueries({ queryKey: ['allRooms'] });
       setReviewUserIds([]);
       setRoomData({});
-      toast.success("Guest checked out successfully");
+      toast.success('Guest checked out successfully');
       setOpenRoomModal(false);
       // The server already raised any turnover tasks; refresh both feeds so the
       // room turns "Cleaning" and the staff task list updates now, rather than
       // waiting for the 30s poll.
-      queryClient.invalidateQueries({ queryKey: ["checkoutTasks"] });
-      queryClient.invalidateQueries({ queryKey: ["checkoutTasksActive"] });
+      queryClient.invalidateQueries({ queryKey: ['checkoutTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['checkoutTasksActive'] });
       return res.data;
     }
     if (response.status === 400) {
@@ -158,7 +137,7 @@ export type UseRoomAlertsResult = UseQueryResult<Alert[], unknown> & {
  */
 export const useRoomAlerts = (): UseRoomAlertsResult => {
   const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
-  const isHotel = outletType === "HOTEL";
+  const isHotel = outletType === 'HOTEL';
 
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const userId = useHiClientZ((s) => s.captainData?._id);
@@ -183,11 +162,7 @@ export const useRoomAlerts = (): UseRoomAlertsResult => {
       setHotelAlertsCount(data.length);
 
       // If no push token (FCM not working) and new alerts appeared, play sound
-      if (
-        !pushToken &&
-        data.length > prevCountRef.current &&
-        prevCountRef.current > 0
-      ) {
+      if (!pushToken && data.length > prevCountRef.current && prevCountRef.current > 0) {
         playSelectedNotificationSound();
       }
       prevCountRef.current = data.length;
@@ -198,7 +173,7 @@ export const useRoomAlerts = (): UseRoomAlertsResult => {
   };
 
   const query = useQuery<Alert[], unknown>({
-    queryKey: ["roomAlerts", businessId, userId],
+    queryKey: ['roomAlerts', businessId, userId],
     queryFn: roomAlerts,
     enabled: isHotel && !!businessId && !!userId,
     refetchInterval: 11_000,
@@ -222,7 +197,7 @@ export const useAllServices = () => {
   };
 
   const { data: services, isPending } = useQuery({
-    queryKey: ["allServices", businessId],
+    queryKey: ['allServices', businessId],
     queryFn: allServices,
     enabled: !!businessId,
   });
@@ -235,15 +210,7 @@ export const useRespondAlerts = () => {
   const userId = useHiClientZ((s) => s.captainData._id);
 
   const { mutateAsync: respondAlert } = useMutation({
-    mutationFn: async ({
-      alertId,
-      action,
-      reasonOfRejection,
-    }: {
-      alertId: string;
-      action: string;
-      reasonOfRejection: string;
-    }) => {
+    mutationFn: async ({ alertId, action, reasonOfRejection }: { alertId: string; action: string; reasonOfRejection: string }) => {
       const response = await apiRpc.hotel.alert.accept_alert.$post({
         json: {
           alertId,
@@ -263,7 +230,7 @@ export const useRespondAlerts = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["roomAlerts"],
+        queryKey: ['roomAlerts'],
       });
     },
   });
@@ -287,7 +254,7 @@ export const useDismissMessageAlert = () => {
       return res;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["roomAlerts"] });
+      queryClient.invalidateQueries({ queryKey: ['roomAlerts'] });
     },
   });
 
@@ -300,11 +267,9 @@ export const useAcknowledgeWakeUpAlert = () => {
 
   const { mutateAsync: acknowledgeWakeUpAlert, isPending } = useMutation({
     mutationFn: async (alertId: string) => {
-      const response = await apiRpc.hotel.alert.acknowledge_wake_up_alert.$post(
-        {
-          json: { alertId, userId },
-        }
-      );
+      const response = await apiRpc.hotel.alert.acknowledge_wake_up_alert.$post({
+        json: { alertId, userId },
+      });
       const res = await response.json();
       if (response.status !== 200 && response.status !== 201) {
         throw new Error(res.message);
@@ -312,7 +277,7 @@ export const useAcknowledgeWakeUpAlert = () => {
       return res;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["roomAlerts"] });
+      queryClient.invalidateQueries({ queryKey: ['roomAlerts'] });
     },
   });
 
@@ -339,13 +304,7 @@ export const useHistoryAlerts = () => {
     }
   };
   const { data: historyData, isPending } = useQuery({
-    queryKey: [
-      "historyAlerts",
-      businessId,
-      userId,
-      timeStampStart,
-      timeStampEnd,
-    ],
+    queryKey: ['historyAlerts', businessId, userId, timeStampStart, timeStampEnd],
     queryFn: historyAlerts,
     enabled: !!businessId && !!userId && !!timeStampStart && !!timeStampEnd,
   });
@@ -370,7 +329,7 @@ export const useGetAllChats = (payload: IHotelRoomData) => {
   };
 
   const { data: chatData } = useQuery({
-    queryKey: ["getChats", payload],
+    queryKey: ['getChats', payload],
     queryFn: getChats,
     enabled: !!payload.roomName,
     refetchInterval: 1000,
@@ -390,11 +349,11 @@ export const useSendChat = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["getChats"],
+        queryKey: ['getChats'],
       });
     },
     onError: (error) => {
-      console.error("Error sending chat:", error);
+      console.error('Error sending chat:', error);
     },
   });
 
@@ -412,65 +371,15 @@ export const useReviewChat = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["getChats"],
+        queryKey: ['getChats'],
       });
     },
     onError: (error) => {
-      console.error("Error reviewing chat:", error);
+      console.error('Error reviewing chat:', error);
     },
   });
 
   return { reviewChat, reviewingChat };
-};
-
-export const useEscalatedAlerts = () => {
-  const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
-  const { setHotelEscalationCount, setEscalatedData } = useHotelStore();
-  const captainData = useHiClientZ((s) => s.captainData);
-  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
-  const customRoles = captainData?.customRole ?? [];
-
-  const roleName = useMemo(() => {
-    const match = customRoles.find(
-      (r) => String(r?.businessId) === String(businessId)
-    );
-    return (match?.role ?? "").toString().trim().toUpperCase();
-  }, [customRoles, businessId]);
-
-  const escalatedAlerts = async () => {
-    if (!businessId || !captainData?._id) return [];
-
-    const response = await apiRpc.hotel.alert.fetch_escalation_alerts.$get({
-      query: {
-        businessId,
-        userId: captainData?._id,
-      },
-    });
-
-    const res = await response.json();
-
-    if (response.status === 200 || response.status === 201) {
-      setEscalatedData(res.data);
-      setHotelEscalationCount(res.data.length);
-      return res.data;
-    }
-
-    return [];
-  };
-
-  const roleNamesAllowed = ["MANAGER", "FRONT_OFFICE"];
-
-  const isEnabled =
-    outletType === "HOTEL" &&
-    Boolean(businessId && captainData?._id) &&
-    roleNamesAllowed.includes(roleName);
-
-  useQuery({
-    queryKey: ["escalatedAlerts"],
-    queryFn: escalatedAlerts,
-    enabled: isEnabled,
-    refetchInterval: 13000,
-  });
 };
 
 type UpdateSourcePayload = {
@@ -485,18 +394,18 @@ export const useUpdateSource = () => {
         json: payload,
       });
       if (response.status !== 200 && response.status !== 201) {
-        throw new Error("Failed to update source");
+        throw new Error('Failed to update source');
       }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["allRooms"],
+        queryKey: ['allRooms'],
       });
-      toast.success("Source updated successfully");
+      toast.success('Source updated successfully');
     },
     onError: () => {
-      toast.error("Failed to update source");
+      toast.error('Failed to update source');
     },
   });
 
@@ -526,18 +435,18 @@ export const useEditAlertCart = () => {
     });
     const res = await response.json();
     if (response.status !== 200 && response.status !== 201) {
-      throw new Error(res.message || "Failed to edit alert cart");
+      throw new Error(res.message || 'Failed to edit alert cart');
     }
     return res;
   };
   const { mutateAsync: editCart, isPending: editingCart } = useMutation({
     mutationFn: editAlertCart,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["roomAlerts"] });
-      toast.success("Order updated successfully");
+      queryClient.invalidateQueries({ queryKey: ['roomAlerts'] });
+      toast.success('Order updated successfully');
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Failed to edit alert cart");
+      toast.error(error instanceof Error ? error.message : 'Failed to edit alert cart');
     },
   });
 
@@ -570,14 +479,14 @@ export const useCreateAlert = () => {
     },
     onSuccess: (data) => {
       if (data.status === 400 || data.status === 401) {
-        setError(extraData.message || "Failed to split bill");
+        setError(extraData.message || 'Failed to split bill');
         setOpenErrorModal(true);
         return;
       }
     },
     onError: (error) => {
-      console.error("Error creating alert:", error);
-      setError(error.message || "Something went wrong.");
+      console.error('Error creating alert:', error);
+      setError(error.message || 'Something went wrong.');
       setOpenErrorModal(true);
     },
   });

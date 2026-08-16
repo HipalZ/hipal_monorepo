@@ -260,9 +260,9 @@ export const useAddService = () => {
       });
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       if (data.status === 400 || data.status === 401) {
-        toast.error('Failed to update category');
+        toast.error('Failed to create service');
       }
       if (data.status === 409) {
         setOpenErrorModal(true);
@@ -270,9 +270,15 @@ export const useAddService = () => {
         return toast.error('Service already exists');
       }
       if (data.status === 200 || data.status === 201) {
-        toast.success('Category Created');
+        toast.success('Service Created');
         queryClient.invalidateQueries({
           queryKey: ['getServiceCategories'],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['getCatServices', variables.businessId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['getAllHotelStaff', variables.businessId],
         });
         return;
       }

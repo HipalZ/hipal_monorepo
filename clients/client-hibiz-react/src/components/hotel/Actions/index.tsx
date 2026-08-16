@@ -81,17 +81,19 @@ const HotelActions = () => {
   };
 
   return (
-    <div className="mx-auto px-4 pb-8 pt-6 xl:pt-0">
-      <div className="mb-6 flex items-center gap-3">
-        {activeService && (
-          <ArrowLeft onClick={handleBackClick} className="hover:bg-muted h-8 w-8 cursor-pointer rounded-md p-1.5 transition-colors" />
-        )}
+    <main className="mt-2 min-h-screen rounded-lg pb-28">
+      <div className="mx-auto px-4 pb-8 pt-6 xl:pt-0">
+        <div className="mb-6 flex items-center gap-3">
+          {activeService && (
+            <ArrowLeft onClick={handleBackClick} className="hover:bg-muted h-8 w-8 cursor-pointer rounded-md p-1.5 transition-colors" />
+          )}
 
-        <h2 className="text-3xl font-bold leading-none">Actions</h2>
+          <h2 className="text-3xl font-bold leading-none">Actions</h2>
+        </div>
+
+        <div>{activeService ? renderActiveService() : renderServiceCards()}</div>
       </div>
-
-      <div>{activeService ? renderActiveService() : renderServiceCards()}</div>
-    </div>
+    </main>
   );
 };
 

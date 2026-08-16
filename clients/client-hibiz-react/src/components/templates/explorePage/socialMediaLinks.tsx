@@ -1,30 +1,28 @@
-import { useExploreStore } from "@/components/store/useExploreStore";
-import { useExploreTemp } from "@/components/store/useExploreTemp";
-import { lazy, memo, useCallback, useMemo, type ChangeEvent } from "react";
-import { IoMdArrowUp } from "react-icons/io";
+import { useExploreStore } from '@/components/store/useExploreStore';
+import { useExploreTemp } from '@/components/store/useExploreTemp';
+import { lazy, memo, useCallback, useMemo, type ChangeEvent } from 'react';
+import { IoMdArrowUp } from 'react-icons/io';
 
-const Paragraph = lazy(() => import("@/components/atom/paragraph"));
-const SubHeader = lazy(() => import("@/components/atom/subHeader"));
+const Paragraph = lazy(() => import('@/components/atom/paragraph'));
+const SubHeader = lazy(() => import('@/components/atom/subHeader'));
 
 const MemoSocialMediaLinks = () => {
-  const { selectedSocialMedia, setSelectedSocialMedia } = useExploreStore(
-    (s) => ({
-      selectedSocialMedia: s.selectedSocialMedia,
-      setSelectedSocialMedia: s.setSelectedSocialMedia,
-    }),
-  );
+  const { selectedSocialMedia, setSelectedSocialMedia } = useExploreStore((s) => ({
+    selectedSocialMedia: s.selectedSocialMedia,
+    setSelectedSocialMedia: s.setSelectedSocialMedia,
+  }));
 
-  const {
-    socialMediaLinks,
-    setSocialMediaLinks,
-  } = useExploreTemp((s) => ({
+  const { socialMediaLinks, setSocialMediaLinks } = useExploreTemp((s) => ({
     socialMediaLinks: s.socialMediaLinks,
     setSocialMediaLinks: s.setSocialMediaLinks,
   }));
 
-  const handleIconClick = useCallback((icon: string) => {
-    setSelectedSocialMedia(icon);
-  }, [setSelectedSocialMedia]);
+  const handleIconClick = useCallback(
+    (icon: string) => {
+      setSelectedSocialMedia(icon);
+    },
+    [setSelectedSocialMedia],
+  );
 
   const selectedLink = useMemo(() => {
     if (!Array.isArray(socialMediaLinks)) {
@@ -44,7 +42,7 @@ const MemoSocialMediaLinks = () => {
         }
         return {
           ...link,
-          link: newLink
+          link: newLink,
         };
       });
 
@@ -56,29 +54,30 @@ const MemoSocialMediaLinks = () => {
   return (
     <>
       <SubHeader text="Social Media Links" />
-      <section className="bg-white rounded-2xl">
+      <section className="rounded-2xl bg-white">
         <article className="flex items-center justify-between p-6">
-          {Array.isArray(socialMediaLinks) && socialMediaLinks.map((link) => (
-            <div
-              key={link._id}
-              onClick={() => handleIconClick(link.icon)}
-              onKeyDown={() => handleIconClick(link.icon)}
-              className={`${selectedSocialMedia === link.icon ? "ring-2 ring-offset-4 ring-blue-500" : ""} rounded-lg flex justify-center items-center bg-transparent`}
-            >
-              <img src={link.logo} alt="logo" className="h-8 w-8 object-contain" />
-            </div>
-          ))}
+          {Array.isArray(socialMediaLinks) &&
+            socialMediaLinks.map((link) => (
+              <div
+                key={link._id}
+                onClick={() => handleIconClick(link.icon)}
+                onKeyDown={() => handleIconClick(link.icon)}
+                className={`${selectedSocialMedia === link.icon ? 'ring-2 ring-blue-500 ring-offset-4' : ''} flex items-center justify-center rounded-lg bg-transparent`}
+              >
+                <img src={link.logo} alt="logo" className="h-8 w-8 object-contain" />
+              </div>
+            ))}
         </article>
         {selectedSocialMedia && (
-          <article className="pb-4 mx-6 space-y-4 rounded-2xl">
+          <article className="mx-6 space-y-4 rounded-2xl pb-4">
             <div className="relative">
               <input
                 maxLength={100}
-                value={selectedLink?.link || ""}
+                value={selectedLink?.link || ''}
                 onChange={handleSaveSocialMediaLink}
                 placeholder={`Enter ${selectedSocialMedia} link`}
                 type="text"
-                className="w-full pr-16 rounded-2xl"
+                className="w-full rounded-2xl pr-16"
               />
               <small className="absolute bottom-3 right-4">
                 {selectedLink?.link?.length}/{100}
@@ -86,13 +85,6 @@ const MemoSocialMediaLinks = () => {
             </div>
           </article>
         )}
-      </section>
-      <section className="mt-4 opacity-30">
-        <SubHeader text="Terms & Condition" />
-        <article className="flex items-center justify-between p-4 bg-white rounded-2xl">
-          <Paragraph text="Add your terms and conditions here" />
-          <IoMdArrowUp size={20} className="rotate-45" />
-        </article>
       </section>
     </>
   );

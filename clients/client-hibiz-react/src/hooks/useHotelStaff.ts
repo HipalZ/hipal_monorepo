@@ -1,27 +1,25 @@
-import type { IService } from "@/components/store/hotel/useHotelStaff";
-import useStaffStore, {
-  useStaffDataStore,
-} from "@/components/store/hotel/useHotelStaff";
-import { useError } from "@/components/store/useError";
-import { apiRpc } from "@hi/common";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
-import { useParams } from "react-router-dom";
+import type { IService } from '@/components/store/hotel/useHotelStaff';
+import useStaffStore, { useStaffDataStore } from '@/components/store/hotel/useHotelStaff';
+import { useError } from '@/components/store/useError';
+import { apiRpc } from '@hi/common';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { useParams } from 'react-router-dom';
 
 export type IHotelRoll =
-  | ""
-  | "MANAGER"
-  | "RECEPTIONIST"
-  | "HOUSEKEEPING"
-  | "MAINTENANCE"
-  | "SECURITY"
-  | "FRONT_OFFICE"
-  | "CLEANER"
-  | "WAITER"
-  | "LAUNDRY"
-  | "KITCHEN"
-  | "ELECTRICIAN"
-  | "PLUMBER";
+  | ''
+  | 'MANAGER'
+  | 'RECEPTIONIST'
+  | 'HOUSEKEEPING'
+  | 'MAINTENANCE'
+  | 'SECURITY'
+  | 'FRONT_OFFICE'
+  | 'CLEANER'
+  | 'WAITER'
+  | 'LAUNDRY'
+  | 'KITCHEN'
+  | 'ELECTRICIAN'
+  | 'PLUMBER';
 export interface IHotelStaffCustomRolePermissions {
   normal_settle: boolean;
   force_settle: boolean;
@@ -38,12 +36,14 @@ export interface IHotelStaffCustomRole {
   _id: string;
   businessId: string;
   role: IHotelRoll;
+  nickName?: string;
   permissions: IHotelStaffCustomRolePermissions;
   permissionGroupIds: string[];
   permissionIds: string[];
   bookMark: boolean;
   isDeleted: boolean;
   serviceIds: string[];
+  restaurantIds?: string[];
 }
 
 export interface IHotelStaff {
@@ -76,7 +76,7 @@ export const useGetAllHotelStaff = (businessId: string) => {
     data: staffData,
     refetch,
   } = useQuery({
-    queryKey: ["getAllHotelStaff", businessId],
+    queryKey: ['getAllHotelStaff', businessId],
     queryFn: getHotelUsers,
     enabled: !!businessId,
     refetchOnWindowFocus: false,
@@ -111,7 +111,7 @@ export const useGetAllHotelStaffRoles = (businessId: string) => {
     data: hotelRolesData,
     refetch,
   } = useQuery({
-    queryKey: ["getAllHotelStaffRoles", businessId || "default"],
+    queryKey: ['getAllHotelStaffRoles', businessId || 'default'],
     queryFn: getHotelRoles,
     enabled: !!businessId,
   });
@@ -139,7 +139,7 @@ export const useGetAllHotelServices = (businessId: string) => {
     data: hotelServicesData,
     refetch,
   } = useQuery({
-    queryKey: ["getAllHotelServices", businessId],
+    queryKey: ['getAllHotelServices', businessId],
     queryFn: getHotelServices,
     enabled: !!businessId,
   });
@@ -166,7 +166,7 @@ export const useGetCatServices = (businessId: string) => {
     data: hotelServicesData,
     refetch,
   } = useQuery({
-    queryKey: ["getCatServices", businessId],
+    queryKey: ['getCatServices', businessId],
     queryFn: getCatServices,
     enabled: !!businessId,
   });
@@ -178,8 +178,10 @@ export interface IHotelStaffPayload {
   name: string;
   phone: string;
   password?: string;
-  nickName: string;
-  services: string[];
+  nickName?: string;
+  services?: string[];
+  serviceIds?: string[];
+  restaurantIds?: string[];
   role: IHotelRoll;
   businessId: string;
   editId?: string;
@@ -199,22 +201,22 @@ export const useAddStaffToHotel = () => {
     },
     onSuccess: (data, variables) => {
       if (data.status === 400 || data.status === 401) {
-        toast.error("Failed to add staff");
+        toast.error('Failed to add staff');
       }
       if (data.status === 409) {
         setOpenErrorModal(true);
-        setError("Staff already exists");
-        return toast.error("Staff already exists");
+        setError('Staff already exists');
+        return toast.error('Staff already exists');
       }
       if (data.status === 200 || data.status === 201) {
         queryClient.invalidateQueries({
-          queryKey: ["getAllHotelStaff", variables.businessId],
+          queryKey: ['getAllHotelStaff', variables.businessId],
         });
         resetForm();
         setStaffModal(false);
         return;
       }
-      toast.success("Staff added successfully");
+      toast.success('Staff added successfully');
     },
     onError: (data) => {
       console.log(data);
@@ -228,37 +230,36 @@ export const useUpdateStaffToHotel = () => {
   const { setError, setOpenErrorModal } = useError();
   const queryClient = useQueryClient();
   const { resetForm, setStaffModal } = useStaffStore();
-  const { isPending: updateStaffLoader, mutateAsync: updateStaff } =
-    useMutation({
-      mutationFn: async (payload: IHotelStaffPayload) => {
-        const response = await apiRpc.hotel.staff.edit_staff.$put({
-          json: payload,
+  const { isPending: updateStaffLoader, mutateAsync: updateStaff } = useMutation({
+    mutationFn: async (payload: IHotelStaffPayload) => {
+      const response = await apiRpc.hotel.staff.edit_staff.$put({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      if (data.status === 400 || data.status === 401) {
+        toast.error('Failed to update staff');
+      }
+      if (data.status === 409) {
+        setOpenErrorModal(true);
+        setError('Staff already exists');
+        return toast.error('Staff already exists');
+      }
+      if (data.status === 200 || data.status === 201) {
+        queryClient.invalidateQueries({
+          queryKey: ['getAllHotelStaff', variables.businessId],
         });
-        return response;
-      },
-      onSuccess: (data, variables) => {
-        if (data.status === 400 || data.status === 401) {
-          toast.error("Failed to update staff");
-        }
-        if (data.status === 409) {
-          setOpenErrorModal(true);
-          setError("Staff already exists");
-          return toast.error("Staff already exists");
-        }
-        if (data.status === 200 || data.status === 201) {
-          queryClient.invalidateQueries({
-            queryKey: ["getAllHotelStaff", variables.businessId],
-          });
-          resetForm();
-          setStaffModal(false);
-          return;
-        }
-        toast.success("Staff updated successfully");
-      },
-      onError: (data) => {
-        console.log(data);
-      },
-    });
+        resetForm();
+        setStaffModal(false);
+        return;
+      }
+      toast.success('Staff updated successfully');
+    },
+    onError: (data) => {
+      console.log(data);
+    },
+  });
 
   return { updateStaffLoader, updateStaff };
 };
@@ -267,38 +268,37 @@ export const useDeleteStaffFromHotel = () => {
   const { setError, setOpenErrorModal } = useError();
   const queryClient = useQueryClient();
   const businessId = useParams().hotelId;
-  const { isPending: deleteStaffLoader, mutateAsync: deleteStaff } =
-    useMutation({
-      mutationFn: async (staffId: string) => {
-        const response = await apiRpc.hotel.staff.delete_staff.$delete({
-          json: {
-            staffId,
-            businessId: businessId as string,
-          },
+  const { isPending: deleteStaffLoader, mutateAsync: deleteStaff } = useMutation({
+    mutationFn: async (staffId: string) => {
+      const response = await apiRpc.hotel.staff.delete_staff.$delete({
+        json: {
+          staffId,
+          businessId: businessId as string,
+        },
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      if (data.status === 400 || data.status === 401) {
+        toast.error('Failed to delete staff');
+      }
+      if (data.status === 409) {
+        setOpenErrorModal(true);
+        setError('Staff already exists');
+        return toast.error('Staff already exists');
+      }
+      if (data.status === 200 || data.status === 201) {
+        queryClient.invalidateQueries({
+          queryKey: ['getAllHotelStaff', businessId],
         });
-        return response;
-      },
-      onSuccess: (data) => {
-        if (data.status === 400 || data.status === 401) {
-          toast.error("Failed to delete staff");
-        }
-        if (data.status === 409) {
-          setOpenErrorModal(true);
-          setError("Staff already exists");
-          return toast.error("Staff already exists");
-        }
-        if (data.status === 200 || data.status === 201) {
-          queryClient.invalidateQueries({
-            queryKey: ["getAllHotelStaff", businessId],
-          });
-          toast.success("Staff deleted successfully");
-          return;
-        }
-      },
-      onError: (data) => {
-        console.log(data);
-      },
-    });
+        toast.success('Staff deleted successfully');
+        return;
+      }
+    },
+    onError: (data) => {
+      console.log(data);
+    },
+  });
 
   return { deleteStaffLoader, deleteStaff };
 };
@@ -324,7 +324,7 @@ export const useFetchLevels = () => {
   const gettingLevelsData = async () => {
     const response = await apiRpc.hotel.staff_level.fetch_levels.$get({
       query: {
-        businessId: businessId || "",
+        businessId: businessId || '',
       },
     });
     const res = await response.json();
@@ -333,7 +333,7 @@ export const useFetchLevels = () => {
   };
 
   const { isLoading: gettingLevels, data: levelsData } = useQuery({
-    queryKey: ["getHotelStaffLevels", businessId],
+    queryKey: ['getHotelStaffLevels', businessId],
     queryFn: gettingLevelsData,
     enabled: !!businessId,
   });
@@ -360,18 +360,18 @@ export const useSaveStaffToLevel = () => {
     },
     onSuccess: (data, variables) => {
       if (data.status === 400 || data.status === 401) {
-        toast.error("Failed to add staff to level");
+        toast.error('Failed to add staff to level');
       }
       if (data.status === 409) {
         setOpenErrorModal(true);
-        setError("Staff already exists");
-        return toast.error("Staff already exists");
+        setError('Staff already exists');
+        return toast.error('Staff already exists');
       }
       if (data.status === 200 || data.status === 201) {
         queryClient.invalidateQueries({
-          queryKey: ["getHotelStaffLevels", variables.businessId],
+          queryKey: ['getHotelStaffLevels', variables.businessId],
         });
-        toast.success("Staff added to level successfully");
+        toast.success('Staff added to level successfully');
         return;
       }
     },
@@ -392,35 +392,34 @@ export const useRemoveStaffFromLevel = () => {
   const { setError, setOpenErrorModal } = useError();
   const businessId = useParams<string>().hotelId;
   const queryClient = useQueryClient();
-  const { isPending: removeStaffLoader, mutateAsync: removeStaff } =
-    useMutation({
-      mutationFn: async (payload: IStaffRemoveFromLevel) => {
-        const response = await apiRpc.hotel.staff_level.remove_staff.$post({
-          json: payload,
+  const { isPending: removeStaffLoader, mutateAsync: removeStaff } = useMutation({
+    mutationFn: async (payload: IStaffRemoveFromLevel) => {
+      const response = await apiRpc.hotel.staff_level.remove_staff.$post({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      if (data.status === 400 || data.status === 401) {
+        toast.error('Failed to remove staff from level');
+      }
+      if (data.status === 409) {
+        setOpenErrorModal(true);
+        setError('Staff already exists');
+        return toast.error('Staff already exists');
+      }
+      if (data.status === 200 || data.status === 201) {
+        queryClient.invalidateQueries({
+          queryKey: ['getHotelStaffLevels', businessId],
         });
-        return response;
-      },
-      onSuccess: (data) => {
-        if (data.status === 400 || data.status === 401) {
-          toast.error("Failed to remove staff from level");
-        }
-        if (data.status === 409) {
-          setOpenErrorModal(true);
-          setError("Staff already exists");
-          return toast.error("Staff already exists");
-        }
-        if (data.status === 200 || data.status === 201) {
-          queryClient.invalidateQueries({
-            queryKey: ["getHotelStaffLevels", businessId],
-          });
-          toast.success("Staff removed from level successfully");
-          return;
-        }
-      },
-      onError: (data) => {
-        console.log(data);
-      },
-    });
+        toast.success('Staff removed from level successfully');
+        return;
+      }
+    },
+    onError: (data) => {
+      console.log(data);
+    },
+  });
 
   return { removeStaffLoader, removeStaff };
 };
@@ -435,35 +434,34 @@ export interface IStaffUpdateLevel {
 export const useUpdateStaffToHotelLevel = () => {
   const { setError, setOpenErrorModal } = useError();
   const queryClient = useQueryClient();
-  const { isPending: updateStaffLoader, mutateAsync: updateStaffToLevel } =
-    useMutation({
-      mutationFn: async (payload: IStaffUpdateLevel) => {
-        const response = await apiRpc.hotel.staff_level.update_level.$put({
-          json: payload,
+  const { isPending: updateStaffLoader, mutateAsync: updateStaffToLevel } = useMutation({
+    mutationFn: async (payload: IStaffUpdateLevel) => {
+      const response = await apiRpc.hotel.staff_level.update_level.$put({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      if (data.status === 400 || data.status === 401) {
+        toast.error('Failed to update staff level');
+      }
+      if (data.status === 409) {
+        setOpenErrorModal(true);
+        setError('Staff already exists');
+        return toast.error('Staff already exists');
+      }
+      if (data.status === 200 || data.status === 201) {
+        queryClient.invalidateQueries({
+          queryKey: ['getHotelStaffLevels', variables.businessId],
         });
-        return response;
-      },
-      onSuccess: (data, variables) => {
-        if (data.status === 400 || data.status === 401) {
-          toast.error("Failed to update staff level");
-        }
-        if (data.status === 409) {
-          setOpenErrorModal(true);
-          setError("Staff already exists");
-          return toast.error("Staff already exists");
-        }
-        if (data.status === 200 || data.status === 201) {
-          queryClient.invalidateQueries({
-            queryKey: ["getHotelStaffLevels", variables.businessId],
-          });
-          toast.success("Staff level updated successfully");
-          return;
-        }
-      },
-      onError: (data) => {
-        console.log(data);
-      },
-    });
+        toast.success('Staff level updated successfully');
+        return;
+      }
+    },
+    onError: (data) => {
+      console.log(data);
+    },
+  });
 
   return { updateStaffLoader, updateStaffToLevel };
 };

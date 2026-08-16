@@ -329,7 +329,7 @@ const ChatCardSection = ({
       ) : (
         <>
           {/* QUICK ACTIONS GROUP */}
-          <section className="mx-4 mb-8 p-4 rounded-3xl bg-gradient-to-br from-[#FAF9F6] to-[#F5F2F0] border border-[#E9E4DC]/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] selection:bg-none">
+          <section className="mx-2 mb-4 p-4 rounded-3xl bg-gradient-to-br from-[#FAF9F6] to-[#F5F2F0] border border-[#E9E4DC]/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] selection:bg-none">
             <div className="mb-4 flex items-center gap-2 px-1">
               <div className="h-4 w-1 bg-gradient-to-b from-[#E85D3A] to-[#E85D3A]/40 rounded-full" />
               <h3 className="font-semibold text-[#4A433D] text-[0.95rem] poppins tracking-tight uppercase">

@@ -21,6 +21,8 @@ interface HorizontalDishCardProps {
   primaryColor?: string;
   secondaryColor?: string;
   isEdgeLayout?: boolean;
+  noDescription?: boolean;
+  redirection?: (dishId: string, category: unknown[]) => void;
 }
 
 const HorizontalCard = ({
@@ -28,6 +30,7 @@ const HorizontalCard = ({
   primaryColor = "#ec4899",
   secondaryColor = "#fce7f3",
   isEdgeLayout = false,
+  noDescription = false,
 }: HorizontalDishCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { cart } = useCartStore();
@@ -83,14 +86,14 @@ const HorizontalCard = ({
     <>
       <div
         className={cn(
-          "flex relative min-h-[11.5rem] items-center justify-between border-b border-gray-100",
-          compactLayout ? "p-2" : "px-4 pb-2",
+          "relative flex items-start gap-3 border-b border-gray-100 bg-white",
+          compactLayout ? "min-h-[9.75rem] p-3" : "min-h-[10.5rem] px-4 py-3",
         )}
       >
         <div
           className={cn(
-            "flex-1 ",
-            compactLayout ? "pr-2 pb-2 w-[60%]" : "pr-4 w-[70%]",
+            "min-w-0 flex-1",
+            compactLayout ? "pb-1" : "pb-2",
           )}
         >
           {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
@@ -124,7 +127,7 @@ const HorizontalCard = ({
             className={compactLayout ? "mt-1" : "mt-2"}
             color={primaryColor}
           />
-          {dishData.description && (
+          {!noDescription && dishData.description && (
             <p
               className={cn(
                 "text-gray-500 line-clamp-2",
@@ -149,8 +152,8 @@ const HorizontalCard = ({
 
         <div
           className={cn(
-            "relative w-[40%] flex flex-col items-center",
-            compactLayout ? "w-[40%]" : "w-[30%]",
+            "flex shrink-0 flex-col items-center justify-start",
+            compactLayout ? "w-28" : "w-32",
           )}
         >
           <div
@@ -180,11 +183,11 @@ const HorizontalCard = ({
             )}
           </div>
           <section
-            className= "absolute right-0 flex flex-col items-center justify-center w-full -bottom-4"
+            className="z-10 -mt-3 flex w-full flex-col items-center justify-center"
           >
             {!dishData.availability ? (
-              <div className="text-xs bg-gray-200 text-gray-500 rounded px-2 py-0.5">
-              Not Available
+              <div className="rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-500">
+                Not Available
               </div>
             ) : shouldShowAddButton ? (
               <DishQuantityButton

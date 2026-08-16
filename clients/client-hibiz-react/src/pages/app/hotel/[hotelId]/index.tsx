@@ -1,20 +1,17 @@
-import { memo, useCallback, lazy, Suspense } from "react";
-import MemoizedHeader from "@/components/molecules/header";
-import { useNavigate } from "react-router-dom";
-import useBusinessData from "@/components/store/useBusinessData";
-import { cn } from "@hi/common";
-import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSidenav";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import HotelActions from "@/components/hotel/Actions";
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import HotelActions from '@/components/hotel/Actions';
+import MemoizedHeader from '@/components/molecules/header';
+import useBusinessData from '@/components/store/useBusinessData';
+import UniversalNav from '@/components/templates/menu/sideNavbaar/universelSidenav';
+import { cn } from '@hi/common';
+import { lazy, memo, Suspense, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 // import PaymentCards from "@/components/hotel/payments";
-import {
-  HotelInfoTabs,
-  useHotelInfoTabs,
-} from "@/components/store/hotel/useHotelDashboardPage.ts";
+import { HotelInfoTabs, useHotelInfoTabs } from '@/components/store/hotel/useHotelDashboardPage.ts';
 
-const AnalyticsCards = lazy(() => import("@/components/hotel/Analytics"));
-const HotelCards = lazy(() => import("@/components/hotel/HotelCards"));
-const Integrations = lazy(() => import("@/components/hotel/Integrations"));
+const AnalyticsCards = lazy(() => import('@/components/hotel/Analytics'));
+const HotelCards = lazy(() => import('@/components/hotel/HotelCards'));
+const Integrations = lazy(() => import('@/components/hotel/Integrations'));
 
 const navItems = [
   { text: HotelInfoTabs.Essentials },
@@ -37,30 +34,25 @@ const MemoHotelInfoMain = () => {
   };
 
   const handleBack = useCallback(() => {
-    navigate("/app/business");
+    navigate('/app/business');
   }, [navigate]);
 
   return (
     <main className="min-h-screen">
       <div className="sticky top-0 z-50 w-full">
         <header className="linear_gradient_background">
-          <MemoizedHeader
-            title={businessData?.name || "Welcome"}
-            onBack={handleBack}
-          />
+          <MemoizedHeader title={businessData?.name || 'Welcome'} onBack={handleBack} />
         </header>
 
-        <nav className="absolute flex w-full px-4 space-x-4 overflow-auto text-sm text-nowrap flex-nowrap hide-scrollbar mobile-only">
+        <nav className="hide-scrollbar mobile-only absolute flex w-full flex-nowrap space-x-4 overflow-auto text-nowrap px-4 text-sm">
           {navItems.map((item) => (
             <button
               key={item.text}
               type="button"
               onClick={() => changeLayout(item.text)}
               className={cn(
-                "pb-3 pt-4 bg-white capitalize",
-                selectedTab === item.text
-                  ? "border-b-2 border-[#8162e6] transition-all text-[#8162e6] font-semibold text-lg"
-                  : "",
+                'bg-white pb-3 pt-4 capitalize',
+                selectedTab === item.text ? 'border-b-2 border-[#8162e6] text-lg font-semibold text-[#8162e6] transition-all' : '',
               )}
             >
               {item.text}
@@ -69,14 +61,10 @@ const MemoHotelInfoMain = () => {
         </nav>
       </div>
 
-      <UniversalNav
-        items={navItems}
-        selectedNavItem={selectedTab}
-        changeNav={changeLayout}
-      />
+      <UniversalNav items={navItems} selectedNavItem={selectedTab} changeNav={changeLayout} />
 
       <Suspense fallback={<LoadingSpinner />}>
-        <section className="pt-12 xl:px-0 pb-[5rem]">
+        <section className="pb-[5rem] xl:px-0">
           {selectedTab === HotelInfoTabs.Essentials && <HotelCards />}
           {selectedTab === HotelInfoTabs.Integrations && <Integrations />}
           {selectedTab === HotelInfoTabs.Actions && <HotelActions />}

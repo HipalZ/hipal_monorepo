@@ -1,31 +1,17 @@
-import { memo, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import QuickFilter from "@/components/atoms/quickFilter";
-import type { CategoryType, DishType } from "@hi/db-models/src/validators";
-import SearchPanelCom from "./searchPanelCom";
-import { useSearch } from "@/components/store/useSearch";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import useTableData from "@/components/store/useTableData";
-import Table from "@/assets/cart/Table.png";
-import Image from "next/image";
-import { Search } from "lucide-react";
+import Table from '@/assets/cart/Table.png';
+import QuickFilter from '@/components/atoms/quickFilter';
+import { _useAllBusiness } from '@/components/store/useAllBusiness';
+import { useSearch } from '@/components/store/useSearch';
+import useTableData from '@/components/store/useTableData';
+import type { CategoryType, DishType } from '@hi/db-models/src/validators';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Search } from 'lucide-react';
+import Image from 'next/image';
+import { memo, useMemo } from 'react';
+import SearchPanelCom from './searchPanelCom';
 
-function Header({
-  categories,
-  primaryColor,
-  secondaryColor,
-}: {
-  categories: CategoryType[];
-  primaryColor: string;
-  secondaryColor: string;
-}) {
-  const {
-    isSearchActive,
-    setIsSearchActive,
-    setSearchText,
-    setShowHeader,
-    showHeader,
-  } = useSearch();
+function Header({ categories, primaryColor, secondaryColor }: { categories: CategoryType[]; primaryColor: string; secondaryColor: string }) {
+  const { isSearchActive, setIsSearchActive, setSearchText, setShowHeader, showHeader } = useSearch();
   const { hiCode } = useTableData();
 
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
@@ -35,12 +21,14 @@ function Header({
 
     const collectDishes = (category: CategoryType) => {
       if (category.dishIds && category.dishIds.length > 0) {
-        result.push(...category.dishIds);
+        result.push(...(category.dishIds.filter((dish) => typeof dish !== 'string') as unknown as DishType[]));
       }
 
       if (category.subCategoryIds && category.subCategoryIds.length > 0) {
         for (const subCategory of category.subCategoryIds) {
-          collectDishes(subCategory);
+          if (typeof subCategory !== 'string') {
+            collectDishes(subCategory);
+          }
         }
       }
     };
@@ -52,12 +40,12 @@ function Header({
     return result;
   }, [categories]);
 
-  if (outletInfo?.outLetType === "OTHER") {
+  if (outletInfo?.outLetType === 'OTHER') {
     return null;
   }
 
   const openDishSearch = () => {
-    setSearchText("");
+    setSearchText('');
     setIsSearchActive(true);
     setShowHeader(true);
   };
@@ -68,15 +56,15 @@ function Header({
         // background: `linear-gradient(180deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
         backgroundColor: `${secondaryColor}`,
       }}
-      className="sticky top-0 z-[1000] flex flex-col text-4xl pb-2 text-black overflow-hidden"
+      className="sticky top-0 z-[1000] flex flex-col overflow-hidden pb-2 text-4xl text-black"
       initial={{ opacity: 0, y: -100 }}
       animate={{
         opacity: showHeader ? 1 : 0,
         y: showHeader ? 0 : -100,
       }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
-      <div className="relative flex flex-col items-start justify-between w-full overflow-hidden">
+      <div className="relative flex w-full flex-col items-start justify-between overflow-hidden">
         {hiCode && (
           <div className="flex w-full items-center justify-end px-2 text-3xl">
             <div className="flex items-center gap-2 text-xl font-semibold opacity-80">
@@ -87,21 +75,21 @@ function Header({
             </div>
           </div>
         )}
-        {outletInfo?.outLetType !== "OTHER" && !isSearchActive && (
+        {outletInfo?.outLetType !== 'OTHER' && !isSearchActive && (
           <motion.div
             className="mt-2 flex w-full items-center gap-2 px-2"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.3 }}
           >
-            <div className="min-w-0 flex-1 overflow-x-auto hide-scrollbar">
+            <div className="hide-scrollbar min-w-0 flex-1 overflow-x-auto">
               <QuickFilter />
             </div>
             <button
               type="button"
               onClick={openDishSearch}
               aria-label="Search dishes"
-              className="flex shrink-0 items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-1 text-sm font-semibold text-black"
+              className="flex shrink-0 items-center gap-1 rounded-md border border-gray-200 bg-white p-2 text-sm font-semibold text-black"
               style={{
                 color: primaryColor,
                 borderColor: `${primaryColor}30`,
@@ -109,7 +97,6 @@ function Header({
               disabled={isSearchActive}
             >
               <Search className="h-4 w-4" />
-              <span>Search</span>
             </button>
           </motion.div>
         )}
@@ -118,15 +105,11 @@ function Header({
         {isSearchActive && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
+            animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <SearchPanelCom
-              allDishes={allDishes}
-              primaryColor={primaryColor}
-              secondaryColor={secondaryColor}
-            />
+            <SearchPanelCom allDishes={allDishes} primaryColor={primaryColor} secondaryColor={secondaryColor} />
           </motion.div>
         )}
       </AnimatePresence>

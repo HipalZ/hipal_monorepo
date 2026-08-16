@@ -1,14 +1,30 @@
 import { getBusinessData } from "@/apis/commonApis";
 import { getThemeSettings } from "@/apis/hotel";
 import HotelCheckinFooter from "@/components/hotels/room/HotelCheckinFooter";
-import HotelCheckinLoader from "@/components/hotels/room/HotelCheckinLoader";
-import HotelLogoLoader from "@/components/hotels/room/HotelLogoLoader";
+import HotelCheckinRenderGate from "@/components/hotels/room/HotelCheckinRenderGate";
 
 import type { BusinessDetails } from "@/components/types/businessData";
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 
 export const fetchCache = "force-no-store";
+
+const EmptyLoader = () => null;
+
+const BannerSkeleton = () => (
+  <div className="h-[16rem] w-full rounded-[1.25rem] bg-[#E7DDD4]/70" />
+);
+
+const CategoryGridSkeleton = () => (
+  <section className="grid grid-cols-2 gap-2 pt-2">
+    {[0, 1, 2, 3].map((item) => (
+      <div
+        key={item}
+        className="aspect-square rounded-[28px] bg-[#E3D7CB]/70"
+      />
+    ))}
+  </section>
+);
 
 export async function generateMetadata({
   searchParams,
@@ -32,7 +48,7 @@ const HotelBackgroundContainer = dynamic(
       (mod) => mod.HotelBackgroundContainer
     ),
   {
-    loading: () => <HotelCheckinLoader />,
+    loading: EmptyLoader,
   }
 );
 
@@ -42,43 +58,36 @@ const ViewPortContainer = dynamic(
       (mod) => mod.ViewPortContainer
     ),
   {
-    loading: () => <HotelCheckinLoader />,
+    loading: EmptyLoader,
   }
 );
 
 const RoomCard = dynamic(() => import("@/components/hotels/room/RoomNumber"), {
-  loading: () => <HotelLogoLoader />,
+  loading: BannerSkeleton,
 });
 
 const HotelWelcomeCard = dynamic(
   () => import("@/components/hotels/room/RoomWelcome"),
   {
-    loading: () => <HotelLogoLoader />,
+    loading: EmptyLoader,
   }
 );
 
 const ChatHotel = dynamic(() => import("@/components/hotels/room/ChatHotel"), {
-  loading: () => <HotelLogoLoader />,
+  loading: EmptyLoader,
 });
-
-const CheckOutRequest = dynamic(
-  () => import("@/components/hotels/room/CheckOutRequest"),
-  {
-    loading: () => <HotelLogoLoader />,
-  }
-);
 
 const ServiceCategoriesSection = dynamic(
   () => import("@/components/hotels/room/ServiceCategoriesSection"),
   {
-    loading: () => <HotelLogoLoader />,
+    loading: CategoryGridSkeleton,
   }
 );
 
 const ChatCardSection = dynamic(
   () => import("@/components/hotels/room/ChatCardSection"),
   {
-    loading: () => <HotelLogoLoader />,
+    loading: EmptyLoader,
   }
 );
 
@@ -109,6 +118,8 @@ const page = async ({
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
       <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[5rem] bg-gradient-to-br from-[#FEB67680] via-[#FEB67610] to-[#f3ede710]">
+        <HotelCheckinRenderGate logoUrl={businessData?.logoUrl} />
+
         <section className="p-3">
           <RoomCard
             roomNumber={room}
@@ -137,7 +148,7 @@ const page = async ({
           contactPhone={contactPhone}
         />
 
-        <section className="p-4">
+        <section className="px-2">
           <ServiceCategoriesSection
             menuId={businessData?.menuId}
             businessId={businessData.businessId}

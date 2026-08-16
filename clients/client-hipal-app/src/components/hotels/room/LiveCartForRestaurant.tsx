@@ -39,6 +39,11 @@ const MemoLiveCart = () => {
         setCartPage,
     ]);
 
+    const handleCartClose = useCallback(() => {
+        if (useCartStore.getState().openInstructionModal) return;
+        setShowCart(false);
+    }, [setShowCart]);
+
     return (
         <>
             <AnimatePresence>
@@ -92,7 +97,7 @@ const MemoLiveCart = () => {
                 )}
             </AnimatePresence>
             {showCart && (
-                <BottomPopUp rightTopBack show={showCart} onClose={() => setShowCart(false)} hide>
+                <BottomPopUp rightTopBack show={showCart} onClose={handleCartClose} hide>
                     <MemoRestaurantCart />
                 </BottomPopUp>
             )}

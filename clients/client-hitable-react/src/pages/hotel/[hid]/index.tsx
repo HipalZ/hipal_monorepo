@@ -1,26 +1,19 @@
-import { memo, Suspense, lazy } from "react";
-import { NavItemsHotelEnum } from "@/components/types/hotelData";
-import { useHotelStore } from "@/components/store/useHotelStore";
-import SpinnerMemo from "@/components/atoms/loadingSpinner";
-import PopUp from "@/components/atoms/popUp";
-import CommonBottomButton from "@/components/atoms/bottomButton";
-import HotelReviews from "@/components/hotel/HotelReview";
+import CommonBottomButton from '@/components/atoms/bottomButton';
+import SpinnerMemo from '@/components/atoms/loadingSpinner';
+import PopUp from '@/components/atoms/popUp';
+import HotelReviews from '@/components/hotel/HotelReview';
+import { useHotelStore } from '@/components/store/useHotelStore';
+import { NavItemsHotelEnum } from '@/components/types/hotelData';
+import { lazy, memo, Suspense } from 'react';
 
-const ViewCart = lazy(() => import("@/components/hotel/ViewCart"));
-const EscalationAlerts = lazy(
-  () => import("@/components/hotel/EscalationAlerts"),
-);
-const AlertHotel = lazy(() => import("@/components/hotel/alertHotel"));
-const HistoryHotel = lazy(() => import("@/components/hotel/historyHotel"));
-const NavItemsHotel = lazy(() => import("@/components/atoms/navItemsHotel"));
-const NavbarHotel = lazy(() => import("@/components/hotel/navbarHotel"));
-const AvailableRoomHotel = lazy(
-  () => import("@/components/hotel/availableRoomHotel"),
-);
-const BookedRoomHotel = lazy(
-  () => import("@/components/hotel/bookedRoomHotel"),
-);
-const RoomsHotel = lazy(() => import("@/components/hotel/roomsHotel"));
+const ViewCart = lazy(() => import('@/components/hotel/ViewCart'));
+const AlertHotel = lazy(() => import('@/components/hotel/alertHotel'));
+const HistoryHotel = lazy(() => import('@/components/hotel/historyHotel'));
+const NavItemsHotel = lazy(() => import('@/components/atoms/navItemsHotel'));
+const NavbarHotel = lazy(() => import('@/components/hotel/navbarHotel'));
+const AvailableRoomHotel = lazy(() => import('@/components/hotel/availableRoomHotel'));
+const BookedRoomHotel = lazy(() => import('@/components/hotel/bookedRoomHotel'));
+const RoomsHotel = lazy(() => import('@/components/hotel/roomsHotel'));
 
 const MemoHotel = () => {
   const selectedNavItem = useHotelStore((state) => state.selectedNavItem);
@@ -46,51 +39,29 @@ const MemoHotel = () => {
           <AlertHotel />
         </Suspense>
       )}
-      {selectedNavItem === NavItemsHotelEnum.Escalation && (
-        <Suspense fallback={<SpinnerMemo />}>
-          <EscalationAlerts />
-        </Suspense>
-      )}
       {selectedNavItem === NavItemsHotelEnum.History && (
         <Suspense fallback={<SpinnerMemo />}>
           <HistoryHotel />
         </Suspense>
       )}
       {selectedNavItem === NavItemsHotelEnum.Reviews && <HotelReviews />}
-      <div className="fixed bottom-0 h-[4.5rem] lg:hidden w-full shadow-2xl flex justify-around items-center bg-white z-50">
-        <nav className="flex w-full p-2 mx-4 rounded-full bg-gray-50">
+      <div className="fixed bottom-0 z-50 flex h-[4.5rem] w-full items-center justify-around bg-white shadow-2xl lg:hidden">
+        <nav className="mx-4 flex w-full rounded-full bg-gray-50 p-2">
           <Suspense fallback={<SpinnerMemo />}>
             <NavItemsHotel />
           </Suspense>
         </nav>
       </div>
       {openRoomModal && (
-        <PopUp
-          width="w-[30rem] md:w-[40rem]"
-          onClose={() => setOpenRoomModal(false)}
-          show={openRoomModal}
-          rightTopBack
-          hide
-        >
-          <section className="overflow-y-scroll h-[100vh] lg:h-[90dvh] bg-gray-50">
-            <Suspense fallback={<SpinnerMemo />}>
-              {roomData?.roomStatus === "AVAILABLE" ? (
-                <AvailableRoomHotel />
-              ) : (
-                <BookedRoomHotel />
-              )}
-            </Suspense>
+        <PopUp width="w-[30rem] md:w-[40rem]" onClose={() => setOpenRoomModal(false)} show={openRoomModal} rightTopBack hide>
+          <section className="h-[100vh] overflow-y-scroll bg-gray-50 lg:h-[90dvh]">
+            <Suspense fallback={<SpinnerMemo />}>{roomData?.roomStatus === 'AVAILABLE' ? <AvailableRoomHotel /> : <BookedRoomHotel />}</Suspense>
           </section>
         </PopUp>
       )}
       {openCartModal && (
-        <PopUp
-          width="w-[30rem] "
-          onClose={() => setOpenCartModal(false)}
-          show={openCartModal}
-          hide
-        >
-          <section className="overflow-y-scroll h-[90vh] bg-gray-50">
+        <PopUp width="w-[30rem] " onClose={() => setOpenCartModal(false)} show={openCartModal} hide>
+          <section className="h-[90vh] overflow-y-scroll bg-gray-50">
             <Suspense fallback={<SpinnerMemo />}>
               <ViewCart />
               <CommonBottomButton
@@ -99,9 +70,9 @@ const MemoHotel = () => {
                 shadow
                 buttons={[
                   {
-                    text: "Back",
+                    text: 'Back',
                     onClick: handleBack,
-                    className: "w-full rounded-md",
+                    className: 'w-full rounded-md',
                   },
                 ]}
               />
