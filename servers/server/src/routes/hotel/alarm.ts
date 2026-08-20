@@ -37,6 +37,7 @@ function parseWakeUpMessage(message?: string) {
 
 function getWakeUpStatus(alert: { alertProgress?: string; acceptedBy?: unknown; deliveredAt?: number; rejectedAt?: number }) {
   if (alert.alertProgress === 'NOT_DELIVERED') return 'DUE';
+  if (alert.alertProgress === 'DELIVERED' && alert.deliveredAt) return 'INFORMED';
   if (alert.alertProgress === 'RESOLVED' && alert.deliveredAt) return 'INFORMED';
   if (alert.alertProgress === 'REJECTED' || alert.rejectedAt) return 'CANCELLED';
   if (alert.acceptedBy) return 'ACKNOWLEDGED';

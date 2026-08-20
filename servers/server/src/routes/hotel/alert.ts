@@ -2025,11 +2025,10 @@ const hotelAlertRouter = new Hono()
         return respond(c, 'Only MESSAGE alerts or due wake-up calls can be dismissed via this route', true, 400, {});
       }
 
-      await HotelAlert.findByIdAndUpdate(
-        alertId,
-        isWakeUpCallAlert
+      const updateFields =
+        isWakeUpCallAlert && alert.alertProgress === 'NOT_DELIVERED'
           ? {
-              alertProgress: 'RESOLVED',
+              alertProgress: 'DELIVERED',
               deliveredAt: Date.now(),
               deliveredBy: userId,
             }
@@ -2037,8 +2036,9 @@ const hotelAlertRouter = new Hono()
               alertProgress: 'REJECTED',
               rejectedAt: Date.now(),
               rejectedBy: userId,
-            },
-      );
+            };
+
+      await HotelAlert.findByIdAndUpdate(alertId, updateFields);
 
       return respond(c, 'Alert dismissed successfully', false, 200, {
         _id: alertId,
