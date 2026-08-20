@@ -61,23 +61,23 @@ const Cell = memo(function Cell({
  * The request's SLA at a glance: a headline for the leg that is running now,
  * and a two-cell breakdown of acceptance and completion beneath it.
  *
- * Completion is due at createdAt + accept + deliver — the same additive total
- * the owner report and CSV use, so card and report can never disagree.
+ * The card separates the request into two legs:
+ * acceptance from createdAt, then delivery/fulfillment after acceptance.
  */
 const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, rejectedAt, acceptMins, deliverMins }: SlaPanelProps) {
   const started = new Date(createdAt).getTime();
   const acceptMs = (acceptMins || 0) * 60_000;
   const fulfillMs = (deliverMins || 0) * 60_000;
-  const totalMs = acceptMs + fulfillMs;
 
   const closed = Boolean(deliveredAt || rejectedAt);
   const now = useNow(!closed);
 
   // Wake-up calls and plain messages carry no service, so there is no SLA to show.
-  if (!totalMs) return null;
+  if (!acceptMs && !fulfillMs) return null;
 
   const acceptLeftMs = started + acceptMs - now;
-  const fulfillLeftMs = (acceptedAt || started + acceptMs) + fulfillMs - now;
+  const deliveryStart = acceptedAt || started;
+  const fulfillLeftMs = deliveryStart + fulfillMs - now;
 
   // The leg currently being raced decides the panel's colour.
   const activeLeftMs = acceptedAt ? fulfillLeftMs : acceptLeftMs;
@@ -86,7 +86,7 @@ const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, re
 
   const head = ((): { tone: ToneKey; title: string; value: string } => {
     if (deliveredAt) {
-      const vsSla = acceptedAt ? deliveredAt - acceptedAt - fulfillMs : deliveredAt - started - totalMs;
+      const vsSla = deliveredAt - deliveryStart - fulfillMs;
       const late = vsSla > 0;
       return {
         tone: late ? 'late' : 'good',
@@ -137,7 +137,7 @@ const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, re
           icon={<CheckCircle2 className="h-3 w-3" />}
           value={!acceptedAt ? formatClock(fulfillMs) : deliverTook !== null ? formatClock(deliverTook) : remainingText(fulfillLeftMs)}
           valueTone={TONES[deliverTone].text}
-          chip={acceptedAt ? `SLA: ${deliverMins || 0}m` : 'After accept'}
+          chip={`SLA: ${deliverMins || 0}m`}
           chipTone={TONES[deliverTone].chip}
         />
       </div>
