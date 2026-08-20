@@ -100,6 +100,7 @@ export interface Alert {
   businessId: string;
   userId: string;
   createdAt: number;
+  wakeUpAt?: number;
   createdBy: CreatedBy;
   acceptedBy: AcceptedBy;
   level?: number;
