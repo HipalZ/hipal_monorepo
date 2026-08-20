@@ -108,10 +108,15 @@ export const buildImportanceByPhone = (
 const minutesBetween = (from?: number | null, to?: number | null): number | null =>
   from && to && to >= from ? (to - from) / 60000 : null;
 
+const serviceAcceptanceSla = (service?: { avgAcceptanceTime?: number }): number => service?.avgAcceptanceTime ?? 0;
+
+const serviceCompletionSla = (service?: { avgDeliveryTime?: number; avgCompletionTime?: number }): number =>
+  service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0;
+
 export const computePerf = (alert: AlertItem): ServicePerf => {
   const services = alert.serviceIds ?? [];
-  const acceptSla = services.reduce((sum, s) => sum + (s?.avgAcceptanceTime ?? 0), 0);
-  const deliverSla = services.reduce((sum, s) => sum + (s?.avgCompletionTime ?? s?.avgDeliveryTime ?? 0), 0);
+  const acceptSla = services.reduce((sum, s) => sum + serviceAcceptanceSla(s), 0);
+  const deliverSla = services.reduce((sum, s) => sum + serviceCompletionSla(s), 0);
   const acceptMins = minutesBetween(alert.createdAt, alert.acceptedAt);
   const deliverMins = minutesBetween(alert.acceptedAt, alert.deliveredAt);
   const totalActual = minutesBetween(alert.createdAt, alert.deliveredAt);
@@ -234,15 +239,15 @@ export const aggregateStaff = (rows: RequestRow[]): StaffStat[] => {
 export const aggregateServices = (rows: RequestRow[]): ServiceStat[] => {
   const byService = new Map<string, { sum: number; total: number; sla: number }>();
   for (const row of rows) {
-    if (row.perf.totalActual == null) continue;
+    if (row.perf.deliverMins == null) continue;
     const service = row.serviceRequested || '—';
-    const stat = byService.get(service) ?? { sum: 0, total: 0, sla: row.perf.totalSla };
-    stat.sum += row.perf.totalActual;
+    const stat = byService.get(service) ?? { sum: 0, total: 0, sla: row.perf.deliverSla };
+    stat.sum += row.perf.deliverMins;
     stat.total += 1;
-    if (row.perf.totalSla > 0) stat.sla = row.perf.totalSla;
+    if (row.perf.deliverSla > 0) stat.sla = row.perf.deliverSla;
     byService.set(service, stat);
   }
-  // Sort by how far each service runs OVER its SLA (worst first).
+  // Sort by how far each service's fulfillment leg runs over its own SLA.
   return [...byService.entries()]
     .map(([service, s]) => ({ service, avgMins: s.sum / s.total, slaMins: s.sla, total: s.total }))
     .sort((a, b) => b.avgMins - b.slaMins - (a.avgMins - a.slaMins));

@@ -33,6 +33,9 @@ const HotelServicesForm = ({
     categoryId: "",
     availability: true,
     businessId: businessId ?? "",
+    avgAcceptanceTime: 2,
+    avgCompletionTime: 4,
+    avgDeliveryTime: 4,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -52,6 +55,17 @@ const HotelServicesForm = ({
     }
     if (!serviceForm.categoryId) {
       newErrors.categoryId = "Please select a category";
+    }
+    const requestTime = serviceForm.avgAcceptanceTime;
+    const responseTime = serviceForm.avgDeliveryTime ?? serviceForm.avgCompletionTime;
+    if (requestTime == null || requestTime <= 0) {
+      newErrors.requestTime = "Request time must be greater than 0";
+    }
+    if (responseTime == null || responseTime <= 0) {
+      newErrors.responseTime = "Response time must be greater than 0";
+    }
+    if (requestTime != null && responseTime != null && responseTime <= requestTime) {
+      newErrors.responseTime = "Response time must be greater than request time";
     }
     return newErrors;
   };

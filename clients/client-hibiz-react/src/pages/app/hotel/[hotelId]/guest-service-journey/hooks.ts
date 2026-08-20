@@ -134,7 +134,7 @@ export const useRequestLog = (rows: RequestRow[]) => {
       drillService
         ? rows
             .filter((r) => r.serviceRequested === drillService)
-            .sort((a, b) => (a.perf.verdict ?? 0) - (b.perf.verdict ?? 0))
+            .sort((a, b) => (a.perf.deliverDelta ?? 0) - (b.perf.deliverDelta ?? 0))
             .slice(0, 4)
         : [],
     [drillService, rows],
