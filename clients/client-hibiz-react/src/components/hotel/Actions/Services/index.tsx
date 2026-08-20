@@ -49,6 +49,7 @@ interface EditServiceData {
   categoryName: string;
   avgAcceptanceTime?: number;
   avgCompletionTime?: number;
+  avgDeliveryTime?: number;
 }
 
 type DurationUnit = 'min' | 'sec';
@@ -177,10 +178,10 @@ const HotelServices = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [requestMin, setRequestMin] = useState<string>('');
   const [responseMin, setResponseMin] = useState<string>('');
-  const [resolutionMin, setResolutionMin] = useState<string>('');
+  const [requestUnit, setRequestUnit] = useState<DurationUnit>('min');
   const [responseUnit, setResponseUnit] = useState<DurationUnit>('min');
-  const [resolutionUnit, setResolutionUnit] = useState<DurationUnit>('min');
   const [showBulkTimingModal, setShowBulkTimingModal] = useState(false);
   const [bulkTimingRows, setBulkTimingRows] = useState<BulkTimingRow[]>([]);
   const [bulkTimingErrors, setBulkTimingErrors] = useState<BulkTimingError[]>([]);
@@ -312,13 +313,14 @@ const HotelServices = () => {
         categoryName,
         avgAcceptanceTime: service.avgAcceptanceTime,
         avgCompletionTime: service.avgCompletionTime,
+        avgDeliveryTime: service.avgDeliveryTime,
       });
-      const responseInput = durationToInput(service.avgAcceptanceTime);
-      const resolutionInput = durationToInput(service.avgCompletionTime);
+      const requestInput = durationToInput(service.avgAcceptanceTime);
+      const responseInput = durationToInput(service.avgDeliveryTime ?? service.avgCompletionTime);
+      setRequestMin(requestInput.value);
+      setRequestUnit(requestInput.unit);
       setResponseMin(responseInput.value);
       setResponseUnit(responseInput.unit);
-      setResolutionMin(resolutionInput.value);
-      setResolutionUnit(resolutionInput.unit);
       setNewImageUrl(null);
       setShowEditModal(true);
     },
@@ -350,8 +352,8 @@ const HotelServices = () => {
         serviceId: editingService._id,
         image: imageUrl,
       };
-      const avgAcceptanceTime = parseDurationText(responseMin, responseUnit);
-      const avgCompletionTime = parseDurationText(resolutionMin, resolutionUnit);
+      const avgAcceptanceTime = parseDurationText(requestMin, requestUnit);
+      const avgCompletionTime = parseDurationText(responseMin, responseUnit);
       if (avgAcceptanceTime != null) payload.avgAcceptanceTime = avgAcceptanceTime;
       if (avgCompletionTime != null) {
         payload.avgCompletionTime = avgCompletionTime;
@@ -374,16 +376,16 @@ const HotelServices = () => {
     } finally {
       setUploadingImage(false);
     }
-  }, [editingService, businessId, newImageUrl, updateService, responseMin, resolutionMin, responseUnit, resolutionUnit]);
+  }, [editingService, businessId, newImageUrl, updateService, requestMin, responseMin, requestUnit, responseUnit]);
 
   const handleCloseEditModal = useCallback(() => {
     setShowEditModal(false);
     setEditingService(null);
     setNewImageUrl(null);
+    setRequestMin('');
     setResponseMin('');
-    setResolutionMin('');
+    setRequestUnit('min');
     setResponseUnit('min');
-    setResolutionUnit('min');
   }, []);
 
   const filteredCategories = useMemo(() => {
@@ -414,13 +416,14 @@ const HotelServices = () => {
     setter(raw);
   };
 
-  const response = parseDurationText(responseMin, responseUnit);
-  const resolution = parseDurationText(resolutionMin, resolutionUnit);
+  const requestSla = parseDurationText(requestMin, requestUnit);
+  const responseSla = parseDurationText(responseMin, responseUnit);
 
-  const cmpError = response !== null && resolution !== null && resolution <= response ? 'Fulfillment time must be greater than response time' : '';
+  const cmpError =
+    requestSla !== null && responseSla !== null && responseSla <= requestSla ? 'Response time must be greater than request time' : '';
 
-  const bothEmpty = response === null && resolution === null;
-  const canSave = bothEmpty || (response !== null && resolution !== null && resolution > response);
+  const bothEmpty = requestSla === null && responseSla === null;
+  const canSave = bothEmpty || (requestSla !== null && responseSla !== null && responseSla > requestSla);
 
   const handleDeleteService = useCallback(
     async (service: IService) => {
@@ -446,12 +449,12 @@ const HotelServices = () => {
         category.serviceIds.map((service) => ({
           serviceName: service.name,
           acceptanceTime: formatDuration(service.avgAcceptanceTime),
-          deliveryTime: formatDuration(service.avgCompletionTime ?? service.avgDeliveryTime),
+          deliveryTime: formatDuration(service.avgDeliveryTime ?? service.avgCompletionTime),
         })),
       ) || [];
 
     const rows = [
-      ['serviceName', 'acceptanceTime', 'deliveryTime'],
+      ['serviceName', 'requestTime', 'responseTime'],
       ...services.map((service) => [service.serviceName, service.acceptanceTime, service.deliveryTime]),
     ];
     const csv = rows.map((row) => row.map(csvEscape).join(',')).join('\n');
@@ -473,8 +476,10 @@ const HotelServices = () => {
 
     const headers = rows[0].map(normalizeHeader);
     const serviceNameIndex = headers.findIndex((header) => ['servicename', 'service', 'name'].includes(header));
-    const acceptanceIndex = headers.findIndex((header) => ['acceptancetime', 'responsetime', 'acceptance'].includes(header));
-    const deliveryIndex = headers.findIndex((header) => ['deliverytime', 'fulfillmenttime', 'completiontime', 'delivery'].includes(header));
+    const acceptanceIndex = headers.findIndex((header) => ['requesttime', 'acceptancetime', 'request', 'acceptance'].includes(header));
+    const deliveryIndex = headers.findIndex((header) =>
+      ['responsetime', 'deliverytime', 'fulfillmenttime', 'completiontime', 'response', 'delivery'].includes(header),
+    );
     const unitIndex = headers.findIndex((header) => header === 'unit');
 
     if (serviceNameIndex < 0 || acceptanceIndex < 0 || deliveryIndex < 0) {
@@ -482,7 +487,7 @@ const HotelServices = () => {
       setBulkTimingErrors([
         {
           lineNumber: 1,
-          message: 'Headers must include serviceName, acceptanceTime, deliveryTime',
+          message: 'Headers must include serviceName, requestTime, responseTime',
         },
       ]);
       return;
@@ -509,7 +514,7 @@ const HotelServices = () => {
       if (avgAcceptanceTime == null) {
         nextErrors.push({
           lineNumber,
-          message: 'Acceptance time must be greater than 0',
+          message: 'Request time must be greater than 0',
         });
         return;
       }
@@ -517,7 +522,7 @@ const HotelServices = () => {
       if (avgCompletionTime == null) {
         nextErrors.push({
           lineNumber,
-          message: 'Delivery time must be greater than 0',
+          message: 'Response time must be greater than 0',
         });
         return;
       }
@@ -525,7 +530,7 @@ const HotelServices = () => {
       if (avgCompletionTime <= avgAcceptanceTime) {
         nextErrors.push({
           lineNumber,
-          message: 'Delivery time must be greater than acceptance time',
+          message: 'Response time must be greater than request time',
         });
         return;
       }
@@ -605,10 +610,11 @@ const HotelServices = () => {
   const ServiceCard = useCallback(
     ({ service, categoryName }: { service: IService; categoryName: string }) => {
       const isAvailable = serviceAvailability[service._id] ?? true;
+      const serviceResponseTime = service.avgDeliveryTime ?? service.avgCompletionTime;
       const hasTimingIssue =
         typeof service.avgAcceptanceTime === 'number' &&
-        typeof service.avgCompletionTime === 'number' &&
-        service.avgCompletionTime <= service.avgAcceptanceTime;
+        typeof serviceResponseTime === 'number' &&
+        serviceResponseTime <= service.avgAcceptanceTime;
 
       return (
         <div
@@ -672,20 +678,20 @@ const HotelServices = () => {
           <div className="bg-muted/30 flex divide-x overflow-hidden rounded-b-xl border-t">
             <div className="flex flex-1 items-center gap-1.5 px-3 py-2">
               <Clock className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-              <span className="text-muted-foreground text-xs">Response</span>
+              <span className="text-muted-foreground text-xs">Request</span>
               <span className="ml-auto text-xs font-medium tabular-nums">{formatDuration(service.avgAcceptanceTime)}</span>
             </div>
             <div className="flex flex-1 items-center gap-1.5 px-3 py-2">
               <Timer className="h-3.5 w-3.5 shrink-0 text-purple-600" />
-              <span className="text-muted-foreground text-xs">Fulfill</span>
-              <span className="ml-auto text-xs font-medium tabular-nums">{formatDuration(service.avgCompletionTime)}</span>
+              <span className="text-muted-foreground text-xs">Response</span>
+              <span className="ml-auto text-xs font-medium tabular-nums">{formatDuration(service.avgDeliveryTime ?? service.avgCompletionTime)}</span>
             </div>
           </div>
 
           {/* ── Timing warning ────────────────────────────────────────────── */}
           {hasTimingIssue && (
             <div className="px-3 pb-2 pt-0">
-              <p className="text-[11px] text-rose-500">⚠ Fulfillment time should exceed response time</p>
+              <p className="text-[11px] text-rose-500">Request time should be less than response time</p>
             </div>
           )}
         </div>
@@ -865,7 +871,7 @@ const HotelServices = () => {
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-lg font-semibold">Bulk Upload Timings</h3>
-              <p className="text-muted-foreground text-sm">Upload CSV columns: serviceName, acceptanceTime, deliveryTime.</p>
+              <p className="text-muted-foreground text-sm">Upload CSV columns: serviceName, requestTime, responseTime.</p>
             </div>
             <Button variant="outline" size="sm" className="gap-2" onClick={handleDownloadBulkTemplate}>
               <Download className="h-4 w-4" />
@@ -899,8 +905,8 @@ const HotelServices = () => {
                 <thead className="bg-muted sticky top-0">
                   <tr>
                     <th className="px-3 py-2 font-medium">Service</th>
-                    <th className="px-3 py-2 font-medium">Acceptance</th>
-                    <th className="px-3 py-2 font-medium">Delivery</th>
+                    <th className="px-3 py-2 font-medium">Request</th>
+                    <th className="px-3 py-2 font-medium">Response</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -973,6 +979,36 @@ const HotelServices = () => {
                 />
               </div>
               <div className="flex w-full justify-between gap-4">
+                {/* Request Time */}
+                <div className="w-[45%]">
+                  <Label htmlFor="requestMin" className="text-sm font-medium">
+                    Request Time
+                  </Label>
+                  <div className="relative mt-1 flex gap-2">
+                    <Input
+                      id="requestMin"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder={requestUnit === 'sec' ? 'e.g., 30' : 'e.g., 2'}
+                      value={requestMin}
+                      onChange={handleChange(setRequestMin)}
+                      aria-invalid={!!cmpError}
+                      className="flex-1"
+                      maxLength={6}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                    />
+                    <select
+                      value={requestUnit}
+                      onChange={(e) => setRequestUnit(e.target.value as DurationUnit)}
+                      className="bg-background h-10 rounded-md border px-2 text-sm"
+                    >
+                      <option value="min">min</option>
+                      <option value="sec">sec</option>
+                    </select>
+                  </div>
+                  <p className="text-muted-foreground mt-1 text-xs">Time to accept the guest request.</p>
+                </div>
+
                 {/* Response Time */}
                 <div className="w-[45%]">
                   <Label htmlFor="responseMin" className="text-sm font-medium">
@@ -983,7 +1019,7 @@ const HotelServices = () => {
                       id="responseMin"
                       type="text"
                       inputMode="decimal"
-                      placeholder={responseUnit === 'sec' ? 'e.g., 30' : 'e.g., 2'}
+                      placeholder={responseUnit === 'sec' ? 'e.g., 90' : 'e.g., 60'}
                       value={responseMin}
                       onChange={handleChange(setResponseMin)}
                       aria-invalid={!!cmpError}
@@ -1000,45 +1036,15 @@ const HotelServices = () => {
                       <option value="sec">sec</option>
                     </select>
                   </div>
-                  <p className="text-muted-foreground mt-1 text-xs">Time to acknowledge the service request.</p>
-                </div>
-
-                {/* Fulfillment Time */}
-                <div className="w-[45%]">
-                  <Label htmlFor="resolutionMin" className="text-sm font-medium">
-                    Fulfillment Time
-                  </Label>
-                  <div className="relative mt-1 flex gap-2">
-                    <Input
-                      id="resolutionMin"
-                      type="text"
-                      inputMode="decimal"
-                      placeholder={resolutionUnit === 'sec' ? 'e.g., 90' : 'e.g., 60'}
-                      value={resolutionMin}
-                      onChange={handleChange(setResolutionMin)}
-                      aria-invalid={!!cmpError}
-                      className="flex-1"
-                      maxLength={6}
-                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                    />
-                    <select
-                      value={resolutionUnit}
-                      onChange={(e) => setResolutionUnit(e.target.value as DurationUnit)}
-                      className="bg-background h-10 rounded-md border px-2 text-sm"
-                    >
-                      <option value="min">min</option>
-                      <option value="sec">sec</option>
-                    </select>
-                  </div>
-                  <p className="text-muted-foreground mt-1 text-xs">Time to complete after staff accepts.</p>
+                  <p className="text-muted-foreground mt-1 text-xs">Time to fulfill after staff accepts.</p>
                 </div>
               </div>
               <div className="text-muted-foreground rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
                 <div className="mb-1 font-semibold text-slate-700">SLA terms</div>
                 <div className="grid gap-1 sm:grid-cols-3">
-                  <span>Response: raised to accepted</span>
-                  <span>Fulfillment: accepted to completed</span>
-                  <span>Total SLA: response + fulfillment</span>
+                  <span>Request: raised to accepted</span>
+                  <span>Response: accepted to completed</span>
+                  <span>Total SLA: request + response</span>
                 </div>
               </div>
               <div className="space-y-3">
@@ -1047,7 +1053,7 @@ const HotelServices = () => {
                 <p className="text-muted-foreground text-xs">
                   Upload a new image or keep the existing one. Images are automatically uploaded to cloud storage.
                 </p>
-                {!canSave && <Label className="text-sm font-medium text-rose-500">Note: Response Time should be less than Fulfillment Time.</Label>}
+                {!canSave && <Label className="text-sm font-medium text-rose-500">Note: Request Time should be less than Response Time.</Label>}
               </div>
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={handleCloseEditModal}>

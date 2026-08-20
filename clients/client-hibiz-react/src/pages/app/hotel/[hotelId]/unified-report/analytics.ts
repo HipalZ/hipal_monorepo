@@ -7,6 +7,11 @@ import type { Source, UnifiedRow } from './model';
 const minutes = (from?: number | null, to?: number | null): number | null =>
   from && to && to >= from ? (to - from) / 60000 : null;
 
+const serviceAcceptanceSla = (service?: { avgAcceptanceTime?: number }): number => service?.avgAcceptanceTime ?? 0;
+
+const serviceCompletionSla = (service?: { avgDeliveryTime?: number; avgCompletionTime?: number }): number =>
+  service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0;
+
 // ── review matching ──────────────────────────────────────────────────────────
 // A review may link straight to an alert, or only to guest+room+service; try the
 // exact alertId link first, then a best-effort match after the request time.
@@ -75,8 +80,8 @@ export const mapGuestAlert = (
 ): UnifiedRow => {
   const { rating, feedback } = reviewOf(a, reviews);
   const services = a.serviceIds ?? [];
-  const acceptSla = services.reduce((s, x) => s + (x.avgAcceptanceTime ?? 0), 0);
-  const deliverSla = services.reduce((s, x) => s + (x.avgCompletionTime ?? x.avgDeliveryTime ?? 0), 0);
+  const acceptSla = services.reduce((s, x) => s + serviceAcceptanceSla(x), 0);
+  const deliverSla = services.reduce((s, x) => s + serviceCompletionSla(x), 0);
   const totalSla = acceptSla + deliverSla;
   const acceptMins = minutes(a.createdAt, a.acceptedAt);
   const deliverMins = minutes(a.acceptedAt, a.deliveredAt);

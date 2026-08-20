@@ -223,7 +223,7 @@ const GuestServiceJourney = () => {
                       <div className={launchLabel}>Keep an eye on</div>
                       <div className={launchTitle}>{slowestService?.service ?? '—'}</div>
                       <div className={launchSub}>
-                        {slowestService ? `avg ${formatMins(slowestService.avgMins)} vs ${formatMins(slowestService.slaMins)} SLA` : 'no data yet'}
+                        {slowestService ? `avg fulfillment ${formatMins(slowestService.avgMins)} vs ${formatMins(slowestService.slaMins)} SLA` : 'no data yet'}
                       </div>
                     </div>
                     <span className={launchArrow}>›</span>
@@ -298,7 +298,7 @@ const GuestServiceJourney = () => {
         {tab === 'services' && (
           <div className={cx(card, 'p-[18px]')}>
             <h3 className={sectionTitle}>Where time is lost, by service</h3>
-            <p className={cx(sectionSub, 'mb-3 mt-0.5')}>Avg total time vs SLA — click a service for its slowest requests.</p>
+            <p className={cx(sectionSub, 'mb-3 mt-0.5')}>Avg fulfillment time vs each service completion SLA — click a service for its slowest requests.</p>
             {serviceStats.length === 0 ? (
               <p className="text-report-faint text-xs">No data.</p>
             ) : (
@@ -314,18 +314,18 @@ const GuestServiceJourney = () => {
             {log.drillService && log.drillRows.length > 0 ? (
               <div className="border-report-line-strong mt-3 border-t border-dashed pt-2.5">
                 <div className="mb-1 text-xs font-semibold">
-                  {log.drillService} — SLA target {formatMins(log.drillRows[0].perf.totalSla)} · slowest first
+                  {log.drillService} — completion SLA {formatMins(log.drillRows[0].perf.deliverSla)} · slowest first
                 </div>
                 {log.drillRows.map((row, i) => (
                   <div key={i} className="border-report-line flex items-center justify-between border-b py-1.5 text-xs last:border-none">
                     <span>
                       {row.guestName} <span className="text-report-faint">· {row.acceptedByStaff || '—'}</span>
                     </span>
-                    <b className={cx('tabular-nums', row.perf.onTime ? 'text-report-good' : 'text-report-bad')}>
-                      {row.perf.totalActual == null ? '—' : formatMins(row.perf.totalActual)}
-                      {row.perf.onTime === false && row.perf.verdict != null
-                        ? ` · ${formatMins(-row.perf.verdict)} late`
-                        : row.perf.onTime
+                    <b className={cx('tabular-nums', row.perf.deliverDelta != null && row.perf.deliverDelta >= 0 ? 'text-report-good' : 'text-report-bad')}>
+                      {row.perf.deliverMins == null ? '—' : formatMins(row.perf.deliverMins)}
+                      {row.perf.deliverDelta != null && row.perf.deliverDelta < 0
+                        ? ` · ${formatMins(row.perf.deliverDelta)} late`
+                        : row.perf.deliverDelta != null && row.perf.deliverDelta >= 0
                           ? ' ✓'
                           : ''}
                     </b>

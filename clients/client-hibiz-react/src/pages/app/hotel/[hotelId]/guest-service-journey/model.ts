@@ -35,8 +35,8 @@ export type AlertItem = {
 
 /**
  * SLA performance for a single request. Standards come from each service's
- * avgAcceptanceTime / avgCompletionTime (minutes); actuals from the timestamps.
- * avgDeliveryTime is kept as a fallback for older service records.
+ * avgAcceptanceTime / avgDeliveryTime (minutes); actuals from the timestamps.
+ * avgCompletionTime is kept as a fallback for older service records.
  * A positive delta means the stage finished AHEAD of its SLA (early / good).
  */
 export type ServicePerf = {
