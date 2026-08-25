@@ -55,12 +55,16 @@ const Cell = memo(function Cell({
   value,
   valueTone,
   helper,
+  chip,
+  chipTone,
 }: {
   label: string;
   icon: ReactNode;
   value: string;
   valueTone: string;
   helper?: string;
+  chip?: string;
+  chipTone?: string;
 }) {
   return (
     <div className="rounded-lg border border-slate-100 bg-white p-2.5">
@@ -70,6 +74,7 @@ const Cell = memo(function Cell({
       </div>
       <div className="flex items-center justify-between gap-2">
         <span className={`min-w-0 text-sm font-bold tabular-nums ${valueTone}`}>{value}</span>
+        {chip ? <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${chipTone || 'bg-slate-100 text-slate-600'}`}>{chip}</span> : null}
       </div>
       {helper ? <div className="mt-1 text-[10px] font-medium text-slate-400">{helper}</div> : null}
     </div>
@@ -120,23 +125,23 @@ const ProgressRing = memo(function ProgressRing({ percent, toneKey, overdue }: {
  * The request's SLA at a glance: a headline for the leg that is running now,
  * and a two-cell breakdown of acceptance and completion beneath it.
  *
- * Completion is due at createdAt + accept + deliver — the same additive total
- * the owner report and CSV use, so card and report can never disagree.
+ * The card separates the request into two legs:
+ * acceptance from createdAt, then delivery/fulfillment after acceptance.
  */
 const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, rejectedAt, acceptMins, deliverMins }: SlaPanelProps) {
   const started = new Date(createdAt).getTime();
   const acceptMs = (acceptMins || 0) * 60_000;
   const fulfillMs = (deliverMins || 0) * 60_000;
-  const totalMs = acceptMs + fulfillMs;
 
   const closed = Boolean(deliveredAt || rejectedAt);
   const now = useNow(!closed);
 
   // Wake-up calls and plain messages carry no service, so there is no SLA to show.
-  if (!totalMs) return null;
+  if (!acceptMs && !fulfillMs) return null;
 
   const acceptLeftMs = started + acceptMs - now;
-  const fulfillLeftMs = (acceptedAt || started + acceptMs) + fulfillMs - now;
+  const deliveryStart = acceptedAt || started;
+  const fulfillLeftMs = deliveryStart + fulfillMs - now;
 
   // The leg currently being raced decides the panel's colour.
   const activeLeftMs = acceptedAt ? fulfillLeftMs : acceptLeftMs;
@@ -145,7 +150,7 @@ const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, re
 
   const head = ((): { tone: ToneKey; title: string } => {
     if (deliveredAt) {
-      const vsSla = acceptedAt ? deliveredAt - acceptedAt - fulfillMs : deliveredAt - started - totalMs;
+      const vsSla = deliveredAt - deliveryStart - fulfillMs;
       const late = vsSla > 0;
       return {
         tone: late ? 'late' : 'good',
@@ -215,12 +220,16 @@ const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, re
           value={acceptTook !== null ? `Accepted in ${formatClock(acceptTook)}` : remainingText(acceptLeftMs)}
           valueTone={TONES[acceptTone].text}
           helper={acceptTook !== null ? undefined : `Target ${formatTargetTime(started + acceptMs)}`}
+          chip={`SLA: ${acceptMins || 0}m`}
+          chipTone={TONES[acceptTone].chip}
         />
         <Cell
           label="Fulfillment"
           icon={<CheckCircle2 className="h-3 w-3" />}
           value={!acceptedAt ? `SLA: ${deliverMins || 0}m` : deliverTook !== null ? formatClock(deliverTook) : remainingText(fulfillLeftMs)}
           valueTone={TONES[deliverTone].text}
+          chip={`SLA: ${deliverMins || 0}m`}
+          chipTone={TONES[deliverTone].chip}
         />
       </div>
 
