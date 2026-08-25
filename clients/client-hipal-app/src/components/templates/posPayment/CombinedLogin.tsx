@@ -82,20 +82,27 @@ const MemoCombinedLogin = () => {
       return;
     }
 
-    setLoading(true);
-    const res = await apiRpc.users[":id"].signUp.$post({
-      json: { phone, role: ["HIPAL_CUSTOMER"] },
-      param: { id: customLink },
-    });
+    try {
+      setLoading(true);
+      const res = await apiRpc.users[":id"].signUp.$post({
+        json: { phone, role: ["HIPAL_CUSTOMER"] },
+        param: { id: customLink },
+      });
 
-    const response = await res.json();
-    if (res.status === 201 || res.status === 409) {
-      setUserDetails(response?.data?.user);
-      setShowOtpScreen(true);
-    } else {
-      toast.error(response?.message || "Failed to send OTP");
+      const response = await res.json();
+      if (res.status === 201 || res.status === 409) {
+        setUserDetails(response?.data?.user);
+        setShowOtpScreen(true);
+      } else {
+        toast.error(response?.message || "Failed to send OTP");
+      }
+    } catch (error) {
+      console.error("Phone login failed:", error);
+      toast.error("Failed to send OTP. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+
     if (pathName?.includes("checkin")) {
       const hotelUrl = `room=${query.get("room")}`;
       setDirection(hotelUrl);
@@ -147,7 +154,8 @@ const MemoCombinedLogin = () => {
     }
   };
 
-  const verifyOtp = async () => {
+  const verifyOtp = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
     const fullOtp = otp.join("");
     const checkCondition =
       userDetails.name === "" &&
@@ -165,53 +173,60 @@ const MemoCombinedLogin = () => {
     if (loading) {
       return toast.error("Please wait for a moment");
     }
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const res = await apiRpc.users[":id"].signIn.$post({
-      json: {
-        phone: userDetails.phone,
-        userId: userDetails._id,
-        otp: fullOtp,
-        role: userDetails?.role,
-        loyaltyId: loyaltyId || businessId,
-        signUpBonus: signUpBonus,
-        name: customerName || userDetails.name,
-        businessId: businessId || outletInfo?.businessId,
-      },
-      param: { id: customLink },
-    });
-    if (res.status === 401) {
-      return errorText(res.status);
-    }
-    const responseData = await res.json();
-    const response = responseData.data;
-    if (res.status === 400) {
-      setError(responseData?.message);
-      toast.error(responseData?.message);
-      setLoading(false);
-      return;
-    }
-    if (res.status === 200) {
-      setAccessToken(response?.accessToken);
-      setRefreshToken(response?.refreshToken);
-      setUserDetails(response?.user);
-      setUserCoinZ(response?.rewards);
-      setIsLogin(true);
-      setCheckLogin(false);
-      setOtp(["", "", "", ""]);
-      if (inputRefs[0].current) {
-        inputRefs[0].current.focus();
-      }
-      if (response.user?.reward > 0 && response.user?.count === 1) {
-        setCoinz(response.user.reward);
-        setOpenBlastModal(true);
-        triggerConfettiBlast();
-        setTimeout(triggerConfettiBlast, 1000);
-        setTimeout(triggerConfettiBlast, 2000);
+      const res = await apiRpc.users[":id"].signIn.$post({
+        json: {
+          phone: userDetails.phone,
+          userId: userDetails._id,
+          otp: fullOtp,
+          role: userDetails?.role,
+          loyaltyId: loyaltyId || businessId,
+          signUpBonus: signUpBonus,
+          name: customerName || userDetails.name,
+          businessId: businessId || outletInfo?.businessId,
+        },
+        param: { id: customLink },
+      });
+      if (res.status === 401) {
+        errorText(res.status);
         return;
       }
-      // to set the auth token in the store
-      goNext();
+      const responseData = await res.json();
+      const response = responseData.data;
+      if (res.status === 400) {
+        setError(responseData?.message);
+        toast.error(responseData?.message);
+        return;
+      }
+      if (res.status === 200) {
+        setAccessToken(response?.accessToken);
+        setRefreshToken(response?.refreshToken);
+        setUserDetails(response?.user);
+        setUserCoinZ(response?.rewards);
+        setIsLogin(true);
+        setCheckLogin(false);
+        setOtp(["", "", "", ""]);
+        if (inputRefs[0].current) {
+          inputRefs[0].current.focus();
+        }
+        if (response.user?.reward > 0 && response.user?.count === 1) {
+          setCoinz(response.user.reward);
+          setOpenBlastModal(true);
+          triggerConfettiBlast();
+          setTimeout(triggerConfettiBlast, 1000);
+          setTimeout(triggerConfettiBlast, 2000);
+          return;
+        }
+        // to set the auth token in the store
+        goNext();
+      }
+    } catch (error) {
+      console.error("OTP verification failed:", error);
+      toast.error("Could not verify OTP. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -345,9 +360,8 @@ const MemoCombinedLogin = () => {
               </span>
             </article>
             <button
-              type="button"
+              type="submit"
               disabled={loading}
-              onClick={verifyOtp}
               className="w-full py-2 mt-4 text-white bg-black rounded-full"
             >
               {loading ? "Verifying..." : "Sign In"}

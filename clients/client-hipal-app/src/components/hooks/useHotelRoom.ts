@@ -43,6 +43,7 @@ interface CreateAlertPayload {
 
 export const useCreateAlert = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const {
     isPending: creatingAlert,
     mutateAsync: createAlert,
@@ -58,6 +59,7 @@ export const useCreateAlert = () => {
     },
     onSuccess: (data, variables) => {
       console.log("Alert created successfully:", data);
+      queryClient.invalidateQueries({ queryKey: ["getChats"] });
     },
     onError: (error) => {
       console.error("Error creating alert:", error);

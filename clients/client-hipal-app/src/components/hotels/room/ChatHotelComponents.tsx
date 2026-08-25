@@ -7,6 +7,7 @@ import { formatHotelTime } from "@/components/utils/helpersHotel";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import foodOrderImage from "@/assets/hotel/orderfood.jpeg";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Bell,
   CheckCircle2,
@@ -23,7 +24,7 @@ import {
   XCircle,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 
 type RequestFilter = "all" | "pending" | "completed" | "rejected";
@@ -45,6 +46,44 @@ const FEEDBACK_OPTIONS = [
   { id: "good", label: "Good", text: "\u{1F642}", value: 3 },
   { id: "happy", label: "Happy", text: "\u{1F60D}", value: 5 },
 ];
+
+const getReviewThanks = (rating: number) => {
+  const ratingLabel = FEEDBACK_OPTIONS.find((option) => option.value === rating)?.label || "Submitted";
+
+  if (rating <= 1) {
+    return {
+      tone: "bad",
+      ratingLabel,
+      title: "Thank you for telling us",
+      message:
+        "We're sorry this did not feel right. Your feedback has been shared with the hotel team so they can make it better.",
+      className: "border-rose-200 bg-rose-50 text-rose-800",
+      iconClassName: "text-rose-700",
+    };
+  }
+
+  if (rating >= 5) {
+    return {
+      tone: "happy",
+      ratingLabel,
+      title: "That makes us happy",
+      message:
+        "Thank you for the lovely review. We're delighted the service made your stay feel better.",
+      className: "border-emerald-200 bg-emerald-50 text-emerald-800",
+      iconClassName: "text-emerald-700",
+    };
+  }
+
+  return {
+    tone: "good",
+    ratingLabel,
+    title: "Thank you for your review",
+    message:
+      "We're glad the service met your expectations. Your feedback helps the hotel team keep the experience warm and reliable.",
+    className: "border-blue-200 bg-blue-50 text-blue-800",
+    iconClassName: "text-blue-700",
+  };
+};
 
 const formatDuration = (milliseconds?: number) => {
   if (!milliseconds || milliseconds <= 0) return "";
@@ -175,6 +214,11 @@ const hasSubmittedReview = (request: RoomChat) =>
     );
   });
 
+const getSubmittedReviewRating = (request: RoomChat) =>
+  [...(request?.roomChatReplyIds ?? [])]
+    .reverse()
+    .find((reply) => Number(reply?.reviewRating) > 0)?.reviewRating;
+
 const getCompletionDuration = (request: RoomChat) => {
   const acceptedAt = request?.alertId?.acceptedAt;
   const deliveredAt = request?.alertId?.deliveredAt || getLatestReply(request)?.date;
@@ -215,8 +259,49 @@ const getEstimatedMinutes = (request: RoomChat) => {
   const services = getServices(request);
   return services.reduce(
     (max, service) =>
-      Math.max(max, service?.avgCompletionTime || service?.avgDeliveryTime || 0),
+      Math.max(max, service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0),
     0
+  );
+};
+
+const getAcceptanceMinutes = (request: RoomChat) => {
+  const services = getServices(request);
+  const serviceAcceptance = services.reduce(
+    (max, service) => Math.max(max, service?.avgAcceptanceTime || 0),
+    0
+  );
+  return serviceAcceptance || (isFoodRequest(request) ? 2 : 1);
+};
+
+const AcceptanceTimer = ({ request }: { request: RoomChat }) => {
+  const active = !request?.alertId?.acceptedAt && !isCompletedRequest(request) && !isRejectedRequest(request);
+  const now = useNow(active);
+  if (!active) return null;
+
+  const acceptanceMs = getAcceptanceMinutes(request) * 60 * 1000;
+  const startedAt = request?.alertId?.createdAt || request?.date || now;
+  const targetAt = startedAt + acceptanceMs;
+  const leftMs = targetAt - now;
+  const isOverdue = leftMs <= 0;
+  const clock = formatCountdown(Math.abs(leftMs));
+
+  return (
+    <div className={`mt-3 rounded-xl border px-3 py-2.5 ${isOverdue ? "border-rose-100 bg-rose-50" : "border-blue-100 bg-blue-50"}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className={`text-[0.68rem] font-semibold ${isOverdue ? "text-rose-700" : "text-blue-700"}`}>
+            {isOverdue ? "Acceptance overdue" : "Acceptance timer"}
+          </p>
+          <p className="mt-0.5 text-[0.7rem] font-medium text-slate-600">
+            Target {formatHotelTime(targetAt)}
+          </p>
+        </div>
+        <div className={`text-right font-semibold tabular-nums ${isOverdue ? "text-rose-700" : "text-blue-700"}`}>
+          <span className="text-[1.05rem]">{isOverdue ? "+" : ""}{clock.minutes}:{clock.seconds}</span>
+          <p className="text-[0.58rem]">{isOverdue ? "late" : "remaining"}</p>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -279,7 +364,7 @@ const getRejectionReasonText = (message: string) => {
 };
 
 export const ChatHeader = ({ hotelName, logo, room, onClose, title, subtitle }: ChatHeaderProps) => (
-  <section className="flex shrink-0 items-center gap-3 border-b border-slate-200/70 bg-white px-4 py-3.5 text-slate-950 shadow-[0_1px_10px_rgba(15,23,42,0.05)] poppins-regular">
+  <section className="plus-jakarta-font flex shrink-0 items-center gap-3 border-b border-slate-200/70 bg-white px-4 py-3.5 text-slate-950 shadow-[0_1px_10px_rgba(15,23,42,0.05)]">
     <Button
       variant="ghost"
       size="icon"
@@ -417,78 +502,6 @@ const EditableFoodOrderBar = ({
   );
 };
 
-const RequestBottomBar = ({
-  requests,
-  onSelect,
-}: {
-  requests: RoomChat[];
-  onSelect: (request: RoomChat) => void;
-}) => {
-  const pending = requests.filter(isPendingRequest);
-  const foodOrders = requests.filter(isFoodRequest);
-  const completed = requests.filter(isCompletedRequest);
-
-  const items = [
-    {
-      label: "Requests",
-      count: requests.length,
-      icon: Package,
-      target: requests[0],
-      tone: "text-[#211915]",
-    },
-    {
-      label: "Orders",
-      count: foodOrders.length,
-      icon: Utensils,
-      target: foodOrders[0],
-      tone: "text-blue-700",
-    },
-    {
-      label: "Pending",
-      count: pending.length,
-      icon: Clock3,
-      target: pending[0],
-      tone: "text-amber-700",
-    },
-    {
-      label: "Done",
-      count: completed.length,
-      icon: CheckCircle2,
-      target: completed[0],
-      tone: "text-emerald-700",
-    },
-  ];
-
-  return (
-    <nav className="shrink-0 border-t border-[#E8E2DA] bg-white/95 px-3 py-2 shadow-[0_-10px_26px_rgba(33,25,21,0.08)] backdrop-blur poppins-regular">
-      <div className="grid grid-cols-4 gap-1 rounded-[18px] bg-[#F5F1EB] p-1">
-        {items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.label}
-              type="button"
-              onClick={() => item.target && onSelect(item.target)}
-              disabled={!item.target}
-              className="relative flex min-h-[3.35rem] flex-col items-center justify-center rounded-2xl bg-white px-1 text-[0.64rem] font-semibold text-[#61564F] shadow-sm transition active:scale-[0.98] disabled:opacity-45"
-            >
-              <span className={`relative ${item.tone}`}>
-                <Icon className="h-4 w-4" />
-                {item.count > 0 ? (
-                  <span className="absolute -right-3 -top-2 min-w-4 rounded-full bg-[#211915] px-1 text-center text-[0.55rem] leading-4 text-white">
-                    {item.count}
-                  </span>
-                ) : null}
-              </span>
-              <span className="mt-1">{item.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-};
-
 const MyRequests = ({ requests, onSelect }: { requests: RoomChat[]; onSelect: (request: RoomChat) => void }) => {
   const [filter, setFilter] = useState<RequestFilter>("all");
   const filteredRequests = useMemo(() => {
@@ -508,7 +521,7 @@ const MyRequests = ({ requests, onSelect }: { requests: RoomChat[]; onSelect: (r
   ];
 
   return (
-    <main className="flex-1 overflow-y-auto mx-2 px-2 pb-6 pt-5 poppins-regular">
+    <main className="plus-jakarta-font mx-2 flex-1 overflow-y-auto px-2 pb-6 pt-5">
       <h2 className="text-[0.95rem]  text-[#211915]">My Requests</h2>
       <div className="mt-3 flex gap-1.5 overflow-x-auto rounded-[16px] border border-[#E7DFD6] bg-[#F1ECE5] p-1 hide-scrollbar">
         {filters.map((item) => (
@@ -1058,22 +1071,31 @@ const DeliveredRequest = ({ request }: { request: RoomChat }) => {
   const isFood = isFoodRequest(request);
   const performance = getDeliveryPerformance(request);
   const isLate = performance?.early === false;
+  const title = isLate
+    ? isFood
+      ? "Order delivered"
+      : "Delivered"
+    : isFood
+      ? "Delivered early"
+      : "Delivered ahead of time";
+  const message = isLate
+    ? "Thank you for your patience. We are sorry this took longer than expected."
+    : isFood
+      ? "Great news. Your order reached you early, and the team was happy to serve it on time."
+      : `Great news. Your ${getRequestTitle(request)} was delivered early and right on time.`;
+
   return (
     <section
-      className={`rounded-2xl border p-5 text-center ${
-        isLate ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"
+      className={`rounded-2xl border p-5 text-center shadow-[0_16px_36px_rgba(16,185,129,0.10)] ${
+        isLate ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-gradient-to-br from-emerald-50 to-[#F4FFF8]"
       }`}
     >
       <CheckCircle2 className={`mx-auto h-10 w-10 ${isLate ? "text-amber-700" : "text-emerald-700"}`} />
       <h3 className={`mt-3 text-[1rem]  ${isLate ? "text-amber-800" : "text-emerald-800"}`}>
-        {isFood ? "Order Delivered" : "Delivered"}
+        {title}
       </h3>
       <p className="mt-1 text-[0.82rem] font-semibold text-slate-800">
-        {isLate
-          ? "Thank you for your patience. We are sorry this took longer than expected."
-          : isFood
-            ? "Your order arrived ahead of schedule. Happy to serve you."
-            : `Your ${getRequestTitle(request)} was completed ahead of schedule.`}
+        {message}
       </p>
       {completion && (
         <p className={`mt-1 text-[0.76rem] font-medium ${isLate ? "text-amber-700" : "text-emerald-700"}`}>
@@ -1086,18 +1108,43 @@ const DeliveredRequest = ({ request }: { request: RoomChat }) => {
 
 const FeedbackCard = ({
   request,
-  submitted,
+  submittedRating,
   onReviewSubmit,
 }: {
   request: RoomChat;
-  submitted: boolean;
-  onReviewSubmit: (chatReplyId: string, rating: number) => Promise<void>;
+  submittedRating?: number;
+  onReviewSubmit: (chatReplyId: string, rating: number, requestId: string) => Promise<void>;
 }) => {
   const replyId = getReviewReplyId(request);
+  const persistedRating = getSubmittedReviewRating(request);
+  const thanks = submittedRating
+    ? getReviewThanks(submittedRating)
+    : persistedRating
+      ? getReviewThanks(persistedRating)
+      : null;
+
+  if (thanks) {
+    return (
+      <section className={`rounded-2xl border p-4 ${thanks.className}`}>
+        <div className="flex gap-3">
+          <CheckCircle2 className={`mt-0.5 h-5 w-5 shrink-0 ${thanks.iconClassName}`} />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-[0.92rem] font-semibold">{thanks.title}</h3>
+              <span className="rounded-full bg-white/75 px-2.5 py-1 text-[0.68rem] font-bold ring-1 ring-current/10">
+                Your rating: {thanks.ratingLabel}
+              </span>
+            </div>
+            <p className="mt-1 text-[0.78rem] font-medium leading-relaxed">{thanks.message}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (
     request?.alertId?.alertProgress !== "DELIVERED" ||
     !replyId ||
-    submitted ||
     hasSubmittedReview(request)
   )
     return null;
@@ -1113,7 +1160,7 @@ const FeedbackCard = ({
           <button
             key={option.id}
             type="button"
-            onClick={() => onReviewSubmit(replyId, option.value)}
+            onClick={() => onReviewSubmit(replyId, option.value, request._id)}
             className="flex min-h-20 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-2 py-3 transition active:scale-[0.98]"
           >
             <span className="text-[1.8rem] leading-none">{option.text}</span>
@@ -1229,6 +1276,7 @@ const ServiceJourney = ({
                 </span>
               ) : null}
             </div>
+            {!isAccepted ? <AcceptanceTimer request={request} /> : null}
           </div>
         </div>
 
@@ -1307,13 +1355,13 @@ const ServiceJourney = ({
 
 const RequestDetail = ({
   request,
-  submitted,
+  submittedRating,
   onReviewSubmit,
   contactPhone,
 }: {
   request: RoomChat;
-  submitted: boolean;
-  onReviewSubmit: (chatReplyId: string, rating: number) => Promise<void>;
+  submittedRating?: number;
+  onReviewSubmit: (chatReplyId: string, rating: number, requestId: string) => Promise<void>;
   contactPhone?: string;
 }) => {
   const isFood = isFoodRequest(request);
@@ -1335,7 +1383,7 @@ const RequestDetail = ({
   };
 
   return (
-    <main className="flex-1 overflow-y-auto px-1 pb-6 pt-4 poppins-regular">
+    <main className="flex-1 overflow-y-auto px-1 pb-6 pt-4 plus-jakarta-font">
       <div className="space-y-4">
         {isFood ? (
           <>
@@ -1352,7 +1400,7 @@ const RequestDetail = ({
         ) : (
           <ServiceJourney request={request} contactPhone={contactPhone} />
         )}
-        <FeedbackCard request={request} submitted={submitted} onReviewSubmit={onReviewSubmit} />
+        <FeedbackCard request={request} submittedRating={submittedRating} onReviewSubmit={onReviewSubmit} />
       </div>
     </main>
   );
@@ -1367,12 +1415,16 @@ export const GuestSupportScreen = ({
   onReviewSubmit,
   contactPhone,
 }: GuestSupportScreenProps) => {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const sortedRequests = useMemo(
     () => [...(requests ?? [])].sort((a, b) => (b?.date ?? 0) - (a?.date ?? 0)),
     [requests]
   );
-  const [selectedRequestId, setSelectedRequestId] = useState<string>("");
-  const [submittedRatings, setSubmittedRatings] = useState<Record<string, boolean>>({});
+  const [selectedRequestId, setSelectedRequestId] = useState<string>(
+    () => searchParams.get("requestId") || ""
+  );
+  const [submittedRatings, setSubmittedRatings] = useState<Record<string, number>>({});
   const selectedRequest = sortedRequests.find((request) => request._id === selectedRequestId);
   const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
   const editWindowMinutes = Number(outletInfo?.orderEditWindowMinutes ?? 2);
@@ -1390,26 +1442,72 @@ export const GuestSupportScreen = ({
     ? getOrderEditState(editableOrder, editWindowMinutes, now)
     : null;
 
-  const handleReview = async (replyId: string, rating: number) => {
+  const replaceUrlWithoutNavigation = useCallback(
+    (params: URLSearchParams) => {
+      const queryString = params.toString();
+      const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      window.history.replaceState(window.history.state, "", nextUrl);
+    },
+    [pathname]
+  );
+
+  const handleReview = async (replyId: string, rating: number, requestId: string) => {
+    setSubmittedRatings((prev) => ({ ...prev, [replyId]: rating, [requestId]: rating }));
     try {
       await onReviewSubmit(replyId, rating);
-      setSubmittedRatings((prev) => ({ ...prev, [replyId]: true }));
     } catch {
-      // The caller owns the user-facing failure toast.
+      setSubmittedRatings((prev) => {
+        const next = { ...prev };
+        delete next[replyId];
+        delete next[requestId];
+        return next;
+      });
     }
   };
 
+  const selectRequest = useCallback(
+    (requestId: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("chat", "1");
+      params.set("requestId", requestId);
+      replaceUrlWithoutNavigation(params);
+      setSelectedRequestId(requestId);
+    },
+    [replaceUrlWithoutNavigation, searchParams]
+  );
+
+  const clearSelectedRequest = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("chat", "1");
+    params.delete("requestId");
+    replaceUrlWithoutNavigation(params);
+    setSelectedRequestId("");
+  }, [replaceUrlWithoutNavigation, searchParams]);
+
   useEffect(() => {
-    if (selectedRequestId && !selectedRequest) setSelectedRequestId("");
-  }, [selectedRequest, selectedRequestId]);
+    const currentParams =
+      typeof window === "undefined"
+        ? searchParams
+        : new URLSearchParams(window.location.search);
+    const requestId = currentParams.get("requestId") || "";
+    if (requestId !== selectedRequestId) {
+      setSelectedRequestId(requestId);
+    }
+  }, [searchParams, selectedRequestId]);
+
+  useEffect(() => {
+    if (selectedRequestId && sortedRequests.length > 0 && !selectedRequest) {
+      clearSelectedRequest();
+    }
+  }, [clearSelectedRequest, selectedRequest, selectedRequestId, sortedRequests.length]);
 
   return (
-    <div className="flex h-full flex-col bg-[#F8F7F4] text-slate-950 poppins-regular">
+    <div className="plus-jakarta-font flex h-full flex-col bg-[#F8F7F4] text-slate-950">
       <ChatHeader
         hotelName={hotelName}
         logo={logo}
         room={room}
-        onClose={selectedRequest ? () => setSelectedRequestId("") : onClose}
+        onClose={selectedRequest ? clearSelectedRequest : onClose}
         title={selectedRequest ? getRequestTitle(selectedRequest) : undefined}
         subtitle={selectedRequest ? getStatusMeta(selectedRequest).label : undefined}
       />
@@ -1417,7 +1515,7 @@ export const GuestSupportScreen = ({
         <EditableFoodOrderBar
           request={editableOrder}
           remainingMs={editableOrderState.remainingMs}
-          onOpen={() => setSelectedRequestId(editableOrder._id)}
+          onOpen={() => selectRequest(editableOrder._id)}
         />
       ) : null}
       <AnimatePresence mode="wait">
@@ -1432,7 +1530,7 @@ export const GuestSupportScreen = ({
           >
             <RequestDetail
               request={selectedRequest}
-              submitted={Boolean(submittedRatings[getReviewReplyId(selectedRequest) || ""])}
+              submittedRating={submittedRatings[getReviewReplyId(selectedRequest) || ""] ?? submittedRatings[selectedRequest._id]}
               onReviewSubmit={handleReview}
               contactPhone={contactPhone}
             />
@@ -1446,14 +1544,10 @@ export const GuestSupportScreen = ({
             exit={{ opacity: 0, x: 18 }}
             transition={{ duration: 0.22 }}
           >
-            <MyRequests requests={sortedRequests} onSelect={(request) => setSelectedRequestId(request._id)} />
+            <MyRequests requests={sortedRequests} onSelect={(request) => selectRequest(request._id)} />
           </motion.div>
         )}
       </AnimatePresence>
-      <RequestBottomBar
-        requests={sortedRequests}
-        onSelect={(request) => setSelectedRequestId(request._id)}
-      />
     </div>
   );
 };

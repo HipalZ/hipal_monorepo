@@ -114,7 +114,7 @@ const CheckoutStatusPopup = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0 }}
-        className="relative p-6 text-center"
+        className="plus-jakarta-font relative p-6 text-center"
       >
         <Button
           variant="secondary"
@@ -136,14 +136,14 @@ const CheckoutStatusPopup = ({
           />
         </div>
 
-        <h2 className="mb-2 text-xl font-semibold text-gray-900 inter">
+        <h2 className="mb-2 text-xl font-semibold text-gray-900">
           {isDeclined
             ? "Checkout Request Declined"
             : isAccepted
               ? "Checkout Update"
               : "Checkout Completed"}
         </h2>
-        <p className="mb-6 text-sm text-gray-600 inter">
+        <p className="mb-6 text-sm text-gray-600">
           {activeReply?.description}
         </p>
 

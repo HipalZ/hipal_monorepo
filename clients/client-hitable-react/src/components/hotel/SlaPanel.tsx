@@ -54,16 +54,12 @@ const Cell = memo(function Cell({
   icon,
   value,
   valueTone,
-  chip,
-  chipTone,
   helper,
 }: {
   label: string;
   icon: ReactNode;
   value: string;
   valueTone: string;
-  chip: string;
-  chipTone: string;
   helper?: string;
 }) {
   return (
@@ -216,16 +212,15 @@ const SlaPanel = memo(function SlaPanel({ createdAt, acceptedAt, deliveredAt, re
         <Cell
           label="Acceptance"
           icon={<UserCheck className="h-3 w-3" />}
-          value={acceptTook !== null && `Accepted in ${formatClock(acceptTook)}`}
+          value={acceptTook !== null ? `Accepted in ${formatClock(acceptTook)}` : remainingText(acceptLeftMs)}
           valueTone={TONES[acceptTone].text}
-          chipTone={TONES[acceptTone].chip}
+          helper={acceptTook !== null ? undefined : `Target ${formatTargetTime(started + acceptMs)}`}
         />
         <Cell
           label="Fulfillment"
           icon={<CheckCircle2 className="h-3 w-3" />}
           value={!acceptedAt ? `SLA: ${deliverMins || 0}m` : deliverTook !== null ? formatClock(deliverTook) : remainingText(fulfillLeftMs)}
           valueTone={TONES[deliverTone].text}
-          chipTone={TONES[deliverTone].chip}
         />
       </div>
 

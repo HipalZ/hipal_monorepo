@@ -97,7 +97,7 @@ export const MenuView = ({
   };
 
   return (
-    <div className="relative">
+    <div className="plus-jakarta-font relative">
       <div className="flex items-center mb-4">
         <button
           type="button"

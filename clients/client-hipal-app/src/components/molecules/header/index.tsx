@@ -56,7 +56,9 @@ function Header({ categories, primaryColor, secondaryColor }: { categories: Cate
         // background: `linear-gradient(180deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
         backgroundColor: `${secondaryColor}`,
       }}
-      className="sticky top-0 z-[1000] flex flex-col overflow-hidden pb-2 text-4xl text-black"
+      className={`sticky top-0 z-[1000] flex flex-col pb-2 text-4xl text-black ${
+        isSearchActive ? 'min-h-[100dvh] overflow-y-auto' : 'overflow-hidden'
+      }`}
       initial={{ opacity: 0, y: -100 }}
       animate={{
         opacity: showHeader ? 1 : 0,

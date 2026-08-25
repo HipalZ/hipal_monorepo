@@ -48,6 +48,7 @@ const ChatCardSection = ({
 }) => {
   const { categoriesLoading, categoriesData } =
     useGetServiceCategories(businessId);
+  const isOpenChat = useHotelTemp((s) => s.isOpenChat);
   const setIsOpenChat = useHotelTemp((s) => s.setIsOpenChat);
   const userDetails = useLogin((s) => s.userDetails);
   const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
@@ -177,7 +178,10 @@ const ChatCardSection = ({
   }, [replacePopupParam]);
 
   useEffect(() => {
-    setIsOpenChat(query.get("chat") === "1");
+    const shouldOpenChat = query.get("chat") === "1";
+    if (isOpenChat !== shouldOpenChat) {
+      setIsOpenChat(shouldOpenChat);
+    }
 
     const shouldOpenCheckout = query.get("checkout") === "1";
     if (!shouldOpenCheckout) {
@@ -201,7 +205,7 @@ const ChatCardSection = ({
     setSelectedService(service);
     setShowServiceModal(true);
     setServiceRequestStatus("idle");
-  }, [query, quickServices, setIsOpenChat, setShowConfirmation]);
+  }, [isOpenChat, query, quickServices, setIsOpenChat, setShowConfirmation]);
 
   const handleConfirmServiceRequest = useCallback(async () => {
     if (!selectedService) return;
@@ -306,6 +310,7 @@ const ChatCardSection = ({
   // Resolution time of the Checkout service (set in hibiz), shown as the ETA.
   const checkoutCompletionMins =
     checkoutEtaMinutes ||
+    quickServices.find((service) => service.isCheckout)?.avgDeliveryTime ||
     quickServices.find((service) => service.isCheckout)?.avgCompletionTime ||
     15;
 
@@ -332,7 +337,7 @@ const ChatCardSection = ({
           <section className="mx-2 mb-4 p-4 rounded-3xl bg-gradient-to-br from-[#FAF9F6] to-[#F5F2F0] border border-[#E9E4DC]/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] selection:bg-none">
             <div className="mb-4 flex items-center gap-2 px-1">
               <div className="h-4 w-1 bg-gradient-to-b from-[#E85D3A] to-[#E85D3A]/40 rounded-full" />
-              <h3 className="font-semibold text-[#4A433D] text-[0.95rem] poppins tracking-tight uppercase">
+              <h3 className="plus-jakarta-font font-semibold text-[#4A433D] text-[0.95rem] tracking-tight uppercase">
                 Quick Actions
               </h3>
             </div>
@@ -368,7 +373,7 @@ const ChatCardSection = ({
                         </>
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#F5F2EE] to-[#E9E4DC] p-2">
-                          <span className="line-clamp-3 text-center text-[0.7rem] font-semibold leading-tight text-[#6B625A] font-poppins">
+                          <span className="plus-jakarta-font line-clamp-3 text-center text-[0.7rem] font-semibold leading-tight text-[#6B625A]">
                             {service.name}
                           </span>
                         </div>
@@ -387,7 +392,7 @@ const ChatCardSection = ({
                     <div className="mt-2 min-h-[28px] px-0.5 text-center">
                       <span
                         className={cn(
-                          "text-[#6B625A] text-[0.8rem] font-medium leading-[1.1] tracking-tight line-clamp-2 transition-colors duration-200 group-hover:text-black font-poppins",
+                          "plus-jakarta-font text-[#6B625A] text-[0.8rem] font-medium leading-[1.1] tracking-tight line-clamp-2 transition-colors duration-200 group-hover:text-black",
                           service.isCheckout && "text-[#E85D3A] font-semibold"
                         )}
                       >
@@ -464,10 +469,10 @@ const ChatCardSection = ({
                   </div>
 
                   {/* Title */}
-                  <h2 className="text-xl font-normal text-gray-900 mb-2 inter">
+                  <h2 className="plus-jakarta-font text-xl font-normal text-gray-900 mb-2">
                     Request {selectedService?.name}?
                   </h2>
-                  <p className="text-gray-600 mb-6 inter text-sm">
+                  <p className="plus-jakarta-font text-gray-600 mb-6 text-sm">
                     We'll notify staff to bring{" "}
                     {selectedService?.name.toLowerCase()} to your room
                   </p>
@@ -543,7 +548,7 @@ const ChatCardSection = ({
               className="p-6 pt-8 text-center"
             >
               <LoadingSpinnerCircle />
-              <p className="mt-4 font-poppins text-sm text-gray-500">
+              <p className="plus-jakarta-font mt-4 text-sm text-gray-500">
                 Sending your checkout request...
               </p>
             </motion.div>
@@ -577,36 +582,36 @@ const ChatCardSection = ({
                   />
                 </motion.div>
               </div>
-              <h2 className="relative mt-5 font-poppins text-[1.35rem] font-semibold tracking-tight text-gray-900">
+              <h2 className="plus-jakarta-font relative mt-5 text-[1.35rem] font-semibold tracking-tight text-gray-900">
                 {checkoutAlreadyInProgress
                   ? "Checkout In Progress"
                   : "Request sent"}
               </h2>
-              <p className="relative mx-auto mt-2 max-w-[16rem] font-poppins text-sm leading-relaxed text-gray-500">
+              <p className="plus-jakarta-font relative mx-auto mt-2 max-w-[16rem] text-sm leading-relaxed text-gray-500">
                 {checkoutAlreadyInProgress
                   ? "Your checkout request is already with the front office."
                   : "Your checkout request has been sent to the front office."}
               </p>
               <div className="relative mt-5 rounded-2xl bg-green-50/80 px-4 py-3.5 ring-1 ring-green-100">
-                <div className="flex items-center justify-center gap-1.5 font-poppins text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-green-700/80">
+                <div className="plus-jakarta-font flex items-center justify-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-green-700/80">
                   Please visit the front office within
                 </div>
-                <p className="mt-0.5 font-poppins text-lg font-bold text-green-700">
+                <p className="plus-jakarta-font mt-0.5 text-lg font-bold text-green-700">
                   {checkoutCompletionMins} minutes
                 </p>
               </div>
               {checkoutAcceptedMessage && (
                 <div className="relative mt-3 rounded-2xl bg-blue-50/80 px-4 py-3 text-left ring-1 ring-blue-100">
-                  <p className="font-poppins text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-blue-700/80">
+                  <p className="plus-jakarta-font text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-blue-700/80">
                     Front office accepted
                   </p>
-                  <p className="mt-1 font-poppins text-sm leading-relaxed text-blue-900">
+                  <p className="plus-jakarta-font mt-1 text-sm leading-relaxed text-blue-900">
                     {checkoutAcceptedMessage}
                   </p>
                 </div>
               )}
               <Button
-                className="relative mt-6 h-11 w-full rounded-2xl bg-gradient-to-r from-green-500 to-green-600 font-poppins text-[0.95rem] font-semibold text-white shadow-[0_8px_20px_rgba(22,163,74,0.3)] hover:from-green-600 hover:to-green-700 active:scale-[0.98]"
+                className="plus-jakarta-font relative mt-6 h-11 w-full rounded-2xl bg-gradient-to-r from-green-500 to-green-600 text-[0.95rem] font-semibold text-white shadow-[0_8px_20px_rgba(22,163,74,0.3)] hover:from-green-600 hover:to-green-700 active:scale-[0.98]"
                 onClick={() => {
                   suppressCheckoutAutoOpenRef.current = true;
                   replacePopupParam("checkout");
@@ -653,10 +658,10 @@ const ChatCardSection = ({
                     <BellDot className="h-9 w-9 text-white" strokeWidth={2.2} />
                   </motion.div>
                 </div>
-                <h2 className="relative mt-5 font-poppins text-[1.35rem] font-semibold tracking-tight text-gray-900">
+                <h2 className="plus-jakarta-font relative mt-5 text-[1.35rem] font-semibold tracking-tight text-gray-900">
                   Request to Check Out?
                 </h2>
-                <p className="relative mx-auto mt-2 max-w-[16rem] font-poppins text-sm leading-relaxed text-gray-500">
+                <p className="plus-jakarta-font relative mx-auto mt-2 max-w-[16rem] text-sm leading-relaxed text-gray-500">
                   We'll notify the front office staff to prepare your checkout.
                 </p>
                 <div className="relative mt-6 flex items-center gap-3 h-2">
@@ -668,7 +673,7 @@ const ChatCardSection = ({
                         text: "Request checkout",
                         onClick: confirmCheckout,
                         className:
-                          "h-11 w-full rounded-2xl font-poppins text-[0.95rem] font-semibold shadow-[0_8px_20px_rgba(37,99,235,0.3)]",
+                          "plus-jakarta-font h-11 w-full rounded-2xl text-[0.95rem] font-semibold shadow-[0_8px_20px_rgba(37,99,235,0.3)]",
                         disable: isSubmitting,
                       },
                     ]}
