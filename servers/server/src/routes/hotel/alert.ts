@@ -2184,16 +2184,17 @@ const hotelAlertRouter = new Hono()
       }
 
       const isWakeUpCallAlert = alert.message?.startsWith('WAKE_UP_CALL::');
+      const wakeUpAt = Number(alert.wakeUpAt || 0);
+      const isWakeUpCallDue = isWakeUpCallAlert && (alert.alertProgress === 'NOT_DELIVERED' || (wakeUpAt > 0 && wakeUpAt <= Date.now()));
 
       if (alert.alertProgress !== 'MESSAGE' && !(isWakeUpCallAlert && alert.alertProgress === 'NOT_DELIVERED')) {
         return respond(c, 'Only MESSAGE alerts or due wake-up calls can be dismissed via this route', true, 400, {});
       }
 
-      await HotelAlert.findByIdAndUpdate(
-        alertId,
-        isWakeUpCallAlert
+      const updateFields =
+        isWakeUpCallAlert && isWakeUpCallDue
           ? {
-              alertProgress: 'RESOLVED',
+              alertProgress: 'DELIVERED',
               deliveredAt: Date.now(),
               deliveredBy: userId,
             }
@@ -2201,8 +2202,9 @@ const hotelAlertRouter = new Hono()
               alertProgress: 'REJECTED',
               rejectedAt: Date.now(),
               rejectedBy: userId,
-            },
-      );
+            };
+
+      await HotelAlert.findByIdAndUpdate(alertId, updateFields);
 
       return respond(c, 'Alert dismissed successfully', false, 200, {
         _id: alertId,

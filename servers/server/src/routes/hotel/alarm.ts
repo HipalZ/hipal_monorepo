@@ -43,6 +43,7 @@ function getWakeUpStatus(alert: {
   rejectedAt?: number;
 }) {
   if (alert.alertProgress === "NOT_DELIVERED") return "DUE";
+  if (alert.alertProgress === "DELIVERED" && alert.deliveredAt) return "INFORMED";
   if (alert.alertProgress === "RESOLVED" && alert.deliveredAt) return "INFORMED";
   if (alert.alertProgress === "REJECTED" || alert.rejectedAt) return "CANCELLED";
   if (alert.acceptedBy) return "ACKNOWLEDGED";

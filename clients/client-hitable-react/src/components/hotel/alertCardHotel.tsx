@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useAcknowledgeWakeUpAlert, useDismissMessageAlert, useEditAlertCart, useRespondAlerts } from '@/hooks/useHotelApis';
-import { formatRaised } from '@/hooks/useTime';
+import { formatRaised, useNow } from '@/hooks/useTime';
 import { useMutation } from '@tanstack/react-query';
 import { AlarmClock, AlertCircle, CheckCheck, CheckCircle, ChevronLeft, Clock, Loader2, Phone, ShoppingCart, User, XCircle } from 'lucide-react';
 import { useCallback, useState } from 'react';
@@ -161,7 +161,9 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
   const hasCart = alert?.cart && alert?.cart?.length > 0;
   const isWakeUpCallAlert = ['MESSAGE', 'NOT_DELIVERED'].includes(alert?.alertProgress) && alert?.message?.startsWith('WAKE_UP_CALL::');
-  const isWakeUpCallDue = isWakeUpCallAlert && alert?.alertProgress === 'NOT_DELIVERED';
+  const now = useNow(isWakeUpCallAlert && !alert?.deliveredAt && !alert?.rejectedAt);
+  const wakeUpAt = Number(alert?.wakeUpAt || 0);
+  const isWakeUpCallDue = isWakeUpCallAlert && (alert?.alertProgress === 'NOT_DELIVERED' || (wakeUpAt > 0 && wakeUpAt <= now));
   const isWakeUpAcknowledged = isWakeUpCallAlert && Boolean(alert?.acceptedBy);
   const wakeUpInfo = isWakeUpCallAlert ? parseWakeUpMessage(alert?.message) : null;
   const isCheckoutRequest = !isWakeUpCallAlert && (alert?.message?.startsWith('CHECKOUT_REQUEST::') ?? false);
@@ -189,7 +191,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     serviceNames[0] || (hasCart ? 'Food Order' : isWakeUpCallAlert ? 'Wake-up Call' : isCheckoutRequest ? 'Checkout' : 'Message');
   const extraServices = Math.max(0, serviceNames.length - 1);
 
-  const badge = (isWakeUpCallAlert ? BADGES.MESSAGE : BADGES[alert?.alertProgress]) ?? FALLBACK_BADGE;
+  const badge = (isWakeUpCallDue ? BADGES.NOT_DELIVERED : isWakeUpCallAlert ? BADGES.MESSAGE : BADGES[alert?.alertProgress]) ?? FALLBACK_BADGE;
 
   const PENDING_STATES = ['CREATED', 'NON_ACCEPTED_AND_WARNING', 'NON_ACCEPTED_AND_ESCALATION'];
   const ACCEPTED_STATES = ['ACCEPTED', 'IS_ACCEPTED_AND_WARNING', 'IS_ACCEPTED_AND_ESCALATION'];
@@ -215,12 +217,12 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     MESSAGE: isWakeUpCallAlert ? 'Wake-up Call' : 'Message',
   };
 
-  const getAlertLabel = (progress?: string) => ALERT_PROGRESS_LABELS[progress ?? ''] || progress || 'Unknown';
+  const getAlertLabel = (progress?: string) => (isWakeUpCallDue ? 'Wake-up Due Now' : ALERT_PROGRESS_LABELS[progress ?? ''] || progress || 'Unknown');
 
   return (
     <Card
       className={`${
-        alert?.alertProgress === 'NOT_DELIVERED' ? 'animation-blink' : ''
+        isWakeUpCallDue || alert?.alertProgress === 'NOT_DELIVERED' ? 'animation-blink' : ''
       } overflow-hidden border border-l-4 transition-all duration-200 hover:shadow-md`}
       style={{
         borderLeftColor: isWakeUpCallDue ? '#dc2626' : isWakeUpCallAlert ? '#7c3aed' : borderColor(alert?.alertProgress),
@@ -386,11 +388,11 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
           {isWakeUpCallAlert && isWakeUpCallDue ? (
             <Button
-              className="w-full rounded-md border border-emerald-900 !bg-emerald-700 font-semibold !text-white shadow-sm hover:!bg-emerald-800"
+              className="w-full rounded-md !bg-blue-600 font-semibold !text-white shadow-sm hover:!bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
               onClick={async () => {
                 try {
                   await dismissAlert(alert?._id);
-                  toast.success('Wake-up call marked as informed');
+                  toast.success('Wake-up call fulfilled');
                 } catch (error) {
                   toast.error(error?.message || 'Failed to complete wake-up call');
                 }
@@ -398,7 +400,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
               disabled={isDismissing}
             >
               {isDismissing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
-              Informed Guest
+              Wake-up Fulfilled
             </Button>
           ) : null}
 
