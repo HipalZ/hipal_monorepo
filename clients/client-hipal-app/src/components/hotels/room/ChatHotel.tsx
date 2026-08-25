@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, memo } from "react";
+import { useCallback, memo, useEffect } from "react";
 import { useGetAllChats, useReviewChat } from "@/components/hooks/useHotelRoom";
 import { useHotelTemp } from "@/components/store/useHotelTemp";
 import { GuestSupportScreen } from "./ChatHotelComponents";
@@ -29,9 +29,18 @@ const MemoChatHotel = ({
   );
   const { reviewChat } = useReviewChat();
   const userDetails = useLogin((s) => s.userDetails);
+
+  useEffect(() => {
+    const shouldOpenChat = searchParams.get("chat") === "1";
+    if (isOpenChat !== shouldOpenChat) {
+      setIsOpenChat(shouldOpenChat);
+    }
+  }, [isOpenChat, searchParams, setIsOpenChat]);
+
   const onClose = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("chat");
+    params.delete("requestId");
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     setIsOpenChat(false);
   }, [pathname, router, searchParams, setIsOpenChat]);

@@ -54,7 +54,7 @@ Available Rooms: ${roomType.roomIds.length}
   );
 
   return (
-    <section className="pb-[5rem]">
+    <section className="plus-jakarta-font pb-[5rem]">
       {sortedRoomTypes.length === 0 ? (
         <div className="p-8 mt-4 text-center">
           <p className="text-muted-foreground">
@@ -79,7 +79,7 @@ Available Rooms: ${roomType.roomIds.length}
               />
               <CardHeader className="p-4 pb-2 !text-black">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold inter line-clamp-1">
+                  <h3 className="text-xl font-semibold line-clamp-1">
                     {roomType.roomType.replace(/_/g, " ")}{" "}
                     {roomType.roomIds.length > 1 && (
                       <span className="text-sm font-normal text-muted-foreground">

@@ -177,7 +177,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   // calls and plain messages have no service attached).
   const services = alert?.serviceIds || [];
   const serviceAcceptMins = services.reduce((max, service) => Math.max(max, service?.avgAcceptanceTime || 0), 0);
-  const serviceDeliverMins = services.reduce((max, service) => Math.max(max, service?.avgCompletionTime ?? service?.avgDeliveryTime ?? 0), 0);
+  const serviceDeliverMins = services.reduce((max, service) => Math.max(max, service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0), 0);
   const foodPrepMins = hasCart ? alert.cart.reduce((max, item) => Math.max(max, item?.dish?.avgPrepTime || 0), 0) : 0;
   const foodDeliverMins = hasCart ? foodPrepMins || 30 : 0;
   const acceptMins = serviceAcceptMins || (hasCart ? 2 : 0);

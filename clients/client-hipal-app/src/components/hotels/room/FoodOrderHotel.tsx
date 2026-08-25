@@ -9,6 +9,7 @@ import { useLogin } from '@/components/store/useLogin';
 import { usePaymentStore } from '@/components/store/usePaymentStore';
 import type { IMenuLayout } from '@/components/types/businessData';
 import { AnimatePresence, motion } from 'framer-motion';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { hasGuestContactDetails } from './guestContactGuard';
@@ -44,6 +45,9 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
   const [isMenuContentLoading, setIsMenuContentLoading] = useState(false);
 
   // Hooks
+  const pathname = usePathname();
+  const query = useSearchParams();
+  const router = useRouter();
   const { roomPayload } = useHotelRoomData();
   const { creatingAlert, createAlert } = useCreateAlert();
   const { fetchingRestaurants, restaurantData } = useGetAllLinkRestautants(businessId) as unknown as {
@@ -60,6 +64,19 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
   const soleRestaurant = hasSingleRestaurant ? linkedRestaurants[0] : null;
   const activeRestaurant = selectedRestaurant ?? soleRestaurant ?? null;
   const shouldShowMenu = currentView === 'menu' || (!!show && !!soleRestaurant && !selectedRestaurant);
+
+  const updateSelectedRestaurantParam = useCallback(
+    (restaurantId?: string) => {
+      const params = new URLSearchParams(query.toString());
+      if (restaurantId) {
+        params.set('restaurantId', restaurantId);
+      } else {
+        params.delete('restaurantId');
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, query, router],
+  );
 
   const sanitizedCart = useMemo(() => {
     return cart.map(({ dish, ...item }) => {
@@ -81,15 +98,32 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
     (restaurant: ILinkHotels) => {
       if (selectedRestaurant?._id === restaurant._id) {
         // If already selected, toggle menu view
-        setCurrentView((prev) => (prev === 'restaurants' ? 'menu' : 'restaurants'));
+        const nextView = currentView === 'restaurants' ? 'menu' : 'restaurants';
+        setCurrentView(nextView);
+        updateSelectedRestaurantParam(nextView === 'menu' ? restaurant._id : undefined);
       } else {
         setSelectedRestaurant(restaurant);
         setCurrentView('menu');
         setIsMenuContentLoading(true);
+        updateSelectedRestaurantParam(restaurant._id);
       }
     },
-    [selectedRestaurant],
+    [currentView, selectedRestaurant, updateSelectedRestaurantParam],
   );
+
+  useEffect(() => {
+    if (!show || !linkedRestaurants.length) return;
+
+    const restaurantId = query.get('restaurantId');
+    if (!restaurantId) return;
+
+    const restaurant = linkedRestaurants.find((item) => item._id === restaurantId);
+    if (!restaurant || selectedRestaurant?._id === restaurant._id) return;
+
+    setSelectedRestaurant(restaurant);
+    setCurrentView('menu');
+    setIsMenuContentLoading(true);
+  }, [linkedRestaurants, query, selectedRestaurant?._id, show]);
 
   useEffect(() => {
     if (!show || !hasSingleRestaurant || selectedRestaurant || !soleRestaurant) return;
@@ -109,9 +143,10 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
     }
     setCurrentView('restaurants');
     setIsMenuContentLoading(false);
+    updateSelectedRestaurantParam();
     setCartEmpty();
     setShowCart(false);
-  }, [hasSingleRestaurant, onClose, setCartEmpty, setShowCart]);
+  }, [hasSingleRestaurant, onClose, setCartEmpty, setShowCart, updateSelectedRestaurantParam]);
 
   // Handle order submission
   const handlePlaceOrder = useCallback(async () => {

@@ -40,6 +40,7 @@ export interface Service {
   _id: string;
   name: string;
   image?: string;
+  systemKey?: string;
   avgCompletionTime?: number;
   avgDeliveryTime?: number;
   avgAcceptanceTime?: number;

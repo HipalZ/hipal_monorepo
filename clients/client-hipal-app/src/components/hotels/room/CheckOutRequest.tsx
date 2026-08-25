@@ -65,18 +65,18 @@ const MemoCheckOutRequest = ({
 
   return (
     <article>
-      <div className="m-4 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.08)] px-4 py-4 flex items-center bg-white relative">
+      <div className="plus-jakarta-font m-4 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.08)] px-4 py-4 flex items-center bg-white relative">
         <div className="flex-1 space-y-2">
-          <h1 className="font-semibold text-h-primary text-base poppins">
+          <h1 className="font-semibold text-h-primary text-base">
             Fast checkout!
           </h1>
-          <p className="font-light text-h-primary text-xs poppins">
+          <p className="font-light text-h-primary text-xs">
             Avoid Long standing queues by initiating
           </p>
         </div>
         <button
           type="button"
-          className="text-sm poppins ml-4 flex items-center px-3 py-2 bg-blue-600 text-white rounded-xl font-light transition shadow-lg"
+          className="text-sm ml-4 flex items-center px-3 py-2 bg-blue-600 text-white rounded-xl font-light transition shadow-lg"
           onClick={proceedToCheckout}
         >
           Checkout
@@ -97,7 +97,7 @@ const MemoCheckOutRequest = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="p-6 text-center"
+              className="plus-jakarta-font p-6 text-center"
             >
               <div className="flex justify-center mb-4">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
@@ -118,7 +118,7 @@ const MemoCheckOutRequest = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="relative"
+              className="plus-jakarta-font relative"
             >
               <Button
                 variant="secondary"
@@ -136,11 +136,11 @@ const MemoCheckOutRequest = ({
                   </div>
 
                   {/* Title */}
-                  <h2 className="text-xl font-normal text-gray-900 mb-2 inter">
+                  <h2 className="text-xl font-normal text-gray-900 mb-2">
                     Request to Check Out?
                   </h2>
 
-                  <p className="text-gray-600 mb-6 inter text-sm">
+                  <p className="text-gray-600 mb-6 text-sm">
                     We'll notify staff to prepare your checkout
                   </p>
                   {/* Action Buttons */}

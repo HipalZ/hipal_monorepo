@@ -252,7 +252,7 @@ export default function HotelAlarmReminder({
         height="auto"
         manageHistory={false}
       >
-        <div className="max-h-[86dvh] overflow-y-auto px-5 pb-24 pt-5 poppins-regular tracking-normal">
+        <div className="plus-jakarta-font max-h-[86dvh] overflow-y-auto px-5 pb-24 pt-5 tracking-normal">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div>
               <h2 className="mt-1 text-[1.25rem] leading-tight tracking-normal text-[#2F2924]">

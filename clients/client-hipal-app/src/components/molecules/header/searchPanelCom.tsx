@@ -202,7 +202,8 @@ const MemoSearchPanelCom = ({
     <AnimatePresence>
       {isSearchActive && (
         <motion.div
-          className="plus-jakarta-font px-4 pb-28 pt-3"
+          className="plus-jakarta-font min-h-[100dvh] px-4 pb-28 pt-3"
+          style={{ backgroundColor: secondaryColor }}
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -218,7 +219,7 @@ const MemoSearchPanelCom = ({
             />
             <input
               type="search"
-              className="h-11 min-w-0 flex-1 bg-transparent px-1 text-[0.95rem] font-semibold text-slate-900 outline-none placeholder:text-slate-400"
+              className="plus-jakarta-font h-11 min-w-0 flex-1 bg-transparent px-1 text-[0.95rem] font-semibold text-slate-900 outline-none placeholder:text-slate-400"
               placeholder="Search for items..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -234,14 +235,14 @@ const MemoSearchPanelCom = ({
             </button>
           </motion.div>
           <motion.div
-            className="mt-4 max-h-[calc(100dvh-12rem)] min-h-[calc(100dvh-12rem)] space-y-3 overflow-y-auto pr-1"
+            className="mt-4 max-h-[calc(100dvh-9.5rem)] min-h-[calc(100dvh-9.5rem)] overscroll-contain space-y-3 overflow-y-auto pr-1"
             variants={itemVariants}
           >
             {filteredDishes.length > 0 ? (
               filteredDishes.map((dish, index) => (
                 <motion.div
                   key={`${dish._id}-${index}`}
-                  className="overflow-hidden rounded-2xl bg-white/95 shadow-sm ring-1 ring-black/5"
+                  className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
                   variants={itemVariants}
                 >
                   <HorizontalCard
@@ -253,7 +254,7 @@ const MemoSearchPanelCom = ({
                 </motion.div>
               ))
             ) : (
-              <div className="rounded-2xl bg-white/80 px-4 py-10 text-center text-sm font-medium text-slate-500 ring-1 ring-black/5">
+              <div className="rounded-2xl bg-white px-4 py-10 text-center text-sm font-medium text-slate-500 ring-1 ring-black/5">
                 No dishes found
               </div>
             )}

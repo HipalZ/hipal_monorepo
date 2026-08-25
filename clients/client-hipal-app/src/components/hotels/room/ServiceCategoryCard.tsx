@@ -13,8 +13,10 @@ import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   useCreateAlert,
+  useGetAllChats,
   useHotelRoomData,
 } from "@/components/hooks/useHotelRoom";
+import type { RoomChat } from "@/components/types/hotelTypes";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
 import toast from "react-hot-toast";
@@ -87,10 +89,11 @@ interface ServiceItemProps {
   selected: boolean;
   onToggle: () => void;
   getInitial: (name: string) => string;
+  requestCount: number;
 }
 
 const ServiceItem = memo(
-  ({ service, selected, onToggle, getInitial }: ServiceItemProps) => (
+  ({ service, selected, onToggle, getInitial, requestCount }: ServiceItemProps) => (
     <section>
       <Card
         className={`relative p-0 rounded-2xl border-none bg-transparent shadow-none transition-all duration-200 cursor-pointer ${
@@ -139,13 +142,47 @@ const ServiceItem = memo(
           </div>
         )}
       </Card>
-      <div className="text-center poppins-regular py-2 font-medium cursor-pointer text-black text-xs leading-tight">
+      <div className="plus-jakarta-font text-center py-2 font-medium cursor-pointer text-black text-xs leading-tight">
         {service.name}
+        {requestCount > 0 ? (
+          <span className="mx-auto mt-1 block w-fit rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[0.62rem] font-semibold leading-none text-amber-700">
+            {requestCount}x this stay
+          </span>
+        ) : null}
       </div>
     </section>
   )
 );
 ServiceItem.displayName = "ServiceItem";
+
+const getLatestCompletedCheckoutAt = (chats: RoomChat[]) =>
+  chats.reduce((latest, chat) => {
+    const services = chat?.alertId?.serviceIds ?? [];
+    const isCheckout =
+      services.some((service) => service?.systemKey === "CHECKOUT") ||
+      chat?.alertId?.message?.startsWith("CHECKOUT_REQUEST::");
+    const completedAt = chat?.alertId?.deliveredAt;
+
+    if (!isCheckout || !completedAt) return latest;
+    return Math.max(latest, completedAt);
+  }, 0);
+
+const getSessionServiceRequestCounts = (chats: RoomChat[]) => {
+  const latestCheckoutAt = getLatestCompletedCheckoutAt(chats);
+  const counts = new Map<string, number>();
+
+  for (const chat of chats) {
+    const createdAt = chat?.alertId?.createdAt || chat?.date || 0;
+    if (latestCheckoutAt && createdAt <= latestCheckoutAt) continue;
+
+    for (const service of chat?.alertId?.serviceIds ?? []) {
+      if (!service?._id || service?.systemKey === "CHECKOUT") continue;
+      counts.set(service._id, (counts.get(service._id) || 0) + 1);
+    }
+  }
+
+  return counts;
+};
 
 function MemoServiceCategoryCard({
   category,
@@ -168,6 +205,10 @@ function MemoServiceCategoryCard({
   const room = roomFromProps || query.get("room") || "";
   const { gettingRoomLoader, roomPayload } = useHotelRoomData();
   const { creatingAlert, createAlert } = useCreateAlert();
+  const { chatData } = useGetAllChats(
+    { businessId, roomName: room || "" },
+    { enabled: servicePopup }
+  );
   const { setCartEmpty } = useCartStore();
   const screenSize = useScreenSize();
 
@@ -192,6 +233,10 @@ function MemoServiceCategoryCard({
         .filter((service) => selectedServices.includes(service._id))
         .map((service) => service.name),
     [category.serviceIds, selectedServices]
+  );
+  const requestCounts = useMemo(
+    () => getSessionServiceRequestCounts(chatData ?? []),
+    [chatData]
   );
 
   useEffect(() => {
@@ -255,6 +300,7 @@ function MemoServiceCategoryCard({
     suppressAutoOpenRef.current = true;
     const params = new URLSearchParams(query.toString());
     params.delete("serviceCategory");
+    params.delete("restaurantId");
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     setServicePopup(false);
     setSelectedServices([]);
@@ -409,7 +455,7 @@ function MemoServiceCategoryCard({
               onClose={closeServicePopup}
               manageHistory={false}
             >
-              <div className="p-4 relative max-h-[90dvh] overflow-auto hide-scrollbar">
+              <div className="plus-jakarta-font p-4 relative max-h-[90dvh] overflow-auto hide-scrollbar">
                 {/* Header row is always present (title + count pill) so selecting
                     a service never pushes the grid down - no layout shift. */}
                 <div className="mb-4 flex items-center justify-between gap-2">
@@ -454,6 +500,7 @@ function MemoServiceCategoryCard({
                             selected={isSelected(service._id)}
                             onToggle={() => handleServiceToggle(service._id)}
                             getInitial={getInitial}
+                            requestCount={requestCounts.get(service._id) || 0}
                           />
                         )
                     )}

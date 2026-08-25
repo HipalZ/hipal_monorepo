@@ -15,7 +15,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import HotelAlarmReminder from "./HotelAlarmReminder";
 import { useHotelBusinessData } from "@/components/store/useHotelBusinessData";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useHotelTemp } from "@/components/store/useHotelTemp";
 
 interface ServiceCategoriesSectionProps {
   businessId: string;
@@ -41,7 +40,6 @@ export default function ServiceCategoriesSection({
   const searchParams = useSearchParams();
   const [showSearchModal, setShowSearchModal] = useState(false);
   const suppressSearchAutoOpenRef = useRef(false);
-  const setIsOpenChat = useHotelTemp((s) => s.setIsOpenChat);
   const hotelPhoneNumber = (
     hotelData as typeof hotelData & {
       phoneNumber?: string;
@@ -105,8 +103,7 @@ export default function ServiceCategoriesSection({
     const params = new URLSearchParams(searchParams.toString());
     params.set("chat", "1");
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    setIsOpenChat(true);
-  }, [pathname, router, searchParams, setIsOpenChat]);
+  }, [pathname, router, searchParams]);
 
   useEffect(() => {
     const shouldOpenSearch = searchParams.get("supportSearch") === "1";

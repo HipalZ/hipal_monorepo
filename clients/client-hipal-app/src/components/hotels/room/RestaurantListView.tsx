@@ -24,8 +24,8 @@ export const RestaurantListView = ({
   isLoading,
 }: RestaurantListViewProps) => {
   return (
-    <div className="p-4">
-      <h2 className="mb-4 text-xl font-semibold text-h-primary poppins">
+    <div className="plus-jakarta-font p-4">
+      <h2 className="mb-4 text-xl font-semibold text-h-primary">
         Select a Restaurant
       </h2>
 
