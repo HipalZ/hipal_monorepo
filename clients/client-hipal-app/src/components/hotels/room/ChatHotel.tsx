@@ -64,7 +64,10 @@ const MemoChatHotel = ({
 
   const handleNotDelivered = async (roomChatReplyId: string) => {
     try {
-      await sendChat({ roomChatReplyId });
+      await sendChat({
+        roomChatReplyId,
+        userId: userDetails?._id || "",
+      });
       toast.success("Complaint raised. The hotel team has been notified.");
     } catch (error) {
       console.error("Error raising not delivered complaint:", error);
