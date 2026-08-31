@@ -13,6 +13,8 @@ export type UnifiedRow = {
   room: string;
   floor: string;
   service: string;
+  /** Food/cart item breakdown for food-order rows. */
+  orderItems: string;
   /** The requester — a guest for GUEST rows, front-office for CHECKOUT rows. */
   requesterName: string;
   requesterPhone: string;

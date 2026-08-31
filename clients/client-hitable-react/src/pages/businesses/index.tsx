@@ -16,6 +16,7 @@ const BusinessesMemo = memo(() => {
   const navigate = useNavigate();
 
   const setTriggerSound = useLiteStore((s) => s.setTriggerSound);
+  const activeCustomRoles = captainData?.customRole?.filter((role) => role?.isDeleted !== true) ?? [];
 
   const getBusinessInfo = async (id: string) => {
     const res = await apiRpc.businesses.outletInfo[':businessId'].$get({
@@ -57,9 +58,9 @@ const BusinessesMemo = memo(() => {
 
   <div className="grid gap-4 sm:gap-5 lg:gap-6">
     {/* Force single column on mobile, 2 columns on large screens */}
-    <div className={`grid gap-4 ${captainData?.customRole?.length ? 'grid-cols-1 lg:grid-cols-2' : ''}`}>
-      {captainData?.customRole && captainData.customRole.length > 0 ? (
-        captainData.customRole.map((biz) => (
+    <div className={`grid gap-4 ${activeCustomRoles.length ? 'grid-cols-1 lg:grid-cols-2' : ''}`}>
+      {activeCustomRoles.length > 0 ? (
+        activeCustomRoles.map((biz) => (
           <div
             key={biz?.businessId?._id}
             onClick={() => exploreBusiness(biz)}

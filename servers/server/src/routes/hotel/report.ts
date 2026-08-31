@@ -35,10 +35,10 @@ const CSV_HEADERS = [
   "Acceptance Time",
   "Fulfillment Time",
   "Total Time",
-  "Standard Acceptance Time (min)",
-  "Fulfillment SLA (min)",
-  "Total Standard SLA (min)",
-  "Total Actual Time (min)",
+  "Standard Acceptance Time",
+  "Fulfillment SLA",
+  "Total Standard SLA",
+  "Total Actual Time",
   "SLA Performance",
   "Escalated",
   "Escalation Level",
@@ -105,26 +105,44 @@ const formatFilenameDate = (timestamp?: number) => {
   return `${get("year")}-${get("month")}-${get("day")}`;
 };
 
+const round1 = (n: number) => Math.round(n * 10) / 10;
+
+const formatDurationMinutes = (minutes?: number | null) => {
+  if (minutes === undefined || minutes === null || !Number.isFinite(minutes)) {
+    return "";
+  }
+  if (minutes < 1) return `${Math.round(minutes * 60)} sec`;
+  const rounded = round1(minutes);
+  return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} min`;
+};
+
 const getDurationLabel = (from?: number | null, to?: number | null) => {
   if (!from || !to || to < from) return "";
-  const totalMinutes = Math.round((to - from) / 60_000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return [hours ? `${hours}h` : "", minutes || !hours ? `${minutes}m` : ""]
-    .filter(Boolean)
-    .join(" ");
+  return formatDurationMinutes((to - from) / 60_000);
 };
 
 const buildOrderItems = (cart?: any[]) => {
   if (!cart?.length) return "";
   return cart
     .map((item) => {
-      const dishName = item?.dish?.name || item?.name || "";
+      const dishName = item?.dish?.name || item?.name || item?.dishName || "";
+      const portionName = item?.portion?.name ? ` - ${item.portion.name}` : "";
+      const extras =
+        item?.extras
+          ?.map((extra: any) =>
+            [extra?.name, extra?.quantity > 1 ? `x${extra.quantity}` : ""]
+              .filter(Boolean)
+              .join(" "),
+          )
+          .filter(Boolean)
+          .join(", ") || "";
       const quantity = item?.quantity ?? 1;
-      const price = item?.dish?.price;
+      const price = item?.portion?.price ?? item?.dish?.price;
+      const label = `${dishName}${portionName}${extras ? ` + ${extras}` : ""}`;
+      if (!label) return "";
       return price !== undefined && price !== null
-        ? `${dishName} x${quantity} (Rs ${price})`
-        : `${dishName} x${quantity}`;
+        ? `${label} x${quantity} (Rs ${price})`
+        : `${label} x${quantity}`;
     })
     .filter(Boolean)
     .join(" | ");
@@ -133,13 +151,17 @@ const buildOrderItems = (cart?: any[]) => {
 const joinNames = (items?: { name?: string }[]) =>
   items?.map((item) => item?.name).filter(Boolean).join(", ") || "";
 
+const serviceRequestedLabel = (alert: any) => {
+  const names = joinNames(alert?.serviceIds);
+  if (names) return names;
+  return alert?.cart?.length ? "Food Order" : "";
+};
+
 const staffName = (staff?: { name?: string } | null) => staff?.name || "";
 
 // SLA analysis for the CSV — mirrors the client's computePerf so the download
 // matches the on-screen report. Standards come from each service's
 // avgAcceptanceTime / avgDeliveryTime (minutes); actuals from the timestamps.
-const round1 = (n: number) => Math.round(n * 10) / 10;
-
 const slaAnalysis = (alert: any) => {
   const services = alert?.serviceIds ?? [];
   const accSla = services.reduce(
@@ -148,7 +170,7 @@ const slaAnalysis = (alert: any) => {
   );
   const delSla = services.reduce(
     (sum: number, s: any) =>
-      sum + (s?.avgCompletionTime ?? s?.avgDeliveryTime ?? 0),
+      sum + (s?.avgDeliveryTime ?? s?.avgCompletionTime ?? 0),
     0,
   );
   const totalSla = accSla + delSla;
@@ -162,15 +184,15 @@ const slaAnalysis = (alert: any) => {
     const diff = totalSla - totalActual;
     performance =
       diff >= 0
-        ? `Completed ${round1(diff)} min before SLA`
-        : `Exceeded SLA by ${round1(-diff)} min`;
+        ? `Completed ${formatDurationMinutes(diff)} before SLA`
+        : `Exceeded SLA by ${formatDurationMinutes(-diff)}`;
   }
 
   return {
-    stdAccept: accSla > 0 ? round1(accSla) : "",
-    stdDeliver: delSla > 0 ? round1(delSla) : "",
-    totalStd: totalSla > 0 ? round1(totalSla) : "",
-    totalActual: totalActual != null ? round1(totalActual) : "",
+    stdAccept: accSla > 0 ? formatDurationMinutes(accSla) : "",
+    stdDeliver: delSla > 0 ? formatDurationMinutes(delSla) : "",
+    totalStd: totalSla > 0 ? formatDurationMinutes(totalSla) : "",
+    totalActual: totalActual != null ? formatDurationMinutes(totalActual) : "",
     performance,
   };
 };
@@ -501,7 +523,7 @@ const hotelReportRouter = new Hono()
             formatCompanions(stay?.guests, phone),
             companionGuests.length,
             "Service Request",
-            joinNames(alert.serviceIds),
+            serviceRequestedLabel(alert),
             buildOrderItems(alert.cart),
             formatDateTime(alert.createdAt),
             staffName(alert.acceptedBy),

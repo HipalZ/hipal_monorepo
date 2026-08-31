@@ -2,6 +2,9 @@
 import {
   Business,
   DeviceToken,
+  HotelRoom,
+  HotelStaffLevel,
+  Kitchen,
   LoyaltySettings,
   StaffPermission,
   StaffPermissionGroup,
@@ -43,6 +46,21 @@ const serviceAccount = require("..//../utils/service_account.json");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
+
+const matchesBusiness = (role: any, businessId: string) =>
+  String(role?.businessId) === String(businessId);
+
+const isActiveBusinessRole = (role: any, businessId: string) =>
+  matchesBusiness(role, businessId) && role?.isDeleted !== true;
+
+const findActiveBusinessRoleIndex = (roles: any[], businessId: string) =>
+  roles.findIndex((role) => isActiveBusinessRole(role, businessId));
+
+const findDeletedBusinessRoleIndex = (roles: any[], businessId: string) =>
+  roles.findIndex(
+    (role) => matchesBusiness(role, businessId) && role?.isDeleted === true,
+  );
+
 export async function hashPassword(password: string): Promise<string> {
   try {
     const hash = await argon2.hash(password);
@@ -566,7 +584,7 @@ const usersRouter = new Hono()
 
     // Step 2: Filter only active customRoles
     const activeRoles = (staff.customRole || []).filter(
-      (r) => r.isDeleted === false,
+      (r) => r.isDeleted !== true,
     );
 
     if (activeRoles.length === 0) {
@@ -671,13 +689,38 @@ const usersRouter = new Hono()
           permissionIds,
         };
 
-        const updateUser = await User.findOneAndUpdate(
-          { phone },
+        const existingCustomRoles = Array.isArray(existingUser.customRole)
+          ? existingUser.customRole
+          : [];
+        const activeRoleIndex = findActiveBusinessRoleIndex(
+          existingCustomRoles,
+          businessId,
+        );
+        const deletedRoleIndex = findDeletedBusinessRoleIndex(
+          existingCustomRoles,
+          businessId,
+        );
+        const updatedCustomRoles = [...existingCustomRoles];
+
+        if (activeRoleIndex >= 0) {
+          updatedCustomRoles[activeRoleIndex] = {
+            ...updatedCustomRoles[activeRoleIndex],
+            ...customRole,
+          };
+        } else if (deletedRoleIndex >= 0) {
+          updatedCustomRoles[deletedRoleIndex] = {
+            ...updatedCustomRoles[deletedRoleIndex],
+            ...customRole,
+          };
+        } else {
+          updatedCustomRoles.push(customRole);
+        }
+
+        const updateUser = await User.findByIdAndUpdate(
+          existingUser._id,
           {
             password: hashPass,
-            $addToSet: {
-              customRole: customRole,
-            },
+            customRole: updatedCustomRoles,
           },
           { new: true },
         );
@@ -762,64 +805,61 @@ const usersRouter = new Hono()
         );
       }
 
-      if (removePermissionIds.length > 0) {
-        await User.findOneAndUpdate(
-          {
-            _id: staffId,
-            "customRole.businessId": businessId,
-          },
-          {
-            $pull: {
-              "customRole.permissionIds": {
-                $in: removePermissionIds,
-              },
-            },
-          },
-        );
-      }
-
-      if (removePermissionGroupIds.length > 0) {
-        await User.findOneAndUpdate(
-          {
-            _id: staffId,
-            "customRole.businessId": businessId,
-          },
-          {
-            $pull: {
-              "customRole.permissionGroupIds": {
-                $in: removePermissionGroupIds,
-              },
-            },
-          },
-        );
-      }
-
-      const perObj = await createPermissionObject(
-        permissionIds,
-        permissionGroupIds,
+      const existingCustomRoles = Array.isArray(existingUser.customRole)
+        ? existingUser.customRole
+        : [];
+      const customRoleIndex = findActiveBusinessRoleIndex(
+        existingCustomRoles,
+        businessId,
       );
 
-      const customRole = {
+      if (customRoleIndex === -1) {
+        return respond(c, "Active staff role not found", true, 404, {});
+      }
+
+      const updatedCustomRoles = [...existingCustomRoles];
+      const existingRole = updatedCustomRoles[customRoleIndex];
+      const existingPermissionIds = (existingRole.permissionIds || []).map(
+        (id: any) => id.toString(),
+      );
+      const existingPermissionGroupIds = (
+        existingRole.permissionGroupIds || []
+      ).map((id: any) => id.toString());
+      const nextPermissionIds =
+        permissionIds.length > 0
+          ? permissionIds
+          : existingPermissionIds.filter(
+              (id) => !removePermissionIds.includes(id),
+            );
+      const nextPermissionGroupIds =
+        permissionGroupIds.length > 0
+          ? permissionGroupIds
+          : existingPermissionGroupIds.filter(
+              (id) => !removePermissionGroupIds.includes(id),
+            );
+      const perObj =
+        nextPermissionIds.length > 0 || nextPermissionGroupIds.length > 0
+          ? await createPermissionObject(nextPermissionIds, nextPermissionGroupIds)
+          : existingRole.permissions ?? {};
+
+      updatedCustomRoles[customRoleIndex] = {
+        ...existingRole,
         businessId,
-        role,
-        permissionGroupIds,
+        role: role ?? existingRole.role,
+        permissionGroupIds: nextPermissionGroupIds,
         default: false,
         isDeleted: false,
-        permissions:
-          permissionGroupIds.length > 0 || permissionIds.length > 0
-            ? perObj
-            : {},
-        permissionIds,
+        permissions: perObj,
+        permissionIds: nextPermissionIds,
       };
 
       await User.findOneAndUpdate(
         {
           _id: staffId,
-          "customRole.businessId": businessId,
         },
         {
           $set: {
-            "customRole.$": customRole,
+            customRole: updatedCustomRoles,
             name: name || undefined,
             bookMark: bookMark,
           },
@@ -982,7 +1022,7 @@ const usersRouter = new Hono()
         customRole: {
           $elemMatch: {
             businessId,
-            isDeleted: false,
+            isDeleted: { $ne: true },
           },
         },
       });
@@ -995,7 +1035,12 @@ const usersRouter = new Hono()
       const updatedUser = await User.findOneAndUpdate(
         {
           _id: staffId,
-          "customRole.businessId": businessId,
+          customRole: {
+            $elemMatch: {
+              businessId,
+              isDeleted: { $ne: true },
+            },
+          },
         },
         {
           $set: {
@@ -1008,6 +1053,19 @@ const usersRouter = new Hono()
       if (!updatedUser) {
         return respond(c, "Staff not found", true, 404, {});
       }
+
+      await HotelRoom.updateMany(
+        { businessId, staffIds: staffId },
+        { $pull: { staffIds: staffId } },
+      );
+      await Kitchen.updateMany(
+        { businessId, staffIds: staffId },
+        { $pull: { staffIds: staffId } },
+      );
+      await HotelStaffLevel.updateMany(
+        { businessId, staffIds: staffId },
+        { $pull: { staffIds: staffId } },
+      );
 
       return respond(c, "Staff deleted successfully", false, 200, updatedUser);
     },
@@ -1107,15 +1165,19 @@ const usersRouter = new Hono()
       const { businessId } = c.req.param();
 
       const existingUser = await User.find({
-        "customRole.businessId": businessId,
-        "customRole.isDeleted": false,
+        customRole: {
+          $elemMatch: {
+            businessId,
+            isDeleted: { $ne: true },
+          },
+        },
       }).select({
         name: 1,
         phone: 1,
         customRole: {
           $elemMatch: {
             businessId: businessId,
-            isDeleted: false,
+            isDeleted: { $ne: true },
           },
         },
       });
@@ -1710,15 +1772,22 @@ const usersRouter = new Hono()
       const existingUser = await User.findOne(
         {
           _id: userId,
-          "customRole.businessId": businessId,
-          "customRole.isDeleted": false,
+          customRole: {
+            $elemMatch: {
+              businessId,
+              isDeleted: { $ne: true },
+            },
+          },
         },
         {
           name: 1,
           email: 1,
           phone: 1,
           customRole: {
-            $elemMatch: { businessId: businessId },
+            $elemMatch: {
+              businessId,
+              isDeleted: { $ne: true },
+            },
           },
         },
       );
@@ -1731,7 +1800,12 @@ const usersRouter = new Hono()
         await User.findOneAndUpdate(
           {
             _id: userId,
-            "customRole.businessId": businessId,
+            customRole: {
+              $elemMatch: {
+                businessId,
+                isDeleted: { $ne: true },
+              },
+            },
           },
           {
             $set: {
@@ -1818,16 +1892,20 @@ const usersRouter = new Hono()
       const staffData = await User.findOne(
         {
           _id: staffId,
-          "customRole.businessId": businessId,
-          "customRole.isDeleted": false,
+          customRole: {
+            $elemMatch: {
+              businessId,
+              isDeleted: { $ne: true },
+            },
+          },
         },
         {
           name: 1,
           phone: 1,
           customRole: {
             $elemMatch: {
-              businessId: businessId,
-              isDeleted: false,
+              businessId,
+              isDeleted: { $ne: true },
             },
           },
         },

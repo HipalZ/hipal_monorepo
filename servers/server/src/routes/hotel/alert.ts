@@ -777,13 +777,31 @@ const hotelAlertRouter = new Hono()
       const { businessId, userId } = c.req.query();
 
       // Step 1: Validate Staff and Role
-      const staff = await User.findOne({ _id: userId, 'customRole.businessId': businessId }, { customRole: 1 }).lean();
+      const staff = await User.findOne(
+        {
+          _id: userId,
+          customRole: {
+            $elemMatch: {
+              businessId,
+              isDeleted: { $ne: true },
+            },
+          },
+        },
+        {
+          customRole: {
+            $elemMatch: {
+              businessId,
+              isDeleted: { $ne: true },
+            },
+          },
+        },
+      ).lean();
 
       if (!staff) {
         return respond(c, 'Staff not found', true, 404, {});
       }
 
-      const customRole = staff.customRole?.find((role) => role.businessId.toString() === businessId);
+      const customRole = staff.customRole?.find((role) => role.businessId.toString() === businessId && role.isDeleted !== true);
 
       if (!customRole) {
         return respond(c, 'Role not found for this business', true, 404, {});
@@ -929,12 +947,13 @@ const hotelAlertRouter = new Hono()
           $elemMatch: {
             businessId: { $eq: businessId },
             role: 'MANAGER',
+            isDeleted: { $ne: true },
           },
         },
       });
 
       const serviceIds =
-        validManager?.customRole?.find((role) => role.businessId.toString() === businessId)?.serviceIds?.map((id) => id.toString()) || [];
+        validManager?.customRole?.find((role) => role.businessId.toString() === businessId && role.isDeleted !== true)?.serviceIds?.map((id) => id.toString()) || [];
 
       const alerts = await HotelAlert.find({
         businessId,
@@ -1444,8 +1463,10 @@ const hotelAlertRouter = new Hono()
               _id: { $in: roomData.staffIds },
               customRole: {
                 $elemMatch: {
+                  businessId: requestData.businessId,
                   serviceIds: { $in: [serviceId] },
                   role: { $ne: 'MANAGER' },
+                  isDeleted: { $ne: true },
                 },
               },
             })
@@ -1495,6 +1516,7 @@ const hotelAlertRouter = new Hono()
               $elemMatch: {
                 businessId: requestData.businessId,
                 role: { $ne: 'MANAGER' },
+                isDeleted: { $ne: true },
               },
             },
           })

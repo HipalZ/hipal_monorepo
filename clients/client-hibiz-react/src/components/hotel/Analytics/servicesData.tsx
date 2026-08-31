@@ -27,6 +27,22 @@ interface Props {
 
 const minsToHours = (minutes: number) => (minutes / 60).toFixed(2);
 
+const formatMinutes = (minutes: number) => {
+  if (minutes < 1) return `${Math.round(minutes * 60)} sec`;
+  const rounded = Math.round(minutes * 10) / 10;
+  return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} min`;
+};
+
+const buildOrderItems = (cart?: Alert['cart']) =>
+  cart?.length
+    ? cart
+        .map((item) => {
+          const portionName = item?.portion?.name ? ` - ${item.portion.name}` : '';
+          return `${item?.quantity ?? 1}x ${item?.dish?.name || 'Item'}${portionName}`;
+        })
+        .join(' | ')
+    : '';
+
 const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
   const totalActiveMinutes = servicesData.reduce((sum, alert) => {
     const acceptM = (alert.acceptedAt - alert.createdAt) / 1000 / 60;
@@ -60,10 +76,16 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
           <div className="space-y-4 pb-4">
             {servicesData.map((alert) => {
               const svc = alert.serviceIds[0];
-              const acceptM = ((alert.acceptedAt - alert.createdAt) / 1000 / 60).toFixed(1);
-              const deliverM = ((alert.deliveredAt - alert.acceptedAt) / 1000 / 60).toFixed(1);
-              const lateAccept = Number(acceptM) > svc.avgAcceptanceTime;
-              const lateDeliver = Number(deliverM) > svc.avgDeliveryTime;
+              const hasCart = Boolean(alert.cart?.length);
+              const serviceName = svc?.name || (hasCart ? 'Food Order' : '—');
+              const orderItems = buildOrderItems(alert.cart);
+              const serviceAcceptSla = svc?.avgAcceptanceTime ?? (hasCart ? 2 : 0);
+              const foodPrepMins = hasCart ? alert.cart?.reduce((max, item) => Math.max(max, Number((item?.dish as any)?.avgPrepTime || 0)), 0) || 0 : 0;
+              const serviceDeliverSla = svc?.avgDeliveryTime ?? (hasCart ? foodPrepMins || 30 : 0);
+              const acceptM = (alert.acceptedAt - alert.createdAt) / 1000 / 60;
+              const deliverM = (alert.deliveredAt - alert.acceptedAt) / 1000 / 60;
+              const lateAccept = serviceAcceptSla > 0 && acceptM > serviceAcceptSla;
+              const lateDeliver = serviceDeliverSla > 0 && deliverM > serviceDeliverSla;
 
               return (
                 <Card key={alert._id} className="transition-all hover:shadow-md">
@@ -71,7 +93,7 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
                         <Package className="h-5 w-5 text-indigo-600" />
-                        <CardTitle className="text-base font-medium">{svc.name}</CardTitle>
+                        <CardTitle className="text-base font-medium">{serviceName}</CardTitle>
                       </div>
                       {alert.isEscalated && (
                         <Badge variant="destructive" className="text-xs">
@@ -87,7 +109,7 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
                       <div className="flex items-center gap-2">
                         <Clock className={cn('h-4 w-4', lateAccept ? 'text-red-500' : 'text-green-500')} />
                         <div>
-                          <strong>{acceptM} min</strong> to accept
+                          <strong>{formatMinutes(acceptM)}</strong> to accept
                           {lateAccept && <span className="ml-1 text-xs text-red-500">(slow)</span>}
                         </div>
                       </div>
@@ -95,7 +117,7 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
                       <div className="flex items-center gap-2">
                         <CheckCircle className={cn('h-4 w-4', lateDeliver ? 'text-red-500' : 'text-green-500')} />
                         <div>
-                          <strong>{deliverM} min</strong> to deliver
+                          <strong>{formatMinutes(deliverM)}</strong> to deliver
                           {lateDeliver && <span className="ml-1 text-xs text-red-500">(slow)</span>}
                         </div>
                       </div>
@@ -106,6 +128,7 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
                         <Separator />
                         <div>
                           <p className="text-muted-foreground mb-1 text-xs font-medium">Food Order</p>
+                          {orderItems ? <p className="mb-2 text-xs font-medium text-slate-700">{orderItems}</p> : null}
                           <ul className="space-y-1 text-xs">
                             {alert.cart.map((item, i) => (
                               <li key={i} className="flex justify-between">

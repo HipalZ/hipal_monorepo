@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, memo, useEffect } from "react";
-import { useGetAllChats, useReviewChat } from "@/components/hooks/useHotelRoom";
+import { useGetAllChats, useReviewChat, useSendChat } from "@/components/hooks/useHotelRoom";
 import { useHotelTemp } from "@/components/store/useHotelTemp";
 import { GuestSupportScreen } from "./ChatHotelComponents";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
@@ -28,6 +28,7 @@ const MemoChatHotel = ({
     { enabled: isOpenChat, refetchInterval: 1000 }
   );
   const { reviewChat } = useReviewChat();
+  const { sendChat } = useSendChat();
   const userDetails = useLogin((s) => s.userDetails);
 
   useEffect(() => {
@@ -61,6 +62,17 @@ const MemoChatHotel = ({
     }
   };
 
+  const handleNotDelivered = async (roomChatReplyId: string) => {
+    try {
+      await sendChat({ roomChatReplyId });
+      toast.success("Complaint raised. The hotel team has been notified.");
+    } catch (error) {
+      console.error("Error raising not delivered complaint:", error);
+      toast.error("Could not raise the complaint. Please try again.");
+      throw error;
+    }
+  };
+
   return (
     <BottomPopUp
       show={isOpenChat}
@@ -77,6 +89,7 @@ const MemoChatHotel = ({
         requests={chatData ?? []}
         onClose={onClose}
         onReviewSubmit={handleReviewSubmit}
+        onNotDelivered={handleNotDelivered}
         contactPhone={contactPhone}
       />
     </BottomPopUp>

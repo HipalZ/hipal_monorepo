@@ -41,7 +41,8 @@ const MemoHistoryHotel = () => {
 
       return (
         item?.roomId?.name?.toLowerCase().includes(term) ||
-        item?.serviceIds?.some((service) => service?.name?.toLowerCase().includes(term)) ||
+        getServiceLabel(item, Boolean(wakeUpMessage)).toLowerCase().includes(term) ||
+        buildOrderItems(item?.cart).toLowerCase().includes(term) ||
         item?.createdBy?.name?.toLowerCase().includes(term) ||
         wakeUpMessage.toLowerCase().includes(term)
       );
@@ -60,6 +61,35 @@ const MemoHistoryHotel = () => {
     if (minutes > 0) return `${minutes}m ${remainingSeconds}s`;
     return `${seconds}s`;
   };
+
+  function buildOrderItems(cart?: any[]) {
+    if (!cart?.length) return '';
+    return cart
+      .map((item) => {
+        const dishName = item?.dish?.name || item?.name || item?.dishName || '';
+        const portionName = item?.portion?.name ? ` - ${item.portion.name}` : '';
+        const extras =
+          item?.extras
+            ?.map((extra) => `${extra?.name || ''}${extra?.quantity > 1 ? ` x${extra.quantity}` : ''}`)
+            .filter(Boolean)
+            .join(', ') || '';
+        if (!dishName) return '';
+        return `${dishName}${portionName}${extras ? ` + ${extras}` : ''} x${item?.quantity ?? 1}`;
+      })
+      .filter(Boolean)
+      .join(' | ');
+  }
+
+  function getServiceLabel(item: any, isWakeUpCallAlert = false) {
+    if (isWakeUpCallAlert) return 'Wake-up Call';
+    const serviceNames =
+      item?.serviceIds
+        ?.map((service) => service?.name)
+        .filter(Boolean)
+        .join(', ') || '';
+    if (serviceNames) return serviceNames;
+    return item?.cart?.length ? 'Food Order' : '—';
+  }
 
   const viewCart = (cart) => {
     setCartData(cart);
@@ -102,7 +132,8 @@ const MemoHistoryHotel = () => {
           {filteredHistory?.map((item) => {
             const isWakeUpCallAlert = item?.message?.startsWith('WAKE_UP_CALL::');
             const displayMessage = isWakeUpCallAlert ? item?.message?.replace('WAKE_UP_CALL::', '') : item?.message;
-            const serviceLabel = isWakeUpCallAlert ? 'Wake-up Call' : item?.serviceIds?.map((service) => service?.name).join(', ');
+            const serviceLabel = getServiceLabel(item, isWakeUpCallAlert);
+            const orderItems = buildOrderItems(item?.cart);
             const completedAt = item?.deliveredAt || item?.rejectedAt || item?.createdAt;
 
             return (
@@ -144,6 +175,11 @@ const MemoHistoryHotel = () => {
                         </div>
                         <div>
                           <h1>{serviceLabel}</h1>
+                          {orderItems ? (
+                            <p className="mt-1 max-w-[18rem] truncate text-xs text-gray-500" title={orderItems}>
+                              {orderItems}
+                            </p>
+                          ) : null}
                           {isWakeUpCallAlert && <p className="mt-1 text-sm text-violet-900">{displayMessage}</p>}
                           <div className="mt-1 flex items-center gap-1 text-sm text-gray-600">
                             <User className="h-3.5 w-3.5" />

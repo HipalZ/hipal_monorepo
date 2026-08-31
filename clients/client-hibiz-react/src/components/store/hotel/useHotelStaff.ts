@@ -23,6 +23,7 @@ export interface IStaffMember {
     nickName?: string;
     serviceIds: string[];
     restaurantIds?: string[];
+    isDeleted?: boolean;
     _id: string;
   }[];
 }
@@ -30,6 +31,9 @@ export interface StaffRole {
   _id: string;
   businessId: string;
   name: string;
+  role?: string;
+  nickName?: string;
+  isDeleted?: boolean;
   permissionGroupIds: string[];
   permissionIds: string[];
   serviceIds: string[];
