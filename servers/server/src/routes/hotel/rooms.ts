@@ -1932,7 +1932,7 @@ const roomRouter = new Hono()
           action: false,
           description: "thank you for your feedback 😃 ",
           roomChatId: roomChat._id,
-          userId: roomChatReply.userId,
+          userId,
           status: "NORMAL",
           date: Date.now(),
           reviewRating,

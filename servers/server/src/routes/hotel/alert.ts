@@ -25,7 +25,6 @@ import {
   acceptHotelAlert,
   hotelAlert,
   updateAlertCart,
-  updateRoomChat,
 } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import { zValidator } from '@hono/zod-validator';
@@ -50,6 +49,11 @@ const getCartRestaurantIds = (cart: any[] = [], hotelBusinessId?: string) =>
         .filter((id): id is string => typeof id === 'string' && id.length === 24 && (!hotelBusinessId || id !== hotelBusinessId)),
     ),
   );
+
+const chatComplainPayload = z.object({
+  roomChatReplyId: z.string().min(2).max(50),
+  userId: z.string().min(2).max(50).optional(),
+});
 
 const oneTimeCronExpression = (runTime: Date) =>
   `${runTime.getSeconds()} ${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${runTime.getMonth() + 1} *`;
@@ -2234,10 +2238,10 @@ const hotelAlertRouter = new Hono()
     },
   )
 
-  .post('/chat_complain', zValidator('json', updateRoomChat), requireRoomOccupancyByChatReply, async (c) => {
+  .post('/chat_complain', zValidator('json', chatComplainPayload), requireRoomOccupancyByChatReply, async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
-      const { roomChatReplyId } = await c.req.json();
+      const { roomChatReplyId, userId } = await c.req.json();
 
       // Retrieve the existing chat reply and its parent room chat
       const roomChatReply = await HotelRoomChatReply.findById(roomChatReplyId);
@@ -2249,6 +2253,7 @@ const hotelAlertRouter = new Hono()
       if (!roomChat) {
         return respond(c, 'Room chat not found', true, 404, {});
       }
+      const complaintUserId = userId || roomChat.userId || roomChatReply.userId;
 
       const updatedChatReply = await HotelRoomChatReply.findByIdAndUpdate(roomChatReplyId, { status: 'WARNING' }, { session, new: true });
       if (!updatedChatReply) {
@@ -2260,7 +2265,7 @@ const hotelAlertRouter = new Hono()
         action: false,
         description: 'we got your complain and we are working on it',
         roomChatId: roomChat._id,
-        userId: roomChatReply.userId,
+        userId: complaintUserId,
         status: 'NORMAL',
         date: Date.now(),
       });
@@ -2274,7 +2279,7 @@ const hotelAlertRouter = new Hono()
 
       // Create a new chat complaint for the existing chat reply
       const newChatComplaint = new HotelRoomChatComplain({
-        userId: roomChatReply.userId,
+        userId: complaintUserId,
         roomChatReplyId: roomChatReply._id,
         date: Date.now(),
         alertId: roomChat.alertId,

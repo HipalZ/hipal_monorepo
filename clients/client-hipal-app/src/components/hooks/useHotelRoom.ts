@@ -179,13 +179,11 @@ export const useGetAllChats = (
 
 export const useSendChat = () => {
   const queryClient = useQueryClient();
-  const router = useRouter();
   const { mutateAsync: sendChat, isPending: sendingChat } = useMutation({
     mutationFn: async (payload: any) => {
       const response = await apiRpc.hotel.alert.chat_complain.$post({
         json: payload,
       });
-      if (expelIfSessionOut(response, router)) throw new Error("SESSION_OUT");
       const result = await response.json();
       if (!response.ok || result?.err) {
         throw new Error(result?.message || "Unable to send complaint");
