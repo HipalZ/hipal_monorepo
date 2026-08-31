@@ -309,15 +309,15 @@ const MemoHistoryHotel = () => {
                 }`}
               >
                 <div className="border-t p-4">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="mb-4 flex items-start gap-3">
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 text-white">
                         <Package className="h-4 w-4" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <h1>{getServiceRequested(item) || '—'}</h1>
                         {item?.cart?.length ? (
-                          <p className="mt-1 max-w-[18rem] truncate text-xs text-gray-500" title={buildOrderItems(item?.cart)}>
+                          <p className="mt-1 line-clamp-2 text-xs text-gray-500" title={buildOrderItems(item?.cart)}>
                             {buildOrderItems(item?.cart)}
                           </p>
                         ) : null}
@@ -329,7 +329,7 @@ const MemoHistoryHotel = () => {
                     </div>
 
                     {item?.cart && item?.cart?.length > 0 && (
-                      <Button onClick={() => viewCart(item?.cart)} variant="outline" className="mt-1 text-sm">
+                      <Button onClick={() => viewCart(item?.cart)} variant="outline" className="w-fit shrink-0 text-sm">
                         View Cart
                       </Button>
                     )}

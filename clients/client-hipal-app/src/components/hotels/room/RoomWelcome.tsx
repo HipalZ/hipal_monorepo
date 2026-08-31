@@ -41,7 +41,7 @@ export default function HotelWelcomeCard({
   const userDetails = useLogin((state) => state.userDetails);
   const router = useRouter();
   const queryClient = useQueryClient();
-  const activeUserId = userID || userDetails?._id || "";
+  const activeUserId = userDetails?._id || userID || "";
   const { checkRoom } = useCheckRoomStatus(
     businessId || "",
     room || "",
@@ -108,9 +108,7 @@ export default function HotelWelcomeCard({
       if (data.status === 200) {
         toast.success("Checked in successfully");
         setShowPopup(false);
-        queryClient.invalidateQueries({
-          queryKey: ["checkRoomStatus", businessId || "", room || "", activeUserId],
-        });
+        queryClient.invalidateQueries({ queryKey: ["checkRoomStatus"] });
       }
     },
   });
@@ -135,15 +133,14 @@ export default function HotelWelcomeCard({
   };
 
   useEffect(() => {
-    if (
-      accessToken !== "" &&
-      (checkRoom?.status === 400 ||
-        checkRoom?.status === 401 ||
-        checkRoom?.status === 403)
-    ) {
+    if (!activeUserId && checkRoom?.status === 401) {
+      return;
+    }
+
+    if (activeUserId && checkRoom?.status === 403) {
       setShowPopup(true);
     }
-  }, [accessToken, checkRoom]);
+  }, [activeUserId, checkRoom]);
 
   return (
     <>
