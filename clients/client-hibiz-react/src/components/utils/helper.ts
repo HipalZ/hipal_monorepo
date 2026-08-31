@@ -597,14 +597,14 @@ export const getDayNames = (days: number[]) => {
   return days.map((day) => dayMap[day]).join(', ');
 };
 
-export const findRole = (customRoles: { businessId: string; role: string }[] | undefined, businessId?: string) => {
+export const findRole = (customRoles: { businessId: string; role: string; isDeleted?: boolean }[] | undefined, businessId?: string) => {
   if (!customRoles || customRoles.length === 0) return '';
-  return customRoles.find((r) => String(r?.businessId) === String(businessId))?.role.replace(/_/g, ' ') ?? '';
+  return customRoles.find((r) => String(r?.businessId) === String(businessId) && r?.isDeleted !== true)?.role.replace(/_/g, ' ') ?? '';
 };
 
-export const findBusinessRole = <T extends { businessId?: string; role?: string }>(customRoles: T[] | undefined, businessId?: string) => {
+export const findBusinessRole = <T extends { businessId?: string; role?: string; isDeleted?: boolean }>(customRoles: T[] | undefined, businessId?: string) => {
   if (!customRoles || customRoles.length === 0) return undefined;
-  return customRoles.find((role) => String(role?.businessId) === String(businessId));
+  return customRoles.find((role) => String(role?.businessId) === String(businessId) && role?.isDeleted !== true);
 };
 
 export const normalizeHotelRole = (role?: string) => (role || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();

@@ -24,21 +24,17 @@ const th =
 const td = 'border-b border-slate-100 px-3 py-3 align-top';
 
 /**
- * Human duration from minutes: "24s" under a minute, "1m 12s" under an hour,
- * "1h 5m" beyond. "0.4m" was impossible to read at a glance.
+ * Human duration from minute values. Under a minute, show seconds; once it
+ * crosses a minute, keep the report in minutes so the sheet stays readable.
  */
 const fmt = (m: number | null) => {
   if (m == null) return '—';
-  const s = Math.round(m * 60);
-  const h = Math.floor(s / 3600);
-  const min = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h > 0) return `${h}h ${min}m`;
-  if (min > 0) return `${min}m ${sec}s`;
-  return `${sec}s`;
+  if (m < 1) return `${Math.round(m * 60)} sec`;
+  const rounded = Math.round(m * 10) / 10;
+  return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} min`;
 };
 const fmtSlaResult = (m: number | null) => {
-  if (m == null) return 'â€”';
+  if (m == null) return '—';
   if (Math.abs(m) < 1 / 120) return 'on time';
   return `${fmt(Math.abs(m))} ${m > 0 ? 'early' : 'late'}`;
 };
@@ -229,7 +225,7 @@ const UnifiedReport = () => {
     if (!rows.length) return toast.error('Nothing to export in this range.');
 
     const cell = (v: unknown) => (v == null || v === '' ? '' : /[",\n\r]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
-    const round = (n: number | null) => (n == null ? '' : Math.round(n * 10) / 10);
+    const durationCell = (n: number | null) => (n == null ? '' : fmt(n));
     const dateTime = (ts?: number) =>
       ts
         ? new Intl.DateTimeFormat('en-IN', {
@@ -245,8 +241,8 @@ const UnifiedReport = () => {
     // MoM verdict wording, matching the guest CSV's SLA Performance column.
     const slaPerformance = (r: UnifiedRow) => {
       if (r.verdict == null) return r.open ? 'In progress' : 'Not delivered';
-      const v = Math.round(Math.abs(r.verdict) * 10) / 10;
-      return r.onTime ? `Completed ${v} minutes before SLA` : `Exceeded SLA by ${v} minutes`;
+      const v = fmt(Math.abs(r.verdict));
+      return r.onTime ? `Completed ${v} before SLA` : `Exceeded SLA by ${v}`;
     };
 
     // Summary block first (totals), matching the guest experience export.
@@ -256,8 +252,8 @@ const UnifiedReport = () => {
       `Within SLA: ${summary.onTimeRate == null ? '—' : `${summary.onTimeRate}%`} (${summary.onTime} of ${summary.judged})`,
       `Still Open: ${summary.open}`,
       `Escalated: ${summary.escalated}`,
-      `Avg Time to Accept (min): ${round(summary.avgAccept)}`,
-      `Avg Fulfillment Time (min): ${round(summary.avgComplete)}`,
+      `Avg Time to Accept: ${durationCell(summary.avgAccept) || '—'}`,
+      `Avg Fulfillment Time: ${durationCell(summary.avgComplete) || '—'}`,
       `Avg Rating: ${summary.avgRating == null ? '—' : `${summary.avgRating} (${summary.reviewed} review${summary.reviewed === 1 ? '' : 's'})`}`,
       `Date Range: ${dateTime(from)} to ${dateTime(to)}`,
       `Generated At: ${dateTime(Date.now())}`,
@@ -275,12 +271,13 @@ const UnifiedReport = () => {
       'Accepted By',
       'Completed By',
       'Requested At',
-      'Acceptance Time (min)',
-      'Standard Acceptance Time (min)',
-      'Fulfillment Time (min)',
-      'Fulfillment SLA (min)',
-      'Total Time (min)',
-      'Total Standard SLA (min)',
+      'Acceptance Time',
+      'Standard Acceptance Time',
+      'Fulfillment Time',
+      'Fulfillment SLA',
+      'Total Time',
+      'Total Standard SLA',
+      'Order Items',
       'SLA Performance',
       'Escalated',
       'Escalation Level',
@@ -300,12 +297,13 @@ const UnifiedReport = () => {
         r.acceptedByName,
         r.completedByName,
         dateTime(r.raisedAt),
-        round(r.acceptMins),
-        r.acceptSla,
-        round(r.deliverMins),
-        r.deliverSla || '',
-        round(r.totalMins),
-        r.totalSla,
+        durationCell(r.acceptMins),
+        fmt(r.acceptSla),
+        durationCell(r.deliverMins),
+        r.deliverSla ? fmt(r.deliverSla) : '',
+        durationCell(r.totalMins),
+        fmt(r.totalSla),
+        r.orderItems,
         slaPerformance(r),
         r.escalated ? (escalationCause(r) ? `Yes — ${escalationCause(r)}` : 'Yes') : 'No',
         r.escalationLevel != null ? `L${r.escalationLevel}` : '',
@@ -628,6 +626,11 @@ const UnifiedReport = () => {
                         <td className={`${td} font-bold text-slate-900`}>{r.room}</td>
                         <td className={td}>
                           <div className="font-medium text-slate-800">{r.service}</div>
+                          {r.orderItems ? (
+                            <div className="mt-0.5 max-w-[260px] truncate text-[11px] text-slate-500" title={r.orderItems}>
+                              {r.orderItems}
+                            </div>
+                          ) : null}
                           <div className="text-xs text-slate-400">{clock(r.raisedAt)}</div>
                         </td>
                         {/* Accepted by name */}
@@ -636,7 +639,7 @@ const UnifiedReport = () => {
                         </td>
                         <td className={td}>
                           <div className={`font-semibold tabular-nums ${slaValueClass(r.acceptMins, r.acceptSla)}`}>{fmt(r.acceptMins)}</div>
-                          <div className="text-[11px] text-slate-400">SLA {r.acceptSla}m</div>
+                          <div className="text-[11px] text-slate-400">SLA {fmt(r.acceptSla)}</div>
                         </td>
                         {/* Completed by name */}
                         <td className={td}>
@@ -644,11 +647,11 @@ const UnifiedReport = () => {
                         </td>
                         <td className={td}>
                           <div className={`font-semibold tabular-nums ${slaValueClass(r.deliverMins, r.deliverSla)}`}>{fmt(r.deliverMins)}</div>
-                          <div className="text-[11px] text-slate-400">{r.deliverSla ? `SLA ${r.deliverSla}m` : '—'}</div>
+                          <div className="text-[11px] text-slate-400">{r.deliverSla ? `SLA ${fmt(r.deliverSla)}` : '—'}</div>
                         </td>
                         <td className={td}>
                           <div className={`font-semibold tabular-nums ${slaValueClass(r.totalMins, r.totalSla)}`}>{fmt(r.totalMins)}</div>
-                          <div className="text-[11px] text-slate-400">SLA {r.totalSla}m</div>
+                          <div className="text-[11px] text-slate-400">SLA {fmt(r.totalSla)}</div>
                         </td>
                         {/* Guest's rating + feedback. Blank on checkout rows and unreviewed requests. */}
                         <td className={`${td} max-w-[160px]`}>

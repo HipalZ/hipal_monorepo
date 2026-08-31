@@ -36,6 +36,7 @@ interface GuestSupportScreenProps {
   requests: RoomChat[];
   onClose: () => void;
   onReviewSubmit: (chatReplyId: string, rating: number) => Promise<void>;
+  onNotDelivered: (chatReplyId: string, requestId: string) => Promise<void>;
   contactPhone?: string;
 }
 
@@ -1110,10 +1111,14 @@ const FeedbackCard = ({
   request,
   submittedRating,
   onReviewSubmit,
+  onNotDelivered,
+  notDeliveredSubmitting,
 }: {
   request: RoomChat;
   submittedRating?: number;
   onReviewSubmit: (chatReplyId: string, rating: number, requestId: string) => Promise<void>;
+  onNotDelivered: (chatReplyId: string, requestId: string) => Promise<void>;
+  notDeliveredSubmitting?: boolean;
 }) => {
   const replyId = getReviewReplyId(request);
   const persistedRating = getSubmittedReviewRating(request);
@@ -1167,6 +1172,28 @@ const FeedbackCard = ({
             <span className="mt-2 text-[0.76rem]  text-slate-800">{option.label}</span>
           </button>
         ))}
+      </div>
+      <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 p-3">
+        <div className="flex gap-2.5">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-rose-700" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[0.78rem] font-semibold text-rose-900">
+              Did not receive it?
+            </p>
+            <p className="mt-1 text-[0.72rem] font-medium leading-relaxed text-rose-700">
+              If this {isFoodRequest(request) ? "order" : "service"} has not reached you, tap Not delivered. We will raise a complaint with the front office and the concerned team.
+            </p>
+            <button
+              type="button"
+              onClick={() => onNotDelivered(replyId, request._id)}
+              disabled={notDeliveredSubmitting}
+              className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-rose-200 bg-white px-4 text-[0.78rem] font-semibold text-rose-700 shadow-sm transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <XCircle className="h-4 w-4" />
+              {notDeliveredSubmitting ? "Raising complaint..." : "Not delivered"}
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -1357,11 +1384,15 @@ const RequestDetail = ({
   request,
   submittedRating,
   onReviewSubmit,
+  onNotDelivered,
+  notDeliveredSubmittingId,
   contactPhone,
 }: {
   request: RoomChat;
   submittedRating?: number;
   onReviewSubmit: (chatReplyId: string, rating: number, requestId: string) => Promise<void>;
+  onNotDelivered: (chatReplyId: string, requestId: string) => Promise<void>;
+  notDeliveredSubmittingId?: string;
   contactPhone?: string;
 }) => {
   const isFood = isFoodRequest(request);
@@ -1400,7 +1431,13 @@ const RequestDetail = ({
         ) : (
           <ServiceJourney request={request} contactPhone={contactPhone} />
         )}
-        <FeedbackCard request={request} submittedRating={submittedRating} onReviewSubmit={onReviewSubmit} />
+        <FeedbackCard
+          request={request}
+          submittedRating={submittedRating}
+          onReviewSubmit={onReviewSubmit}
+          onNotDelivered={onNotDelivered}
+          notDeliveredSubmitting={notDeliveredSubmittingId === request._id}
+        />
       </div>
     </main>
   );
@@ -1413,6 +1450,7 @@ export const GuestSupportScreen = ({
   requests,
   onClose,
   onReviewSubmit,
+  onNotDelivered,
   contactPhone,
 }: GuestSupportScreenProps) => {
   const pathname = usePathname();
@@ -1425,6 +1463,7 @@ export const GuestSupportScreen = ({
     () => searchParams.get("requestId") || ""
   );
   const [submittedRatings, setSubmittedRatings] = useState<Record<string, number>>({});
+  const [notDeliveredSubmittingId, setNotDeliveredSubmittingId] = useState("");
   const selectedRequest = sortedRequests.find((request) => request._id === selectedRequestId);
   const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
   const editWindowMinutes = Number(outletInfo?.orderEditWindowMinutes ?? 2);
@@ -1462,6 +1501,15 @@ export const GuestSupportScreen = ({
         delete next[requestId];
         return next;
       });
+    }
+  };
+
+  const handleNotDelivered = async (replyId: string, requestId: string) => {
+    setNotDeliveredSubmittingId(requestId);
+    try {
+      await onNotDelivered(replyId, requestId);
+    } finally {
+      setNotDeliveredSubmittingId("");
     }
   };
 
@@ -1532,6 +1580,8 @@ export const GuestSupportScreen = ({
               request={selectedRequest}
               submittedRating={submittedRatings[getReviewReplyId(selectedRequest) || ""] ?? submittedRatings[selectedRequest._id]}
               onReviewSubmit={handleReview}
+              onNotDelivered={handleNotDelivered}
+              notDeliveredSubmittingId={notDeliveredSubmittingId}
               contactPhone={contactPhone}
             />
           </motion.div>

@@ -45,6 +45,7 @@ export interface CustomRole {
   permissionIds: string[];
   permissionGroupIds: string[];
   bookMark: boolean;
+  isDeleted?: boolean;
   _id: string;
 }
 
