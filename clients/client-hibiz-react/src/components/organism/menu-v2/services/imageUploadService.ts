@@ -1,6 +1,6 @@
 /**
  * Service Layer: Image Upload & Deduplication
- * 
+ *
  * Handles cloud upload and content-based deduplication.
  * Maintains upload cache to avoid re-uploading identical images.
  */
@@ -28,7 +28,7 @@ const uploadCache = new Map<string, string>();
 
 /**
  * Gets cached upload URL for a hash.
- * 
+ *
  * @param hash - Image content hash
  * @returns Cached URL if exists, null otherwise
  */
@@ -38,7 +38,7 @@ export function getCachedUploadUrl(hash: string): string | null {
 
 /**
  * Caches an uploaded URL for a hash.
- * 
+ *
  * @param hash - Image content hash
  * @param url - Uploaded URL
  */
@@ -66,15 +66,12 @@ export function getCacheSize(): number {
 
 /**
  * Uploads an image file to cloud storage.
- * 
+ *
  * @param file - Image file to upload
  * @param dataUrl - Base64 data URL (for preview/validation)
  * @returns Uploaded image URL, or null if upload failed
  */
-export async function uploadImageToCloud(
-  file: File,
-  dataUrl: string,
-): Promise<string | null> {
+export async function uploadImageToCloud(file: File, dataUrl: string): Promise<string | null> {
   try {
     // Extract base64 data (after comma)
     const base64Data = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
@@ -95,7 +92,7 @@ export async function uploadImageToCloud(
     formData.append('bucketName', 'assets');
 
     // Upload to cloud storage
-    const response = await fetch('https://storage.test.hipalz.com/upload', {
+    const response = await fetch('https://storage.hipalz.com/upload', {
       method: 'POST',
       body: formData,
     });
@@ -115,7 +112,7 @@ export async function uploadImageToCloud(
 /**
  * Uploads an image with deduplication.
  * Checks cache first, uploads only if not cached.
- * 
+ *
  * @param file - Image file to upload
  * @param dataUrl - Base64 data URL
  * @param hash - Image content hash (if already computed)

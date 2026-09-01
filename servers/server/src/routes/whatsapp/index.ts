@@ -316,7 +316,7 @@ const whatsappRouter = new Hono()
           storageForm.append('fileData', new Blob([buffer], { type: fileLike.type }), fileLike.name);
           storageForm.append('fileName', randomUUID());
           storageForm.append('bucketName', 'assets');
-          const r = await axios.post('https://storage.test.hipalz.com/upload', storageForm, {
+          const r = await axios.post('https://storage.hipalz.com/upload', storageForm, {
             headers: { 'Content-Type': 'multipart/form-data' },
             maxBodyLength: Number.POSITIVE_INFINITY,
             maxContentLength: Number.POSITIVE_INFINITY,

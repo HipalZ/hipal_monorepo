@@ -109,7 +109,7 @@ async function storeImageAfterSave(
   //    - fileData: Blob
   //    - fileName: crypto.randomUUID()
   //    - bucketName: "assets"
-  // 5. POST to: https://storage.test.hipalz.com/upload
+  // 5. POST to: https://storage.hipalz.com/upload
   // 6. Return response.data.url (image URL string)
 }
 ```
