@@ -16,10 +16,9 @@ import { type ChangeEvent, memo, useCallback, useMemo, useState } from "react";
 import { GoAlert } from "react-icons/go";
 import { IoCheckmark } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 const AvailableCoinz = () => {
-
   const billValue = usePaymentStore((s) => s.billValue);
   const userCoinz = usePaymentStore((s) => s.userCoinz);
   const claimedCoins = usePaymentStore((s) => s.claimedCoins);
@@ -38,11 +37,10 @@ const AvailableCoinz = () => {
 
   useUserCoinz(loyaltyId ?? "", businessId ?? "");
 
-
   const addCoinsMutation = useMutation({ mutationFn: addCoins });
   const removeCoinsMutation = useMutation({ mutationFn: removeCoinz });
   const removeCouponMutation = useMutation({ mutationFn: removeCouponz });
-  const  tableName = useTableData(s=>s.tableName);
+  const tableName = useTableData((s) => s.tableName);
   const handleApplyCoinz = async (finalValue: number) => {
     setClaimedCoins(finalValue);
     handleCoins(finalValue);
@@ -56,7 +54,6 @@ const AvailableCoinz = () => {
         payload.variantId = billData.variantId;
       }
       await addCoinsMutation.mutateAsync(payload);
-    
     }
   };
 
@@ -81,7 +78,7 @@ const AvailableCoinz = () => {
         };
       }
     },
-    [setIsModalOpen],
+    [setIsModalOpen]
   );
 
   const { setAvailedCoupon } = useCouponz((s) => ({
@@ -93,13 +90,13 @@ const AvailableCoinz = () => {
     setShowAlert: s.setShowAlert,
   }));
   const [tempClaimedCoins, setTempClaimedCoins] = useState<number | null>(
-    claimedCoins || null,
+    claimedCoins || null
   );
 
   const maxClaim = useMemo(() => {
     const canClaimCoinz = Math.round(
       (billData?.subTotal || billValue) *
-        (loyaltySetting?.setClaimedPercentage / 100) || 0,
+        (loyaltySetting?.setClaimedPercentage / 100) || 0
     );
     return canClaimCoinz < userCoinz ? canClaimCoinz : userCoinz;
   }, [
@@ -127,7 +124,7 @@ const AvailableCoinz = () => {
       const payload = {
         businessId: outletInfo.businessId,
         tableName: tableName,
-      }
+      };
       if (billData?.variantId) {
         payload.variantId = billData.variantId;
       }
@@ -157,10 +154,10 @@ const AvailableCoinz = () => {
     setShowAlert(false);
     setAvailedCoupon({});
     toast.success("Coupon removed successfully");
-       const payload ={
+    const payload = {
       businessId: outletInfo.businessId,
       tableName: tableName,
-    }
+    };
     if (billData?.variantId) {
       payload.variantId = billData.variantId;
     }

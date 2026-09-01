@@ -154,9 +154,9 @@ const MemoMainForm = () => {
         },
       });
 
-      await handleEnvelope(outletInfo);
-
-      const outletInfoData = await outletInfo.json();
+      const outletInfoData = await handleEnvelope<{
+        error?: Parameters<typeof showErrorToasts>[0];
+      }>(outletInfo);
       if (outletInfo.status === 200) {
         toast.success('Data saved successfully');
         if (businessId) navigate(`/app/business/${businessId}/explorePage`);

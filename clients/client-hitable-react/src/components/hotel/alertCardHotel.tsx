@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useAcknowledgeWakeUpAlert, useDismissMessageAlert, useEditAlertCart, useRespondAlerts } from '@/hooks/useHotelApis';
-import { formatRaised } from '@/hooks/useTime';
+import { formatRaised, useNow } from '@/hooks/useTime';
 import { useMutation } from '@tanstack/react-query';
 import { AlarmClock, AlertCircle, CheckCheck, CheckCircle, ChevronLeft, Clock, Loader2, Phone, ShoppingCart, User, XCircle } from 'lucide-react';
 import { useCallback, useState } from 'react';
@@ -25,19 +25,26 @@ export interface AlertCardProps {
 
 /** Status pill styling + icon, one lookup keyed by alertProgress. */
 const BADGES: Record<string, { cls: string; Icon: typeof AlertCircle }> = {
-  CREATED: { cls: 'bg-blue-50 text-blue-700 ring-blue-100', Icon: Clock },
-  ACCEPTED: { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-100', Icon: CheckCircle },
-  DELIVERED: { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-100', Icon: CheckCheck },
-  RESOLVED: { cls: 'bg-slate-100 text-slate-600 ring-slate-200', Icon: CheckCheck },
-  NON_ACCEPTED_AND_WARNING: { cls: 'bg-amber-50 text-amber-700 ring-amber-100', Icon: AlertCircle },
-  IS_ACCEPTED_AND_WARNING: { cls: 'bg-amber-50 text-amber-700 ring-amber-100', Icon: AlertCircle },
-  NON_ACCEPTED_AND_ESCALATION: { cls: 'bg-red-50 text-red-700 ring-red-100', Icon: AlertCircle },
-  IS_ACCEPTED_AND_ESCALATION: { cls: 'bg-red-50 text-red-700 ring-red-100', Icon: AlertCircle },
-  NOT_DELIVERED: { cls: 'bg-red-50 text-red-700 ring-red-100', Icon: AlertCircle },
-  REJECTED: { cls: 'bg-slate-100 text-slate-600 ring-slate-200', Icon: XCircle },
-  MESSAGE: { cls: 'bg-violet-50 text-violet-700 ring-violet-100', Icon: AlarmClock },
+  CREATED: { cls: 'text-blue-700 ring-blue-100', Icon: Clock },
+  ACCEPTED: { cls: 'text-emerald-700 ring-emerald-100', Icon: CheckCircle },
+  DELIVERED: { cls: 'text-emerald-700 ring-emerald-100', Icon: CheckCheck },
+  RESOLVED: { cls: 'text-slate-600 ring-slate-200', Icon: CheckCheck },
+  NON_ACCEPTED_AND_WARNING: { cls: 'text-amber-700 ring-amber-100', Icon: AlertCircle },
+  IS_ACCEPTED_AND_WARNING: { cls: 'text-amber-700 ring-amber-100', Icon: AlertCircle },
+  NON_ACCEPTED_AND_ESCALATION: { cls: 'text-red-700 ring-red-100', Icon: AlertCircle },
+  IS_ACCEPTED_AND_ESCALATION: { cls: 'text-red-700 ring-red-100', Icon: AlertCircle },
+  NOT_DELIVERED: { cls: 'text-red-700 ring-red-100', Icon: AlertCircle },
+  REJECTED: { cls: 'text-slate-600 ring-slate-200', Icon: XCircle },
+  MESSAGE: { cls: 'text-violet-700 ring-violet-100', Icon: AlarmClock },
 };
 const FALLBACK_BADGE = { cls: 'bg-slate-100 text-slate-600 ring-slate-200', Icon: Clock };
+
+type RemovedCartItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  reason: string;
+};
 
 function parseWakeUpMessage(message?: string) {
   const cleanMessage = message?.replace('WAKE_UP_CALL::', '') || '';
@@ -68,7 +75,8 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const [customReason, setCustomReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localCart, setLocalCart] = useState<Cart[]>(alert?.cart || []);
-  const { editCart } = useEditAlertCart();
+  const [removedCartItems, setRemovedCartItems] = useState<RemovedCartItem[]>([]);
+  const { editCart, editingCart } = useEditAlertCart();
 
   const rejectionReasons = [
     { id: 'out_of_stock', label: 'Item out of stock' },
@@ -114,27 +122,48 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     handleAction(alert?._id, 'REJECTED', finalReason);
   };
 
-  // API mutation for updating the cart
-  const { isPending } = useMutation({
-    mutationFn: editCart,
-  });
+  const handleCartItemRemoved = useCallback((item: Cart, reason: string) => {
+    setRemovedCartItems((items) => [
+      ...items.filter((removedItem) => removedItem.id !== item.id),
+      {
+        id: item.id,
+        name: item?.dish?.name || 'Item',
+        quantity: item?.quantity || 1,
+        reason,
+      },
+    ]);
+  }, []);
 
-  const updateCart = (alertId: string) => {
-    editCart({
-      alertId: alertId,
-      cart: localCart,
-    });
-    setShowOrderDetails(null);
+  const updateCart = async (alertId: string) => {
+    if (!removedCartItems.length) {
+      toast.error('Please remove at least one item before updating');
+      return;
+    }
+
+    try {
+      await editCart({
+        alertId,
+        cart: localCart,
+        removedItems: removedCartItems,
+      });
+      setRemovedCartItems([]);
+      setShowOrderDetails(null);
+    } catch {
+      // The mutation hook already displays the failure toast.
+    }
   };
 
   const cancelChanges = () => {
-    setLocalCart(alert?.cart);
+    setLocalCart(alert?.cart || []);
+    setRemovedCartItems([]);
     setShowOrderDetails(null);
   };
 
   const hasCart = alert?.cart && alert?.cart?.length > 0;
   const isWakeUpCallAlert = ['MESSAGE', 'NOT_DELIVERED'].includes(alert?.alertProgress) && alert?.message?.startsWith('WAKE_UP_CALL::');
-  const isWakeUpCallDue = isWakeUpCallAlert && alert?.alertProgress === 'NOT_DELIVERED';
+  const now = useNow(isWakeUpCallAlert && !alert?.deliveredAt && !alert?.rejectedAt);
+  const wakeUpAt = Number(alert?.wakeUpAt || 0);
+  const isWakeUpCallDue = isWakeUpCallAlert && (alert?.alertProgress === 'NOT_DELIVERED' || (wakeUpAt > 0 && wakeUpAt <= now));
   const isWakeUpAcknowledged = isWakeUpCallAlert && Boolean(alert?.acceptedBy);
   const wakeUpInfo = isWakeUpCallAlert ? parseWakeUpMessage(alert?.message) : null;
   const isCheckoutRequest = !isWakeUpCallAlert && (alert?.message?.startsWith('CHECKOUT_REQUEST::') ?? false);
@@ -149,19 +178,27 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   // against the largest on the alert. 0/0 → SlaPanel renders nothing (wake-up
   // calls and plain messages have no service attached).
   const services = alert?.serviceIds || [];
-  const acceptMins = services.reduce((max, service) => Math.max(max, service?.avgAcceptanceTime || 0), 0);
-  const deliverMins = services.reduce((max, service) => Math.max(max, service?.avgCompletionTime ?? service?.avgDeliveryTime ?? 0), 0);
+  const serviceAcceptMins = services.reduce((max, service) => Math.max(max, service?.avgAcceptanceTime || 0), 0);
+  const serviceDeliverMins = services.reduce((max, service) => Math.max(max, service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0), 0);
+  const foodPrepMins = hasCart ? alert.cart.reduce((max, item) => Math.max(max, item?.dish?.avgPrepTime || 0), 0) : 0;
+  const foodDeliverMins = hasCart ? foodPrepMins || 30 : 0;
+  const acceptMins = serviceAcceptMins || (hasCart ? 2 : 0);
+  const deliverMins = hasCart ? foodDeliverMins : serviceDeliverMins;
 
   // The header names the request; extra services collapse into a "+N more".
   const serviceNames = services.map((service) => service?.name).filter(Boolean);
-  const primaryService = serviceNames[0] || (isWakeUpCallAlert ? 'Wake-up Call' : isCheckoutRequest ? 'Checkout' : 'Message');
+  const primaryService =
+    serviceNames[0] || (hasCart ? 'Food Order' : isWakeUpCallAlert ? 'Wake-up Call' : isCheckoutRequest ? 'Checkout' : 'Message');
   const extraServices = Math.max(0, serviceNames.length - 1);
 
-  const badge = (isWakeUpCallAlert ? BADGES.MESSAGE : BADGES[alert?.alertProgress]) ?? FALLBACK_BADGE;
+  const badge = (isWakeUpCallDue ? BADGES.NOT_DELIVERED : isWakeUpCallAlert ? BADGES.MESSAGE : BADGES[alert?.alertProgress]) ?? FALLBACK_BADGE;
 
   const PENDING_STATES = ['CREATED', 'NON_ACCEPTED_AND_WARNING', 'NON_ACCEPTED_AND_ESCALATION'];
   const ACCEPTED_STATES = ['ACCEPTED', 'IS_ACCEPTED_AND_WARNING', 'IS_ACCEPTED_AND_ESCALATION'];
   const CLOSED_STATES = ['REJECTED', 'DELIVERED'];
+  const ESCALATION_STATES = ['NON_ACCEPTED_AND_ESCALATION', 'IS_ACCEPTED_AND_ESCALATION'];
+  const isEscalatedAlert = ESCALATION_STATES.includes(alert?.alertProgress ?? '');
+  const escalationLevel = isEscalatedAlert ? alert?.level || 1 : null;
 
   const isPendingState = (p?: string) => PENDING_STATES.includes(p ?? '');
   const isAcceptedState = (p?: string) => ACCEPTED_STATES.includes(p ?? '');
@@ -180,12 +217,12 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     MESSAGE: isWakeUpCallAlert ? 'Wake-up Call' : 'Message',
   };
 
-  const getAlertLabel = (progress?: string) => ALERT_PROGRESS_LABELS[progress ?? ''] || progress || 'Unknown';
+  const getAlertLabel = (progress?: string) => (isWakeUpCallDue ? 'Wake-up Due Now' : ALERT_PROGRESS_LABELS[progress ?? ''] || progress || 'Unknown');
 
   return (
     <Card
       className={`${
-        alert?.alertProgress === 'NOT_DELIVERED' ? 'animation-blink' : ''
+        isWakeUpCallDue || alert?.alertProgress === 'NOT_DELIVERED' ? 'animation-blink' : ''
       } overflow-hidden border border-l-4 transition-all duration-200 hover:shadow-md`}
       style={{
         borderLeftColor: isWakeUpCallDue ? '#dc2626' : isWakeUpCallAlert ? '#7c3aed' : borderColor(alert?.alertProgress),
@@ -197,19 +234,24 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
         <div className="mb-2 flex items-start justify-between gap-3">
           <h3 className="text-xl font-bold leading-tight">Room {alert?.roomId?.name}</h3>
           <div className="min-w-0 text-right">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Request</div>
             <div className="truncate font-bold leading-tight">{primaryService}</div>
             {extraServices > 0 ? <div className="text-[11px] text-slate-500">+{extraServices} more</div> : null}
           </div>
         </div>
 
         {/* Status + when it came in */}
-        <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${badge.cls}`}>
-            <badge.Icon className="h-3.5 w-3.5" />
-            {getAlertLabel(alert?.alertProgress)}
-          </span>
-          <span className="text-slate-300">·</span>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${badge.cls}`}>
+              <badge.Icon className="h-3.5 w-3.5" />
+              {getAlertLabel(alert?.alertProgress)}
+            </span>
+            {escalationLevel ? (
+              <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700 ring-1 ring-red-100">
+                L{escalationLevel}
+              </span>
+            ) : null}
+          </div>
           <span className="text-xs text-slate-500">Raised {formatRaised(alert?.createdAt)}</span>
         </div>
 
@@ -227,7 +269,6 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             {displayMessage}
           </p>
         ) : null}
-
         {/* Order details button */}
         {hasCart && (
           <Button size="sm" variant="outline" className="w-full bg-indigo-400 text-white" onClick={() => setShowOrderDetails(alert._id)}>
@@ -239,7 +280,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
         {/* Secondary information in accordion */}
         <Accordion type="single" collapsible className="mb-3">
           <AccordionItem value="guest-info" className="border-b-0">
-            <AccordionTrigger className="py-2 text-sm font-medium text-gray-900">Guest Information</AccordionTrigger>
+            <AccordionTrigger className="py-2 text-sm font-medium text-gray-900">Guest Info</AccordionTrigger>
             <AccordionContent>
               <div className="rounded-md bg-gray-50 p-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -347,11 +388,11 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
           {isWakeUpCallAlert && isWakeUpCallDue ? (
             <Button
-              className="w-full rounded-md border border-emerald-900 !bg-emerald-700 font-semibold !text-white shadow-sm hover:!bg-emerald-800"
+              className="w-full rounded-md !bg-blue-600 font-semibold !text-white shadow-sm hover:!bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
               onClick={async () => {
                 try {
                   await dismissAlert(alert?._id);
-                  toast.success('Wake-up call marked as informed');
+                  toast.success('Wake-up call fulfilled');
                 } catch (error) {
                   toast.error(error?.message || 'Failed to complete wake-up call');
                 }
@@ -359,7 +400,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
               disabled={isDismissing}
             >
               {isDismissing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
-              Informed Guest
+              Wake-up Fulfilled
             </Button>
           ) : null}
 
@@ -415,7 +456,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
             {hasCart ? (
               <div className="space-y-3 p-4">
-                <CartDetailsHotel localCart={localCart} setLocalCart={setLocalCart} readOnly={false} />
+                <CartDetailsHotel localCart={localCart} setLocalCart={setLocalCart} readOnly={false} onItemRemoved={handleCartItemRemoved} />
               </div>
             ) : (
               <div className="py-6 text-center">
@@ -439,7 +480,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
                 onClick: () => updateCart(alert?._id),
                 hide: alert?.alertProgress === 'MESSAGE',
                 className: 'rounded-lg shadow-md text-white',
-                disable: isPending,
+                disable: editingCart || !removedCartItems.length,
               },
             ]}
           />

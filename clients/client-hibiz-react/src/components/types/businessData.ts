@@ -1,12 +1,8 @@
-import type { ReactNode } from "react";
-import type {
-  businessType,
-  exploreLayout,
-  MenuLayout,
-} from "../store/useBusinessCtrl";
-import type { User } from "../store/useOwnerLogin";
-import type { BannerType } from "../utils/bannerLayouts";
-import type Area from "react-easy-crop";
+import type { ReactNode } from 'react';
+import type Area from 'react-easy-crop';
+import type { businessType, exploreLayout, MenuLayout } from '../store/useBusinessCtrl';
+import type { User } from '../store/useOwnerLogin';
+import type { BannerType } from '../utils/bannerLayouts';
 
 export interface CustomRole {
   businessId: string;
@@ -147,6 +143,8 @@ export interface IOutletInfo {
   gst: string;
   billingEndTime: string;
   billingStartTime: string;
+  endBillTime?: number;
+  startBillTime?: number;
   branchName: string;
   brandName: string;
   footerDescription: string;
@@ -163,6 +161,7 @@ export interface IOutletInfo {
   isPosEnabled: boolean;
   shareCart: boolean;
   posWithOnlyMenu: boolean;
+  orderEditWindowMinutes?: number;
 }
 
 export interface Order {
@@ -352,7 +351,7 @@ export interface HistoryData {
 
 export interface NetworkInformation extends EventTarget {
   downlink?: number;
-  effectiveType?: "slow-2g" | "2g" | "3g" | "4g";
+  effectiveType?: 'slow-2g' | '2g' | '3g' | '4g';
   rtt?: number;
   saveData?: boolean;
   onchange?: EventListenerOrEventListenerObject;
@@ -387,7 +386,7 @@ export interface ICategory {
   timerStart: null;
   timerEnd: null;
   availableDays: never[];
-  hierarchy: string | "PARENT";
+  hierarchy: string | 'PARENT';
   parentCategory: string;
   parentCategoryId?: string;
   coverImage: string;
@@ -402,38 +401,9 @@ export interface ICategory {
   id: string;
 }
 
-export type CurrencyCode =
-  | "INR"
-  | "USD"
-  | "EUR"
-  | "GBP"
-  | "JPY"
-  | "AUD"
-  | "CAD"
-  | "CNY"
-  | "RUB"
-  | "BRL"
-  | "ZAR"
-  | "KRW"
-  | "MXN"
-  | "NZD"
-  | "SGD";
+export type CurrencyCode = 'INR' | 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AUD' | 'CAD' | 'CNY' | 'RUB' | 'BRL' | 'ZAR' | 'KRW' | 'MXN' | 'NZD' | 'SGD';
 
-export type CurrencyCodeSymbol =
-  | "₹"
-  | "$"
-  | "€"
-  | "£"
-  | "¥"
-  | "A$"
-  | "C$"
-  | "¥"
-  | "₽"
-  | "R$"
-  | "R"
-  | "₩"
-  | "$"
-  | "₩";
+export type CurrencyCodeSymbol = '₹' | '$' | '€' | '£' | '¥' | 'A$' | 'C$' | '¥' | '₽' | 'R$' | 'R' | '₩' | '$' | '₩';
 
 export interface IBizInfo {
   categoryTopBanner: string;
@@ -509,13 +479,7 @@ export interface IBanner {
   patternType?: string;
 }
 
-export type TextAlign =
-  | "center"
-  | "left"
-  | "right"
-  | "justify"
-  | "initial"
-  | "inherit";
+export type TextAlign = 'center' | 'left' | 'right' | 'justify' | 'initial' | 'inherit';
 
 export interface IBizPayload {
   customTiming?: { day: string; openTime: string; closeTime: string }[];
@@ -541,6 +505,7 @@ export interface IBizPayload {
   isCustomTime?: boolean;
   address?: string;
   hotelBanners?: string[];
+  orderEditWindowMinutes?: number;
 }
 
 export interface IBannerPayload {
@@ -655,9 +620,9 @@ export interface GroupData {
   businessId: string;
   duration: number;
   visitCount?: number;
-  visitType?: "ABOVE" | "BELOW";
+  visitType?: 'ABOVE' | 'BELOW';
   spendAmount?: number;
-  spendType?: "ABOVE" | "BELOW";
+  spendType?: 'ABOVE' | 'BELOW';
   userCount: number;
   userPercentage: number;
   groupName: string;
@@ -704,9 +669,9 @@ export interface ICustomerRecord {
 export interface IGroupFilter {
   duration: number;
   visit: number;
-  visitType: "ABOVE" | "BELOW";
+  visitType: 'ABOVE' | 'BELOW';
   spend: number;
-  spendType: "ABOVE" | "BELOW";
+  spendType: 'ABOVE' | 'BELOW';
   _id: string;
 }
 
@@ -717,7 +682,7 @@ export interface IUserGroup {
   description: string;
   filter: IGroupFilter[];
   autoUpdate: boolean;
-  groupType: "MANUAL" | "DYNAMIC";
+  groupType: 'MANUAL' | 'DYNAMIC';
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -843,10 +808,10 @@ export interface INotes {
 }
 
 export enum DatePickerEnum {
-  TODAY = "TODAY",
-  YESTERDAY = "YESTERDAY",
-  ONE_MONTH = "ONE MONTH",
-  CUSTOM_DATE = "CUSTOM DATE",
+  TODAY = 'TODAY',
+  YESTERDAY = 'YESTERDAY',
+  ONE_MONTH = 'ONE MONTH',
+  CUSTOM_DATE = 'CUSTOM DATE',
 }
 
 export interface SocialMediaLink {
@@ -871,7 +836,7 @@ interface Link {
 // Define the Config type
 interface Config {
   value: number;
-  discountType: "AMOUNT" | "PERCENTAGE";
+  discountType: 'AMOUNT' | 'PERCENTAGE';
   upto: number;
   _id: string;
 }
@@ -890,13 +855,7 @@ interface ExpiryClaimLimit {
 
 // Define the Availability type
 interface Availability {
-  when:
-    | "custom"
-    | "allthetime"
-    | "birthdayweek"
-    | "birthdaymonth"
-    | "weekdays"
-    | "weekends";
+  when: 'custom' | 'allthetime' | 'birthdayweek' | 'birthdaymonth' | 'weekdays' | 'weekends';
   customDays: string[];
   startTime: number;
   endTime: number;
@@ -929,7 +888,7 @@ interface Conditions {
 export interface ICoupon {
   _id: string;
   name: string;
-  type: "FIX";
+  type: 'FIX';
   businessId: string;
   config: Config;
   isActive: boolean;
@@ -965,6 +924,7 @@ export interface WhatsAppTemplateButton {
   type: string;
   text: string;
   url?: string; // Optional, only applies to URL button
+  example?: string[]; // Optional, only applies to dynamic URL button
   phone_number?: string; // Optional, only applies to PHONE_NUMBER button
 }
 
@@ -980,6 +940,7 @@ export interface WhatsAppTemplatePayload {
   components: WhatsAppTemplateComponent[];
   imageUrl?: string; // Optional, only applies if imageUrl is present
   bodyVariableSequence: string[];
+  buttonVariableSequence?: string[];
 }
 
 export interface CropperRef {
@@ -1011,8 +972,8 @@ export interface BannerProps {
 }
 
 export enum ViewType {
-  BANNERS = "Banners",
-  DRAFTS = "Drafts",
+  BANNERS = 'Banners',
+  DRAFTS = 'Drafts',
 }
 
 interface ButtonStyle {
@@ -1098,7 +1059,7 @@ export interface IUserMessage {
   text: string;
   createdAt?: string;
   updatedAt?: string;
-  type?: "text" | "image" | "video" | "document";
+  type?: 'text' | 'image' | 'video' | 'document';
   mediaUrl?: string;
   caption?: string;
   filename?: string;
@@ -1115,7 +1076,7 @@ export interface IWhatsAppMessage {
   message: string;
   userId: string;
   ownerId: string;
-  type?: "text" | "image" | "video" | "document";
+  type?: 'text' | 'image' | 'video' | 'document';
   mediaUrl?: string;
   caption?: string;
   filename?: string;

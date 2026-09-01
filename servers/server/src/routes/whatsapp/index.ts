@@ -485,7 +485,7 @@ const whatsappRouter = new Hono()
   .post('/template', zValidator('json', validateWhatAppTemplateSchema), async (c) => {
     try {
       const requestData = await c.req.json();
-      const { bodyVariableSequence, headerVariableSequence, footerVariableSequence, businessId } = requestData;
+      const { bodyVariableSequence, headerVariableSequence, footerVariableSequence, buttonVariableSequence, businessId } = requestData;
       const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
         businessId,
       });
@@ -556,6 +556,7 @@ const whatsappRouter = new Hono()
             bodyVariableSequence,
             headerVariableSequence,
             footerVariableSequence,
+            buttonVariableSequence,
             businessId,
             date: Date.now(),
             templateName: requestData?.name,
@@ -715,6 +716,9 @@ const whatsappRouter = new Hono()
           { templateId: templateid, businessId },
           {
             bodyVariableSequence: requestData.bodyVariableSequence || [],
+            headerVariableSequence: requestData.headerVariableSequence || [],
+            footerVariableSequence: requestData.footerVariableSequence || [],
+            buttonVariableSequence: requestData.buttonVariableSequence || [],
           },
         );
 

@@ -5,7 +5,7 @@ import { useLogin } from "@/components/store/useLogin";
 import useTableData from "@/components/store/useTableData";
 import { apiRpc } from "@hi/common";
 import { memo, useCallback, useState } from "react";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { useErrorHandling } from "@/utils/helper";
 import Bill from "@/assets/call/BillImage.png";
 import Breakfast from "@/assets/call/Breakfast.png";
@@ -119,7 +119,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
         <div
           className={cn(
             "relative flex items-center transition-all duration-300",
-            isFocused ? "transform scale-[1.02]" : "",
+            isFocused ? "transform scale-[1.02]" : ""
           )}
         >
           <input
@@ -190,7 +190,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
               message === messageText
                 ? "border-[#008800] border-2 bg-green-50"
                 : "border-[#CACACA] border",
-              "overflow-hidden rounded-2xl h-[10rem] aspect-square relative cursor-pointer flex flex-col items-center justify-center hover:shadow-md transition-all duration-300",
+              "overflow-hidden rounded-2xl h-[10rem] aspect-square relative cursor-pointer flex flex-col items-center justify-center hover:shadow-md transition-all duration-300"
             )}
             onClick={() => handleSelectMessage(messageText)}
             whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
@@ -222,7 +222,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
             message?.length > 0
               ? "bg-[#008800] text-white"
               : "bg-[#FFFFFF] text-gray-500",
-            "w-full border border-[#cacaca] text-base p-3 rounded-xl",
+            "w-full border border-[#cacaca] text-base p-3 rounded-xl"
           )}
         >
           {message?.length > 0 ? "Continue" : "Select the option and call"}

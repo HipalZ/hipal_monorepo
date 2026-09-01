@@ -14,6 +14,9 @@ const MemoDynamicCombinedLogin = () => {
     const { goNext } = useGoNext();
     const { setCheckLogin, checkLogin, openBlastModal, setOpenBlastModal } = usePaymentStore();
     const { setSubscribeModal } = useLogin();
+    const handleLoginClose = useCallback(() => {
+        setCheckLogin(false);
+    }, [setCheckLogin]);
     const handleNext = useCallback(() => {
         setOpenBlastModal(false);
         setCheckLogin(false);
@@ -25,8 +28,9 @@ const MemoDynamicCombinedLogin = () => {
         <>
             <BottomPopUp
                 hide
-                onClose={() => setCheckLogin(false)}
+                onClose={handleLoginClose}
                 show={checkLogin}
+                manageHistory={false}
             >
                 <CombinedLogin />
             </BottomPopUp>

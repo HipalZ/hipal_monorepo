@@ -14,7 +14,7 @@ import CurvedText from "@/components/atoms/curvedText";
 import Sunrays from "@/assets/img/sunrays_white.png";
 import { useReview } from "@/components/store/useReview";
 import { useErrorHandling } from "@/utils/helper";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { CardSkeleton } from "@/components/atoms/paymentPageLoader";
 import LoadingSpinnerCircle from "@/components/atoms/loader";

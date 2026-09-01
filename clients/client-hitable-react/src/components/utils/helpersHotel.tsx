@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { AlertTriangle, CheckCheck, CheckCircle, Clock, ShieldAlert, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCheck, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useCallback } from 'react';
 import type { IconType } from 'react-icons';
 import { AiOutlineStar } from 'react-icons/ai';
@@ -14,7 +14,6 @@ export function hotelNavItems(): Array<{
   const navItems = [
     { type: NavItemsHotelEnum.Rooms, icon: LuHotel },
     { type: NavItemsHotelEnum.Alerts, icon: MdOutlineNotificationsActive },
-    { type: NavItemsHotelEnum.Escalation, icon: ShieldAlert as IconType },
     { type: NavItemsHotelEnum.History, icon: MdOutlineHistory },
     { type: NavItemsHotelEnum.Reviews, icon: AiOutlineStar },
   ];

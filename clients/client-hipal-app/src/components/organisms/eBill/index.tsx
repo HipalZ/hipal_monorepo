@@ -8,7 +8,7 @@ import { memo, useMemo } from "react";
 import { Receipt, Download } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import type { IBusinessData } from "../../types/businessData";
 import FoodType from "@/components/atoms/foodType";
 
@@ -66,7 +66,7 @@ const MemoEBill = ({ data }: IEbillProps) => {
     item?.extras?.reduce(
       (sum: number, extra: any) =>
         sum + (extra?.price || 0) * (extra?.quantity || 0),
-      0,
+      0
     ) || 0;
 
   const calcLineTotal = (item: any) => {
@@ -124,10 +124,10 @@ const MemoEBill = ({ data }: IEbillProps) => {
                           <div>+ ${ex?.name || ""}</div>
                           <div style="text-align:center;">${exQty}</div>
                           <div style="text-align:right;">₹${formatMoney(
-                            ex?.price || 0,
+                            ex?.price || 0
                           )}</div>
                           <div style="text-align:right;">₹${formatMoney(
-                            exTotal,
+                            exTotal
                           )}</div>
                         </div>`;
                     })
@@ -142,7 +142,9 @@ const MemoEBill = ({ data }: IEbillProps) => {
                   </div>
                   <div style="text-align:center;">× ${qty}</div>
                   <div style="text-align:right;">₹${formatMoney(unit)}</div>
-                  <div style="text-align:right;">₹${formatMoney(lineTotal)}</div>
+                  <div style="text-align:right;">₹${formatMoney(
+                    lineTotal
+                  )}</div>
                 </div>
                 ${extrasHtml}
               </div>`;
@@ -175,16 +177,22 @@ const MemoEBill = ({ data }: IEbillProps) => {
     const summaryHtml = `
       <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;">
         <div style="display:flex;justify-content:space-between;margin:6px 0;">
-          <span>Subtotal</span><strong>₹${formatMoney(billData?.subTotal)}</strong>
+          <span>Subtotal</span><strong>₹${formatMoney(
+            billData?.subTotal
+          )}</strong>
         </div>
         ${
           billData?.gst > 0
             ? `
           <div style="display:flex;justify-content:space-between;margin:6px 0;">
-            <span>CGST</span><strong>₹${formatMoney((billData?.gst || 0) / 2)}</strong>
+            <span>CGST</span><strong>₹${formatMoney(
+              (billData?.gst || 0) / 2
+            )}</strong>
           </div>
           <div style="display:flex;justify-content:space-between;margin:6px 0;">
-            <span>SGST</span><strong>₹${formatMoney((billData?.gst || 0) / 2)}</strong>
+            <span>SGST</span><strong>₹${formatMoney(
+              (billData?.gst || 0) / 2
+            )}</strong>
           </div>
         `
             : ""
@@ -193,7 +201,9 @@ const MemoEBill = ({ data }: IEbillProps) => {
           billData?.otherTax > 0
             ? `
           <div style="display:flex;justify-content:space-between;margin:6px 0;">
-            <span>Other Tax</span><strong>₹${formatMoney(billData?.otherTax)}</strong>
+            <span>Other Tax</span><strong>₹${formatMoney(
+              billData?.otherTax
+            )}</strong>
           </div>
         `
             : ""
@@ -203,7 +213,7 @@ const MemoEBill = ({ data }: IEbillProps) => {
             ? `
           <div style="display:flex;justify-content:space-between;margin:6px 0;">
             <span>Service Charge</span><strong>₹${formatMoney(
-              billData?.serviceCharge,
+              billData?.serviceCharge
             )}</strong>
           </div>
         `
@@ -213,7 +223,9 @@ const MemoEBill = ({ data }: IEbillProps) => {
           billData?.discount > 0
             ? `
           <div style="display:flex;justify-content:space-between;margin:6px 0;color:#16a34a;">
-            <span>Discount</span><strong>-₹${formatMoney(billData?.discount)}</strong>
+            <span>Discount</span><strong>-₹${formatMoney(
+              billData?.discount
+            )}</strong>
           </div>
         `
             : ""
@@ -223,7 +235,7 @@ const MemoEBill = ({ data }: IEbillProps) => {
             ? `
           <div style="display:flex;justify-content:space-between;margin:6px 0;color:#16a34a;">
             <span>Loyalty Coins</span><strong>-₹${formatMoney(
-              billData?.claimedCoins,
+              billData?.claimedCoins
             )}</strong>
           </div>
         `
@@ -234,7 +246,7 @@ const MemoEBill = ({ data }: IEbillProps) => {
             ? `
           <div style="display:flex;justify-content:space-between;margin:6px 0;color:#16a34a;">
             <span>Coupon Discount</span><strong>-₹${formatMoney(
-              billData?.couponDiscount,
+              billData?.couponDiscount
             )}</strong>
           </div>
         `
@@ -280,7 +292,9 @@ const MemoEBill = ({ data }: IEbillProps) => {
     <div>Bill ID: ${billData?.billId || "-"}</div>
     <div>${new Date(billData?.date || Date.now()).toLocaleString("en-IN")}</div>
   </div>
-  <div style="margin:4px 0;">Table: <strong>${billData?.tableName || "-"}</strong></div>
+  <div style="margin:4px 0;">Table: <strong>${
+    billData?.tableName || "-"
+  }</strong></div>
 
   <div style="margin-top:10px;">${rowsHtml}</div>
 
@@ -356,7 +370,7 @@ const MemoEBill = ({ data }: IEbillProps) => {
                     </section>
                     <span>
                       {new Date(billData.date || Date.now()).toLocaleString(
-                        "en-IN",
+                        "en-IN"
                       )}
                     </span>
                   </div>
@@ -443,7 +457,7 @@ const MemoEBill = ({ data }: IEbillProps) => {
                                             <span className="text-gray-500">
                                               (+₹
                                               {formatMoney(
-                                                item?.portion?.price || 0,
+                                                item?.portion?.price || 0
                                               )}
                                               )
                                             </span>
@@ -507,11 +521,11 @@ const MemoEBill = ({ data }: IEbillProps) => {
                                     )}
                                   </motion.article>
                                 );
-                              },
+                              }
                             )}
                           </div>
                         </motion.div>
-                      ),
+                      )
                     )
                   ) : (
                     <NoBillFound />

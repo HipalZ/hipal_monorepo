@@ -7,7 +7,6 @@ import { memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import { useCart } from "@/components/store/useCart";
-import { useCartStore } from "@/components/store/useCartStore";
 import { useLogin } from "@/components/store/useLogin";
 import { useParams, useRouter } from "next/navigation";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
@@ -53,8 +52,6 @@ const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
   const setInputModal = useCart((s) => s.setInputModal);
   const setCallWaiterModal = useCart((s) => s.setCallWaiterModal);
   const setOrderPlaced = useCart((s) => s.setOrderPlaced);
-
-  const openInstructionModal = useCartStore((s) => s.openInstructionModal);
 
   const closeModal = useCallback(() => {
     setInputModal(false);
@@ -273,7 +270,7 @@ const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
         )}
       </AnimatePresence>
 
-      {openInstructionModal && <InstructionPopup />}
+      <InstructionPopup />
       <AnimatePresence>
         {orderPlaced && (
           <motion.div

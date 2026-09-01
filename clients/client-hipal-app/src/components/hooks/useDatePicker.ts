@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 const useDatePicker = (currentYear, currentMonth, currentDay, pickerRef) => {
   const [date, setDate] = useState({
@@ -43,12 +43,12 @@ const useDatePicker = (currentYear, currentMonth, currentDay, pickerRef) => {
       const selectedDate = new Date(
         Number.parseInt(newState.year),
         Number.parseInt(newState.month) - 1,
-        Number.parseInt(newState.day),
+        Number.parseInt(newState.day)
       ).getTime();
       const today = new Date(
         currentYear,
         currentMonth - 1,
-        currentDay,
+        currentDay
       ).getTime();
 
       if (selectedDate > today) {
@@ -58,7 +58,7 @@ const useDatePicker = (currentYear, currentMonth, currentDay, pickerRef) => {
       const daysInMonth = new Date(
         Number.parseInt(newState.year),
         Number.parseInt(newState.month),
-        0,
+        0
       ).getDate();
 
       if (Number.parseInt(prev.day) > daysInMonth) {

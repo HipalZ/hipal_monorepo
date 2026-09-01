@@ -56,6 +56,11 @@ const MemoLiveCart = () => {
     setShowCart(true);
   }, [setShowCart, setCartPage, tableNameMissing, setTableNameMissing]);
 
+  const handleCartClose = useCallback(() => {
+    if (useCartStore.getState().openInstructionModal) return;
+    setShowCart(false);
+  }, [setShowCart]);
+
   return (
     <>
       <AnimatePresence>
@@ -104,7 +109,7 @@ const MemoLiveCart = () => {
       </AnimatePresence>
 
       {showCart && tableName ? (
-        <BottomPopUp show={showCart} onClose={() => setShowCart(false)} hide>
+        <BottomPopUp show={showCart} onClose={handleCartClose} hide>
           <MemoCart />
         </BottomPopUp>
       ) : (

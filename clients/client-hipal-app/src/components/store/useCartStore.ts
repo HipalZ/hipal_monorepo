@@ -1,5 +1,5 @@
 import type { DishType } from "@hi/db-models/src/validators";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -45,7 +45,7 @@ export interface ICartHistory {
 function generateCartItemId(
   dishId: string,
   portionId: string | null,
-  extras: Array<{ id: string; quantity: number }>,
+  extras: Array<{ id: string; quantity: number }>
 ): string {
   const sortedExtras = [...extras]
     .sort((a, b) => a.id.localeCompare(b.id))
@@ -159,7 +159,7 @@ export const useCartStore = create(
       removeSelectedChoice: (choiceId) => {
         set((state) => ({
           selectedChoices: state.selectedChoices.filter(
-            (c) => c.id !== choiceId,
+            (c) => c.id !== choiceId
           ),
         }));
       },
@@ -172,14 +172,14 @@ export const useCartStore = create(
         const itemId = generateCartItemId(
           newItem.dish._id,
           newItem.portion?._id || null,
-          newItem.extras.map((e) => ({ id: e.id, quantity: e.quantity })),
+          newItem.extras.map((e) => ({ id: e.id, quantity: e.quantity }))
         );
 
         newItem.id = itemId;
 
         set((state) => {
           const existingItemIndex = state.cart.findIndex(
-            (item) => item.id === itemId,
+            (item) => item.id === itemId
           );
 
           if (existingItemIndex !== -1) {
@@ -226,7 +226,7 @@ export const useCartStore = create(
       addInstructionToDish: (instruction: string) => {
         set((state) => {
           const dishIndex = state.cart.findIndex(
-            (item) => String(item.id) === state.instructionId,
+            (item) => String(item.id) === state.instructionId
           );
           if (dishIndex !== -1) {
             const updatedCart = [...state.cart];
@@ -245,7 +245,7 @@ export const useCartStore = create(
       removeInstructionFromDish: (id: string) => {
         set((state) => {
           const dishIndex = state.cart.findIndex(
-            (item) => String(item.id) === id,
+            (item) => String(item.id) === id
           );
           if (dishIndex !== -1) {
             const updatedCart = [...state.cart];
@@ -265,6 +265,6 @@ export const useCartStore = create(
     {
       name: "cart-store-updated",
       storage: createJSONStorage(() => localStorage),
-    },
-  ),
+    }
+  )
 );

@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import { AlarmClock, CalendarClock, X } from "lucide-react";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import { Button } from "@/components/ui/button";
@@ -112,7 +112,7 @@ export default function HotelAlarmReminder({
   const requireGuestDetails = useCallback(() => {
     if (hasGuestContactDetails(userDetails)) return true;
 
-    toast.info("Please add your name and phone number to continue.");
+    toast("Please add your name and phone number to continue.");
     setCheckLogin(true);
     return false;
   }, [setCheckLogin, userDetails]);
@@ -232,14 +232,14 @@ export default function HotelAlarmReminder({
         size={triggerLabel ? "default" : "icon"}
         aria-label="Request wake-up call"
         className={cn(
-          "relative h-11 w-11 rounded-full border border-white/70 bg-black text-white shadow-[0_6px_14px_rgba(0,0,0,0.18)] transition-all duration-300 hover:scale-[1.05] hover:bg-[#1F1F1F] active:scale-95",
+          "relative h-11 w-11 rounded-full border border-white/70 text-white transition-all duration-300 hover:scale-[1.05] active:scale-95 plus-jakarta-font tracking-normal",
           triggerClassName
         )}
       >
         <AlarmClock size={18} />
         {triggerLabel && <span>{triggerLabel}</span>}
         {activeRequests.length > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-[#E85D3A] px-1 text-[0.68rem] font-bold leading-none">
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white px-1 text-[0.68rem] font-bold leading-none">
             {activeRequests.length}
           </span>
         )}
@@ -250,17 +250,15 @@ export default function HotelAlarmReminder({
         hide
         onClose={() => setShowPopup(false)}
         height="auto"
+        manageHistory={false}
       >
-        <div className="max-h-[88dvh] overflow-y-auto px-5 pb-24 pt-5 poppins">
+        <div className="plus-jakarta-font max-h-[86dvh] overflow-y-auto px-5 pb-24 pt-5 tracking-normal">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div>
-              <p className="poppins text-[0.72rem] font-semibold uppercase text-[#A79F97]">
-                Front-office request
-              </p>
-              <h2 className="mt-1 poppins text-[1.32rem] font-bold leading-tight text-[#2F2924]">
+              <h2 className="mt-1 text-[1.25rem] leading-tight tracking-normal text-[#2F2924]">
                 Wake-up call
               </h2>
-              <p className="mt-1 poppins text-[0.82rem] leading-relaxed text-[#6B625A]">
+              <p className="mt-1 text-[0.82rem] font-medium leading-relaxed tracking-normal text-[#6B625A]">
                 Send your requested call time to front office.
               </p>
             </div>
@@ -276,16 +274,19 @@ export default function HotelAlarmReminder({
 
           <section className="space-y-4">
             <div className="rounded-lg bg-[#F7F3EE] p-3 text-[#111111]">
-              <div className="flex items-center gap-2 poppins text-[0.86rem] font-semibold text-[#2F2924]">
+              <div className="flex items-center gap-2 text-[0.86rem] font-bold tracking-normal text-[#2F2924]">
                 <CalendarClock size={17} />
                 Wake-up call time
               </div>
-              <p className="mt-1 poppins text-[0.76rem] leading-relaxed text-[#5A5048]">
+              <p className="mt-1 text-[0.75rem] font-medium leading-relaxed tracking-normal text-[#5A5048]">
                 Staff will receive your room details and call time.
               </p>
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="wake-date" className="poppins text-[#111111]">
+              <div className="mt-3 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="min-w-0 space-y-1.5">
+                  <Label
+                    htmlFor="wake-date"
+                    className="text-[0.8rem] font-bold tracking-normal text-[#111111]"
+                  >
                     Date
                   </Label>
                   <Input
@@ -294,11 +295,14 @@ export default function HotelAlarmReminder({
                     value={wakeDate}
                     min={getDateInputValue(new Date())}
                     onChange={(event) => setWakeDate(event.target.value)}
-                    className="poppins border-[#E1D8CE] bg-[#F7F3EE] text-[#111111] [color-scheme:light]"
+                    className="h-11 w-full min-w-0 rounded-xl border-[#E1D8CE] bg-white px-2 text-[0.82rem] font-semibold tracking-normal text-[#111111] [color-scheme:light]"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="wake-time" className="poppins text-[#111111]">
+                <div className="min-w-0 space-y-1.5">
+                  <Label
+                    htmlFor="wake-time"
+                    className="text-[0.8rem] font-bold tracking-normal text-[#111111]"
+                  >
                     Time
                   </Label>
                   <Input
@@ -306,14 +310,17 @@ export default function HotelAlarmReminder({
                     type="time"
                     value={wakeTime}
                     onChange={(event) => setWakeTime(event.target.value)}
-                    className="poppins border-[#E1D8CE] bg-[#F7F3EE] text-[#111111] [color-scheme:light]"
+                    className="h-11 w-full min-w-0 rounded-xl border-[#E1D8CE] bg-white px-2 text-[0.82rem] font-semibold tracking-normal text-[#111111] [color-scheme:light]"
                   />
                 </div>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="wake-note" className="poppins text-[#111111]">
+              <Label
+                htmlFor="wake-note"
+                className="text-[0.85rem] font-bold tracking-normal text-[#111111]"
+              >
                 Wake-up note
               </Label>
               <Input
@@ -322,15 +329,15 @@ export default function HotelAlarmReminder({
                 maxLength={80}
                 onChange={(event) => setNote(event.target.value)}
                 placeholder="Example: airport pickup"
-                className="poppins border-[#E1D8CE] bg-white text-[#111111] placeholder:text-[#7A7168]"
+                className="h-11 rounded-xl border-[#E1D8CE] bg-white text-[0.88rem] font-semibold tracking-normal text-[#111111] placeholder:text-[#7A7168]"
               />
             </div>
 
             <div className="rounded-lg border border-[#E6DDD3] bg-white p-3">
-              <p className="poppins text-[0.88rem] font-semibold text-[#2F2924]">
+              <p className="text-[0.88rem] font-bold tracking-normal text-[#2F2924]">
                 Front office will be notified
               </p>
-              <p className="mt-1 poppins text-[0.76rem] leading-relaxed text-[#6B625A]">
+              <p className="mt-1 text-[0.76rem] font-medium leading-relaxed tracking-normal text-[#6B625A]">
                 They can track, acknowledge, and mark the wake-up call as
                 informed.
               </p>
@@ -338,7 +345,7 @@ export default function HotelAlarmReminder({
 
             {activeRequests.length > 0 && (
               <div className="space-y-2">
-                <p className="poppins text-[0.76rem] font-semibold uppercase text-[#A79F97]">
+                <p className="text-[0.76rem] font-bold uppercase tracking-[0.12em] text-[#A79F97]">
                   Active wake-up call
                 </p>
                 {activeRequests.map((request) => (
@@ -347,14 +354,14 @@ export default function HotelAlarmReminder({
                     className="rounded-md bg-[#F7F3EE] px-3 py-2"
                   >
                     <div>
-                      <p className="poppins text-[0.85rem] font-semibold text-[#2F2924]">
+                      <p className="text-[0.85rem] font-bold tracking-normal text-[#2F2924]">
                         {getWakeUpTimeLabel(request)}
                       </p>
-                      <p className="poppins text-[0.75rem] text-[#6B625A]">
+                      <p className="text-[0.75rem] font-medium tracking-normal text-[#6B625A]">
                         {request.note}
                       </p>
                       <p
-                        className={`mt-1 poppins text-[0.72rem] font-semibold ${
+                        className={`mt-1 text-[0.72rem] font-bold tracking-normal ${
                           request.status === "DUE"
                             ? "text-[#C2410C]"
                             : request.acceptedBy?.name
@@ -372,7 +379,7 @@ export default function HotelAlarmReminder({
 
             {historyRequests.length > 0 && (
               <div className="space-y-2">
-                <p className="poppins text-[0.76rem] font-semibold uppercase text-[#A79F97]">
+                <p className="text-[0.76rem] font-bold uppercase tracking-[0.12em] text-[#A79F97]">
                   Wake-up call history
                 </p>
                 {historyRequests.map((request) => (
@@ -380,13 +387,13 @@ export default function HotelAlarmReminder({
                     key={request.id}
                     className="rounded-md border border-[#E6DDD3] bg-white px-3 py-2"
                   >
-                    <p className="poppins text-[0.85rem] font-semibold text-[#2F2924]">
+                    <p className="text-[0.85rem] font-bold tracking-normal text-[#2F2924]">
                       {getWakeUpTimeLabel(request)}
                     </p>
-                    <p className="poppins text-[0.75rem] text-[#6B625A]">
+                    <p className="text-[0.75rem] font-medium tracking-normal text-[#6B625A]">
                       {request.note}
                     </p>
-                    <p className="mt-1 poppins text-[0.72rem] font-semibold text-[#198754]">
+                    <p className="mt-1 text-[0.72rem] font-bold tracking-normal text-[#198754]">
                       {getStatusLabel(request)}
                     </p>
                   </div>

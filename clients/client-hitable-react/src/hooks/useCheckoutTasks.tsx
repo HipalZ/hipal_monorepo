@@ -1,10 +1,10 @@
+import useBusinessData from '@/components/store/useBusinessData';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
+import { useHotelStore } from '@/components/store/useHotelStore';
 import { apiRpc } from '@hi/common';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import toast from 'react-hot-toast';
-import useBusinessData from '@/components/store/useBusinessData';
-import { useHiClientZ } from '@/components/store/useHiClientzData';
-import { useHotelStore } from '@/components/store/useHotelStore';
 
 export interface CheckoutTask {
   _id: string;
@@ -32,9 +32,7 @@ export const useMyCheckoutTasks = (businessId?: string, userId?: string) => {
   const { data, isLoading, refetch } = useQuery({
     queryKey: [TASKS_KEY, businessId, userId],
     enabled: Boolean(businessId && userId),
-    // Escalation happens server-side on a 30s sweep; match it so a task that
-    // widens to this staff member shows up without a manual refresh.
-    refetchInterval: 30_000,
+    refetchInterval: 1000,
     queryFn: async (): Promise<CheckoutTask[]> => {
       const res = await apiRpc.hotel.checkout_task.my_tasks.$get({
         query: { businessId: businessId as string, userId: userId as string },

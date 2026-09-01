@@ -1,6 +1,7 @@
 import { HotelCheckoutGroup, HotelCheckoutTask } from '@hi/db-models';
 import { pushToManagers, pushToStaff, whatsAppManagers } from '../services/checkoutTasks/notify';
 import { allFloorStaffFor } from '../services/checkoutTasks/routing';
+import mongoose from 'mongoose';
 
 /**
  * Advances checkout tasks past their deadlines.
@@ -79,6 +80,10 @@ const flagOverrun = async (task: PopulatedTask, now: number) => {
 };
 
 export const sweepCheckoutTasks = async (): Promise<void> => {
+  if (mongoose.connection.readyState !== 1) {
+    return;
+  }
+
   const now = Date.now();
 
   const unaccepted = (await HotelCheckoutTask.find({

@@ -1,60 +1,43 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  DndContext,
-  DragOverlay,
-  type DragEndEvent,
-  type DragStartEvent,
-  type DropAnimation,
-  defaultDropAnimationSideEffects,
-} from "@dnd-kit/core";
-import { CheckCircle2 } from "lucide-react";
-import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
-import { useStaffDataStore } from "@/components/store/hotel/useHotelStaff";
-import { useRoomStore } from "@/components/store/hotel/useRoomStore";
-import { useFloorStore } from "@/components/store/hotel/useFloorStore";
-import { useStaffLinking } from "@/hooks/hotel/useStaffLinking";
-import type { FloorDoc, RoomDoc, StaffDoc } from "./types";
-import { DroppableFloor } from "./droppableFloor";
-import DraggableStaff from "./draggableStaff";
-import { StaffAssignmentsDialog } from "./staffAssignmentDialog";
-import { DroppableRoom } from "./droppableRoom";
-import { Input } from "@/components/ui/input";
-import { ScreenDisclaimer } from "./screenDisclaimer";
+import AdvancedBottomButton from '@/components/atom/bottomButton/advancedBottomButton';
+import { useFloorStore } from '@/components/store/hotel/useFloorStore';
+import { useStaffDataStore } from '@/components/store/hotel/useHotelStaff';
+import { useRoomStore } from '@/components/store/hotel/useRoomStore';
+import useBusinessData from '@/components/store/useBusinessData';
+import { Input } from '@/components/ui/input';
+import { findBusinessRole } from '@/components/utils/helper';
+import { useStaffLinking } from '@/hooks/hotel/useStaffLinking';
+import { defaultDropAnimationSideEffects, DndContext, DragOverlay, type DragEndEvent, type DragStartEvent, type DropAnimation } from '@dnd-kit/core';
+import { CheckCircle2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import DraggableStaff from './draggableStaff';
+import { DroppableFloor } from './droppableFloor';
+import { DroppableRoom } from './droppableRoom';
+import { ScreenDisclaimer } from './screenDisclaimer';
+import { StaffAssignmentsDialog } from './staffAssignmentDialog';
+import type { FloorDoc, RoomDoc, StaffDoc } from './types';
 
-const formatRoleName = (role = "Uncategorized") => {
-  return role
-    .replace(/_/g, " ")
-    .replace(
-      /\w\S*/g,
-      (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
-    );
+const formatRoleName = (role = 'Uncategorized') => {
+  return role.replace(/_/g, ' ').replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 };
 
 export function RoomStaffLink() {
   const { mutateAsync, isPending } = useStaffLinking();
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId || s.businessData?._id);
   const [infoStaff, setInfoStaff] = useState<StaffDoc | null>(null);
-  const [searchTerm, setSearchTerm] = useState(""); // search input
+  const [searchTerm, setSearchTerm] = useState(''); // search input
 
   const staffListRaw = useStaffDataStore((s) => s.staffData);
   const roomRawData = useRoomStore((s) => s.roomData);
   const floorDataRaw = useFloorStore((s) => s.floorData);
 
   const staff = (Array.isArray(staffListRaw) ? staffListRaw : []) as StaffDoc[];
-  const rooms = (Array.isArray(roomRawData)
-    ? roomRawData
-    : []) as unknown as RoomDoc[];
-  const floors = (
-    Array.isArray(floorDataRaw) ? floorDataRaw : []
-  ) as FloorDoc[];
+  const rooms = (Array.isArray(roomRawData) ? roomRawData : []) as unknown as RoomDoc[];
+  const floors = (Array.isArray(floorDataRaw) ? floorDataRaw : []) as FloorDoc[];
 
-  const [assignments, setAssignments] = useState<Record<string, Set<string>>>(
-    {},
-  );
+  const [assignments, setAssignments] = useState<Record<string, Set<string>>>({});
   const [activeStaff, setActiveStaff] = useState<StaffDoc | null>(null);
 
-  const [initialAssignments, setInitialAssignments] = useState<
-    Record<string, Set<string>>
-  >({});
+  const [initialAssignments, setInitialAssignments] = useState<Record<string, Set<string>>>({});
 
   useEffect(() => {
     const mapping: Record<string, Set<string>> = {};
@@ -72,17 +55,13 @@ export function RoomStaffLink() {
     if (!searchTerm.trim()) return staff;
 
     const lower = searchTerm.toLowerCase();
-    return staff.filter(
-      (s) =>
-        s.name.toLowerCase().includes(lower) ||
-        s?.phone.toLowerCase().includes(lower),
-    );
+    return staff.filter((s) => s.name.toLowerCase().includes(lower) || (s.phone ?? '').toLowerCase().includes(lower));
   }, [staff, searchTerm]);
 
   const groupedStaff = useMemo(() => {
     return filteredStaff.reduce(
       (acc, staffMember) => {
-        const role = staffMember.customRole?.[0]?.role || "Uncategorized";
+        const role = findBusinessRole(staffMember.customRole, businessId)?.role ?? 'Uncategorized';
         if (!acc[role]) {
           acc[role] = [];
         }
@@ -91,7 +70,7 @@ export function RoomStaffLink() {
       },
       {} as Record<string, StaffDoc[]>,
     );
-  }, [filteredStaff]);
+  }, [businessId, filteredStaff]);
 
   const assignedStaffIds = useMemo(() => {
     const allIds = new Set<string>();
@@ -116,7 +95,7 @@ export function RoomStaffLink() {
     const staffId = active.data.current.staffId as string;
     const dropType = over.data.current?.type;
 
-    if (dropType === "room") {
+    if (dropType === 'room') {
       const roomId = over?.data?.current?.roomId as string;
       setAssignments((prev) => {
         const next = { ...prev };
@@ -127,7 +106,7 @@ export function RoomStaffLink() {
       });
     }
 
-    if (dropType === "floor") {
+    if (dropType === 'floor') {
       const floorId = over?.data?.current?.floorId as string;
       const floorRooms = rooms.filter((r) => r.zoneId === floorId);
       setAssignments((prev) => {
@@ -213,7 +192,7 @@ export function RoomStaffLink() {
     }
 
     const payload = { rooms: roomsPayload };
-    console.log("Payload:", payload);
+    console.log('Payload:', payload);
 
     await mutateAsync(payload);
 
@@ -221,7 +200,8 @@ export function RoomStaffLink() {
     setInitialAssignments((prev) => {
       const next = { ...prev };
       for (const r of roomsPayload) {
-        next[r?.roomId] = new Set([...(assignments[r?.roomId] || [])]);
+        if (!r) continue;
+        next[r.roomId] = new Set([...(assignments[r.roomId] || [])]);
       }
       return next;
     });
@@ -229,14 +209,14 @@ export function RoomStaffLink() {
 
   const dropAnimation: DropAnimation = {
     sideEffects: defaultDropAnimationSideEffects({
-      styles: { active: { opacity: "0.5" } },
+      styles: { active: { opacity: '0.5' } },
     }),
   };
 
   return (
     <>
-      <div className="h-[90vh] flex flex-col p-4 bg-slate-50">
-        <h1 className="font-semibold text-3xl my-2">Staff Assignment</h1>
+      <div className="flex h-[90vh] flex-col bg-slate-50 p-4">
+        <h1 className="my-2 text-3xl font-semibold">Staff Assignment</h1>
         <ScreenDisclaimer />
         {/* 🔍 Search Box */}
         <Input
@@ -244,21 +224,17 @@ export function RoomStaffLink() {
           placeholder="Search staff by name or phone..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="mb-4 p-2 border rounded-md text-sm focus:ring-2 focus:ring-purple-400"
+          className="mb-4 rounded-md border p-2 text-sm focus:ring-2 focus:ring-purple-400"
         />
 
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow overflow-hidden">
-            <aside className="col-span-1 flex flex-col bg-white p-4 rounded-lg shadow-sm overflow-y-auto">
-              <h2 className="text-xl font-bold mb-4 text-slate-800 flex-shrink-0">
-                Staff
-              </h2>
-              <div className="overflow-y-auto -mr-4 pr-4">
+          <div className="grid flex-grow grid-cols-1 gap-6 overflow-hidden lg:grid-cols-3">
+            <aside className="col-span-1 flex flex-col overflow-y-auto rounded-lg bg-white p-4 shadow-sm">
+              <h2 className="mb-4 flex-shrink-0 text-xl font-bold text-slate-800">Staff</h2>
+              <div className="-mr-4 overflow-y-auto pr-4">
                 {Object.entries(groupedStaff).map(([role, staffInRole]) => (
                   <div key={role} className="mb-4">
-                    <h3 className="text-xs font-bold uppercase text-slate-500 mb-2 sticky top-0 bg-white py-1">
-                      {formatRoleName(role)}
-                    </h3>
+                    <h3 className="sticky top-0 mb-2 bg-white py-1 text-xs font-bold uppercase text-slate-500">{formatRoleName(role)}</h3>
                     {staffInRole?.map((s) => (
                       <DraggableStaff
                         key={s._id}
@@ -282,17 +258,11 @@ export function RoomStaffLink() {
               rooms={rooms}
             />
 
-            <main className="col-span-1 lg:col-span-2 overflow-y-auto bg-white p-4 rounded-lg shadow-sm">
-              <h2 className="text-xl font-bold mb-4 text-slate-800">
-                Floors & Rooms
-              </h2>
+            <main className="col-span-1 overflow-y-auto rounded-lg bg-white p-4 shadow-sm lg:col-span-2">
+              <h2 className="mb-4 text-xl font-bold text-slate-800">Floors & Rooms</h2>
               {floors.map((f) => {
                 const floorRooms = rooms.filter((r) => r.zoneId === f._id);
-                const staffCount = new Set(
-                  floorRooms.flatMap((r) =>
-                    Array.from(assignments[r._id] || []),
-                  ),
-                ).size;
+                const staffCount = new Set(floorRooms.flatMap((r) => Array.from(assignments[r._id] || []))).size;
 
                 return (
                   <DroppableFloor
@@ -307,9 +277,7 @@ export function RoomStaffLink() {
                       <DroppableRoom
                         key={r._id}
                         room={r}
-                        assigned={staff.filter((s) =>
-                          (assignments[r._id] || new Set()).has(s._id),
-                        )}
+                        assigned={staff.filter((s) => (assignments[r._id] || new Set()).has(s._id))}
                         onRemove={(sid) => handleRemove(r._id, sid)}
                       />
                     ))}
@@ -321,13 +289,13 @@ export function RoomStaffLink() {
 
           <DragOverlay dropAnimation={dropAnimation}>
             {activeStaff ? (
-              <div className="p-2 flex items-center gap-3 rounded-lg border bg-white shadow-xl">
+              <div className="flex items-center gap-3 rounded-lg border bg-white p-2 shadow-xl">
                 {assignedStaffIds.has(activeStaff._id) ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
                 ) : (
-                  <div className="w-5 h-5 bg-slate-200 rounded-full" />
+                  <div className="h-5 w-5 rounded-full bg-slate-200" />
                 )}
-                <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center font-bold text-sm text-gray-700">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 text-sm font-bold text-gray-700">
                   {activeStaff.name.slice(0, 2).toUpperCase()}
                 </div>
                 <div>
@@ -345,9 +313,9 @@ export function RoomStaffLink() {
         maxWidth="30rem"
         buttons={[
           {
-            text: "Save Assignments",
+            text: 'Save Assignments',
             onClick: handleSave,
-            className: "w-full pl-3 rounded-md",
+            className: 'w-full pl-3 rounded-md',
             isLoading: isPending,
           },
         ]}

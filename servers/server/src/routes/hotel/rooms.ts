@@ -37,6 +37,7 @@ import { z } from "zod";
 import { raiseCheckoutTasks } from "../../services/checkoutTasks/raise";
 import { ensureQuickActionDefaults } from "../../services/hotel/quickActions";
 import { DEFAULT_IOS_NOTIFICATION_SOUND } from "../../services/notifications/sound";
+import { buildBackendUrl } from "../../utils/backendBaseUrl";
 import {
   requireRoomOccupancy,
   requireRoomOccupancyByChatReply,
@@ -122,7 +123,7 @@ export const hotelTemplateBodySequence = async (
   googleReviewLink: string,
   serviceRejectionReason: string,
   phone: string,
-  checkoutEtaTime?: string,
+  checkoutEtaTime?: string
 ) => {
   const ans = [];
 
@@ -181,7 +182,7 @@ export const returnHotelBodyComponents = async (
   serviceRejectionReason: string,
   phone: string,
   imageUrl?: string,
-  checkoutEtaTime?: string,
+  checkoutEtaTime?: string
 ) => {
   // return components for the body
   const parameters = await hotelTemplateBodySequence(
@@ -198,7 +199,7 @@ export const returnHotelBodyComponents = async (
     googleReviewLink,
     serviceRejectionReason,
     phone,
-    checkoutEtaTime,
+    checkoutEtaTime
   );
 
   const components = [];
@@ -279,7 +280,7 @@ const roomRouter = new Hono()
         })
         .refine((data) => data.roomId || data.roomName, {
           message: "Either roomId or roomName must be provided",
-        }),
+        })
     ),
     async (c) => {
       const { businessId, roomId, roomName } = c.req.query();
@@ -296,7 +297,7 @@ const roomRouter = new Hono()
       return room
         ? respond(c, "Room details", false, 200, room)
         : respond(c, "Room not found", true, 404, {});
-    },
+    }
   )
 
   .get(
@@ -305,7 +306,7 @@ const roomRouter = new Hono()
       "query",
       z.object({
         businessId: z.string().min(2).max(50),
-      }),
+      })
     ),
     async (c) => {
       const { businessId } = c.req.query();
@@ -320,7 +321,7 @@ const roomRouter = new Hono()
       });
 
       return respond(c, "All rooms", false, 200, rooms);
-    },
+    }
   )
 
   .get(
@@ -331,7 +332,7 @@ const roomRouter = new Hono()
         businessId: z.string().min(2).max(50),
         room: z.string().min(1).max(50),
         userId: z.string().min(2).max(50),
-      }),
+      })
     ),
     async (c) => {
       const { businessId, room, userId } = c.req.query();
@@ -358,7 +359,7 @@ const roomRouter = new Hono()
           `Room already Occupied by ${roomData.userIds[0].name}`,
           true,
           403,
-          {},
+          {}
         );
       }
 
@@ -367,7 +368,7 @@ const roomRouter = new Hono()
         data: { _id: roomData._id },
         err: false,
       });
-    },
+    }
   )
   .get(
     "/fetch_room_session",
@@ -375,7 +376,7 @@ const roomRouter = new Hono()
       "query",
       z.object({
         sessionId: z.string().min(24).max(24),
-      }),
+      })
     ),
 
     async (c) => {
@@ -389,7 +390,7 @@ const roomRouter = new Hono()
             err: true,
             data: {},
           },
-          404,
+          404
         );
       }
 
@@ -399,9 +400,9 @@ const roomRouter = new Hono()
           err: false,
           data: { _id: roomSession._id },
         },
-        200,
+        200
       );
-    },
+    }
   )
 
   .get(
@@ -413,7 +414,7 @@ const roomRouter = new Hono()
         from: z.string().optional(),
         to: z.string().optional(),
         source: z.string().optional(),
-      }),
+      })
     ),
 
     async (c) => {
@@ -448,15 +449,12 @@ const roomRouter = new Hono()
         .lean();
 
       const uniqueByUser = Object.values(
-        filterAnalytics.reduce(
-          (acc, curr) => {
-            if (curr.userId?._id) {
-              acc[curr.userId._id.toString()] = curr; // keep latest entry per user
-            }
-            return acc;
-          },
-          {} as Record<string, (typeof filterAnalytics)[number]>,
-        ),
+        filterAnalytics.reduce((acc, curr) => {
+          if (curr.userId?._id) {
+            acc[curr.userId._id.toString()] = curr; // keep latest entry per user
+          }
+          return acc;
+        }, {} as Record<string, (typeof filterAnalytics)[number]>)
       );
 
       // Lifetime visit count per guest (all stays ever, keyed by phone) so the
@@ -466,13 +464,17 @@ const roomRouter = new Hono()
         { $group: { _id: "$userId", count: { $sum: 1 } } },
       ]);
       const countByUser = new Map<string, number>(
-        visitAgg.map((v: { _id: unknown; count: number }) => [String(v._id), v.count]),
+        visitAgg.map((v: { _id: unknown; count: number }) => [
+          String(v._id),
+          v.count,
+        ])
       );
       const visitCountByPhone: Record<string, number> = {};
       for (const entry of uniqueByUser) {
         const phone = entry.userId?.phone;
         if (phone) {
-          visitCountByPhone[phone] = countByUser.get(String(entry.userId?._id)) ?? 1;
+          visitCountByPhone[phone] =
+            countByUser.get(String(entry.userId?._id)) ?? 1;
         }
       }
 
@@ -509,7 +511,7 @@ const roomRouter = new Hono()
 
       const totalSources = Object.values(sourceCount).reduce(
         (a, b) => a + b,
-        0,
+        0
       );
       const sourcePercentages: Record<string, number> = {};
 
@@ -524,7 +526,7 @@ const roomRouter = new Hono()
         sourcePercentages,
         userCount: Object.keys(userCount).length,
       });
-    },
+    }
   )
 
   .get(
@@ -535,7 +537,7 @@ const roomRouter = new Hono()
         businessId: z.string().min(24).max(24),
         userId: z.string().min(24).max(24),
         roomId: z.string().min(24).max(24).optional(),
-      }),
+      })
     ),
 
     async (c) => {
@@ -595,7 +597,7 @@ const roomRouter = new Hono()
         overAll,
         userAnalytics,
       });
-    },
+    }
   )
 
   .post(
@@ -615,7 +617,7 @@ const roomRouter = new Hono()
             isRead: z.boolean().optional(),
           })
           .default({}),
-      }),
+      })
     ),
 
     async (c) => {
@@ -638,7 +640,7 @@ const roomRouter = new Hono()
         ...criteria,
       })
         .select(
-          "userId roomId alertId reviewRating description date staffs improvementAreas isRead readAt readBy note",
+          "userId roomId alertId reviewRating description date staffs improvementAreas isRead readAt readBy note"
         )
         .sort({ date: -1 })
         .populate({
@@ -668,9 +670,9 @@ const roomRouter = new Hono()
         "Hotel reviews fetched successfully",
         false,
         200,
-        reviews,
+        reviews
       );
-    },
+    }
   )
 
   .post("/", zValidator("json", hotelRoom), async (c) => {
@@ -698,7 +700,7 @@ const roomRouter = new Hono()
 
       const [room] = await HotelRoom.create(
         [{ ...requestData, slug: uniqueOrderId }],
-        { session },
+        { session }
       );
 
       if (!room) {
@@ -716,7 +718,7 @@ const roomRouter = new Hono()
         const shortUrl = await UrlModel.create({
           longUrl,
           businessId: requestData.businessId,
-          shortUrl: `https://api.hipalz.com/surl/r/${uniqueOrderId}`,
+          shortUrl: buildBackendUrl(`/surl/r/${uniqueOrderId}`),
           urlCode: uniqueOrderId,
           shortUrlType: "ROOM",
         });
@@ -733,7 +735,7 @@ const roomRouter = new Hono()
       const updatedZone = await HotelZone.findByIdAndUpdate(
         requestData.zoneId,
         { $addToSet: { roomIds: room._id } },
-        { session, new: true },
+        { session, new: true }
       );
 
       if (!updatedZone) {
@@ -743,7 +745,7 @@ const roomRouter = new Hono()
       const updatedRoomType = await HotelRoomType.findByIdAndUpdate(
         requestData.roomTypeId,
         { $addToSet: { roomIds: room._id } },
-        { session, new: true },
+        { session, new: true }
       );
 
       if (!updatedRoomType) {
@@ -784,7 +786,7 @@ const roomRouter = new Hono()
       const updatedRoom = await HotelRoom.findByIdAndUpdate(
         roomId,
         requestData,
-        { new: true, session },
+        { new: true, session }
       );
 
       if (!updatedRoom) {
@@ -796,7 +798,7 @@ const roomRouter = new Hono()
         const updatedZone = await HotelZone.findByIdAndUpdate(
           zoneId,
           { $addToSet: { roomIds: updatedRoom._id } },
-          { new: true, session },
+          { new: true, session }
         );
 
         if (!updatedZone) {
@@ -808,7 +810,7 @@ const roomRouter = new Hono()
         const updatedRoomType = await HotelRoomType.findByIdAndUpdate(
           roomTypeId,
           { $addToSet: { roomIds: updatedRoom._id } },
-          { new: true, session },
+          { new: true, session }
         );
 
         if (!updatedRoomType) {
@@ -887,7 +889,7 @@ const roomRouter = new Hono()
           const shortUrl = await UrlModel.create({
             longUrl,
             businessId: requestData.businessId,
-            shortUrl: `https://api.hipalz.com/surl/r/${uniqueOrderId}`,
+            shortUrl: buildBackendUrl(`/surl/r/${uniqueOrderId}`),
             urlCode: uniqueOrderId,
             shortUrlType: "ROOM",
           });
@@ -906,7 +908,7 @@ const roomRouter = new Hono()
       const updateZone = await HotelZone.findByIdAndUpdate(
         requestData.zoneId,
         { $addToSet: { roomIds: { $each: createdRooms.map((r) => r._id) } } },
-        { session, new: true },
+        { session, new: true }
       );
 
       if (!updateZone) {
@@ -916,7 +918,7 @@ const roomRouter = new Hono()
       const updateRoomType = await HotelRoomType.findByIdAndUpdate(
         requestData.roomTypeId,
         { $addToSet: { roomIds: { $each: createdRooms.map((r) => r._id) } } },
-        { session, new: true },
+        { session, new: true }
       );
 
       if (!updateRoomType) {
@@ -955,7 +957,7 @@ const roomRouter = new Hono()
       const user = await User.findOneAndUpdate(
         { phone },
         { name, phone },
-        { upsert: true, new: true, session },
+        { upsert: true, new: true, session }
       );
 
       if (!user) {
@@ -972,7 +974,7 @@ const roomRouter = new Hono()
           authCode,
           source: requestData.source,
         },
-        { new: true, session },
+        { new: true, session }
       );
 
       if (!updatedRoom) {
@@ -991,7 +993,7 @@ const roomRouter = new Hono()
             source: requestData.source,
           },
         ],
-        { session },
+        { session }
       );
 
       if (!roomSession) {
@@ -1010,7 +1012,7 @@ const roomRouter = new Hono()
           source: requestData.source,
           checkIn: Date.now(),
         },
-        { upsert: true },
+        { upsert: true }
       );
 
       await syncHotelStayCompanions({
@@ -1024,7 +1026,7 @@ const roomRouter = new Hono()
 
       if (whatsAppConfig) {
         const businessInfo = await Business.findById(
-          roomExists.businessId,
+          roomExists.businessId
         ).select("name");
 
         const outLetInfo = await OutLetInfo.findOne({
@@ -1072,7 +1074,7 @@ const roomRouter = new Hono()
                 err: true,
                 data: {},
               },
-              404,
+              404
             );
           }
 
@@ -1091,7 +1093,7 @@ const roomRouter = new Hono()
             outLetInfo?.placeUrl as string,
             "serviceRejectionReason",
             user?.phone as string,
-            imageUrl,
+            imageUrl
           );
 
           const payload = {
@@ -1155,7 +1157,7 @@ const roomRouter = new Hono()
           "Cannot check out. There are pending alerts for this room.",
           true,
           400,
-          {},
+          {}
         );
       }
 
@@ -1208,7 +1210,7 @@ const roomRouter = new Hono()
                   err: true,
                   data: {},
                 },
-                404,
+                404
               );
             }
 
@@ -1227,7 +1229,7 @@ const roomRouter = new Hono()
               "https://chatlink.com",
               `${outletInfo?.placeUrl}`,
               "serviceRejectionReason",
-              userData?.phone as string,
+              userData?.phone as string
             );
 
             const payload = {
@@ -1265,7 +1267,7 @@ const roomRouter = new Hono()
           message: { $regex: "^WAKE_UP_CALL::" },
         },
         { $set: { alertProgress: "RESOLVED", deliveredAt: Date.now() } },
-        { session },
+        { session }
       );
 
       await HotelAlert.updateMany(
@@ -1278,7 +1280,7 @@ const roomRouter = new Hono()
           ],
         },
         { $set: { alertProgress: "REJECTED", rejectedAt: Date.now() } },
-        { session },
+        { session }
       );
 
       const updatedRoom = await HotelRoom.findByIdAndUpdate(
@@ -1289,7 +1291,7 @@ const roomRouter = new Hono()
           authCode: "",
           source: "",
         },
-        { new: true, session },
+        { new: true, session }
       );
 
       if (!updatedRoom) {
@@ -1299,7 +1301,7 @@ const roomRouter = new Hono()
       const deleteRoomChat = await HotelRoomChat.updateMany(
         { roomId },
         { $set: { isDeleted: true } },
-        { session },
+        { session }
       );
       if (!deleteRoomChat) {
         throw new Error("Error deleting room chat");
@@ -1335,8 +1337,22 @@ const roomRouter = new Hono()
         },
         {
           session,
-        },
+        }
       );
+      if (removeSession?._id) {
+        await UrlModel.deleteMany(
+          {
+            businessId: roomExists.businessId,
+            shortUrlType: "ROOM_SESSION",
+            longUrl: {
+              $regex: new RegExp(
+                `[?&]sessionId=${String(removeSession._id)}(?:&|$)`
+              ),
+            },
+          },
+          { session }
+        );
+      }
       await HotelRoomSession.deleteOne({ roomId }, { session });
 
       // Raise the configured turnover tasks in the same round-trip, so hitable
@@ -1348,11 +1364,13 @@ const roomRouter = new Hono()
         // The room's own occupants, not requestData.userIds — that field is the
         // review selection, which is empty whenever nobody is ticked for a
         // review, and the report would then lose who actually stayed.
-        const occupantIds = (
-          roomExists.userIds?.length ? roomExists.userIds : requestData.userIds
-        )
-          ?.map(String)
-          .filter(Boolean) ?? [];
+        const occupantIds =
+          (roomExists.userIds?.length
+            ? roomExists.userIds
+            : requestData.userIds
+          )
+            ?.map(String)
+            .filter(Boolean) ?? [];
 
         // Keep every occupant, in the room's order — [0] is the primary guest
         // and the rest are companions, which the guest reports need. A find()
@@ -1431,7 +1449,7 @@ const roomRouter = new Hono()
         const checkoutCompletionMinutes =
           checkoutService?.avgCompletionTime || 15;
         const checkoutEtaTime = new Date(
-          Date.now() + checkoutCompletionMinutes * 60 * 1000,
+          Date.now() + checkoutCompletionMinutes * 60 * 1000
         ).toLocaleTimeString("en-IN", {
           hour: "2-digit",
           minute: "2-digit",
@@ -1462,12 +1480,18 @@ const roomRouter = new Hono()
           .lean();
 
         if (existingCheckoutRequest) {
-          return respond(c, "Checkout request already in progress", false, 200, {
-            alreadyRequested: true,
-            _id: existingCheckoutRequest._id,
-            alertProgress: existingCheckoutRequest.alertProgress,
-            etaMinutes: checkoutCompletionMinutes,
-          });
+          return respond(
+            c,
+            "Checkout request already in progress",
+            false,
+            200,
+            {
+              alreadyRequested: true,
+              _id: existingCheckoutRequest._id,
+              alertProgress: existingCheckoutRequest.alertProgress,
+              etaMinutes: checkoutCompletionMinutes,
+            }
+          );
         }
 
         const alert = new HotelAlert({
@@ -1516,9 +1540,7 @@ const roomRouter = new Hono()
           .select("_id")
           .lean();
 
-        const frontofficeIds = frontofficeStaff.map((s) =>
-          s._id.toString(),
-        );
+        const frontofficeIds = frontofficeStaff.map((s) => s._id.toString());
 
         if (frontofficeIds.length > 0) {
           const registrationTokens = await DeviceToken.find({
@@ -1529,7 +1551,7 @@ const roomRouter = new Hono()
           // Parallel + fire-and-forget: FCM latency/outages must never block
           // or fail the checkout request (errors are logged, not thrown).
           const pushTargets = registrationTokens.filter(
-            (obj) => obj.notification,
+            (obj) => obj.notification
           );
           void Promise.allSettled(
             pushTargets.map((obj) => {
@@ -1556,7 +1578,7 @@ const roomRouter = new Hono()
                 iosSound: pushMessage.apns.payload.aps.sound,
               });
               return admin.messaging().send(pushMessage);
-            }),
+            })
           ).then(async (results) => {
             // FCM-rejected tokens are dead (uninstalled/expired) — prune them
             // so future pushes only target live devices.
@@ -1565,7 +1587,7 @@ const roomRouter = new Hono()
               if (result.status !== "rejected") return;
               console.error(
                 "Error sending checkout push notification:",
-                result.reason,
+                result.reason
               );
               const code =
                 result.reason?.code || result.reason?.errorInfo?.code;
@@ -1580,10 +1602,10 @@ const roomRouter = new Hono()
               await DeviceToken.deleteMany({
                 _id: { $in: staleTokenIds },
               }).catch((error) =>
-                console.error("Error pruning stale device tokens:", error),
+                console.error("Error pruning stale device tokens:", error)
               );
               console.log(
-                `[hotelRoom:checkoutPush:prune] removed ${staleTokenIds.length} stale token(s)`,
+                `[hotelRoom:checkoutPush:prune] removed ${staleTokenIds.length} stale token(s)`
               );
             }
           });
@@ -1604,7 +1626,7 @@ const roomRouter = new Hono()
               checkoutService.name,
               frontofficeIds,
               roomExists.staffIds,
-              checkoutService._id.toString(),
+              checkoutService._id.toString()
             );
 
             scheduleAlertUpdate(
@@ -1615,7 +1637,7 @@ const roomRouter = new Hono()
               checkoutService.name,
               frontofficeIds,
               roomExists.staffIds,
-              checkoutService._id.toString(),
+              checkoutService._id.toString()
             );
           }
 
@@ -1624,7 +1646,7 @@ const roomRouter = new Hono()
             roomExists.name,
             alert._id.toString(),
             checkoutService.name,
-            frontofficeIds,
+            frontofficeIds
           );
         }
 
@@ -1661,7 +1683,7 @@ const roomRouter = new Hono()
                   err: true,
                   data: {},
                 },
-                404,
+                404
               );
             }
 
@@ -1685,7 +1707,7 @@ const roomRouter = new Hono()
               "serviceRejectionReason",
               userData?.phone as string,
               undefined,
-              checkoutEtaTime,
+              checkoutEtaTime
             );
 
             const payload = {
@@ -1708,9 +1730,7 @@ const roomRouter = new Hono()
             // Fire-and-forget: WhatsApp latency must not block the response.
             void axios
               .post(url, payload, axiosConfig)
-              .catch((error) =>
-                console.error("Error sending message:", error),
-              );
+              .catch((error) => console.error("Error sending message:", error));
           }
 
           // const res = await axios.post(
@@ -1762,7 +1782,7 @@ const roomRouter = new Hono()
           etaMinutes: checkoutCompletionMinutes,
         });
       });
-    },
+    }
   )
 
   .post(
@@ -1772,7 +1792,7 @@ const roomRouter = new Hono()
       z.object({
         authCode: z.string().min(4).max(4),
         userId: z.string().min(2).max(50),
-      }),
+      })
     ),
     async (c) => {
       //@ts-ignore
@@ -1795,7 +1815,7 @@ const roomRouter = new Hono()
               userIds: userId,
             },
           },
-          { session },
+          { session }
         );
 
         await syncHotelStayCompanions({
@@ -1810,7 +1830,7 @@ const roomRouter = new Hono()
           authCode,
         });
       });
-    },
+    }
   )
 
   .post(
@@ -1832,7 +1852,7 @@ const roomRouter = new Hono()
           })
           .optional(),
         roomChatReplyId: z.string().min(2).max(50),
-      }),
+      })
     ),
     requireRoomOccupancyByChatReply,
     async (c) => {
@@ -1841,14 +1861,8 @@ const roomRouter = new Hono()
         const requestData = await c.req.json();
         const { businessId, userId, reviewRating } = requestData;
 
-        const roomChatReply = await HotelRoomChatReply.findOneAndUpdate(
-          {
-            _id: requestData.roomChatReplyId,
-          },
-          {
-            action: false,
-            status: "NORMAL",
-          },
+        const roomChatReply = await HotelRoomChatReply.findById(
+          requestData.roomChatReplyId
         );
 
         if (!roomChatReply) {
@@ -1862,6 +1876,43 @@ const roomRouter = new Hono()
           return respond(c, "Room chat not found", true, 404, {});
         }
 
+        const existingReview = await Reviews.findOne({
+          alertId: roomChat.alertId,
+          userId,
+        }).select("_id");
+
+        if (existingReview || roomChatReply.action === false) {
+          await HotelRoomChatReply.findByIdAndUpdate(
+            requestData.roomChatReplyId,
+            {
+              action: false,
+              status: "NORMAL",
+            },
+            { session }
+          );
+
+          return respond(c, "Feedback already recorded", false, 200, {
+            _id: existingReview?._id,
+            alreadyReviewed: true,
+          });
+        }
+
+        await HotelRoomChatReply.findByIdAndUpdate(
+          requestData.roomChatReplyId,
+          {
+            action: false,
+            status: "NORMAL",
+          },
+          { session }
+        );
+
+        const ratingReply =
+          Number(reviewRating) <= 2
+            ? "We are sorry this did not feel right. Thank you for telling us - our team will review this and improve."
+            : Number(reviewRating) >= 5
+            ? "Thank you for the lovely feedback. We are delighted we could make this comfortable for you."
+            : "Thank you for your feedback. We appreciate you helping us improve your stay.";
+
         const newChatReply = new HotelRoomChatReply({
           action: false,
           description: "thank you for your feedback 😃 ",
@@ -1869,7 +1920,9 @@ const roomRouter = new Hono()
           userId: roomChatReply.userId,
           status: "NORMAL",
           date: Date.now(),
+          reviewRating,
         });
+        newChatReply.description = ratingReply;
         await newChatReply.save({ session });
 
         if (!newChatReply) {
@@ -1879,7 +1932,7 @@ const roomRouter = new Hono()
         await HotelRoomChat.findByIdAndUpdate(
           roomChat._id,
           { $addToSet: { roomChatReplyIds: newChatReply._id } },
-          { session },
+          { session }
         );
 
         const alertOnfo = await HotelAlert.findById(roomChat.alertId);
@@ -1912,14 +1965,14 @@ const roomRouter = new Hono()
           {
             $addToSet: { reviewIds: createReview._id },
           },
-          { upsert: true },
+          { upsert: true }
         );
 
         return respond(c, "Review created successfully", false, 201, {
           _id: createReview._id,
         });
       });
-    },
+    }
   )
 
   .put(
@@ -1929,7 +1982,7 @@ const roomRouter = new Hono()
       z.object({
         roomId: z.string().min(2).max(50),
         source: z.string().min(2).max(50),
-      }),
+      })
     ),
     async (c) => {
       //@ts-ignore
@@ -1944,7 +1997,7 @@ const roomRouter = new Hono()
           {
             source,
           },
-          { new: true, session },
+          { new: true, session }
         );
 
         if (!roomSource) {
@@ -1958,7 +2011,7 @@ const roomRouter = new Hono()
           {
             source,
           },
-          { new: true, session, sort: { checkIn: -1, date: -1 } },
+          { new: true, session, sort: { checkIn: -1, date: -1 } }
         );
 
         if (!roomSession) {
@@ -1974,7 +2027,7 @@ const roomRouter = new Hono()
           {
             source,
           },
-          { session },
+          { session }
         );
 
         return respond(c, "update ", false, 200, {
@@ -1982,7 +2035,7 @@ const roomRouter = new Hono()
           source: roomSource.source,
         });
       });
-    },
+    }
   )
 
   .put(
@@ -1995,9 +2048,9 @@ const roomRouter = new Hono()
             roomId: z.string().min(24).max(24),
             staffIds: z.array(z.string().min(24).max(24)).default([]),
             removeStaffIds: z.array(z.string().min(24).max(24)).default([]),
-          }),
+          })
         ),
-      }),
+      })
     ),
     async (c) => {
       //@ts-ignore
@@ -2017,7 +2070,7 @@ const roomRouter = new Hono()
             await HotelRoom.updateOne(
               { _id: roomId },
               { $addToSet: { staffIds: { $each: staffIds } } },
-              { session },
+              { session }
             );
           }
 
@@ -2026,14 +2079,14 @@ const roomRouter = new Hono()
             await HotelRoom.updateOne(
               { _id: roomId },
               { $pull: { staffIds: { $in: removeStaffIds } } },
-              { session },
+              { session }
             );
           }
         }
 
         return respond(c, "Bulk update successful", false, 200, {});
       });
-    },
+    }
   )
   .put(
     "/review/read_by",
@@ -2042,7 +2095,7 @@ const roomRouter = new Hono()
       z.object({
         readBy: z.string().min(24).max(24),
         reviewId: z.string().min(24).max(24),
-      }),
+      })
     ),
     async (c) => {
       //@ts-ignore
@@ -2069,7 +2122,7 @@ const roomRouter = new Hono()
             readAt: Date.now(),
             isRead: true,
           },
-          { new: true, session },
+          { new: true, session }
         );
 
         if (!review) {
@@ -2078,7 +2131,7 @@ const roomRouter = new Hono()
 
         return respond(c, "Review updated", false, 200, { _id: review._id });
       });
-    },
+    }
   )
 
   .put(
@@ -2088,7 +2141,7 @@ const roomRouter = new Hono()
       z.object({
         note: z.string().min(1).max(200),
         reviewId: z.string().min(24).max(24),
-      }),
+      })
     ),
     async (c) => {
       //@ts-ignore
@@ -2101,7 +2154,7 @@ const roomRouter = new Hono()
           {
             note,
           },
-          { new: true, session },
+          { new: true, session }
         );
 
         if (!review) {
@@ -2110,7 +2163,7 @@ const roomRouter = new Hono()
 
         return respond(c, "Review updated", false, 200, { _id: review._id });
       });
-    },
+    }
   );
 
 export default roomRouter;

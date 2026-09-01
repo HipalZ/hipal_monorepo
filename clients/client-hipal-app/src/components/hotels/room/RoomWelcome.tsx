@@ -7,7 +7,7 @@ import CommonBottomButton from "@/components/atoms/bottomButton";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import CheckInPopup from "./CheckInPopup";
@@ -21,6 +21,7 @@ export interface HotelWelcomeCardProps {
   customLink?: string;
   userID?: string;
   sessionId?: string;
+  contactPhone?: string;
 }
 
 export default function HotelWelcomeCard({
@@ -36,12 +37,12 @@ export default function HotelWelcomeCard({
   const [verificationCode, setVerificationCode] = useState("");
   const [codeError, setCodeError] = useState("");
   const accessToken = useUserToken.getState().accessToken;
-    const router = useRouter();
+  const router = useRouter();
   const { checkRoom } = useCheckRoomStatus(
     businessId || "",
     room || "",
     customLink,
-    userID,
+    userID
   );
 
   const handleClosePopup = () => {

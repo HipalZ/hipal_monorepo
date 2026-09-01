@@ -4,6 +4,7 @@ import {
   DeviceToken,
   HotelAlert,
   HotelAnalytics,
+  HotelNotificationJob,
   HotelRoom,
   HotelRoomChat,
   HotelRoomChatComplain,
@@ -34,12 +35,21 @@ import { schedule } from 'node-cron';
 import { z } from 'zod';
 import { sendPushToToken, sendPushToTokens } from '../../services/notifications';
 import { DEFAULT_IOS_NOTIFICATION_SOUND } from '../../services/notifications/sound';
-import { requireRoomOccupancy, requireRoomOccupancyByChatReply } from '../../utils/requireRoomOccupancy';
+import { isCurrentOccupant, requireRoomOccupancy, requireRoomOccupancyByChatReply } from '../../utils/requireRoomOccupancy';
 import { respond } from '../../utils/response';
 import whatsAppApiBaseUrl from '../../utils/whatsAppApiBaseUrl/apiPaths';
 import { endOfToday, startOfToday } from '../payments';
 import { returnHotelBodyComponents } from './rooms';
 const admin = require('firebase-admin');
+
+const getCartRestaurantIds = (cart: any[] = [], hotelBusinessId?: string) =>
+  Array.from(
+    new Set(
+      cart
+        .map((item) => item?.dish?.businessId || item?.businessId || item?.restaurantId || item?.dish?.restaurantId)
+        .filter((id): id is string => typeof id === 'string' && id.length === 24 && (!hotelBusinessId || id !== hotelBusinessId)),
+    ),
+  );
 
 const oneTimeCronExpression = (runTime: Date) =>
   `${runTime.getSeconds()} ${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${runTime.getMonth() + 1} *`;
@@ -301,7 +311,7 @@ export const scheduleAlertUpdate = (
                   roomName,
                   'authCode',
                   (staffData?.name as string) || 'datta',
-                  alertData?.serviceIds[0]?.name || 'other',
+                  alertData?.serviceIds?.[0]?.name || serviceName || 'other',
                   staffData?.name as string,
                   'https://chatlink.com',
                   outLetInfo?.placeUrl || 'googleReviewLink',
@@ -447,7 +457,7 @@ export const scheduleAlertUpdate = (
                   roomName,
                   'authCode',
                   (staffData?.name as string) || 'datta',
-                  alertData?.serviceIds[0]?.name || 'other',
+                  alertData?.serviceIds?.[0]?.name || serviceName || 'other',
                   staffData?.name as string,
                   'https://chatlink.com',
                   outLetInfo?.placeUrl || 'googleReviewLink',
@@ -569,7 +579,7 @@ const scheduleLevel2Alert = (
               roomName,
               'authCode',
               (staffData?.name as string) || 'datta',
-              alertData?.serviceIds[0]?.name || 'other',
+              alertData?.serviceIds?.[0]?.name || serviceName || 'other',
               staffData?.name as string,
               'https://chatlink.com',
               outLetInfo?.placeUrl || 'googleReviewLink',
@@ -685,7 +695,7 @@ const scheduleLevel3Alert = (
               roomName,
               'authCode',
               (staffData?.name as string) || 'datta',
-              alertData?.serviceIds[0]?.name || 'other',
+              alertData?.serviceIds?.[0]?.name || serviceName || 'other',
               staffData?.name as string,
               'https://chatlink.com',
               outLetInfo?.placeUrl || 'googleReviewLink',
@@ -779,7 +789,9 @@ const hotelAlertRouter = new Hono()
         return respond(c, 'Role not found for this business', true, 404, {});
       }
 
-      const { role, serviceIds } = customRole;
+      const { role, serviceIds, restaurantIds } = customRole;
+      const serviceIdStrings = (serviceIds || []).map((id: any) => id.toString());
+      const restaurantIdStrings = (restaurantIds || []).map((id: any) => id.toString());
 
       // Step 2: Get all room IDs assigned to this staff
       const rooms = await HotelRoom.find({
@@ -791,7 +803,7 @@ const hotelAlertRouter = new Hono()
 
       const roomIds = rooms.map((room) => room._id);
 
-      if (roomIds.length === 0) {
+      if (roomIds.length === 0 && role !== 'MANAGER') {
         return respond(c, 'Staff is not assigned to any room in this business', true, 403, {});
       }
 
@@ -808,13 +820,37 @@ const hotelAlertRouter = new Hono()
         'NON_ACCEPTED_AND_ESCALATION',
       ];
 
+      const hasFoodRestaurantMapping = await User.exists({
+        customRole: {
+          $elemMatch: {
+            businessId,
+            restaurantIds: { $exists: true, $ne: [] },
+            isDeleted: { $ne: true },
+          },
+        },
+      });
+
+      const foodAlertQuery =
+        hasFoodRestaurantMapping && restaurantIdStrings.length
+          ? {
+              alertProgress: { $in: activeStatuses },
+              cart: { $exists: true, $ne: [] },
+              'cart.dish.businessId': { $in: restaurantIdStrings },
+            }
+          : !hasFoodRestaurantMapping
+            ? {
+                alertProgress: { $in: activeStatuses },
+                cart: { $exists: true, $ne: [] },
+              }
+            : undefined;
+
       const alertQuery: any = {
         businessId,
         roomId: { $in: roomIds },
         $or: [
           {
             alertProgress: { $in: activeStatuses },
-            serviceIds: { $in: serviceIds || [] },
+            serviceIds: { $in: serviceIdStrings },
           },
           { alertProgress: 'MESSAGE' },
           {
@@ -823,6 +859,10 @@ const hotelAlertRouter = new Hono()
           },
         ],
       };
+
+      if (foodAlertQuery) {
+        alertQuery.$or.push(foodAlertQuery);
+      }
 
       // Checkout requests route to front office by room assignment, not by
       // service membership, so surface them regardless of role.serviceIds.
@@ -844,11 +884,29 @@ const hotelAlertRouter = new Hono()
         { path: 'roomId', select: 'name' },
       ];
 
-      let alerts = await HotelAlert.find(alertQuery).populate(populateFields).lean();
-
       if (role === 'MANAGER') {
-        alerts = [];
+        const managerEscalationQuery: any = {
+          businessId,
+          alertProgress: { $in: ['IS_ACCEPTED_AND_ESCALATION', 'NON_ACCEPTED_AND_ESCALATION'] },
+          $or: [{ serviceIds: { $in: serviceIdStrings } }],
+        };
+
+        if (hasFoodRestaurantMapping && restaurantIdStrings.length) {
+          managerEscalationQuery.$or.push({
+            cart: { $exists: true, $ne: [] },
+            'cart.dish.businessId': { $in: restaurantIdStrings },
+          });
+        } else if (!hasFoodRestaurantMapping) {
+          managerEscalationQuery.$or.push({
+            cart: { $exists: true, $ne: [] },
+          });
+        }
+
+        const alerts = await HotelAlert.find(managerEscalationQuery).populate(populateFields).lean();
+        return respond(c, 'Alerts fetched successfully', false, 200, alerts);
       }
+
+      const alerts = await HotelAlert.find(alertQuery).populate(populateFields).lean();
 
       return respond(c, 'Alerts fetched successfully', false, 200, alerts);
     },
@@ -875,19 +933,14 @@ const hotelAlertRouter = new Hono()
         },
       });
 
-      const serviceIds = validManager?.customRole?.find((role) => role.businessId.toString() === businessId)?.serviceIds.map((id) => id.toString());
-
-      const levelData = await HotelStaffLevel.findOne({
-        businessId,
-        staffIds: userId,
-      });
+      const serviceIds =
+        validManager?.customRole?.find((role) => role.businessId.toString() === businessId)?.serviceIds?.map((id) => id.toString()) || [];
 
       const alerts = await HotelAlert.find({
         businessId,
         alertProgress: {
           $in: ['IS_ACCEPTED_AND_ESCALATION', 'NON_ACCEPTED_AND_ESCALATION'],
         },
-        ...(levelData ? { level: levelData.level } : {}),
         serviceIds: { $in: serviceIds || [] },
       })
         .populate({
@@ -960,10 +1013,10 @@ const hotelAlertRouter = new Hono()
         })
         .populate({
           path: 'alertId',
-          select: 'alertProgress acceptedAt createdAt',
+          select: 'alertProgress acceptedAt createdAt deliveredAt rejectedAt message',
           populate: {
             path: 'serviceIds',
-            select: 'name avgCompletionTime',
+            select: 'name image avgAcceptanceTime avgCompletionTime avgDeliveryTime',
           },
         })
         .populate({
@@ -1311,11 +1364,21 @@ const hotelAlertRouter = new Hono()
         return respond(c, 'User not found', true, 404, {});
       }
 
+      const isFoodOrderAlert = Array.isArray(requestData.cart) && requestData.cart.length > 0;
+      const cartRestaurantIds = isFoodOrderAlert ? getCartRestaurantIds(requestData.cart, requestData.businessId) : [];
       const serviceIds = requestData.serviceIds || [];
-      for (const serviceId of serviceIds) {
+
+      if (!isFoodOrderAlert && serviceIds.length === 0) {
+        return respond(c, 'No service found for this alert', true, 400, {});
+      }
+
+      const alertServiceIds = serviceIds.length ? serviceIds : [undefined];
+
+      for (const serviceId of alertServiceIds) {
+        const currentServiceIds = serviceId ? [serviceId] : [];
         const alert = new HotelAlert({
           ...requestData,
-          serviceIds: [serviceId],
+          serviceIds: currentServiceIds,
           createdAt: Date.now(),
           createdBy: requestData.userId,
           // Present only when front office raised it for the guest.
@@ -1343,7 +1406,7 @@ const hotelAlertRouter = new Hono()
           throw new Error('Failed to create room chat');
         }
 
-        if (requestData?.cart?.length !== 0) {
+        if (isFoodOrderAlert) {
           const createItemAnalytics = new Cart({
             businessId: requestData.businessId,
             userId: requestData.userId,
@@ -1360,28 +1423,90 @@ const hotelAlertRouter = new Hono()
           }
         }
 
-        serviceData = await HotelService.findById(serviceId).lean();
+        serviceData = serviceId
+          ? await HotelService.findById(serviceId).lean()
+          : {
+              businessId: requestData.businessId,
+              name: 'Food Order',
+              availability: true,
+              categoryId: '',
+              avgCompletionTime: 0,
+              avgAcceptanceTime: 0,
+              avgDeliveryTime: 0,
+              image: '',
+            };
         const avgCompletionTime = serviceData?.avgCompletionTime || 0;
         const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
 
         // Find valid staff for this room and service
-        const validStaff = await User.find({
-          _id: { $in: roomData.staffIds },
-          customRole: {
-            $elemMatch: {
-              serviceIds: { $in: [serviceId] },
-              role: { $ne: 'MANAGER' },
+        let validStaff = serviceId
+          ? await User.find({
+              _id: { $in: roomData.staffIds },
+              customRole: {
+                $elemMatch: {
+                  serviceIds: { $in: [serviceId] },
+                  role: { $ne: 'MANAGER' },
+                },
+              },
+            })
+              .select('_id')
+              .lean()
+          : [];
+
+        let useLegacyFoodStaffRouting = isFoodOrderAlert;
+
+        if (!validStaff.length && isFoodOrderAlert) {
+          const hasFoodRestaurantMapping = await User.exists({
+            _id: { $in: roomData.staffIds },
+            customRole: {
+              $elemMatch: {
+                businessId: requestData.businessId,
+                restaurantIds: { $exists: true, $ne: [] },
+                role: { $ne: 'MANAGER' },
+                isDeleted: { $ne: true },
+              },
             },
-          },
-        })
-          .select('_id')
-          .lean();
+          });
+
+          if (hasFoodRestaurantMapping) {
+            useLegacyFoodStaffRouting = false;
+            if (cartRestaurantIds.length) {
+              validStaff = await User.find({
+                _id: { $in: roomData.staffIds },
+                customRole: {
+                  $elemMatch: {
+                    businessId: requestData.businessId,
+                    restaurantIds: { $in: cartRestaurantIds },
+                    role: { $ne: 'MANAGER' },
+                    isDeleted: { $ne: true },
+                  },
+                },
+              })
+                .select('_id')
+                .lean();
+            }
+          }
+        }
+
+        if (!validStaff.length && isFoodOrderAlert && useLegacyFoodStaffRouting) {
+          validStaff = await User.find({
+            _id: { $in: roomData.staffIds },
+            customRole: {
+              $elemMatch: {
+                businessId: requestData.businessId,
+                role: { $ne: 'MANAGER' },
+              },
+            },
+          })
+            .select('_id')
+            .lean();
+        }
         if (!validStaff.length) {
           return respond(c, 'No valid staff found for this room and service', true, 400, {});
         }
         validStaffIds = validStaff.map((u) => u._id);
 
-        if (avgCompletionTime > 0) {
+        if (serviceId && avgCompletionTime > 0) {
           // Schedule updates based on average times
           scheduleAlertUpdate(
             alert._id.toString(),
@@ -1407,26 +1532,35 @@ const hotelAlertRouter = new Hono()
         }
 
         scheduleAlert(requestData.businessId, roomData.name, alert._id.toString(), serviceData?.name, validStaffIds);
-      }
-      // Step 2: Get device tokens only for those staff
-      const registrationTokens = await DeviceToken.find({
-        businessId: requestData.businessId,
-        userId: { $in: validStaffIds },
-        notification: true,
-      });
 
-      // Step 3: Send push notifications
-      await sendPushToTokens(registrationTokens, {
-        title: 'Room Attention Required',
-        body: `${roomData.name} requires your attention for ${serviceData?.name}. kindly respond to the alert!`,
-        data: {
-          type: 'HOTEL_SERVICE_ALERT',
-          businessId: requestData.businessId,
-          roomId: roomData._id.toString(),
-          roomName: roomData.name,
-          serviceName: serviceData?.name || '',
-        },
-      });
+        const now = Date.now();
+        await HotelNotificationJob.create(
+          [
+            {
+              businessId: requestData.businessId,
+              alertId: alert._id,
+              targetUserIds: validStaffIds,
+              title: 'Room Attention Required',
+              body: `${roomData.name} requires your attention for ${serviceData?.name}. kindly respond to the alert!`,
+              data: {
+                type: 'HOTEL_SERVICE_ALERT',
+                businessId: String(requestData.businessId),
+                roomId: roomData._id.toString(),
+                roomName: roomData.name,
+                serviceName: serviceData?.name || '',
+              },
+              status: 'PENDING',
+              attempts: 0,
+              maxAttempts: 8,
+              nextAttemptAt: now,
+              createdAt: now,
+              updatedAt: now,
+              expiresAt: new Date(now + 36 * 60 * 60 * 1000),
+            },
+          ],
+          { session },
+        );
+      }
 
       const roomSession = await HotelRoomSession.findOne({
         roomId: roomData._id,
@@ -1439,9 +1573,13 @@ const hotelAlertRouter = new Hono()
           userId: requestData.userId,
           roomSessionId: roomSession?._id,
         },
-        {
-          $addToSet: { serviceIds: serviceIds },
-        },
+        serviceIds.length
+          ? {
+              $addToSet: { serviceIds: { $each: serviceIds } },
+            }
+          : {
+              $setOnInsert: { serviceIds: [] },
+            },
         { upsert: true },
       );
 
@@ -1467,6 +1605,16 @@ const hotelAlertRouter = new Hono()
       if (!alert) {
         return respond(c, 'Alert not found', true, 404, {});
       }
+
+      const alertServices = (alert.serviceIds || []) as any[];
+      const primaryServiceRef = alertServices[0];
+      const primaryServiceId = primaryServiceRef?._id || primaryServiceRef;
+      const isFoodOrderAlert = Array.isArray(alert.cart) && alert.cart.length > 0;
+      const alertServiceName = primaryServiceRef?.name || (isFoodOrderAlert ? 'Food Order' : 'other');
+      const foodOrderPrepMins = isFoodOrderAlert
+        ? (alert.cart ?? []).reduce((max: number, item: any) => Math.max(max, Number(item?.dish?.avgPrepTime || 0)), 0)
+        : 0;
+      const foodOrderCompletionMins = isFoodOrderAlert && foodOrderPrepMins > 0 ? foodOrderPrepMins : 30;
 
       const captainData = await User.findById(userId);
 
@@ -1544,8 +1692,8 @@ const hotelAlertRouter = new Hono()
           throw new Error('Room chat not found');
         }
 
-        const service = await HotelService.findById(alert.serviceIds[0]);
-        const avgCompletionTime = service?.avgCompletionTime || 15;
+        const service = primaryServiceId ? await HotelService.findById(primaryServiceId) : null;
+        const avgCompletionTime = service?.avgCompletionTime || (isFoodOrderAlert ? foodOrderCompletionMins : 15);
         const etaTimestamp = Date.now() + avgCompletionTime * 60 * 1000;
         const formattedTime = new Date(etaTimestamp).toLocaleTimeString('en-IN', {
           hour: '2-digit',
@@ -1555,6 +1703,9 @@ const hotelAlertRouter = new Hono()
         });
 
         const isCheckoutRequest = alert.message?.startsWith('CHECKOUT_REQUEST::') ?? false;
+        const acceptedDescription = isCheckoutRequest
+          ? `Please visit the front office by ${formattedTime}.`
+          : `Your request is being processed. Completion time for service: ${avgCompletionTime} min. Expected by ${formattedTime}.`;
 
         const roomChatReply = new HotelRoomChatReply({
           action: false,
@@ -1567,6 +1718,7 @@ const hotelAlertRouter = new Hono()
           date: Date.now(),
         });
 
+        roomChatReply.description = acceptedDescription;
         await roomChatReply.save({ session });
 
         if (!roomChatReply) {
@@ -1602,6 +1754,9 @@ const hotelAlertRouter = new Hono()
           date: Date.now(),
         });
 
+        roomChatReply.description = `We are sorry, this request cannot be provided right now. Reason:- ${
+          reasonOfRejection || 'not specified'
+        }. Please contact the front desk for the next best option.`;
         await roomChatReply.save({ session });
 
         await HotelRoomChat.findByIdAndUpdate(
@@ -1622,10 +1777,18 @@ const hotelAlertRouter = new Hono()
 
         const acceptedTime = alert.acceptedAt || alert.createdAt || Date.now();
         const timeTakenMs = Date.now() - acceptedTime;
+        const timeTakenSecs = Math.max(1, Math.ceil(timeTakenMs / 1000));
         const timeTakenMins = Math.max(1, Math.ceil(timeTakenMs / 60000));
-        const service = await HotelService.findById(alert.serviceIds[0]);
-        const avgCompletionTime = service?.avgCompletionTime || 15;
-        const deliveredFast = timeTakenMins < avgCompletionTime;
+        const timeTakenLabel = timeTakenSecs < 60 ? `${timeTakenSecs} sec` : `${timeTakenMins} min`;
+        const service = primaryServiceId ? await HotelService.findById(primaryServiceId) : null;
+        const avgCompletionTime = service?.avgCompletionTime || (isFoodOrderAlert ? foodOrderCompletionMins : 15);
+        const deliveredFast = timeTakenMs < avgCompletionTime * 60 * 1000;
+        const isCheckoutDelivery = alert.message?.startsWith('CHECKOUT_REQUEST::') ?? false;
+        const guestDeliveryAck = isCheckoutDelivery
+          ? `Checkout completed. Thank you for staying with us.`
+          : deliveredFast
+            ? `Completed in ${timeTakenLabel}, ahead of schedule. Thank you for letting us serve you.`
+            : `Completed in ${timeTakenLabel}. Thank you for your patience - we are sorry this took longer than expected.`;
 
         const deliveryAck = alert.message?.startsWith('CHECKOUT_REQUEST::')
           ? `Your checkout is complete — thank you for staying with us! 🙏`
@@ -1642,6 +1805,7 @@ const hotelAlertRouter = new Hono()
           date: Date.now(),
         });
 
+        roomChatReply.description = guestDeliveryAck;
         await roomChatReply.save({ session });
 
         if (!roomChatReply) {
@@ -1714,7 +1878,7 @@ const hotelAlertRouter = new Hono()
               'authCode',
               userData?.name as string,
 
-              alert?.serviceIds[0]?.name || 'other',
+              alertServiceName,
               `${captainData?.name} within ${timeTakenText}`,
               `https://hipalz.com/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
               outLetInfo?.placeUrl as string,
@@ -1770,7 +1934,7 @@ const hotelAlertRouter = new Hono()
         }
 
         const newChatReply = new HotelRoomChatReply({
-          description: `your service ${alert?.serviceIds[0]?.name} is resolved`,
+          description: `your service ${alertServiceName} is resolved`,
           roomChatId: roomChat._id,
           userId: roomChatReply.userId,
           action: true,
@@ -1842,7 +2006,7 @@ const hotelAlertRouter = new Hono()
               'authCode',
               userData?.name as string,
 
-              alert?.serviceIds[0]?.name || 'other',
+              alertServiceName,
               `${captainData?.name} within ${timeTakenText}`,
               `https://hipalz.com/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
               outLetInfo?.placeUrl as string,
@@ -1925,7 +2089,7 @@ const hotelAlertRouter = new Hono()
                 roomData?.name as string,
                 'authCode',
                 userData.name as string,
-                alert?.serviceIds[0]?.name || 'other',
+                alertServiceName,
                 captainData?.name as string,
                 'https://chatlink.com',
                 outLetInfo?.placeUrl as string,
@@ -2020,13 +2184,15 @@ const hotelAlertRouter = new Hono()
       }
 
       const isWakeUpCallAlert = alert.message?.startsWith('WAKE_UP_CALL::');
+      const wakeUpAt = Number(alert.wakeUpAt || 0);
+      const isWakeUpCallDue = isWakeUpCallAlert && (alert.alertProgress === 'NOT_DELIVERED' || (wakeUpAt > 0 && wakeUpAt <= Date.now()));
 
       if (alert.alertProgress !== 'MESSAGE' && !(isWakeUpCallAlert && alert.alertProgress === 'NOT_DELIVERED')) {
         return respond(c, 'Only MESSAGE alerts or due wake-up calls can be dismissed via this route', true, 400, {});
       }
 
       const updateFields =
-        isWakeUpCallAlert && alert.alertProgress === 'NOT_DELIVERED'
+        isWakeUpCallAlert && isWakeUpCallDue
           ? {
               alertProgress: 'DELIVERED',
               deliveredAt: Date.now(),
@@ -2136,7 +2302,7 @@ const hotelAlertRouter = new Hono()
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
-      const { alertId, cart } = requestData as UpdateAlertCartType;
+      const { alertId, cart, removedItems = [], userId } = requestData as UpdateAlertCartType;
 
       const alert = await HotelAlert.findById(alertId);
 
@@ -2151,23 +2317,58 @@ const hotelAlertRouter = new Hono()
         return respond(c, 'Alert not found', true, 404, {});
       }
 
-      const updatedAlert = await HotelAlert.findByIdAndUpdate(alertId, { cart: cart }, { session, new: true });
+      if (!removedItems.length) {
+        return respond(c, 'Removed item details are required', true, 400, {});
+      }
+
+      const updatedCartItems = Array.isArray(cart) ? cart : [];
+      const allItemsRemoved = updatedCartItems.length === 0;
+      const removedSummary = removedItems.map((item) => `${item.quantity} x ${item.name} (Reason: ${item.reason})`).join(', ');
+      const updatedCartSummary = updatedCartItems.length
+        ? updatedCartItems
+            .map((item: any) => {
+              const quantity = item?.quantity || 1;
+              const name = item?.dish?.name || 'Item';
+              return `${quantity} x ${name}`;
+            })
+            .join(', ')
+        : 'No items remaining';
+      const rejectionReason = removedItems.length === 1 ? removedItems[0]?.reason : `All ordered items were removed. ${removedSummary}`;
+      const chatDescription = allItemsRemoved
+        ? `Sorry, your food order has been rejected because all ordered items were removed. ${removedSummary}.`
+        : `Your order has been updated. Removed: ${removedSummary}. Updated cart items: ${updatedCartSummary}.`;
+
+      const updatedAlert = await HotelAlert.findByIdAndUpdate(
+        alertId,
+        {
+          cart: updatedCartItems,
+          ...(allItemsRemoved
+            ? {
+                alertProgress: 'REJECTED',
+                rejectedAt: Date.now(),
+                rejectedBy: userId,
+                message: rejectionReason,
+              }
+            : {}),
+        },
+        { session, new: true },
+      );
 
       if (!updatedAlert) {
         throw new Error('Failed to update alert');
       }
 
-      const updateRoomChat = await HotelRoomChat.findOneAndUpdate({ alertId: alertId }, { cart: cart }, { session, new: true });
+      const updateRoomChat = await HotelRoomChat.findOneAndUpdate({ alertId: alertId }, { cart: updatedCartItems }, { session, new: true });
       if (!updateRoomChat) {
         throw new Error('Failed to update room chat');
       }
 
       const roomChatReply = new HotelRoomChatReply({
         action: false,
-        description: 'your cart is updated',
+        description: chatDescription,
         roomChatId: roomChat._id,
-        userId: alert.userId,
-        status: 'NORMAL',
+        userId: userId || alert.acceptedBy || alert.userId,
+        status: allItemsRemoved ? 'WARNING' : 'NORMAL',
         date: Date.now(),
       });
 
@@ -2185,10 +2386,126 @@ const hotelAlertRouter = new Hono()
         { session },
       );
 
-      return respond(c, 'Alert cart updated successfully', false, 200, {
+      return respond(c, allItemsRemoved ? 'Order rejected because all items were removed' : 'Alert cart updated successfully', false, 200, {
         _id: updatedAlert._id,
+        alertProgress: updatedAlert.alertProgress,
       });
     });
-  });
+  })
+
+  .put(
+    '/guest_edit_alert_cart',
+    zValidator(
+      'json',
+      z.object({
+        alertId: z.string().min(2).max(50),
+        userId: z.string().min(2).max(50),
+        cart: z.array(z.object({}).passthrough()).min(1),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const { alertId, userId, cart } = await c.req.json();
+
+        const alert = await HotelAlert.findById(alertId);
+        if (!alert) {
+          return respond(c, 'Alert not found', true, 404, {});
+        }
+
+        if (String(alert.userId) !== String(userId)) {
+          return respond(c, 'You cannot edit this order', true, 403, {});
+        }
+
+        const currentCart = Array.isArray(alert.cart) ? alert.cart : [];
+        if (currentCart.length === 0) {
+          return respond(c, 'Only food orders can be edited', true, 400, {});
+        }
+
+        const terminalStatuses = ['DELIVERED', 'REJECTED', 'NOT_DELIVERED', 'RESOLVED'];
+        if (terminalStatuses.includes(alert.alertProgress)) {
+          return respond(c, 'This order can no longer be edited', true, 400, {
+            editable: false,
+          });
+        }
+
+        const outletInfo = await OutLetInfo.findOne({
+          businessId: alert.businessId,
+        })
+          .select('orderEditWindowMinutes')
+          .lean();
+        const editWindowMinutes = Number(outletInfo?.orderEditWindowMinutes ?? 2);
+        const editableUntil = Number(alert.createdAt || 0) + editWindowMinutes * 60 * 1000;
+
+        if (editWindowMinutes <= 0) {
+          return respond(c, 'Order editing is disabled', true, 400, {
+            editable: false,
+            editWindowMinutes,
+            editableUntil,
+          });
+        }
+
+        if (Date.now() > editableUntil) {
+          return respond(c, 'Order edit time has expired', true, 400, {
+            editable: false,
+            editWindowMinutes,
+            editableUntil,
+          });
+        }
+
+        const room = await HotelRoom.findById(alert.roomId).select('roomStatus userIds').lean();
+        if (!room || !isCurrentOccupant(room, userId)) {
+          return respond(c, 'Guest is not checked in to this room', true, 403, {
+            editable: false,
+          });
+        }
+
+        const updatedCartSummary = cart
+          .map((item: any) => {
+            const quantity = item?.quantity || 1;
+            const name = item?.dish?.name || 'Item';
+            return `${quantity} x ${name}`;
+          })
+          .join(', ');
+
+        const updatedAlert = await HotelAlert.findByIdAndUpdate(alertId, { cart }, { session, new: true });
+
+        if (!updatedAlert) {
+          throw new Error('Failed to update alert cart');
+        }
+
+        const roomChat = await HotelRoomChat.findOneAndUpdate({ alertId }, { cart }, { session, new: true });
+
+        if (!roomChat) {
+          throw new Error('Failed to update room chat cart');
+        }
+
+        const roomChatReply = new HotelRoomChatReply({
+          action: false,
+          description: `Your order has been updated. Updated cart items: ${updatedCartSummary}.`,
+          roomChatId: roomChat._id,
+          userId,
+          status: 'NORMAL',
+          date: Date.now(),
+        });
+
+        await roomChatReply.save({ session });
+
+        await HotelRoomChat.findByIdAndUpdate(
+          roomChat._id,
+          {
+            $addToSet: { roomChatReplyIds: roomChatReply._id },
+          },
+          { session },
+        );
+
+        return respond(c, 'Order updated successfully', false, 200, {
+          _id: updatedAlert._id,
+          editableUntil,
+          editWindowMinutes,
+        });
+      });
+    },
+  );
 
 export default hotelAlertRouter;

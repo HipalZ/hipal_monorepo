@@ -4,13 +4,13 @@ import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useHotelStore } from '@/components/store/useHotelStore';
 import useTimings from '@/components/store/useTimings';
 import type { Alert, Cart } from '@/components/types/hotelData';
+import { playSelectedNotificationSound } from '@/utils/notificationSound';
 import { apiRpc } from '@hi/common';
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
 import { useError } from '../components/store/useError';
-import { playSelectedNotificationSound } from '@/utils/notificationSound';
 interface IHotelRoomData {
   businessId: string;
   roomName: string;
@@ -332,7 +332,7 @@ export const useGetAllChats = (payload: IHotelRoomData) => {
     queryKey: ['getChats', payload],
     queryFn: getChats,
     enabled: !!payload.roomName,
-    refetchInterval: 5000,
+    refetchInterval: 1000,
   });
 
   return { chatData };
@@ -382,51 +382,6 @@ export const useReviewChat = () => {
   return { reviewChat, reviewingChat };
 };
 
-export const useEscalatedAlerts = () => {
-  const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
-  const { setHotelEscalationCount, setEscalatedData } = useHotelStore();
-  const captainData = useHiClientZ((s) => s.captainData);
-  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
-  const customRoles = captainData?.customRole ?? [];
-
-  const roleName = useMemo(() => {
-    const match = customRoles.find((r) => String(r?.businessId) === String(businessId));
-    return (match?.role ?? '').toString().trim().toUpperCase();
-  }, [customRoles, businessId]);
-
-  const escalatedAlerts = async () => {
-    if (!businessId || !captainData?._id) return [];
-
-    const response = await apiRpc.hotel.alert.fetch_escalation_alerts.$get({
-      query: {
-        businessId,
-        userId: captainData?._id,
-      },
-    });
-
-    const res = await response.json();
-
-    if (response.status === 200 || response.status === 201) {
-      setEscalatedData(res.data);
-      setHotelEscalationCount(res.data.length);
-      return res.data;
-    }
-
-    return [];
-  };
-
-  const roleNamesAllowed = ['MANAGER', 'FRONT_OFFICE'];
-
-  const isEnabled = outletType === 'HOTEL' && Boolean(businessId && captainData?._id) && roleNamesAllowed.includes(roleName);
-
-  useQuery({
-    queryKey: ['escalatedAlerts'],
-    queryFn: escalatedAlerts,
-    enabled: isEnabled,
-    refetchInterval: 13000,
-  });
-};
-
 type UpdateSourcePayload = {
   source: string;
   roomId: string;
@@ -460,22 +415,38 @@ export const useUpdateSource = () => {
 type EditAlertCartPayload = {
   alertId: string;
   cart: Cart[];
+  removedItems?: {
+    id: string;
+    name: string;
+    quantity: number;
+    reason: string;
+  }[];
 };
 
 export const useEditAlertCart = () => {
+  const queryClient = useQueryClient();
+  const userId = useHiClientZ((s) => s.captainData?._id);
   const editAlertCart = async (payload: EditAlertCartPayload) => {
     const response = await apiRpc.hotel.alert.edit_alert_cart.$put({
-      json: payload,
+      json: {
+        ...payload,
+        ...(userId ? { userId } : {}),
+      },
     });
-    return response.json();
+    const res = await response.json();
+    if (response.status !== 200 && response.status !== 201) {
+      throw new Error(res.message || 'Failed to edit alert cart');
+    }
+    return res;
   };
   const { mutateAsync: editCart, isPending: editingCart } = useMutation({
     mutationFn: editAlertCart,
     onSuccess: () => {
-      toast.success('cart edited successfully');
+      queryClient.invalidateQueries({ queryKey: ['roomAlerts'] });
+      toast.success('Order updated successfully');
     },
-    onError: () => {
-      toast.error('Failed to edit alert cart');
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to edit alert cart');
     },
   });
 

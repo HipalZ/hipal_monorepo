@@ -1,5 +1,5 @@
-import ExploreSkelton from "@/components/atoms/progressBar/exploreLoader";
+import HotelCheckinLoader from "@/components/hotels/room/HotelCheckinLoader";
 
-export default function Loading() {
-    return <ExploreSkelton />;
+export default function HotelCheckinLoading() {
+  return <HotelCheckinLoader />;
 }

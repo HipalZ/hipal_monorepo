@@ -1,60 +1,47 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from 'react';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Users, AlertTriangle } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  useFetchLevels,
-  useUpdateStaffToHotelLevel,
-  type IHotelStaff,
-  type IHotelStaffLevel,
-} from "@/hooks/useHotelStaff";
-import useBusinessData from "@/components/store/useBusinessData";
-import toast from "react-hot-toast";
-import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton.tsx";
+import AdvancedBottomButton from '@/components/atom/bottomButton/advancedBottomButton.tsx';
+import useBusinessData from '@/components/store/useBusinessData';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { findBusinessRole } from '@/components/utils/helper';
+import { useFetchLevels, useUpdateStaffToHotelLevel, type IHotelStaff, type IHotelStaffLevel } from '@/hooks/useHotelStaff';
+import { cn } from '@/lib/utils';
+import { AlertTriangle, Users } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface BulkEscalationAssignmentPanelProps {
   staffList: IHotelStaff[];
   onClose: () => void;
 }
 
-export default function BulkEscalationAssignmentPanel({
-  staffList,
-  onClose,
-}: BulkEscalationAssignmentPanelProps) {
+export default function BulkEscalationAssignmentPanel({ staffList, onClose }: BulkEscalationAssignmentPanelProps) {
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
-  const [roleFilter, setRoleFilter] = useState<string>("ALL");
+  const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const { levelsData = [], gettingLevels } = useFetchLevels();
-  const { updateStaffToLevel, updateStaffLoader } =
-    useUpdateStaffToHotelLevel();
+  const { updateStaffToLevel, updateStaffLoader } = useUpdateStaffToHotelLevel();
 
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [level, setLevel] = useState<1 | 2 | 3>(1);
   const [minutes, setMinutes] = useState<number>(5); // will be synced from levelDoc below
 
   // currently selected level document
-  const levelDoc = useMemo(
-    () => levelsData.find((l) => l.level === level),
-    [levelsData, level],
-  ) as IHotelStaffLevel | undefined;
+  const levelDoc = useMemo(() => levelsData.find((l) => l.level === level), [levelsData, level]) as IHotelStaffLevel | undefined;
 
   // Pull minutes from the selected level (supports either nextLevelTime or nextLevelDelayMinutes)
   const levelMinutes = useMemo(() => {
-    const raw =
-      (levelDoc as any)?.nextLevelTime ??
-      (levelDoc as any)?.nextLevelDelayMinutes;
+    const raw = (levelDoc as any)?.nextLevelTime ?? (levelDoc as any)?.nextLevelDelayMinutes;
     return Number.isFinite(raw) ? Number(raw) : undefined;
   }, [levelDoc]);
 
   // Keep minutes input in sync with selected level's stored value
   useEffect(() => {
-    if (typeof levelMinutes === "number") {
+    if (typeof levelMinutes === 'number') {
       setMinutes(levelMinutes);
     } else {
       // fallback if the level has no saved value yet
@@ -72,15 +59,14 @@ export default function BulkEscalationAssignmentPanel({
     for (const lvl of levelsData as IHotelStaffLevel[]) {
       const L = (lvl.level as 1 | 2 | 3) ?? 1;
       for (const s of lvl.staffIds ?? []) {
-        const id = typeof s === "string" ? s : s._id;
+        const id = typeof s === 'string' ? s : s._id;
         if (id) map[L].add(id);
       }
     }
     return map;
   }, [levelsData]);
 
-  const getRole = (s: IHotelStaff) =>
-    s.customRole?.[0]?.role?.trim() || "Unassigned";
+  const getRole = (s: IHotelStaff) => findBusinessRole(s.customRole, businessId)?.role?.trim() || 'Unassigned';
 
   // All roles + counts (for the role chips)
   const roleIndex = useMemo(() => {
@@ -90,31 +76,27 @@ export default function BulkEscalationAssignmentPanel({
       map.set(r, (map.get(r) || 0) + 1);
     }
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])); // [role, count][]
-  }, [staffList]);
+  }, [businessId, staffList]);
 
   // Slug for heading IDs
   const slug = (s: string) =>
     s
       .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
 
   // 1) Search filter only
   const searchFiltered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return staffList;
-    return staffList.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        (s.phone ?? "").toLowerCase().includes(q),
-    );
+    return staffList.filter((s) => s.name.toLowerCase().includes(q) || (s.phone ?? '').toLowerCase().includes(q));
   }, [query, staffList]);
 
   // 2) Apply role filter on top of search
   const filtered = useMemo(() => {
-    if (roleFilter === "ALL") return searchFiltered;
+    if (roleFilter === 'ALL') return searchFiltered;
     return searchFiltered.filter((s) => getRole(s) === roleFilter);
-  }, [searchFiltered, roleFilter]);
+  }, [businessId, searchFiltered, roleFilter]);
 
   // 3) Group by role for display
   const groupedByRole = useMemo(() => {
@@ -125,14 +107,10 @@ export default function BulkEscalationAssignmentPanel({
       map.get(r)!.push(s);
     }
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])); // [role, staff[]][]
-  }, [filtered]);
+  }, [businessId, filtered]);
 
   // Eligible to add = not already in the selected level
-  const eligibleFilteredIds = useMemo(
-    () =>
-      filtered.map((s) => s._id).filter((id) => !assignedSets[level].has(id)),
-    [filtered, assignedSets, level],
-  );
+  const eligibleFilteredIds = useMemo(() => filtered.map((s) => s._id).filter((id) => !assignedSets[level].has(id)), [filtered, assignedSets, level]);
 
   const toggleSelect = (id: string, disabled: boolean) => {
     if (disabled) return;
@@ -147,15 +125,10 @@ export default function BulkEscalationAssignmentPanel({
   const selectAllFiltered = () => setSelectedIds(new Set(eligibleFilteredIds));
   const clearSelection = () => setSelectedIds(new Set());
 
-  const selectedForAdd = useMemo(
-    () => Array.from(selectedIds).filter((id) => !assignedSets[level].has(id)),
-    [selectedIds, assignedSets, level],
-  );
+  const selectedForAdd = useMemo(() => Array.from(selectedIds).filter((id) => !assignedSets[level].has(id)), [selectedIds, assignedSets, level]);
 
   const alreadyInSelected = useMemo(
-    () =>
-      Array.from(selectedIds).filter((id) => assignedSets[level].has(id))
-        .length,
+    () => Array.from(selectedIds).filter((id) => assignedSets[level].has(id)).length,
     [selectedIds, assignedSets, level],
   );
 
@@ -173,17 +146,16 @@ export default function BulkEscalationAssignmentPanel({
   // current members of selected level (read-only)
   const currentMembersObjects =
     (levelDoc?.staffIds ?? []).map((s: any) => ({
-      _id: typeof s === "string" ? s : s._id,
-      name: typeof s === "string" ? "" : s.name,
-      phone: typeof s === "string" ? "" : s.phone,
+      _id: typeof s === 'string' ? s : s._id,
+      name: typeof s === 'string' ? '' : s.name,
+      phone: typeof s === 'string' ? '' : s.phone,
     })) ?? [];
 
   // ADD handler only
   const handleAdd = async () => {
     if (!businessId) return;
-    if (!levelDoc?._id)
-      return toast.error(`Level L${level} not configured yet`);
-    if (selectedForAdd.length === 0) return toast("Nothing to add");
+    if (!levelDoc?._id) return toast.error(`Level L${level} not configured yet`);
+    if (selectedForAdd.length === 0) return toast('Nothing to add');
 
     try {
       await updateStaffToLevel({
@@ -196,35 +168,26 @@ export default function BulkEscalationAssignmentPanel({
       onClose();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to add staff");
+      toast.error('Failed to add staff');
     }
   };
 
   const isSaving = updateStaffLoader;
 
   return (
-    <section
-      className={cn(
-        "w-full max-w-5xl mx-auto",
-        "max-h-[85vh] overflow-y-auto hide-scrollbar",
-        "rounded-lg border bg-background p-4",
-      )}
-    >
+    <section className={cn('mx-auto w-full max-w-5xl', 'hide-scrollbar max-h-[85vh] overflow-y-auto', 'bg-background rounded-lg border p-4')}>
       <div className="mb-4">
         <div className="flex items-center gap-2 text-xl font-semibold">
-          <AlertTriangle className="w-5 h-5" />
+          <AlertTriangle className="h-5 w-5" />
           Bulk Escalation — Add Members
         </div>
-        <p className="text-sm text-muted-foreground">
-          Search/select staff, choose a level, set the escalation time
-          (minutes), then add.
-        </p>
+        <p className="text-muted-foreground text-sm">Search/select staff, choose a level, set the escalation time (minutes), then add.</p>
       </div>
 
       {gettingLevels ? (
         <div className="grid gap-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-16 rounded-md bg-muted animate-pulse" />
+            <div key={i} className="bg-muted h-16 animate-pulse rounded-md" />
           ))}
         </div>
       ) : (
@@ -244,12 +207,8 @@ export default function BulkEscalationAssignmentPanel({
                   onChange={(e) => setQuery(e.target.value)}
                   className="mt-1"
                 />
-                <div className="flex items-center gap-2 mt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={selectAllFiltered}
-                  >
+                <div className="mt-2 flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={selectAllFiltered}>
                     Select All Eligible ({eligibleFilteredIds.length})
                   </Button>
                   <Button variant="ghost" size="sm" onClick={clearSelection}>
@@ -266,14 +225,12 @@ export default function BulkEscalationAssignmentPanel({
                     <Button
                       key={lv}
                       type="button"
-                      variant={
-                        level === (lv as 1 | 2 | 3) ? "default" : "outline"
-                      }
+                      variant={level === (lv as 1 | 2 | 3) ? 'default' : 'outline'}
                       onClick={() => {
                         setLevel(lv as 1 | 2 | 3);
                         setSelectedIds(new Set());
                       }}
-                      className={cn(level === lv && "ring-2 ring-primary")}
+                      className={cn(level === lv && 'ring-primary ring-2')}
                     >
                       L{lv}
                     </Button>
@@ -288,33 +245,26 @@ export default function BulkEscalationAssignmentPanel({
                     min={1}
                     max={60}
                     value={minutes}
-                    onChange={(e) =>
-                      setMinutes(
-                        Math.max(1, Number.parseInt(e.target.value, 10) || 1),
-                      )
-                    }
+                    onChange={(e) => setMinutes(Math.max(1, Number.parseInt(e.target.value, 10) || 1))}
                     className="mt-1"
                   />
-                  <div className="text-[11px] text-muted-foreground mt-1">
-                    {typeof levelMinutes === "number"
+                  <div className="text-muted-foreground mt-1 text-[11px]">
+                    {typeof levelMinutes === 'number'
                       ? `Loaded from L${level}: ${levelMinutes} min`
                       : `No saved time for L${level} yet. Using 5 min default.`}
                   </div>
                 </div>
 
                 {/* Counters */}
-                <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                <div className="text-muted-foreground mt-2 space-y-1 text-xs">
                   <div>
-                    Already in L{level}:{" "}
-                    <strong>{currentMembersObjects.length}</strong>
+                    Already in L{level}: <strong>{currentMembersObjects.length}</strong>
                   </div>
                   <div>
-                    Selected already in L{level}:{" "}
-                    <strong>{alreadyInSelected}</strong>
+                    Selected already in L{level}: <strong>{alreadyInSelected}</strong>
                   </div>
                   <div>
-                    Will add to L{level}:{" "}
-                    <strong>{selectedForAdd.length}</strong>
+                    Will add to L{level}: <strong>{selectedForAdd.length}</strong>
                   </div>
                 </div>
               </div>
@@ -322,31 +272,22 @@ export default function BulkEscalationAssignmentPanel({
           </Card>
 
           {/* Details panes */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Current members of selected level — read-only */}
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">
-                    Current members of L{level}
-                  </CardTitle>
+                  <CardTitle className="text-base">Current members of L{level}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 {currentMembersObjects.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">
-                    No members in L{level} yet.
-                  </div>
+                  <div className="text-muted-foreground text-sm">No members in L{level} yet.</div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {currentMembersObjects.map((m) => (
-                      <div
-                        key={m._id}
-                        className="rounded-md border p-2 text-xs"
-                      >
-                        <div className="font-medium">
-                          {m.name || "(Unnamed)"}{" "}
-                        </div>
+                      <div key={m._id} className="rounded-md border p-2 text-xs">
+                        <div className="font-medium">{m.name || '(Unnamed)'} </div>
                         <div className="text-muted-foreground">{m.phone}</div>
                       </div>
                     ))}
@@ -358,23 +299,15 @@ export default function BulkEscalationAssignmentPanel({
             {/* Selected list preview (from the search list) */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">
-                  Selected ({selectedObjects.length})
-                </CardTitle>
+                <CardTitle className="text-base">Selected ({selectedObjects.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 {selectedObjects.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">
-                    Choose staff from the list below. Staff already in L{level}{" "}
-                    are disabled.
-                  </div>
+                  <div className="text-muted-foreground text-sm">Choose staff from the list below. Staff already in L{level} are disabled.</div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {selectedObjects.map((s) => (
-                      <div
-                        key={s._id}
-                        className="rounded-md border p-2 text-xs"
-                      >
+                      <div key={s._id} className="rounded-md border p-2 text-xs">
                         <div className="font-medium">{s.name}</div>
                         <div className="text-muted-foreground">{s.phone}</div>
                       </div>
@@ -388,20 +321,20 @@ export default function BulkEscalationAssignmentPanel({
           {/* Selectable staff list */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="w-4 h-4" /> All Staff
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Users className="h-4 w-4" /> All Staff
               </CardTitle>
             </CardHeader>
             <CardContent>
               {/* Role quick filter chips */}
-              <div className="flex items-center gap-2 overflow-x-auto p-2 mb-3 border-b">
+              <div className="mb-3 flex items-center gap-2 overflow-x-auto border-b p-2">
                 <Button
-                  variant={roleFilter === "ALL" ? "default" : "outline"}
+                  variant={roleFilter === 'ALL' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setRoleFilter("ALL")}
-                  className={cn(roleFilter === "ALL" && "ring-2 ring-primary")}
+                  onClick={() => setRoleFilter('ALL')}
+                  className={cn(roleFilter === 'ALL' && 'ring-primary ring-2')}
                 >
-                  All{" "}
+                  All{' '}
                   <Badge variant="secondary" className="ml-2">
                     {staffList.length}
                   </Badge>
@@ -410,13 +343,13 @@ export default function BulkEscalationAssignmentPanel({
                 {roleIndex.map(([role, count]) => (
                   <Button
                     key={role}
-                    variant={roleFilter === role ? "default" : "outline"}
+                    variant={roleFilter === role ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setRoleFilter(role)}
-                    className={cn(roleFilter === role && "ring-2 ring-primary")}
+                    className={cn(roleFilter === role && 'ring-primary ring-2')}
                   >
-                    {role}{" "}
-                    <Badge variant={roleFilter === role ? "default" : "outline"} className="ml-2">
+                    {role}{' '}
+                    <Badge variant={roleFilter === role ? 'default' : 'outline'} className="ml-2">
                       {count}
                     </Badge>
                   </Button>
@@ -425,25 +358,16 @@ export default function BulkEscalationAssignmentPanel({
 
               {/* When filtering to one role, still show its heading; when "ALL", show all groups */}
               {groupedByRole.length === 0 ? (
-                <div className="text-sm text-muted-foreground">
-                  No staff match your search.
-                </div>
+                <div className="text-muted-foreground text-sm">No staff match your search.</div>
               ) : (
                 <div className="space-y-6">
                   {groupedByRole.map(([role, people]) => (
-                    <section
-                      key={role}
-                      id={`role-${slug(role)}`}
-                      className="space-y-2"
-                    >
+                    <section key={role} id={`role-${slug(role)}`} className="space-y-2">
                       <h3 className="text-sm font-semibold tracking-wide">
-                        {role}{" "}
-                        <span className="text-muted-foreground">
-                          ({people.length})
-                        </span>
+                        {role} <span className="text-muted-foreground">({people.length})</span>
                       </h3>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         {people.map((s) => {
                           const inLevel = assignedSets[level].has(s._id);
                           const checked = selectedIds.has(s._id);
@@ -454,18 +378,11 @@ export default function BulkEscalationAssignmentPanel({
                             <label
                               key={s._id}
                               className={cn(
-                                "flex items-center justify-between rounded-md border p-3 cursor-pointer transition",
-                                checked
-                                  ? "border-primary ring-2 ring-primary/30"
-                                  : "hover:bg-muted/40",
-                                disabled &&
-                                  "opacity-60 cursor-not-allowed bg-muted/50",
+                                'flex cursor-pointer items-center justify-between rounded-md border p-3 transition',
+                                checked ? 'border-primary ring-primary/30 ring-2' : 'hover:bg-muted/40',
+                                disabled && 'bg-muted/50 cursor-not-allowed opacity-60',
                               )}
-                              title={
-                                disabled
-                                  ? `Already in Level ${level}`
-                                  : "Select to add"
-                              }
+                              title={disabled ? `Already in Level ${level}` : 'Select to add'}
                             >
                               <div className="flex gap-3">
                                 <input
@@ -476,28 +393,20 @@ export default function BulkEscalationAssignmentPanel({
                                   className="h-4 w-4"
                                 />
                                 <div>
-                                  <div className="font-medium flex flex-wrap items-center gap-2">
+                                  <div className="flex flex-wrap items-center gap-2 font-medium">
                                     {s.name}
                                     {inLevel && (
-                                      <Badge
-                                        variant="secondary"
-                                        className="text-xs"
-                                      >
+                                      <Badge variant="secondary" className="text-xs">
                                         In L{level}
                                       </Badge>
                                     )}
                                     {staffRole && (
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
+                                      <Badge variant="outline" className="text-xs">
                                         {staffRole}
                                       </Badge>
                                     )}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {s.phone}
-                                  </div>
+                                  <div className="text-muted-foreground text-xs">{s.phone}</div>
                                 </div>
                               </div>
                             </label>
@@ -521,15 +430,15 @@ export default function BulkEscalationAssignmentPanel({
         maxWidth="36rem"
         buttons={[
           {
-            text: "Back",
+            text: 'Back',
             isBackButton: true,
             onClick: onClose,
-            className: "pl-3 rounded-md",
+            className: 'pl-3 rounded-md',
           },
           {
             text: `Add to L${level}`,
             onClick: handleAdd,
-            className: "pl-3 rounded-md",
+            className: 'pl-3 rounded-md',
             disable: isSaving || selectedForAdd.length === 0 || gettingLevels,
           },
         ]}

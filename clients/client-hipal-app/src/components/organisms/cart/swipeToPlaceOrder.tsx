@@ -8,12 +8,15 @@ import { FaHandHoldingUsd } from "react-icons/fa";
 import { AiFillDollarCircle } from "react-icons/ai";
 import { cn } from "@/components/utils/helpers";
 import { HiOutlineShoppingBag } from "react-icons/hi";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 const MemoSwipeToPlaceOrder = ({
   placeOrder,
   disabled,
-}: { placeOrder: () => void; disabled?: boolean }) => {
+}: {
+  placeOrder: () => void;
+  disabled?: boolean;
+}) => {
   const { cartPage } = useCart();
   const [isComplete, setIsComplete] = useState(false);
   const [showBowlDrop, setShowBowlDrop] = useState(false);
@@ -131,7 +134,7 @@ const MemoSwipeToPlaceOrder = ({
         <motion.div
           className={cn(
             cartPage === "order" ? "top-4" : "top-2",
-            "right-[22px] absolute pointer-events-none",
+            "right-[22px] absolute pointer-events-none"
           )}
           initial={{ y: -50, rotate: -45 }}
           animate={{

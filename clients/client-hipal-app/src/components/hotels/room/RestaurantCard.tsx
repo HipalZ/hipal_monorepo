@@ -42,7 +42,7 @@ export const RestaurantCard = ({
       {/* Content Section */}
       <div className="p-4 flex items-center justify-between gap-2">
         <div>
-          <h3 className="font-semibold text-gray-900 text-base leading-tight poppins-regular">
+          <h3 className="plus-jakarta-font font-semibold text-gray-900 text-base leading-tight">
             {restaurant.name}
           </h3>
         </div>

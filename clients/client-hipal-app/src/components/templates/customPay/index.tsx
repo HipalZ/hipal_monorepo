@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import type { IBusinessData } from "@/components/types/businessData";
@@ -38,7 +38,9 @@ const ensureRazorpayScript = (() => {
     if (promise) return promise;
 
     promise = new Promise((resolve) => {
-      const existing = document.getElementById(RAZORPAY_SCRIPT_ID) as HTMLScriptElement | null;
+      const existing = document.getElementById(
+        RAZORPAY_SCRIPT_ID
+      ) as HTMLScriptElement | null;
 
       if (existing) {
         const onLoad = () => resolve(true);
@@ -72,7 +74,9 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<SuccessState>(null);
   const [isRazorpayReady, setIsRazorpayReady] = useState(false);
-  const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(Boolean(userIdFromUrl));
+  const [waitingForAutoLogin, setWaitingForAutoLogin] = useState(
+    Boolean(userIdFromUrl)
+  );
 
   const mountedRef = useRef(true);
 
@@ -191,7 +195,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setAmount(e.target.value);
     },
-    [],
+    []
   );
 
   const validatePayment = useCallback(
@@ -223,7 +227,7 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
         return false;
       }
     },
-    [merchantDetails.razorpayMerchantId, userDetails?._id, businessId],
+    [merchantDetails.razorpayMerchantId, userDetails?._id, businessId]
   );
 
   const openRazorpayCheckout = useCallback(
@@ -288,61 +292,61 @@ const CustomPayPage = ({ data }: { data: IBusinessData }) => {
       userDetails?.phone,
       businessId,
       validatePayment,
-    ],
+    ]
   );
 
-const handleOnlinePay = async (payAmount: number) => {
-  try {
-    setLoading(true);
+  const handleOnlinePay = async (payAmount: number) => {
+    try {
+      setLoading(true);
 
-    const currentTableName = useTableData.getState().tableName;
+      const currentTableName = useTableData.getState().tableName;
 
-    const res = await apiRpc.payments.createOrder[":merchantId"].$post({
-      param: { merchantId: merchantDetails.razorpayMerchantId },
-      json: {
-        businessId,
-        total: payAmount,
-        currency: "INR",
-        claimedCoins: 0,
-        billValue: payAmount,
-        userId: userDetails?._id,
-        tips: 0,
-        tableName: currentTableName,
-        cashbackAvailable: false,
-      },
-    });
+      const res = await apiRpc.payments.createOrder[":merchantId"].$post({
+        param: { merchantId: merchantDetails.razorpayMerchantId },
+        json: {
+          businessId,
+          total: payAmount,
+          currency: "INR",
+          claimedCoins: 0,
+          billValue: payAmount,
+          userId: userDetails?._id,
+          tips: 0,
+          tableName: currentTableName,
+          cashbackAvailable: false,
+        },
+      });
 
-    if (res.status === 401) {
-      toast.error("Session expired. Please login again.");
-      setCheckLogin(true);
+      if (res.status === 401) {
+        toast.error("Session expired. Please login again.");
+        setCheckLogin(true);
+        setLoading(false);
+        return;
+      }
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        toast.error(errBody?.message || "Failed to create order.");
+        setLoading(false);
+        return;
+      }
+
+      const orderRes = (await res.json()) as { data: { order_id: string } };
+      const orderId = orderRes?.data?.order_id;
+
+      if (!orderId) {
+        toast.error("Order creation failed.");
+        setLoading(false);
+        return;
+      }
+
       setLoading(false);
-      return;
-    }
-
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => null);
-      toast.error(errBody?.message || "Failed to create order.");
+      await openRazorpayCheckout(orderId, payAmount, currentTableName);
+    } catch (error) {
+      console.error("Online payment error:", error);
+      toast.error("Something went wrong. Please try again.");
       setLoading(false);
-      return;
     }
-
-    const orderRes = (await res.json()) as { data: { order_id: string } };
-    const orderId = orderRes?.data?.order_id;
-
-    if (!orderId) {
-      toast.error("Order creation failed.");
-      setLoading(false);
-      return;
-    }
-
-    setLoading(false);
-    await openRazorpayCheckout(orderId, payAmount, currentTableName);
-  } catch (error) {
-    console.error("Online payment error:", error);
-    toast.error("Something went wrong. Please try again.");
-    setLoading(false);
-  }
-};
+  };
 
   const handleOfflinePay = useCallback(
     async (payAmount: number) => {
@@ -397,7 +401,7 @@ const handleOnlinePay = async (payAmount: number) => {
         if (mountedRef.current) setLoading(false);
       }
     },
-    [businessId, userDetails?._id, setCheckLogin],
+    [businessId, userDetails?._id, setCheckLogin]
   );
 
   const handlePay = useCallback(
@@ -429,7 +433,7 @@ const handleOnlinePay = async (payAmount: number) => {
 
       void handleOfflinePay(payAmount);
     },
-    [amount, setCheckLogin, handleOnlinePay, handleOfflinePay],
+    [amount, setCheckLogin, handleOnlinePay, handleOfflinePay]
   );
 
   if (waitingForAutoLogin) {

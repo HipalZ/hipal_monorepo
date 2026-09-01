@@ -5,7 +5,7 @@ import { calculateFinalBill, cn } from "@/components/utils/helpers";
 import { FaCaretRight } from "react-icons/fa";
 import { memo, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { usePayments } from "@/components/hooks/usePayments";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import Image from "next/image";
@@ -34,7 +34,7 @@ const MemoPaymentModes = () => {
   const paymentMode = useCallback(() => {
     if (total <= 0) {
       return toast.error(
-        "You cannot pay 0 amount through online. Please pay by cash mode",
+        "You cannot pay 0 amount through online. Please pay by cash mode"
       );
     }
     if (
@@ -42,7 +42,7 @@ const MemoPaymentModes = () => {
       !merchantDetails?.razorpayMerchantId
     ) {
       return toast.error(
-        "Online Pay is not available for this business, pay through offline mode",
+        "Online Pay is not available for this business, pay through offline mode"
       );
     }
     handleCreateOrder(billValue, "ONLINE");
@@ -143,14 +143,14 @@ const MemoPaymentModes = () => {
                     </section>
                     <div
                       className={cn(
-                        "text-black inter absolute bottom-0 h-10 w-full bg-black/20 flex items-center justify-end pr-4",
+                        "text-black inter absolute bottom-0 h-10 w-full bg-black/20 flex items-center justify-end pr-4"
                       )}
                     >
                       {method.footerText}
                     </div>
                   </article>
                 </motion.button>
-              ),
+              )
           )}
         </div>
 

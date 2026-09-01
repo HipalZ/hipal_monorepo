@@ -17,12 +17,12 @@ import { useLogin } from "@/components/store/useLogin";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
 import useTableData from "@/components/store/useTableData";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const AddAmountModal = dynamic(
   () => import("@/components/molecules/bottomButton/addAmountModal"),
-  { loading: () => <SkeletonLoader height={200} />, ssr: false },
+  { loading: () => <SkeletonLoader height={200} />, ssr: false }
 );
 
 const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
@@ -34,7 +34,7 @@ const MemoSeeMyCouponz = () => {
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
   const currencySymbol = _useAllBusiness(
-    (s) => s.data?.outletInfo?.currencySymbol,
+    (s) => s.data?.outletInfo?.currencySymbol
   );
   const { tableName } = useTableData((s) => ({
     tableName: s.tableName,
@@ -47,11 +47,11 @@ const MemoSeeMyCouponz = () => {
   }));
   const { userCouponz, error, isLoading } = useUserCouponz(
     businessDetails?.businessId,
-    userDetails?._id,
+    userDetails?._id
   );
   const [openBillModal, setOpenBillModal] = useState(false);
   const logoUrl = useBusinessDetails(
-    (state) => state?.businessDetails?.logoUrl,
+    (state) => state?.businessDetails?.logoUrl
   );
 
   const { selectedCoupon } = useCouponz((s) => ({
@@ -74,10 +74,10 @@ const MemoSeeMyCouponz = () => {
   const sortedCouponz = useMemo(() => {
     if (!userCouponz) return [];
     const selected = userCouponz.find(
-      (coupon) => coupon._id === selectedCoupon?._id,
+      (coupon) => coupon._id === selectedCoupon?._id
     );
     const others = userCouponz.filter(
-      (coupon) => coupon._id !== selectedCoupon?._id,
+      (coupon) => coupon._id !== selectedCoupon?._id
     );
     return selected ? [selected, ...others] : userCouponz;
   }, [userCouponz, selectedCoupon]);
@@ -109,11 +109,11 @@ const MemoSeeMyCouponz = () => {
       {sortedCouponz && sortedCouponz.length > 0 ? (
         sortedCouponz.map((coupon) => {
           const startTime = formatTime(
-            coupon?.conditions?.availability?.startTime || 1,
+            coupon?.conditions?.availability?.startTime || 1
           );
 
           const endTime = formatTime(
-            coupon?.conditions?.availability?.endTime || 23.5,
+            coupon?.conditions?.availability?.endTime || 23.5
           );
           return (
             <section
@@ -167,7 +167,7 @@ const MemoSeeMyCouponz = () => {
                     <p className="text-xs text-left capitalize">
                       {getAvailabilityText(
                         coupon?.conditions?.availability?.when,
-                        coupon?.conditions?.availability?.customDays || [],
+                        coupon?.conditions?.availability?.customDays || []
                       ).map((text, index, array) => (
                         <React.Fragment key={text}>
                           {text}

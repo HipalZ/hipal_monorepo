@@ -1,32 +1,33 @@
-import { memo } from "react"
-import { Bed } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import type { IHotelRoom } from "@/hooks/hotel/useRoomHook"
-import type { IRoomType } from "@/hooks/hotel/useRoomTypeHook"
-import { RoomCard } from "./RoomComponants"
+import { Badge } from '@/components/ui/badge';
+import type { IHotelRoom } from '@/hooks/hotel/useRoomHook';
+import type { IRoomType } from '@/hooks/hotel/useRoomTypeHook';
+import { Bed } from 'lucide-react';
+import { memo } from 'react';
+import { RoomCard } from './RoomComponants';
 
 interface RoomTypeSectionProps {
-  roomType: IRoomType
-  rooms: IHotelRoom[]
-  onEditRoom: (roomId: string) => void
-  getFloorName: (floorId: string) => string
-  getStaffNames: (staffIds: string[]) => string[]
-  downloadSingleQRCode: (e: React.MouseEvent<HTMLButtonElement>, roomId: string) => void
-
+  roomType?: IRoomType;
+  title?: string;
+  rooms: IHotelRoom[];
+  onEditRoom: (roomId: string) => void;
+  getFloorName: (floorId: string) => string;
+  getStaffNames: (staffIds: string[]) => string[];
+  downloadSingleQRCode: (e: React.MouseEvent<HTMLButtonElement>, roomId: string) => void;
 }
 
-const RoomTypeSection = ({ roomType, rooms, onEditRoom, getFloorName, getStaffNames,downloadSingleQRCode }: RoomTypeSectionProps) => {
-  if (rooms.length === 0) return null
+const RoomTypeSection = ({ roomType, title, rooms, onEditRoom, getFloorName, getStaffNames, downloadSingleQRCode }: RoomTypeSectionProps) => {
+  if (rooms.length === 0) return null;
+  const sectionTitle = title || roomType?.roomType.replace(/_/g, ' ') || 'Rooms';
 
   return (
     <div className="mb-8">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="p-2 rounded-full bg-primary/10">
-          <Bed className="w-5 h-5 text-primary" />
+      <div className="mb-4 flex items-center gap-2">
+        <div className="bg-primary/10 rounded-full p-2">
+          <Bed className="text-primary h-5 w-5" />
         </div>
-        <h2 className="text-xl font-bold">{roomType.roomType.replace(/_/g, " ")}</h2>
+        <h2 className="text-xl font-bold">{sectionTitle}</h2>
         <Badge variant="outline" className="ml-2">
-          {rooms.length} {rooms.length === 1 ? "Room" : "Rooms"}
+          {rooms.length} {rooms.length === 1 ? 'Room' : 'Rooms'}
         </Badge>
       </div>
 
@@ -43,8 +44,7 @@ const RoomTypeSection = ({ roomType, rooms, onEditRoom, getFloorName, getStaffNa
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default memo(RoomTypeSection)
-
+export default memo(RoomTypeSection);

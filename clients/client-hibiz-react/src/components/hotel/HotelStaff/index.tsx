@@ -1,6 +1,5 @@
 import PopUp from '@/components/atom/popUp/index.tsx';
-import type { IService } from '@/components/store/hotel/useHotelServices.ts';
-import useStaffStore, { type IStaffMember } from '@/components/store/hotel/useHotelStaff';
+import useStaffStore, { type IService, type IStaffMember } from '@/components/store/hotel/useHotelStaff';
 import useBusinessData from '@/components/store/useBusinessData';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,15 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { findRole } from '@/components/utils/helper';
-import {
-  type IHotel_Roll,
-  type IHotelRoll,
-  type IHotelStaff,
-  useDeleteStaffFromHotel,
-  useGetAllHotelServices,
-  useGetAllHotelStaff,
-} from '@/hooks/useHotelStaff';
+import { findBusinessRole, normalizeHotelRole } from '@/components/utils/helper';
+import { type IHotelRoll, type IHotelStaff, useDeleteStaffFromHotel, useGetAllHotelServices, useGetAllHotelStaff } from '@/hooks/useHotelStaff';
 import { BadgeAlert, Edit, MoreVertical, Phone, Plus, Trash, User, UserCircle } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import BulkEscalationAssignmentPanel from './BulkEscalation.tsx';
@@ -43,12 +35,15 @@ const getBadgeColor = (role: string) => roleBadgeColors[role] || 'bg-gray-100 te
 
 const HotelStaffMain = () => {
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
-  const { staffLoading, staffData = [] } = useGetAllHotelStaff(businessId as string);
+  const staffQuery = useGetAllHotelStaff(businessId as string);
+  const staffLoading = staffQuery?.staffLoading ?? false;
+  const staffData = staffQuery?.staffData ?? [];
   const { deleteStaffLoader, deleteStaff } = useDeleteStaffFromHotel();
   const [escalationModalOpen, setEscalationModalOpen] = useState(false);
   const [selectedStaffForEscalation, setSelectedStaffForEscalation] = useState<IStaffMember | null>(null);
 
-  const { hotelServicesData } = useGetAllHotelServices(businessId as string);
+  const servicesQuery = useGetAllHotelServices(businessId as string);
+  const hotelServicesData = servicesQuery?.hotelServicesData ?? [];
 
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
@@ -56,6 +51,8 @@ const HotelStaffMain = () => {
   const initializeFormForEdit = useStaffStore((s) => s.initializeFormForEdit);
   const setEditRoleStr = useStaffStore((s) => s.setEditRoleStr);
   const setEditServiceIds = useStaffStore((s) => s.setEditServiceIds);
+  const setSelectedRestaurants = useStaffStore((s) => s.setSelectedRestaurants);
+  const setPersonalInfo = useStaffStore((s) => s.setPersonalInfo);
 
   // 🔎 New state for filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,13 +64,19 @@ const HotelStaffMain = () => {
     return hotelServicesData;
   }, [hotelServicesData]);
 
+  const getStaffBusinessRole = useCallback((staff: IHotelStaff | IStaffMember) => findBusinessRole(staff?.customRole, businessId), [businessId]);
+
   // 🔎 Filter logic
   const filteredStaff = staffData.filter((staff: IHotelStaff) => {
-    const matchesSearch = staff?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || staff?.phone?.includes(searchTerm);
+    const businessRole = getStaffBusinessRole(staff);
+    const matchesSearch =
+      staff?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      staff?.phone?.includes(searchTerm) ||
+      businessRole?.role?.replace(/_/g, ' ').toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesRole = roleFilter === 'ALL' || staff?.customRole?.some((r) => r?.role === roleFilter);
+    const matchesRole = roleFilter === 'ALL' || normalizeHotelRole(businessRole?.role) === normalizeHotelRole(roleFilter);
 
-    const matchesService = serviceFilter === 'ALL' || staff?.customRole?.some((r) => (r?.serviceIds || []).includes(serviceFilter));
+    const matchesService = serviceFilter === 'ALL' || (businessRole?.serviceIds || []).includes(serviceFilter);
 
     return matchesSearch && matchesRole && matchesService;
   });
@@ -81,13 +84,25 @@ const HotelStaffMain = () => {
   const handleEditStaff = useCallback(
     (staff: IStaffMember) => {
       initializeFormForEdit(staff);
-      const role = findRole(staff.customRole, businessId) as IHotelRoll;
+      const businessRole = getStaffBusinessRole(staff);
+      const role = (businessRole?.role || '') as IHotelRoll;
       setEditRoleStr(role);
-      const serviceIds = findRole(staff.customRole, businessId)?.serviceIds || [];
+      setPersonalInfo({ nickname: businessRole?.nickName || '' });
+      const serviceIds = businessRole?.serviceIds || [];
       if (serviceIds?.length > 0) setEditServiceIds(serviceIds);
+      setSelectedRestaurants(businessRole?.restaurantIds || []);
       setStaffModal(true);
     },
-    [initializeFormForEdit, setEditRoleStr, setEditServiceIds, setStaffModal, businessId],
+    [
+      initializeFormForEdit,
+      setEditRoleStr,
+      setEditServiceIds,
+      setPersonalInfo,
+      setSelectedRestaurants,
+      setStaffModal,
+      businessId,
+      getStaffBusinessRole,
+    ],
   );
 
   const handleDeleteStaff = useCallback(
@@ -254,19 +269,23 @@ const HotelStaffMain = () => {
                   </div>
                 </div>
 
-                {staff?.customRole?.length > 0 && (
+                {getStaffBusinessRole(staff) && (
                   <>
                     <Separator />
                     <div className="bg-muted/30 p-4 pt-3">
                       <div className="flex flex-wrap gap-2">
-                        {staff?.customRole?.map((role: IHotel_Roll) => (
-                          <div key={role._id} className="flex flex-col">
-                            <Badge variant="secondary" className={getBadgeColor(role?.role)}>
-                              {role.role.replace(/_/g, ' ')}
-                            </Badge>
-                            {role?.nickName && <span className="text-muted-foreground mt-1 text-xs">Nickname: {role?.nickName}</span>}
-                          </div>
-                        ))}
+                        {(() => {
+                          const role = getStaffBusinessRole(staff);
+                          if (!role) return null;
+                          return (
+                            <div key={role._id} className="flex flex-col">
+                              <Badge variant="secondary" className={getBadgeColor(role?.role)}>
+                                {role.role.replace(/_/g, ' ')}
+                              </Badge>
+                              {role?.nickName && <span className="text-muted-foreground mt-1 text-xs">Nickname: {role?.nickName}</span>}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </>
@@ -281,7 +300,14 @@ const HotelStaffMain = () => {
 
       {/* Single-user escalation modal */}
       {escalationModalOpen && (
-        <PopUp show={escalationModalOpen} rightTopBack onClose={handleCloseEscalationModal} height="h-[100dvh] lg:h-[90dvh]">
+        <PopUp
+          show={escalationModalOpen}
+          rightTopBack
+          onClose={handleCloseEscalationModal}
+          height="h-[100dvh] lg:h-[90dvh]"
+          title="Assign staff to escalation"
+          description="Choose escalation levels and handoff timings for the selected hotel staff member."
+        >
           <EscalationAssignmentModal
             isOpen={escalationModalOpen}
             onClose={handleCloseEscalationModal}
@@ -292,7 +318,14 @@ const HotelStaffMain = () => {
 
       {/* Bulk add to escalation modal */}
       {bulkModalOpen && (
-        <PopUp show={bulkModalOpen} rightTopBack onClose={() => setBulkModalOpen(false)} height="h-[100dvh] lg:h-[90dvh]">
+        <PopUp
+          show={bulkModalOpen}
+          rightTopBack
+          onClose={() => setBulkModalOpen(false)}
+          height="h-[100dvh] lg:h-[90dvh]"
+          title="Add staff to escalation"
+          description="Select multiple hotel staff members and add them to an escalation level."
+        >
           <BulkEscalationAssignmentPanel onClose={() => setBulkModalOpen(false)} staffList={staffData} />
         </PopUp>
       )}

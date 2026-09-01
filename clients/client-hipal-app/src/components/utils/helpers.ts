@@ -20,7 +20,7 @@ import { MdOutlineCall } from "react-icons/md";
 import { initializeApp } from "firebase/app";
 import { GoogleAuthProvider, getAuth } from "firebase/auth";
 import confetti from "canvas-confetti";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { useCallback } from "react";
 
 export const getPrice = (price: number | string) => {
@@ -151,7 +151,7 @@ export const formatDate = (timestamp: number): string => {
 export const calculateHelperReward = (
   exist: number,
   reward: number,
-  limit: number,
+  limit: number
 ) => {
   console.log("📥 Inputs -> exist:", exist, "reward:", reward, "limit:", limit);
 
@@ -169,7 +169,7 @@ export const calculateHelperReward = (
     "📤 Outputs -> finalReward:",
     finalReward,
     "curentBalance:",
-    curentBalance,
+    curentBalance
   );
 
   return { finalReward, curentBalance };
@@ -234,7 +234,7 @@ export const defaultThemes: IThemes = {
 export function calculateTotalPrice(
   dishData: IDish,
   selectedPortion: string | null,
-  selectedExtras: IExtraItem,
+  selectedExtras: IExtraItem
 ): number {
   let totalPrice = 0;
 
@@ -247,7 +247,7 @@ export function calculateTotalPrice(
 
   for (const extraId of Object.keys(selectedExtras)) {
     const extra = dishData?.extras?.[0]?.items?.find(
-      (item) => item._id === extraId,
+      (item) => item._id === extraId
     );
     if (extra) {
       totalPrice += extra.price * selectedExtras[extraId];
@@ -346,7 +346,7 @@ export const colors = [
 ];
 export function getLinearGradient(hexColor: string): string | null {
   const colorObject = colors?.find(
-    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase(),
+    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase()
   );
   return colorObject
     ? colorObject?.linearGradient
@@ -355,14 +355,14 @@ export function getLinearGradient(hexColor: string): string | null {
 
 export function getTextColor(hexColor: string): string {
   const colorObject = colors?.find(
-    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase(),
+    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase()
   );
   return colorObject?.textColor ?? "#000000"; // Default to black if not found
 }
 
 export function getHueColor(hexColor: string): number | null {
   const colorObject = colors?.find(
-    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase(),
+    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase()
   );
   return colorObject ? colorObject?.hueRotate : null;
 }
@@ -398,8 +398,8 @@ const hexToHSL = (H) => {
     ? l === r
       ? (g - b) / s
       : l === g
-        ? 2 + (b - r) / s
-        : 4 + (r - g) / s
+      ? 2 + (b - r) / s
+      : 4 + (r - g) / s
     : 0;
   return {
     h: 60 * h < 0 ? 60 * h + 360 : 60 * h,
@@ -599,7 +599,7 @@ const calculateDiscountValue = (
   billValue,
   discountValue,
   discountType,
-  upto,
+  upto
 ) => {
   let discount = 0;
 
@@ -625,7 +625,7 @@ export const calculateFinalBill = (
   billValue: number,
   claimedCoins: number,
   claimCouponz: number,
-  tips: number,
+  tips: number
 ): number => {
   const adjustedClaimCouponz =
     claimCouponz >= billValue ? billValue : claimCouponz;
@@ -638,13 +638,13 @@ export const calculateFinalBill = (
 export const getBestCouponSuggestion = (
   availedCoupon,
   missingOutCouponz,
-  billValue,
+  billValue
 ) => {
   const availedDiscount = calculateDiscountValue(
     billValue,
     availedCoupon?.config?.value || 0,
     availedCoupon?.config?.discountType || "percentage",
-    availedCoupon?.config?.upto,
+    availedCoupon?.config?.upto
   );
   let bestCoupon: Coupon = null;
   let bestDiscount = availedDiscount;
@@ -664,7 +664,7 @@ export const getBestCouponSuggestion = (
       effectiveBillValue,
       coupon?.config?.value || 0,
       coupon?.config?.discountType || "percentage",
-      coupon?.config?.upto,
+      coupon?.config?.upto
     );
 
     // Prioritize higher discounts and handle edge cases

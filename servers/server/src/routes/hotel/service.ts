@@ -8,6 +8,11 @@ import { z } from 'zod';
 import { ensureQuickActionDefaults } from '../../services/hotel/quickActions';
 import { respond } from '../../utils/response';
 
+const keepAvailableServices = <T extends { serviceIds?: unknown[] }>(category: T) => ({
+  ...category,
+  serviceIds: (category.serviceIds || []).filter((service: any) => service?.availability !== false),
+});
+
 const bulkUpdateHotelServiceTimings = z.object({
   businessId: z.string().min(24).max(24),
   services: z
@@ -81,9 +86,16 @@ const serviceRouter = new Hono()
           path: 'serviceIds',
           select: 'name image availability sequence',
           options: { sort: { sequence: 1 } },
-        });
+        })
+        .lean();
 
-      return respond(c, 'All services ', false, 200, services);
+      return respond(
+        c,
+        'All services ',
+        false,
+        200,
+        services.map(keepAvailableServices).filter((category) => category.serviceIds.length > 0),
+      );
     },
   )
 
@@ -116,7 +128,9 @@ const serviceRouter = new Hono()
         .select('name image serviceIds sequence systemKey')
         .lean();
 
-      return respond(c, 'All service categories', false, 200, categories);
+      const availableCategories = categories.map(keepAvailableServices).filter((category) => category.serviceIds.length > 0);
+
+      return respond(c, 'All service categories', false, 200, availableCategories);
     },
   )
 
@@ -181,6 +195,31 @@ const serviceRouter = new Hono()
         }
 
         await HotelServiceCategory.findOneAndUpdate({ _id: requestData.categoryId }, { $push: { serviceIds: service._id } }, { session });
+
+        await User.updateMany(
+          {
+            customRole: {
+              $elemMatch: {
+                businessId: requestData.businessId,
+                isDeleted: { $ne: true },
+              },
+            },
+          },
+          {
+            $addToSet: {
+              'customRole.$[role].serviceIds': service._id,
+            },
+          },
+          {
+            session,
+            arrayFilters: [
+              {
+                'role.businessId': new mongoose.Types.ObjectId(requestData.businessId),
+                'role.isDeleted': { $ne: true },
+              },
+            ],
+          },
+        );
 
         return respond(c, 'Service created', false, 201, { _id: service._id });
       });

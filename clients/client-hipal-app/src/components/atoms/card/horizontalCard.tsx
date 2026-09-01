@@ -21,6 +21,8 @@ interface HorizontalDishCardProps {
   primaryColor?: string;
   secondaryColor?: string;
   isEdgeLayout?: boolean;
+  noDescription?: boolean;
+  redirection?: (dishId: string, category: unknown[]) => void;
 }
 
 const HorizontalCard = ({
@@ -28,6 +30,7 @@ const HorizontalCard = ({
   primaryColor = "#ec4899",
   secondaryColor = "#fce7f3",
   isEdgeLayout = false,
+  noDescription = false,
 }: HorizontalDishCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { cart } = useCartStore();
@@ -124,7 +127,7 @@ const HorizontalCard = ({
             className={compactLayout ? "mt-1" : "mt-2"}
             color={primaryColor}
           />
-          {dishData.description && (
+          {!noDescription && dishData.description && (
             <p
               className={cn(
                 "text-gray-500 line-clamp-2",

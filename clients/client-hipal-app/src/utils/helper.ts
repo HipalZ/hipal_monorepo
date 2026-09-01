@@ -4,7 +4,7 @@ import useTableData from "@/components/store/useTableData";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { useParams } from "next/navigation";
 import { useCallback } from "react";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 export const useErrorHandling = () => {
   const { setCheckLogin } = usePaymentStore();

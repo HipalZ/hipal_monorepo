@@ -39,7 +39,11 @@ export interface IRoomProps {
 export interface Service {
   _id: string;
   name: string;
+  image?: string;
+  systemKey?: string;
   avgCompletionTime?: number;
+  avgDeliveryTime?: number;
+  avgAcceptanceTime?: number;
 }
 
 export interface RoomChatReply {
@@ -51,6 +55,7 @@ export interface RoomChatReply {
   description: string;
   roomChatId: string;
   complainIds: any[];
+  reviewRating?: number;
 }
 
 interface Alert {
@@ -59,26 +64,30 @@ interface Alert {
   serviceIds: Service[];
   acceptedAt?: number;
   createdAt?: number;
+  deliveredAt?: number;
+  rejectedAt?: number;
+  message?: string;
 }
 
 export interface Cart {
-  id: string
-  portion: string | null
-  extras: any[]
-  quantity: number
+  id: string;
+  portion: string | null;
+  extras: any[];
+  quantity: number;
   dish: {
     types: FOOD_TYPES[];
-    _id: string
-    name: string
-    categoryIds: string[]
-    price: number
-    visibility: boolean
-    availability: true
-    dishTypes: string[]
-    images: string[]
-    portions: any[]
-    description: string
-  }
+    _id: string;
+    name: string;
+    categoryIds: string[];
+    price: number;
+    avgPrepTime?: number;
+    visibility: boolean;
+    availability: true;
+    dishTypes: string[];
+    images: string[];
+    portions: any[];
+    description: string;
+  };
 }
 
 export interface RoomChat {
@@ -105,6 +114,9 @@ export interface ChatHeaderProps {
   logo: string;
   room: string;
   onClose: () => void;
+  title?: string;
+  subtitle?: string;
+  contactPhone?: string;
 }
 
 export interface ChatMessageHotelProps {
@@ -114,6 +126,7 @@ export interface ChatMessageHotelProps {
   openReview: boolean;
   selectedReplyId: string;
   handleReviewSubmit: (userId: string, rating: number) => void;
+  actionSubmittingId?: string;
 }
 
 export interface ChatReplyMessageProps {
@@ -124,4 +137,5 @@ export interface ChatReplyMessageProps {
   openReview: boolean;
   selectedReplyId: string;
   handleReviewSubmit: (userId: string, rating: number) => void;
+  actionSubmittingId?: string;
 }

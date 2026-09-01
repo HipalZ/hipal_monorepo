@@ -4,7 +4,7 @@ import hipayBg from "@/assets/payment/hipay_background.png";
 import style from "./addAmount.module.css";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import useTableData from "@/components/store/useTableData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useLogin } from "@/components/store/useLogin";

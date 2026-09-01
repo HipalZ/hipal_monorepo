@@ -17,7 +17,7 @@ const restaurantRouter = new Hono()
         .lean();
 
       return respond(c, "All restaurants", false, 200, restaurants);
-    },
+    }
   )
 
   .get(
@@ -26,7 +26,7 @@ const restaurantRouter = new Hono()
       "query",
       z.object({
         businessId: z.string(),
-      }),
+      })
     ),
 
     async (c) => {
@@ -39,7 +39,7 @@ const restaurantRouter = new Hono()
         .lean();
 
       return respond(c, "All restaurants ", false, 200, restaurants);
-    },
+    }
   )
 
   .post(
@@ -48,14 +48,15 @@ const restaurantRouter = new Hono()
       "json",
       z.object({
         businessId: z.string(),
-        restaurantIds: z.array(z.string()).min(1).max(50),
-      }),
+        restaurantIds: z.array(z.string()).max(50),
+      })
     ),
 
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
         const { businessId, restaurantIds } = await c.req.json();
+        const uniqueRestaurantIds = Array.from(new Set(restaurantIds));
         const business = await Business.findOne({ _id: businessId });
 
         if (!business) {
@@ -64,27 +65,35 @@ const restaurantRouter = new Hono()
 
         const updateHotel = await Business.findByIdAndUpdate(
           businessId,
-          { $addToSet: { restaurantIds: { $each: restaurantIds } } },
-          { session },
+          { $set: { restaurantIds: uniqueRestaurantIds } },
+          { new: true, session }
         );
 
         if (!updateHotel) {
           throw new Error("Business not found");
         }
 
-        const updateRestaurant = await Business.updateMany(
-          { _id: { $in: restaurantIds } },
-          { $addToSet: { hotelIds: businessId } },
-          { session },
+        await Business.updateMany(
+          {
+            businessType: "MENU",
+            hotelIds: businessId,
+            _id: { $nin: uniqueRestaurantIds },
+          },
+          { $pull: { hotelIds: businessId } },
+          { session }
         );
 
-        if (!updateRestaurant) {
-          throw new Error("Restaurants not found");
+        if (uniqueRestaurantIds.length > 0) {
+          await Business.updateMany(
+            { _id: { $in: uniqueRestaurantIds }, businessType: "MENU" },
+            { $addToSet: { hotelIds: businessId } },
+            { session }
+          );
         }
 
-        return respond(c, "Restaurants linked", false, 200, business);
+        return respond(c, "Restaurant links saved", false, 200, updateHotel);
       });
-    },
+    }
   );
 
 export default restaurantRouter;

@@ -1,19 +1,12 @@
-import type { FOOD_TYPES } from "../atoms/dishType";
+import type { FOOD_TYPES } from '../atoms/dishType';
 
-export type NavItemHotelTypes =
-  | "Alerts"
-  | "History"
-  | "Sales"
-  | "Rooms"
-  | "Reviews"
-  | "Escalation";
+export type NavItemHotelTypes = 'Alerts' | 'History' | 'Sales' | 'Rooms' | 'Reviews';
 export enum NavItemsHotelEnum {
-  Alerts = "Alerts",
-  History = "History",
-  Sales = "Sales",
-  Rooms = "Rooms",
-  Escalation = "Escalation",
-  Reviews = "Reviews",
+  Alerts = 'Alerts',
+  History = 'History',
+  Sales = 'Sales',
+  Rooms = 'Rooms',
+  Reviews = 'Reviews',
 }
 
 export interface guestData {
@@ -90,25 +83,28 @@ export interface Alert {
   name: string;
   _id: string;
   alertProgress:
-    | "CREATED"
-    | "ACCEPTED"
-    | "REJECTED"
-    | "DELIVERED"
-    | "WARNING"
-    | "ESCALATION"
-    | "NOT_DELIVERED"
-    | "MESSAGE"
-    | "NON_ACCEPTED_AND_WARNING"
-    | "NON_ACCEPTED_AND_ESCALATION"
-    | "IS_ACCEPTED_AND_WARNING"
-    | "IS_ACCEPTED_AND_ESCALATION"
-    | "RESOLVED";
+    | 'CREATED'
+    | 'ACCEPTED'
+    | 'REJECTED'
+    | 'DELIVERED'
+    | 'WARNING'
+    | 'ESCALATION'
+    | 'NOT_DELIVERED'
+    | 'MESSAGE'
+    | 'NON_ACCEPTED_AND_WARNING'
+    | 'NON_ACCEPTED_AND_ESCALATION'
+    | 'IS_ACCEPTED_AND_WARNING'
+    | 'IS_ACCEPTED_AND_ESCALATION'
+    | 'RESOLVED';
   serviceIds: Service[];
   businessId: string;
   userId: string;
   createdAt: number;
+  wakeUpAt?: number;
   createdBy: CreatedBy;
   acceptedBy: AcceptedBy;
+  level?: number;
+  isEscalated?: boolean;
   roomId: Room;
   cart: Cart[];
   __v: number;
@@ -120,14 +116,7 @@ export interface Alert {
 }
 
 export interface AlertProgress {
-  alertProgress:
-    | "CREATED"
-    | "ACCEPTED"
-    | "REJECTED"
-    | "DELIVERED"
-    | "WARNING"
-    | "ESCALATION"
-    | "NOT_DELIVERED";
+  alertProgress: 'CREATED' | 'ACCEPTED' | 'REJECTED' | 'DELIVERED' | 'WARNING' | 'ESCALATION' | 'NOT_DELIVERED';
 }
 
 export interface User {
@@ -164,6 +153,7 @@ export interface Cart {
     name: string;
     categoryIds: string[];
     price: number;
+    avgPrepTime?: number;
     visibility: boolean;
     availability: true;
     dishTypes: string[];

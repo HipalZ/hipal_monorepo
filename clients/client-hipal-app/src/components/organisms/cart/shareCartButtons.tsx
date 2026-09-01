@@ -9,7 +9,7 @@ import { useParams } from "next/navigation";
 import Script from "next/script";
 import { memo, useMemo, useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 const MemoShareCartButtons = () => {
   const { cart } = useCartStore();
@@ -63,7 +63,7 @@ const MemoShareCartButtons = () => {
     const shareUrl = urlOverride || shareState.url;
     if (!shareUrl) return;
     const message = encodeURIComponent(
-      `Hi, I am interested in this item(s). Can I know more details?.\n\n *Customer Cart:* ${shareUrl}\n *Captain View (Internal Use):* ${BASE_URL}/${outletInfo?.businessId}/alerts`,
+      `Hi, I am interested in this item(s). Can I know more details?.\n\n *Customer Cart:* ${shareUrl}\n *Captain View (Internal Use):* ${BASE_URL}/${outletInfo?.businessId}/alerts`
     );
 
     const whatsappUrl = `https://wa.me/+91${outletInfo?.phone}?text=${message}`;

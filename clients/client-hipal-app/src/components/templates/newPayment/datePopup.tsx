@@ -21,7 +21,7 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import useDatePicker from "@/components/hooks/useDatePicker";
 import { useErrorHandling } from "@/utils/helper";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 const MemoApplyCouponDatePopup = () => {
   const { errorText } = useErrorHandling();
@@ -59,7 +59,7 @@ const MemoApplyCouponDatePopup = () => {
     currentYear,
     currentMonth,
     currentDay,
-    pickerRef,
+    pickerRef
   );
   const handleBack = useCallback(() => {
     setShowPopup(false);
@@ -150,7 +150,7 @@ const MemoApplyCouponDatePopup = () => {
             height={90}
             className={cn(
               "bg-white",
-              "object-cover w-20 h-20 bg-center rounded-full",
+              "object-cover w-20 h-20 bg-center rounded-full"
             )}
           />
           <h1 className="mt-2 font-bold">

@@ -7,7 +7,7 @@ import { useParams, usePathname, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "../loader/skeletonLoader";
 import { useReview } from "@/components/store/useReview";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import LoadingSpinnerCircle from "../loader";
 import { useErrorHandling } from "@/utils/helper";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
@@ -99,7 +99,7 @@ const MemoGoogleReviewCard = () => {
 
       if (!newWindow) {
         toast.error(
-          "Failed to open the new tab. Please enable pop-ups for this site and try again.",
+          "Failed to open the new tab. Please enable pop-ups for this site and try again."
         );
         alert("Please enable pop-ups for this site to proceed.");
       }
