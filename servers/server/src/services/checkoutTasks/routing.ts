@@ -24,6 +24,7 @@ const staffForRooms = async (
         businessId,
         serviceIds: { $in: [serviceId] },
         role: { $ne: "MANAGER" },
+        isDeleted: { $ne: true },
       },
     },
   })
@@ -41,7 +42,9 @@ const uniq = (ids: string[]): string[] => [...new Set(ids)];
  */
 export const frontOfficeFor = async (businessId: string): Promise<string[]> => {
   const staff = await User.find({
-    customRole: { $elemMatch: { businessId, role: "FRONT_OFFICE" } },
+    customRole: {
+      $elemMatch: { businessId, role: "FRONT_OFFICE", isDeleted: { $ne: true } },
+    },
   })
     .select("_id")
     .lean();
@@ -86,7 +89,9 @@ export const managersFor = async (
   businessId: string,
 ): Promise<Array<{ _id: string; name?: string; phone?: string }>> => {
   const managers = await User.find({
-    customRole: { $elemMatch: { businessId, role: "MANAGER" } },
+    customRole: {
+      $elemMatch: { businessId, role: "MANAGER", isDeleted: { $ne: true } },
+    },
   })
     .select("_id name phone")
     .lean();

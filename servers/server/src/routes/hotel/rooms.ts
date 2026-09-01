@@ -1792,15 +1792,30 @@ const roomRouter = new Hono()
       z.object({
         authCode: z.string().min(4).max(4),
         userId: z.string().min(2).max(50),
+        businessId: z.string().min(2).max(50),
+        room: z.string().min(1).max(50),
       })
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
         const requestData = await c.req.json();
-        const { authCode, userId } = requestData;
+        const { authCode, userId, businessId, room } = requestData;
 
-        const roomSession = await HotelRoomSession.findOne({ authCode });
+        const roomData = await HotelRoom.findOne({
+          businessId,
+          name: room,
+          roomStatus: "OCCUPIED",
+        }).select("_id");
+
+        if (!roomData) {
+          return respond(c, "Room not found or not occupied", true, 404, {});
+        }
+
+        const roomSession = await HotelRoomSession.findOne({
+          authCode,
+          roomId: roomData._id,
+        });
 
         if (!roomSession) {
           return respond(c, "Invalid auth code", true, 400, {});
@@ -1917,7 +1932,7 @@ const roomRouter = new Hono()
           action: false,
           description: "thank you for your feedback 😃 ",
           roomChatId: roomChat._id,
-          userId: roomChatReply.userId,
+          userId,
           status: "NORMAL",
           date: Date.now(),
           reviewRating,

@@ -1,4 +1,4 @@
-import { Table } from '@hi/db-models';
+import { Business, Table } from '@hi/db-models';
 import type { WhatsAppBusinessConfigType } from '@hi/db-models/src/validators';
 import axios from 'axios';
 import whatsAppApiBaseUrl from '../whatsAppApiBaseUrl/apiPaths';
@@ -15,6 +15,33 @@ function interpolateTokens(text: string, businessName: string, tableName?: strin
     .replace(/{{userId}}/g, userId || '')
     .replace(/{{userPhone}}/g, userPhone || '')
     .replace(/{{payLink}}/g, payLink || '');
+}
+
+function normalizeHttpUrl(url?: string) {
+  const trimmed = url?.trim();
+  if (!trimmed) return '';
+
+  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+  try {
+    const parsed = new URL(candidate);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
+function withWhatsappVisitParams(url: string, userId?: string) {
+  if (!url || !userId) return url;
+
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.set('q', 'wa');
+    parsed.searchParams.set('id', userId);
+    return parsed.toString();
+  } catch {
+    return url;
+  }
 }
 
 async function sendWhatsAppTemplateForTableQr(
@@ -35,9 +62,19 @@ async function sendWhatsAppTemplateForTableQr(
     // ── Resolve the final destination URL ──
     // If the business has a custom URL template, interpolate it with the
     // actual values. Otherwise use the default tableQrShortUrl.
-    let payLink = tableQrShortUrl;
+    let payLink = normalizeHttpUrl(tableQrShortUrl);
     if (whatsAppBusinessConfigData?.tableQrCustomUrl) {
-      payLink = interpolateTokens(whatsAppBusinessConfigData.tableQrCustomUrl, businessName, tableName, userId, userPhone, tableQrShortUrl);
+      const customPayLink = normalizeHttpUrl(
+        interpolateTokens(whatsAppBusinessConfigData.tableQrCustomUrl, businessName, tableName, userId, userPhone, payLink),
+      );
+      if (customPayLink) {
+        payLink = customPayLink;
+      } else {
+        console.warn('[WA-Webhook] Invalid table QR custom URL, falling back to default link', {
+          businessId: whatsAppBusinessConfigData?.businessId?.toString(),
+          tableQrCustomUrl: whatsAppBusinessConfigData.tableQrCustomUrl,
+        });
+      }
     }
 
     // Interpolate placeholders in the message body (uses the resolved payLink)
@@ -64,6 +101,27 @@ async function sendWhatsAppTemplateForTableQr(
           type: 'text',
           text: {
             preview_url: true,
+            body: messageText,
+          },
+        },
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return;
+    }
+
+    if (!payLink) {
+      await axios({
+        method: 'POST',
+        url: apiUrl,
+        data: {
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: userPhone,
+          type: 'text',
+          text: {
+            preview_url: false,
             body: messageText,
           },
         },
@@ -130,13 +188,17 @@ async function tableQrHandler(tableName: string, userPhone: string, userId: stri
       resolvedTableName = undefined; // omit tableName from URL/body
     }
 
-    // 3. Build the default URL. If we have no table at all (brand new
-    // business with zero tables), leave it empty — the custom URL
-    // template (if configured) can still resolve, otherwise the message
-    // body will just not include a link.
+    // 3. Build the default URL. If there is no table/tableLink, fall back
+    // to the business explore page so WhatsApp never receives an empty
+    // CTA URL for table-less QR use cases.
     let tableQrShortUrl = '';
     if (tableInfo?.tableLink) {
-      tableQrShortUrl = `${tableInfo.tableLink}?q=wa&id=${userId}`;
+      tableQrShortUrl = withWhatsappVisitParams(tableInfo.tableLink, userId);
+    } else {
+      const businessInfo = await Business.findById(whatsAppBusinessConfigData?.businessId).select('customLink').lean();
+      if (businessInfo?.customLink) {
+        tableQrShortUrl = withWhatsappVisitParams(`https://hipalz.com/${businessInfo.customLink}/explore`, userId);
+      }
     }
 
     await sendWhatsAppTemplateForTableQr(whatsAppBusinessConfigData, userPhone, tableQrShortUrl, resolvedTableName, userId);

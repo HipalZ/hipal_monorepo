@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useCheckRoomStatus } from "@/components/hooks/useAuthForHotel";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import CommonBottomButton from "@/components/atoms/bottomButton";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import toast from "react-hot-toast";
@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import CheckInPopup from "./CheckInPopup";
 import AutoLogin from "./AutoLogin";
+import { useLogin } from "@/components/store/useLogin";
 
 export interface HotelWelcomeCardProps {
   hotelName: string;
@@ -36,13 +37,16 @@ export default function HotelWelcomeCard({
   const [showPopup, setShowPopup] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [codeError, setCodeError] = useState("");
-  const accessToken = useUserToken.getState().accessToken;
+  const accessToken = useUserToken((state) => state.accessToken);
+  const userDetails = useLogin((state) => state.userDetails);
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const activeUserId = userDetails?._id || userID || "";
   const { checkRoom } = useCheckRoomStatus(
     businessId || "",
     room || "",
     customLink,
-    userID
+    activeUserId
   );
 
   const handleClosePopup = () => {
@@ -85,7 +89,9 @@ export default function HotelWelcomeCard({
       const response = await apiRpc.hotel.rooms.verify_authcode.$post({
         json: {
           authCode: code,
-          userId: userID,
+          userId: activeUserId,
+          businessId: businessId || "",
+          room: room || "",
         },
       });
       return response;
@@ -102,6 +108,7 @@ export default function HotelWelcomeCard({
       if (data.status === 200) {
         toast.success("Checked in successfully");
         setShowPopup(false);
+        queryClient.invalidateQueries({ queryKey: ["checkRoomStatus"] });
       }
     },
   });
@@ -114,6 +121,10 @@ export default function HotelWelcomeCard({
   };
 
   const handleCheckIn = () => {
+    if (!activeUserId) {
+      setCodeError("Please login before entering the room code");
+      return;
+    }
     if (verificationCode.length !== 4) {
       setCodeError("Please enter a 4-digit code");
       return;
@@ -122,22 +133,21 @@ export default function HotelWelcomeCard({
   };
 
   useEffect(() => {
-    if (
-      accessToken !== "" &&
-      (checkRoom?.status === 400 ||
-        checkRoom?.status === 401 ||
-        checkRoom?.status === 403)
-    ) {
+    if (!activeUserId && checkRoom?.status === 401) {
+      return;
+    }
+
+    if (activeUserId && checkRoom?.status === 403) {
       setShowPopup(true);
     }
-  }, [checkRoom]);
+  }, [activeUserId, checkRoom]);
 
   return (
     <>
       {accessToken === "" && userID && <AutoLogin userID={userID} />}
 
       {showPopup && (
-        <BottomPopUp hide show={showPopup} onClose={handleClosePopup}>
+        <BottomPopUp hide show={showPopup} onClose={handleClosePopup} manageHistory={false}>
           {isPending ? (
             <LoadingSpinnerCircle />
           ) : (

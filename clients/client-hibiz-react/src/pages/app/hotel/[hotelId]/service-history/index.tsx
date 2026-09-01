@@ -37,12 +37,14 @@ const MemoHistoryHotel = () => {
 
   const filteredHistory = useMemo(() => {
     if (!historyData) return [];
+    const term = searchTerm?.toLowerCase();
 
     return historyData.filter(
       (item) =>
-        item?.roomId?.name?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
-        item?.serviceIds?.some((service) => service?.name?.toLowerCase().includes(searchTerm?.toLowerCase())) ||
-        item?.createdBy?.name?.toLowerCase().includes(searchTerm?.toLowerCase()),
+        item?.roomId?.name?.toLowerCase().includes(term) ||
+        getServiceRequested(item).toLowerCase().includes(term) ||
+        buildOrderItems(item?.cart).toLowerCase().includes(term) ||
+        item?.createdBy?.name?.toLowerCase().includes(term),
     );
   }, [historyData, searchTerm]);
 
@@ -61,7 +63,10 @@ const MemoHistoryHotel = () => {
 
   const getTimeDifferenceInMinutes = (start?: number, end?: number) => {
     if (!start || !end) return '';
-    return Number(((end - start) / 1000 / 60).toFixed(2));
+    const minutes = (end - start) / 1000 / 60;
+    if (minutes < 1) return `${Math.round(minutes * 60)} sec`;
+    const rounded = Math.round(minutes * 10) / 10;
+    return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} min`;
   };
 
   const formatExcelTimestamp = (timestamp?: number) => {
@@ -78,7 +83,7 @@ const MemoHistoryHotel = () => {
     });
   };
 
-  const buildOrderItems = (cart?: any[]) => {
+  function buildOrderItems(cart?: any[]) {
     if (!cart || cart.length === 0) return '';
 
     return cart
@@ -101,7 +106,18 @@ const MemoHistoryHotel = () => {
         return `${dishName}${portionName}${extrasLabel ? ` + ${extrasLabel}` : ''} x${quantity}`;
       })
       .join(' | ');
-  };
+  }
+
+  function getServiceRequested(item: any) {
+    const serviceNames =
+      item?.serviceIds
+        ?.map((service) => service?.name)
+        .filter(Boolean)
+        .join(', ') || '';
+
+    if (serviceNames) return serviceNames;
+    return item?.cart?.length ? 'Food Order' : '';
+  }
 
   const escapeCsvValue = (value: unknown) => {
     const str = String(value ?? '');
@@ -156,22 +172,18 @@ const MemoHistoryHotel = () => {
         'Requested At': formatExcelTimestamp(item?.createdAt),
         'Guest Name': item?.createdBy?.name || '',
         'Room No': item?.roomId?.name || '',
-        'Service Requested':
-          item?.serviceIds
-            ?.map((service) => service?.name)
-            .filter(Boolean)
-            .join(', ') || '',
+        'Service Requested': getServiceRequested(item),
         'Order Items': buildOrderItems(item?.cart),
         'Request Status': item?.alertProgress || '',
         Escalated: item?.isEscalated ? 'Yes' : 'No',
         'Escalation Level': item?.isEscalated ? (item?.level ?? 0) : 0,
         'Accepted By': item?.acceptedBy?.name || '',
         'Accepted At': formatExcelTimestamp(item?.acceptedAt),
-        'Acceptance Time (Min)': getTimeDifferenceInMinutes(item?.createdAt, item?.acceptedAt),
+        'Acceptance Time': getTimeDifferenceInMinutes(item?.createdAt, item?.acceptedAt),
         'Completed By': item?.deliveredBy?.name || '',
         'Completed At': formatExcelTimestamp(item?.deliveredAt),
-        'Completion Time After Acceptance (Min)': getTimeDifferenceInMinutes(item?.acceptedAt, item?.deliveredAt),
-        'Total Time (Min)': getTimeDifferenceInMinutes(item?.createdAt, item?.deliveredAt),
+        'Completion Time After Acceptance': getTimeDifferenceInMinutes(item?.acceptedAt, item?.deliveredAt),
+        'Total Time': getTimeDifferenceInMinutes(item?.createdAt, item?.deliveredAt),
       }));
 
       const uniqueGuests = new Set(curatedServiceRows.map((row) => row['Guest Name']).filter(Boolean)).size;
@@ -286,7 +298,7 @@ const MemoHistoryHotel = () => {
                 </article>
 
                 <article className="flex items-center gap-2">
-                  <h1 className="font-medium">{item?.serviceIds[0]?.name}</h1>
+                  <h1 className="font-medium">{getServiceRequested(item) || '—'}</h1>
                   {expandedItems.has(item._id) ? <ChevronUp className="h-5 w-5 text-gray-500" /> : <ChevronDown className="h-5 w-5 text-gray-500" />}
                 </article>
               </section>
@@ -297,13 +309,18 @@ const MemoHistoryHotel = () => {
                 }`}
               >
                 <div className="border-t p-4">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="mb-4 flex items-start gap-3">
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 text-white">
                         <Package className="h-4 w-4" />
                       </div>
-                      <div>
-                        <h1>{item?.serviceIds.map((service) => service?.name).join(', ')}</h1>
+                      <div className="min-w-0">
+                        <h1>{getServiceRequested(item) || '—'}</h1>
+                        {item?.cart?.length ? (
+                          <p className="mt-1 line-clamp-2 text-xs text-gray-500" title={buildOrderItems(item?.cart)}>
+                            {buildOrderItems(item?.cart)}
+                          </p>
+                        ) : null}
                         <div className="mt-1 flex items-center gap-1 text-sm text-gray-600">
                           <User className="h-3.5 w-3.5" />
                           Requested by {item?.createdBy?.name}
@@ -312,7 +329,7 @@ const MemoHistoryHotel = () => {
                     </div>
 
                     {item?.cart && item?.cart?.length > 0 && (
-                      <Button onClick={() => viewCart(item?.cart)} variant="outline" className="mt-1 text-sm">
+                      <Button onClick={() => viewCart(item?.cart)} variant="outline" className="w-fit shrink-0 text-sm">
                         View Cart
                       </Button>
                     )}

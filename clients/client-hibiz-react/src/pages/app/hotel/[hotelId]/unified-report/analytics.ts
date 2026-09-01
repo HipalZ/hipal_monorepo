@@ -12,6 +12,35 @@ const serviceAcceptanceSla = (service?: { avgAcceptanceTime?: number }): number 
 const serviceCompletionSla = (service?: { avgDeliveryTime?: number; avgCompletionTime?: number }): number =>
   service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0;
 
+const cartItemName = (item: any): string => {
+  const dishName = item?.dish?.name || item?.name || item?.dishName || '';
+  const portionName = item?.portion?.name ? ` - ${item.portion.name}` : '';
+  const extras =
+    item?.extras
+      ?.map((extra: any) => `${extra?.name || ''}${extra?.quantity > 1 ? ` x${extra.quantity}` : ''}`)
+      .filter(Boolean)
+      .join(', ') || '';
+  return [dishName, portionName, extras ? ` + ${extras}` : ''].filter(Boolean).join('');
+};
+
+const buildOrderItems = (cart?: any[]): string =>
+  cart?.length
+    ? cart
+        .map((item) => {
+          const name = cartItemName(item);
+          if (!name) return '';
+          return `${name} x${item?.quantity ?? 1}`;
+        })
+        .filter(Boolean)
+        .join(' | ')
+    : '';
+
+const serviceLabel = (services: GuestAlert['serviceIds'] = [], cart?: any[]): string => {
+  const names = services.map((x) => x.name).filter(Boolean).join(', ');
+  if (names) return names;
+  return cart?.length ? 'Food Order' : '—';
+};
+
 // ── review matching ──────────────────────────────────────────────────────────
 // A review may link straight to an alert, or only to guest+room+service; try the
 // exact alertId link first, then a best-effort match after the request time.
@@ -67,6 +96,7 @@ type GuestAlert = {
   raisedByStaff?: { name?: string };
   acceptedBy?: { name?: string };
   deliveredBy?: { name?: string };
+  cart?: any[];
 };
 
 const OPEN_GUEST = new Set(['CREATED', 'ACCEPTED', 'IS_ACCEPTED_AND_WARNING', 'NON_ACCEPTED_AND_WARNING', 'IS_ACCEPTED_AND_ESCALATION', 'NON_ACCEPTED_AND_ESCALATION']);
@@ -93,7 +123,8 @@ export const mapGuestAlert = (
     source: 'GUEST',
     room,
     floor: floorOf(room),
-    service: services.map((x) => x.name).filter(Boolean).join(', ') || '—',
+    service: serviceLabel(services, a.cart),
+    orderItems: buildOrderItems(a.cart),
     requesterName: a.createdBy?.name || 'Guest',
     requesterPhone: a.createdBy?.phone || '',
     requesterKind: 'GUEST',
@@ -144,6 +175,7 @@ export const mapCheckoutTask = (t: CheckoutTask, index: number, visitsByPhone: R
     room,
     floor: t.zoneId?.name || floorOf(room),
     service: t.serviceId?.name || '—',
+    orderItems: '',
     requesterName: t.triggeredBy?.name || '',
     requesterPhone: t.triggeredBy?.phone || '',
     // Empty triggeredBy is a genuine "automatic" job, never a placeholder name.
