@@ -95,7 +95,7 @@ export async function uploadImageToCloud(
     formData.append('bucketName', 'assets');
 
     // Upload to cloud storage
-    const response = await fetch('https://storage.test.hipalz.com/upload', {
+    const response = await fetch('https://storage.hipalz.com/upload', {
       method: 'POST',
       body: formData,
     });

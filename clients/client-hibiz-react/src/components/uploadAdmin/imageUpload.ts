@@ -48,7 +48,7 @@ export async function storeImageAfterSave(
     formData.append("bucketName", "assets")
 
     console.log("Sending upload request to server")
-    const response = await axios.post("https://storage.test.hipalz.com/upload", formData, {
+    const response = await axios.post("https://storage.hipalz.com/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -165,7 +165,7 @@ export async function storeHotelBannerMediaAfterSave(
     formData.append("fileName", `${mediaId}.${extension}`)
     formData.append("bucketName", "assets")
 
-    const response = await axios.post("https://storage.test.hipalz.com/upload", formData, {
+    const response = await axios.post("https://storage.hipalz.com/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

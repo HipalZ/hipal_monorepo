@@ -38,7 +38,7 @@ export async function storeImageAfterSave(image: File, imagePreview: string | nu
     formData.append('fileName', `${imageId}`);
     formData.append('bucketName', 'assets');
 
-    const response = await axios.post('https://storage.test.hipalz.com/upload', formData);
+    const response = await axios.post('https://storage.hipalz.com/upload', formData);
 
     if (response.status === 201 || response.status === 200) {
       setIsLoading?.(false);

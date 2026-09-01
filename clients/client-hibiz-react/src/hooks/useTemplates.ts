@@ -318,7 +318,7 @@ export const useMediaUpload = () => {
       storageFormData.append("bucketName", "assets");
 
       const storageResponse = await axios.post(
-        "https://storage.test.hipalz.com/upload",
+        "https://storage.hipalz.com/upload",
         storageFormData,
         {
           headers: { "Content-Type": "multipart/form-data" },

@@ -1,4 +1,4 @@
-import { Cart, HotelAlert, HotelAnalytics, Reviews } from '@hi/db-models';
+import { Cart, HotelAlert, HotelAnalytics, HotelRoomChat, Reviews } from '@hi/db-models';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { stream } from 'hono/streaming';
@@ -305,7 +305,7 @@ const hotelReportRouter = new Hono()
       const alerts = await HotelAlert.find({
         businessId,
         createdAt: { $gte: from, $lte: to },
-        alertProgress: { $in: ["DELIVERED", "RESOLVED"] },
+        alertProgress: { $in: ["DELIVERED", "RESOLVED", "NOT_DELIVERED", "REJECTED"] },
       })
         .populate({
           path: "serviceIds",
@@ -317,6 +317,29 @@ const hotelReportRouter = new Hono()
         .populate({ path: "roomId", select: "name" })
         .sort({ createdAt: 1 })
         .lean();
+
+      const alertIds = (alerts as any[]).map((alert) => alert._id);
+      const roomChats = alertIds.length
+        ? await HotelRoomChat.find({
+            alertId: { $in: alertIds },
+            isDeleted: false,
+          })
+            .select("alertId userId cart date")
+            .populate({ path: "userId", select: "name phone" })
+            .lean()
+        : [];
+      const chatByAlertId = new Map((roomChats as any[]).map((chat) => [String(chat.alertId), chat]));
+      const hydratedAlerts = (alerts as any[]).map((alert) => {
+        const chat = chatByAlertId.get(String(alert._id));
+        const alertCart = Array.isArray(alert.cart) ? alert.cart : [];
+        const chatCart = Array.isArray(chat?.cart) ? chat.cart : [];
+        return {
+          ...alert,
+          cart: alertCart.length ? alertCart : chatCart,
+          createdBy: alert.createdBy || chat?.userId,
+          createdAt: alert.createdAt || chat?.date,
+        };
+      });
 
       const stays = await HotelAnalytics.find({
         businessId,
@@ -399,7 +422,7 @@ const hotelReportRouter = new Hono()
 
       // ── Step 4: LIFETIME visit counts in ONE aggregation ───────────────
       const userIdSet = new Set<string>();
-      for (const a of alerts as any[]) {
+      for (const a of hydratedAlerts as any[]) {
         const id = a.createdBy?._id;
         if (id) userIdSet.add(String(id));
       }
@@ -421,7 +444,7 @@ const hotelReportRouter = new Hono()
       // Map by phone (matches the client expectation). We need the
       // userId→phone link from `alerts` since visitAgg is keyed by userId.
       const phoneByUserId = new Map<string, string>();
-      for (const a of alerts as any[]) {
+      for (const a of hydratedAlerts as any[]) {
         const uid = a.createdBy?._id;
         const phone = a.createdBy?.phone;
         if (uid && phone) phoneByUserId.set(String(uid), phone);
@@ -479,15 +502,15 @@ const hotelReportRouter = new Hono()
         // Summary block, then a blank line, then headers.
         const uniqueGuests = new Set(
           [
-            ...(alerts as any[]).map((a) => a.createdBy?.phone),
+            ...(hydratedAlerts as any[]).map((a) => a.createdBy?.phone),
             ...(stays as any[]).map((stay) => stay.userId?.phone),
           ]
             .filter(Boolean),
         ).size;
-        const escalated = (alerts as any[]).filter((a) => a.isEscalated).length;
+        const escalated = (hydratedAlerts as any[]).filter((a) => a.isEscalated).length;
         const summary = [
           "HOTEL GUEST EXPERIENCE REPORT",
-          `Total Service Requests: ${alerts.length}`,
+          `Total Service Requests: ${hydratedAlerts.length}`,
           `Unique Guests: ${uniqueGuests}`,
           `Escalated Requests: ${escalated}`,
           `Date Range: ${formatDateTime(from)} to ${formatDateTime(to)}`,
@@ -501,7 +524,7 @@ const hotelReportRouter = new Hono()
         // string from ever existing in process memory for large reports.
         let buffer: string[] = [];
         const phonesWithServiceRows = new Set<string>();
-        for (const alert of alerts as any[]) {
+        for (const alert of hydratedAlerts as any[]) {
           const phone = alert.createdBy?.phone || "";
           if (phone) phonesWithServiceRows.add(phone);
           const review = findMatchingReview(alert);

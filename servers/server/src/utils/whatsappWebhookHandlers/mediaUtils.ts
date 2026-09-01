@@ -62,7 +62,7 @@ async function uploadToPermanentStorage(
     });
 
     const uploadResponse = await axios.post(
-      "https://storage.test.hipalz.com/upload",
+      "https://storage.hipalz.com/upload",
       formData,
       {
         headers: { ...formData.getHeaders() },

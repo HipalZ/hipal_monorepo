@@ -358,7 +358,7 @@ const whatsappRouter = new Hono()
           storageForm.append("fileName", randomUUID());
           storageForm.append("bucketName", "assets");
           const r = await axios.post(
-            "https://storage.test.hipalz.com/upload",
+            "https://storage.hipalz.com/upload",
             storageForm,
             {
               headers: { "Content-Type": "multipart/form-data" },
