@@ -14,10 +14,9 @@ interface CartDetailsHotelProps {
 }
 
 const removalReasons = [
-    "Item is out of stock",
-    "Item is not available right now",
+    "Item not available",
+    "Ingredient not available",
     "Kitchen cannot prepare this item",
-    "Guest requested this change",
     "Other",
 ]
 
@@ -44,7 +43,7 @@ const MemoCartDetailsHotel = ({ localCart, setLocalCart, readOnly, onItemRemoved
         if (!reason) return
 
         const updatedCart = localCart.filter((item) => item.id !== pendingItem.id)
-        onItemRemoved?.(pendingItem, reason)
+        onItemRemoved?.(pendingItem, reason.trim())
         setLocalCart(updatedCart)
         resetRemoval()
     }

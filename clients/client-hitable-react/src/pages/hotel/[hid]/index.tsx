@@ -1,4 +1,3 @@
-import CommonBottomButton from '@/components/atoms/bottomButton';
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
 import PopUp from '@/components/atoms/popUp';
 import HotelReviews from '@/components/hotel/HotelReview';
@@ -60,22 +59,10 @@ const MemoHotel = () => {
         </PopUp>
       )}
       {openCartModal && (
-        <PopUp width="w-[30rem] " onClose={() => setOpenCartModal(false)} show={openCartModal} hide>
-          <section className="h-[90vh] overflow-y-scroll bg-gray-50">
+        <PopUp width="w-full max-w-[30rem]" height="h-[82dvh] max-h-[42rem]" onClose={() => setOpenCartModal(false)} show={openCartModal} hide>
+          <section className="h-full overflow-hidden rounded-t-2xl bg-gray-50 md:rounded-2xl">
             <Suspense fallback={<SpinnerMemo />}>
-              <ViewCart />
-              <CommonBottomButton
-                maxWidth="30rem"
-                position="mid"
-                shadow
-                buttons={[
-                  {
-                    text: 'Back',
-                    onClick: handleBack,
-                    className: 'w-full rounded-md',
-                  },
-                ]}
-              />
+              <ViewCart onClose={handleBack} />
             </Suspense>
           </section>
         </PopUp>

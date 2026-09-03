@@ -20,6 +20,8 @@ const hotelRoomChatSchema = new Schema<HotelRoomChatType>({
   },
 });
 
+hotelRoomChatSchema.index({ alertId: 1, isDeleted: 1 });
+
 // Hotel Room Chat Reply Schema
 const hotelRoomChatReplySchema = new Schema<HotelRoomChatReplyType>({
   userId: { type: ObjectId, required: true, ref: "User" },

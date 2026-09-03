@@ -1,5 +1,4 @@
 // DateRangePicker.tsx
-import CommonBottomButton from '@/components/atoms/bottomButton';
 import PopUp from '@/components/atoms/popUp';
 import useBusinessData from '@/components/store/useBusinessData';
 import usePaginationStore from '@/components/store/usePagination';
@@ -280,7 +279,7 @@ const DateRangePicker = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between space-x-2 pl-4 pt-4">
+      <div className="flex items-center justify-between space-x-2">
         <div className="sticky top-0 overflow-hidden">
           <div className="flex w-full max-w-[30rem] gap-2 overflow-x-auto text-nowrap px-4 md:max-w-full">
             <button
@@ -332,82 +331,88 @@ const DateRangePicker = () => {
               height="h-[100dvh] md:h-[80dvh] lg:h-[30rem]"
               hide
             >
-              <h3 className="mt-4 text-center font-semibold">Pick your date &amp; time range</h3>
+              <div className="flex h-full flex-col overflow-hidden">
+                <div className="shrink-0 px-4 pt-4">
+                  <h3 className="text-center font-semibold">Pick your date &amp; time range</h3>
 
-              {/* Checkbox: include extended billing time */}
-              <div className="mt-2 flex items-center justify-center gap-2">
-                <input
-                  id="useExtendedTime"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-slate-300 text-[#8C63FF] focus:ring-[#8C63FF]"
-                  checked={useExtendedTime}
-                  onChange={handleToggleExtended}
-                />
-                <label htmlFor="useExtendedTime" className="text-xs text-slate-700">
-                  Include extended billing time (use extended closing)
-                </label>
-              </div>
-
-              <div className="pt-6">
-                <div className="flex h-[90dvh] w-full flex-col gap-6 overflow-auto pb-[10rem] text-center lg:flex-row lg:items-start lg:justify-center">
-                  {/* Start DateTime */}
-                  <div>
-                    <p className="mb-2 text-sm font-medium">Start</p>
-                    <DatePicker
-                      selected={tempStart}
-                      onChange={(date: Date) => {
-                        const next = date ?? tempStart;
-                        setTempStart(next);
-                        if (next > tempEnd) setValidationError('Start cannot be after End.');
-                        else setValidationError('');
-                      }}
-                      showTimeSelect
-                      timeIntervals={1}
-                      timeCaption="Time"
-                      dateFormat="dd-MM-yyyy hh:mm aa"
-                      maxDate={tempEnd || new Date()}
-                      {...startPickerTimes}
-                      inline
+                  {/* Checkbox: include extended billing time */}
+                  <div className="mt-2 flex items-center justify-center gap-2">
+                    <input
+                      id="useExtendedTime"
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-slate-300 text-[#8C63FF] focus:ring-[#8C63FF]"
+                      checked={useExtendedTime}
+                      onChange={handleToggleExtended}
                     />
-                  </div>
-
-                  {/* End DateTime */}
-                  <div>
-                    <p className="mb-2 text-sm font-medium">End</p>
-                    <DatePicker
-                      selected={tempEnd}
-                      onChange={(date: Date) => {
-                        const next = date ?? tempEnd;
-                        setTempEnd(next);
-                        if (next < tempStart) setValidationError('End cannot be before Start.');
-                        else setValidationError('');
-                      }}
-                      showTimeSelect
-                      timeIntervals={1}
-                      timeCaption="Time"
-                      dateFormat="dd-MM-yyyy hh:mm aa"
-                      minDate={tempStart}
-                      {...endPickerTimes}
-                      maxDate={(() => {
-                        const d = new Date();
-                        d.setDate(d.getDate() + 1); // today + 1 day cap
-                        return d;
-                      })()}
-                      inline
-                    />
+                    <label htmlFor="useExtendedTime" className="text-xs text-slate-700">
+                      Include extended billing time (use extended closing)
+                    </label>
                   </div>
                 </div>
 
-                {validationError && <p className="mt-2 text-sm font-medium text-red-600">{validationError}</p>}
+                <div className="flex-1 overflow-auto px-4 pt-6 text-center">
+                  <div className="flex w-full flex-col gap-6 pb-4 lg:flex-row lg:items-start lg:justify-center">
+                    {/* Start DateTime */}
+                    <div>
+                      <p className="mb-2 text-sm font-medium">Start</p>
+                      <DatePicker
+                        selected={tempStart}
+                        onChange={(date: Date) => {
+                          const next = date ?? tempStart;
+                          setTempStart(next);
+                          if (next > tempEnd) setValidationError('Start cannot be after End.');
+                          else setValidationError('');
+                        }}
+                        showTimeSelect
+                        timeIntervals={1}
+                        timeCaption="Time"
+                        dateFormat="dd-MM-yyyy hh:mm aa"
+                        maxDate={tempEnd || new Date()}
+                        {...startPickerTimes}
+                        inline
+                      />
+                    </div>
 
-                <CommonBottomButton
-                  buttons={[
-                    {
-                      text: 'Apply',
-                      onClick: onSaveCustom,
-                    },
-                  ]}
-                />
+                    {/* End DateTime */}
+                    <div>
+                      <p className="mb-2 text-sm font-medium">End</p>
+                      <DatePicker
+                        selected={tempEnd}
+                        onChange={(date: Date) => {
+                          const next = date ?? tempEnd;
+                          setTempEnd(next);
+                          if (next < tempStart) setValidationError('End cannot be before Start.');
+                          else setValidationError('');
+                        }}
+                        showTimeSelect
+                        timeIntervals={1}
+                        timeCaption="Time"
+                        dateFormat="dd-MM-yyyy hh:mm aa"
+                        minDate={tempStart}
+                        {...endPickerTimes}
+                        maxDate={(() => {
+                          const d = new Date();
+                          d.setDate(d.getDate() + 1); // today + 1 day cap
+                          return d;
+                        })()}
+                        inline
+                      />
+                    </div>
+                  </div>
+
+                  {validationError && <p className="pb-3 text-sm font-medium text-red-600">{validationError}</p>}
+                </div>
+
+                <div className="shrink-0 border-t bg-white px-4 py-3 shadow-[0_-6px_18px_rgba(15,23,42,0.08)]">
+                  <button
+                    type="button"
+                    className="h-12 w-full rounded-full bg-black px-6 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+                    onClick={onSaveCustom}
+                    disabled={Boolean(validationError)}
+                  >
+                    Apply
+                  </button>
+                </div>
               </div>
             </PopUp>
           )}

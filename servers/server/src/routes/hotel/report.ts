@@ -1,4 +1,4 @@
-import { Cart, HotelAlert, HotelAnalytics, Reviews } from '@hi/db-models';
+import { Cart, HotelAlert, HotelAnalytics, HotelRoomChat, Reviews } from '@hi/db-models';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { stream } from 'hono/streaming';
@@ -191,26 +191,35 @@ const slaAnalysis = (alert: any) => {
 
 const getCompanionGuests = (guests?: any[], primaryPhone?: string) =>
   (guests || []).filter((guest) => {
-    if (!guest || typeof guest !== 'object') return false;
+    if (!guest || typeof guest !== "object") return false;
     return !primaryPhone || guest.phone !== primaryPhone;
   });
 
 const formatCompanions = (guests?: any[], primaryPhone?: string) =>
   getCompanionGuests(guests, primaryPhone)
-    .map((guest) => [guest.name || 'Guest', guest.phone ? `(${guest.phone})` : ''].filter(Boolean).join(' '))
-    .join(' | ');
+    .map((guest) =>
+      [guest.name || "Guest", guest.phone ? `(${guest.phone})` : ""]
+        .filter(Boolean)
+        .join(" "),
+    )
+    .join(" | ");
 
-const servicesOverlap = (a?: { name?: string }[], b?: { name?: string }[]) => {
+const servicesOverlap = (
+  a?: { name?: string }[],
+  b?: { name?: string }[],
+) => {
   if (!a?.length || !b?.length) return false;
   const set = new Set(a.map((s) => s?.name?.toLowerCase()).filter(Boolean));
   return b.some((s) => set.has(s?.name?.toLowerCase()));
 };
 
+
+
 const timePeriods = [
-  { name: 'Morning', start: 4, end: 10 },
-  { name: 'Afternoon', start: 10, end: 16 },
-  { name: 'Evening', start: 16, end: 22 },
-  { name: 'Night', start: 22, end: 28 },
+  { name: "Morning", start: 4, end: 10 },
+  { name: "Afternoon", start: 10, end: 16 },
+  { name: "Evening", start: 16, end: 22 },
+  { name: "Night", start: 22, end: 28 },
 ];
 
 const getTimePeriod = (timestamp: number) => {
@@ -253,9 +262,9 @@ const hotelReportRouter = new Hono()
    *     dashboard only; client never calls it from an unauthed origin).
    */
   .get(
-    '/guest_experience_csv',
+    "/guest_experience_csv",
     zValidator(
-      'query',
+      "query",
       z.object({
         businessId: z.string().min(2).max(50),
         from: z.coerce.number().int().nonnegative(),
@@ -263,13 +272,19 @@ const hotelReportRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { businessId, from, to } = c.req.valid('query');
+      const { businessId, from, to } = c.req.valid("query");
 
       if (from >= to) {
-        return respond(c, 'Invalid date range (from >= to)', true, 400, {});
+        return respond(c, "Invalid date range (from >= to)", true, 400, {});
       }
       if (to - from > MAX_REPORT_RANGE_MS) {
-        return respond(c, `Date range exceeds ${MAX_REPORT_RANGE_MS / (24 * 60 * 60 * 1000)} days`, true, 400, {});
+        return respond(
+          c,
+          `Date range exceeds ${MAX_REPORT_RANGE_MS / (24 * 60 * 60 * 1000)} days`,
+          true,
+          400,
+          {},
+        );
       }
 
       // ── Step 1: alerts in range ─────────────────────────────────────────
@@ -282,27 +297,53 @@ const hotelReportRouter = new Hono()
       const alerts = await HotelAlert.find({
         businessId,
         createdAt: { $gte: from, $lte: to },
-        alertProgress: { $in: ['DELIVERED', 'RESOLVED'] },
+        alertProgress: { $in: ["DELIVERED", "RESOLVED", "NOT_DELIVERED", "REJECTED"] },
       })
         .populate({
-          path: 'serviceIds',
-          select: 'name avgAcceptanceTime avgCompletionTime avgDeliveryTime',
+          path: "serviceIds",
+          select: "name avgAcceptanceTime avgCompletionTime avgDeliveryTime",
         })
-        .populate({ path: 'createdBy', select: 'name phone' })
-        .populate({ path: 'acceptedBy', select: 'name phone' })
-        .populate({ path: 'deliveredBy', select: 'name phone' })
-        .populate({ path: 'roomId', select: 'name' })
+        .populate({ path: "createdBy", select: "name phone" })
+        .populate({ path: "acceptedBy", select: "name phone" })
+        .populate({ path: "deliveredBy", select: "name phone" })
+        .populate({ path: "roomId", select: "name" })
         .sort({ createdAt: 1 })
         .lean();
 
+      const alertIds = (alerts as any[]).map((alert) => alert._id);
+      const roomChats = alertIds.length
+        ? await HotelRoomChat.find({
+            alertId: { $in: alertIds },
+            isDeleted: false,
+          })
+            .select("alertId userId cart date")
+            .populate({ path: "userId", select: "name phone" })
+            .lean()
+        : [];
+      const chatByAlertId = new Map((roomChats as any[]).map((chat) => [String(chat.alertId), chat]));
+      const hydratedAlerts = (alerts as any[]).map((alert) => {
+        const chat = chatByAlertId.get(String(alert._id));
+        const alertCart = Array.isArray(alert.cart) ? alert.cart : [];
+        const chatCart = Array.isArray(chat?.cart) ? chat.cart : [];
+        return {
+          ...alert,
+          cart: alertCart.length ? alertCart : chatCart,
+          createdBy: alert.createdBy || chat?.userId,
+          createdAt: alert.createdAt || chat?.date,
+        };
+      });
+
       const stays = await HotelAnalytics.find({
         businessId,
-        $or: [{ checkIn: { $gte: from, $lte: to } }, { checkOut: { $gte: from, $lte: to } }],
+        $or: [
+          { checkIn: { $gte: from, $lte: to } },
+          { checkOut: { $gte: from, $lte: to } },
+        ],
       })
-        .select('userId roomId source checkIn checkOut guestUserIds serviceIds')
-        .populate({ path: 'userId', select: 'name phone' })
-        .populate({ path: 'roomId', select: 'name' })
-        .populate({ path: 'guestUserIds', select: 'name phone' })
+        .select("userId roomId source checkIn checkOut guestUserIds serviceIds")
+        .populate({ path: "userId", select: "name phone" })
+        .populate({ path: "roomId", select: "name" })
+        .populate({ path: "guestUserIds", select: "name phone" })
         .sort({ checkIn: -1 })
         .lean();
 
@@ -313,21 +354,24 @@ const hotelReportRouter = new Hono()
       // checking content length or the row count after parse.
       if (!alerts.length && !stays.length) {
         const filename = `guest_experience_report_${formatFilenameDate(from)}-to-${formatFilenameDate(to)}.csv`;
-        c.header('Content-Type', 'text/csv; charset=utf-8');
-        c.header('Content-Disposition', `attachment; filename="${filename}"`);
-        c.header('Cache-Control', 'no-store');
-        c.header('X-Hipalz-Report-Status', 'empty');
+        c.header("Content-Type", "text/csv; charset=utf-8");
+        c.header(
+          "Content-Disposition",
+          `attachment; filename="${filename}"`,
+        );
+        c.header("Cache-Control", "no-store");
+        c.header("X-Hipalz-Report-Status", "empty");
         return c.body(
           [
-            '﻿HOTEL GUEST EXPERIENCE REPORT',
+            "﻿HOTEL GUEST EXPERIENCE REPORT",
             `Date Range: ${formatDateTime(from)} to ${formatDateTime(to)}`,
             `Generated At: ${formatDateTime(Date.now())}`,
-            'No guest experience data was recorded in this range.',
-            '--------------------------------------------',
-            '',
-            CSV_HEADERS.map(escapeCsvCell).join(','),
-            '',
-          ].join('\n'),
+            "No guest experience data was recorded in this range.",
+            "--------------------------------------------",
+            "",
+            CSV_HEADERS.map(escapeCsvCell).join(","),
+            "",
+          ].join("\n"),
           200,
         );
       }
@@ -337,12 +381,12 @@ const hotelReportRouter = new Hono()
         businessId,
         date: { $gte: from, $lte: to },
       })
-        .populate({ path: 'userId', select: 'name phone' })
-        .populate({ path: 'roomId', select: 'name' })
+        .populate({ path: "userId", select: "name phone" })
+        .populate({ path: "roomId", select: "name" })
         .populate({
-          path: 'alertId',
-          select: 'serviceIds',
-          populate: { path: 'serviceIds', select: 'name' },
+          path: "alertId",
+          select: "serviceIds",
+          populate: { path: "serviceIds", select: "name" },
         })
         .lean();
 
@@ -370,7 +414,7 @@ const hotelReportRouter = new Hono()
 
       // ── Step 4: LIFETIME visit counts in ONE aggregation ───────────────
       const userIdSet = new Set<string>();
-      for (const a of alerts as any[]) {
+      for (const a of hydratedAlerts as any[]) {
         const id = a.createdBy?._id;
         if (id) userIdSet.add(String(id));
       }
@@ -383,13 +427,16 @@ const hotelReportRouter = new Hono()
         .map((id) => new Types.ObjectId(id));
 
       const visitAgg = userObjectIds.length
-        ? await HotelAnalytics.aggregate([{ $match: { userId: { $in: userObjectIds } } }, { $group: { _id: '$userId', count: { $sum: 1 } } }])
+        ? await HotelAnalytics.aggregate([
+            { $match: { userId: { $in: userObjectIds } } },
+            { $group: { _id: "$userId", count: { $sum: 1 } } },
+          ])
         : [];
 
       // Map by phone (matches the client expectation). We need the
       // userId→phone link from `alerts` since visitAgg is keyed by userId.
       const phoneByUserId = new Map<string, string>();
-      for (const a of alerts as any[]) {
+      for (const a of hydratedAlerts as any[]) {
         const uid = a.createdBy?._id;
         const phone = a.createdBy?.phone;
         if (uid && phone) phoneByUserId.set(String(uid), phone);
@@ -407,67 +454,85 @@ const hotelReportRouter = new Hono()
 
       // ── Step 5: stream CSV ─────────────────────────────────────────────
       const filename = `guest_experience_report_${formatFilenameDate(from)}-to-${formatFilenameDate(to)}.csv`;
-      c.header('Content-Type', 'text/csv; charset=utf-8');
-      c.header('Content-Disposition', `attachment; filename="${filename}"`);
-      c.header('Cache-Control', 'no-store');
+      c.header("Content-Type", "text/csv; charset=utf-8");
+      c.header(
+        "Content-Disposition",
+        `attachment; filename="${filename}"`,
+      );
+      c.header("Cache-Control", "no-store");
 
       const findMatchingReview = (alert: any) => {
-        const alertId = alert?._id ? String(alert._id) : '';
+        const alertId = alert?._id ? String(alert._id) : "";
         const exact = reviews.find((r: any) => {
-          const rAlertId = r.alertId && typeof r.alertId === 'object' ? String(r.alertId._id) : '';
+          const rAlertId =
+            r.alertId && typeof r.alertId === "object" ? String(r.alertId._id) : "";
           return alertId && rAlertId === alertId;
         });
         if (exact) return exact;
         return reviews.find((r: any) => {
-          const user = r.userId && typeof r.userId === 'object' ? r.userId : null;
-          const sameGuest = user?.phone && user.phone === alert.createdBy?.phone;
-          const sameRoom = r.roomId?.name && r.roomId.name === alert.roomId?.name;
-          const reviewAlert = r.alertId && typeof r.alertId === 'object' ? r.alertId : null;
-          const sameService = servicesOverlap(alert.serviceIds, reviewAlert?.serviceIds);
-          const afterRequest = r.date && alert.createdAt ? r.date >= alert.createdAt : true;
+          const user = r.userId && typeof r.userId === "object" ? r.userId : null;
+          const sameGuest =
+            user?.phone && user.phone === alert.createdBy?.phone;
+          const sameRoom =
+            r.roomId?.name && r.roomId.name === alert.roomId?.name;
+          const reviewAlert =
+            r.alertId && typeof r.alertId === "object" ? r.alertId : null;
+          const sameService = servicesOverlap(
+            alert.serviceIds,
+            reviewAlert?.serviceIds,
+          );
+          const afterRequest =
+            r.date && alert.createdAt ? r.date >= alert.createdAt : true;
           return Boolean(sameGuest && sameRoom && sameService && afterRequest);
         });
       };
 
       return stream(c, async (s) => {
         // UTF-8 BOM so Excel opens the file with the right encoding.
-        await s.write('﻿');
+        await s.write("﻿");
 
         // Summary block, then a blank line, then headers.
         const uniqueGuests = new Set(
-          [...(alerts as any[]).map((a) => a.createdBy?.phone), ...(stays as any[]).map((stay) => stay.userId?.phone)].filter(Boolean),
+          [
+            ...(hydratedAlerts as any[]).map((a) => a.createdBy?.phone),
+            ...(stays as any[]).map((stay) => stay.userId?.phone),
+          ]
+            .filter(Boolean),
         ).size;
-        const escalated = (alerts as any[]).filter((a) => a.isEscalated).length;
+        const escalated = (hydratedAlerts as any[]).filter((a) => a.isEscalated).length;
         const summary = [
-          'HOTEL GUEST EXPERIENCE REPORT',
-          `Total Service Requests: ${alerts.length}`,
+          "HOTEL GUEST EXPERIENCE REPORT",
+          `Total Service Requests: ${hydratedAlerts.length}`,
           `Unique Guests: ${uniqueGuests}`,
           `Escalated Requests: ${escalated}`,
           `Date Range: ${formatDateTime(from)} to ${formatDateTime(to)}`,
           `Generated At: ${formatDateTime(Date.now())}`,
-          '--------------------------------------------',
-        ].join('\n');
+          "--------------------------------------------",
+        ].join("\n");
         await s.write(`${summary}\n\n`);
-        await s.write(CSV_HEADERS.map(escapeCsvCell).join(',') + '\n');
+        await s.write(CSV_HEADERS.map(escapeCsvCell).join(",") + "\n");
 
         // Emit rows in batches. Building rows row-by-row keeps a single 80MB
         // string from ever existing in process memory for large reports.
         let buffer: string[] = [];
         const phonesWithServiceRows = new Set<string>();
-        for (const alert of alerts as any[]) {
-          const phone = alert.createdBy?.phone || '';
+        for (const alert of hydratedAlerts as any[]) {
+          const phone = alert.createdBy?.phone || "";
           if (phone) phonesWithServiceRows.add(phone);
           const review = findMatchingReview(alert);
           const stay = phone ? stayByPhone.get(phone) : undefined;
-          const companionGuests = getCompanionGuests(stay?.guests, phone);
+          const companionGuests = getCompanionGuests(
+            stay?.guests,
+            phone,
+          );
           const sla = slaAnalysis(alert);
 
           const row = [
-            alert.createdBy?.name || 'Guest',
+            alert.createdBy?.name || "Guest",
             phone,
-            alert.roomId?.name || '',
-            phone ? (visitCountByPhone.get(phone) ?? '') : '',
-            stay?.source || '',
+            alert.roomId?.name || "",
+            phone ? visitCountByPhone.get(phone) ?? "" : "",
+            stay?.source || "",
             formatDateTime(stay?.checkIn),
             formatDateTime(stay?.checkOut),
             formatCompanions(stay?.guests, phone),
@@ -521,6 +586,11 @@ const hotelReportRouter = new Hono()
             companionGuests.length,
             'Room Scan / Stay',
             joinNames(stay.serviceIds),
+            '',
+            '',
+            '',
+            '',
+            '',
             '',
             '',
             '',

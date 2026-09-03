@@ -8,7 +8,7 @@ import { useAcknowledgeWakeUpAlert, useDismissMessageAlert, useEditAlertCart, us
 import { formatRaised, useNow } from '@/hooks/useTime';
 import { useMutation } from '@tanstack/react-query';
 import { AlarmClock, AlertCircle, CheckCheck, CheckCircle, ChevronLeft, Clock, Loader2, Phone, ShoppingCart, User, XCircle } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import CommonBottomButton from '../atoms/bottomButton';
 import BottomPopUp from '../atoms/universalPopup';
@@ -78,6 +78,13 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const [removedCartItems, setRemovedCartItems] = useState<RemovedCartItem[]>([]);
   const { editCart, editingCart } = useEditAlertCart();
 
+  useEffect(() => {
+    if (showOrderDetails !== alert?._id) {
+      setLocalCart(alert?.cart || []);
+      setRemovedCartItems([]);
+    }
+  }, [alert?._id, alert?.cart, showOrderDetails]);
+
   const rejectionReasons = [
     { id: 'out_of_stock', label: 'Item out of stock' },
     { id: 'unavailable_service', label: 'Service temporarily unavailable' },
@@ -122,6 +129,27 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     handleAction(alert?._id, 'REJECTED', finalReason);
   };
 
+  const removedOriginalItems = useMemo(() => {
+    const remainingIds = new Set(localCart.map((item) => item.id));
+    return (alert?.cart || []).filter((item) => !remainingIds.has(item.id));
+  }, [alert?.cart, localCart]);
+
+  const removedCartItemsWithReasons = useMemo(
+    () =>
+      removedOriginalItems.map((item) => {
+        const recordedItem = removedCartItems.find((removedItem) => removedItem.id === item.id);
+        return {
+          id: item.id,
+          name: item?.dish?.name || recordedItem?.name || 'Item',
+          quantity: item?.quantity || recordedItem?.quantity || 1,
+          reason: recordedItem?.reason?.trim() || '',
+        };
+      }),
+    [removedCartItems, removedOriginalItems],
+  );
+
+  const hasMissingRemovalReason = removedCartItemsWithReasons.some((item) => !item.reason);
+
   const handleCartItemRemoved = useCallback((item: Cart, reason: string) => {
     setRemovedCartItems((items) => [
       ...items.filter((removedItem) => removedItem.id !== item.id),
@@ -129,14 +157,19 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
         id: item.id,
         name: item?.dish?.name || 'Item',
         quantity: item?.quantity || 1,
-        reason,
+        reason: reason.trim(),
       },
     ]);
   }, []);
 
   const updateCart = async (alertId: string) => {
-    if (!removedCartItems.length) {
+    if (!removedOriginalItems.length) {
       toast.error('Please remove at least one item before updating');
+      return;
+    }
+
+    if (hasMissingRemovalReason) {
+      toast.error('Please add a reason for every removed item');
       return;
     }
 
@@ -144,7 +177,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
       await editCart({
         alertId,
         cart: localCart,
-        removedItems: removedCartItems,
+        removedItems: removedCartItemsWithReasons,
       });
       setRemovedCartItems([]);
       setShowOrderDetails(null);
@@ -457,6 +490,21 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             {hasCart ? (
               <div className="space-y-3 p-4">
                 <CartDetailsHotel localCart={localCart} setLocalCart={setLocalCart} readOnly={false} onItemRemoved={handleCartItemRemoved} />
+                {removedCartItemsWithReasons.length > 0 && (
+                  <div className="rounded-xl border border-amber-100 bg-amber-50 p-3">
+                    <div className="mb-2 text-sm font-semibold text-amber-950">Items removed</div>
+                    <div className="space-y-2">
+                      {removedCartItemsWithReasons.map((item) => (
+                        <div key={item.id} className="rounded-lg bg-white px-3 py-2 text-xs text-amber-950 shadow-sm">
+                          <div className="font-semibold">
+                            {item.quantity} x {item.name}
+                          </div>
+                          <div className="mt-1 text-amber-800">Reason: {item.reason || 'Reason required'}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="py-6 text-center">
@@ -480,7 +528,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
                 onClick: () => updateCart(alert?._id),
                 hide: alert?.alertProgress === 'MESSAGE',
                 className: 'rounded-lg shadow-md text-white',
-                disable: editingCart || !removedCartItems.length,
+                disable: editingCart || !removedOriginalItems.length || hasMissingRemovalReason,
               },
             ]}
           />

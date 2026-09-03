@@ -30,6 +30,7 @@ import { runInTransaction } from '@hi/utils';
 import { zValidator } from '@hono/zod-validator';
 import axios from 'axios';
 import { Hono } from 'hono';
+import { Types } from 'mongoose';
 import { schedule } from 'node-cron';
 import { z } from 'zod';
 import { sendPushToToken, sendPushToTokens } from '../../services/notifications';
@@ -54,6 +55,319 @@ const chatComplainPayload = z.object({
   roomChatReplyId: z.string().min(2).max(50),
   userId: z.string().min(2).max(50).optional(),
 });
+
+const historyStatuses = ['DELIVERED', 'RESOLVED', 'NOT_DELIVERED', 'REJECTED'] as const;
+const historyCategoryValues = ['food', 'housekeeping', 'frontOffice', 'maintenance'] as const;
+
+type HistoryCategory = (typeof historyCategoryValues)[number];
+
+const historyCategoryPatterns: Record<HistoryCategory, RegExp> = {
+  food: /food|order|restaurant|breakfast|lunch|dinner|snack|beverage|tea|coffee/i,
+  housekeeping: /house\s*keeping|housekeeping|clean|linen|towel|toilet|soap|shower|comb|dental|laundry|slipper|water|bottle|lotion|kit/i,
+  frontOffice: /front|office|reception|checkout|check out|check-in|check in|wake|key|luggage|bill|billing/i,
+  maintenance: /maintenance|repair|ac|a\/c|tv|wifi|internet|light|fan|electric|plumb|leak|flush|geyser|tap|shower repair/i,
+};
+
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const toMongoId = (value: string) => (Types.ObjectId.isValid(value) ? new Types.ObjectId(value) : value);
+
+const objectIds = (items: Array<{ _id?: unknown }>) =>
+  items
+    .map((item) => String(item?._id || ''))
+    .filter((id) => Types.ObjectId.isValid(id))
+    .map((id) => new Types.ObjectId(id));
+
+const alertIdsFromChats = (items: Array<{ alertId?: unknown }>) =>
+  items
+    .map((item) => String(item?.alertId || ''))
+    .filter((id) => Types.ObjectId.isValid(id))
+    .map((id) => new Types.ObjectId(id));
+
+const findFoodChatAlertIds = async (baseAlertQuery: any, itemSearch?: RegExp) => {
+  const candidateAlerts = await HotelAlert.find(baseAlertQuery).select('_id').lean();
+  const candidateAlertIds = objectIds(candidateAlerts);
+  if (!candidateAlertIds.length) return [];
+
+  const chatQuery: any = {
+    alertId: { $in: candidateAlertIds },
+    isDeleted: false,
+    cart: { $exists: true, $ne: [] },
+  };
+
+  if (itemSearch) {
+    chatQuery.$or = [{ 'cart.dish.name': itemSearch }, { 'cart.name': itemSearch }, { 'cart.dishName': itemSearch }];
+  }
+
+  const chats = await HotelRoomChat.find(chatQuery).select('alertId').lean();
+  return alertIdsFromChats(chats);
+};
+
+const buildHistoryAlertQuery = async ({
+  businessId,
+  fromDate,
+  toDate,
+  search,
+  category,
+  room,
+  service,
+  status,
+  staff,
+}: {
+  businessId: string;
+  fromDate: number;
+  toDate: number;
+  search?: string;
+  category?: HistoryCategory;
+  room?: string;
+  service?: string;
+  status?: string;
+  staff?: string;
+}) => {
+  const query: any = {
+    businessId: toMongoId(businessId),
+    createdAt: { $gte: fromDate, $lte: toDate },
+    alertProgress: status && status !== 'all' ? status : { $in: historyStatuses },
+  };
+  const andClauses: any[] = [];
+
+  if (room && room !== 'all') {
+    const rooms = await HotelRoom.find({ businessId, name: room }).select('_id').lean();
+    andClauses.push({ roomId: { $in: objectIds(rooms) } });
+  }
+
+  if (service && service !== 'all') {
+    if (service === 'Food Order') {
+      const foodChatAlertIds = await findFoodChatAlertIds(query);
+      andClauses.push({
+        $or: [
+          { cart: { $exists: true, $ne: [] } },
+          { _id: { $in: foodChatAlertIds } },
+        ],
+      });
+    } else {
+      const services = await HotelService.find({ businessId, name: service }).select('_id').lean();
+      andClauses.push({ serviceIds: { $in: objectIds(services) } });
+    }
+  }
+
+  if (staff && staff !== 'all') {
+    const staffUsers = await User.find({ name: staff }).select('_id').lean();
+    const staffIds = objectIds(staffUsers);
+    andClauses.push({
+      $or: [{ acceptedBy: { $in: staffIds } }, { deliveredBy: { $in: staffIds } }, { rejectedBy: { $in: staffIds } }],
+    });
+  }
+
+  if (category && category !== 'housekeeping') {
+    const categoryServices = await HotelService.find({
+      businessId,
+      name: historyCategoryPatterns[category],
+    })
+      .select('_id')
+      .lean();
+    const categoryServiceIds = objectIds(categoryServices);
+
+    if (category === 'food') {
+      const foodChatAlertIds = await findFoodChatAlertIds(query);
+      andClauses.push({
+        $or: [
+          { cart: { $exists: true, $ne: [] } },
+          { serviceIds: { $in: categoryServiceIds } },
+          { _id: { $in: foodChatAlertIds } },
+        ],
+      });
+    } else {
+      andClauses.push(
+        category === 'frontOffice'
+          ? { $or: [{ serviceIds: { $in: categoryServiceIds } }, { message: /^WAKE_UP_CALL::/ }] }
+          : { serviceIds: { $in: categoryServiceIds } },
+      );
+    }
+  }
+
+  if (category === 'housekeeping') {
+    const [foodServices, frontOfficeServices, maintenanceServices] = await Promise.all([
+      HotelService.find({ businessId, name: historyCategoryPatterns.food }).select('_id').lean(),
+      HotelService.find({ businessId, name: historyCategoryPatterns.frontOffice }).select('_id').lean(),
+      HotelService.find({ businessId, name: historyCategoryPatterns.maintenance }).select('_id').lean(),
+    ]);
+    const excludedServiceIds = [...objectIds(foodServices), ...objectIds(frontOfficeServices), ...objectIds(maintenanceServices)];
+    andClauses.push({
+      cart: { $not: { $elemMatch: {} } },
+      serviceIds: { $nin: excludedServiceIds },
+      message: { $not: /^WAKE_UP_CALL::/ },
+    });
+  }
+
+  const trimmedSearch = search?.trim();
+  if (trimmedSearch) {
+    const regex = new RegExp(escapeRegex(trimmedSearch), 'i');
+    const [rooms, services, users, foodChatAlertIds] = await Promise.all([
+      HotelRoom.find({ businessId, name: regex }).select('_id').lean(),
+      HotelService.find({ businessId, name: regex }).select('_id').lean(),
+      User.find({ $or: [{ name: regex }, { phone: regex }] }).select('_id').lean(),
+      findFoodChatAlertIds(query, regex),
+    ]);
+
+    const userIds = objectIds(users);
+    andClauses.push({
+      $or: [
+        { roomId: { $in: objectIds(rooms) } },
+        { serviceIds: { $in: objectIds(services) } },
+        { createdBy: { $in: userIds } },
+        { acceptedBy: { $in: userIds } },
+        { deliveredBy: { $in: userIds } },
+        { rejectedBy: { $in: userIds } },
+        { message: regex },
+        { 'cart.dish.name': regex },
+        { 'cart.name': regex },
+        { 'cart.dishName': regex },
+        { _id: { $in: foodChatAlertIds } },
+      ],
+    });
+  }
+
+  return andClauses.length ? { ...query, $and: andClauses } : query;
+};
+
+const hydrateHistoryAlerts = async (alerts: any[]) => {
+  const alertIds = alerts.map((alert) => alert._id);
+  const roomChats = alertIds.length
+    ? await HotelRoomChat.find({
+        alertId: { $in: alertIds },
+        isDeleted: false,
+      })
+        .select('alertId userId cart date')
+        .populate({ path: 'userId', select: 'name phone' })
+        .lean()
+    : [];
+  const chatByAlertId = new Map(roomChats.map((chat: any) => [String(chat.alertId), chat]));
+
+  return alerts.map((alert: any) => {
+    const chat = chatByAlertId.get(String(alert._id));
+    const alertCart = Array.isArray(alert.cart) ? alert.cart : [];
+    const chatCart = Array.isArray(chat?.cart) ? chat.cart : [];
+    return {
+      ...alert,
+      cart: alertCart.length ? alertCart : chatCart,
+      createdBy: alert.createdBy || chat?.userId,
+      createdAt: alert.createdAt || chat?.date,
+    };
+  });
+};
+
+const getHistoryCategorySummary = async (query: any) => {
+  const rows = await HotelAlert.aggregate([
+    { $match: query },
+    {
+      $lookup: {
+        from: 'hotelservices',
+        localField: 'serviceIds',
+        foreignField: '_id',
+        as: 'services',
+      },
+    },
+    {
+      $lookup: {
+        from: 'hotelroomchats',
+        localField: '_id',
+        foreignField: 'alertId',
+        as: 'roomChats',
+      },
+    },
+    {
+      $addFields: {
+        effectiveCart: {
+          $cond: [
+            { $gt: [{ $size: { $ifNull: ['$cart', []] } }, 0] },
+            '$cart',
+            { $ifNull: [{ $arrayElemAt: ['$roomChats.cart', 0] }, []] },
+          ],
+        },
+        serviceNamesText: {
+          $reduce: {
+            input: '$services.name',
+            initialValue: '',
+            in: { $concat: ['$$value', ' ', '$$this'] },
+          },
+        },
+        messageText: { $ifNull: ['$message', ''] },
+      },
+    },
+    {
+      $addFields: {
+        category: {
+          $switch: {
+            branches: [
+              {
+                case: {
+                  $or: [
+                    { $gt: [{ $size: { $ifNull: ['$effectiveCart', []] } }, 0] },
+                    { $regexMatch: { input: '$serviceNamesText', regex: historyCategoryPatterns.food } },
+                  ],
+                },
+                then: 'food',
+              },
+              {
+                case: {
+                  $or: [
+                    { $regexMatch: { input: '$messageText', regex: /^WAKE_UP_CALL::/ } },
+                    { $regexMatch: { input: '$serviceNamesText', regex: historyCategoryPatterns.frontOffice } },
+                  ],
+                },
+                then: 'frontOffice',
+              },
+              {
+                case: { $regexMatch: { input: '$serviceNamesText', regex: historyCategoryPatterns.maintenance } },
+                then: 'maintenance',
+              },
+            ],
+            default: 'housekeeping',
+          },
+        },
+      },
+    },
+    { $group: { _id: '$category', count: { $sum: 1 } } },
+  ]).allowDiskUse(true);
+
+  return rows.reduce(
+    (acc, row) => {
+      if (row?._id && row._id in acc) acc[row._id as HistoryCategory] = row.count;
+      return acc;
+    },
+    { food: 0, housekeeping: 0, frontOffice: 0, maintenance: 0 } as Record<HistoryCategory, number>,
+  );
+};
+
+const getHistoryRoomSummary = async (query: any) => {
+  const rows = await HotelAlert.aggregate([
+    { $match: query },
+    { $group: { _id: '$roomId', count: { $sum: 1 } } },
+    {
+      $lookup: {
+        from: 'hotelrooms',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'room',
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        name: { $arrayElemAt: ['$room.name', 0] },
+        count: 1,
+      },
+    },
+    { $match: { name: { $type: 'string', $ne: '' } } },
+    { $sort: { name: 1 } },
+  ]).allowDiskUse(true);
+
+  return rows.map((row) => ({
+    name: row.name,
+    count: row.count,
+  }));
+};
 
 const oneTimeCronExpression = (runTime: Date) =>
   `${runTime.getSeconds()} ${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${runTime.getMonth() + 1} *`;
@@ -997,7 +1311,7 @@ const hotelAlertRouter = new Hono()
       const alertQuery = {
         businessId,
         createdAt: { $gte: fromDate, $lte: toDate },
-        alertProgress: { $in: ['DELIVERED', 'RESOLVED'] },
+        alertProgress: { $in: ['DELIVERED', 'RESOLVED', 'NOT_DELIVERED', 'REJECTED'] },
       };
 
       const alerts = await HotelAlert.find(alertQuery)
@@ -1011,7 +1325,145 @@ const hotelAlertRouter = new Hono()
         .populate({ path: 'roomId', select: 'name' })
         .lean();
 
-      return respond(c, 'Alerts history fetched successfully', false, 200, alerts);
+      const alertIds = alerts.map((alert) => alert._id);
+      const roomChats = alertIds.length
+        ? await HotelRoomChat.find({
+            alertId: { $in: alertIds },
+            isDeleted: false,
+          })
+            .select('alertId userId cart date')
+            .populate({ path: 'userId', select: 'name phone' })
+            .lean()
+        : [];
+      const chatByAlertId = new Map(roomChats.map((chat: any) => [String(chat.alertId), chat]));
+
+      const hydratedAlerts = alerts.map((alert: any) => {
+        const chat = chatByAlertId.get(String(alert._id));
+        const alertCart = Array.isArray(alert.cart) ? alert.cart : [];
+        const chatCart = Array.isArray(chat?.cart) ? chat.cart : [];
+        return {
+          ...alert,
+          cart: alertCart.length ? alertCart : chatCart,
+          createdBy: alert.createdBy || chat?.userId,
+          createdAt: alert.createdAt || chat?.date,
+        };
+      });
+
+      return respond(c, 'Alerts history fetched successfully', false, 200, hydratedAlerts);
+    },
+  )
+
+  .get(
+    '/fetch_alert_history_page',
+    zValidator(
+      'query',
+      z.object({
+        businessId: z.string().min(2).max(50),
+        userId: z.string().min(2).max(50),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        page: z.coerce.number().int().min(1).default(1),
+        limit: z.coerce.number().int().min(1).max(100).default(20),
+        search: z.string().optional(),
+        category: z.enum(historyCategoryValues).or(z.literal('all')).optional(),
+        room: z.string().optional(),
+        service: z.string().optional(),
+        status: z.enum(historyStatuses).or(z.literal('all')).optional(),
+        staff: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, userId, from, to, page, limit, search, category, room, service, status, staff } = c.req.valid('query');
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (Number.isNaN(fromDate) || Number.isNaN(toDate)) {
+        return respond(c, 'Invalid dates', true, 400, {});
+      }
+
+      if (fromDate > toDate) {
+        return respond(c, 'Invalid date range', true, 400, {});
+      }
+
+      const pageQuery = await buildHistoryAlertQuery({
+        businessId,
+        fromDate,
+        toDate,
+        search,
+        category: category === 'all' ? undefined : category,
+        room,
+        service,
+        status,
+        staff,
+      });
+      const summaryQuery = await buildHistoryAlertQuery({
+        businessId,
+        fromDate,
+        toDate,
+        search,
+        room,
+        service,
+        status,
+        staff,
+      });
+      const roomSummaryQuery = await buildHistoryAlertQuery({
+        businessId,
+        fromDate,
+        toDate,
+        search,
+        category: category === 'all' ? undefined : category,
+        service,
+        status,
+        staff,
+      });
+
+      const skip = (page - 1) * limit;
+      const [total, alerts, summary, roomSummary, rooms, services, acceptedByIds, deliveredByIds, rejectedByIds] = await Promise.all([
+        HotelAlert.countDocuments(pageQuery),
+        HotelAlert.find(pageQuery)
+          .sort({ createdAt: -1, _id: -1 })
+          .skip(skip)
+          .limit(limit)
+          .populate({
+            path: 'serviceIds',
+            select: 'name avgAcceptanceTime avgCompletionTime avgDeliveryTime',
+          })
+          .populate({ path: 'createdBy', select: 'name phone' })
+          .populate({ path: 'acceptedBy', select: 'name phone' })
+          .populate({ path: 'deliveredBy', select: 'name phone' })
+          .populate({ path: 'rejectedBy', select: 'name phone' })
+          .populate({ path: 'roomId', select: 'name' })
+          .lean(),
+        getHistoryCategorySummary(summaryQuery),
+        getHistoryRoomSummary(roomSummaryQuery),
+        HotelRoom.find({ businessId, isDeleted: false }).select('name').sort({ name: 1 }).lean(),
+        HotelService.find({ businessId, availability: true }).select('name').sort({ name: 1 }).lean(),
+        HotelAlert.distinct('acceptedBy', summaryQuery),
+        HotelAlert.distinct('deliveredBy', summaryQuery),
+        HotelAlert.distinct('rejectedBy', summaryQuery),
+      ]);
+
+      const staffIds = Array.from(new Set([...acceptedByIds, ...deliveredByIds, ...rejectedByIds].filter(Boolean).map(String)))
+        .filter((id) => Types.ObjectId.isValid(id))
+        .map((id) => new Types.ObjectId(id));
+      const staffUsers = staffIds.length ? await User.find({ _id: { $in: staffIds } }).select('name').sort({ name: 1 }).lean() : [];
+      const rows = await hydrateHistoryAlerts(alerts);
+      const serviceOptions = [...new Set(['Food Order', ...services.map((item: any) => item?.name).filter(Boolean)])].sort();
+
+      return respond(c, 'Alerts history fetched successfully', false, 200, {
+        rows,
+        total,
+        page,
+        limit,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+        summary,
+        roomSummary,
+        filterOptions: {
+          rooms: rooms.map((item: any) => item.name).filter(Boolean),
+          services: serviceOptions,
+          staff: staffUsers.map((item: any) => item.name).filter(Boolean),
+        },
+      });
     },
   )
 
@@ -2349,8 +2801,29 @@ const hotelAlertRouter = new Hono()
       }
 
       const updatedCartItems = Array.isArray(cart) ? cart : [];
+      const originalCartItems = Array.isArray(alert.cart) && alert.cart.length ? alert.cart : Array.isArray(roomChat.cart) ? roomChat.cart : [];
+      const updatedCartIds = new Set(updatedCartItems.map((item: any) => item?.id).filter(Boolean));
+      const actualRemovedItems = originalCartItems.filter((item: any) => item?.id && !updatedCartIds.has(item.id));
+      const removedReasonById = new Map(removedItems.map((item) => [item.id, item.reason?.trim()]));
+      const missingRemovalReason = actualRemovedItems.some((item: any) => !removedReasonById.get(item.id));
+
+      if (!actualRemovedItems.length) {
+        return respond(c, 'No cart items were removed', true, 400, {});
+      }
+
+      if (missingRemovalReason || removedItems.length !== actualRemovedItems.length) {
+        return respond(c, 'Reason is required for every removed item', true, 400, {});
+      }
+
       const allItemsRemoved = updatedCartItems.length === 0;
-      const removedSummary = removedItems.map((item) => `${item.quantity} x ${item.name} (Reason: ${item.reason})`).join(', ');
+      const removedSummary = actualRemovedItems
+        .map((item: any) => {
+          const removedItem = removedItems.find((removed) => removed.id === item.id);
+          const quantity = item?.quantity || removedItem?.quantity || 1;
+          const name = item?.dish?.name || removedItem?.name || 'Item';
+          return `${quantity} x ${name} (Reason: ${removedReasonById.get(item.id)})`;
+        })
+        .join(', ');
       const updatedCartSummary = updatedCartItems.length
         ? updatedCartItems
             .map((item: any) => {

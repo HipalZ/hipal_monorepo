@@ -28,7 +28,9 @@ function App() {
   }));
 
   const checkAllowRedirectionConditions = () => {
-    const isValidBusiness = captainData?.customRole?.some((role) => role?.isDeleted !== true && role.businessId?._id === selectedBiz?.businessId?._id);
+    const isValidBusiness = captainData?.customRole?.some(
+      (role) => role?.isDeleted !== true && role.businessId?._id === selectedBiz?.businessId?._id,
+    );
     if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType !== 'HOTEL') {
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
     } else if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType === 'HOTEL') {
@@ -55,7 +57,6 @@ function App() {
 
   return (
     <main className="!lg:poppins relative">
-      <InstallAppBanner />
       <AlertReadinessPrompt enabled={Boolean(accessToken)} />
       <InternetConnection />
       {loading ? <SpinnerMemo /> : null}

@@ -116,6 +116,8 @@ const hotelAlertSchema = new mongoose.Schema<HotelAlertType>({
   },
 });
 
+hotelAlertSchema.index({ businessId: 1, createdAt: -1, alertProgress: 1 });
+
 const HotelAlert: Model<HotelAlertType> = mongoose.model<HotelAlertType>(
   "hotelalert",
   hotelAlertSchema,

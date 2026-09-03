@@ -364,6 +364,27 @@ const getRejectionReasonText = (message: string) => {
   return reasonMatch?.[1]?.trim() || normalizedMessage;
 };
 
+const isRejectionReply = (reply?: RoomChatReply) =>
+  Boolean(
+    reply?.description &&
+      /reason|reject|rejected|unable|cannot be provided|couldn't process|could not process|unavailable/i.test(
+        reply.description
+      )
+  );
+
+const getRejectionMessage = (request: RoomChat) => {
+  if (request?.alertId?.message?.trim()) {
+    return request.alertId.message.trim();
+  }
+
+  return (
+    [...(request?.roomChatReplyIds ?? [])]
+      .reverse()
+      .find((reply) => reply?.status === "WARNING" && isRejectionReply(reply))
+      ?.description || "No rejection reason was shared by the hotel team."
+  );
+};
+
 export const ChatHeader = ({ hotelName, logo, room, onClose, title, subtitle }: ChatHeaderProps) => (
   <section className="plus-jakarta-font flex shrink-0 items-center gap-3 border-b border-slate-200/70 bg-white px-4 py-3.5 text-slate-950 shadow-[0_1px_10px_rgba(15,23,42,0.05)]">
     <Button
@@ -1030,8 +1051,7 @@ const RejectedRequest = ({
   request: RoomChat;
   contactPhone?: string;
 }) => {
-  const latestWarning = [...(request?.roomChatReplyIds ?? [])].reverse().find((reply) => reply?.status === "WARNING");
-  const message = request?.alertId?.message || latestWarning?.description || "We're unable to process your request right now.";
+  const message = getRejectionMessage(request);
   const reasonText = getRejectionReasonText(message);
   const isFood = isFoodRequest(request);
   const handleCall = () => {
