@@ -35,7 +35,7 @@ interface GuestSupportScreenProps {
   room: string;
   requests: RoomChat[];
   onClose: () => void;
-  onReviewSubmit: (chatReplyId: string, rating: number) => Promise<void>;
+  onReviewSubmit: (chatReplyId: string, rating: number, review?: string) => Promise<void>;
   onNotDelivered: (chatReplyId: string, requestId: string) => Promise<void>;
   contactPhone?: string;
 }
@@ -47,6 +47,7 @@ const FEEDBACK_OPTIONS = [
   { id: "good", label: "Good", text: "\u{1F642}", value: 3 },
   { id: "happy", label: "Happy", text: "\u{1F60D}", value: 5 },
 ];
+const REVIEW_MAX_LENGTH = 250;
 
 const getReviewThanks = (rating: number) => {
   const ratingLabel = FEEDBACK_OPTIONS.find((option) => option.value === rating)?.label || "Submitted";
@@ -119,8 +120,22 @@ const useNow = (enabled: boolean) => {
 
 const getServices = (request: RoomChat) => request?.alertId?.serviceIds ?? [];
 
-const getServiceNames = (services: Service[]) => {
-  const names = services.map((service) => service?.name).filter(Boolean);
+const getServiceQuantity = (request: RoomChat, serviceId?: string) => {
+  if (!serviceId) return 1;
+  const requestedItem = [...(request?.alertId?.serviceRequestItems ?? []), ...(request?.serviceRequestItems ?? [])].find(
+    (item) => item.serviceId?.toString() === serviceId,
+  );
+  return requestedItem?.quantity && requestedItem.quantity > 1 ? requestedItem.quantity : 1;
+};
+
+const getServiceNames = (request: RoomChat) => {
+  const names = getServices(request)
+    .map((service) => {
+      if (!service?.name) return "";
+      const quantity = getServiceQuantity(request, service._id);
+      return quantity > 1 ? `${service.name} x${quantity}` : service.name;
+    })
+    .filter(Boolean);
   if (!names.length) return "Service request";
   if (names.length === 1) return names[0];
   return `${names[0]} +${names.length - 1} more`;
@@ -129,20 +144,17 @@ const getServiceNames = (services: Service[]) => {
 const getPrimaryServiceImage = (request: RoomChat) =>
   getServices(request).find((service) => service?.image)?.image;
 
-const isFoodRequest = (request: RoomChat) => {
-  const services = getServices(request);
-  return (
-    (request?.cart?.length ?? 0) > 0 ||
-    services.some((service) => /food|order|restaurant|delivery/i.test(service?.name ?? ""))
-  );
-};
+const hasFoodCartItems = (request: RoomChat) =>
+  (request?.cart ?? []).some((item: Cart) => Boolean(item?.dish || (item as any)?.dishId || (item as any)?.name || (item as any)?.dishName));
+
+const isFoodRequest = (request: RoomChat) => hasFoodCartItems(request);
 
 const getRequestTitle = (request: RoomChat) => {
   if (isFoodRequest(request)) {
     return `Food Order`;
   }
 
-  return getServiceNames(getServices(request));
+  return getServiceNames(request);
 };
 
 const getStatusMeta = (request: RoomChat) => {
@@ -220,11 +232,17 @@ const getSubmittedReviewRating = (request: RoomChat) =>
     .reverse()
     .find((reply) => Number(reply?.reviewRating) > 0)?.reviewRating;
 
+const getSubmittedReviewText = (request: RoomChat) =>
+  [...(request?.roomChatReplyIds ?? [])]
+    .reverse()
+    .map((reply) => reply?.review?.trim())
+    .find(Boolean);
+
 const getCompletionDuration = (request: RoomChat) => {
-  const acceptedAt = request?.alertId?.acceptedAt;
+  const requestedAt = request?.alertId?.createdAt || request?.date;
   const deliveredAt = request?.alertId?.deliveredAt || getLatestReply(request)?.date;
-  if (!acceptedAt || !deliveredAt || request?.alertId?.alertProgress !== "DELIVERED") return "";
-  return formatDuration(deliveredAt - acceptedAt);
+  if (!requestedAt || !deliveredAt || request?.alertId?.alertProgress !== "DELIVERED") return "";
+  return formatDuration(deliveredAt - requestedAt);
 };
 
 const getRequestCode = (request: RoomChat) =>
@@ -326,15 +344,18 @@ const getEta = (request: RoomChat, now: number) => {
 };
 
 const getDeliveryPerformance = (request: RoomChat) => {
-  const acceptedAt = request?.alertId?.acceptedAt;
+  const requestedAt = request?.alertId?.createdAt || request?.date;
   const deliveredAt = request?.alertId?.deliveredAt || getLatestReply(request)?.date;
-  if (!acceptedAt || !deliveredAt) return null;
+  if (!requestedAt || !deliveredAt) return null;
 
-  const estimatedMs = Math.max(getEstimatedMinutes(request), 1) * 60 * 1000;
-  const actualMs = deliveredAt - acceptedAt;
+  const estimatedMs = Math.max(getAcceptanceMinutes(request) + getEstimatedMinutes(request), 1) * 60 * 1000;
+  const actualMs = deliveredAt - requestedAt;
+  const deltaMs = actualMs - estimatedMs;
   return {
     early: actualMs <= estimatedMs,
     actualLabel: formatDuration(actualMs),
+    slaLabel: formatDuration(estimatedMs),
+    lateByLabel: deltaMs > 0 ? formatDuration(deltaMs) : "",
   };
 };
 
@@ -438,7 +459,7 @@ const RequestListItem = ({ request, onSelect }: { request: RoomChat; onSelect: (
     : status.detail;
   const outcomeText =
     status.label === "Completed" && completion
-      ? `Completed in ${completion}`
+      ? `Turnaround time ${completion}`
       : status.label === "Rejected"
         ? "View reason"
         : status.detail;
@@ -544,7 +565,7 @@ const MyRequests = ({ requests, onSelect }: { requests: RoomChat[]; onSelect: (r
 
   return (
     <main className="plus-jakarta-font mx-2 flex-1 overflow-y-auto px-2 pb-6 pt-5">
-      <h2 className="text-[0.95rem]  text-[#211915]">My Requests</h2>
+      <h2 className="text-[0.95rem] text-[#211915]">My Requests</h2>
       <div className="mt-3 flex gap-1.5 overflow-x-auto rounded-[16px] border border-[#E7DFD6] bg-[#F1ECE5] p-1 hide-scrollbar">
         {filters.map((item) => (
           <button
@@ -1094,8 +1115,8 @@ const DeliveredRequest = ({ request }: { request: RoomChat }) => {
   const isLate = performance?.early === false;
   const title = isLate
     ? isFood
-      ? "Order delivered"
-      : "Delivered"
+      ? "Order delivered late"
+      : "Delivered late"
     : isFood
       ? "Delivered early"
       : "Delivered ahead of time";
@@ -1108,21 +1129,24 @@ const DeliveredRequest = ({ request }: { request: RoomChat }) => {
   return (
     <section
       className={`rounded-2xl border p-5 text-center shadow-[0_16px_36px_rgba(16,185,129,0.10)] ${
-        isLate ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-gradient-to-br from-emerald-50 to-[#F4FFF8]"
+        isLate ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-gradient-to-br from-emerald-50 to-[#F4FFF8]"
       }`}
     >
-      <CheckCircle2 className={`mx-auto h-10 w-10 ${isLate ? "text-amber-700" : "text-emerald-700"}`} />
-      <h3 className={`mt-3 text-[1rem]  ${isLate ? "text-amber-800" : "text-emerald-800"}`}>
+      <CheckCircle2 className={`mx-auto h-10 w-10 ${isLate ? "text-rose-700" : "text-emerald-700"}`} />
+      <h3 className={`mt-3 text-[1rem]  ${isLate ? "text-rose-800" : "text-emerald-800"}`}>
         {title}
       </h3>
       <p className="mt-1 text-[0.82rem] font-semibold text-slate-800">
         {message}
       </p>
       {completion && (
-        <p className={`mt-1 text-[0.76rem] font-medium ${isLate ? "text-amber-700" : "text-emerald-700"}`}>
-          Completed in {completion}
+        <p className={`mt-1 text-[0.76rem] font-medium ${isLate ? "text-rose-700" : "text-emerald-700"}`}>
+          Turnaround time {completion}{performance?.slaLabel ? ` • SLA ${performance.slaLabel}` : ""}
         </p>
       )}
+      {isLate && performance?.lateByLabel ? (
+        <p className="mt-1 text-[0.72rem] font-semibold text-rose-700">Late by {performance.lateByLabel}</p>
+      ) : null}
     </section>
   );
 };
@@ -1130,23 +1154,40 @@ const DeliveredRequest = ({ request }: { request: RoomChat }) => {
 const FeedbackCard = ({
   request,
   submittedRating,
+  submittedReview,
   onReviewSubmit,
   onNotDelivered,
   notDeliveredSubmitting,
 }: {
   request: RoomChat;
   submittedRating?: number;
-  onReviewSubmit: (chatReplyId: string, rating: number, requestId: string) => Promise<void>;
+  submittedReview?: string;
+  onReviewSubmit: (chatReplyId: string, rating: number, requestId: string, review?: string) => Promise<void>;
   onNotDelivered: (chatReplyId: string, requestId: string) => Promise<void>;
   notDeliveredSubmitting?: boolean;
 }) => {
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [review, setReview] = useState("");
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const replyId = getReviewReplyId(request);
   const persistedRating = getSubmittedReviewRating(request);
+  const persistedReview = getSubmittedReviewText(request);
+  const visibleReview = submittedReview?.trim() || persistedReview;
+  const selectedOption = FEEDBACK_OPTIONS.find((option) => option.value === selectedRating);
   const thanks = submittedRating
     ? getReviewThanks(submittedRating)
     : persistedRating
       ? getReviewThanks(persistedRating)
       : null;
+  const handleSubmitFeedback = async () => {
+    if (!replyId || !selectedRating) return;
+    setIsSubmittingFeedback(true);
+    try {
+      await onReviewSubmit(replyId, selectedRating, request._id, review.trim());
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
 
   if (thanks) {
     return (
@@ -1161,6 +1202,16 @@ const FeedbackCard = ({
               </span>
             </div>
             <p className="mt-1 text-[0.78rem] font-medium leading-relaxed">{thanks.message}</p>
+            {visibleReview ? (
+              <div className="mt-3 rounded-2xl border border-white/70 bg-white/70 px-3 py-2">
+                <p className="text-[0.68rem] font-bold uppercase tracking-wide opacity-70">
+                  Your review
+                </p>
+                <p className="mt-1 text-[0.78rem] font-semibold leading-relaxed">
+                  {visibleReview}
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
@@ -1185,14 +1236,50 @@ const FeedbackCard = ({
           <button
             key={option.id}
             type="button"
-            onClick={() => onReviewSubmit(replyId, option.value, request._id)}
-            className="flex min-h-20 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-2 py-3 transition active:scale-[0.98]"
+            onClick={() => setSelectedRating(option.value)}
+            className={`flex min-h-20 flex-col items-center justify-center rounded-2xl border px-2 py-3 transition active:scale-[0.98] ${
+              selectedRating === option.value
+                ? "border-[#6D4DEB] bg-[#F2EEFF] shadow-[0_8px_20px_rgba(109,77,235,0.12)]"
+                : "border-slate-200 bg-white"
+            }`}
           >
             <span className="text-[1.8rem] leading-none">{option.text}</span>
             <span className="mt-2 text-[0.76rem]  text-slate-800">{option.label}</span>
           </button>
         ))}
       </div>
+      {selectedOption ? (
+        <div className="mt-4 rounded-2xl border border-[#E3DDF9] bg-[#FAF8FF] p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[0.78rem] font-semibold text-slate-900">
+              Add review <span className="font-medium text-slate-500">(optional)</span>
+            </p>
+            <span className="rounded-full bg-white px-2.5 py-1 text-[0.68rem] font-bold text-[#5D3FD7] ring-1 ring-[#E3DDF9]">
+              Selected: {selectedOption.label}
+            </span>
+          </div>
+          <textarea
+            value={review}
+            maxLength={REVIEW_MAX_LENGTH}
+            onChange={(event) => setReview(event.target.value)}
+            placeholder="Write your review here..."
+            className="mt-3 min-h-24 w-full resize-none rounded-2xl border border-[#DED7F4] bg-white px-3 py-3 text-[0.8rem] font-medium leading-relaxed text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#6D4DEB] focus:ring-2 focus:ring-[#6D4DEB]/15"
+          />
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <span className="text-[0.7rem] font-medium text-slate-500">
+              {review.length}/{REVIEW_MAX_LENGTH}
+            </span>
+            <Button
+              type="button"
+              onClick={handleSubmitFeedback}
+              disabled={isSubmittingFeedback}
+              className="min-h-10 rounded-full bg-[#101010] px-5 text-[0.78rem] font-semibold text-white shadow-sm hover:bg-[#101010]/90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmittingFeedback ? "Sending..." : "Send feedback"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
       <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 p-3">
         <div className="flex gap-2.5">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-rose-700" />
@@ -1260,6 +1347,7 @@ const ServiceJourney = ({
   const acceptanceReply = getAcceptanceReply(request);
   const serviceName = getRequestTitle(request);
   const deliveredAt = request?.alertId?.deliveredAt || getLatestReply(request)?.date;
+  const serviceInstruction = request?.alertId?.serviceInstructionSnapshot?.message?.trim();
 
   return (
     <section className="rounded-[18px] border border-[#E4E0F4] bg-white shadow-[0_10px_28px_rgba(31,41,80,0.06)]">
@@ -1276,6 +1364,12 @@ const ServiceJourney = ({
         </div>
         <StatusPill request={request} />
       </div>
+
+      {serviceInstruction ? (
+        <div className="mx-4 mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-[0.78rem] font-semibold leading-relaxed text-blue-950">
+          {serviceInstruction}
+        </div>
+      ) : null}
 
       <div className="relative px-4 py-4">
         <div className="absolute bottom-9 left-8 top-7 w-px bg-[#D8CCFF]" />
@@ -1403,6 +1497,7 @@ const ServiceJourney = ({
 const RequestDetail = ({
   request,
   submittedRating,
+  submittedReview,
   onReviewSubmit,
   onNotDelivered,
   notDeliveredSubmittingId,
@@ -1410,7 +1505,8 @@ const RequestDetail = ({
 }: {
   request: RoomChat;
   submittedRating?: number;
-  onReviewSubmit: (chatReplyId: string, rating: number, requestId: string) => Promise<void>;
+  submittedReview?: string;
+  onReviewSubmit: (chatReplyId: string, rating: number, requestId: string, review?: string) => Promise<void>;
   onNotDelivered: (chatReplyId: string, requestId: string) => Promise<void>;
   notDeliveredSubmittingId?: string;
   contactPhone?: string;
@@ -1454,6 +1550,7 @@ const RequestDetail = ({
         <FeedbackCard
           request={request}
           submittedRating={submittedRating}
+          submittedReview={submittedReview}
           onReviewSubmit={onReviewSubmit}
           onNotDelivered={onNotDelivered}
           notDeliveredSubmitting={notDeliveredSubmittingId === request._id}
@@ -1483,6 +1580,7 @@ export const GuestSupportScreen = ({
     () => searchParams.get("requestId") || ""
   );
   const [submittedRatings, setSubmittedRatings] = useState<Record<string, number>>({});
+  const [submittedReviews, setSubmittedReviews] = useState<Record<string, string>>({});
   const [notDeliveredSubmittingId, setNotDeliveredSubmittingId] = useState("");
   const selectedRequest = sortedRequests.find((request) => request._id === selectedRequestId);
   const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
@@ -1510,17 +1608,16 @@ export const GuestSupportScreen = ({
     [pathname]
   );
 
-  const handleReview = async (replyId: string, rating: number, requestId: string) => {
-    setSubmittedRatings((prev) => ({ ...prev, [replyId]: rating, [requestId]: rating }));
+  const handleReview = async (replyId: string, rating: number, requestId: string, review?: string) => {
+    const cleanReview = review?.trim() ?? "";
     try {
-      await onReviewSubmit(replyId, rating);
+      await onReviewSubmit(replyId, rating, cleanReview);
+      setSubmittedRatings((prev) => ({ ...prev, [replyId]: rating, [requestId]: rating }));
+      if (cleanReview) {
+        setSubmittedReviews((prev) => ({ ...prev, [replyId]: cleanReview, [requestId]: cleanReview }));
+      }
     } catch {
-      setSubmittedRatings((prev) => {
-        const next = { ...prev };
-        delete next[replyId];
-        delete next[requestId];
-        return next;
-      });
+      throw new Error("Could not submit feedback");
     }
   };
 
@@ -1570,7 +1667,7 @@ export const GuestSupportScreen = ({
   }, [clearSelectedRequest, selectedRequest, selectedRequestId, sortedRequests.length]);
 
   return (
-    <div className="plus-jakarta-font flex h-full flex-col bg-[#F8F7F4] text-slate-950">
+    <div className="plus-jakarta-font flex h-full flex-col bg-white text-slate-950">
       <ChatHeader
         hotelName={hotelName}
         logo={logo}
@@ -1599,6 +1696,7 @@ export const GuestSupportScreen = ({
             <RequestDetail
               request={selectedRequest}
               submittedRating={submittedRatings[getReviewReplyId(selectedRequest) || ""] ?? submittedRatings[selectedRequest._id]}
+              submittedReview={submittedReviews[getReviewReplyId(selectedRequest) || ""] ?? submittedReviews[selectedRequest._id]}
               onReviewSubmit={handleReview}
               onNotDelivered={handleNotDelivered}
               notDeliveredSubmittingId={notDeliveredSubmittingId}

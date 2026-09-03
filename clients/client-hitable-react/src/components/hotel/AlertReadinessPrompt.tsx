@@ -61,7 +61,7 @@ const getReadinessIssues = (status: AlertReadinessStatus | null): ReadinessIssue
     issues.push({
       id: 'unused-apps',
       title: 'Turn off pause app activity',
-      description: 'Android can pause unused apps and block push alerts after long inactivity.',
+      description: 'This device can pause unused apps and block push alerts after long inactivity.',
       actionLabel: 'Open app activity setting',
       icon: Clock3,
     });
@@ -142,7 +142,7 @@ const AlertReadinessPrompt = memo(function AlertReadinessPrompt({ enabled }: { e
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-200">Alert setup</p>
                 <h2 className="mt-1 text-xl font-bold leading-tight">Keep hotel alerts ringing</h2>
                 <p className="mt-1.5 text-sm leading-5 text-slate-300">
-                  Complete these Android settings so guest requests can reach staff with sound.
+                  Complete these device settings so guest requests can reach staff with sound.
                 </p>
               </div>
             </div>
@@ -192,7 +192,7 @@ const AlertReadinessPrompt = memo(function AlertReadinessPrompt({ enabled }: { e
             <div className="flex items-start gap-2">
               <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-500" />
               <p className="text-xs leading-5 text-slate-600">
-                Android does not allow us to change these settings automatically. Tap each item, enable it in Settings, then return here.
+                This device does not allow us to change these settings automatically. Tap each item, enable it in Settings, then return here.
               </p>
             </div>
           </div>

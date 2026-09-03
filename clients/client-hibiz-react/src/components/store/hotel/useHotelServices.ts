@@ -12,7 +12,21 @@ export interface IService {
   avgCompletionTime?: number;
   avgAcceptanceTime?: number;
   avgDeliveryTime?: number;
+  quantityLimit?: number;
+  serviceBehavior?: ServiceBehavior;
   sequence?: number;
+}
+
+export interface ServiceInstructionRule {
+  condition: 'BEFORE_TIME' | 'AFTER_TIME';
+  time: string;
+  message: string;
+}
+
+export interface ServiceBehavior {
+  instructionEnabled?: boolean;
+  instruction?: string;
+  instructionRules?: ServiceInstructionRule[];
 }
 export interface ICategoryPayload {
   businessId: string;
@@ -38,6 +52,8 @@ interface UpdateServicePayload {
   avgAcceptanceTime?: number;
   avgCompletionTime?: number;
   avgDeliveryTime?: number;
+  quantityLimit?: number;
+  serviceBehavior?: ServiceBehavior;
 }
 
 interface BulkUpdateServiceTimingsPayload {
@@ -47,6 +63,8 @@ interface BulkUpdateServiceTimingsPayload {
     avgAcceptanceTime: number;
     avgCompletionTime: number;
     avgDeliveryTime?: number;
+    quantityLimit?: number;
+    serviceBehavior?: ServiceBehavior;
   }[];
 }
 
@@ -58,6 +76,8 @@ export interface IServicePayload {
   avgAcceptanceTime?: number;
   avgCompletionTime?: number;
   avgDeliveryTime?: number;
+  quantityLimit?: number;
+  serviceBehavior?: ServiceBehavior;
 }
 
 export const useGetServiceCategories = (businessId?: string) => {

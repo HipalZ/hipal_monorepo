@@ -15,6 +15,17 @@ export interface IService {
   avgDeliveryTime?: number;
   /** Resolution/completion time in minutes — shown to the guest as the ETA. */
   avgCompletionTime?: number;
+  /** Maximum quantity a guest can request in one alert. 1 keeps the direct request flow. */
+  quantityLimit?: number;
+  serviceBehavior?: {
+    instructionEnabled?: boolean;
+    instruction?: string;
+    instructionRules?: Array<{
+      condition: "BEFORE_TIME" | "AFTER_TIME";
+      time: string;
+      message: string;
+    }>;
+  };
 }
 
 export interface IServiceCategory {

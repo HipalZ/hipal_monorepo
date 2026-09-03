@@ -28,6 +28,8 @@ import { useScreenSize } from "@/components/hooks/useScreenSize";
 import { hasGuestContactDetails } from "./guestContactGuard";
 import ServiceEtaBadge from "./ServiceEtaBadge";
 import HotelLogoLoader from "./HotelLogoLoader";
+import ServiceQuantityPopup from "./ServiceQuantityPopup";
+import { resolveServiceInstructionMessage } from "./serviceBehavior";
 
 // Lazy-loaded components
 const AlertCircle = dynamic(
@@ -88,12 +90,26 @@ interface ServiceItemProps {
   service: IService;
   selected: boolean;
   onToggle: () => void;
+  onQuantitySelect: () => void;
   getInitial: (name: string) => string;
   requestCount: number;
+  quantity: number;
+  quantityLimit: number;
+  requiresConfirmation: boolean;
 }
 
 const ServiceItem = memo(
-  ({ service, selected, onToggle, getInitial, requestCount }: ServiceItemProps) => (
+  ({
+    service,
+    selected,
+    onToggle,
+    onQuantitySelect,
+    getInitial,
+    requestCount,
+    quantity,
+    quantityLimit,
+    requiresConfirmation,
+  }: ServiceItemProps) => (
     <section>
       <Card
         className={`relative p-0 rounded-2xl border-none bg-transparent shadow-none transition-all duration-200 cursor-pointer ${
@@ -102,7 +118,12 @@ const ServiceItem = memo(
           service.availability === false ? "opacity-50 cursor-not-allowed" : ""
         }`}
         onClick={() => {
-          if (service.availability !== false) onToggle();
+          if (service.availability === false) return;
+          if (requiresConfirmation) {
+            onQuantitySelect();
+            return;
+          }
+          onToggle();
         }}
       >
         {selected && (
@@ -144,9 +165,9 @@ const ServiceItem = memo(
       </Card>
       <div className="plus-jakarta-font text-center py-2 font-medium cursor-pointer text-black text-xs leading-tight">
         {service.name}
-        {requestCount > 0 ? (
-          <span className="mx-auto mt-1 block w-fit rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[0.62rem] font-semibold leading-none text-amber-700">
-            {requestCount}x this stay
+        {quantityLimit > 1 && quantity > 0 ? (
+          <span className="mx-auto mt-2 block w-fit rounded-full border border-neutral-200 bg-black px-3 py-1 text-[0.68rem] font-bold leading-none text-white shadow-sm">
+            x{quantity} selected
           </span>
         ) : null}
       </div>
@@ -177,12 +198,18 @@ const getSessionServiceRequestCounts = (chats: RoomChat[]) => {
 
     for (const service of chat?.alertId?.serviceIds ?? []) {
       if (!service?._id || service?.systemKey === "CHECKOUT") continue;
-      counts.set(service._id, (counts.get(service._id) || 0) + 1);
+      const requestedItem = chat?.alertId?.serviceRequestItems?.find(
+        (item) => item.serviceId?.toString() === service._id
+      );
+      counts.set(service._id, (counts.get(service._id) || 0) + (requestedItem?.quantity || 1));
     }
   }
 
   return counts;
 };
+
+const getServiceQuantityLimit = (service: IService) =>
+  Math.max(1, Math.min(20, Math.floor(Number(service.quantityLimit) || 1)));
 
 function MemoServiceCategoryCard({
   category,
@@ -192,7 +219,8 @@ function MemoServiceCategoryCard({
   room: roomFromProps,
 }: ServiceCategoryCardProps) {
   const [servicePopup, setServicePopup] = useState<boolean>(false);
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedServiceQuantities, setSelectedServiceQuantities] = useState<Record<string, number>>({});
+  const [quantityPromptService, setQuantityPromptService] = useState<IService | null>(null);
   const [alertStatus, setAlertStatus] = useState<AlertStatus>("idle");
   const suppressAutoOpenRef = useRef(false);
 
@@ -225,14 +253,24 @@ function MemoServiceCategoryCard({
   }, [category.name]);
 
   const isLoading = gettingRoomLoader;
-  const hasSelectedServices = selectedServices.length > 0;
   const maxSelectableServices = 2;
+  const selectedServices = useMemo(
+    () =>
+      Object.entries(selectedServiceQuantities)
+        .filter(([, quantity]) => quantity > 0)
+        .map(([serviceId]) => serviceId),
+    [selectedServiceQuantities]
+  );
+  const hasSelectedServices = selectedServices.length > 0;
   const selectedServiceNames = useMemo(
     () =>
       category.serviceIds
         .filter((service) => selectedServices.includes(service._id))
-        .map((service) => service.name),
-    [category.serviceIds, selectedServices]
+        .map((service) => {
+          const quantity = selectedServiceQuantities[service._id] || 1;
+          return quantity > 1 ? `${service.name} x${quantity}` : service.name;
+        }),
+    [category.serviceIds, selectedServiceQuantities, selectedServices]
   );
   const requestCounts = useMemo(
     () => getSessionServiceRequestCounts(chatData ?? []),
@@ -252,12 +290,14 @@ function MemoServiceCategoryCard({
       hasGuestContactDetails(userDetails)
     ) {
       setServicePopup(true);
-      setSelectedServices([]);
+      setSelectedServiceQuantities({});
+      setQuantityPromptService(null);
       setAlertStatus("idle");
     }
     if (!shouldOpen && servicePopup) {
       setServicePopup(false);
-      setSelectedServices([]);
+      setSelectedServiceQuantities({});
+      setQuantityPromptService(null);
       setAlertStatus("idle");
       setCartEmpty();
     }
@@ -284,7 +324,8 @@ function MemoServiceCategoryCard({
     params.set("serviceCategory", category._id);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     setServicePopup(true);
-    setSelectedServices([]);
+    setSelectedServiceQuantities({});
+    setQuantityPromptService(null);
     setAlertStatus("idle");
   }, [
     accessToken,
@@ -303,7 +344,8 @@ function MemoServiceCategoryCard({
     params.delete("restaurantId");
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     setServicePopup(false);
-    setSelectedServices([]);
+    setSelectedServiceQuantities({});
+    setQuantityPromptService(null);
     setAlertStatus("idle");
     setCartEmpty();
   }, [pathname, query, router, setCartEmpty]);
@@ -318,14 +360,44 @@ function MemoServiceCategoryCard({
         return;
       }
 
-      setSelectedServices((prev) => {
-        if (prev.includes(serviceId))
-          return prev.filter((id) => id !== serviceId);
-        return [...prev, serviceId];
+      setSelectedServiceQuantities((prev) => {
+        if (prev[serviceId]) {
+          const { [serviceId]: _removed, ...next } = prev;
+          return next;
+        }
+        return { ...prev, [serviceId]: 1 };
       });
     },
     [maxSelectableServices, selectedServices]
   );
+
+  const openQuantityPopup = useCallback(
+    (service: IService) => {
+      const currentQuantity = selectedServiceQuantities[service._id] || 0;
+      if (!currentQuantity && selectedServices.length >= maxSelectableServices) {
+        toast("You can request up to 2 services at a time.");
+        return;
+      }
+      setQuantityPromptService(service);
+    },
+    [maxSelectableServices, selectedServiceQuantities, selectedServices.length]
+  );
+
+  const handleQuantityConfirm = useCallback((serviceId: string, quantity: number) => {
+    setSelectedServiceQuantities((prev) => ({
+      ...prev,
+      [serviceId]: quantity,
+    }));
+    setQuantityPromptService(null);
+  }, []);
+
+  const handleQuantityRemove = useCallback((serviceId: string) => {
+    setSelectedServiceQuantities((prev) => {
+      const { [serviceId]: _removed, ...next } = prev;
+      return next;
+    });
+    setQuantityPromptService(null);
+  }, []);
 
   const handleConfirmSelection = useCallback(async () => {
     if (!hasSelectedServices) return;
@@ -346,6 +418,10 @@ function MemoServiceCategoryCard({
 
       await createAlert({
         serviceIds: selectedServices,
+        serviceRequestItems: selectedServices.map((serviceId) => ({
+          serviceId,
+          quantity: selectedServiceQuantities[serviceId] || 1,
+        })),
         businessId,
         userId: userDetails?._id || "",
         roomId,
@@ -353,7 +429,7 @@ function MemoServiceCategoryCard({
 
       toast.success(formatRaisedServicesToast(selectedServiceNames));
       setAlertStatus("idle");
-      setSelectedServices([]);
+      setSelectedServiceQuantities({});
     } catch (error) {
       setAlertStatus("error");
       toast.error("Error sending request. Please try again.");
@@ -365,6 +441,7 @@ function MemoServiceCategoryCard({
     room,
     roomPayload,
     selectedServices,
+    selectedServiceQuantities,
     selectedServiceNames,
     setCheckLogin,
     userDetails,
@@ -499,13 +576,28 @@ function MemoServiceCategoryCard({
                             service={service}
                             selected={isSelected(service._id)}
                             onToggle={() => handleServiceToggle(service._id)}
+                            onQuantitySelect={() => openQuantityPopup(service)}
                             getInitial={getInitial}
                             requestCount={requestCounts.get(service._id) || 0}
+                            quantity={selectedServiceQuantities[service._id] || 0}
+                            quantityLimit={getServiceQuantityLimit(service)}
+                            requiresConfirmation={getServiceQuantityLimit(service) > 1 || Boolean(resolveServiceInstructionMessage(service))}
                           />
                         )
                     )}
                   </div>
                 )}
+                {quantityPromptService ? (
+                  <ServiceQuantityPopup
+                    service={quantityPromptService}
+                    quantityLimit={getServiceQuantityLimit(quantityPromptService)}
+                    initialQuantity={selectedServiceQuantities[quantityPromptService._id] || 1}
+                    instructionMessage={resolveServiceInstructionMessage(quantityPromptService)}
+                    onClose={() => setQuantityPromptService(null)}
+                    onConfirm={(quantity) => handleQuantityConfirm(quantityPromptService._id, quantity)}
+                    onRemove={() => handleQuantityRemove(quantityPromptService._id)}
+                  />
+                ) : null}
               </div>
 
               <CommonBottomButton fixed buttons={footerButtons} />

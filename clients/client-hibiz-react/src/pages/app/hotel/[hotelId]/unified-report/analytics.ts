@@ -23,8 +23,11 @@ const cartItemName = (item: any): string => {
   return [dishName, portionName, extras ? ` + ${extras}` : ''].filter(Boolean).join('');
 };
 
+const hasFoodCartItems = (cart?: any[]): boolean =>
+  Boolean(cart?.some((item) => item?.dish || item?.dishId || item?.name || item?.dishName));
+
 const buildOrderItems = (cart?: any[]): string =>
-  cart?.length
+  hasFoodCartItems(cart)
     ? cart
         .map((item) => {
           const name = cartItemName(item);
@@ -35,10 +38,20 @@ const buildOrderItems = (cart?: any[]): string =>
         .join(' | ')
     : '';
 
+const cartQuantity = (cart?: any[]): number =>
+  hasFoodCartItems(cart) ? cart!.reduce((sum, item) => sum + (Number(item?.quantity) || 1), 0) : 0;
+
+const serviceQuantity = (items?: Array<{ quantity?: number }>, cart?: any[]): number => {
+  const serviceTotal = items?.reduce((sum, item) => sum + (Number(item?.quantity) || 1), 0) ?? 0;
+  if (serviceTotal > 0) return serviceTotal;
+  const foodTotal = cartQuantity(cart);
+  return foodTotal > 0 ? foodTotal : 1;
+};
+
 const serviceLabel = (services: GuestAlert['serviceIds'] = [], cart?: any[]): string => {
   const names = services.map((x) => x.name).filter(Boolean).join(', ');
   if (names) return names;
-  return cart?.length ? 'Food Order' : '—';
+  return hasFoodCartItems(cart) ? 'Food Order' : '—';
 };
 
 // ── review matching ──────────────────────────────────────────────────────────
@@ -71,7 +84,12 @@ const reviewOf = (a: GuestAlert, reviews: reviewResponse[]): { rating: number | 
   const review = reviews.length ? findReview(a, reviews) : undefined;
   return {
     rating: review?.reviewRating ?? null,
-    feedback: review?.note || review?.improvementAreas?.filter(Boolean).join(', ') || '',
+    feedback:
+      review?.review?.trim() ||
+      review?.description?.trim() ||
+      review?.note?.trim() ||
+      review?.improvementAreas?.filter(Boolean).join(', ') ||
+      '',
   };
 };
 
@@ -97,6 +115,8 @@ type GuestAlert = {
   acceptedBy?: { name?: string };
   deliveredBy?: { name?: string };
   cart?: any[];
+  serviceRequestItems?: Array<{ quantity?: number }>;
+  serviceInstructionSnapshot?: { message?: string };
 };
 
 const OPEN_GUEST = new Set(['CREATED', 'ACCEPTED', 'IS_ACCEPTED_AND_WARNING', 'NON_ACCEPTED_AND_WARNING', 'IS_ACCEPTED_AND_ESCALATION', 'NON_ACCEPTED_AND_ESCALATION']);
@@ -124,7 +144,9 @@ export const mapGuestAlert = (
     room,
     floor: floorOf(room),
     service: serviceLabel(services, a.cart),
+    quantity: serviceQuantity(a.serviceRequestItems, a.cart),
     orderItems: buildOrderItems(a.cart),
+    customerInstruction: a.serviceInstructionSnapshot?.message?.trim() || '',
     requesterName: a.createdBy?.name || 'Guest',
     requesterPhone: a.createdBy?.phone || '',
     requesterKind: 'GUEST',
@@ -175,7 +197,9 @@ export const mapCheckoutTask = (t: CheckoutTask, index: number, visitsByPhone: R
     room,
     floor: t.zoneId?.name || floorOf(room),
     service: t.serviceId?.name || '—',
+    quantity: 1,
     orderItems: '',
+    customerInstruction: '',
     requesterName: t.triggeredBy?.name || '',
     requesterPhone: t.triggeredBy?.phone || '',
     // Empty triggeredBy is a genuine "automatic" job, never a placeholder name.

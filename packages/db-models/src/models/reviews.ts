@@ -26,6 +26,11 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
     description: {
       type: String,
     },
+    review: {
+      type: String,
+      default: "",
+      maxlength: 250,
+    },
     improvementAreas: {
       type: [String],
     },

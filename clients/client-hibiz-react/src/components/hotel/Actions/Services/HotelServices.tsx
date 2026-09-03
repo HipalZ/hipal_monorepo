@@ -36,6 +36,12 @@ const HotelServicesForm = ({
     avgAcceptanceTime: 2,
     avgCompletionTime: 4,
     avgDeliveryTime: 4,
+    quantityLimit: 1,
+    serviceBehavior: {
+      instructionEnabled: false,
+      instruction: "",
+      instructionRules: [],
+    },
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -67,6 +73,21 @@ const HotelServicesForm = ({
     if (requestTime != null && responseTime != null && responseTime <= requestTime) {
       newErrors.responseTime = "Response time must be greater than request time";
     }
+    const quantityLimit = serviceForm.quantityLimit ?? 1;
+    if (!Number.isInteger(quantityLimit) || quantityLimit < 1 || quantityLimit > 20) {
+      newErrors.quantityLimit = "Quantity limit must be a whole number from 1 to 20";
+    }
+    const behavior = serviceForm.serviceBehavior;
+    if (behavior?.instructionEnabled) {
+      const instruction = behavior.instruction?.trim() || "";
+      const validRules = behavior.instructionRules?.filter((rule) => rule.message?.trim()) || [];
+      if (!instruction && validRules.length === 0) {
+        newErrors.serviceInstruction = "Add a customer instruction or at least one time-based message";
+      }
+      if ((behavior.instructionRules ?? []).some((rule) => rule.message?.trim() && !/^([01]\d|2[0-3]):[0-5]\d$/.test(rule.time))) {
+        newErrors.serviceInstruction = "Time-based rules need a valid time";
+      }
+    }
     return newErrors;
   };
 
@@ -87,7 +108,22 @@ const HotelServicesForm = ({
       setErrors(serviceErrors);
       return;
     }
-    await addService(serviceForm);
+    const cleanedBehavior = {
+      instructionEnabled: Boolean(serviceForm.serviceBehavior?.instructionEnabled),
+      instruction: serviceForm.serviceBehavior?.instruction?.trim() || "",
+      instructionRules: (serviceForm.serviceBehavior?.instructionRules ?? [])
+        .map((rule) => ({
+          condition: rule.condition,
+          time: rule.time,
+          message: rule.message.trim(),
+        }))
+        .filter((rule) => rule.message),
+    };
+    await addService({
+      ...serviceForm,
+      name: serviceForm.name.trim(),
+      serviceBehavior: cleanedBehavior,
+    });
   };
 
   const uploadImage = (
@@ -103,7 +139,7 @@ const HotelServicesForm = ({
   const [activeTab, setActiveTab] = useState("categories");
 
   return (
-    <div className="w-full lg:w-[30rem] mx-auto overflow-auto">
+    <div className="mx-auto flex h-full min-h-0 w-full flex-col overflow-y-auto pr-1 lg:w-[30rem]">
       <div className="flex items-center justify-between mb-2">
         <div>
           <h1 className="text-2xl font-bold">Create Categories & Services</h1>

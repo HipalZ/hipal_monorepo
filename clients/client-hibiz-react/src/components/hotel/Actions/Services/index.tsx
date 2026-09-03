@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -29,6 +30,8 @@ import {
   Edit,
   FileUp,
   GripVertical,
+  Hash,
+  Info,
   Loader2,
   Search,
   Settings,
@@ -50,6 +53,16 @@ interface EditServiceData {
   avgAcceptanceTime?: number;
   avgCompletionTime?: number;
   avgDeliveryTime?: number;
+  quantityLimit?: number;
+  serviceBehavior?: {
+    instructionEnabled?: boolean;
+    instruction?: string;
+    instructionRules?: Array<{
+      condition: 'BEFORE_TIME' | 'AFTER_TIME';
+      time: string;
+      message: string;
+    }>;
+  };
 }
 
 type DurationUnit = 'min' | 'sec';
@@ -148,6 +161,16 @@ const durationToInput = (time?: number | null): { value: string; unit: DurationU
   }
   return { value: String(time), unit: 'min' };
 };
+
+const getDefaultServiceBehavior = () => ({
+  instructionEnabled: false,
+  instruction: '',
+  instructionRules: [] as Array<{
+    condition: 'BEFORE_TIME' | 'AFTER_TIME';
+    time: string;
+    message: string;
+  }>,
+});
 
 const csvEscape = (value: string | number | undefined) => {
   const text = value == null ? '' : String(value);
@@ -314,6 +337,12 @@ const HotelServices = () => {
         avgAcceptanceTime: service.avgAcceptanceTime,
         avgCompletionTime: service.avgCompletionTime,
         avgDeliveryTime: service.avgDeliveryTime,
+        quantityLimit: service.quantityLimit ?? 1,
+        serviceBehavior: {
+          ...getDefaultServiceBehavior(),
+          ...(service.serviceBehavior ?? {}),
+          instructionRules: service.serviceBehavior?.instructionRules ?? [],
+        },
       });
       const requestInput = durationToInput(service.avgAcceptanceTime);
       const responseInput = durationToInput(service.avgDeliveryTime ?? service.avgCompletionTime);
@@ -359,6 +388,29 @@ const HotelServices = () => {
         payload.avgCompletionTime = avgCompletionTime;
         payload.avgDeliveryTime = avgCompletionTime;
       }
+      const quantityLimit = Number(editingService.quantityLimit ?? 1);
+      if (!Number.isInteger(quantityLimit) || quantityLimit < 1 || quantityLimit > 20) {
+        toast.error('Quantity limit must be a whole number from 1 to 20');
+        return;
+      }
+      payload.quantityLimit = quantityLimit;
+      const behavior = {
+        ...getDefaultServiceBehavior(),
+        ...(editingService.serviceBehavior ?? {}),
+        instruction: editingService.serviceBehavior?.instruction?.trim() || '',
+        instructionRules: (editingService.serviceBehavior?.instructionRules ?? [])
+          .map((rule) => ({
+            condition: rule.condition,
+            time: rule.time,
+            message: rule.message.trim(),
+          }))
+          .filter((rule) => rule.message),
+      };
+      if (behavior.instructionEnabled && !behavior.instruction && behavior.instructionRules.length === 0) {
+        toast.error('Add a customer instruction or at least one time-based message');
+        return;
+      }
+      payload.serviceBehavior = behavior;
       await updateService(payload);
 
       setServiceAvailability((prev) => ({
@@ -416,6 +468,52 @@ const HotelServices = () => {
     setter(raw);
   };
 
+  const updateEditingBehavior = (nextBehavior: Partial<NonNullable<EditServiceData['serviceBehavior']>>) => {
+    setEditingService((prev) =>
+      prev
+        ? {
+            ...prev,
+            serviceBehavior: {
+              ...getDefaultServiceBehavior(),
+              ...(prev.serviceBehavior ?? {}),
+              ...nextBehavior,
+            },
+          }
+        : null,
+    );
+  };
+
+  const addEditingInstructionRule = () => {
+    const behavior = editingService?.serviceBehavior ?? getDefaultServiceBehavior();
+    updateEditingBehavior({
+      instructionEnabled: true,
+      instructionRules: [
+        ...(behavior.instructionRules ?? []),
+        {
+          condition: 'BEFORE_TIME',
+          time: '09:00',
+          message: '',
+        },
+      ],
+    });
+  };
+
+  const updateEditingInstructionRule = (index: number, field: 'condition' | 'time' | 'message', value: string) => {
+    const behavior = editingService?.serviceBehavior ?? getDefaultServiceBehavior();
+    updateEditingBehavior({
+      instructionRules: (behavior.instructionRules ?? []).map((rule, ruleIndex) =>
+        ruleIndex === index ? { ...rule, [field]: value } : rule,
+      ),
+    });
+  };
+
+  const removeEditingInstructionRule = (index: number) => {
+    const behavior = editingService?.serviceBehavior ?? getDefaultServiceBehavior();
+    updateEditingBehavior({
+      instructionRules: (behavior.instructionRules ?? []).filter((_, ruleIndex) => ruleIndex !== index),
+    });
+  };
+
   const requestSla = parseDurationText(requestMin, requestUnit);
   const responseSla = parseDurationText(responseMin, responseUnit);
 
@@ -423,7 +521,9 @@ const HotelServices = () => {
     requestSla !== null && responseSla !== null && responseSla <= requestSla ? 'Response time must be greater than request time' : '';
 
   const bothEmpty = requestSla === null && responseSla === null;
-  const canSave = bothEmpty || (requestSla !== null && responseSla !== null && responseSla > requestSla);
+  const quantityLimitValue = Number(editingService?.quantityLimit ?? 1);
+  const isQuantityLimitValid = Number.isInteger(quantityLimitValue) && quantityLimitValue >= 1 && quantityLimitValue <= 20;
+  const canSave = (bothEmpty || (requestSla !== null && responseSla !== null && responseSla > requestSla)) && isQuantityLimitValid;
 
   const handleDeleteService = useCallback(
     async (service: IService) => {
@@ -649,6 +749,12 @@ const HotelServices = () => {
               <p className="text-muted-foreground mt-0.5 truncate text-xs">
                 {isAvailable ? <span className="text-green-600">Available</span> : <span className="text-muted-foreground">Unavailable</span>}
               </p>
+              {service.serviceBehavior?.instructionEnabled ? (
+                <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                  <Info className="h-3 w-3" />
+                  Instruction
+                </span>
+              ) : null}
             </div>
 
             {/* Actions — always visible on mobile, hover on desktop */}
@@ -675,7 +781,7 @@ const HotelServices = () => {
           </div>
 
           {/* ── Time strip ────────────────────────────────────────────────── */}
-          <div className="bg-muted/30 flex divide-x overflow-hidden rounded-b-xl border-t">
+          <div className="bg-muted/30 grid grid-cols-3 divide-x overflow-hidden rounded-b-xl border-t">
             <div className="flex flex-1 items-center gap-1.5 px-3 py-2">
               <Clock className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
               <span className="text-muted-foreground text-xs">Request</span>
@@ -685,6 +791,11 @@ const HotelServices = () => {
               <Timer className="h-3.5 w-3.5 shrink-0 text-purple-600" />
               <span className="text-muted-foreground text-xs">Response</span>
               <span className="ml-auto text-xs font-medium tabular-nums">{formatDuration(service.avgDeliveryTime ?? service.avgCompletionTime)}</span>
+            </div>
+            <div className="flex flex-1 items-center gap-1.5 px-3 py-2">
+              <Hash className="h-3.5 w-3.5 shrink-0 text-blue-600" />
+              <span className="text-muted-foreground text-xs">Qty</span>
+              <span className="ml-auto text-xs font-medium tabular-nums">{(service.quantityLimit ?? 1) > 1 ? `Up to ${service.quantityLimit}` : 'Direct'}</span>
             </div>
           </div>
 
@@ -947,14 +1058,21 @@ const HotelServices = () => {
       </PopUp>
 
       {/* Edit Service Modal */}
-      <PopUp width="w-[30rem] md:w-[40rem]" height="h-auto" show={showEditModal} onClose={handleCloseEditModal} rightTopBack>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+      <PopUp
+        width="w-[calc(100vw-1rem)] max-w-[40rem]"
+        height="h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] md:h-[calc(100dvh-2rem)] md:max-h-[calc(100dvh-2rem)]"
+        show={showEditModal}
+        onClose={handleCloseEditModal}
+        rightTopBack
+      >
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">
+          <div className="flex shrink-0 items-center justify-between border-b pb-3 pr-10">
             <h3 className="text-lg font-semibold">Edit Service</h3>
           </div>
 
           {editingService && (
             <>
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-1 py-4 pr-2">
               <div className="space-y-1">
                 <Label htmlFor="service-name" className="text-sm font-medium">
                   Service Name
@@ -978,9 +1096,9 @@ const HotelServices = () => {
                   onCheckedChange={(checked) => setEditingService((prev) => (prev ? { ...prev, availability: checked } : null))}
                 />
               </div>
-              <div className="flex w-full justify-between gap-4">
+              <div className="grid w-full gap-4 md:grid-cols-3">
                 {/* Request Time */}
-                <div className="w-[45%]">
+                <div>
                   <Label htmlFor="requestMin" className="text-sm font-medium">
                     Request Time
                   </Label>
@@ -1010,7 +1128,7 @@ const HotelServices = () => {
                 </div>
 
                 {/* Response Time */}
-                <div className="w-[45%]">
+                <div>
                   <Label htmlFor="responseMin" className="text-sm font-medium">
                     Response Time
                   </Label>
@@ -1038,6 +1156,36 @@ const HotelServices = () => {
                   </div>
                   <p className="text-muted-foreground mt-1 text-xs">Time to fulfill after staff accepts.</p>
                 </div>
+                <div>
+                  <Label htmlFor="quantityLimit" className="text-sm font-medium">
+                    Quantity Limit
+                  </Label>
+                  <Input
+                    id="quantityLimit"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={20}
+                    step={1}
+                    value={editingService.quantityLimit ?? 1}
+                    onChange={(e) => {
+                      const nextValue = Number(e.target.value);
+                      setEditingService((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              quantityLimit: Number.isInteger(nextValue) && nextValue > 0 ? nextValue : undefined,
+                            }
+                          : null,
+                      );
+                    }}
+                    aria-invalid={!isQuantityLimitValid}
+                    className="mt-1"
+                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                  />
+                  <p className="text-muted-foreground mt-1 text-xs">1 is direct. 2-20 enables guest quantity controls.</p>
+                  {!isQuantityLimitValid && <p className="mt-1 text-xs text-rose-500">Enter a whole number from 1 to 20.</p>}
+                </div>
               </div>
               <div className="text-muted-foreground rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
                 <div className="mb-1 font-semibold text-slate-700">SLA terms</div>
@@ -1047,6 +1195,75 @@ const HotelServices = () => {
                   <span>Total SLA: request + response</span>
                 </div>
               </div>
+              <div className="space-y-3 rounded-lg border bg-slate-50 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label className="text-sm font-medium">Customer Instruction</Label>
+                    <p className="text-muted-foreground text-xs">Show service-specific information before the guest confirms.</p>
+                  </div>
+                  <Switch
+                    checked={Boolean(editingService.serviceBehavior?.instructionEnabled)}
+                    onCheckedChange={(checked) => updateEditingBehavior({ instructionEnabled: checked })}
+                  />
+                </div>
+
+                {editingService.serviceBehavior?.instructionEnabled && (
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="edit-service-instruction" className="text-xs">
+                        General message
+                      </Label>
+                      <Textarea
+                        id="edit-service-instruction"
+                        maxLength={240}
+                        rows={3}
+                        placeholder="Example: Laundry pickup delivery depends on the request time."
+                        value={editingService.serviceBehavior?.instruction ?? ''}
+                        onChange={(e) => updateEditingBehavior({ instruction: e.target.value })}
+                      />
+                      <p className="text-muted-foreground text-right text-[11px]">{(editingService.serviceBehavior?.instruction ?? '').length}/240</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs">Time-based messages</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={addEditingInstructionRule}
+                          disabled={(editingService.serviceBehavior?.instructionRules ?? []).length >= 4}
+                        >
+                          Add Rule
+                        </Button>
+                      </div>
+                      {(editingService.serviceBehavior?.instructionRules ?? []).map((rule, index) => (
+                        <div key={`${rule.condition}-${index}`} className="grid gap-2 rounded-md border bg-white p-2 md:grid-cols-[8rem_7rem_1fr_auto]">
+                          <select
+                            value={rule.condition}
+                            onChange={(e) => updateEditingInstructionRule(index, 'condition', e.target.value)}
+                            className="h-9 rounded-md border px-2 text-sm"
+                          >
+                            <option value="BEFORE_TIME">Before</option>
+                            <option value="AFTER_TIME">After</option>
+                          </select>
+                          <Input type="time" value={rule.time} onChange={(e) => updateEditingInstructionRule(index, 'time', e.target.value)} className="h-9" />
+                          <Input
+                            value={rule.message}
+                            maxLength={240}
+                            placeholder="Example: Delivery tomorrow evening"
+                            onChange={(e) => updateEditingInstructionRule(index, 'message', e.target.value)}
+                            className="h-9"
+                          />
+                          <Button type="button" variant="ghost" size="icon" onClick={() => removeEditingInstructionRule(index)} className="h-9 w-9">
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Service Image</Label>
                 <BirthdayImageUploader image={newImageUrl || editingService.image || ''} onUploadSuccess={handleImageUploadSuccess} />
@@ -1055,7 +1272,8 @@ const HotelServices = () => {
                 </p>
                 {!canSave && <Label className="text-sm font-medium text-rose-500">Note: Request Time should be less than Response Time.</Label>}
               </div>
-              <div className="flex justify-end gap-2 pt-4">
+              </div>
+              <div className="flex shrink-0 justify-end gap-2 border-t bg-base-100 px-1 pt-3">
                 <Button variant="outline" onClick={handleCloseEditModal}>
                   Cancel
                 </Button>

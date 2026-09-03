@@ -98,7 +98,7 @@ const DEFAULT_METADATA: Metadata = {
       "Menu Application for Businesses - Transform your business with HipalZ's digital menu solution. Improve customer engagement, streamline operations, and enhance your business presence.",
     images: [
       {
-        url: "/android-chrome-512x512.png",
+        url: "/app-icon-512x512.png",
         width: 512,
         height: 512,
         alt: "Hipal App Logo",
@@ -134,13 +134,13 @@ const DEFAULT_METADATA: Metadata = {
         rel: "icon",
         type: "image/png",
         sizes: "192x192",
-        url: "/android-chrome-192x192.png",
+        url: "/app-icon-192x192.png",
       },
       {
         rel: "icon",
         type: "image/png",
         sizes: "512x512",
-        url: "/android-chrome-512x512.png",
+        url: "/app-icon-512x512.png",
       },
     ],
     apple: [

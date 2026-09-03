@@ -41,6 +41,12 @@ export interface Service {
   avgAcceptanceTime?: number;
   avgCompletionTime?: number;
   avgDeliveryTime?: number;
+  quantityLimit?: number;
+}
+
+export interface ServiceRequestItem {
+  serviceId: string;
+  quantity: number;
 }
 
 interface CreatedBy {
@@ -97,6 +103,14 @@ export interface Alert {
     | 'IS_ACCEPTED_AND_ESCALATION'
     | 'RESOLVED';
   serviceIds: Service[];
+  serviceRequestItems?: ServiceRequestItem[];
+  serviceInstructionSnapshot?: {
+    message?: string;
+    baseInstruction?: string;
+    ruleMessage?: string;
+    ruleCondition?: 'BEFORE_TIME' | 'AFTER_TIME';
+    ruleTime?: string;
+  };
   businessId: string;
   userId: string;
   createdAt: number;
@@ -165,6 +179,7 @@ export interface Cart {
 
 export interface RoomChat {
   cart: Cart[];
+  serviceRequestItems?: ServiceRequestItem[];
   _id: string;
   userId: User;
   roomId: string;

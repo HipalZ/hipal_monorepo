@@ -26,6 +26,7 @@ const CSV_HEADERS = [
   "Companion Count",
   "Record Type",
   "Service Requested",
+  "Quantity",
   "Order Items",
   "Requested At",
   "Accepted By Staff",
@@ -49,8 +50,13 @@ const CSV_HEADERS = [
 ] as const;
 
 const escapeCsvCell = (value: unknown): string => {
-  const str = value === undefined || value === null ? '' : String(value);
-  if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
+  const str = value === undefined || value === null ? "" : String(value);
+  if (
+    str.includes('"') ||
+    str.includes(",") ||
+    str.includes("\n") ||
+    str.includes("\r")
+  ) {
     return `"${str.replace(/"/g, '""')}"`;
   }
   return str;
@@ -71,19 +77,20 @@ const getOrdinalDay = (day: number) => {
 };
 
 const formatDateTime = (timestamp?: number | null) => {
-  if (!timestamp) return '';
-  const parts = new Intl.DateTimeFormat('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  if (!timestamp) return "";
+  const parts = new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: true,
   }).formatToParts(new Date(timestamp));
-  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? '';
-  const day = Number(get('day'));
-  return `${getOrdinalDay(day)} ${get('month')} ${get('year')}, ${get('hour')}:${get('minute')} ${get('dayPeriod').toUpperCase()}`;
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  const day = Number(get("day"));
+  return `${getOrdinalDay(day)} ${get("month")} ${get("year")}, ${get("hour")}:${get("minute")} ${get("dayPeriod").toUpperCase()}`;
 };
 
 const formatFilenameDate = (timestamp?: number) => {
@@ -151,6 +158,22 @@ const serviceRequestedLabel = (alert: any) => {
   return alert?.cart?.length ? "Food Order" : "";
 };
 
+const requestQuantity = (alert: any) => {
+  const serviceTotal =
+    alert?.serviceRequestItems?.reduce(
+      (sum: number, item: any) => sum + (Number(item?.quantity) || 1),
+      0,
+    ) ?? 0;
+  if (serviceTotal > 0) return serviceTotal;
+
+  const cartTotal =
+    alert?.cart?.reduce(
+      (sum: number, item: any) => sum + (Number(item?.quantity) || 1),
+      0,
+    ) ?? 0;
+  return cartTotal > 0 ? cartTotal : 1;
+};
+
 const staffName = (staff?: { name?: string } | null) => staff?.name || "";
 
 // SLA analysis for the CSV — mirrors the client's computePerf so the download
@@ -169,9 +192,11 @@ const slaAnalysis = (alert: any) => {
   );
   const totalSla = accSla + delSla;
   const totalActual =
-    alert?.createdAt && alert?.deliveredAt && alert.deliveredAt >= alert.createdAt ? (alert.deliveredAt - alert.createdAt) / 60000 : null;
+    alert?.createdAt && alert?.deliveredAt && alert.deliveredAt >= alert.createdAt
+      ? (alert.deliveredAt - alert.createdAt) / 60000
+      : null;
 
-  let performance = '';
+  let performance = "";
   if (totalSla > 0 && totalActual != null) {
     const diff = totalSla - totalActual;
     performance =
@@ -539,6 +564,7 @@ const hotelReportRouter = new Hono()
             companionGuests.length,
             "Service Request",
             serviceRequestedLabel(alert),
+            requestQuantity(alert),
             buildOrderItems(alert.cart),
             formatDateTime(alert.createdAt),
             staffName(alert.acceptedBy),
@@ -553,77 +579,85 @@ const hotelReportRouter = new Hono()
             sla.totalStd,
             sla.totalActual,
             sla.performance,
-            alert.isEscalated ? 'Yes' : 'No',
-            alert.isEscalated ? (alert.level ?? 0) : '',
-            alert.isEscalated ? 'Yes' : 'No',
-            (review as any)?.reviewRating ?? '',
-            (review as any)?.note || (review as any)?.improvementAreas?.filter(Boolean).join(', ') || '',
+            alert.isEscalated ? "Yes" : "No",
+            alert.isEscalated ? alert.level ?? 0 : "",
+            alert.isEscalated ? "Yes" : "No",
+            (review as any)?.reviewRating ?? "",
+            (review as any)?.review ||
+              (review as any)?.description ||
+              (review as any)?.note ||
+              (review as any)?.improvementAreas?.filter(Boolean).join(", ") ||
+              "",
             formatDateTime((review as any)?.date),
           ]
             .map(escapeCsvCell)
-            .join(',');
+            .join(",");
 
           buffer.push(row);
           if (buffer.length >= CSV_BATCH_FLUSH) {
-            await s.write(buffer.join('\n') + '\n');
+            await s.write(buffer.join("\n") + "\n");
             buffer = [];
           }
         }
         for (const stay of stays as any[]) {
-          const phone = stay.userId?.phone || '';
+          const phone = stay.userId?.phone || "";
           if (!phone || phonesWithServiceRows.has(phone)) continue;
 
-          const companionGuests = getCompanionGuests(stay.guestUserIds, phone);
-          const row = [
-            stay.userId?.name || 'Guest',
+          const companionGuests = getCompanionGuests(
+            stay.guestUserIds,
             phone,
-            stay.roomId?.name || '',
-            visitCountByPhone.get(phone) ?? '',
-            stay.source || '',
+          );
+          const row = [
+            stay.userId?.name || "Guest",
+            phone,
+            stay.roomId?.name || "",
+            visitCountByPhone.get(phone) ?? "",
+            stay.source || "",
             formatDateTime(stay.checkIn),
             formatDateTime(stay.checkOut),
             formatCompanions(stay.guestUserIds, phone),
             companionGuests.length,
-            'Room Scan / Stay',
+            "Room Scan / Stay",
             joinNames(stay.serviceIds),
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
           ]
             .map(escapeCsvCell)
-            .join(',');
+            .join(",");
 
           buffer.push(row);
           if (buffer.length >= CSV_BATCH_FLUSH) {
-            await s.write(buffer.join('\n') + '\n');
+            await s.write(buffer.join("\n") + "\n");
             buffer = [];
           }
         }
-        if (buffer.length) await s.write(buffer.join('\n') + '\n');
+        if (buffer.length) await s.write(buffer.join("\n") + "\n");
       });
     },
   )
+
   .post(
-    '/fetch_escalated_reports',
+    "/fetch_escalated_reports",
     zValidator(
-      'json',
+      "json",
       z.object({
         businessId: z.string(),
         from: z.number().optional(),
@@ -642,25 +676,25 @@ const hotelReportRouter = new Hono()
           $lte: to,
         },
         alertProgress: {
-          $nin: ['MESSAGE', 'REJECTED' /* Exclude non-service alerts */],
+          $nin: ["MESSAGE", "REJECTED" /* Exclude non-service alerts */],
         },
       })
-        .populate('roomId', '_id name')
-        .populate('userId', '_id name phone')
-        .populate('serviceIds', '_id name')
-        .populate('createdBy', '_id name phone')
+        .populate("roomId", "_id name")
+        .populate("userId", "_id name phone")
+        .populate("serviceIds", "_id name")
+        .populate("createdBy", "_id name phone")
 
         .sort({ _id: -1 })
 
         .lean();
 
-      return respond(c, 'All escalated reports', false, 200, escalatedReports);
+      return respond(c, "All escalated reports", false, 200, escalatedReports);
     },
   )
   .post(
-    '/fetch_item_reports',
+    "/fetch_item_reports",
     zValidator(
-      'json',
+      "json",
       z.object({
         businessId: z.string(),
         page: z.number().optional().default(1),
@@ -689,8 +723,14 @@ const hotelReportRouter = new Hono()
         .limit(limit)
         .lean();
 
-      const dishCounts = new Map<string, { id: string; name: string; count: number }>();
-      const timePeriodData = new Map<string, Map<string, { id: string; name: string; count: number }>>();
+      const dishCounts = new Map<
+        string,
+        { id: string; name: string; count: number }
+      >();
+      const timePeriodData = new Map<
+        string,
+        Map<string, { id: string; name: string; count: number }>
+      >();
 
       // Initialize time period data
       for (const period of timePeriods) {
@@ -730,20 +770,30 @@ const hotelReportRouter = new Hono()
         .slice(0, 6);
 
       // Get top dish per time period
-      const timeBasedAnalytics = Array.from(timePeriodData.entries()).map(([timePeriod, dishes]) => {
-        const topDish = Array.from(dishes.values()).sort((a, b) => b.count - a.count)[0];
-        return {
-          timePeriod,
-          topDish: topDish || null,
-        };
-      });
+      const timeBasedAnalytics = Array.from(timePeriodData.entries()).map(
+        ([timePeriod, dishes]) => {
+          const topDish = Array.from(dishes.values()).sort(
+            (a, b) => b.count - a.count,
+          )[0];
+          return {
+            timePeriod,
+            topDish: topDish || null,
+          };
+        },
+      );
 
       const analytics = {
         topDishes,
         timeBasedAnalytics,
       };
 
-      return respond(c, 'Top selling dishes retrieved successfully', false, 200, analytics);
+      return respond(
+        c,
+        "Top selling dishes retrieved successfully",
+        false,
+        200,
+        analytics,
+      );
     },
   );
 

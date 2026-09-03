@@ -24,6 +24,8 @@ export interface reviewResponse {
   _id: string;
   userId?: { _id?: string; name?: string; phone?: string };
   reviewRating: number;
+  review?: string;
+  description?: string;
   improvementAreas?: string[];
   staffs?: string[];
   date?: number;

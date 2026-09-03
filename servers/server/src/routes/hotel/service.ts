@@ -84,7 +84,7 @@ const serviceRouter = new Hono()
         .sort({ sequence: 1 })
         .populate({
           path: 'serviceIds',
-          select: 'name image availability sequence',
+          select: 'name image availability quantityLimit serviceBehavior sequence',
           options: { sort: { sequence: 1 } },
         })
         .lean();
@@ -122,7 +122,7 @@ const serviceRouter = new Hono()
         .sort({ sequence: 1, _id: 1 })
         .populate({
           path: 'serviceIds',
-          select: 'name image availability avgAcceptanceTime avgCompletionTime avgDeliveryTime sequence systemKey',
+          select: 'name image availability avgAcceptanceTime avgCompletionTime avgDeliveryTime quantityLimit serviceBehavior sequence systemKey',
           options: { sort: { sequence: 1, _id: 1 } },
         })
         .select('name image serviceIds sequence systemKey')

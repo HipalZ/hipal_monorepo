@@ -46,6 +46,52 @@ type RemovedCartItem = {
   reason: string;
 };
 
+const getServiceQuantity = (alert: Alert, serviceId?: string) => {
+  if (!serviceId) return 1;
+  const requestedItem = alert?.serviceRequestItems?.find((item) => item.serviceId?.toString() === serviceId);
+  return requestedItem?.quantity && requestedItem.quantity > 1 ? requestedItem.quantity : 1;
+};
+
+const hasSlaBreach = ({
+  createdAt,
+  acceptedAt,
+  completedAt,
+  acceptMins,
+  deliverMins,
+  progress,
+  isEscalated,
+  now,
+}: {
+  createdAt?: number;
+  acceptedAt?: number;
+  completedAt?: number;
+  acceptMins: number;
+  deliverMins: number;
+  progress?: string;
+  isEscalated?: boolean;
+  now: number;
+}) => {
+  if (isEscalated || progress?.includes('ESCALATION')) return true;
+
+  const startedAt = Number(createdAt || 0);
+  if (!startedAt) return false;
+
+  const acceptMs = Math.max(acceptMins, 0) * 60_000;
+  const deliverMs = Math.max(deliverMins, 0) * 60_000;
+  const accepted = Number(acceptedAt || 0);
+  const completed = Number(completedAt || 0);
+  const activeOrCompletedAt = completed || now;
+
+  const acceptanceLate = acceptMs > 0 && (accepted ? accepted - startedAt > acceptMs : activeOrCompletedAt - startedAt > acceptMs);
+  const deliveryLate =
+    deliverMs > 0 &&
+    (accepted > 0
+      ? (completed ? completed - accepted : now - accepted) > deliverMs
+      : completed > 0 && completed - startedAt > acceptMs + deliverMs);
+
+  return acceptanceLate || deliveryLate;
+};
+
 function parseWakeUpMessage(message?: string) {
   const cleanMessage = message?.replace('WAKE_UP_CALL::', '') || '';
   const match = cleanMessage.match(/^(.*?) \((.*?)\) requested a wake-up call for (.*?)\. Note: (.*)$/);
@@ -207,6 +253,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     : isCheckoutRequest
       ? alert.message.slice('CHECKOUT_REQUEST::'.length)
       : alert?.message;
+  const serviceInstruction = alert?.serviceInstructionSnapshot?.message?.trim();
   // A request isn't done until its slowest service is done, so the SLA runs
   // against the largest on the alert. 0/0 → SlaPanel renders nothing (wake-up
   // calls and plain messages have no service attached).
@@ -219,9 +266,17 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const deliverMins = hasCart ? foodDeliverMins : serviceDeliverMins;
 
   // The header names the request; extra services collapse into a "+N more".
-  const serviceNames = services.map((service) => service?.name).filter(Boolean);
+  const serviceSummaries = services
+    .map((service) => {
+      if (!service?.name) return null;
+      const quantity = getServiceQuantity(alert, service._id);
+      return { name: service.name, quantity };
+    })
+    .filter((service): service is { name: string; quantity: number } => Boolean(service));
+  const serviceNames = serviceSummaries.map((service) => service.name);
   const primaryService =
     serviceNames[0] || (hasCart ? 'Food Order' : isWakeUpCallAlert ? 'Wake-up Call' : isCheckoutRequest ? 'Checkout' : 'Message');
+  const primaryServiceQuantity = serviceSummaries[0]?.quantity || 1;
   const extraServices = Math.max(0, serviceNames.length - 1);
 
   const badge = (isWakeUpCallDue ? BADGES.NOT_DELIVERED : isWakeUpCallAlert ? BADGES.MESSAGE : BADGES[alert?.alertProgress]) ?? FALLBACK_BADGE;
@@ -232,6 +287,17 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const ESCALATION_STATES = ['NON_ACCEPTED_AND_ESCALATION', 'IS_ACCEPTED_AND_ESCALATION'];
   const isEscalatedAlert = ESCALATION_STATES.includes(alert?.alertProgress ?? '');
   const escalationLevel = isEscalatedAlert ? alert?.level || 1 : null;
+  const slaWatchNow = useNow(!['DELIVERED', 'REJECTED', 'RESOLVED', 'NOT_DELIVERED'].includes(alert?.alertProgress ?? ''));
+  const isSlaBreached = hasSlaBreach({
+    createdAt: alert?.createdAt,
+    acceptedAt: alert?.acceptedAt,
+    completedAt: alert?.deliveredAt || alert?.rejectedAt,
+    acceptMins,
+    deliverMins,
+    progress: alert?.alertProgress,
+    isEscalated: alert?.isEscalated,
+    now: slaWatchNow,
+  });
 
   const isPendingState = (p?: string) => PENDING_STATES.includes(p ?? '');
   const isAcceptedState = (p?: string) => ACCEPTED_STATES.includes(p ?? '');
@@ -256,9 +322,11 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     <Card
       className={`${
         isWakeUpCallDue || alert?.alertProgress === 'NOT_DELIVERED' ? 'animation-blink' : ''
-      } overflow-hidden border border-l-4 transition-all duration-200 hover:shadow-md`}
+      } overflow-hidden border border-l-4 transition-all duration-200 hover:shadow-md ${
+        isSlaBreached ? 'border-red-200 bg-red-50/60 shadow-[0_10px_28px_rgba(220,38,38,0.08)]' : 'bg-white'
+      }`}
       style={{
-        borderLeftColor: isWakeUpCallDue ? '#dc2626' : isWakeUpCallAlert ? '#7c3aed' : borderColor(alert?.alertProgress),
+        borderLeftColor: isSlaBreached || isWakeUpCallDue ? '#dc2626' : isWakeUpCallAlert ? '#7c3aed' : borderColor(alert?.alertProgress),
       }}
     >
       {/* Primary information section */}
@@ -268,7 +336,14 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
           <h3 className="text-xl font-bold leading-tight">Room {alert?.roomId?.name}</h3>
           <div className="min-w-0 text-right">
             <div className="truncate font-bold leading-tight">{primaryService}</div>
-            {extraServices > 0 ? <div className="text-[11px] text-slate-500">+{extraServices} more</div> : null}
+            <div className="mt-1 flex flex-wrap justify-end gap-1">
+              {primaryServiceQuantity > 1 ? (
+                <span className="inline-flex rounded-full border bg-blue-700 px-2 py-0.5 text-[11px] font-bold text-white">
+                  Qty: {primaryServiceQuantity}
+                </span>
+              ) : null}
+              {extraServices > 0 ? <span className="text-[11px] text-slate-500">+{extraServices} more</span> : null}
+            </div>
           </div>
         </div>
 
@@ -301,6 +376,9 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
           <p className={`mt-3 text-sm ${isWakeUpCallAlert ? 'rounded-lg bg-violet-50 p-3 font-semibold text-violet-950' : 'text-slate-700'}`}>
             {displayMessage}
           </p>
+        ) : null}
+        {serviceInstruction ? (
+          <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm font-medium text-blue-950">{serviceInstruction}</p>
         ) : null}
         {/* Order details button */}
         {hasCart && (

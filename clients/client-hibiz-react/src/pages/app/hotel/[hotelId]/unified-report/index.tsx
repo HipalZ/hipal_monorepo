@@ -268,6 +268,7 @@ const UnifiedReport = () => {
       'Visit Count Till Date',
       'Room',
       'Service Requested',
+      'Quantity',
       'Accepted By',
       'Completed By',
       'Requested At',
@@ -278,6 +279,7 @@ const UnifiedReport = () => {
       'Total Time',
       'Total Standard SLA',
       'Order Items',
+      'Customer Instruction',
       'SLA Performance',
       'Escalated',
       'Escalation Level',
@@ -294,6 +296,7 @@ const UnifiedReport = () => {
         r.visits ?? '',
         r.room,
         r.service,
+        r.quantity ?? '',
         r.acceptedByName,
         r.completedByName,
         dateTime(r.raisedAt),
@@ -304,6 +307,7 @@ const UnifiedReport = () => {
         durationCell(r.totalMins),
         fmt(r.totalSla),
         r.orderItems,
+        r.customerInstruction,
         slaPerformance(r),
         r.escalated ? (escalationCause(r) ? `Yes — ${escalationCause(r)}` : 'Yes') : 'No',
         r.escalationLevel != null ? `L${r.escalationLevel}` : '',
@@ -583,12 +587,15 @@ const UnifiedReport = () => {
                       <th className={th}>Guest</th>
                       <th className={th}>Room</th>
                       <th className={th}>Service</th>
+                      <th className={th}>Qty</th>
+                      <th className={th}>Instruction</th>
                       <th className={th}>Accepted by</th>
                       <th className={th}>Accepted at</th>
                       <th className={th}>Completed by</th>
                       <th className={th}>Completed at</th>
                       <th className={th}>Total</th>
                       <th className={th}>Rating</th>
+                      <th className={th}>Feedback</th>
                       <th className={`${th} text-right`}>SLA result</th>
                     </tr>
                   </thead>
@@ -633,6 +640,20 @@ const UnifiedReport = () => {
                           ) : null}
                           <div className="text-xs text-slate-400">{clock(r.raisedAt)}</div>
                         </td>
+                        <td className={td}>
+                          <span className="inline-flex min-w-8 items-center justify-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold tabular-nums text-indigo-700 ring-1 ring-indigo-100">
+                            {r.quantity ?? '—'}
+                          </span>
+                        </td>
+                        <td className={`${td} max-w-[280px]`}>
+                          {r.customerInstruction ? (
+                            <div className="line-clamp-2 rounded-lg border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-xs font-medium leading-relaxed text-blue-950" title={r.customerInstruction}>
+                              {r.customerInstruction}
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-slate-300">—</span>
+                          )}
+                        </td>
                         {/* Accepted by name */}
                         <td className={td}>
                           <div className="font-medium text-slate-800">{r.acceptedByName || <span className="text-slate-300">—</span>}</div>
@@ -653,20 +674,22 @@ const UnifiedReport = () => {
                           <div className={`font-semibold tabular-nums ${slaValueClass(r.totalMins, r.totalSla)}`}>{fmt(r.totalMins)}</div>
                           <div className="text-[11px] text-slate-400">SLA {fmt(r.totalSla)}</div>
                         </td>
-                        {/* Guest's rating + feedback. Blank on checkout rows and unreviewed requests. */}
-                        <td className={`${td} max-w-[160px]`}>
+                        {/* Guest's rating. Blank on checkout rows and unreviewed requests. */}
+                        <td className={td}>
                           {r.rating != null ? (
-                            <>
-                              <span className="inline-flex items-center gap-1 font-semibold text-amber-500">
-                                <Star className="h-3.5 w-3.5 fill-current" />
-                                {r.rating}
-                              </span>
-                              {r.feedback ? (
-                                <div className="truncate text-[11px] text-slate-400" title={r.feedback}>
-                                  {r.feedback}
-                                </div>
-                              ) : null}
-                            </>
+                            <span className="inline-flex items-center gap-1 font-semibold text-amber-500">
+                              <Star className="h-3.5 w-3.5 fill-current" />
+                              {r.rating}
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-slate-300">—</span>
+                          )}
+                        </td>
+                        <td className={`${td} max-w-[260px]`}>
+                          {r.feedback ? (
+                            <div className="line-clamp-2 text-xs leading-relaxed text-slate-600" title={r.feedback}>
+                              {r.feedback}
+                            </div>
                           ) : (
                             <span className="text-[11px] text-slate-300">—</span>
                           )}

@@ -582,7 +582,7 @@ const roomRouter = new Hono()
         })
         .populate({
           path: "reviewIds",
-          select: "reviewRating description date -_id",
+          select: "reviewRating review description date -_id",
           populate: {
             path: "serviceIds",
             select: "name -_id",
@@ -640,7 +640,7 @@ const roomRouter = new Hono()
         ...criteria,
       })
         .select(
-          "userId roomId alertId reviewRating description date staffs improvementAreas isRead readAt readBy note"
+          "userId roomId alertId reviewRating review description date staffs improvementAreas isRead readAt readBy note"
         )
         .sort({ date: -1 })
         .populate({
@@ -1866,6 +1866,7 @@ const roomRouter = new Hono()
             message: "Review rating must be less than 6",
           })
           .optional(),
+        review: z.string().trim().max(250).optional().default(""),
         roomChatReplyId: z.string().min(2).max(50),
       })
     ),
@@ -1875,6 +1876,7 @@ const roomRouter = new Hono()
       return runInTransaction(async (session) => {
         const requestData = await c.req.json();
         const { businessId, userId, reviewRating } = requestData;
+        const review = (requestData.review || "").trim().slice(0, 250);
 
         const roomChatReply = await HotelRoomChatReply.findById(
           requestData.roomChatReplyId
@@ -1936,6 +1938,7 @@ const roomRouter = new Hono()
           status: "NORMAL",
           date: Date.now(),
           reviewRating,
+          review,
         });
         newChatReply.description = ratingReply;
         await newChatReply.save({ session });
@@ -1963,6 +1966,8 @@ const roomRouter = new Hono()
           serviceIds: alertOnfo?.serviceIds || [],
           acceptedBy: alertOnfo?.acceptedBy || [],
           deliveredBy: alertOnfo?.deliveredBy || [],
+          review,
+          description: review,
         });
 
         if (!createReview) {

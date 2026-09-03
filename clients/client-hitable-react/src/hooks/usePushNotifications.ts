@@ -7,7 +7,7 @@ import { useLiteStore } from "@/components/store/useLiteStore";
 const pushNotificationService = new PushNotificationService();
 
 /**
- * Native Android notification channels own push sounds. Local web audio is only
+ * Native notification channels own push sounds. Local web audio is only
  * used by polling fallbacks when a device has no push token.
  */
 export const usePushNotifications = () => {
@@ -79,7 +79,7 @@ export const usePushNotifications = () => {
         const granted = status === "granted";
         setNotificationStatus(granted);
 
-        // If now granted and we didn't initialize yet, do it
+        // If now granted and we didn't initialize yet, do it.
         if (granted && !initializedRef.current) {
           initializedRef.current = false;
           await initializePushNotifications();

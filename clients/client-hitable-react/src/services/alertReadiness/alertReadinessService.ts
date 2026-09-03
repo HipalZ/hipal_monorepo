@@ -24,7 +24,7 @@ export const checkAlertReadiness = async (): Promise<AlertReadinessStatus | null
   try {
     return await AlertReadiness.check();
   } catch (error) {
-    console.warn('Alert readiness check is unavailable in this APK build.', error);
+    console.warn('Alert readiness check is unavailable in this native build.', error);
     return null;
   }
 };

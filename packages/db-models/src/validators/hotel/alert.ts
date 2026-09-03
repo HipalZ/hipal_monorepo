@@ -30,6 +30,19 @@ const CartItemSchema = z.object({
   quantity: z.number().positive(),
 });
 
+const ServiceRequestItemSchema = z.object({
+  serviceId: ObjectIdSchema,
+  quantity: z.number().int().min(1).max(20),
+});
+
+const ServiceInstructionSnapshotSchema = z.object({
+  message: z.string().max(500).optional(),
+  baseInstruction: z.string().max(240).optional(),
+  ruleMessage: z.string().max(240).optional(),
+  ruleCondition: z.enum(["BEFORE_TIME", "AFTER_TIME"]).optional(),
+  ruleTime: z.string().optional(),
+});
+
 export const hotelAlert = z.object({
   alertProgress: z.enum(alertProgressEnum).optional().default("CREATED"),
   serviceIds: z.array(ObjectIdSchema),
@@ -49,6 +62,8 @@ export const hotelAlert = z.object({
   rejectedBy: ObjectIdSchema.optional(),
   roomId: ObjectIdSchema,
   cart: z.array(z.object({})).optional(),
+  serviceRequestItems: z.array(ServiceRequestItemSchema).optional().default([]),
+  serviceInstructionSnapshot: ServiceInstructionSnapshotSchema.optional(),
   roomChatComplainId: ObjectIdSchema.optional(),
   message: z.string().optional(),
   isEscalated: z.boolean().optional().default(false),
