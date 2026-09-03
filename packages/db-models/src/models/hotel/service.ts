@@ -16,6 +16,24 @@ const hotelServiceSchema = new Schema<HotelServiceType>({
   avgCompletionTime: { type: Number, default: 4 },
   avgAcceptanceTime: { type: Number, default: 2 },
   avgDeliveryTime: { type: Number, default: 3 },
+  quantityLimit: { type: Number, default: 1, min: 1, max: 20 },
+  serviceBehavior: {
+    instructionEnabled: { type: Boolean, default: false },
+    instruction: { type: String, default: "" },
+    instructionRules: {
+      type: [
+        {
+          condition: {
+            type: String,
+            enum: ["BEFORE_TIME", "AFTER_TIME"],
+          },
+          time: { type: String },
+          message: { type: String },
+        },
+      ],
+      default: [],
+    },
+  },
   sequence: { type: Number, default: 0 },
   // Rename-proof identifier for system-managed services (e.g. "CHECKOUT").
   systemKey: { type: String, required: false },

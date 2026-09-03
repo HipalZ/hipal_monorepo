@@ -26,6 +26,7 @@ const CSV_HEADERS = [
   "Companion Count",
   "Record Type",
   "Service Requested",
+  "Quantity",
   "Order Items",
   "Requested At",
   "Accepted By Staff",
@@ -155,6 +156,22 @@ const serviceRequestedLabel = (alert: any) => {
   const names = joinNames(alert?.serviceIds);
   if (names) return names;
   return alert?.cart?.length ? "Food Order" : "";
+};
+
+const requestQuantity = (alert: any) => {
+  const serviceTotal =
+    alert?.serviceRequestItems?.reduce(
+      (sum: number, item: any) => sum + (Number(item?.quantity) || 1),
+      0,
+    ) ?? 0;
+  if (serviceTotal > 0) return serviceTotal;
+
+  const cartTotal =
+    alert?.cart?.reduce(
+      (sum: number, item: any) => sum + (Number(item?.quantity) || 1),
+      0,
+    ) ?? 0;
+  return cartTotal > 0 ? cartTotal : 1;
 };
 
 const staffName = (staff?: { name?: string } | null) => staff?.name || "";
@@ -547,6 +564,7 @@ const hotelReportRouter = new Hono()
             companionGuests.length,
             "Service Request",
             serviceRequestedLabel(alert),
+            requestQuantity(alert),
             buildOrderItems(alert.cart),
             formatDateTime(alert.createdAt),
             staffName(alert.acceptedBy),
@@ -565,7 +583,9 @@ const hotelReportRouter = new Hono()
             alert.isEscalated ? alert.level ?? 0 : "",
             alert.isEscalated ? "Yes" : "No",
             (review as any)?.reviewRating ?? "",
-            (review as any)?.note ||
+            (review as any)?.review ||
+              (review as any)?.description ||
+              (review as any)?.note ||
               (review as any)?.improvementAreas?.filter(Boolean).join(", ") ||
               "",
             formatDateTime((review as any)?.date),

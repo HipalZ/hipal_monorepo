@@ -5,7 +5,6 @@ import { lazy, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SpinnerMemo from './components/atoms/loadingSpinner';
 import AlertReadinessPrompt from './components/hotel/AlertReadinessPrompt';
-import InstallAppBanner from './components/pwa/InstallAppBanner';
 import useBusinessData from './components/store/useBusinessData';
 import { useHiClientZ } from './components/store/useHiClientzData';
 import { useLiteStore } from './components/store/useLiteStore';

@@ -11,12 +11,16 @@ import { memo } from 'react';
 
 interface Alert {
   _id: string;
-  serviceIds: Array<{ name: string; avgAcceptanceTime: number; avgDeliveryTime: number }>;
+  serviceIds: Array<{ _id?: string; name: string; avgAcceptanceTime: number; avgDeliveryTime: number }>;
+  serviceRequestItems?: Array<{ serviceId?: string | { _id?: string }; quantity?: number }>;
   createdAt: number;
   acceptedAt: number;
   deliveredAt: number;
   isEscalated: boolean;
   level: number;
+  serviceInstructionSnapshot?: {
+    message?: string;
+  };
   cart?: Array<{ quantity: number; dish: { name: string; price: number }; portion?: { name?: string; price?: number } | null; extras?: Array<{ price?: number; quantity?: number }> }>;
 }
 
@@ -33,8 +37,11 @@ const formatMinutes = (minutes: number) => {
   return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} min`;
 };
 
+const hasFoodCartItems = (cart?: Alert['cart']) =>
+  Boolean(cart?.some((item) => item?.dish || (item as any)?.dishId || (item as any)?.name || (item as any)?.dishName));
+
 const buildOrderItems = (cart?: Alert['cart']) =>
-  cart?.length
+  hasFoodCartItems(cart)
     ? cart
         .map((item) => {
           const portionName = item?.portion?.name ? ` - ${item.portion.name}` : '';
@@ -42,6 +49,23 @@ const buildOrderItems = (cart?: Alert['cart']) =>
         })
         .join(' | ')
     : '';
+
+const getServiceQuantityLabel = (alert: Alert) => {
+  const service = alert.serviceIds?.[0];
+  const serviceId = service?._id?.toString();
+  const requestItem = alert.serviceRequestItems?.find((item) => {
+    const itemServiceId = typeof item?.serviceId === 'object' ? item.serviceId?._id?.toString() : item?.serviceId?.toString();
+    return serviceId ? itemServiceId === serviceId : true;
+  });
+  const serviceQuantity = Number(requestItem?.quantity);
+
+  if (Number.isFinite(serviceQuantity) && serviceQuantity > 0) return `Qty: ${serviceQuantity}`;
+
+  const cartQuantity = alert.cart?.reduce((total, item) => total + Number(item?.quantity || 0), 0) || 0;
+  if (cartQuantity > 0) return `Items: ${cartQuantity}`;
+
+  return '';
+};
 
 const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
   const totalActiveMinutes = servicesData.reduce((sum, alert) => {
@@ -76,8 +100,10 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
           <div className="space-y-4 pb-4">
             {servicesData.map((alert) => {
               const svc = alert.serviceIds[0];
-              const hasCart = Boolean(alert.cart?.length);
+              const hasCart = hasFoodCartItems(alert.cart);
               const serviceName = svc?.name || (hasCart ? 'Food Order' : '—');
+              const quantityLabel = getServiceQuantityLabel(alert);
+              const serviceInstruction = alert.serviceInstructionSnapshot?.message?.trim();
               const orderItems = buildOrderItems(alert.cart);
               const serviceAcceptSla = svc?.avgAcceptanceTime ?? (hasCart ? 2 : 0);
               const foodPrepMins = hasCart ? alert.cart?.reduce((max, item) => Math.max(max, Number((item?.dish as any)?.avgPrepTime || 0)), 0) || 0 : 0;
@@ -93,7 +119,14 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
                         <Package className="h-5 w-5 text-indigo-600" />
-                        <CardTitle className="text-base font-medium">{serviceName}</CardTitle>
+                        <CardTitle className="flex min-w-0 flex-wrap items-center gap-1.5 text-base font-medium">
+                          <span className="min-w-0 truncate">{serviceName}</span>
+                          {quantityLabel && (
+                            <span className="inline-flex shrink-0 rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[11px] font-bold leading-none text-violet-700">
+                              {quantityLabel}
+                            </span>
+                          )}
+                        </CardTitle>
                       </div>
                       {alert.isEscalated && (
                         <Badge variant="destructive" className="text-xs">
@@ -123,7 +156,7 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
                       </div>
                     </div>
 
-                    {alert.cart && alert.cart.length > 0 && (
+                    {hasFoodCartItems(alert.cart) && (
                       <>
                         <Separator />
                         <div>
@@ -142,6 +175,14 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
                         </div>
                       </>
                     )}
+                    {serviceInstruction ? (
+                      <>
+                        <Separator />
+                        <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs font-medium leading-relaxed text-blue-950">
+                          {serviceInstruction}
+                        </div>
+                      </>
+                    ) : null}
                   </CardContent>
                 </Card>
               );

@@ -20,6 +20,7 @@ export const hotelRoomChatReply = z.object({
   description: z.string().min(1).max(200),
   roomChatId: ObjectIdSchema,
   reviewRating: z.number().min(1).max(5).optional(),
+  review: z.string().min(0).max(250).optional(),
 });
 
 export const updateRoomChat = z.object({

@@ -163,6 +163,7 @@ export default function HotelReviews() {
 
       const curatedReviewRows = results.map((item) => {
         const user = typeof item?.userId === 'object' && item?.userId !== null ? item.userId : null;
+        const guestReview = item?.review?.trim() || item?.description?.trim() || '';
 
         const reviewedServices =
           item?.alertId?.serviceIds
@@ -176,6 +177,7 @@ export default function HotelReviews() {
           'Room No': item?.roomId?.name || '',
           'Reviewed Service': reviewedServices,
           Rating: item?.reviewRating ?? '',
+          'Guest Review': guestReview,
           'Improvement Areas': item?.improvementAreas?.filter(Boolean).join(', ') || '',
           'Accepted By': item?.alertId?.acceptedBy?.name || '',
           'Completed By': item?.alertId?.deliveredBy?.name || '',

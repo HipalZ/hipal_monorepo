@@ -41,11 +41,12 @@ const Chats = ({
     );
   }, [businessId, customLink, room, router]);
 
-  const handleReviewSubmit = async (roomChatReplyId: string, rating: number) => {
+  const handleReviewSubmit = async (roomChatReplyId: string, rating: number, review?: string) => {
     try {
       await reviewChat({
         roomChatReplyId,
         reviewRating: rating,
+        review: review?.trim() ?? "",
         businessId,
         userId: userDetails?._id || "",
       });

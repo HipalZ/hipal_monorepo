@@ -42,7 +42,7 @@ export const useHiClientZ = create(
       notification: true,
       setNotification: (value) => set({ notification: value }),
 
-      platform: "android",
+      platform: "web",
       setPlatform: (value: string) => set({ platform: value }),
     }),
     {

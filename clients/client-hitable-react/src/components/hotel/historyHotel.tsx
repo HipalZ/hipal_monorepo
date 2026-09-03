@@ -38,6 +38,10 @@ const CATEGORY_META = {
     accentClass: 'border-l-[#E7A84B]',
     headerClass: 'bg-[#FFF8EE]',
     serviceClass: 'text-slate-950',
+    borderColor: '#F2D4A7',
+    backgroundColor: '#FFF6E8',
+    accentColor: '#E7A84B',
+    headerBackgroundColor: '#FFF8EE',
   },
   housekeeping: {
     label: 'Housekeeping',
@@ -46,6 +50,10 @@ const CATEGORY_META = {
     accentClass: 'border-l-[#54A58D]',
     headerClass: 'bg-[#F6FCFA]',
     serviceClass: 'text-slate-950',
+    borderColor: '#BFDCD3',
+    backgroundColor: '#F0FAF7',
+    accentColor: '#54A58D',
+    headerBackgroundColor: '#F6FCFA',
   },
   frontOffice: {
     label: 'Front Office',
@@ -54,6 +62,10 @@ const CATEGORY_META = {
     accentClass: 'border-l-[#6F9EDB]',
     headerClass: 'bg-[#F7FAFF]',
     serviceClass: 'text-slate-950',
+    borderColor: '#C8DAF3',
+    backgroundColor: '#F3F8FF',
+    accentColor: '#6F9EDB',
+    headerBackgroundColor: '#F7FAFF',
   },
   maintenance: {
     label: 'Maintenance',
@@ -62,6 +74,10 @@ const CATEGORY_META = {
     accentClass: 'border-l-[#8A78C7]',
     headerClass: 'bg-[#FAF8FF]',
     serviceClass: 'text-slate-950',
+    borderColor: '#D5CEE9',
+    backgroundColor: '#F8F5FF',
+    accentColor: '#8A78C7',
+    headerBackgroundColor: '#FAF8FF',
   },
 } as const;
 
@@ -124,8 +140,12 @@ const MemoHistoryHotel = () => {
     return `${seconds}s`;
   };
 
+  function hasFoodCartItems(cart?: any[]) {
+    return Boolean(cart?.some((item) => item?.dish || item?.dishId || item?.name || item?.dishName));
+  }
+
   function buildOrderItems(cart?: any[]) {
-    if (!cart?.length) return '';
+    if (!hasFoodCartItems(cart)) return '';
     return cart
       .map((item) => {
         const dishName = item?.dish?.name || item?.name || item?.dishName || '';
@@ -146,19 +166,35 @@ const MemoHistoryHotel = () => {
     if (isWakeUpCallAlert) return 'Wake-up Call';
     const serviceNames =
       item?.serviceIds
-        ?.map((service) => service?.name)
+        ?.map((service) => {
+          if (!service?.name) return '';
+          return service.name;
+        })
         .filter(Boolean)
         .join(', ') || '';
     if (serviceNames) return serviceNames;
-    return item?.cart?.length ? 'Food Order' : '—';
+    return hasFoodCartItems(item?.cart) ? 'Food Order' : '—';
+  }
+
+  function getServiceQuantityBadges(item: any) {
+    return (
+      item?.serviceIds
+        ?.map((service) => {
+          if (!service?._id || !service?.name) return null;
+          const requestedItem = item?.serviceRequestItems?.find((requestItem) => requestItem?.serviceId?.toString() === service?._id);
+          const quantity = Number(requestedItem?.quantity || 1);
+          if (quantity <= 1) return null;
+          return item?.serviceIds?.length > 1 ? `${service.name}: ${quantity}` : `Qty: ${quantity}`;
+        })
+        .filter(Boolean) || []
+    );
   }
 
   function getCategory(item: any, isWakeUpCallAlert = false): CategoryKey {
-    if (item?.cart?.length) return 'food';
+    if (hasFoodCartItems(item?.cart)) return 'food';
     if (isWakeUpCallAlert) return 'frontOffice';
 
     const label = getServiceLabel(item).toLowerCase();
-    if (/food|order|restaurant|breakfast|lunch|dinner|snack|beverage|tea|coffee/i.test(label)) return 'food';
     if (/front|office|reception|checkout|check out|check-in|check in|wake|key|luggage|bill|billing/i.test(label)) return 'frontOffice';
     if (/maintenance|repair|ac|a\/c|tv|wifi|internet|light|fan|electric|plumb|leak|flush|geyser|tap|shower repair/i.test(label)) return 'maintenance';
     return 'housekeeping';
@@ -172,6 +208,44 @@ const MemoHistoryHotel = () => {
     return status || 'Unknown';
   }
 
+  function getSlaStatus(item: any) {
+    const createdAt = Number(item?.createdAt || item?.date || 0);
+    const acceptedAt = Number(item?.acceptedAt || 0);
+    const completedAt = Number(item?.deliveredAt || item?.rejectedAt || 0);
+    const services = item?.serviceIds || [];
+    const serviceAcceptMins = services.reduce((max, service) => Math.max(max, Number(service?.avgAcceptanceTime || 0)), 0);
+    const serviceDeliverMins = services.reduce(
+      (max, service) => Math.max(max, Number(service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0)),
+      0,
+    );
+    const foodPrepMins = hasFoodCartItems(item?.cart)
+      ? item.cart.reduce((max, cartItem) => Math.max(max, Number(cartItem?.dish?.avgPrepTime || 0)), 0)
+      : 0;
+    const acceptMs = (serviceAcceptMins || (hasFoodCartItems(item?.cart) ? 2 : 0)) * 60_000;
+    const deliverMs = (hasFoodCartItems(item?.cart) ? foodPrepMins || 30 : serviceDeliverMins) * 60_000;
+    const progress = String(item?.alertProgress || '');
+    const now = Date.now();
+    const activeOrCompletedAt = completedAt || now;
+
+    const acceptanceLate = Boolean(
+      createdAt && acceptMs > 0 && (acceptedAt ? acceptedAt - createdAt > acceptMs : activeOrCompletedAt - createdAt > acceptMs),
+    );
+    const deliveryLate = Boolean(
+      createdAt &&
+        deliverMs > 0 &&
+        (acceptedAt
+          ? (completedAt ? completedAt - acceptedAt : now - acceptedAt) > deliverMs
+          : completedAt > 0 && completedAt - createdAt > acceptMs + deliverMs),
+    );
+    const escalated = Boolean(item?.isEscalated || progress.includes('ESCALATION'));
+
+    return {
+      acceptanceLate,
+      deliveryLate,
+      isBreached: escalated || acceptanceLate || deliveryLate,
+    };
+  }
+
   const sortedHistory = useMemo(
     () => [...(historyData ?? [])].sort((a, b) => Number(b?.createdAt ?? b?.date ?? 0) - Number(a?.createdAt ?? a?.date ?? 0)),
     [historyData],
@@ -182,18 +256,23 @@ const MemoHistoryHotel = () => {
       sortedHistory.map((item) => {
         const isWakeUpCallAlert = item?.message?.startsWith('WAKE_UP_CALL::');
         const serviceLabel = getServiceLabel(item, isWakeUpCallAlert);
+        const serviceQuantityBadges = getServiceQuantityBadges(item);
         const orderItems = buildOrderItems(item?.cart);
         const category = getCategory(item, isWakeUpCallAlert);
         const staffName = item?.deliveredBy?.name || item?.acceptedBy?.name || '';
+        const slaStatus = getSlaStatus(item);
 
         return {
           item,
           isWakeUpCallAlert,
           displayMessage: isWakeUpCallAlert ? item?.message?.replace('WAKE_UP_CALL::', '') : item?.message,
           serviceLabel,
+          serviceQuantityBadges,
+          serviceInstruction: item?.serviceInstructionSnapshot?.message || '',
           orderItems,
           category,
           staffName,
+          slaStatus,
           status: item?.alertProgress || 'UNKNOWN',
         };
       }),
@@ -252,13 +331,13 @@ const MemoHistoryHotel = () => {
 
   return (
     <>
-      <div className="mx-auto px-4 pb-16 pt-6 lg:pb-6">
+      <div className="mx-auto px-3 pb-40 pt-3 sm:px-4 lg:pb-24 lg:pt-4">
         <DateRangePicker />
-        <div className="mb-4 mt-2 rounded-lg border bg-white p-4 shadow-sm">
-          <div className="flex items-start justify-between gap-3">
+        <div className="mb-3 mt-2 rounded-lg border bg-white p-3 shadow-sm sm:p-4">
+          <div className="flex items-start justify-between gap-2 sm:gap-3">
             <div className="min-w-0">
-              <h1 className="flex items-center gap-2 text-2xl font-bold">Service History</h1>
-              <p className="mt-1 text-sm text-gray-500">Latest requests are shown first</p>
+              <h1 className="flex items-center gap-2 text-xl font-bold sm:text-2xl">Service History</h1>
+              <p className="mt-0.5 text-sm text-gray-500">Latest requests are shown first</p>
             </div>
             <Button type="button" variant="outline" size="sm" className="h-9 shrink-0 gap-2 px-3" onClick={() => setShowFilters((value) => !value)}>
               <SlidersHorizontal className="h-4 w-4" />
@@ -353,7 +432,7 @@ const MemoHistoryHotel = () => {
           )}
         </div>
 
-        <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {(Object.keys(CATEGORY_META) as CategoryKey[]).map((key) => {
             const meta = CATEGORY_META[key];
             const Icon = meta.Icon;
@@ -363,19 +442,20 @@ const MemoHistoryHotel = () => {
                 key={key}
                 type="button"
                 onClick={() => setCategoryFilter((value) => (value === key ? 'all' : key))}
-                className={`rounded-lg border p-3 text-left shadow-sm transition ${meta.className} ${active ? 'ring-2 ring-slate-900/10' : 'hover:shadow-md'}`}
+                className={`min-h-[86px] rounded-lg border p-3 text-left shadow-sm transition sm:min-h-[76px] ${meta.className} ${active ? 'ring-2 ring-slate-900/10' : 'hover:shadow-md'}`}
+                style={{ backgroundColor: meta.backgroundColor, borderColor: meta.borderColor }}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-semibold">{meta.label}</span>
                   <Icon className="h-4 w-4 text-slate-700" />
                 </div>
-                <div className="mt-2 text-2xl font-bold tabular-nums">{categoryCounts[key]}</div>
+                <div className="mt-1.5 text-2xl font-bold leading-none tabular-nums">{categoryCounts[key]}</div>
               </button>
             );
           })}
         </div>
 
-        <div className="mb-4 rounded-lg border bg-white px-3 py-2 text-sm text-gray-600 shadow-sm">
+        <div className="mb-3 rounded-lg border bg-white px-3 py-2 text-sm text-gray-600 shadow-sm">
           <div>
             Showing page rows{' '}
             <span className="font-semibold text-gray-900">
@@ -390,29 +470,49 @@ const MemoHistoryHotel = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 items-start gap-4 pb-24 md:grid-cols-2 lg:pb-20 xl:grid-cols-3 2xl:grid-cols-4">
-          {pagedHistory?.map(({ item, isWakeUpCallAlert, displayMessage, serviceLabel, orderItems, category, status }) => {
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {pagedHistory?.map(({ item, isWakeUpCallAlert, displayMessage, serviceLabel, serviceQuantityBadges, serviceInstruction, orderItems, category, slaStatus, status }) => {
             const completedAt = item?.deliveredAt || item?.rejectedAt || item?.createdAt;
             const categoryMeta = CATEGORY_META[category];
+            const cardBackgroundColor = slaStatus.isBreached ? '#FFF1F2' : '#FFFFFF';
+            const cardBorderColor = slaStatus.isBreached ? '#F3C7CD' : undefined;
+            const cardAccentColor = slaStatus.isBreached ? '#DC2626' : categoryMeta.accentColor;
+            const cardHeaderBackgroundColor = slaStatus.isBreached ? '#FFF7F7' : categoryMeta.headerBackgroundColor;
 
             return (
               <div
                 key={item._id}
-                className={`self-start overflow-hidden rounded-lg border border-l-4 bg-white shadow-sm transition-all duration-200 ${categoryMeta.accentClass}`}
+                className={`self-start overflow-hidden rounded-lg border border-l-4 shadow-sm transition-all duration-200 ${
+                  slaStatus.isBreached ? 'shadow-[0_10px_24px_rgba(220,38,38,0.08)]' : categoryMeta.accentClass
+                }`}
+                style={{ backgroundColor: cardBackgroundColor, borderColor: cardBorderColor, borderLeftColor: cardAccentColor }}
               >
                 <section
-                  className={`flex cursor-pointer items-center justify-between gap-3 border-b p-3 ${categoryMeta.headerClass}`}
+                  className={`flex min-h-[52px] cursor-pointer items-center justify-between gap-3 border-b p-3 ${categoryMeta.headerClass}`}
+                  style={{ backgroundColor: cardHeaderBackgroundColor }}
                   onClick={() => toggleItem(item._id)}
                   onKeyDown={(e) => e.key === 'Enter' && toggleItem(item._id)}
                 >
-                  <article className="min-w-0">
+                  <article className="min-w-0 shrink-0">
                     <div>
                       <div className="font-medium">Room:- {item?.roomId?.name}</div>
                     </div>
                   </article>
 
-                  <article className="flex min-w-0 flex-1 items-center justify-end gap-2">
-                    <h1 className={`min-w-0 truncate text-right font-semibold ${categoryMeta.serviceClass}`}>{serviceLabel}</h1>
+                  <article className="flex min-w-0 flex-1 items-center justify-end gap-2 text-right">
+                    <h1 className={`flex min-w-0 items-center justify-end gap-1.5 font-semibold ${categoryMeta.serviceClass}`}>
+                      <span className="min-w-0 truncate">{serviceLabel}</span>
+                      {serviceQuantityBadges.length > 0
+                        ? serviceQuantityBadges.map((badge) => (
+                            <span
+                              key={badge}
+                              className="inline-flex shrink-0 rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[11px] font-bold leading-none text-violet-700"
+                            >
+                              {badge}
+                            </span>
+                          ))
+                        : null}
+                    </h1>
                     {expandedItems.has(item._id) ? (
                       <ChevronUp className="h-5 w-5 shrink-0 text-gray-500" />
                     ) : (
@@ -435,20 +535,33 @@ const MemoHistoryHotel = () => {
                           {isWakeUpCallAlert ? <AlarmClock className="h-4 w-4" /> : <Package className="h-4 w-4" />}
                         </div>
                         <div className="min-w-0">
-                          <h1>{serviceLabel}</h1>
+                          <h1 className="flex min-w-0 flex-wrap items-center gap-1.5">
+                            <span>{serviceLabel}</span>
+                            {serviceQuantityBadges.length > 0
+                              ? serviceQuantityBadges.map((badge) => (
+                                  <span
+                                    key={badge}
+                                    className="inline-flex shrink-0 rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[11px] font-bold leading-none text-violet-700"
+                                  >
+                                    {badge}
+                                  </span>
+                                ))
+                              : null}
+                          </h1>
                           {orderItems ? (
                             <p className="mt-1 line-clamp-2 text-xs text-gray-500" title={orderItems}>
                               {orderItems}
                             </p>
                           ) : null}
                           {isWakeUpCallAlert && <p className="mt-1 text-sm text-violet-900">{displayMessage}</p>}
+                          {serviceInstruction ? <p className="mt-2 rounded-md border border-blue-100 bg-blue-50 p-2 text-xs font-medium text-blue-950">{serviceInstruction}</p> : null}
                           <div className="mt-1 flex items-center gap-1 text-sm text-gray-600">
                             <User className="h-3.5 w-3.5" />
                             Requested by {item?.createdBy?.name}
                           </div>
                         </div>
                       </div>
-                      {item?.cart && item?.cart?.length > 0 && (
+                      {hasFoodCartItems(item?.cart) && (
                         <Button onClick={() => viewCart(item?.cart)} variant="outline" className="w-fit shrink-0 text-sm">
                           View Cart
                         </Button>
@@ -468,10 +581,14 @@ const MemoHistoryHotel = () => {
 
                       {!isWakeUpCallAlert && (
                         <div className="group relative mb-4">
-                          <div className="absolute left-[-8px] h-4 w-4 rounded-full border-2 border-white bg-gradient-to-r from-indigo-400 to-indigo-500 transition-transform group-hover:scale-110" />
+                          <div
+                            className={`absolute left-[-8px] h-4 w-4 rounded-full border-2 border-white transition-transform group-hover:scale-110 ${
+                              slaStatus.acceptanceLate ? 'bg-gradient-to-r from-red-400 to-red-500' : 'bg-gradient-to-r from-indigo-400 to-indigo-500'
+                            }`}
+                          />
                           <div className="pl-4 transition-transform group-hover:translate-x-1">
-                            <div className="text-sm font-medium">Request Accepted</div>
-                            <div className="text-xs text-gray-600">
+                            <div className={`text-sm font-medium ${slaStatus.acceptanceLate ? 'text-red-700' : ''}`}>Request Accepted</div>
+                            <div className={`text-xs ${slaStatus.acceptanceLate ? 'font-semibold text-red-700' : 'text-gray-600'}`}>
                               {formatTimestamp(item?.acceptedAt || item?.createdAt)} -
                               <span className="ml-1">{getTimeDifference(item?.createdAt, item?.acceptedAt)} after request</span>
                             </div>
@@ -481,10 +598,16 @@ const MemoHistoryHotel = () => {
                       )}
 
                       <div className="group relative">
-                        <div className="absolute left-[-8px] h-4 w-4 rounded-full border-2 border-white bg-gradient-to-r from-green-400 to-green-500 transition-transform group-hover:scale-110" />
+                        <div
+                          className={`absolute left-[-8px] h-4 w-4 rounded-full border-2 border-white transition-transform group-hover:scale-110 ${
+                            slaStatus.deliveryLate ? 'bg-gradient-to-r from-red-400 to-red-500' : 'bg-gradient-to-r from-green-400 to-green-500'
+                          }`}
+                        />
                         <div className="pl-4 transition-transform group-hover:translate-x-1">
-                          <div className="text-sm font-medium">{isWakeUpCallAlert ? 'Wake-up Call Removed' : getStatusLabel(status)}</div>
-                          <div className="text-xs text-gray-600">
+                          <div className={`text-sm font-medium ${slaStatus.deliveryLate ? 'text-red-700' : ''}`}>
+                            {isWakeUpCallAlert ? 'Wake-up Call Removed' : getStatusLabel(status)}
+                          </div>
+                          <div className={`text-xs ${slaStatus.deliveryLate ? 'font-semibold text-red-700' : 'text-gray-600'}`}>
                             {formatTimestamp(completedAt)} -
                             <span className="ml-1">
                               {isWakeUpCallAlert
@@ -512,7 +635,7 @@ const MemoHistoryHotel = () => {
           })}
 
           {historyTotal === 0 && (
-            <div className="rounded-lg border bg-white py-12 text-center shadow-sm md:col-span-2 xl:col-span-3 2xl:col-span-4">
+            <div className="rounded-lg border bg-white py-10 text-center shadow-sm md:col-span-2 xl:col-span-3">
               <Clock className="mx-auto mb-3 h-16 w-16 text-gray-300" />
               <h3 className="text-xl font-medium text-gray-700">No history found</h3>
               <p className="mx-auto mt-1 max-w-md text-gray-500">
@@ -530,30 +653,32 @@ const MemoHistoryHotel = () => {
         </div>
 
         {historyTotal > 0 && (
-          <div className="sticky bottom-[4.5rem] z-20 -mx-4 mt-2 flex items-center justify-center gap-3 border-t bg-white/95 px-4 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.08)] backdrop-blur lg:bottom-0">
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Previous page"
-              className="h-9 w-9 rounded-full"
-              onClick={() => setPage((value) => Math.max(1, value - 1))}
-              disabled={currentPage <= 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="rounded-md border bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Next page"
-              className="h-9 w-9 rounded-full"
-              onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-              disabled={currentPage >= totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+          <div className="fixed bottom-[4.5rem] left-0 right-0 z-40 border-t bg-white/95 px-3 py-2 shadow-[0_-8px_20px_rgba(15,23,42,0.08)] backdrop-blur lg:bottom-0">
+            <div className="mx-auto flex items-center justify-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Previous page"
+                className="h-9 w-9 rounded-full bg-white"
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="rounded-md border bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Next page"
+                className="h-9 w-9 rounded-full bg-white"
+                onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
       </div>

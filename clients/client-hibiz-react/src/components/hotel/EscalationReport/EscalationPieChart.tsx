@@ -82,7 +82,7 @@ export default function EscalationPieChart({ isLoading, serviceData }: Escalatio
 
       <CardContent>
         {/* Horizontal layout */}
-        <div className="flex h-[200px] flex-col gap-6 lg:flex-row">
+        <div className="flex h-[300px] flex-col gap-6 lg:flex-row">
           {/* ────── PIE CHART (fixed width) ────── */}
           <div className="min-w-0 flex-1 lg:w-1/2">
             <ResponsiveContainer width="100%" height="100%">

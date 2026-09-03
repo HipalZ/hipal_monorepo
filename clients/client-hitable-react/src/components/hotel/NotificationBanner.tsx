@@ -1,24 +1,45 @@
 import { useLiteStore } from '@/components/store/useLiteStore';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { Capacitor } from '@capacitor/core';
 import { BellOff, BellRing, Settings, X } from 'lucide-react';
 import { memo, useEffect, useState } from 'react';
 
-/**
- * Opens the app's notification settings page on Android.
- */
-const openNotificationSettings = async () => {
+const openDeviceNotificationSettings = async () => {
+  if (!Capacitor.isNativePlatform()) return;
+
   try {
-    const { NativeSettings, AndroidSettings } = await import('capacitor-native-settings');
-    await NativeSettings.openAndroid({
-      option: AndroidSettings.AppNotification,
-    });
+    const { NativeSettings, AndroidSettings, IOSSettings } = await import('capacitor-native-settings');
+
+    if (Capacitor.getPlatform() === 'ios') {
+      await NativeSettings.openIOS({
+        option: IOSSettings.App,
+      });
+      return;
+    }
+
+    if (Capacitor.getPlatform() === 'android') {
+      await NativeSettings.openAndroid({
+        option: AndroidSettings.AppNotification,
+      });
+      return;
+    }
   } catch {
     try {
-      const { NativeSettings, AndroidSettings } = await import('capacitor-native-settings');
-      await NativeSettings.openAndroid({
-        option: AndroidSettings.ApplicationDetails,
-      });
+      const { NativeSettings, AndroidSettings, IOSSettings } = await import('capacitor-native-settings');
+
+      if (Capacitor.getPlatform() === 'ios') {
+        await NativeSettings.openIOS({
+          option: IOSSettings.App,
+        });
+        return;
+      }
+
+      if (Capacitor.getPlatform() === 'android') {
+        await NativeSettings.openAndroid({
+          option: AndroidSettings.ApplicationDetails,
+        });
+      }
     } catch {
       console.error('Could not open notification settings');
     }
@@ -59,11 +80,11 @@ const NotificationBanner = memo(function NotificationBanner() {
             </p>
             <button
               type="button"
-              onClick={openNotificationSettings}
+              onClick={openDeviceNotificationSettings}
               className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white active:bg-red-700"
             >
               <Settings className="h-3.5 w-3.5" />
-              Turn ON Notifications
+              Open Settings
             </button>
           </div>
           <button

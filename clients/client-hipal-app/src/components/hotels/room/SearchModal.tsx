@@ -18,6 +18,8 @@ import { useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { hasGuestContactDetails } from './guestContactGuard';
+import ServiceQuantityPopup from './ServiceQuantityPopup';
+import { resolveServiceInstructionMessage } from './serviceBehavior';
 
 // Lazy-loaded components
 const AlertCircle = dynamic(() => import('lucide-react').then((mod) => ({ default: mod.AlertCircle })), { ssr: false });
@@ -55,7 +57,11 @@ interface SearchResultItemProps {
   categoryName: string;
   selected: boolean;
   onToggle: () => void;
+  onQuantitySelect: () => void;
   getInitial: (name: string) => string;
+  quantity: number;
+  quantityLimit: number;
+  requiresConfirmation: boolean;
 }
 
 const ErrorState = ({ onRetry }: { onRetry: () => void }) => (
@@ -75,13 +81,29 @@ const LoadingState = () => (
   </div>
 );
 
-const SearchResultItem = ({ service, categoryName, selected, onToggle, getInitial }: SearchResultItemProps) => (
+const getServiceQuantityLimit = (service: IService) => Math.max(1, Math.min(20, Math.floor(Number(service.quantityLimit) || 1)));
+
+const SearchResultItem = ({
+  service,
+  categoryName,
+  selected,
+  onToggle,
+  onQuantitySelect,
+  getInitial,
+  quantity,
+  quantityLimit,
+  requiresConfirmation,
+}: SearchResultItemProps) => (
   <Card
     className={`relative cursor-pointer transition-all duration-200 ${
       selected ? 'border-[#111111] bg-neutral-50 shadow-md ring-1 ring-[#111111]/10' : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
     } ${service.availability === false ? 'cursor-not-allowed opacity-50' : ''}`}
     onClick={() => {
       if (service.availability !== false) {
+        if (requiresConfirmation) {
+          onQuantitySelect();
+          return;
+        }
         onToggle();
       }
     }}
@@ -116,7 +138,14 @@ const SearchResultItem = ({ service, categoryName, selected, onToggle, getInitia
         <div className="min-w-0 flex-1">
           <h4 className="truncate text-sm font-medium text-gray-900">{service.name}</h4>
           <p className="text-xs capitalize text-gray-500">{categoryName.replace(/[^a-zA-Z0-9 ]/g, ' ').toLowerCase()}</p>
+          {quantityLimit > 1 ? <p className="mt-0.5 text-[11px] font-medium text-neutral-500">Up to {quantityLimit} per request</p> : null}
         </div>
+
+        {quantityLimit > 1 && quantity > 0 && service.availability !== false && (
+          <span className="shrink-0 rounded-full border border-neutral-200 bg-neutral-950 px-3 py-1 text-xs font-bold text-white shadow-sm">
+            x{quantity}
+          </span>
+        )}
 
         {/* Availability Status */}
         {service.availability === false && (
@@ -131,7 +160,8 @@ const SearchResultItem = ({ service, categoryName, selected, onToggle, getInitia
 
 export default function SearchModal({ show, onClose, categories, businessId }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedServiceQuantities, setSelectedServiceQuantities] = useState<Record<string, number>>({});
+  const [quantityPromptService, setQuantityPromptService] = useState<IService | null>(null);
   const [alertStatus, setAlertStatus] = useState<AlertStatus>('idle');
 
   // Hooks
@@ -145,8 +175,15 @@ export default function SearchModal({ show, onClose, categories, businessId }: S
 
   // Derived state
   const isLoading = gettingRoomLoader;
-  const hasSelectedServices = selectedServices.length > 0;
   const maxSelectableServices = 2;
+  const selectedServices = useMemo(
+    () =>
+      Object.entries(selectedServiceQuantities)
+        .filter(([, quantity]) => quantity > 0)
+        .map(([serviceId]) => serviceId),
+    [selectedServiceQuantities],
+  );
+  const hasSelectedServices = selectedServices.length > 0;
 
   // Flatten all services from all categories for searching
   const allServices = useMemo(() => {
@@ -181,8 +218,14 @@ export default function SearchModal({ show, onClose, categories, businessId }: S
   }, [searchQuery, allServices]);
 
   const selectedServiceNames = useMemo(
-    () => allServices.filter(({ service }) => selectedServices.includes(service._id)).map(({ service }) => service.name),
-    [allServices, selectedServices],
+    () =>
+      allServices
+        .filter(({ service }) => selectedServices.includes(service._id))
+        .map(({ service }) => {
+          const quantity = selectedServiceQuantities[service._id] || 1;
+          return quantity > 1 ? `${service.name} x${quantity}` : service.name;
+        }),
+    [allServices, selectedServiceQuantities, selectedServices],
   );
 
   // Service selection handlers
@@ -193,17 +236,46 @@ export default function SearchModal({ show, onClose, categories, businessId }: S
         return;
       }
 
-      setSelectedServices((prev) => {
-        if (prev.includes(serviceId)) {
-          return prev.filter((id) => id !== serviceId);
+      setSelectedServiceQuantities((prev) => {
+        if (prev[serviceId]) {
+          const { [serviceId]: _removed, ...next } = prev;
+          return next;
         }
-        return [...prev, serviceId];
+        return { ...prev, [serviceId]: 1 };
       });
     },
     [maxSelectableServices, selectedServices],
   );
 
   const isSelected = useCallback((serviceId: string) => selectedServices.includes(serviceId), [selectedServices]);
+
+  const openQuantityPopup = useCallback(
+    (service: IService) => {
+      const currentQuantity = selectedServiceQuantities[service._id] || 0;
+      if (!currentQuantity && selectedServices.length >= maxSelectableServices) {
+        toast('You can request up to 2 services at a time.');
+        return;
+      }
+      setQuantityPromptService(service);
+    },
+    [maxSelectableServices, selectedServiceQuantities, selectedServices.length],
+  );
+
+  const handleQuantityConfirm = useCallback((serviceId: string, quantity: number) => {
+    setSelectedServiceQuantities((prev) => ({
+      ...prev,
+      [serviceId]: quantity,
+    }));
+    setQuantityPromptService(null);
+  }, []);
+
+  const handleQuantityRemove = useCallback((serviceId: string) => {
+    setSelectedServiceQuantities((prev) => {
+      const { [serviceId]: _removed, ...next } = prev;
+      return next;
+    });
+    setQuantityPromptService(null);
+  }, []);
 
   // Alert creation handler
   const handleConfirmSelection = async () => {
@@ -231,6 +303,10 @@ export default function SearchModal({ show, onClose, categories, businessId }: S
       // Create the alert
       await createAlert({
         serviceIds: selectedServices,
+        serviceRequestItems: selectedServices.map((serviceId) => ({
+          serviceId,
+          quantity: selectedServiceQuantities[serviceId] || 1,
+        })),
         businessId,
         userId: userDetails?._id || '',
         roomId,
@@ -238,7 +314,7 @@ export default function SearchModal({ show, onClose, categories, businessId }: S
 
       toast.success(formatRaisedServicesToast(selectedServiceNames));
       setAlertStatus('idle');
-      setSelectedServices([]);
+      setSelectedServiceQuantities({});
     } catch (error) {
       console.error('Error creating alert:', error);
       setAlertStatus('error');
@@ -256,7 +332,8 @@ export default function SearchModal({ show, onClose, categories, businessId }: S
 
   const handleClose = useCallback(() => {
     setSearchQuery('');
-    setSelectedServices([]);
+    setSelectedServiceQuantities({});
+    setQuantityPromptService(null);
     setAlertStatus('idle');
     onClose();
   }, [onClose]);
@@ -327,7 +404,11 @@ export default function SearchModal({ show, onClose, categories, businessId }: S
                   categoryName={categoryName}
                   selected={isSelected(service._id)}
                   onToggle={() => handleServiceToggle(service._id)}
+                  onQuantitySelect={() => openQuantityPopup(service)}
                   getInitial={getInitial}
+                  quantity={selectedServiceQuantities[service._id] || 0}
+                  quantityLimit={getServiceQuantityLimit(service)}
+                  requiresConfirmation={getServiceQuantityLimit(service) > 1 || Boolean(resolveServiceInstructionMessage(service))}
                 />
               ))}
             </div>
@@ -358,6 +439,17 @@ export default function SearchModal({ show, onClose, categories, businessId }: S
             },
           ]}
         />
+        {quantityPromptService ? (
+          <ServiceQuantityPopup
+            service={quantityPromptService}
+            quantityLimit={getServiceQuantityLimit(quantityPromptService)}
+            initialQuantity={selectedServiceQuantities[quantityPromptService._id] || 1}
+            instructionMessage={resolveServiceInstructionMessage(quantityPromptService)}
+            onClose={() => setQuantityPromptService(null)}
+            onConfirm={(quantity) => handleQuantityConfirm(quantityPromptService._id, quantity)}
+            onRemove={() => handleQuantityRemove(quantityPromptService._id)}
+          />
+        ) : null}
       </div>
     </BottomPopUp>
   );

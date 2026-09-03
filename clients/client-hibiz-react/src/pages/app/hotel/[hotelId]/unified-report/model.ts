@@ -13,8 +13,12 @@ export type UnifiedRow = {
   room: string;
   floor: string;
   service: string;
+  /** Quantity requested. For food rows this is total cart quantity. */
+  quantity: number | null;
   /** Food/cart item breakdown for food-order rows. */
   orderItems: string;
+  /** Service-specific message shown to the guest before request confirmation. */
+  customerInstruction: string;
   /** The requester — a guest for GUEST rows, front-office for CHECKOUT rows. */
   requesterName: string;
   requesterPhone: string;

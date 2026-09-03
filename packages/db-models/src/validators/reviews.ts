@@ -37,6 +37,7 @@ export const ReviewsSchema = z.object({
     .optional(),
   staffs: z.array(ObjectIdSchema).optional(),
   description: z.string().min(0).max(200).optional(),
+  review: z.string().min(0).max(250).optional(),
   improvementAreas: z
     .array(
       z

@@ -18,6 +18,9 @@ const hotelRoomChatSchema = new Schema<HotelRoomChatType>({
   cart: {
     type: [Object],
   },
+  serviceRequestItems: {
+    type: [Object],
+  },
 });
 
 hotelRoomChatSchema.index({ alertId: 1, isDeleted: 1 });
@@ -31,6 +34,7 @@ const hotelRoomChatReplySchema = new Schema<HotelRoomChatReplyType>({
   description: { type: String, required: true },
   roomChatId: { type: ObjectId, required: true, ref: "hotelroomchat" },
   reviewRating: { type: Number, required: false, min: 1, max: 5 },
+  review: { type: String, required: false, maxlength: 250 },
 });
 
 // Hotel Room Chat Complain Schema

@@ -39,6 +39,7 @@ interface CreateAlertPayload {
   userId: string;
   roomId: string;
   cart?: any;
+  serviceRequestItems?: { serviceId: string; quantity: number }[];
 }
 
 export const useCreateAlert = () => {

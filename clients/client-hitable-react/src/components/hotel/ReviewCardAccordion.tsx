@@ -83,6 +83,7 @@ const MemoReviewAccordionCard = ({
   const services =
     r.alertId?.serviceIds?.map((s) => s?.name).filter(Boolean) ?? [];
   const staffs = (r.staffs ?? []).filter(Boolean);
+  const guestReview = (r.review || r.description || "").trim();
   const getStaffById = (id: string) =>
     staffData.find((s) => s._id === id)?.name;
 
@@ -319,6 +320,15 @@ const MemoReviewAccordionCard = ({
                 )}
               </div>
             </div>
+
+            {guestReview ? (
+              <div className="rounded-md border border-indigo-100 bg-indigo-50/60 p-3">
+                <div className="text-xs font-medium text-indigo-700 mb-1">
+                  Guest review
+                </div>
+                <p className="text-sm whitespace-pre-wrap text-slate-800">{guestReview}</p>
+              </div>
+            ) : null}
 
             {/* ---- Note block ---- */}
             {r.note ? (

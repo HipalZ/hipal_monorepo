@@ -195,7 +195,7 @@ const DateRangePicker = () => {
   const dateRangeDisplay = useMemo(() => {
     if (!startDate || !endDate) return null;
     return (
-      <center className="w-full bg-[#8C63FF30] py-1 text-sm font-semibold text-[#8C63FF] md:ml-4 md:w-[28rem] md:text-sm">
+      <center className="w-full rounded-sm bg-[#8C63FF30] px-2 py-1 text-xs font-semibold text-[#8C63FF] sm:text-sm md:w-[28rem]">
         Selected: {fmtDateTime(startDate)} – {fmtDateTime(endDate)}
       </center>
     );
@@ -279,9 +279,9 @@ const DateRangePicker = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between space-x-2">
-        <div className="sticky top-0 overflow-hidden">
-          <div className="flex w-full max-w-[30rem] gap-2 overflow-x-auto text-nowrap px-4 md:max-w-full">
+      <div className="flex min-w-0 items-center justify-between">
+        <div className="-mx-1 min-w-0 overflow-hidden sm:mx-0">
+          <div className="flex w-full max-w-[30rem] gap-2 overflow-x-auto text-nowrap px-1 pb-1 md:max-w-full">
             <button
               type="button"
               className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'today' ? 'bg-black text-white' : 'bg-white'}`}
@@ -419,7 +419,7 @@ const DateRangePicker = () => {
         </div>
       </div>
 
-      <div className="mt-4 w-full max-w-[28rem]">{dateRangeDisplay}</div>
+      <div className="mt-2 w-full max-w-[28rem]">{dateRangeDisplay}</div>
     </>
   );
 };

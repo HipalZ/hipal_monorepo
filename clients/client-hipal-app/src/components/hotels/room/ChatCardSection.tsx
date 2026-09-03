@@ -231,6 +231,7 @@ const ChatCardSection = ({
       // Create the alert for the selected service
       await createAlert({
         serviceIds: [selectedService._id],
+        serviceRequestItems: [{ serviceId: selectedService._id, quantity: 1 }],
         businessId,
         userId: userDetails._id,
         roomId: roomData.data._id,

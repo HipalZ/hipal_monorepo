@@ -51,6 +51,20 @@ const getCartRestaurantIds = (cart: any[] = [], hotelBusinessId?: string) =>
     ),
   );
 
+const hasFoodCartItems = (cart?: any[]) =>
+  Boolean(cart?.some((item) => item?.dish || item?.dishId || item?.name || item?.dishName));
+
+const foodCartElemMatch = {
+  $elemMatch: {
+    $or: [
+      { dish: { $exists: true, $ne: null } },
+      { dishId: { $exists: true, $ne: null } },
+      { name: { $type: 'string', $ne: '' } },
+      { dishName: { $type: 'string', $ne: '' } },
+    ],
+  },
+};
+
 const chatComplainPayload = z.object({
   roomChatReplyId: z.string().min(2).max(50),
   userId: z.string().min(2).max(50).optional(),
@@ -61,8 +75,7 @@ const historyCategoryValues = ['food', 'housekeeping', 'frontOffice', 'maintenan
 
 type HistoryCategory = (typeof historyCategoryValues)[number];
 
-const historyCategoryPatterns: Record<HistoryCategory, RegExp> = {
-  food: /food|order|restaurant|breakfast|lunch|dinner|snack|beverage|tea|coffee/i,
+const historyCategoryPatterns: Record<Exclude<HistoryCategory, 'food'>, RegExp> = {
   housekeeping: /house\s*keeping|housekeeping|clean|linen|towel|toilet|soap|shower|comb|dental|laundry|slipper|water|bottle|lotion|kit/i,
   frontOffice: /front|office|reception|checkout|check out|check-in|check in|wake|key|luggage|bill|billing/i,
   maintenance: /maintenance|repair|ac|a\/c|tv|wifi|internet|light|fan|electric|plumb|leak|flush|geyser|tap|shower repair/i,
@@ -84,6 +97,58 @@ const alertIdsFromChats = (items: Array<{ alertId?: unknown }>) =>
     .filter((id) => Types.ObjectId.isValid(id))
     .map((id) => new Types.ObjectId(id));
 
+type ServiceInstructionRule = {
+  condition?: 'BEFORE_TIME' | 'AFTER_TIME';
+  time?: string;
+  message?: string;
+};
+
+const timeToMinutes = (time?: string) => {
+  const match = time?.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+};
+
+const getIndiaClockMinutes = (timestamp: number) => {
+  const parts = new Intl.DateTimeFormat('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(timestamp));
+  const hour = Number(parts.find((part) => part.type === 'hour')?.value || 0);
+  const minute = Number(parts.find((part) => part.type === 'minute')?.value || 0);
+  return hour * 60 + minute;
+};
+
+const buildServiceInstructionSnapshot = (service: any, requestedAt: number) => {
+  const behavior = service?.serviceBehavior;
+  if (!behavior?.instructionEnabled) return undefined;
+
+  const baseInstruction = String(behavior?.instruction || '').trim();
+  const requestMinutes = getIndiaClockMinutes(requestedAt);
+  const rule = (behavior?.instructionRules || []).find((item: ServiceInstructionRule) => {
+    const ruleMinutes = timeToMinutes(item?.time);
+    const message = String(item?.message || '').trim();
+    if (ruleMinutes == null || !message) return false;
+    if (item.condition === 'BEFORE_TIME') return requestMinutes < ruleMinutes;
+    if (item.condition === 'AFTER_TIME') return requestMinutes >= ruleMinutes;
+    return false;
+  });
+  const ruleMessage = String(rule?.message || '').trim();
+  const message = [baseInstruction, ruleMessage].filter(Boolean).join(' ');
+
+  if (!message) return undefined;
+
+  return {
+    message,
+    baseInstruction: baseInstruction || undefined,
+    ruleMessage: ruleMessage || undefined,
+    ruleCondition: rule?.condition,
+    ruleTime: rule?.time,
+  };
+};
+
 const findFoodChatAlertIds = async (baseAlertQuery: any, itemSearch?: RegExp) => {
   const candidateAlerts = await HotelAlert.find(baseAlertQuery).select('_id').lean();
   const candidateAlertIds = objectIds(candidateAlerts);
@@ -92,7 +157,7 @@ const findFoodChatAlertIds = async (baseAlertQuery: any, itemSearch?: RegExp) =>
   const chatQuery: any = {
     alertId: { $in: candidateAlertIds },
     isDeleted: false,
-    cart: { $exists: true, $ne: [] },
+    cart: foodCartElemMatch,
   };
 
   if (itemSearch) {
@@ -141,7 +206,7 @@ const buildHistoryAlertQuery = async ({
       const foodChatAlertIds = await findFoodChatAlertIds(query);
       andClauses.push({
         $or: [
-          { cart: { $exists: true, $ne: [] } },
+          { cart: foodCartElemMatch },
           { _id: { $in: foodChatAlertIds } },
         ],
       });
@@ -159,7 +224,15 @@ const buildHistoryAlertQuery = async ({
     });
   }
 
-  if (category && category !== 'housekeeping') {
+  if (category === 'food') {
+    const foodChatAlertIds = await findFoodChatAlertIds(query);
+    andClauses.push({
+      $or: [
+        { cart: foodCartElemMatch },
+        { _id: { $in: foodChatAlertIds } },
+      ],
+    });
+  } else if (category && category !== 'housekeeping') {
     const categoryServices = await HotelService.find({
       businessId,
       name: historyCategoryPatterns[category],
@@ -168,35 +241,23 @@ const buildHistoryAlertQuery = async ({
       .lean();
     const categoryServiceIds = objectIds(categoryServices);
 
-    if (category === 'food') {
-      const foodChatAlertIds = await findFoodChatAlertIds(query);
-      andClauses.push({
-        $or: [
-          { cart: { $exists: true, $ne: [] } },
-          { serviceIds: { $in: categoryServiceIds } },
-          { _id: { $in: foodChatAlertIds } },
-        ],
-      });
-    } else {
-      andClauses.push(
-        category === 'frontOffice'
-          ? { $or: [{ serviceIds: { $in: categoryServiceIds } }, { message: /^WAKE_UP_CALL::/ }] }
-          : { serviceIds: { $in: categoryServiceIds } },
-      );
-    }
+    andClauses.push(
+      category === 'frontOffice'
+        ? { $or: [{ serviceIds: { $in: categoryServiceIds } }, { message: /^WAKE_UP_CALL::/ }] }
+        : { serviceIds: { $in: categoryServiceIds } },
+    );
   }
 
   if (category === 'housekeeping') {
-    const [foodServices, frontOfficeServices, maintenanceServices] = await Promise.all([
-      HotelService.find({ businessId, name: historyCategoryPatterns.food }).select('_id').lean(),
+    const [frontOfficeServices, maintenanceServices] = await Promise.all([
       HotelService.find({ businessId, name: historyCategoryPatterns.frontOffice }).select('_id').lean(),
       HotelService.find({ businessId, name: historyCategoryPatterns.maintenance }).select('_id').lean(),
     ]);
-    const excludedServiceIds = [...objectIds(foodServices), ...objectIds(frontOfficeServices), ...objectIds(maintenanceServices)];
+    const excludedServiceIds = [...objectIds(frontOfficeServices), ...objectIds(maintenanceServices)];
     andClauses.push({
-      cart: { $not: { $elemMatch: {} } },
       serviceIds: { $nin: excludedServiceIds },
       message: { $not: /^WAKE_UP_CALL::/ },
+      $nor: [{ cart: foodCartElemMatch }],
     });
   }
 
@@ -250,7 +311,7 @@ const hydrateHistoryAlerts = async (alerts: any[]) => {
     const chatCart = Array.isArray(chat?.cart) ? chat.cart : [];
     return {
       ...alert,
-      cart: alertCart.length ? alertCart : chatCart,
+      cart: hasFoodCartItems(alertCart) ? alertCart : hasFoodCartItems(chatCart) ? chatCart : [],
       createdBy: alert.createdBy || chat?.userId,
       createdAt: alert.createdAt || chat?.date,
     };
@@ -297,16 +358,36 @@ const getHistoryCategorySummary = async (query: any) => {
     },
     {
       $addFields: {
+        hasFoodCart: {
+          $gt: [
+            {
+              $size: {
+                $filter: {
+                  input: { $ifNull: ['$effectiveCart', []] },
+                  as: 'cartItem',
+                  cond: {
+                    $or: [
+                      { $ne: ['$$cartItem.dish', null] },
+                      { $ne: ['$$cartItem.dishId', null] },
+                      { $gt: [{ $strLenCP: { $ifNull: ['$$cartItem.name', ''] } }, 0] },
+                      { $gt: [{ $strLenCP: { $ifNull: ['$$cartItem.dishName', ''] } }, 0] },
+                    ],
+                  },
+                },
+              },
+            },
+            0,
+          ],
+        },
+      },
+    },
+    {
+      $addFields: {
         category: {
           $switch: {
             branches: [
               {
-                case: {
-                  $or: [
-                    { $gt: [{ $size: { $ifNull: ['$effectiveCart', []] } }, 0] },
-                    { $regexMatch: { input: '$serviceNamesText', regex: historyCategoryPatterns.food } },
-                  ],
-                },
+                case: '$hasFoodCart',
                 then: 'food',
               },
               {
@@ -1170,13 +1251,13 @@ const hotelAlertRouter = new Hono()
         hasFoodRestaurantMapping && restaurantIdStrings.length
           ? {
               alertProgress: { $in: activeStatuses },
-              cart: { $exists: true, $ne: [] },
+              cart: foodCartElemMatch,
               'cart.dish.businessId': { $in: restaurantIdStrings },
             }
           : !hasFoodRestaurantMapping
             ? {
                 alertProgress: { $in: activeStatuses },
-                cart: { $exists: true, $ne: [] },
+                cart: foodCartElemMatch,
               }
             : undefined;
 
@@ -1229,12 +1310,12 @@ const hotelAlertRouter = new Hono()
 
         if (hasFoodRestaurantMapping && restaurantIdStrings.length) {
           managerEscalationQuery.$or.push({
-            cart: { $exists: true, $ne: [] },
+            cart: foodCartElemMatch,
             'cart.dish.businessId': { $in: restaurantIdStrings },
           });
         } else if (!hasFoodRestaurantMapping) {
           managerEscalationQuery.$or.push({
-            cart: { $exists: true, $ne: [] },
+            cart: foodCartElemMatch,
           });
         }
 
@@ -1343,7 +1424,7 @@ const hotelAlertRouter = new Hono()
         const chatCart = Array.isArray(chat?.cart) ? chat.cart : [];
         return {
           ...alert,
-          cart: alertCart.length ? alertCart : chatCart,
+          cart: hasFoodCartItems(alertCart) ? alertCart : hasFoodCartItems(chatCart) ? chatCart : [],
           createdBy: alert.createdBy || chat?.userId,
           createdAt: alert.createdAt || chat?.date,
         };
@@ -1448,7 +1529,9 @@ const hotelAlertRouter = new Hono()
         .map((id) => new Types.ObjectId(id));
       const staffUsers = staffIds.length ? await User.find({ _id: { $in: staffIds } }).select('name').sort({ name: 1 }).lean() : [];
       const rows = await hydrateHistoryAlerts(alerts);
-      const serviceOptions = [...new Set(['Food Order', ...services.map((item: any) => item?.name).filter(Boolean)])].sort();
+      const serviceOptions = [
+        ...new Set([...(summary.food > 0 ? ['Food Order'] : []), ...services.map((item: any) => item?.name).filter(Boolean)]),
+      ].sort();
 
       return respond(c, 'Alerts history fetched successfully', false, 200, {
         rows,
@@ -1488,7 +1571,7 @@ const hotelAlertRouter = new Hono()
         })
         .populate({
           path: 'alertId',
-          select: 'alertProgress acceptedAt createdAt deliveredAt rejectedAt message',
+          select: 'alertProgress acceptedAt createdAt deliveredAt rejectedAt message serviceInstructionSnapshot',
           populate: {
             path: 'serviceIds',
             select: 'name image avgAcceptanceTime avgCompletionTime avgDeliveryTime',
@@ -1819,6 +1902,12 @@ const hotelAlertRouter = new Hono()
         avgCompletionTime: 0,
         avgAcceptanceTime: 0,
         avgDeliveryTime: 0,
+        quantityLimit: 1,
+        serviceBehavior: {
+          instructionEnabled: false,
+          instruction: '',
+          instructionRules: [],
+        },
         image: '',
       };
       // Loaded + occupancy-verified by requireRoomOccupancy (no second query).
@@ -1839,22 +1928,67 @@ const hotelAlertRouter = new Hono()
         return respond(c, 'User not found', true, 404, {});
       }
 
-      const isFoodOrderAlert = Array.isArray(requestData.cart) && requestData.cart.length > 0;
+      const isFoodOrderAlert = hasFoodCartItems(requestData.cart);
       const cartRestaurantIds = isFoodOrderAlert ? getCartRestaurantIds(requestData.cart, requestData.businessId) : [];
       const serviceIds = requestData.serviceIds || [];
+      const servicesById = new Map<string, any>();
+      const requestedServiceIds = new Set(serviceIds.map((serviceId: any) => serviceId.toString()));
+      const requestedQuantityByServiceId = new Map<string, { serviceId: any; quantity: number }>();
+
+      for (const item of requestData.serviceRequestItems || []) {
+        const itemServiceId = item.serviceId?.toString();
+        if (!itemServiceId || !requestedServiceIds.has(itemServiceId)) {
+          return respond(c, 'Quantity can only be sent for selected services', true, 400, {});
+        }
+        requestedQuantityByServiceId.set(itemServiceId, {
+          serviceId: item.serviceId,
+          quantity: item.quantity,
+        });
+      }
 
       if (!isFoodOrderAlert && serviceIds.length === 0) {
         return respond(c, 'No service found for this alert', true, 400, {});
       }
 
+      if (serviceIds.length > 0) {
+        const servicesForQuantity = await HotelService.find({
+          _id: { $in: serviceIds },
+          businessId: requestData.businessId,
+        })
+          .select('_id name quantityLimit serviceBehavior')
+          .lean();
+        servicesForQuantity.forEach((service: any) => servicesById.set(service._id.toString(), service));
+
+        for (const serviceId of serviceIds) {
+          const serviceIdString = serviceId.toString();
+          const service = servicesById.get(serviceIdString);
+          if (!service) {
+            return respond(c, 'Service not found for this business', true, 404, {});
+          }
+
+          const quantity = requestedQuantityByServiceId.get(serviceIdString)?.quantity ?? 1;
+          const quantityLimit = Math.max(1, Math.min(20, Math.floor(Number(service.quantityLimit) || 1)));
+          if (!Number.isInteger(quantity) || quantity < 1 || quantity > quantityLimit) {
+            return respond(c, `You can request up to ${quantityLimit} ${service.name} at a time`, true, 400, {});
+          }
+        }
+      }
+
       const alertServiceIds = serviceIds.length ? serviceIds : [undefined];
 
       for (const serviceId of alertServiceIds) {
+        const requestedAt = Date.now();
         const currentServiceIds = serviceId ? [serviceId] : [];
+        const requestedQuantityItem = serviceId ? requestedQuantityByServiceId.get(serviceId.toString()) : undefined;
+        const currentServiceRequestItems = serviceId ? [requestedQuantityItem || { serviceId, quantity: 1 }] : [];
+        const instructionSnapshot = serviceId ? buildServiceInstructionSnapshot(servicesById.get(serviceId.toString()), requestedAt) : undefined;
         const alert = new HotelAlert({
           ...requestData,
           serviceIds: currentServiceIds,
-          createdAt: Date.now(),
+          serviceRequestItems: currentServiceRequestItems,
+          serviceInstructionSnapshot: instructionSnapshot,
+          cart: isFoodOrderAlert ? requestData.cart : undefined,
+          createdAt: requestedAt,
           createdBy: requestData.userId,
           // Present only when front office raised it for the guest.
           raisedByStaff: requestData.raisedByStaff || undefined,
@@ -1873,7 +2007,8 @@ const hotelAlertRouter = new Hono()
           roomId: roomData._id,
           date: Date.now(),
           description: 'Alert created',
-          cart: requestData.cart,
+          cart: isFoodOrderAlert ? requestData.cart : undefined,
+          serviceRequestItems: currentServiceRequestItems,
         });
         await create.save({ session });
 
@@ -1899,7 +2034,7 @@ const hotelAlertRouter = new Hono()
         }
 
         serviceData = serviceId
-          ? await HotelService.findById(serviceId).lean()
+          ? servicesById.get(serviceId.toString()) || (await HotelService.findById(serviceId).lean())
           : {
               businessId: requestData.businessId,
               name: 'Food Order',
@@ -1908,8 +2043,16 @@ const hotelAlertRouter = new Hono()
               avgCompletionTime: 0,
               avgAcceptanceTime: 0,
               avgDeliveryTime: 0,
+              quantityLimit: 1,
+              serviceBehavior: {
+                instructionEnabled: false,
+                instruction: '',
+                instructionRules: [],
+              },
               image: '',
             };
+        const serviceQuantity = currentServiceRequestItems[0]?.quantity || 1;
+        const serviceDisplayName = serviceQuantity > 1 ? `${serviceData?.name} x${serviceQuantity}` : serviceData?.name;
         const avgCompletionTime = serviceData?.avgCompletionTime || 0;
         const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
 
@@ -1991,7 +2134,7 @@ const hotelAlertRouter = new Hono()
             avgCompletionTime,
             requestData.businessId,
             roomData.name,
-            serviceData?.name,
+            serviceDisplayName,
             validStaffIds,
             roomData.staffIds,
             serviceId,
@@ -2002,14 +2145,14 @@ const hotelAlertRouter = new Hono()
             avgAcceptanceTime,
             requestData.businessId,
             roomData.name,
-            serviceData?.name,
+            serviceDisplayName,
             validStaffIds,
             roomData.staffIds,
             serviceId,
           );
         }
 
-        scheduleAlert(requestData.businessId, roomData.name, alert._id.toString(), serviceData?.name, validStaffIds);
+        scheduleAlert(requestData.businessId, roomData.name, alert._id.toString(), serviceDisplayName, validStaffIds);
 
         const now = Date.now();
         await HotelNotificationJob.create(
@@ -2019,13 +2162,13 @@ const hotelAlertRouter = new Hono()
               alertId: alert._id,
               targetUserIds: validStaffIds,
               title: 'Room Attention Required',
-              body: `${roomData.name} requires your attention for ${serviceData?.name}. kindly respond to the alert!`,
+              body: `${roomData.name} requires your attention for ${serviceDisplayName}. kindly respond to the alert!`,
               data: {
                 type: 'HOTEL_SERVICE_ALERT',
                 businessId: String(requestData.businessId),
                 roomId: roomData._id.toString(),
                 roomName: roomData.name,
-                serviceName: serviceData?.name || '',
+                serviceName: serviceDisplayName || '',
               },
               status: 'PENDING',
               attempts: 0,
@@ -2087,7 +2230,7 @@ const hotelAlertRouter = new Hono()
       const alertServices = (alert.serviceIds || []) as any[];
       const primaryServiceRef = alertServices[0];
       const primaryServiceId = primaryServiceRef?._id || primaryServiceRef;
-      const isFoodOrderAlert = Array.isArray(alert.cart) && alert.cart.length > 0;
+      const isFoodOrderAlert = hasFoodCartItems(alert.cart);
       const alertServiceName = primaryServiceRef?.name || (isFoodOrderAlert ? 'Food Order' : 'other');
       const foodOrderPrepMins = isFoodOrderAlert
         ? (alert.cart ?? []).reduce((max: number, item: any) => Math.max(max, Number(item?.dish?.avgPrepTime || 0)), 0)
@@ -2801,7 +2944,13 @@ const hotelAlertRouter = new Hono()
       }
 
       const updatedCartItems = Array.isArray(cart) ? cart : [];
-      const originalCartItems = Array.isArray(alert.cart) && alert.cart.length ? alert.cart : Array.isArray(roomChat.cart) ? roomChat.cart : [];
+      const alertCartItems = Array.isArray(alert.cart) ? alert.cart : [];
+      const roomChatCartItems = Array.isArray(roomChat.cart) ? roomChat.cart : [];
+      const originalCartItems = hasFoodCartItems(alertCartItems)
+        ? alertCartItems
+        : hasFoodCartItems(roomChatCartItems)
+          ? roomChatCartItems
+          : [];
       const updatedCartIds = new Set(updatedCartItems.map((item: any) => item?.id).filter(Boolean));
       const actualRemovedItems = originalCartItems.filter((item: any) => item?.id && !updatedCartIds.has(item.id));
       const removedReasonById = new Map(removedItems.map((item) => [item.id, item.reason?.trim()]));
@@ -2918,7 +3067,7 @@ const hotelAlertRouter = new Hono()
         }
 
         const currentCart = Array.isArray(alert.cart) ? alert.cart : [];
-        if (currentCart.length === 0) {
+        if (!hasFoodCartItems(currentCart)) {
           return respond(c, 'Only food orders can be edited', true, 400, {});
         }
 

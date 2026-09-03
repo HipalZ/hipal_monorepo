@@ -44,6 +44,12 @@ export interface Service {
   avgCompletionTime?: number;
   avgDeliveryTime?: number;
   avgAcceptanceTime?: number;
+  quantityLimit?: number;
+}
+
+export interface ServiceRequestItem {
+  serviceId: string;
+  quantity: number;
 }
 
 export interface RoomChatReply {
@@ -56,6 +62,7 @@ export interface RoomChatReply {
   roomChatId: string;
   complainIds: any[];
   reviewRating?: number;
+  review?: string;
 }
 
 interface Alert {
@@ -67,6 +74,14 @@ interface Alert {
   deliveredAt?: number;
   rejectedAt?: number;
   message?: string;
+  serviceInstructionSnapshot?: {
+    message?: string;
+    baseInstruction?: string;
+    ruleMessage?: string;
+    ruleCondition?: "BEFORE_TIME" | "AFTER_TIME";
+    ruleTime?: string;
+  };
+  serviceRequestItems?: ServiceRequestItem[];
 }
 
 export interface Cart {
@@ -92,6 +107,7 @@ export interface Cart {
 
 export interface RoomChat {
   cart: any;
+  serviceRequestItems?: ServiceRequestItem[];
   _id: string;
   userId: User;
   roomId: string;
