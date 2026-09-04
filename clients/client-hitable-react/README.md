@@ -32,3 +32,5 @@ export default {
 
 "test"
 test to understand hitable push for auto update ui apk
+tyoe
+
