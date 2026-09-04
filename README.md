@@ -1,6 +1,6 @@
 # HiPal Monorepo
 
-/////////////
+//////////////
 
 ## Project Structure
 

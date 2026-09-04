@@ -47,4 +47,4 @@ jobs:
 
       - name: Restart Kubernetes deployment
         run: |
-          kubectl rollout restart deployment -n hipalz prod-wa-and-camp-worker
+          kubectl rollout restart deployment -n hipalz-main prod-wa-and-camp-worker
