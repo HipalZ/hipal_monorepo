@@ -41,16 +41,16 @@ const essentialCards = [
     ),
     href: 'service-history',
   },
-  {
-    title: 'Escalation Analytics',
-    description: 'Escalation Reports',
-    icon: (
-      <div className="transform rounded-full bg-gradient-to-br from-blue-400 to-blue-600 p-3 shadow-lg transition-transform hover:scale-105">
-        <GrGraphQl className="h-8 w-8 text-white drop-shadow-md" />
-      </div>
-    ),
-    href: 'escalation-reports',
-  },
+  // {
+  //   title: 'Escalation Analytics',
+  //   description: 'Escalation Reports',
+  //   icon: (
+  //     <div className="transform rounded-full bg-gradient-to-br from-blue-400 to-blue-600 p-3 shadow-lg transition-transform hover:scale-105">
+  //       <GrGraphQl className="h-8 w-8 text-white drop-shadow-md" />
+  //     </div>
+  //   ),
+  //   href: 'escalation-reports',
+  // },
   {
     title: 'Item Analytics',
     description: 'Item Reports',
