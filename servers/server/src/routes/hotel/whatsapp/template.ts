@@ -21,6 +21,74 @@ interface AxiosError {
   message: string;
 }
 
+const updateWhatsAppTemplate = async ({
+  templateId,
+  businessId,
+  requestData,
+}: {
+  templateId: string;
+  businessId: string;
+  requestData: any;
+}) => {
+  const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
+    businessId,
+  });
+
+  if (!whatsAppConfigData) {
+    return {
+      statusCode: 404 as const,
+      body: {
+        message: "whatsAppConfigData not found",
+        err: true,
+        data: {},
+      },
+    };
+  }
+
+  if (!isWhatsAppConfigEnabled(whatsAppConfigData)) {
+    return {
+      statusCode: 403 as const,
+      body: {
+        message: WHATSAPP_BUSINESS_DISABLED_MESSAGE,
+        err: true,
+        data: {},
+      },
+    };
+  }
+
+  const updateWhatAppTemplate = await axios.post(
+    `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${templateId}`,
+    {
+      ...requestData,
+      businessId,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${whatsAppConfigData.token}`,
+      },
+    },
+  );
+
+  await WhatAppTemplate.findOneAndUpdate(
+    { templateId, businessId },
+    {
+      bodyVariableSequence: requestData.bodyVariableSequence || [],
+      headerVariableSequence: requestData.headerVariableSequence || [],
+      footerVariableSequence: requestData.footerVariableSequence || [],
+      buttonVariableSequence: requestData.buttonVariableSequence || [],
+    },
+  );
+
+  return {
+    statusCode: 200 as const,
+    body: {
+      message: "Edited successfully",
+      err: false,
+      data: updateWhatAppTemplate.data,
+    },
+  };
+};
+
 const whatsappTemplateRouter = new Hono()
   .post("/", zValidator("json", validateWhatAppTemplateSchema), async (c) => {
     try {
@@ -236,6 +304,46 @@ const whatsappTemplateRouter = new Hono()
   )
 
   .put(
+    "/:templateid/:businessId",
+
+    zValidator(
+      "param",
+      z.object({
+        templateid: z.string().min(3).max(30),
+        businessId: z.string().min(3).max(26),
+      }),
+    ),
+    zValidator("json", validateWhatAppTemplateSchema.partial()),
+
+    async (c) => {
+      try {
+        const { templateid, businessId } = c.req.param();
+        const requestData = await c.req.json();
+        const result = await updateWhatsAppTemplate({
+          templateId: templateid,
+          businessId,
+          requestData,
+        });
+
+        return c.json(result.body, result.statusCode);
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        const message =
+          axiosError.response?.data?.error?.message || axiosError.message;
+
+        return c.json(
+          {
+            message: `Error updating template: ${message}`,
+            err: true,
+            data: axiosError.response?.data || {},
+          },
+          400,
+        );
+      }
+    },
+  )
+
+  .put(
     "/:templateId",
 
     zValidator(
@@ -251,52 +359,25 @@ const whatsappTemplateRouter = new Hono()
       const requestData = await c.req.json();
       const { businessId } = requestData;
 
-      const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
-        businessId,
-      });
-
-      if (!whatsAppConfigData) {
+      if (!businessId) {
         return c.json(
           {
-            message: "whatsAppConfigData not found",
+            message: "businessId is required to update template",
             err: true,
             data: {},
           },
-          404,
+          400,
         );
       }
 
       try {
-        const updateWhatAppTemplate = await axios.post(
-          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${templateId}`,
-          {
-            ...requestData,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${whatsAppConfigData.token}`,
-            },
-          },
-        );
+        const result = await updateWhatsAppTemplate({
+          templateId,
+          businessId,
+          requestData,
+        });
 
-        await WhatAppTemplate.findOneAndUpdate(
-          { templateId, businessId },
-          {
-            bodyVariableSequence: requestData.bodyVariableSequence || [],
-            headerVariableSequence: requestData.headerVariableSequence || [],
-            footerVariableSequence: requestData.footerVariableSequence || [],
-            buttonVariableSequence: requestData.buttonVariableSequence || [],
-          },
-        );
-
-        return c.json(
-          {
-            message: "Edited successfully",
-            err: false,
-            data: updateWhatAppTemplate.data,
-          },
-          200,
-        );
+        return c.json(result.body, result.statusCode);
       } catch (error) {
         const axiosError = error as AxiosError;
         const message =
