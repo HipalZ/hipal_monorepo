@@ -8,12 +8,12 @@ import useTimings from '@/components/store/useTimings';
 import { fetchReviews, type reviewResponse } from '@/hooks/hotel/useReviewHook';
 import { useUsersAnalyticsData } from '@/hooks/hotel/useUserData';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, ArrowLeft, CheckCircle2, Download, Search, Star, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronDown, Download, Search, Star, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { buildRows, closedStatusLabel, groupBy, summarize, verdictText } from './analytics';
-import { ANY, activeTags, applyFilters, blankFilters, clearFilter, filterOptions, type UnifiedFilters } from './filters';
+import { activeTags, applyFilters, blankFilters, clearFilter, filterOptions, type UnifiedFilters } from './filters';
 import type { UnifiedRow } from './model';
 
 const PAGE_SIZES = [10, 25, 50, 100] as const;
@@ -120,6 +120,98 @@ const Select = ({
     </select>
   </div>
 );
+
+const MultiSelect = ({
+  label,
+  placeholder,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  value: string[];
+  options: string[];
+  onChange: (v: string[]) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const selected = value.filter((v) => options.includes(v));
+  const title = selected.length === 0 ? placeholder : selected.length === 1 ? selected[0] : `${selected.length} selected`;
+  const toggle = (option: string) =>
+    onChange(selected.includes(option) ? selected.filter((v) => v !== option) : [...selected, option]);
+
+  return (
+    <div
+      className="relative"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex min-h-9 max-w-[190px] items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+      >
+        <span className="truncate">{title}</span>
+        {selected.length > 0 ? (
+          <span className="rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-indigo-700">
+            {selected.length}
+          </span>
+        ) : null}
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+      </button>
+      <div
+        className={`absolute left-0 top-full z-30 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/10 transition-all ${
+          open ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-1 opacity-0'
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-2 pb-2">
+          <span className="text-xs font-bold text-slate-700">{label}</span>
+          {selected.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => onChange([])}
+              className="text-[11px] font-semibold text-slate-400 transition-colors hover:text-rose-600"
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
+        <div className="mt-1 max-h-56 overflow-y-auto pr-1">
+          {options.length ? (
+            options.map((option) => {
+              const checked = selected.includes(option);
+              return (
+                <label
+                  key={option}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(option)}
+                    className="sr-only"
+                  />
+                  <span
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                      checked ? 'border-indigo-500 bg-indigo-600 text-white' : 'border-slate-300 bg-white text-transparent'
+                    }`}
+                  >
+                    <Check className="h-3 w-3" />
+                  </span>
+                  <span className="truncate">{option}</span>
+                </label>
+              );
+            })
+          ) : (
+            <p className="px-2 py-3 text-xs text-slate-400">No options available.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Kpi = ({ label, value, unit, sub, tone }: { label: string; value: string | number; unit?: string; sub: string; tone?: string }) => (
   <div className={`${card} flex flex-col justify-between p-4`}>
@@ -234,8 +326,6 @@ const UnifiedReport = () => {
   const pageRows = useMemo(() => rows.slice((currentPage - 1) * pageSize, currentPage * pageSize), [rows, currentPage, pageSize]);
   const rangeStart = rows.length ? (currentPage - 1) * pageSize + 1 : 0;
   const rangeEnd = Math.min(currentPage * pageSize, rows.length);
-
-  const asOptions = (values: string[], allLabel: string) => [{ value: ANY, label: allLabel }, ...values.map((v) => ({ value: v, label: v }))];
 
   const onDownload = useCallback(() => {
     if (!rows.length) return toast.error('Nothing to export in this range.');
@@ -469,38 +559,50 @@ const UnifiedReport = () => {
                   ]}
                 />
                 {showGuest ? (
-                  <Select
+                  <MultiSelect
                     label="Guest"
+                    placeholder="Any guest"
                     value={filters.guest}
                     onChange={(v) => setFilter('guest', v)}
-                    options={asOptions(options.guests, 'Any guest')}
+                    options={options.guests}
                   />
                 ) : null}
                 {showCheckout ? (
-                  <Select
+                  <MultiSelect
                     label="Front office"
+                    placeholder="Any front office"
                     value={filters.frontOffice}
                     onChange={(v) => setFilter('frontOffice', v)}
-                    options={asOptions(options.frontOffice, 'Any front office')}
+                    options={options.frontOffice}
                   />
                 ) : null}
-                <Select
+                <MultiSelect
+                  label="Rooms"
+                  placeholder="All rooms"
+                  value={filters.rooms}
+                  onChange={(v) => setFilter('rooms', v)}
+                  options={options.rooms}
+                />
+                <MultiSelect
                   label="Served by"
+                  placeholder="Served by anyone"
                   value={filters.staff}
                   onChange={(v) => setFilter('staff', v)}
-                  options={asOptions(options.staff, 'Served by anyone')}
+                  options={options.staff}
                 />
-                <Select
+                <MultiSelect
                   label="Service"
+                  placeholder="All services"
                   value={filters.service}
                   onChange={(v) => setFilter('service', v)}
-                  options={asOptions(options.services, 'All services')}
+                  options={options.services}
                 />
-                <Select
+                <MultiSelect
                   label="Floor"
+                  placeholder="All floors"
                   value={filters.floor}
                   onChange={(v) => setFilter('floor', v)}
-                  options={asOptions(options.floors, 'All floors')}
+                  options={options.floors}
                 />
               </div>
 

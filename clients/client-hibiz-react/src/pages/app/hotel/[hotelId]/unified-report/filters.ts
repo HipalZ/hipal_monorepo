@@ -2,18 +2,17 @@
 
 import type { Source, UnifiedRow } from './model';
 
-export const ANY = 'ALL';
-
 export type UnifiedFilters = {
   source: Source | 'ALL';
   outcome: 'all' | 'ontime' | 'late' | 'open' | 'escalated';
   rating: 'all' | '5' | '4' | '3' | '2' | '1' | 'unrated';
   /** Guest and front-office are kept as separate filters, never one blurred list. */
-  guest: string;
-  frontOffice: string;
-  staff: string;
-  service: string;
-  floor: string;
+  guest: string[];
+  frontOffice: string[];
+  staff: string[];
+  service: string[];
+  floor: string[];
+  rooms: string[];
   q: string;
 };
 
@@ -21,13 +20,16 @@ export const blankFilters = (): UnifiedFilters => ({
   source: 'ALL',
   outcome: 'all',
   rating: 'all',
-  guest: ANY,
-  frontOffice: ANY,
-  staff: ANY,
-  service: ANY,
-  floor: ANY,
+  guest: [],
+  frontOffice: [],
+  staff: [],
+  service: [],
+  floor: [],
+  rooms: [],
   q: '',
 });
+
+const hasSelected = (values: string[]) => values.length > 0;
 
 export const matches = (r: UnifiedRow, f: UnifiedFilters): boolean => {
   if (f.source !== 'ALL' && r.source !== f.source) return false;
@@ -38,11 +40,12 @@ export const matches = (r: UnifiedRow, f: UnifiedFilters): boolean => {
   if (f.rating === 'unrated' && r.rating != null) return false;
   if (f.rating !== 'all' && f.rating !== 'unrated' && r.rating !== Number(f.rating)) return false;
   // Guest filter only matches guest-raised rows; front-office only front-office.
-  if (f.guest !== ANY && !(r.requesterKind === 'GUEST' && r.requesterName === f.guest)) return false;
-  if (f.frontOffice !== ANY && !(r.requesterKind === 'FRONT_OFFICE' && r.requesterName === f.frontOffice)) return false;
-  if (f.staff !== ANY && r.servicedBy !== f.staff) return false;
-  if (f.service !== ANY && r.service !== f.service) return false;
-  if (f.floor !== ANY && r.floor !== f.floor) return false;
+  if (hasSelected(f.rooms) && !f.rooms.includes(r.room)) return false;
+  if (hasSelected(f.guest) && !(r.requesterKind === 'GUEST' && f.guest.includes(r.requesterName))) return false;
+  if (hasSelected(f.frontOffice) && !(r.requesterKind === 'FRONT_OFFICE' && f.frontOffice.includes(r.requesterName))) return false;
+  if (hasSelected(f.staff) && !f.staff.includes(r.servicedBy)) return false;
+  if (hasSelected(f.service) && !f.service.includes(r.service)) return false;
+  if (hasSelected(f.floor) && !f.floor.includes(r.floor)) return false;
   if (f.q) {
     const hay = `${r.room} ${r.service} ${r.requesterName} ${r.servicedBy} ${r.floor}`.toLowerCase();
     if (!hay.includes(f.q)) return false;
@@ -77,11 +80,12 @@ export const activeTags = (f: UnifiedFilters): FilterTag[] => {
   if (f.source !== 'ALL') tags.push({ key: 'source', label: f.source === 'GUEST' ? 'Guest requests' : 'Checkout turnover' });
   if (f.outcome !== 'all') tags.push({ key: 'outcome', label: OUTCOME_LABELS[f.outcome] });
   if (f.rating !== 'all') tags.push({ key: 'rating', label: RATING_LABELS[f.rating] });
-  if (f.guest !== ANY) tags.push({ key: 'guest', label: `Guest: ${f.guest}` });
-  if (f.frontOffice !== ANY) tags.push({ key: 'frontOffice', label: `Front office: ${f.frontOffice}` });
-  if (f.staff !== ANY) tags.push({ key: 'staff', label: `Served by ${f.staff}` });
-  if (f.service !== ANY) tags.push({ key: 'service', label: f.service });
-  if (f.floor !== ANY) tags.push({ key: 'floor', label: f.floor });
+  if (hasSelected(f.rooms)) tags.push({ key: 'rooms', label: f.rooms.length === 1 ? `Room: ${f.rooms[0]}` : `Rooms: ${f.rooms.length} selected` });
+  if (hasSelected(f.guest)) tags.push({ key: 'guest', label: f.guest.length === 1 ? `Guest: ${f.guest[0]}` : `Guests: ${f.guest.length} selected` });
+  if (hasSelected(f.frontOffice)) tags.push({ key: 'frontOffice', label: f.frontOffice.length === 1 ? `Front office: ${f.frontOffice[0]}` : `Front office: ${f.frontOffice.length} selected` });
+  if (hasSelected(f.staff)) tags.push({ key: 'staff', label: f.staff.length === 1 ? `Served by ${f.staff[0]}` : `Staff: ${f.staff.length} selected` });
+  if (hasSelected(f.service)) tags.push({ key: 'service', label: f.service.length === 1 ? f.service[0] : `Services: ${f.service.length} selected` });
+  if (hasSelected(f.floor)) tags.push({ key: 'floor', label: f.floor.length === 1 ? f.floor[0] : `Floors: ${f.floor.length} selected` });
   if (f.q) tags.push({ key: 'q', label: `“${f.q}”` });
   return tags;
 };
@@ -97,5 +101,6 @@ export const filterOptions = (rows: UnifiedRow[]) => {
     staff: uniq(rows.map((r) => r.servicedBy)),
     services: uniq(rows.map((r) => r.service)),
     floors: uniq(rows.map((r) => r.floor)),
+    rooms: uniq(rows.map((r) => r.room)),
   };
 };
