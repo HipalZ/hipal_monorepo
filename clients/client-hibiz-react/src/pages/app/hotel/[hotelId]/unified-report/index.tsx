@@ -9,7 +9,7 @@ import { fetchReviews, type reviewResponse } from '@/hooks/hotel/useReviewHook';
 import { useUsersAnalyticsData } from '@/hooks/hotel/useUserData';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronDown, Download, Search, Star, X } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { buildRows, closedStatusLabel, groupBy, summarize, verdictText } from './analytics';
@@ -135,18 +135,36 @@ const MultiSelect = ({
   onChange: (v: string[]) => void;
 }) => {
   const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const selected = value.filter((v) => options.includes(v));
-  const title = selected.length === 0 ? placeholder : selected.length === 1 ? selected[0] : `${selected.length} selected`;
-  const toggle = (option: string) =>
-    onChange(selected.includes(option) ? selected.filter((v) => v !== option) : [...selected, option]);
+  const title = selected.length === 0 || selected.length === options.length ? placeholder : selected.length === 1 ? selected[0] : `${selected.length} selected`;
+  const allChecked = options.length > 0 && (selected.length === 0 || selected.length === options.length);
+  const isChecked = (option: string) => selected.length === 0 || selected.includes(option);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsidePointer);
+    return () => document.removeEventListener('pointerdown', closeOnOutsidePointer);
+  }, [open]);
+
+  const toggleAll = () => onChange([]);
+  const toggle = (option: string) => {
+    if (selected.length === 0) {
+      onChange(options.filter((v) => v !== option));
+      return;
+    }
+
+    const next = selected.includes(option) ? selected.filter((v) => v !== option) : [...selected, option];
+    onChange(next.length === options.length ? [] : next);
+  };
 
   return (
-    <div
-      className="relative"
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
-      }}
-    >
+    <div ref={wrapperRef} className="relative">
       <button
         type="button"
         aria-expanded={open}
@@ -154,7 +172,7 @@ const MultiSelect = ({
         className="inline-flex min-h-9 max-w-[190px] items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50"
       >
         <span className="truncate">{title}</span>
-        {selected.length > 0 ? (
+        {selected.length > 0 && selected.length !== options.length ? (
           <span className="rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-indigo-700">
             {selected.length}
           </span>
@@ -180,30 +198,49 @@ const MultiSelect = ({
         </div>
         <div className="mt-1 max-h-56 overflow-y-auto pr-1">
           {options.length ? (
-            options.map((option) => {
-              const checked = selected.includes(option);
-              return (
-                <label
-                  key={option}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            <>
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs font-bold text-slate-800 hover:bg-indigo-50">
+                <input
+                  type="checkbox"
+                  checked={allChecked}
+                  onChange={toggleAll}
+                  className="sr-only"
+                />
+                <span
+                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                    allChecked ? 'border-indigo-500 bg-indigo-600 text-white' : 'border-slate-300 bg-white text-transparent'
+                  }`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggle(option)}
-                    className="sr-only"
-                  />
-                  <span
-                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                      checked ? 'border-indigo-500 bg-indigo-600 text-white' : 'border-slate-300 bg-white text-transparent'
-                    }`}
+                  <Check className="h-3 w-3" />
+                </span>
+                <span className="truncate">{placeholder}</span>
+              </label>
+              <div className="my-1 border-t border-slate-100" />
+              {options.map((option) => {
+                const checked = isChecked(option);
+                return (
+                  <label
+                    key={option}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
                   >
-                    <Check className="h-3 w-3" />
-                  </span>
-                  <span className="truncate">{option}</span>
-                </label>
-              );
-            })
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggle(option)}
+                      className="sr-only"
+                    />
+                    <span
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                        checked ? 'border-indigo-500 bg-indigo-600 text-white' : 'border-slate-300 bg-white text-transparent'
+                      }`}
+                    >
+                      <Check className="h-3 w-3" />
+                    </span>
+                    <span className="truncate">{option}</span>
+                  </label>
+                );
+              })}
+            </>
           ) : (
             <p className="px-2 py-3 text-xs text-slate-400">No options available.</p>
           )}
