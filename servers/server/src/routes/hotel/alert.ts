@@ -54,6 +54,16 @@ const getCartRestaurantIds = (cart: any[] = [], hotelBusinessId?: string) =>
 const hasFoodCartItems = (cart?: any[]) =>
   Boolean(cart?.some((item) => item?.dish || item?.dishId || item?.name || item?.dishName));
 
+const FOOD_ORDER_FULFILLMENT_FALLBACK_MINS = 30;
+
+const foodCartItemPrepMins = (item: any) => {
+  const prepMins = Number(item?.dish?.avgPrepTime ?? item?.dish?.avgPreparationTime ?? item?.avgPrepTime ?? item?.avgPreparationTime ?? 0);
+  return prepMins > 0 ? prepMins : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS;
+};
+
+const foodOrderFulfillmentMins = (cart?: any[]) =>
+  hasFoodCartItems(cart) ? Math.max(...cart!.map(foodCartItemPrepMins)) : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS;
+
 const foodCartElemMatch = {
   $elemMatch: {
     $or: [
@@ -2232,10 +2242,7 @@ const hotelAlertRouter = new Hono()
       const primaryServiceId = primaryServiceRef?._id || primaryServiceRef;
       const isFoodOrderAlert = hasFoodCartItems(alert.cart);
       const alertServiceName = primaryServiceRef?.name || (isFoodOrderAlert ? 'Food Order' : 'other');
-      const foodOrderPrepMins = isFoodOrderAlert
-        ? (alert.cart ?? []).reduce((max: number, item: any) => Math.max(max, Number(item?.dish?.avgPrepTime || 0)), 0)
-        : 0;
-      const foodOrderCompletionMins = isFoodOrderAlert && foodOrderPrepMins > 0 ? foodOrderPrepMins : 30;
+      const foodOrderCompletionMins = foodOrderFulfillmentMins(alert.cart);
 
       const captainData = await User.findById(userId);
 

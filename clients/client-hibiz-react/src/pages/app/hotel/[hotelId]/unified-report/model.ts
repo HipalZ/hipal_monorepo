@@ -38,6 +38,8 @@ export type UnifiedRow = {
   completedByName: string;
   /** Front-office staff who raised a guest request on the guest's behalf. */
   operatorName: string;
+  /** Original guest-alert progress, used when SLA cannot be judged. */
+  alertProgress?: string;
   raisedAt: number;
   // SLA spine shared by both types. For a guest, "total" is created→delivered;
   // for a checkout job it's created→completed. Same shape, comparable numbers.
