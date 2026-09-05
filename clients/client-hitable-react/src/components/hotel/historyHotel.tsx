@@ -34,52 +34,54 @@ const CATEGORY_META = {
   food: {
     label: 'Food',
     Icon: Utensils,
-    className: 'border-[#F2D4A7] bg-[#FFF6E8] text-slate-950',
-    accentClass: 'border-l-[#E7A84B]',
-    headerClass: 'bg-[#FFF8EE]',
-    serviceClass: 'text-slate-950',
-    borderColor: '#F2D4A7',
-    backgroundColor: '#FFF6E8',
-    accentColor: '#E7A84B',
-    headerBackgroundColor: '#FFF8EE',
+    className: 'border-[#B66B00] bg-[#D97706] text-white shadow-[0_10px_22px_rgba(217,119,6,0.18)]',
+    borderColor: '#B66B00',
+    backgroundColor: '#D97706',
+    iconClass: 'text-white/95',
   },
   housekeeping: {
     label: 'Housekeeping',
     Icon: SprayCan,
-    className: 'border-[#BFDCD3] bg-[#F0FAF7] text-slate-950',
-    accentClass: 'border-l-[#54A58D]',
-    headerClass: 'bg-[#F6FCFA]',
-    serviceClass: 'text-slate-950',
-    borderColor: '#BFDCD3',
-    backgroundColor: '#F0FAF7',
-    accentColor: '#54A58D',
-    headerBackgroundColor: '#F6FCFA',
+    className: 'border-[#08745F] bg-[#0F9F82] text-white shadow-[0_10px_22px_rgba(15,159,130,0.18)]',
+    borderColor: '#08745F',
+    backgroundColor: '#0F9F82',
+    iconClass: 'text-white/95',
   },
   frontOffice: {
     label: 'Front Office',
     Icon: BriefcaseBusiness,
-    className: 'border-[#C8DAF3] bg-[#F3F8FF] text-slate-950',
-    accentClass: 'border-l-[#6F9EDB]',
-    headerClass: 'bg-[#F7FAFF]',
-    serviceClass: 'text-slate-950',
-    borderColor: '#C8DAF3',
-    backgroundColor: '#F3F8FF',
-    accentColor: '#6F9EDB',
-    headerBackgroundColor: '#F7FAFF',
+    className: 'border-[#245DA8] bg-[#3478D4] text-white shadow-[0_10px_22px_rgba(52,120,212,0.18)]',
+    borderColor: '#245DA8',
+    backgroundColor: '#3478D4',
+    iconClass: 'text-white/95',
   },
   maintenance: {
     label: 'Maintenance',
     Icon: Wrench,
-    className: 'border-[#D5CEE9] bg-[#F8F5FF] text-slate-950',
-    accentClass: 'border-l-[#8A78C7]',
-    headerClass: 'bg-[#FAF8FF]',
-    serviceClass: 'text-slate-950',
-    borderColor: '#D5CEE9',
-    backgroundColor: '#F8F5FF',
-    accentColor: '#8A78C7',
-    headerBackgroundColor: '#FAF8FF',
+    className: 'border-[#5E4AB4] bg-[#7457D9] text-white shadow-[0_10px_22px_rgba(116,87,217,0.18)]',
+    borderColor: '#5E4AB4',
+    backgroundColor: '#7457D9',
+    iconClass: 'text-white/95',
   },
 } as const;
+
+const HISTORY_OK_COLORS = {
+  background: '#F1FBF6',
+  border: '#B8E4C8',
+  accent: '#2FB26F',
+  header: '#F8FFFB',
+  serviceClass: 'text-[#0F5132]',
+  shadowClass: 'shadow-[0_8px_20px_rgba(47,178,111,0.08)]',
+};
+
+const HISTORY_BREACH_COLORS = {
+  background: '#FFF1F2',
+  border: '#F3C7CD',
+  accent: '#DC2626',
+  header: '#FFF7F7',
+  serviceClass: 'text-[#8A1F2D]',
+  shadowClass: 'shadow-[0_10px_24px_rgba(220,38,38,0.08)]',
+};
 
 type CategoryKey = keyof typeof CATEGORY_META;
 type StatusFilter = 'all' | 'DELIVERED' | 'NOT_DELIVERED' | 'REJECTED' | 'RESOLVED';
@@ -442,14 +444,14 @@ const MemoHistoryHotel = () => {
                 key={key}
                 type="button"
                 onClick={() => setCategoryFilter((value) => (value === key ? 'all' : key))}
-                className={`min-h-[86px] rounded-lg border p-3 text-left shadow-sm transition sm:min-h-[76px] ${meta.className} ${active ? 'ring-2 ring-slate-900/10' : 'hover:shadow-md'}`}
+                className={`min-h-[86px] rounded-lg border p-3 text-left transition sm:min-h-[76px] ${meta.className} ${active ? 'ring-2 ring-black/20' : 'hover:-translate-y-0.5 hover:shadow-lg'}`}
                 style={{ backgroundColor: meta.backgroundColor, borderColor: meta.borderColor }}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold">{meta.label}</span>
-                  <Icon className="h-4 w-4 text-slate-700" />
+                  <span className="text-sm font-semibold text-white/95">{meta.label}</span>
+                  <Icon className={`h-4 w-4 ${meta.iconClass}`} />
                 </div>
-                <div className="mt-1.5 text-2xl font-bold leading-none tabular-nums">{categoryCounts[key]}</div>
+                <div className="mt-1.5 text-2xl font-bold leading-none tabular-nums text-white">{categoryCounts[key]}</div>
               </button>
             );
           })}
@@ -471,24 +473,24 @@ const MemoHistoryHotel = () => {
         </div>
 
         <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {pagedHistory?.map(({ item, isWakeUpCallAlert, displayMessage, serviceLabel, serviceQuantityBadges, serviceInstruction, orderItems, category, slaStatus, status }) => {
+          {pagedHistory?.map(({ item, isWakeUpCallAlert, displayMessage, serviceLabel, serviceQuantityBadges, serviceInstruction, orderItems, slaStatus, status }) => {
             const completedAt = item?.deliveredAt || item?.rejectedAt || item?.createdAt;
-            const categoryMeta = CATEGORY_META[category];
-            const cardBackgroundColor = slaStatus.isBreached ? '#FFF1F2' : '#FFFFFF';
-            const cardBorderColor = slaStatus.isBreached ? '#F3C7CD' : undefined;
-            const cardAccentColor = slaStatus.isBreached ? '#DC2626' : categoryMeta.accentColor;
-            const cardHeaderBackgroundColor = slaStatus.isBreached ? '#FFF7F7' : categoryMeta.headerBackgroundColor;
+            const historyTone = slaStatus.isBreached ? HISTORY_BREACH_COLORS : HISTORY_OK_COLORS;
+            const cardBackgroundColor = historyTone.background;
+            const cardBorderColor = historyTone.border;
+            const cardAccentColor = historyTone.accent;
+            const cardHeaderBackgroundColor = historyTone.header;
 
             return (
               <div
                 key={item._id}
                 className={`self-start overflow-hidden rounded-lg border border-l-4 shadow-sm transition-all duration-200 ${
-                  slaStatus.isBreached ? 'shadow-[0_10px_24px_rgba(220,38,38,0.08)]' : categoryMeta.accentClass
+                  historyTone.shadowClass
                 }`}
                 style={{ backgroundColor: cardBackgroundColor, borderColor: cardBorderColor, borderLeftColor: cardAccentColor }}
               >
                 <section
-                  className={`flex min-h-[52px] cursor-pointer items-center justify-between gap-3 border-b p-3 ${categoryMeta.headerClass}`}
+                  className="flex min-h-[52px] cursor-pointer items-center justify-between gap-3 border-b p-3"
                   style={{ backgroundColor: cardHeaderBackgroundColor }}
                   onClick={() => toggleItem(item._id)}
                   onKeyDown={(e) => e.key === 'Enter' && toggleItem(item._id)}
@@ -500,7 +502,7 @@ const MemoHistoryHotel = () => {
                   </article>
 
                   <article className="flex min-w-0 flex-1 items-center justify-end gap-2 text-right">
-                    <h1 className={`flex min-w-0 items-center justify-end gap-1.5 font-semibold ${categoryMeta.serviceClass}`}>
+                    <h1 className={`flex min-w-0 items-center justify-end gap-1.5 font-semibold ${historyTone.serviceClass}`}>
                       <span className="min-w-0 truncate">{serviceLabel}</span>
                       {serviceQuantityBadges.length > 0
                         ? serviceQuantityBadges.map((badge) => (
