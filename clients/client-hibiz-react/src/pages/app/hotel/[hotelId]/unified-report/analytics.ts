@@ -7,10 +7,14 @@ import type { Source, UnifiedRow } from './model';
 const minutes = (from?: number | null, to?: number | null): number | null =>
   from && to && to >= from ? (to - from) / 60000 : null;
 
+const isSlaLate = (actual: number | null, sla: number): boolean => actual != null && sla > 0 && actual > sla;
+
 const serviceAcceptanceSla = (service?: { avgAcceptanceTime?: number }): number => service?.avgAcceptanceTime ?? 0;
 
 const serviceCompletionSla = (service?: { avgDeliveryTime?: number; avgCompletionTime?: number }): number =>
   service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0;
+
+const FOOD_ORDER_FULFILLMENT_FALLBACK_MINS = 30;
 
 const cartItemName = (item: any): string => {
   const dishName = item?.dish?.name || item?.name || item?.dishName || '';
@@ -25,6 +29,14 @@ const cartItemName = (item: any): string => {
 
 const hasFoodCartItems = (cart?: any[]): boolean =>
   Boolean(cart?.some((item) => item?.dish || item?.dishId || item?.name || item?.dishName));
+
+const foodCartItemPrepMins = (item: any): number => {
+  const prepMins = Number(item?.dish?.avgPrepTime ?? item?.dish?.avgPreparationTime ?? item?.avgPrepTime ?? item?.avgPreparationTime ?? 0);
+  return prepMins > 0 ? prepMins : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS;
+};
+
+const foodOrderFulfillmentSla = (cart?: any[]): number =>
+  hasFoodCartItems(cart) ? Math.max(...cart!.map(foodCartItemPrepMins)) : 0;
 
 const buildOrderItems = (cart?: any[]): string =>
   hasFoodCartItems(cart)
@@ -120,6 +132,14 @@ type GuestAlert = {
 };
 
 const OPEN_GUEST = new Set(['CREATED', 'ACCEPTED', 'IS_ACCEPTED_AND_WARNING', 'NON_ACCEPTED_AND_WARNING', 'IS_ACCEPTED_AND_ESCALATION', 'NON_ACCEPTED_AND_ESCALATION']);
+const CLOSED_STATUS_LABEL: Record<string, string> = {
+  DELIVERED: 'Delivered',
+  RESOLVED: 'Resolved',
+  NOT_DELIVERED: 'Not delivered',
+  REJECTED: 'Rejected',
+};
+
+export const closedStatusLabel = (status?: string): string | null => (status ? CLOSED_STATUS_LABEL[status] ?? null : null);
 
 /** A guest request → unified row. Accept leg + deliver leg = total SLA. */
 export const mapGuestAlert = (
@@ -131,12 +151,14 @@ export const mapGuestAlert = (
   const { rating, feedback } = reviewOf(a, reviews);
   const services = a.serviceIds ?? [];
   const acceptSla = services.reduce((s, x) => s + serviceAcceptanceSla(x), 0);
-  const deliverSla = services.reduce((s, x) => s + serviceCompletionSla(x), 0);
+  const serviceDeliverSla = services.reduce((s, x) => s + serviceCompletionSla(x), 0);
+  const deliverSla = serviceDeliverSla > 0 ? serviceDeliverSla : foodOrderFulfillmentSla(a.cart);
   const totalSla = acceptSla + deliverSla;
   const acceptMins = minutes(a.createdAt, a.acceptedAt);
   const deliverMins = minutes(a.acceptedAt, a.deliveredAt);
   const totalMins = minutes(a.createdAt, a.deliveredAt);
   const verdict = totalMins != null && totalSla > 0 ? totalSla - totalMins : null;
+  const breachedLegSla = isSlaLate(acceptMins, acceptSla) || isSlaLate(deliverMins, deliverSla);
   const room = a.roomId?.name || '—';
   return {
     id: a._id || `g-${index}`,
@@ -159,6 +181,7 @@ export const mapGuestAlert = (
     acceptedByName: a.acceptedBy?.name || '',
     completedByName: a.deliveredBy?.name || '',
     operatorName: a.raisedByStaff?.name || '',
+    alertProgress: a.alertProgress || '',
     raisedAt: a.createdAt ?? 0,
     acceptMins,
     acceptSla,
@@ -166,7 +189,7 @@ export const mapGuestAlert = (
     totalSla,
     verdict,
     onTime: verdict == null ? null : verdict >= 0,
-    escalated: Boolean(a.isEscalated),
+    escalated: Boolean(a.isEscalated) || breachedLegSla,
     escalationLevel: a.isEscalated ? a.level ?? 1 : null,
     deliverMins,
     deliverSla,
@@ -191,6 +214,7 @@ export const mapCheckoutTask = (t: CheckoutTask, index: number, visitsByPhone: R
   const verdict = totalMins != null ? totalSla - totalMins : null;
   const room = t.roomId?.name || '—';
   const escalationLevel = STAGE_LEVEL[t.stage ?? 'FLOOR'] ?? null;
+  const breachedLegSla = isSlaLate(acceptMins, t.acceptMins) || isSlaLate(deliverMins, t.completeMins);
   return {
     id: t._id || `c-${index}`,
     source: 'CHECKOUT',
@@ -222,7 +246,7 @@ export const mapCheckoutTask = (t: CheckoutTask, index: number, visitsByPhone: R
     verdict,
     onTime: verdict == null ? null : verdict >= 0,
     // Widening to all floors is itself an escalation, so L2+ counts as escalated.
-    escalated: Boolean(t.escalatedAt) || escalationLevel != null,
+    escalated: Boolean(t.escalatedAt) || escalationLevel != null || breachedLegSla,
     escalationLevel,
     deliverMins,
     deliverSla: t.completeMins,
@@ -334,7 +358,7 @@ const dur = (m: number): string => {
  * that much. Plainer than "before/over SLA", which read as ambiguous.
  */
 export const verdictText = (r: UnifiedRow): string => {
-  if (r.verdict == null) return r.open ? 'In progress' : 'Not delivered';
+  if (r.verdict == null) return r.open ? 'In progress' : closedStatusLabel(r.alertProgress) ?? 'Status unavailable';
   return r.onTime ? `${dur(r.verdict)} early` : `${dur(r.verdict)} late`;
 };
 

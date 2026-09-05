@@ -13,6 +13,7 @@ import { respond } from '../../utils/response';
 // endpoint can't be abused with a "from=0, to=now" range.
 const MAX_REPORT_RANGE_MS = 92 * 24 * 60 * 60 * 1000;
 const CSV_BATCH_FLUSH = 500;
+const FOOD_ORDER_FULFILLMENT_FALLBACK_MINS = 30;
 
 const CSV_HEADERS = [
   "Guest Name",
@@ -106,21 +107,32 @@ const formatFilenameDate = (timestamp?: number) => {
   return `${get("year")}-${get("month")}-${get("day")}`;
 };
 
-const round1 = (n: number) => Math.round(n * 10) / 10;
-
 const formatDurationMinutes = (minutes?: number | null) => {
   if (minutes === undefined || minutes === null || !Number.isFinite(minutes)) {
     return "";
   }
-  if (minutes < 1) return `${Math.round(minutes * 60)} sec`;
-  const rounded = round1(minutes);
-  return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} min`;
+  const totalSeconds = Math.max(0, Math.round(minutes * 60));
+  const hours = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${hours} hr ${mins} min`;
+  if (mins > 0) return seconds > 0 ? `${mins} min ${seconds} sec` : `${mins} min`;
+  return `${seconds} sec`;
 };
 
 const getDurationLabel = (from?: number | null, to?: number | null) => {
   if (!from || !to || to < from) return "";
   return formatDurationMinutes((to - from) / 60_000);
 };
+
+const isSlaLate = (actual?: number | null, sla?: number | null) =>
+  actual !== undefined &&
+  actual !== null &&
+  Number.isFinite(actual) &&
+  sla !== undefined &&
+  sla !== null &&
+  sla > 0 &&
+  actual > sla;
 
 const buildOrderItems = (cart?: any[]) => {
   if (!cart?.length) return "";
@@ -149,6 +161,17 @@ const buildOrderItems = (cart?: any[]) => {
     .join(" | ");
 };
 
+const hasFoodCartItems = (cart?: any[]) =>
+  Boolean(cart?.some((item) => item?.dish || item?.dishId || item?.name || item?.dishName));
+
+const foodCartItemPrepMins = (item: any) => {
+  const prepMins = Number(item?.dish?.avgPrepTime ?? item?.dish?.avgPreparationTime ?? item?.avgPrepTime ?? item?.avgPreparationTime ?? 0);
+  return prepMins > 0 ? prepMins : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS;
+};
+
+const foodOrderFulfillmentSla = (cart?: any[]) =>
+  hasFoodCartItems(cart) ? Math.max(...cart!.map(foodCartItemPrepMins)) : 0;
+
 const joinNames = (items?: { name?: string }[]) =>
   items?.map((item) => item?.name).filter(Boolean).join(", ") || "";
 
@@ -176,6 +199,21 @@ const requestQuantity = (alert: any) => {
 
 const staffName = (staff?: { name?: string } | null) => staff?.name || "";
 
+const closedStatusPerformanceLabel = (status?: string) => {
+  switch (status) {
+    case "DELIVERED":
+      return "Delivered (SLA not configured)";
+    case "RESOLVED":
+      return "Resolved (SLA not configured)";
+    case "NOT_DELIVERED":
+      return "Not delivered";
+    case "REJECTED":
+      return "Rejected";
+    default:
+      return "";
+  }
+};
+
 // SLA analysis for the CSV — mirrors the client's computePerf so the download
 // matches the on-screen report. Standards come from each service's
 // avgAcceptanceTime / avgDeliveryTime (minutes); actuals from the timestamps.
@@ -185,16 +223,26 @@ const slaAnalysis = (alert: any) => {
     (sum: number, s: any) => sum + (s?.avgAcceptanceTime ?? 0),
     0,
   );
-  const delSla = services.reduce(
+  const serviceDelSla = services.reduce(
     (sum: number, s: any) =>
       sum + (s?.avgDeliveryTime ?? s?.avgCompletionTime ?? 0),
     0,
   );
+  const delSla = serviceDelSla > 0 ? serviceDelSla : foodOrderFulfillmentSla(alert?.cart);
   const totalSla = accSla + delSla;
   const totalActual =
     alert?.createdAt && alert?.deliveredAt && alert.deliveredAt >= alert.createdAt
       ? (alert.deliveredAt - alert.createdAt) / 60000
       : null;
+  const actualAccept =
+    alert?.createdAt && alert?.acceptedAt && alert.acceptedAt >= alert.createdAt
+      ? (alert.acceptedAt - alert.createdAt) / 60000
+      : null;
+  const actualDeliver =
+    alert?.acceptedAt && alert?.deliveredAt && alert.deliveredAt >= alert.acceptedAt
+      ? (alert.deliveredAt - alert.acceptedAt) / 60000
+      : null;
+  const breachedLegSla = isSlaLate(actualAccept, accSla) || isSlaLate(actualDeliver, delSla);
 
   let performance = "";
   if (totalSla > 0 && totalActual != null) {
@@ -203,6 +251,8 @@ const slaAnalysis = (alert: any) => {
       diff >= 0
         ? `Completed ${formatDurationMinutes(diff)} before SLA`
         : `Exceeded SLA by ${formatDurationMinutes(-diff)}`;
+  } else {
+    performance = closedStatusPerformanceLabel(alert?.alertProgress);
   }
 
   return {
@@ -211,6 +261,7 @@ const slaAnalysis = (alert: any) => {
     totalStd: totalSla > 0 ? formatDurationMinutes(totalSla) : "",
     totalActual: totalActual != null ? formatDurationMinutes(totalActual) : "",
     performance,
+    breachedLegSla,
   };
 };
 
@@ -524,7 +575,7 @@ const hotelReportRouter = new Hono()
           ]
             .filter(Boolean),
         ).size;
-        const escalated = (hydratedAlerts as any[]).filter((a) => a.isEscalated).length;
+        const escalated = (hydratedAlerts as any[]).filter((a) => a.isEscalated || slaAnalysis(a).breachedLegSla).length;
         const summary = [
           "HOTEL GUEST EXPERIENCE REPORT",
           `Total Service Requests: ${hydratedAlerts.length}`,
@@ -551,6 +602,7 @@ const hotelReportRouter = new Hono()
             phone,
           );
           const sla = slaAnalysis(alert);
+          const isEscalated = Boolean(alert.isEscalated || sla.breachedLegSla);
 
           const row = [
             alert.createdBy?.name || "Guest",
@@ -579,9 +631,9 @@ const hotelReportRouter = new Hono()
             sla.totalStd,
             sla.totalActual,
             sla.performance,
-            alert.isEscalated ? "Yes" : "No",
+            isEscalated ? "Yes" : "No",
             alert.isEscalated ? alert.level ?? 0 : "",
-            alert.isEscalated ? "Yes" : "No",
+            isEscalated ? "Yes" : "No",
             (review as any)?.reviewRating ?? "",
             (review as any)?.review ||
               (review as any)?.description ||

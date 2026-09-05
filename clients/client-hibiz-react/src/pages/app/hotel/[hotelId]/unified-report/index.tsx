@@ -12,7 +12,7 @@ import { AlertTriangle, ArrowLeft, CheckCircle2, Download, Search, Star, X } fro
 import { useCallback, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { buildRows, groupBy, summarize, verdictText } from './analytics';
+import { buildRows, closedStatusLabel, groupBy, summarize, verdictText } from './analytics';
 import { ANY, activeTags, applyFilters, blankFilters, clearFilter, filterOptions, type UnifiedFilters } from './filters';
 import type { UnifiedRow } from './model';
 
@@ -23,15 +23,16 @@ const th =
   'border-b border-slate-200/80 bg-slate-50/60 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap';
 const td = 'border-b border-slate-100 px-3 py-3 align-top';
 
-/**
- * Human duration from minute values. Under a minute, show seconds; once it
- * crosses a minute, keep the report in minutes so the sheet stays readable.
- */
+/** Human duration from minute values, without decimal minutes. */
 const fmt = (m: number | null) => {
   if (m == null) return '—';
-  if (m < 1) return `${Math.round(m * 60)} sec`;
-  const rounded = Math.round(m * 10) / 10;
-  return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} min`;
+  const totalSeconds = Math.max(0, Math.round(m * 60));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${hours} hr ${minutes} min`;
+  if (minutes > 0) return seconds > 0 ? `${minutes} min ${seconds} sec` : `${minutes} min`;
+  return `${seconds} sec`;
 };
 const fmtSlaResult = (m: number | null) => {
   if (m == null) return '—';
@@ -58,7 +59,7 @@ const clock = (ts: number) =>
  * acceptance) breached, which otherwise reads as a contradiction.
  */
 const escalationCause = (r: UnifiedRow): string => {
-  const acceptLate = r.acceptMins != null && r.acceptMins > r.acceptSla;
+  const acceptLate = r.acceptMins != null && r.acceptSla > 0 && r.acceptMins > r.acceptSla;
   const completeLate = r.deliverMins != null && r.deliverSla > 0 && r.deliverMins > r.deliverSla;
   if (acceptLate && completeLate) return 'acceptance & completion delay';
   if (acceptLate) return 'acceptance delay';
@@ -71,6 +72,21 @@ const slaValueClass = (actual: number | null, sla: number): string => {
   if (actual > sla) return 'text-red-500';
   if (actual >= sla * 0.8) return 'text-amber-600';
   return 'text-emerald-600';
+};
+
+const slaResultClass = (r: UnifiedRow): string => {
+  if (r.onTime != null) return r.onTime ? 'text-emerald-700' : 'text-rose-700';
+  if (r.open) return 'text-amber-700';
+  if (r.alertProgress === 'DELIVERED' || r.alertProgress === 'RESOLVED') return 'text-emerald-700';
+  if (r.alertProgress === 'NOT_DELIVERED' || r.alertProgress === 'REJECTED') return 'text-rose-700';
+  return 'text-slate-500';
+};
+
+const slaResultIcon = (r: UnifiedRow) => {
+  if (r.onTime != null) return r.onTime ? <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> : <AlertTriangle className="mr-1 h-3.5 w-3.5" />;
+  if (r.alertProgress === 'DELIVERED' || r.alertProgress === 'RESOLVED') return <CheckCircle2 className="mr-1 h-3.5 w-3.5" />;
+  if (r.alertProgress === 'NOT_DELIVERED' || r.alertProgress === 'REJECTED') return <AlertTriangle className="mr-1 h-3.5 w-3.5" />;
+  return null;
 };
 
 /**
@@ -240,7 +256,11 @@ const UnifiedReport = () => {
         : '';
     // MoM verdict wording, matching the guest CSV's SLA Performance column.
     const slaPerformance = (r: UnifiedRow) => {
-      if (r.verdict == null) return r.open ? 'In progress' : 'Not delivered';
+      if (r.verdict == null) {
+        if (r.open) return 'In progress';
+        const status = closedStatusLabel(r.alertProgress);
+        return status ? `${status} (SLA not configured)` : 'Status unavailable';
+      }
       const v = fmt(Math.abs(r.verdict));
       return r.onTime ? `Completed ${v} before SLA` : `Exceeded SLA by ${v}`;
     };
@@ -588,7 +608,6 @@ const UnifiedReport = () => {
                       <th className={th}>Room</th>
                       <th className={th}>Service</th>
                       <th className={th}>Qty</th>
-                      <th className={th}>Instruction</th>
                       <th className={th}>Accepted by</th>
                       <th className={th}>Accepted at</th>
                       <th className={th}>Completed by</th>
@@ -645,15 +664,6 @@ const UnifiedReport = () => {
                             {r.quantity ?? '—'}
                           </span>
                         </td>
-                        <td className={`${td} max-w-[280px]`}>
-                          {r.customerInstruction ? (
-                            <div className="line-clamp-2 rounded-lg border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-xs font-medium leading-relaxed text-blue-950" title={r.customerInstruction}>
-                              {r.customerInstruction}
-                            </div>
-                          ) : (
-                            <span className="text-[11px] text-slate-300">—</span>
-                          )}
-                        </td>
                         {/* Accepted by name */}
                         <td className={td}>
                           <div className="font-medium text-slate-800">{r.acceptedByName || <span className="text-slate-300">—</span>}</div>
@@ -699,14 +709,10 @@ const UnifiedReport = () => {
                           <div className="flex flex-col items-end gap-1.5">
                             <span
                               className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                                r.onTime == null ? (r.open ? 'text-amber-700' : 'text-slate-500') : r.onTime ? 'text-emerald-700' : 'text-rose-700'
+                                slaResultClass(r)
                               }`}
                             >
-                              {r.onTime == null ? null : r.onTime ? (
-                                <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                              ) : (
-                                <AlertTriangle className="mr-1 h-3.5 w-3.5" />
-                              )}
+                              {slaResultIcon(r)}
                               {verdictText(r)}
                             </span>
                             {r.escalated ? (
