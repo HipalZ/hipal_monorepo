@@ -10,6 +10,10 @@ import Image from "next/image";
 import { useSearch } from "@/components/store/useSearch";
 import { motion } from "framer-motion";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
+import {
+  isTimingDisabledCategory,
+  type CategoryWithTimingState,
+} from "@/components/utils/categoryAvailability";
 
 /**
  * Generate a pastel color based on a string
@@ -25,7 +29,7 @@ const generatePastelColor = (str: string) => {
 
 interface IMainTypes {
   parentCategory: CategoryType[];
-  childCategory: CategoryType[];
+  childCategory: CategoryWithTimingState[];
   primaryColor?: string;
   secondaryColor?: string;
 }
@@ -69,12 +73,12 @@ const filterDishesByType = (
  */
 const groupSubcategoriesByParent = (
   parentCategories: CategoryType[],
-  childCategories: CategoryType[],
+  childCategories: CategoryWithTimingState[],
   activeDishType: string,
 ) => {
   const result: Record<
     string,
-    { parent: CategoryType; subcategories: CategoryType[] }
+    { parent: CategoryType; subcategories: CategoryWithTimingState[] }
   > = {};
 
   for (const parent of parentCategories) {
@@ -294,15 +298,21 @@ const MemoMainTypes = (props: IMainTypes) => {
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 px-4 py-2">
-                  {subcategories.map((category) => (
+                  {subcategories.map((category) => {
+                    const isTimingDisabled = isTimingDisabledCategory(category);
+
+                    return (
                     <motion.button
                       key={category._id}
-                      className="flex flex-col items-center text-center"
+                      className={cn(
+                        "flex flex-col items-center text-center transition-opacity",
+                        isTimingDisabled && "opacity-60",
+                      )}
                       onClick={() => setActiveCategories(category)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <div className="w-16 h-16 mb-1 overflow-hidden bg-gray-100 rounded-full shadow-sm">
+                      <div className={cn("w-16 h-16 mb-1 overflow-hidden bg-gray-100 rounded-full shadow-sm", isTimingDisabled && "grayscale")}>
                         {category.coverImage ? (
                           <Image
                             src={category.coverImage || "/placeholder.svg"}
@@ -328,14 +338,20 @@ const MemoMainTypes = (props: IMainTypes) => {
                       </div>
                       <span
                         style={{
-                          color: primaryColor,
+                          color: isTimingDisabled ? "#6b7280" : primaryColor,
                         }}
                         className="max-w-full text-base font-medium capitalize poppins-regular line-clamp-3"
                       >
                         {category.name}
                       </span>
+                      {isTimingDisabled && (
+                        <span className="mt-1 rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
+                          Not available
+                        </span>
+                      )}
                     </motion.button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ),
@@ -352,15 +368,21 @@ const MemoMainTypes = (props: IMainTypes) => {
               </div>
 
               <div className="grid grid-cols-3 gap-3 px-4 py-2">
-                {standaloneCategories.map((category) => (
+                {standaloneCategories.map((category) => {
+                  const isTimingDisabled = isTimingDisabledCategory(category);
+
+                  return (
                   <motion.button
                     key={category._id}
-                    className="flex flex-col items-center text-center"
+                    className={cn(
+                      "flex flex-col items-center text-center transition-opacity",
+                      isTimingDisabled && "opacity-60",
+                    )}
                     onClick={() => setActiveCategories(category)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <div className="w-16 h-16 mb-1 overflow-hidden bg-gray-100 rounded-full shadow-sm">
+                    <div className={cn("w-16 h-16 mb-1 overflow-hidden bg-gray-100 rounded-full shadow-sm", isTimingDisabled && "grayscale")}>
                       {category.coverImage ? (
                         <Image
                           src={category?.coverImage}
@@ -384,14 +406,20 @@ const MemoMainTypes = (props: IMainTypes) => {
                     </div>
                     <span
                       style={{
-                        color: primaryColor,
+                        color: isTimingDisabled ? "#6b7280" : primaryColor,
                       }}
                       className="max-w-full text-base font-medium capitalize line-clamp-3 poppins-regular "
                     >
                       {category.name}
                     </span>
+                    {isTimingDisabled && (
+                      <span className="mt-1 rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
+                        Not available
+                      </span>
+                    )}
                   </motion.button>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

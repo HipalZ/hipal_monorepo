@@ -16,6 +16,10 @@ import GridDishCard from "@/components/atoms/card/GridDishCard";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
 import OtherOutletCard from "@/components/atoms/card/otherOutletCard";
 import NoDishesCard from "@/components/atoms/empty/NoDishesCard";
+import {
+  isTimingDisabledCategory,
+  type CategoryWithTimingState,
+} from "@/components/utils/categoryAvailability";
 
 /* ----------------------- Dish Renderer ------------------------ */
 function DishRenderer({
@@ -91,7 +95,7 @@ function MemoSubTypes({
   secondaryColor = "#fce7f3",
   isHorizontalCard = false,
 }: {
-  childCategory: CategoryType[];
+  childCategory: CategoryWithTimingState[];
   primaryColor?: string;
   secondaryColor?: string;
   isHorizontalCard?: boolean;
@@ -205,17 +209,21 @@ function MemoSubTypes({
         >
           {filteredCategories.map((cat) => {
             const active = cat._id?.toString() === isActiveCategory;
+            const isTimingDisabled = isTimingDisabledCategory(cat);
 
             return (
               <SplideSlide key={cat._id}>
                 <motion.button
                   type="button"
                   onClick={() => handleCategoryClick(cat)}
-                  className="relative flex w-full flex-col items-center py-2"
+                  className={cn(
+                    "relative flex w-full flex-col items-center py-2 transition-opacity",
+                    isTimingDisabled && "opacity-60",
+                  )}
                   whileTap={{ scale: 0.95 }}
                 >
                   {cat.coverImage ? (
-                    <div className="h-11 w-11 overflow-hidden rounded-lg">
+                    <div className={cn("h-11 w-11 overflow-hidden rounded-lg", isTimingDisabled && "grayscale")}>
                       <Image
                         src={cat.coverImage}
                         alt={cat.name}
@@ -226,7 +234,10 @@ function MemoSubTypes({
                     </div>
                   ) : (
                     <div
-                      className="flex h-11 w-11 items-center justify-center rounded-lg"
+                      className={cn(
+                        "flex h-11 w-11 items-center justify-center rounded-lg",
+                        isTimingDisabled && "grayscale",
+                      )}
                       style={{ backgroundColor: secondaryColor }}
                     >
                       <span className="text-base font-semibold">
@@ -238,7 +249,7 @@ function MemoSubTypes({
                   {/* Fixed-height label area — prevents layout shift */}
                   <span
                     className="mt-1 h-[2rem] w-full text-center text-[11px] font-medium leading-[1rem] line-clamp-2"
-                    style={{ color: active ? primaryColor : "#555" }}
+                    style={{ color: active ? primaryColor : isTimingDisabled ? "#6b7280" : "#555" }}
                   >
                     {cat.name}
                   </span>
@@ -268,12 +279,16 @@ function MemoSubTypes({
                  />
                ) : (filteredCategories.map((cat, index) => {
           const dishes = cat.__filteredDishes;
+          const isTimingDisabled = isTimingDisabledCategory(cat);
 
           return (
             <motion.section
               key={cat._id}
               id={cat._id?.toString()}
-              className="w-full mb-6 overflow-hidden bg-white rounded-lg shadow-sm"
+              className={cn(
+                "w-full mb-6 overflow-hidden bg-white rounded-lg shadow-sm transition-opacity",
+                isTimingDisabled && "opacity-80",
+              )}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
@@ -298,18 +313,26 @@ function MemoSubTypes({
                   <>
                     <div
                       ref={ref}
-                      className="z-40 flex items-center justify-between px-4 h-[3rem] font-bold border-l-4 rounded-t-lg"
+                      className={cn(
+                        "z-40 flex items-center justify-between gap-3 px-4 h-[3rem] font-bold border-l-4 rounded-t-lg",
+                        isTimingDisabled && "grayscale",
+                      )}
                       style={{
                         borderColor: primaryColor,
                         backgroundColor: `${secondaryColor}20`,
                       }}
                     >
                       <h2
-                        className="w-full text-2xl font-semibold text-center capitalize truncate"
+                        className="min-w-0 text-2xl font-semibold capitalize truncate"
                         style={{ color: primaryColor }}
                       >
                         {cat.name}
                       </h2>
+                      {isTimingDisabled && (
+                        <span className="shrink-0 rounded-full border border-gray-300 bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
+                          Not available
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex flex-col">

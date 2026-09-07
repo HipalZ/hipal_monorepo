@@ -8,10 +8,14 @@ import Image from "next/image";
 import HorizontalTileCard from "@/components/atoms/card/horizontalTileCard";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import MemoDishPopup from "@/components/atoms/dishPopup";
+import {
+  isTimingDisabledCategory,
+  type CategoryWithTimingState,
+} from "@/components/utils/categoryAvailability";
 
 interface CollapseMenuProps {
-  parentCategories: CategoryType[];
-  childCategories: CategoryType[];
+  parentCategories: CategoryWithTimingState[];
+  childCategories: CategoryWithTimingState[];
   primaryColor?: string;
   secondaryColor?: string;
 }
@@ -91,15 +95,22 @@ const closeModal = () => {
         <div className="flex items-start gap-4 overflow-x-auto px-4 py-3 bg-gray-50">
           {parentCategories.map((cat) => {
             const isActive = cat._id === activeMainCategory;
+            const isTimingDisabled = isTimingDisabledCategory(cat);
             return (
               <button
                 type="button"
                 key={cat._id}
                 onClick={() => setActiveCategory(cat._id)}
-                className="flex flex-col items-center justify-center w-[4.5rem] min-w-[4.5rem] relative"
+                className={cn(
+                  "flex flex-col items-center justify-center w-[4.5rem] min-w-[4.5rem] relative transition-opacity",
+                  isTimingDisabled && "opacity-60",
+                )}
               >
                 <div
-                  className="rounded-full w-[5rem] h-[5rem] border-2 overflow-hidden transition-all duration-300"
+                  className={cn(
+                    "rounded-full w-[5rem] h-[5rem] border-2 overflow-hidden transition-all duration-300",
+                    isTimingDisabled && "grayscale",
+                  )}
                   style={
                     isActive
                       ? {
@@ -180,13 +191,17 @@ const closeModal = () => {
             const visibleDishes = category.dishIds.filter((d) => d.visibility);
             const dishes = filterDishes(visibleDishes, isActiveDishType);
             const isOpen = openCategoryId === category._id;
+            const isTimingDisabled = isTimingDisabledCategory(category);
 
             if (dishes.length === 0) return null;
 
             return (
               <div
                 key={category._id}
-                className="bg-white rounded-xl shadow-md transition-all duration-300"
+                className={cn(
+                  "bg-white rounded-xl shadow-md transition-all duration-300",
+                  isTimingDisabled && "opacity-80",
+                )}
               >
                 {/* Subcategory Tile */}
                 <button
@@ -194,7 +209,10 @@ const closeModal = () => {
                   onClick={() =>
                     setOpenCategoryId(isOpen ? null : category._id)
                   }
-                  className="w-full flex items-center justify-between p-2"
+                  className={cn(
+                    "w-full flex items-center justify-between p-2",
+                    isTimingDisabled && "grayscale",
+                  )}
                   style={{
                     color: primaryColor,
                     borderBottom: isOpen
@@ -225,6 +243,11 @@ const closeModal = () => {
                     >
                       {category.name}
                     </span>
+                    {isTimingDisabled && (
+                      <span className="rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
+                        Not available
+                      </span>
+                    )}
                   </div>
                   <article className="flex items-center gap-2">
                     <p className="text-sm bg-gray-50 rounded-full px-2 py-1 text-primary">
