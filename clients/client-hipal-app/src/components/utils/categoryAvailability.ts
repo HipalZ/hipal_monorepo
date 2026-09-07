@@ -13,6 +13,34 @@ export type CategoryWithTimingState = CategoryType & {
 type PopulatedDish = string | DishType;
 
 const MINUTES_IN_DAY = 1440;
+const WEEKDAY_INDEX: Record<string, number> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
+
+const getIndiaClock = (now: Date) => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Kolkata",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(now);
+
+  const weekday = parts.find((part) => part.type === "weekday")?.value || "Sun";
+  const hour = Number(parts.find((part) => part.type === "hour")?.value || 0);
+  const minute = Number(parts.find((part) => part.type === "minute")?.value || 0);
+
+  return {
+    currentDay: WEEKDAY_INDEX[weekday] ?? now.getDay(),
+    currentMinutes: hour * 60 + minute,
+  };
+};
 
 const getSlotAppliesToday = (slotDay: number, currentDay: number) => {
   return slotDay === -1 || slotDay === currentDay;
@@ -43,8 +71,21 @@ export const isCategoryCurrentlyAvailable = (
   const timings = (category.timings || []) as CategoryTiming[];
   if (timings.length === 0) return true;
 
-  const currentDay = now.getDay();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const { currentDay, currentMinutes } = getIndiaClock(now);
+
+  return timings.some((slot) => isInsideSlot(slot, currentDay, currentMinutes));
+};
+
+export const isDishCurrentlyAvailable = (
+  dish: Pick<DishType, "availability" | "visibility" | "timings">,
+  now = new Date(),
+) => {
+  if (dish.availability === false || dish.visibility === false) return false;
+
+  const timings = (dish.timings || []) as CategoryTiming[];
+  if (timings.length === 0) return true;
+
+  const { currentDay, currentMinutes } = getIndiaClock(now);
 
   return timings.some((slot) => isInsideSlot(slot, currentDay, currentMinutes));
 };
@@ -64,7 +105,7 @@ export const applyCategoryTimingAvailability = (
 
       return {
         ...dish,
-        availability: isTimingAvailable && dish.availability !== false,
+        availability: isTimingAvailable && isDishCurrentlyAvailable(dish, now),
       } as DishType;
     }) as CategoryType["dishIds"],
   };

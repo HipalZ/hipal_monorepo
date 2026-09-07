@@ -58,23 +58,17 @@ const CategoryMainForm = memo(() => {
     [resetStore, selectedCategory, setSelectedCategory],
   );
 
-  // check if All day exists
-  const hasAllDay = timings.some((t) => t.day === -1);
-
   const handleSaveCategory = useCallback(() => {
     if (!categoryName.trim()) {
       toast.error('Category name is required');
       return;
     }
 
-    // sanitize timings -> keep only All-day slot if exists
-    const sanitizedTimings = hasAllDay ? [timings.find((t) => t.day === -1)!] : timings;
-
     const commonPayload = {
       name: categoryName,
       businessId: businessId?.toString() || '',
       menuId,
-      timings: sanitizedTimings as Timing[],
+      timings: timings as Timing[],
       categoryInfo,
     };
 
@@ -89,7 +83,7 @@ const CategoryMainForm = memo(() => {
           };
 
     createCategory(payload);
-  }, [categoryName, categoryInfo, businessId, menuId, selectedCategory, selectIds, selectSingleParentCat, recommendationIds, timings, hasAllDay, createCategory]);
+  }, [categoryName, categoryInfo, businessId, menuId, selectedCategory, selectIds, selectSingleParentCat, recommendationIds, timings, createCategory]);
 
   const goToNextStep = useCallback(() => {
     if (!categoryName.trim()) {
@@ -205,16 +199,7 @@ const CategoryMainForm = memo(() => {
                   onValueChange={(val) => {
                     const day = Number(val);
 
-                    // Prevent selecting All (-1) if other slots exist
-                    if (day === -1 && (timings.length > 1 || timings.some((s, idx) => idx !== i && s.day !== -1))) {
-                      toast.error('You can select ‘All day’ only if it is the only slot.');
-                      return;
-                    }
-
                     updateTiming(i, { day });
-                    if (day === -1) {
-                      updateTiming(i, { start: 0, end: 1440 });
-                    }
                   }}
                 >
                   <SelectTrigger className="w-full">
@@ -237,7 +222,6 @@ const CategoryMainForm = memo(() => {
                     updateTiming(i, { start: h * 60 + m });
                   }}
                   className="w-24"
-                  disabled={t.day === -1}
                 />
 
                 <Input
@@ -248,7 +232,6 @@ const CategoryMainForm = memo(() => {
                     updateTiming(i, { end: h * 60 + m });
                   }}
                   className="w-24"
-                  disabled={t.day === -1}
                 />
 
                 <Button variant="ghost" size="icon" onClick={() => removeTiming(i)} className="absolute bottom-0 right-0">
@@ -262,8 +245,6 @@ const CategoryMainForm = memo(() => {
           variant="outline"
           className="mt-2"
           onClick={() => addTiming({ day: 0, start: 0, end: 60 })}
-          disabled={hasAllDay && timings.length >= 1}
-          title={hasAllDay ? '‘All day’ allows only one slot' : undefined}
         >
           + Add Slot
         </Button>

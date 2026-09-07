@@ -134,9 +134,6 @@ const MemoDishForm = () => {
     setDishStep(DishSteps.DISH_STEP_2);
   }, [dishStep, dishName, dishPrice, dishTypes, setDishStep]);
 
-  const hasAllDay = timings.some((t) => t.day === -1);
-  const sanitizedTimings = hasAllDay ? [timings.find((t) => t.day === -1)!] : timings;
-
   const handleSubmitDish = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (dishTypes.length === 0 || dishName.length === 0 || dishPrice === 0) {
@@ -172,7 +169,7 @@ const MemoDishForm = () => {
       removeRecommendationIds: Object(removeRecommendationIds),
       tags: tags,
       images: images,
-      timings: sanitizedTimings as Timing[],
+      timings: timings as Timing[],
       avgPrepTime: avgPrepTime,
       kitchenId: kitchenId,
     };
@@ -445,15 +442,8 @@ const MemoDishForm = () => {
                             value={String(t.day)}
                             onValueChange={(val) => {
                               const day = Number(val);
-                              // Prevent selecting All if other slots exist
-                              const hasAllDay = timings.some((tm) => tm.day === -1);
-                              if (day === -1 && (hasAllDay || timings.length > 1)) {
-                                toast.error('“All day” can only exist as a single slot.');
-                                return;
-                              }
 
                               updateTiming(i, { day });
-                              if (day === -1) updateTiming(i, { start: 0, end: 1440 });
                             }}
                           >
                             <SelectTrigger className="w-full">
@@ -504,8 +494,6 @@ const MemoDishForm = () => {
                     className="mt-2"
                     type="button"
                     onClick={() => addTiming({ day: 0, start: 0, end: 60 })}
-                    disabled={timings.some((t) => t.day === -1) && timings.length >= 1}
-                    title={timings.some((t) => t.day === -1) ? '“All day” allows only one slot' : undefined}
                   >
                     + Add Slot
                   </Button>

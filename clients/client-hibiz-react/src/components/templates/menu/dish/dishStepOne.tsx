@@ -74,9 +74,6 @@ const MemoDishForm = () => {
     setEditingKitchen(null);
   }, []);
 
-  const hasAllDay = timings.some((t) => t.day === -1);
-  const sanitizedTimings = hasAllDay ? [timings.find((t) => t.day === -1)!] : timings;
-
   useEffect(() => {
     if (dishTypes.length === 0) {
       setDishTypes(['VEG']);
@@ -161,7 +158,7 @@ const MemoDishForm = () => {
       recommendationIds: Object(recommendationIds),
       tags: tags,
       images: images,
-      timings: sanitizedTimings as Timing[],
+      timings: timings as Timing[],
       avgPrepTime: avgPrepTime,
       kitchenId: kitchenId,
     };
@@ -392,15 +389,8 @@ const MemoDishForm = () => {
                             value={String(t.day)}
                             onValueChange={(val) => {
                               const day = Number(val);
-                              // Prevent selecting All if other slots exist
-                              const hasAllDay = timings.some((tm) => tm.day === -1);
-                              if (day === -1 && (hasAllDay || timings.length > 1)) {
-                                toast.error('“All day” can only exist as a single slot.');
-                                return;
-                              }
 
                               updateTiming(i, { day });
-                              if (day === -1) updateTiming(i, { start: 0, end: 1440 });
                             }}
                           >
                             <SelectTrigger className="w-full">
@@ -450,8 +440,6 @@ const MemoDishForm = () => {
                     variant="outline"
                     className="mt-2"
                     onClick={() => addTiming({ day: 0, start: 0, end: 60 })}
-                    disabled={timings.some((t) => t.day === -1) && timings.length >= 1}
-                    title={timings.some((t) => t.day === -1) ? '“All day” allows only one slot' : undefined}
                   >
                     + Add Slot
                   </Button>
