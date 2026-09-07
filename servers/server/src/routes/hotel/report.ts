@@ -1,10 +1,16 @@
-import { Cart, HotelAlert, HotelAnalytics, HotelRoomChat, Reviews } from '@hi/db-models';
+import { Business, Cart, HotelAlert, HotelAnalytics, HotelRoomChat, Reviews } from '@hi/db-models';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { stream } from 'hono/streaming';
 import { Types } from 'mongoose';
 import { z } from 'zod';
 import { syncHotelCompanionReadModel } from '../../services/hotelCompanions';
+import {
+  addBoldHeaderRow,
+  addKeyValueRow,
+  autoFitColumns,
+  createReportWorkbook,
+} from '../../utils/reportHelper/excelUtils';
 import { respond } from '../../utils/response';
 
 // ─── Guest Experience CSV helpers ──────────────────────────────────────────
@@ -310,6 +316,91 @@ const getTimePeriod = (timestamp: number) => {
   }
   return null;
 };
+
+type HotelItemAnalyticsRow = {
+  id: string;
+  name: string;
+  orderCount: number;
+  quantity: number;
+  estimatedSales: number;
+  timePeriods: Record<string, number>;
+};
+
+const toItemId = (id: unknown) => {
+  if (typeof id === "string") return id;
+  if (id && typeof (id as { toString(): string }).toString === "function") {
+    return (id as { toString(): string }).toString();
+  }
+  return "";
+};
+
+const getCartQuery = ({
+  businessId,
+  from,
+  to,
+}: {
+  businessId: string;
+  from?: number;
+  to?: number;
+}) => {
+  const query: Record<string, unknown> = { businessId };
+  if (from || to) {
+    query.date = {
+      ...(from ? { $gte: from } : {}),
+      ...(to ? { $lte: to } : {}),
+    };
+  }
+  return query;
+};
+
+const getItemUnitPrice = (item: any) => {
+  const portionPrice =
+    typeof item?.portion?.price === "number" ? item.portion.price : undefined;
+  const dishPrice =
+    typeof item?.dish?.price === "number" ? item.dish.price : undefined;
+  return portionPrice ?? dishPrice ?? 0;
+};
+
+const buildHotelItemAnalyticsRows = (carts: any[]) => {
+  const itemMap: Record<string, HotelItemAnalyticsRow> = {};
+
+  for (const cart of carts) {
+    const timePeriod = typeof cart.date === "number" ? getTimePeriod(cart.date) : null;
+
+    for (const item of cart.cart ?? []) {
+      const id = toItemId(item?.dish?._id);
+      const name = item?.dish?.name;
+      if (!id || !name) continue;
+
+      const quantity = Math.max(Number(item?.quantity ?? 1), 1);
+      if (!itemMap[id]) {
+        itemMap[id] = {
+          id,
+          name,
+          orderCount: 0,
+          quantity: 0,
+          estimatedSales: 0,
+          timePeriods: {},
+        };
+      }
+
+      itemMap[id].orderCount += 1;
+      itemMap[id].quantity += quantity;
+      itemMap[id].estimatedSales += getItemUnitPrice(item) * quantity;
+
+      if (timePeriod) {
+        itemMap[id].timePeriods[timePeriod] =
+          (itemMap[id].timePeriods[timePeriod] ?? 0) + quantity;
+      }
+    }
+  }
+
+  return Object.values(itemMap).sort((a, b) => b.quantity - a.quantity);
+};
+
+const sanitizeFilenamePart = (value: string) =>
+  value.replace(/[<>:"/\\|?*\x00-\x1f]/g, "").trim() || "Hotel";
+
 const hotelReportRouter = new Hono()
   /**
    * GET /hotel/report/guest_experience_csv?businessId=&from=&to=
@@ -760,16 +851,8 @@ const hotelReportRouter = new Hono()
       const requestData = await c.req.json();
       const { businessId, page, limit, from, to } = requestData;
 
-      // Validate and construct the query
-      const query: any = { businessId };
-      if (from || to) {
-        query.date = {};
-        if (from) query.date.$gte = from;
-        if (to) query.date.$lte = to;
-      }
-
       // Fetch carts with pagination
-      const carts = await Cart.find(query)
+      const carts = await Cart.find(getCartQuery({ businessId, from, to }))
         .sort({ _id: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -846,6 +929,134 @@ const hotelReportRouter = new Hono()
         200,
         analytics,
       );
+    },
+  )
+  .post(
+    "/fetch_item_reports/download_xlsx",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string(),
+        from: z.number().optional(),
+        to: z.number().optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to } = await c.req.json();
+      const business = await Business.findById(businessId)
+        .select("name registeredName")
+        .lean();
+      const businessName =
+        business?.name || business?.registeredName || "Hotel";
+      const carts = await Cart.find(getCartQuery({ businessId, from, to }))
+        .sort({ _id: -1 })
+        .lean();
+
+      const rows = buildHotelItemAnalyticsRows(carts);
+      const totalQuantity = rows.reduce((sum, row) => sum + row.quantity, 0);
+      const totalSales = rows.reduce((sum, row) => sum + row.estimatedSales, 0);
+      const { workbook } = createReportWorkbook();
+
+      const summarySheet = workbook.addWorksheet("Top Recommendations");
+      addKeyValueRow(summarySheet, "Business Name", businessName);
+      addKeyValueRow(summarySheet, "From", from ? formatDateTime(from) : "");
+      addKeyValueRow(summarySheet, "To", to ? formatDateTime(to) : "");
+      addKeyValueRow(summarySheet, "Generated At", formatDateTime(Date.now()));
+      summarySheet.addRow([]);
+
+      if (rows.length === 0) {
+        summarySheet.addRow(["No item report data available"]);
+      } else {
+        addBoldHeaderRow(summarySheet, [
+          "Rank",
+          "Item",
+          "Orders",
+          "Quantity",
+          "Estimated Sales",
+          "Share",
+          "Recommendation",
+        ]);
+
+        const bySales = [...rows].sort((a, b) => b.estimatedSales - a.estimatedSales);
+        rows.slice(0, 10).forEach((row, index) => {
+          const share = totalQuantity
+            ? `${((row.quantity / totalQuantity) * 100).toFixed(1)}%`
+            : "0%";
+          const recommendation =
+            index === 0
+              ? "Top requested item"
+              : bySales[0]?.id === row.id
+                ? "Highest total value"
+                : row.quantity <= 2
+                  ? "Low movement"
+                  : "Popular item";
+
+          summarySheet.addRow([
+            index + 1,
+            row.name,
+            row.orderCount,
+            row.quantity,
+            row.estimatedSales,
+            share,
+            recommendation,
+          ]);
+        });
+
+        summarySheet.addRow([]);
+        addKeyValueRow(summarySheet, "Total Quantity", totalQuantity);
+        addKeyValueRow(summarySheet, "Estimated Sales", totalSales);
+      }
+      autoFitColumns(summarySheet);
+
+      const detailsSheet = workbook.addWorksheet("Item Details");
+      addBoldHeaderRow(detailsSheet, [
+        "Item",
+        "Orders",
+        "Quantity",
+        "Estimated Sales",
+        "Average Quantity Per Order",
+      ]);
+      for (const row of rows) {
+        detailsSheet.addRow([
+          row.name,
+          row.orderCount,
+          row.quantity,
+          row.estimatedSales,
+          row.orderCount ? Number((row.quantity / row.orderCount).toFixed(2)) : 0,
+        ]);
+      }
+      autoFitColumns(detailsSheet);
+
+      const timeSheet = workbook.addWorksheet("Time Based Analytics");
+      addBoldHeaderRow(timeSheet, ["Time Period", "Top Item", "Quantity"]);
+      for (const period of timePeriods) {
+        const topItem = [...rows].sort(
+          (a, b) =>
+            (b.timePeriods[period.name] ?? 0) -
+            (a.timePeriods[period.name] ?? 0),
+        )[0];
+        const quantity = topItem?.timePeriods[period.name] ?? 0;
+        timeSheet.addRow([
+          period.name,
+          quantity > 0 ? topItem.name : "No data",
+          quantity,
+        ]);
+      }
+      autoFitColumns(timeSheet);
+
+      const filename = `${sanitizeFilenamePart(businessName)} Item Reports ${formatFilenameDate(from)} to ${formatFilenameDate(to)}.xlsx`;
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      c.header(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; charset=utf-8",
+      );
+      c.header(
+        "Content-Disposition",
+        `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+      );
+
+      return c.body(buffer);
     },
   );
 

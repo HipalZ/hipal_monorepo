@@ -11,6 +11,7 @@ import Image from "next/image";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
 import GridDishCard from "@/components/atoms/card/GridDishCard";
 import NoDishesCard from "@/components/atoms/empty/NoDishesCard";
+import { isTimingDisabledCategory } from "@/components/utils/categoryAvailability";
 
 const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
   const typeMap: Record<string, string[]> = {
@@ -137,11 +138,15 @@ const EdgeFlow = ({
         <div className="flex flex-col min-h-full pb-20">
           {filteredCategories.map((category) => {
             const active = category._id === isActiveCategory;
+            const isTimingDisabled = isTimingDisabledCategory(category);
 
             return (
               <button
                 key={category._id}
-                className="w-full mb-2 p-2 text-xs font-medium flex flex-col items-center"
+                className={cn(
+                  "w-full mb-2 p-2 text-xs font-medium flex flex-col items-center transition-opacity",
+                  isTimingDisabled && "opacity-60",
+                )}
                 style={{
                   color: active ? primaryColor : "black",
                   borderRight: `4px solid ${active ? primaryColor : "transparent"}`,
@@ -167,12 +172,15 @@ const EdgeFlow = ({
                       alt={category.name}
                       width={40}
                       height={40}
-                      className="object-cover w-full h-full"
+                      className={cn("object-cover w-full h-full", isTimingDisabled && "grayscale")}
                     />
                   </div>
                 ) : (
                   <div
-                    className="w-12 h-12 mb-1 rounded-full flex items-center justify-center"
+                    className={cn(
+                      "w-12 h-12 mb-1 rounded-full flex items-center justify-center",
+                      isTimingDisabled && "grayscale",
+                    )}
                     style={{
                       backgroundColor: secondaryColor,
                       color: active ? primaryColor : "gray",
@@ -210,6 +218,7 @@ const EdgeFlow = ({
         ) : (
           filteredCategories.map((category, index) => {
             const dishes = category.__filteredDishes;
+            const isTimingDisabled = isTimingDisabledCategory(category);
 
             return (
               <section
@@ -237,18 +246,26 @@ const EdgeFlow = ({
                   {({ ref }) => (
                     <div
                       ref={ref}
-                      className="flex items-center px-4 h-[4rem] border-b"
+                      className={cn(
+                        "flex items-center justify-between gap-3 px-4 h-[4rem] border-b",
+                        isTimingDisabled && "grayscale",
+                      )}
                       style={{
                         backgroundColor: `${secondaryColor}50`,
                         borderColor: `${primaryColor}20`,
                       }}
                     >
                       <h2
-                        className="text-xl font-medium"
+                        className="min-w-0 text-xl font-medium truncate"
                         style={{ color: primaryColor }}
                       >
                         {category.name}
                       </h2>
+                      {isTimingDisabled && (
+                        <span className="shrink-0 rounded-full border border-gray-300 bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
+                          Not available
+                        </span>
+                      )}
                     </div>
                   )}
                 </InView>

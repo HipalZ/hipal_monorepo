@@ -1084,7 +1084,7 @@ const RejectedRequest = ({
       <div className="flex gap-3">
         <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#9B2D2D]" />
         <div>
-          <h3 className="text-[0.92rem]  text-[#7C2727]">{isFood ? "Order rejected" : "Request unavailable"}</h3>
+          <h3 className="text-[0.92rem]  text-[#7C2727]">{isFood ? "Order rejected" : "Request not delivered"}</h3>
           <p className="mt-2 text-[0.78rem] font-semibold leading-relaxed text-[#7C2727]">
             <span className="">Reason:- </span>
             {reasonText}
