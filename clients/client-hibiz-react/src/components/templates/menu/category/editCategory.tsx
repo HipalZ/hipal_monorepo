@@ -58,9 +58,6 @@ const MemoEditCategory = () => {
     menuId: string;
   }>();
 
-  // check if All-day slot exists
-  const hasAllDay = timings.some((t) => t.day === -1);
-
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -150,8 +147,6 @@ const MemoEditCategory = () => {
     const removedCatIds = getRemovedIds(idCheck, categoryStep === 'EDIT_MAIN_CATEGORY' ? selectIds : selectSingleParentCat);
     const removeDishIds = getRemovedIds(removeRecommendationIds, recommendationIds);
 
-    // sanitize timings -> keep only All-day if exists
-    const sanitizedTimings = hasAllDay ? [timings.find((t) => t.day === -1)!] : timings;
     const commonPayload = {
       name: categoryName,
       businessId: businessId || '',
@@ -159,7 +154,7 @@ const MemoEditCategory = () => {
       coverImage: imageUrl,
       visibility: visibility,
       _id: catId,
-      timings: sanitizedTimings,
+      timings,
       categoryInfo,
     };
 
@@ -296,16 +291,7 @@ const MemoEditCategory = () => {
                   onValueChange={(val) => {
                     const day = Number(val);
 
-                    // Block multiple All-day slots
-                    if (day === -1 && (timings.length > 1 || timings.some((s, idx) => idx !== i && s.day !== -1))) {
-                      toast.error('‘All day’ can only be the single slot.');
-                      return;
-                    }
-
                     updateTiming(i, { day });
-                    if (day === -1) {
-                      updateTiming(i, { start: 0, end: 1440 });
-                    }
                   }}
                   className="w-28"
                 >
@@ -329,7 +315,6 @@ const MemoEditCategory = () => {
                     updateTiming(i, { start: h * 60 + m });
                   }}
                   className="w-24"
-                  disabled={t.day === -1}
                 />
 
                 <Input
@@ -340,7 +325,6 @@ const MemoEditCategory = () => {
                     updateTiming(i, { end: h * 60 + m });
                   }}
                   className="w-20"
-                  disabled={t.day === -1}
                 />
 
                 <Button variant="ghost" size="icon" onClick={() => removeTiming(i)} className="absolute bottom-0 right-0">
@@ -354,8 +338,6 @@ const MemoEditCategory = () => {
           variant="outline"
           className="mt-2"
           onClick={() => addTiming({ day: 0, start: 0, end: 60 })}
-          disabled={hasAllDay && timings.length >= 1}
-          title={hasAllDay ? '‘All day’ allows only one slot' : undefined}
         >
           + Add Slot
         </Button>
