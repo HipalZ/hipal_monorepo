@@ -8,11 +8,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import CheckInPopup from "./CheckInPopup";
 import AutoLogin from "./AutoLogin";
 import { useLogin } from "@/components/store/useLogin";
+import { showHotelSessionExpired } from "@/components/hooks/sessionGuard";
 
 export interface HotelWelcomeCardProps {
   hotelName: string;
@@ -39,7 +39,6 @@ export default function HotelWelcomeCard({
   const [codeError, setCodeError] = useState("");
   const accessToken = useUserToken((state) => state.accessToken);
   const userDetails = useLogin((state) => state.userDetails);
-  const router = useRouter();
   const queryClient = useQueryClient();
   const activeUserId = userDetails?._id || userID || "";
   const { checkRoom } = useCheckRoomStatus(
@@ -66,13 +65,15 @@ export default function HotelWelcomeCard({
       return response;
     }
     if (response.status === 404) {
-      toast.error("Session expired. Please login again.");
-      router.push("/");
+      showHotelSessionExpired();
       return;
     }
     if (response.status === 400 || response.status === 401) {
-      toast.error("Session is not valid. Please login again.");
-      router.push("/");
+      showHotelSessionExpired();
+      return;
+    }
+    if (response.status === 403) {
+      showHotelSessionExpired();
       return;
     }
     return response;
@@ -138,7 +139,7 @@ export default function HotelWelcomeCard({
     }
 
     if (activeUserId && checkRoom?.status === 403) {
-      setShowPopup(true);
+      showHotelSessionExpired();
     }
   }, [activeUserId, checkRoom]);
 
