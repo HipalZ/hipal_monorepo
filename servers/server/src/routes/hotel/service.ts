@@ -1,4 +1,4 @@
-import { HotelAlert, HotelService, HotelServiceCategory, User } from '@hi/db-models';
+import { HotelAlert, HotelService, HotelServiceAvailabilityGroup, HotelServiceCategory, User } from '@hi/db-models';
 import { hotelService, hotelServiceCategory, updateHotelService } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import { zValidator } from '@hono/zod-validator';
@@ -12,6 +12,36 @@ const keepAvailableServices = <T extends { serviceIds?: unknown[] }>(category: T
   ...category,
   serviceIds: (category.serviceIds || []).filter((service: any) => service?.availability !== false),
 });
+
+const attachAvailabilityGroups = async <T extends { serviceIds?: unknown[] }>(businessId: string, categories: T[]) => {
+  const groups = await HotelServiceAvailabilityGroup.find({ businessId, active: true })
+    .select('_id name active timings serviceIds')
+    .lean();
+
+  const groupsByServiceId = new Map<string, any[]>();
+
+  for (const group of groups) {
+    for (const serviceId of group.serviceIds || []) {
+      const key = serviceId.toString();
+      const serviceGroups = groupsByServiceId.get(key) || [];
+      serviceGroups.push({
+        _id: group._id,
+        name: group.name,
+        active: group.active,
+        timings: group.timings || [],
+      });
+      groupsByServiceId.set(key, serviceGroups);
+    }
+  }
+
+  return categories.map((category: any) => ({
+    ...category,
+    serviceIds: (category.serviceIds || []).map((service: any) => ({
+      ...service,
+      availabilityGroups: groupsByServiceId.get(service?._id?.toString()) || [],
+    })),
+  }));
+};
 
 const bulkUpdateHotelServiceTimings = z.object({
   businessId: z.string().min(24).max(24),
@@ -89,12 +119,14 @@ const serviceRouter = new Hono()
         })
         .lean();
 
+      const servicesWithAvailabilityGroups = await attachAvailabilityGroups(businessId, services);
+
       return respond(
         c,
         'All services ',
         false,
         200,
-        services.map(keepAvailableServices).filter((category) => category.serviceIds.length > 0),
+        servicesWithAvailabilityGroups.map(keepAvailableServices).filter((category) => category.serviceIds.length > 0),
       );
     },
   )
@@ -128,7 +160,8 @@ const serviceRouter = new Hono()
         .select('name image serviceIds sequence systemKey')
         .lean();
 
-      const availableCategories = categories.map(keepAvailableServices).filter((category) => category.serviceIds.length > 0);
+      const categoriesWithAvailabilityGroups = await attachAvailabilityGroups(businessId, categories);
+      const availableCategories = categoriesWithAvailabilityGroups.map(keepAvailableServices).filter((category) => category.serviceIds.length > 0);
 
       return respond(c, 'All service categories', false, 200, availableCategories);
     },

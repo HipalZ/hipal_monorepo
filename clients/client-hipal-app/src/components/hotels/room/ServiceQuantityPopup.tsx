@@ -40,7 +40,7 @@ export default function ServiceQuantityPopup({
 
   return createPortal(
     <div className="fixed inset-0 z-[2200] flex items-end justify-center bg-black/25 px-3 pb-3 pt-10 backdrop-blur-sm">
-      <section className="plus-jakarta-font w-full max-w-md overflow-hidden rounded-t-[28px] bg-white text-[#111111] shadow-[0_-12px_32px_rgba(15,23,42,0.16)] sm:rounded-[28px]">
+      <section className="services-inter-font w-full max-w-md overflow-hidden rounded-t-[28px] bg-white text-[#111111] shadow-[0_-12px_32px_rgba(15,23,42,0.16)] sm:rounded-[28px]">
         <div className="flex items-start justify-between gap-3 border-b border-[#EEE8DF] px-5 pb-4 pt-5">
           <div className="flex min-w-0 items-center gap-3">
             {service.image ? (

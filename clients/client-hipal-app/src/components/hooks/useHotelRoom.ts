@@ -56,7 +56,11 @@ export const useCreateAlert = () => {
         json: payload,
       });
       if (expelIfSessionOut(response, router)) throw new Error("SESSION_OUT");
-      return response.json();
+      const result = await response.json();
+      if (!response.ok || result?.err) {
+        throw new Error(result?.message || "Unable to create request");
+      }
+      return result;
     },
     onSuccess: (data, variables) => {
       console.log("Alert created successfully:", data);

@@ -11,6 +11,7 @@ import {
   HotelRoomChatReply,
   HotelRoomSession,
   HotelService,
+  HotelServiceAvailabilityGroup,
   HotelServiceTemplateMapping,
   HotelStaffLevel,
   OutLetInfo,
@@ -129,6 +130,121 @@ const getIndiaClockMinutes = (timestamp: number) => {
   const hour = Number(parts.find((part) => part.type === 'hour')?.value || 0);
   const minute = Number(parts.find((part) => part.type === 'minute')?.value || 0);
   return hour * 60 + minute;
+};
+
+type ServiceAvailabilityTiming = {
+  day?: number;
+  start?: number;
+  end?: number;
+};
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const getIndiaClock = (timestamp: number) => {
+  const parts = new Intl.DateTimeFormat('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(timestamp));
+  const weekday = parts.find((part) => part.type === 'weekday')?.value || 'Sun';
+  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(weekday);
+  const hour = Number(parts.find((part) => part.type === 'hour')?.value || 0);
+  const minute = Number(parts.find((part) => part.type === 'minute')?.value || 0);
+  return { day: day >= 0 ? day : 0, minutes: hour * 60 + minute };
+};
+
+const isServiceTimingActive = (slot: ServiceAvailabilityTiming, currentDay: number, currentMinutes: number) => {
+  const day = Number(slot.day ?? -1);
+  const start = Number(slot.start);
+  const end = Number(slot.end);
+
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return false;
+
+  const dayMatches = day === -1 || day === currentDay;
+  if (start <= end) {
+    return dayMatches && currentMinutes >= start && currentMinutes < end;
+  }
+
+  const previousDay = (currentDay + 6) % 7;
+  const isStartDay = day === -1 || day === currentDay;
+  const isEndDay = day === -1 || day === previousDay;
+  return (isStartDay && currentMinutes >= start) || (isEndDay && currentMinutes < end);
+};
+
+const formatServiceAvailabilityTime = (minutes: number) => {
+  const normalized = Math.max(0, Math.min(1439, minutes));
+  const hour = Math.floor(normalized / 60);
+  const minute = normalized % 60;
+  const suffix = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${String(minute).padStart(2, '0')} ${suffix}`;
+};
+
+const getNextServiceAvailabilityLabel = (timings: ServiceAvailabilityTiming[], currentDay: number, currentMinutes: number) => {
+  let best: { offset: number; start: number; day: number } | null = null;
+
+  for (let offset = 0; offset < 8; offset += 1) {
+    const candidateDay = (currentDay + offset) % 7;
+
+    for (const slot of timings) {
+      const day = Number(slot.day ?? -1);
+      const start = Number(slot.start);
+      if (!Number.isFinite(start)) continue;
+      if (!(day === -1 || day === candidateDay)) continue;
+      if (offset === 0 && start <= currentMinutes) continue;
+
+      if (!best || offset < best.offset || (offset === best.offset && start < best.start)) {
+        best = { offset, start, day: candidateDay };
+      }
+    }
+  }
+
+  if (!best) return 'soon';
+
+  const time = formatServiceAvailabilityTime(best.start);
+  if (best.offset === 0) return `at ${time}`;
+  if (best.offset === 1) return `tomorrow at ${time}`;
+  return `on ${DAY_NAMES[best.day]} at ${time}`;
+};
+
+const getServiceAvailabilityIssue = async (businessId: string, servicesById: Map<string, any>, serviceIds: any[]) => {
+  const groups = await HotelServiceAvailabilityGroup.find({
+    businessId,
+    active: true,
+    serviceIds: { $in: serviceIds },
+  })
+    .select('_id name timings serviceIds')
+    .lean();
+
+  if (!groups.length) return null;
+
+  const groupsByServiceId = new Map<string, ServiceAvailabilityTiming[]>();
+  for (const group of groups) {
+    for (const serviceId of group.serviceIds || []) {
+      const key = serviceId.toString();
+      if (!serviceIds.some((requestedServiceId) => requestedServiceId.toString() === key)) continue;
+      groupsByServiceId.set(key, [...(groupsByServiceId.get(key) || []), ...((group.timings || []) as ServiceAvailabilityTiming[])]);
+    }
+  }
+
+  const clock = getIndiaClock(Date.now());
+  for (const serviceId of serviceIds) {
+    const key = serviceId.toString();
+    const timings = groupsByServiceId.get(key) || [];
+    if (!timings.length) continue;
+    const isAvailable = timings.some((slot) => isServiceTimingActive(slot, clock.day, clock.minutes));
+    if (isAvailable) continue;
+
+    const service = servicesById.get(key);
+    return {
+      serviceName: service?.name || 'This service',
+      nextLabel: getNextServiceAvailabilityLabel(timings, clock.day, clock.minutes),
+    };
+  }
+
+  return null;
 };
 
 const buildServiceInstructionSnapshot = (service: any, requestedAt: number) => {
@@ -1981,6 +2097,17 @@ const hotelAlertRouter = new Hono()
           if (!Number.isInteger(quantity) || quantity < 1 || quantity > quantityLimit) {
             return respond(c, `You can request up to ${quantityLimit} ${service.name} at a time`, true, 400, {});
           }
+        }
+
+        const availabilityIssue = await getServiceAvailabilityIssue(requestData.businessId, servicesById, serviceIds);
+        if (availabilityIssue) {
+          return respond(
+            c,
+            `${availabilityIssue.serviceName} is not available right now. It will be available ${availabilityIssue.nextLabel}.`,
+            true,
+            400,
+            {},
+          );
         }
       }
 

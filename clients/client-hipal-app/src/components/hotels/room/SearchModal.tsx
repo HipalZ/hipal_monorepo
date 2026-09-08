@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import { hasGuestContactDetails } from './guestContactGuard';
 import ServiceQuantityPopup from './ServiceQuantityPopup';
 import { resolveServiceInstructionMessage } from './serviceBehavior';
+import { getServiceTimingAvailability } from './serviceAvailability';
 
 // Lazy-loaded components
 const AlertCircle = dynamic(() => import('lucide-react').then((mod) => ({ default: mod.AlertCircle })), { ssr: false });
@@ -93,19 +94,25 @@ const SearchResultItem = ({
   quantity,
   quantityLimit,
   requiresConfirmation,
-}: SearchResultItemProps) => (
+}: SearchResultItemProps) => {
+  const timingAvailability = getServiceTimingAvailability(service);
+  const isUnavailable = !timingAvailability.available;
+
+  return (
   <Card
     className={`relative cursor-pointer transition-all duration-200 ${
       selected ? 'border-[#111111] bg-neutral-50 shadow-md ring-1 ring-[#111111]/10' : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
-    } ${service.availability === false ? 'cursor-not-allowed opacity-50' : ''}`}
+    } ${isUnavailable ? 'cursor-not-allowed opacity-60' : ''}`}
     onClick={() => {
-      if (service.availability !== false) {
-        if (requiresConfirmation) {
-          onQuantitySelect();
-          return;
-        }
-        onToggle();
+      if (isUnavailable) {
+        toast(timingAvailability.label || 'Service is unavailable right now.');
+        return;
       }
+      if (requiresConfirmation) {
+        onQuantitySelect();
+        return;
+      }
+      onToggle();
     }}
   >
     <CardContent className="p-3">
@@ -125,11 +132,13 @@ const SearchResultItem = ({
               alt={service.name}
               width={40}
               height={40}
-              className="h-10 w-10 rounded-lg object-cover"
+              className={`h-10 w-10 rounded-lg object-cover ${isUnavailable ? 'grayscale' : ''}`}
             />
           ) : (
             <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-[#111111] text-sm font-semibold text-white">{getInitial(service.name)}</AvatarFallback>
+              <AvatarFallback className={`${isUnavailable ? 'bg-neutral-200 text-neutral-500' : 'bg-[#111111] text-white'} text-sm font-semibold`}>
+                {getInitial(service.name)}
+              </AvatarFallback>
             </Avatar>
           )}
         </div>
@@ -138,17 +147,18 @@ const SearchResultItem = ({
         <div className="min-w-0 flex-1">
           <h4 className="truncate text-sm font-medium text-gray-900">{service.name}</h4>
           <p className="text-xs capitalize text-gray-500">{categoryName.replace(/[^a-zA-Z0-9 ]/g, ' ').toLowerCase()}</p>
+          {isUnavailable ? <p className="mt-0.5 text-[11px] font-semibold text-neutral-500">{timingAvailability.label || 'Unavailable'}</p> : null}
           {quantityLimit > 1 ? <p className="mt-0.5 text-[11px] font-medium text-neutral-500">Up to {quantityLimit} per request</p> : null}
         </div>
 
-        {quantityLimit > 1 && quantity > 0 && service.availability !== false && (
+        {quantityLimit > 1 && quantity > 0 && !isUnavailable && (
           <span className="shrink-0 rounded-full border border-neutral-200 bg-neutral-950 px-3 py-1 text-xs font-bold text-white shadow-sm">
             x{quantity}
           </span>
         )}
 
         {/* Availability Status */}
-        {service.availability === false && (
+        {isUnavailable && (
           <div className="flex-shrink-0">
             <span className="rounded bg-red-50 px-2 py-1 text-xs font-medium text-red-500">Unavailable</span>
           </div>
@@ -156,7 +166,8 @@ const SearchResultItem = ({
       </div>
     </CardContent>
   </Card>
-);
+  );
+};
 
 export default function SearchModal({ show, onClose, categories, businessId }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -191,7 +202,6 @@ export default function SearchModal({ show, onClose, categories, businessId }: S
 
     for (const category of categories) {
       for (const service of category.serviceIds) {
-        if (service.availability === false) continue;
         services.push({
           service,
           categoryName: category.name,
@@ -318,7 +328,7 @@ export default function SearchModal({ show, onClose, categories, businessId }: S
     } catch (error) {
       console.error('Error creating alert:', error);
       setAlertStatus('error');
-      toast.error('Error sending request. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Error sending request. Please try again.');
     }
   };
 

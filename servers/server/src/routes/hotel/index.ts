@@ -9,6 +9,7 @@ import hotelServiceTemplateMappingRouter from "./hotelServiceTemplateMapping";
 import reportRouter from "./report";
 import restaurantRouter from "./restaurant";
 import roomRouter from "./rooms";
+import serviceAvailabilityGroupRouter from "./serviceAvailabilityGroup";
 import serviceRouter from "./service";
 import staffRouter from "./staff";
 import hotelStaffLevelRouter from "./staffLevel";
@@ -23,6 +24,7 @@ const hotelRouter = new Hono()
   .route("/staff_level", hotelStaffLevelRouter)
   .route("/restaurant", restaurantRouter)
   .route("/service", serviceRouter)
+  .route("/service_availability_group", serviceAvailabilityGroupRouter)
   .route("/book", roomBookRouter)
   .route("/amenities", hotelAmenitiesRouter)
   .route("/alert", hotelALertRouter)

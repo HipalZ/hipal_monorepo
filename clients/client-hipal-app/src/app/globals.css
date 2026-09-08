@@ -24,6 +24,11 @@ body {
   font-family: 'Playfair Display', serif;
 }
 
+.services-inter-font,
+.services-inter-font * {
+  font-family: 'Inter', sans-serif;
+}
+
 .montserrat-400 {
   font-family: 'Montserrat', serif;
   font-optical-sizing: auto;

@@ -26,6 +26,16 @@ export interface IService {
       message: string;
     }>;
   };
+  availabilityGroups?: Array<{
+    _id: string;
+    name: string;
+    active?: boolean;
+    timings?: Array<{
+      day: number;
+      start: number;
+      end: number;
+    }>;
+  }>;
 }
 
 export interface IServiceCategory {
