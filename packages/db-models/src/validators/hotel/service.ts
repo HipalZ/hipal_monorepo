@@ -61,5 +61,27 @@ export const updateHotelService = z.object({
   sequence: z.number().optional(),
 });
 
+export const hotelServiceAvailabilityTiming = z.object({
+  day: z.number().int().min(-1).max(6).default(-1),
+  start: z.number().int().min(0).max(1439),
+  end: z.number().int().min(1).max(1440),
+});
+
+export const hotelServiceAvailabilityGroup = z.object({
+  businessId: ObjectIdSchema,
+  name: z.string().trim().min(1).max(80),
+  active: z.boolean().optional().default(true),
+  timings: z.array(hotelServiceAvailabilityTiming).min(1).max(14),
+  serviceIds: z.array(ObjectIdSchema).optional().default([]),
+});
+
+export const updateHotelServiceAvailabilityGroup = hotelServiceAvailabilityGroup
+  .partial()
+  .extend({
+    businessId: ObjectIdSchema,
+    groupId: ObjectIdSchema,
+  });
+
 export type HotelServiceType = z.infer<typeof hotelService>;
 export type HotelServiceCategoryType = z.infer<typeof hotelServiceCategory>;
+export type HotelServiceAvailabilityGroupType = z.infer<typeof hotelServiceAvailabilityGroup>;

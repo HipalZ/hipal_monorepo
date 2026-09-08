@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { cn } from "@/lib/utils";
+import { Clock3, Zap } from "lucide-react";
 
 /**
  * A small, non-ticking "estimated time to delivery" pill shown on the top-right
@@ -43,9 +44,8 @@ function ariaEta(minutes: number): string {
  *   blue   = longer wait  (> 15 min)
  */
 function toneFor(minutes: number): string {
-  if (minutes <= 5) return "bg-green-100 text-green-800 ring-green-600/20";
-  if (minutes <= 15) return "bg-amber-100 text-amber-800 ring-amber-600/20";
-  return "bg-blue-100 text-blue-800 ring-blue-600/20";
+  if (minutes <= 5) return "bg-[#CFF8DF] text-[#064A37]";
+  return "bg-[#F1F2F4] text-[#18243A]";
 }
 
 const ServiceEtaBadge = memo(({ minutes, className }: ServiceEtaBadgeProps) => {
@@ -59,14 +59,14 @@ const ServiceEtaBadge = memo(({ minutes, className }: ServiceEtaBadgeProps) => {
       aria-label={ariaEta(minutes)}
       title={ariaEta(minutes)}
       className={cn(
-        "inline-flex items-baseline gap-0.5 rounded-full px-2 py-0.5",
-        "ring-1 ring-inset shadow-sm leading-none whitespace-nowrap",
+        "inline-flex h-7 items-center gap-1 rounded-full px-2.5",
+        "leading-none whitespace-nowrap",
         toneFor(minutes),
         className,
       )}
     >
-      <span className="text-[12px] font-bold">{value}</span>
-      <span className="text-[9px] font-medium opacity-80">{unit}</span>
+      {minutes <= 5 ? <Zap className="h-3.5 w-3.5 fill-current" /> : <Clock3 className="h-3.5 w-3.5" />}
+      <span className="text-[0.66rem] font-semibold">{value} {unit}</span>
     </span>
   );
 });

@@ -1,6 +1,5 @@
 "use client";
 import { useState, useCallback, memo, useMemo, useEffect, useRef } from "react";
-import CommonBottomButton from "@/components/atoms/bottomButton";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import type {
   IService,
@@ -10,7 +9,6 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import Image from "next/image";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   useCreateAlert,
   useGetAllChats,
@@ -24,12 +22,19 @@ import LoadingSpinnerCircle from "@/components/atoms/loader";
 import dynamic from "next/dynamic";
 import { useCartStore } from "@/components/store/useCartStore";
 import type { IMenuLayout } from "@/components/types/businessData";
-import { useScreenSize } from "@/components/hooks/useScreenSize";
 import { hasGuestContactDetails } from "./guestContactGuard";
 import ServiceEtaBadge from "./ServiceEtaBadge";
 import HotelLogoLoader from "./HotelLogoLoader";
 import ServiceQuantityPopup from "./ServiceQuantityPopup";
 import { resolveServiceInstructionMessage } from "./serviceBehavior";
+import { getServiceTimingAvailability } from "./serviceAvailability";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Minus,
+  Plus,
+  ShoppingCart,
+} from "lucide-react";
 
 // Lazy-loaded components
 const AlertCircle = dynamic(
@@ -56,11 +61,6 @@ const FoodOrderPopup = dynamic(() => import("./FoodOrderHotel"), {
   ),
   ssr: false,
 });
-
-const SERVICE_ACTION_COLOR = "#111111";
-const SERVICE_ACTION_TEXT_COLOR = "#ffffff";
-const SERVICE_MUTED_PILL = "bg-neutral-100 text-neutral-500";
-const SERVICE_SELECTED_PILL = "bg-[#111111] text-white shadow-sm";
 
 type AlertStatus = "idle" | "loading" | "success" | "error";
 
@@ -89,90 +89,151 @@ interface ServiceCategoryCardProps {
 interface ServiceItemProps {
   service: IService;
   selected: boolean;
-  onToggle: () => void;
+  onAdd: () => void;
+  onRemove: () => void;
+  onIncrement: () => void;
+  onDecrement: () => void;
   onQuantitySelect: () => void;
   getInitial: (name: string) => string;
   requestCount: number;
   quantity: number;
   quantityLimit: number;
   requiresConfirmation: boolean;
+  compact: boolean;
 }
 
 const ServiceItem = memo(
-  ({
+  function ServiceItemView({
     service,
     selected,
-    onToggle,
+    onAdd,
+    onRemove,
+    onIncrement,
+    onDecrement,
     onQuantitySelect,
     getInitial,
     requestCount,
     quantity,
     quantityLimit,
     requiresConfirmation,
-  }: ServiceItemProps) => (
-    <section>
-      <Card
-        className={`relative p-0 rounded-2xl border-none bg-transparent shadow-none transition-all duration-200 cursor-pointer ${
-          selected ? "" : "hover:bg-gray-50"
+    compact,
+  }: ServiceItemProps) {
+    const timingAvailability = getServiceTimingAvailability(service);
+    const isUnavailable = !timingAvailability.available;
+
+    const handleAdd = () => {
+      if (isUnavailable) {
+        toast(timingAvailability.label || "Service is unavailable right now.");
+        return;
+      }
+      if (requiresConfirmation) {
+        onQuantitySelect();
+        return;
+      }
+      onAdd();
+    };
+
+    return (
+      <section
+        className={`services-inter-font relative flex flex-col overflow-hidden bg-white text-left transition-colors ${
+          compact ? "rounded-[1rem]" : "rounded-[1.25rem]"
         } ${
-          service.availability === false ? "opacity-50 cursor-not-allowed" : ""
-        }`}
-        onClick={() => {
-          if (service.availability === false) return;
-          if (requiresConfirmation) {
-            onQuantitySelect();
-            return;
-          }
-          onToggle();
-        }}
+          selected
+            ? "border-[#07543D] ring-1 ring-[#07543D]"
+            : "border-[#F1ECE7]"
+        } ${isUnavailable ? "text-neutral-700" : "text-[#07152D]"}`}
       >
-        {selected && (
-          <div className="absolute left-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-[#111111] shadow-sm ring-2 ring-white">
-            <CheckIcon className="w-3 h-3 text-white" />
-          </div>
-        )}
-        <div className="mb-3 text-center flex items-start justify-center">
-          <div className="relative inline-flex">
-            {service.image ? (
-              <Image
-                src={service.image}
-                alt={service.name}
-                width={96}
-                height={96}
-                className="w-[110px] h-[100px]"
-              />
-            ) : (
-              <Avatar className="w-12 h-12 text-center flex items-start justify-center">
-                <AvatarFallback className="bg-[#111111] text-white text-lg font-semibold">
-                  {getInitial(service.name)}
-                </AvatarFallback>
-              </Avatar>
-            )}
-            {/* Est. time-to-delivery, so the guest can check the expected wait before ordering */}
-            <ServiceEtaBadge
-              minutes={service.avgDeliveryTime}
-              className="absolute -top-2 -right-2 z-10"
+        <div
+          className={`relative shrink-0 overflow-hidden bg-[#F4EEE7] ${
+            compact
+              ? "mx-1.5 mt-1.5 aspect-[4/5] rounded-[0.8rem]"
+              : "mx-2 mt-2 aspect-[4/5] rounded-[1rem]"
+          }`}
+        >
+          {service.image ? (
+            <Image
+              src={service.image}
+              alt={service.name}
+              fill
+              sizes="(max-width: 448px) 46vw, 190px"
+              className={`object-cover object-center ${isUnavailable ? "grayscale-[35%] opacity-80" : ""}`}
             />
-          </div>
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-[#F4EEE7] text-3xl font-bold text-[#07543D]">
+              {getInitial(service.name)}
+            </div>
+          )}
+
+          <ServiceEtaBadge
+            minutes={service.avgDeliveryTime}
+            className={`absolute left-0 top-0 z-10 ${compact ? "origin-top-left scale-[0.78]" : ""} ${isUnavailable ? "grayscale opacity-80" : ""}`}
+          />
+
+          <button
+            type="button"
+            onClick={selected ? onRemove : handleAdd}
+            aria-label={selected ? `Remove ${service.name}` : `Add ${service.name}`}
+            className={`absolute z-10 flex h-6 w-6 items-center justify-center rounded-full border p-1 transition active:scale-95 right-0 top-0 ${
+              selected
+                ? "border-[#07543D] bg-[#07543D] text-white"
+                : "border-[#EEE9E4] bg-white text-[#07152D]"
+            }`}
+          >
+            {selected ? <CheckIcon className="h-5 w-5" /> : <Plus className="h-5 w-5" strokeWidth={2.2} />}
+          </button>
+
         </div>
-        {service.availability === false && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
-            <span className="text-xs font-medium text-white bg-red-500 px-2 py-1 rounded">
-              Unavailable
-            </span>
+
+        <div
+          className={`flex flex-1 flex-col items-start ${
+            compact
+              ? "min-h-[3.25rem] px-2.5 pb-2 pt-1.5"
+              : "min-h-[4.5rem] px-3 pb-3 pt-2.5"
+          }`}
+        >
+          <div className="w-full min-w-0">
+            <p className={`${compact ? "text-[0.7rem]" : "text-[0.82rem]"} line-clamp-2 min-w-0 font-semibold leading-[1.2] tracking-[-0.015em] text-[#07152D]`}>
+              {service.name || "Service"}
+            </p>
+            {requestCount > 0 && !selected ? (
+              <span className={`${compact ? "mt-1 px-2 py-0.5 text-[0.55rem]" : "mt-2 px-2.5 py-1 text-[0.62rem]"} inline-flex shrink-0 rounded-full border border-[#C7D2FE] bg-[#e9e9fc] font-semibold leading-none text-[#3448E5]`}>
+                Ordered: {requestCount}
+              </span>
+            ) : null}
           </div>
-        )}
-      </Card>
-      <div className="plus-jakarta-font text-center py-2 font-medium cursor-pointer text-black text-xs leading-tight">
-        {service.name}
-        {quantityLimit > 1 && quantity > 0 ? (
-          <span className="mx-auto mt-2 block w-fit rounded-full border border-neutral-200 bg-black px-3 py-1 text-[0.68rem] font-bold leading-none text-white shadow-sm">
-            x{quantity} selected
-          </span>
-        ) : null}
-      </div>
-    </section>
-  )
+
+          {isUnavailable ? (
+            <p className={`${compact ? "mt-0.5" : "mt-1"} line-clamp-2 text-[0.58rem] font-semibold leading-tight text-[#E12B12]`}>
+              {timingAvailability.label || "Unavailable"}
+            </p>
+          ) : null}
+
+          {selected && quantityLimit > 1 ? (
+            <div className="mt-1 grid w-full grid-cols-[1.8rem_1fr_1.8rem] items-center gap-1.5">
+              <button
+                type="button"
+                onClick={quantity <= 1 ? onRemove : onDecrement}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-[#DDF9E8] text-[#07543D] active:scale-95"
+                aria-label={`Decrease ${service.name} quantity`}
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="text-center text-[0.88rem] font-bold tabular-nums text-[#07543D]">{quantity}</span>
+              <button
+                type="button"
+                onClick={onIncrement}
+                disabled={quantity >= quantityLimit}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-[#DDF9E8] text-[#07543D] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label={`Increase ${service.name} quantity`}
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </section>
+    );
+  }
 );
 ServiceItem.displayName = "ServiceItem";
 
@@ -238,7 +299,6 @@ function MemoServiceCategoryCard({
     { enabled: servicePopup }
   );
   const { setCartEmpty } = useCartStore();
-  const screenSize = useScreenSize();
 
   // Optimized: Memoize the name formatting logic
   const formattedCategoryName = useMemo(() => {
@@ -399,6 +459,21 @@ function MemoServiceCategoryCard({
     setQuantityPromptService(null);
   }, []);
 
+  const changeServiceQuantity = useCallback(
+    (serviceId: string, delta: number, quantityLimit: number) => {
+      setSelectedServiceQuantities((prev) => {
+        const current = prev[serviceId] || 0;
+        const nextQuantity = Math.max(0, Math.min(quantityLimit, current + delta));
+        if (nextQuantity === 0) {
+          const { [serviceId]: _removed, ...next } = prev;
+          return next;
+        }
+        return { ...prev, [serviceId]: nextQuantity };
+      });
+    },
+    []
+  );
+
   const handleConfirmSelection = useCallback(async () => {
     if (!hasSelectedServices) return;
     if (!hasGuestContactDetails(userDetails)) {
@@ -432,7 +507,7 @@ function MemoServiceCategoryCard({
       setSelectedServiceQuantities({});
     } catch (error) {
       setAlertStatus("error");
-      toast.error("Error sending request. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Error sending request. Please try again.");
     }
   }, [
     businessId,
@@ -460,36 +535,14 @@ function MemoServiceCategoryCard({
     [selectedServices]
   );
 
-  // Optimized: Memoize the button configuration to prevent CommonBottomButton re-renders
-  const footerButtons = useMemo(
-    () => [
-      {
-        text: "Cancel",
-        onClick: closeServicePopup,
-        className: "rounded-md pl-3",
-        isBackButton: true,
-        color: SERVICE_ACTION_COLOR,
-        textColor: SERVICE_ACTION_TEXT_COLOR,
-        disable: alertStatus === "loading",
-      },
-      {
-        text: alertStatus === "error" ? "Try Again" : "Confirm",
-        onClick: alertStatus === "error" ? handleRetry : handleConfirmSelection,
-        className: "w-full rounded-md",
-        color: SERVICE_ACTION_COLOR,
-        textColor: SERVICE_ACTION_TEXT_COLOR,
-        disable: !hasSelectedServices || alertStatus === "loading",
-        isLoading: alertStatus === "loading" || creatingAlert,
-      },
-    ],
-    [
-      alertStatus,
-      closeServicePopup,
-      handleRetry,
-      handleConfirmSelection,
-      hasSelectedServices,
-      creatingAlert,
-    ]
+  const selectedServiceDetails = useMemo(
+    () => category.serviceIds.filter((service) => selectedServices.includes(service._id)),
+    [category.serviceIds, selectedServices]
+  );
+
+  const estimatedDeliveryMinutes = useMemo(
+    () => Math.max(0, ...selectedServiceDetails.map((service) => Number(service.avgDeliveryTime) || 0)),
+    [selectedServiceDetails]
   );
 
   return (
@@ -531,76 +584,152 @@ function MemoServiceCategoryCard({
               show={servicePopup}
               onClose={closeServicePopup}
               manageHistory={false}
+              surfaceClassName="overflow-hidden bg-[#FCFBF9] shadow-none"
             >
-              <div className="plus-jakarta-font p-4 relative max-h-[90dvh] overflow-auto hide-scrollbar">
-                {/* Header row is always present (title + count pill) so selecting
-                    a service never pushes the grid down - no layout shift. */}
-                <div className="mb-4 flex items-center justify-between gap-2">
-                  <h2 className="text-xl font-bold text-[#111111]">
-                    {formattedCategoryName} Assistance
-                  </h2>
-                  {alertStatus === "idle" && (
-                    <span
-                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors duration-200 ${
-                        hasSelectedServices
-                          ? SERVICE_SELECTED_PILL
-                          : SERVICE_MUTED_PILL
-                      }`}
-                    >
-                      {selectedServices.length} selected
-                    </span>
-                  )}
-                </div>
+              <div
+                className={`services-inter-font relative h-[100dvh] overflow-y-auto bg-[#FCFBF9] hide-scrollbar ${
+                  hasSelectedServices ? "pb-28" : "pb-4"
+                }`}
+              >
+                <header className="sticky top-0 z-40 flex items-start gap-2.5 shadow-md rounded-b-xl bg-[#FCFBF9] px-3.5 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+                  <button
+                    type="button"
+                    onClick={closeServicePopup}
+                    aria-label="Go back"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F3F2F0] text-[#07152D] transition active:scale-95"
+                  >
+                    <ArrowLeft className="h-5 w-5" strokeWidth={2.2} />
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="truncate text-[1.05rem] font-bold leading-tight tracking-[-0.025em] text-[#07152D]">
+                      {formattedCategoryName} Assistance
+                    </h2>
+                    <p className="mt-1 truncate text-[0.65rem] font-medium text-[#68758A]">
+                      Select items to request&nbsp; · &nbsp;Delivered in minutes
+                    </p>
+                  </div>
+                  <div className="relative flex h-10 w-14 shrink-0 items-center justify-center rounded-full border border-[#EEE9E4] bg-white text-[#07152D]">
+                    <ShoppingCart className="h-5 w-5" strokeWidth={2.1} />
+                    {selectedServices.length > 0 ? (
+                      <span className="absolute -right-0.5 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-[#07543D] px-1 text-[0.65rem] font-bold text-white ring-2 ring-[#FCFBF9]">
+                        {selectedServices.length}
+                      </span>
+                    ) : null}
+                  </div>
+                </header>
 
-                {isLoading && alertStatus === "idle" ? (
-                  <div className="flex items-center justify-center py-10">
-                    <LoadingSpinnerCircle />
-                  </div>
-                ) : alertStatus === "error" ? (
-                  <div className="flex flex-col items-center justify-center py-10">
-                    <AlertCircle className="w-16 h-16 mb-4 text-red-500" />
-                    <button
-                      onClick={handleRetry}
-                      className="rounded-md bg-[#111111] px-4 py-2 text-white transition-colors hover:bg-neutral-800"
-                    >
-                      Try Again
-                    </button>
-                  </div>
-                ) : (
-                  <div className="mb-20 grid grid-cols-3 gap-4">
-                    {category.serviceIds.map(
-                      (service) =>
-                        service.availability && (
+                <div className="px-3 py-3">
+                  {isLoading && alertStatus === "idle" ? (
+                    <div className="flex items-center justify-center py-10">
+                      <LoadingSpinnerCircle />
+                    </div>
+                  ) : alertStatus === "error" ? (
+                    <div className="flex flex-col items-center justify-center py-10">
+                      <AlertCircle className="mb-4 h-16 w-16 text-red-500" />
+                      <button
+                        onClick={handleRetry}
+                        className="rounded-2xl bg-[#07543D] px-5 py-3 font-semibold text-white"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      {category.serviceIds.map((service) => {
+                        const quantityLimit = getServiceQuantityLimit(service);
+                        return (
                           <ServiceItem
                             key={service._id}
                             service={service}
                             selected={isSelected(service._id)}
-                            onToggle={() => handleServiceToggle(service._id)}
+                            onAdd={() => handleServiceToggle(service._id)}
+                            onRemove={() => handleQuantityRemove(service._id)}
+                            onIncrement={() => changeServiceQuantity(service._id, 1, quantityLimit)}
+                            onDecrement={() => changeServiceQuantity(service._id, -1, quantityLimit)}
                             onQuantitySelect={() => openQuantityPopup(service)}
                             getInitial={getInitial}
                             requestCount={requestCounts.get(service._id) || 0}
                             quantity={selectedServiceQuantities[service._id] || 0}
-                            quantityLimit={getServiceQuantityLimit(service)}
-                            requiresConfirmation={getServiceQuantityLimit(service) > 1 || Boolean(resolveServiceInstructionMessage(service))}
+                            quantityLimit={quantityLimit}
+                            requiresConfirmation={Boolean(resolveServiceInstructionMessage(service))}
+                            compact
                           />
-                        )
-                    )}
-                  </div>
-                )}
-                {quantityPromptService ? (
-                  <ServiceQuantityPopup
-                    service={quantityPromptService}
-                    quantityLimit={getServiceQuantityLimit(quantityPromptService)}
-                    initialQuantity={selectedServiceQuantities[quantityPromptService._id] || 1}
-                    instructionMessage={resolveServiceInstructionMessage(quantityPromptService)}
-                    onClose={() => setQuantityPromptService(null)}
-                    onConfirm={(quantity) => handleQuantityConfirm(quantityPromptService._id, quantity)}
-                    onRemove={() => handleQuantityRemove(quantityPromptService._id)}
-                  />
-                ) : null}
+                        );
+                      })}
+                    </div>
+                  )}
+                  {quantityPromptService ? (
+                    <ServiceQuantityPopup
+                      service={quantityPromptService}
+                      quantityLimit={getServiceQuantityLimit(quantityPromptService)}
+                      initialQuantity={selectedServiceQuantities[quantityPromptService._id] || 1}
+                      instructionMessage={resolveServiceInstructionMessage(quantityPromptService)}
+                      onClose={() => setQuantityPromptService(null)}
+                      onConfirm={(quantity) => handleQuantityConfirm(quantityPromptService._id, quantity)}
+                      onRemove={() => handleQuantityRemove(quantityPromptService._id)}
+                    />
+                  ) : null}
+                </div>
               </div>
 
-              <CommonBottomButton fixed buttons={footerButtons} />
+              {hasSelectedServices ? (
+              <footer className="services-inter-font animate-in fade-in slide-in-from-bottom-6 absolute inset-x-0 bottom-0 z-50 rounded-t-2xl bg-white px-3 pb-[max(0.55rem,env(safe-area-inset-bottom))] pt-2 shadow-2xl duration-300">
+                <div className="mx-auto flex max-w-md items-center gap-2.5">
+                  <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[1rem] bg-[#FBFAF8] px-2 py-1.5">
+                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-visible rounded-lg bg-[#F1ECE6]">
+                      {selectedServiceDetails.slice(0, 2).map((service, index) =>
+                        service.image ? (
+                          <Image
+                            key={service._id}
+                            src={service.image}
+                            alt=""
+                            width={32}
+                            height={32}
+                            className={`absolute h-8 w-8 rounded-md object-cover ${
+                              index === 0 ? "-translate-x-1.5" : "translate-x-2 translate-y-1.5"
+                            }`}
+                          />
+                        ) : null
+                      )}
+                      {selectedServices.length === 0 ? <ShoppingCart className="h-5 w-5 text-[#87909F]" /> : null}
+                      {selectedServices.length > 0 ? (
+                        <span className="absolute -right-1.5 -top-1.5 z-10 flex h-6 min-w-6 items-center justify-center rounded-full bg-[#07543D] px-1 text-[0.68rem] font-bold text-white ring-2 ring-white">
+                          {selectedServices.length}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-[0.74rem] font-bold text-[#07152D]">
+                        {selectedServices.length > 0
+                          ? `${selectedServices.length} item${selectedServices.length === 1 ? "" : "s"} selected`
+                          : "Select items"}
+                      </p>
+                      <p className="mt-0.5 truncate text-[0.58rem] font-medium text-[#758095]">
+                        {estimatedDeliveryMinutes > 0
+                          ? `Estimated delivery in ${estimatedDeliveryMinutes} mins`
+                          : "Choose up to 2 services"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={alertStatus === "error" ? handleRetry : handleConfirmSelection}
+                    disabled={!hasSelectedServices || alertStatus === "loading" || creatingAlert}
+                    className="animate-in zoom-in-95 flex h-[3rem] min-w-[8.5rem] items-center justify-center gap-1 rounded-2xl bg-[#07543D] px-4 text-[0.76rem] font-semibold text-white transition duration-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-[#BFC7C3]"
+                  >
+                    {alertStatus === "loading" || creatingAlert ? (
+                      <LoadingSpinnerCircle />
+                    ) : (
+                      <>
+                        {alertStatus === "error" ? "Try Again" : "Request Items"}
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </footer>
+              ) : null}
             </BottomPopUp>
           )}
         </>

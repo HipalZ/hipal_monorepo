@@ -3,11 +3,17 @@ import LoadingSpinner from '@/components/atom/loadingSpinner';
 import PopUp from '@/components/atom/popUp';
 import {
   useBulkUpdateHotelServiceTimings,
+  useCreateHotelServiceAvailabilityGroup,
+  useDeleteHotelServiceAvailabilityGroup,
   useDeleteHotelService,
   useGetServiceCategories,
+  useGetHotelServiceAvailabilityGroups,
   useUpdateCategorySequence,
+  useUpdateHotelServiceAvailabilityGroup,
   useUpdateHotelService,
   useUpdateServiceSequence,
+  type IServiceAvailabilityGroup,
+  type IServiceAvailabilityTiming,
   type IService,
 } from '@/components/store/hotel/useHotelServices';
 import useBusinessData from '@/components/store/useBusinessData';
@@ -79,6 +85,14 @@ interface BulkTimingRow {
 interface BulkTimingError {
   lineNumber: number;
   message: string;
+}
+
+interface AvailabilityGroupFormState {
+  groupId?: string;
+  name: string;
+  active: boolean;
+  timings: IServiceAvailabilityTiming[];
+  serviceIds: string[];
 }
 
 const normalizeHeader = (value: string) =>
@@ -172,6 +186,42 @@ const getDefaultServiceBehavior = () => ({
   }>,
 });
 
+const DAY_OPTIONS = [
+  { value: -1, label: 'All Days' },
+  { value: 0, label: 'Sunday' },
+  { value: 1, label: 'Monday' },
+  { value: 2, label: 'Tuesday' },
+  { value: 3, label: 'Wednesday' },
+  { value: 4, label: 'Thursday' },
+  { value: 5, label: 'Friday' },
+  { value: 6, label: 'Saturday' },
+];
+
+const getDefaultAvailabilityGroupForm = (): AvailabilityGroupFormState => ({
+  name: '',
+  active: true,
+  timings: [{ day: -1, start: 540, end: 1020 }],
+  serviceIds: [],
+});
+
+const minutesToTimeInput = (minutes: number) => {
+  const safeMinutes = Math.max(0, Math.min(1439, Number(minutes) || 0));
+  const hour = Math.floor(safeMinutes / 60);
+  const minute = safeMinutes % 60;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+};
+
+const timeInputToMinutes = (value: string, fallback: number) => {
+  const match = value.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+  if (!match) return fallback;
+  return Number(match[1]) * 60 + Number(match[2]);
+};
+
+const formatSlotLabel = (slot: IServiceAvailabilityTiming) => {
+  const dayLabel = DAY_OPTIONS.find((day) => day.value === slot.day)?.label || 'All Days';
+  return `${dayLabel}: ${minutesToTimeInput(slot.start)}-${minutesToTimeInput(slot.end)}`;
+};
+
 const csvEscape = (value: string | number | undefined) => {
   const text = value == null ? '' : String(value);
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -180,8 +230,12 @@ const csvEscape = (value: string | number | undefined) => {
 const HotelServices = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
   const { categoriesData, categoriesLoading } = useGetServiceCategories(businessId as string);
+  const { availabilityGroups } = useGetHotelServiceAvailabilityGroups(businessId as string);
   const { updateService } = useUpdateHotelService();
   const { bulkUpdateServiceTimings, bulkUpdateServiceTimingsLoading } = useBulkUpdateHotelServiceTimings();
+  const { createAvailabilityGroup, creatingAvailabilityGroup } = useCreateHotelServiceAvailabilityGroup();
+  const { updateAvailabilityGroup, updatingAvailabilityGroup } = useUpdateHotelServiceAvailabilityGroup();
+  const { deleteAvailabilityGroup, deletingAvailabilityGroup } = useDeleteHotelServiceAvailabilityGroup();
   const { deleteService } = useDeleteHotelService();
   const { updateCategorySequence } = useUpdateCategorySequence();
   const { updateServiceSequence } = useUpdateServiceSequence();
@@ -209,6 +263,26 @@ const HotelServices = () => {
   const [bulkTimingRows, setBulkTimingRows] = useState<BulkTimingRow[]>([]);
   const [bulkTimingErrors, setBulkTimingErrors] = useState<BulkTimingError[]>([]);
   const [bulkTimingFileName, setBulkTimingFileName] = useState('');
+  const [showAvailabilityGroupModal, setShowAvailabilityGroupModal] = useState(false);
+  const [availabilityGroupForm, setAvailabilityGroupForm] = useState<AvailabilityGroupFormState>(getDefaultAvailabilityGroupForm);
+  const [assignedServicesSearch, setAssignedServicesSearch] = useState('');
+
+  const filteredAvailabilityServiceCategories = useMemo(() => {
+    const query = assignedServicesSearch.trim().toLowerCase();
+    if (!query) return categoriesData || [];
+
+    return (categoriesData || [])
+      .map((category) => {
+        const categoryMatches = category.name.toLowerCase().includes(query);
+        return {
+          ...category,
+          serviceIds: categoryMatches
+            ? category.serviceIds
+            : category.serviceIds.filter((service) => service.name.toLowerCase().includes(query)),
+        };
+      })
+      .filter((category) => category.serviceIds.length > 0);
+  }, [assignedServicesSearch, categoriesData]);
 
   useEffect(() => {
     if (categoriesData) {
@@ -706,6 +780,121 @@ const HotelServices = () => {
     }
   }, [businessId, bulkTimingErrors.length, bulkTimingRows, bulkUpdateServiceTimings]);
 
+  const openAvailabilityGroupModal = useCallback((group?: IServiceAvailabilityGroup) => {
+    setAssignedServicesSearch('');
+    if (!group) {
+      setAvailabilityGroupForm(getDefaultAvailabilityGroupForm());
+      setShowAvailabilityGroupModal(true);
+      return;
+    }
+
+    setAvailabilityGroupForm({
+      groupId: group._id,
+      name: group.name,
+      active: group.active !== false,
+      timings: group.timings?.length ? group.timings : [{ day: -1, start: 540, end: 1020 }],
+      serviceIds: (group.serviceIds || []).map((service) => (typeof service === 'string' ? service : service._id)).filter(Boolean),
+    });
+    setShowAvailabilityGroupModal(true);
+  }, []);
+
+  const closeAvailabilityGroupModal = useCallback(() => {
+    setShowAvailabilityGroupModal(false);
+    setAvailabilityGroupForm(getDefaultAvailabilityGroupForm());
+    setAssignedServicesSearch('');
+  }, []);
+
+  const updateAvailabilityTiming = useCallback((index: number, field: keyof IServiceAvailabilityTiming, value: number) => {
+    setAvailabilityGroupForm((prev) => ({
+      ...prev,
+      timings: prev.timings.map((slot, slotIndex) => (slotIndex === index ? { ...slot, [field]: value } : slot)),
+    }));
+  }, []);
+
+  const addAvailabilityTiming = useCallback(() => {
+    setAvailabilityGroupForm((prev) => ({
+      ...prev,
+      timings: [...prev.timings, { day: -1, start: 1140, end: 1380 }].slice(0, 14),
+    }));
+  }, []);
+
+  const removeAvailabilityTiming = useCallback((index: number) => {
+    setAvailabilityGroupForm((prev) => ({
+      ...prev,
+      timings: prev.timings.length > 1 ? prev.timings.filter((_, slotIndex) => slotIndex !== index) : prev.timings,
+    }));
+  }, []);
+
+  const toggleAvailabilityGroupService = useCallback((serviceId: string) => {
+    setAvailabilityGroupForm((prev) => {
+      const isSelected = prev.serviceIds.includes(serviceId);
+      return {
+        ...prev,
+        serviceIds: isSelected ? prev.serviceIds.filter((id) => id !== serviceId) : [...prev.serviceIds, serviceId],
+      };
+    });
+  }, []);
+
+  const handleSaveAvailabilityGroup = useCallback(async () => {
+    if (!businessId) {
+      toast.error('Missing business id');
+      return;
+    }
+
+    const name = availabilityGroupForm.name.trim();
+    if (!name) {
+      toast.error('Enter a group name');
+      return;
+    }
+
+    if (!availabilityGroupForm.serviceIds.length) {
+      toast.error('Select at least one service');
+      return;
+    }
+
+    const timings = availabilityGroupForm.timings.map((slot) => ({
+      day: Number(slot.day),
+      start: Math.max(0, Math.min(1439, Number(slot.start))),
+      end: Math.max(1, Math.min(1440, Number(slot.end))),
+    }));
+
+    try {
+      const payload = {
+        businessId,
+        name,
+        active: availabilityGroupForm.active,
+        timings,
+        serviceIds: availabilityGroupForm.serviceIds,
+      };
+
+      if (availabilityGroupForm.groupId) {
+        await updateAvailabilityGroup({ ...payload, groupId: availabilityGroupForm.groupId });
+        toast.success('Availability group updated');
+      } else {
+        await createAvailabilityGroup(payload);
+        toast.success('Availability group created');
+      }
+      closeAvailabilityGroupModal();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || 'Failed to save availability group');
+    }
+  }, [availabilityGroupForm, businessId, closeAvailabilityGroupModal, createAvailabilityGroup, updateAvailabilityGroup]);
+
+  const handleDeleteAvailabilityGroup = useCallback(
+    async (group: IServiceAvailabilityGroup) => {
+      if (!businessId) return;
+      const ok = window.confirm(`Delete "${group.name}" availability group?`);
+      if (!ok) return;
+      try {
+        await deleteAvailabilityGroup({ groupId: group._id, businessId });
+        toast.success('Availability group deleted');
+      } catch (error: any) {
+        toast.error(error?.response?.data?.message || error?.message || 'Failed to delete availability group');
+      }
+    },
+    [businessId, deleteAvailabilityGroup],
+  );
+
   // ── Service card (normal view) ─────────────────────────────────────────────
   const ServiceCard = useCallback(
     ({ service, categoryName }: { service: IService; categoryName: string }) => {
@@ -874,6 +1063,13 @@ const HotelServices = () => {
 
         {/* Reorder toggle — filled by default so it's always visible */}
         {!isReorderMode && (
+          <Button size="sm" variant="outline" onClick={() => openAvailabilityGroupModal()} className="shrink-0 gap-1.5">
+            <Clock className="h-3.5 w-3.5" />
+            Availability Groups
+          </Button>
+        )}
+
+        {!isReorderMode && (
           <Button size="sm" variant="outline" onClick={() => setShowBulkTimingModal(true)} className="shrink-0 gap-1.5">
             <FileUp className="h-3.5 w-3.5" />
             Bulk Timings
@@ -907,6 +1103,54 @@ const HotelServices = () => {
           {filteredServicesCount} result{filteredServicesCount !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
         </p>
       )}
+
+      {!isReorderMode && availabilityGroups && availabilityGroups.length > 0 ? (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {availabilityGroups.map((group) => (
+            <Card key={group._id} className="border-blue-100 bg-blue-50/50 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate text-sm font-semibold text-slate-900">{group.name}</p>
+                    <Badge variant={group.active === false ? 'secondary' : 'default'} className="text-[10px]">
+                      {group.active === false ? 'Paused' : 'Active'}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600">
+                    {(group.serviceIds || []).length} service{(group.serviceIds || []).length === 1 ? '' : 's'} assigned
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {(group.timings || []).slice(0, 2).map((slot, index) => (
+                      <span key={`${group._id}-${index}`} className="rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[11px] text-blue-700">
+                        {formatSlotLabel(slot)}
+                      </span>
+                    ))}
+                    {(group.timings || []).length > 2 ? (
+                      <span className="rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[11px] text-blue-700">
+                        +{group.timings.length - 2} more
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAvailabilityGroupModal(group)}>
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                    disabled={deletingAvailabilityGroup}
+                    onClick={() => handleDeleteAvailabilityGroup(group)}
+                  >
+                    <Trash className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : null}
 
       {categoriesLoading ? (
         <div className="flex justify-center py-10">
@@ -975,6 +1219,175 @@ const HotelServices = () => {
       ) : (
         <EmptyState />
       )}
+
+      {/* Service Availability Group Modal */}
+      <PopUp
+        width="w-[calc(100vw-1rem)] max-w-[48rem]"
+        height="h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] md:h-[calc(100dvh-2rem)] md:max-h-[calc(100dvh-2rem)]"
+        show={showAvailabilityGroupModal}
+        onClose={closeAvailabilityGroupModal}
+        rightTopBack
+      >
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">
+          <div className="flex shrink-0 items-start justify-between gap-3 border-b pb-3 pr-10">
+            <div>
+              <h3 className="text-lg font-semibold">{availabilityGroupForm.groupId ? 'Edit Availability Group' : 'Create Availability Group'}</h3>
+              <p className="text-muted-foreground text-sm">Set visible timings and assign individual hotel services.</p>
+            </div>
+          </div>
+
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-1 py-4 pr-2">
+            <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+              <div className="space-y-2">
+                <Label htmlFor="availability-group-name">Group Name</Label>
+                <Input
+                  id="availability-group-name"
+                  value={availabilityGroupForm.name}
+                  placeholder="Example: Laundry service hours"
+                  onChange={(event) => setAvailabilityGroupForm((prev) => ({ ...prev, name: event.target.value }))}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3 md:min-w-44">
+                <div>
+                  <Label className="text-sm">Active</Label>
+                  <p className="text-muted-foreground text-xs">Apply these timings</p>
+                </div>
+                <Switch
+                  checked={availabilityGroupForm.active}
+                  onCheckedChange={(checked) => setAvailabilityGroupForm((prev) => ({ ...prev, active: checked }))}
+                />
+              </div>
+            </div>
+
+            <section className="space-y-3 rounded-lg border bg-slate-50 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <Label className="text-sm font-medium">Timing Slots</Label>
+                  <p className="text-muted-foreground text-xs">A service is visible when any slot is currently active.</p>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={addAvailabilityTiming} disabled={availabilityGroupForm.timings.length >= 14}>
+                  Add Slot
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {availabilityGroupForm.timings.map((slot, index) => (
+                  <div key={`${slot.day}-${index}`} className="grid gap-2 rounded-md border bg-white p-2 md:grid-cols-[10rem_8rem_8rem_auto]">
+                    <select
+                      value={slot.day}
+                      onChange={(event) => updateAvailabilityTiming(index, 'day', Number(event.target.value))}
+                      className="h-10 rounded-md border px-2 text-sm"
+                    >
+                      {DAY_OPTIONS.map((day) => (
+                        <option key={day.value} value={day.value}>
+                          {day.label}
+                        </option>
+                      ))}
+                    </select>
+                    <Input
+                      type="time"
+                      value={minutesToTimeInput(slot.start)}
+                      onChange={(event) => updateAvailabilityTiming(index, 'start', timeInputToMinutes(event.target.value, slot.start))}
+                    />
+                    <Input
+                      type="time"
+                      value={minutesToTimeInput(slot.end)}
+                      onChange={(event) => updateAvailabilityTiming(index, 'end', timeInputToMinutes(event.target.value, slot.end))}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10 text-rose-600"
+                      disabled={availabilityGroupForm.timings.length === 1}
+                      onClick={() => removeAvailabilityTiming(index)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-3 rounded-lg border p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <Label className="text-sm font-medium">Assigned Services</Label>
+                  <p className="text-muted-foreground text-xs">Choose only the services that should follow this timing group.</p>
+                </div>
+                <Badge variant="secondary">{availabilityGroupForm.serviceIds.length} selected</Badge>
+              </div>
+
+              <div className="relative">
+                <Search className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+                <Label htmlFor="assigned-services-search" className="sr-only">
+                  Search assigned services
+                </Label>
+                <Input
+                  id="assigned-services-search"
+                  type="search"
+                  value={assignedServicesSearch}
+                  onChange={(event) => setAssignedServicesSearch(event.target.value)}
+                  placeholder="Search services or categories"
+                  className="pl-9"
+                />
+              </div>
+
+              <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
+                {filteredAvailabilityServiceCategories.map((category) => (
+                  <div key={category._id} className="space-y-2">
+                    <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">{category.name}</p>
+                    <div className="grid gap-2 md:grid-cols-2">
+                      {category.serviceIds.map((service) => {
+                        const checked = availabilityGroupForm.serviceIds.includes(service._id);
+                        return (
+                          <label
+                            key={service._id}
+                            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                              checked ? 'border-blue-300 bg-blue-50 text-blue-800' : 'bg-white hover:bg-slate-50'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleAvailabilityGroupService(service._id)}
+                              className="h-4 w-4 accent-blue-600"
+                            />
+                            <span className="min-w-0 flex-1 truncate">{service.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {filteredAvailabilityServiceCategories.length === 0 ? (
+                  <div className="flex min-h-28 flex-col items-center justify-center rounded-lg border border-dashed px-4 text-center">
+                    <Search className="text-muted-foreground mb-2 h-5 w-5" />
+                    <p className="text-sm font-medium">No services found</p>
+                    <p className="text-muted-foreground mt-1 text-xs">Try another service or category name.</p>
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          </div>
+
+          <div className="flex shrink-0 justify-end gap-2 border-t bg-base-100 px-1 pt-3">
+            <Button variant="outline" onClick={closeAvailabilityGroupModal}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAvailabilityGroup} disabled={creatingAvailabilityGroup || updatingAvailabilityGroup}>
+              {creatingAvailabilityGroup || updatingAvailabilityGroup ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Group'
+              )}
+            </Button>
+          </div>
+        </div>
+      </PopUp>
 
       {/* Bulk Service Timing Modal */}
       <PopUp width="w-[30rem] md:w-[44rem]" height="h-auto" show={showBulkTimingModal} onClose={() => setShowBulkTimingModal(false)} rightTopBack>

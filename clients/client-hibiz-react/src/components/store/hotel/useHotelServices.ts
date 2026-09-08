@@ -28,6 +28,29 @@ export interface ServiceBehavior {
   instruction?: string;
   instructionRules?: ServiceInstructionRule[];
 }
+
+export interface IServiceAvailabilityTiming {
+  day: number;
+  start: number;
+  end: number;
+}
+
+export interface IServiceAvailabilityGroup {
+  _id: string;
+  businessId: string;
+  name: string;
+  active?: boolean;
+  timings: IServiceAvailabilityTiming[];
+  serviceIds: Array<IService | string>;
+}
+
+interface ServiceAvailabilityGroupPayload {
+  businessId: string;
+  name: string;
+  active?: boolean;
+  timings: IServiceAvailabilityTiming[];
+  serviceIds: string[];
+}
 export interface ICategoryPayload {
   businessId: string;
   name: string;
@@ -105,6 +128,74 @@ export const useGetServiceCategories = (businessId?: string) => {
   });
 
   return { categoriesLoading, categoriesData, refetchCategories };
+};
+
+export const useGetHotelServiceAvailabilityGroups = (businessId?: string) => {
+  const fetchGroups = async (): Promise<IServiceAvailabilityGroup[]> => {
+    if (!businessId) return [];
+    const response = await axios.get('/hotel/service_availability_group/fetch_groups', {
+      params: { businessId },
+    });
+    return response.data?.data || [];
+  };
+
+  const { isLoading, data, refetch } = useQuery({
+    queryKey: ['getHotelServiceAvailabilityGroups', businessId],
+    queryFn: fetchGroups,
+    enabled: !!businessId,
+  });
+
+  return { availabilityGroupsLoading: isLoading, availabilityGroups: data, refetchAvailabilityGroups: refetch };
+};
+
+export const useCreateHotelServiceAvailabilityGroup = () => {
+  const queryClient = useQueryClient();
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: ServiceAvailabilityGroupPayload) => {
+      const response = await axios.post('/hotel/service_availability_group/add_group', payload);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['getHotelServiceAvailabilityGroups', variables.businessId] });
+      queryClient.invalidateQueries({ queryKey: ['getServiceCategories', variables.businessId] });
+    },
+  });
+
+  return { createAvailabilityGroup: mutateAsync, creatingAvailabilityGroup: isPending };
+};
+
+export const useUpdateHotelServiceAvailabilityGroup = () => {
+  const queryClient = useQueryClient();
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: ServiceAvailabilityGroupPayload & { groupId: string }) => {
+      const response = await axios.put('/hotel/service_availability_group/edit_group', payload);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['getHotelServiceAvailabilityGroups', variables.businessId] });
+      queryClient.invalidateQueries({ queryKey: ['getServiceCategories', variables.businessId] });
+    },
+  });
+
+  return { updateAvailabilityGroup: mutateAsync, updatingAvailabilityGroup: isPending };
+};
+
+export const useDeleteHotelServiceAvailabilityGroup = () => {
+  const queryClient = useQueryClient();
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: { groupId: string; businessId: string }) => {
+      const response = await axios.delete(`/hotel/service_availability_group/delete_group/${payload.groupId}`, {
+        data: { businessId: payload.businessId },
+      });
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['getHotelServiceAvailabilityGroups', variables.businessId] });
+      queryClient.invalidateQueries({ queryKey: ['getServiceCategories', variables.businessId] });
+    },
+  });
+
+  return { deleteAvailabilityGroup: mutateAsync, deletingAvailabilityGroup: isPending };
 };
 
 export const useUpdateHotelService = () => {
