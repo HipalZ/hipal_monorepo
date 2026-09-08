@@ -27,10 +27,19 @@ export type AlertItem = {
   cart?: Array<{
     quantity?: number;
     name?: string;
-    dish?: { name?: string; price?: number };
+    dishId?: string;
+    dishName?: string;
+    avgPrepTime?: number;
+    avgPreparationTime?: number;
+    dish?: { name?: string; price?: number; avgPrepTime?: number; avgPreparationTime?: number };
     portion?: { name?: string; price?: number } | null;
     extras?: Array<{ name?: string; price?: number; quantity?: number }>;
   }>;
+  foodOrderSlaSettings?: {
+    avgAcceptanceTime?: number;
+    avgDeliveryTime?: number;
+    useItemPrepTime?: boolean;
+  };
 };
 
 /**

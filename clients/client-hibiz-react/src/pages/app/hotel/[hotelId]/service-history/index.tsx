@@ -36,6 +36,20 @@ import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const PAGE_SIZE = 20;
+const FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS = 0.5;
+const FOOD_ORDER_FULFILLMENT_FALLBACK_MINS = 30;
+
+type FoodOrderSlaSettings = {
+  avgAcceptanceTime?: number;
+  avgDeliveryTime?: number;
+  useItemPrepTime?: boolean;
+};
+
+const normalizeFoodOrderSlaSettings = (settings?: FoodOrderSlaSettings | null) => ({
+  avgAcceptanceTime: Number(settings?.avgAcceptanceTime) > 0 ? Number(settings?.avgAcceptanceTime) : FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS,
+  avgDeliveryTime: Number(settings?.avgDeliveryTime) > 0 ? Number(settings?.avgDeliveryTime) : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS,
+  useItemPrepTime: settings?.useItemPrepTime !== false,
+});
 
 const CATEGORY_META = {
   food: {
@@ -169,6 +183,11 @@ const MemoHistoryHotel = () => {
     return Boolean(cart?.some((item) => item?.dish || item?.dishId || item?.name || item?.dishName));
   }
 
+  function getFoodCartItemPrepMins(item: any, fallbackMins: number) {
+    const prepMins = Number(item?.dish?.avgPrepTime ?? item?.dish?.avgPreparationTime ?? item?.avgPrepTime ?? item?.avgPreparationTime ?? 0);
+    return prepMins > 0 ? prepMins : fallbackMins;
+  }
+
   const formatExcelTimestamp = (timestamp?: number) => {
     if (!timestamp) return '';
     return new Date(timestamp).toLocaleString('en-IN', {
@@ -275,11 +294,14 @@ const MemoHistoryHotel = () => {
       (max, service) => Math.max(max, Number(service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0)),
       0,
     );
-    const foodPrepMins = hasFoodCartItems(item?.cart)
-      ? item.cart.reduce((max, cartItem) => Math.max(max, Number(cartItem?.dish?.avgPrepTime || 0)), 0)
-      : 0;
-    const acceptMs = (serviceAcceptMins || (hasFoodCartItems(item?.cart) ? 2 : 0)) * 60_000;
-    const deliverMs = (hasFoodCartItems(item?.cart) ? foodPrepMins || 30 : serviceDeliverMins) * 60_000;
+    const isFoodOrder = hasFoodCartItems(item?.cart);
+    const foodOrderSla = normalizeFoodOrderSlaSettings(item?.foodOrderSlaSettings);
+    const foodPrepMins =
+      isFoodOrder && foodOrderSla.useItemPrepTime
+        ? item.cart.reduce((max, cartItem) => Math.max(max, getFoodCartItemPrepMins(cartItem, foodOrderSla.avgDeliveryTime)), 0)
+        : 0;
+    const acceptMs = (serviceAcceptMins || (isFoodOrder ? foodOrderSla.avgAcceptanceTime : 0)) * 60_000;
+    const deliverMs = (isFoodOrder ? foodPrepMins || foodOrderSla.avgDeliveryTime : serviceDeliverMins) * 60_000;
     const progress = String(item?.alertProgress || '');
     const now = Date.now();
     const activeOrCompletedAt = completedAt || now;

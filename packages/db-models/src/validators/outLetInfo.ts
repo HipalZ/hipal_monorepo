@@ -60,6 +60,12 @@ export const SocialMedia = z.object({
   link: z.string().url().min(10).max(100),
 });
 
+export const foodOrderSlaSchema = z.object({
+  avgAcceptanceTime: z.coerce.number().positive().max(5760).optional().default(0.5),
+  avgDeliveryTime: z.coerce.number().positive().max(5760).optional().default(30),
+  useItemPrepTime: z.boolean().optional().default(true),
+});
+
 export const outLetInfoSchema = z.object({
   name: z.string().min(4).max(50).optional(),
   businessId: ObjectIdSchema,
@@ -168,6 +174,7 @@ export const outLetInfoSchema = z.object({
   addButton: z.boolean().optional().default(true),
   placeOrderButton: z.boolean().optional().default(true),
   orderEditWindowMinutes: z.coerce.number().min(0).max(120).optional().default(2),
+  foodOrderSla: foodOrderSlaSchema.optional(),
   currencyCode: z.enum(CurrencyCode).optional(),
   currencySymbol: z.enum(CurrencyCodeSymbol).optional(),
   shareCart: z.boolean().optional().default(false),

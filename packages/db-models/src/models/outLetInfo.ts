@@ -34,6 +34,29 @@ const serviceStatusSchema = new mongoose.Schema({
     default: false,
   },
 });
+
+const foodOrderSlaSchema = new mongoose.Schema(
+  {
+    avgAcceptanceTime: {
+      type: Number,
+      default: 0.5,
+      min: 0,
+      max: 5760,
+    },
+    avgDeliveryTime: {
+      type: Number,
+      default: 30,
+      min: 0,
+      max: 5760,
+    },
+    useItemPrepTime: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  { _id: false },
+);
+
 const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   businessId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -296,6 +319,14 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     default: 2,
     min: 0,
     max: 120,
+  },
+  foodOrderSla: {
+    type: foodOrderSlaSchema,
+    default: () => ({
+      avgAcceptanceTime: 0.5,
+      avgDeliveryTime: 30,
+      useItemPrepTime: true,
+    }),
   },
   currencyCode: {
     type: String,

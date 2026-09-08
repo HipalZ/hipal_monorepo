@@ -55,15 +55,37 @@ const getCartRestaurantIds = (cart: any[] = [], hotelBusinessId?: string) =>
 const hasFoodCartItems = (cart?: any[]) =>
   Boolean(cart?.some((item) => item?.dish || item?.dishId || item?.name || item?.dishName));
 
+const FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS = 0.5;
 const FOOD_ORDER_FULFILLMENT_FALLBACK_MINS = 30;
 
-const foodCartItemPrepMins = (item: any) => {
-  const prepMins = Number(item?.dish?.avgPrepTime ?? item?.dish?.avgPreparationTime ?? item?.avgPrepTime ?? item?.avgPreparationTime ?? 0);
-  return prepMins > 0 ? prepMins : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS;
+type FoodOrderSlaSettings = {
+  avgAcceptanceTime: number;
+  avgDeliveryTime: number;
+  useItemPrepTime: boolean;
 };
 
-const foodOrderFulfillmentMins = (cart?: any[]) =>
-  hasFoodCartItems(cart) ? Math.max(...cart!.map(foodCartItemPrepMins)) : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS;
+const normalizeFoodOrderSlaSettings = (settings?: Partial<FoodOrderSlaSettings> | null): FoodOrderSlaSettings => ({
+  avgAcceptanceTime: Number(settings?.avgAcceptanceTime) > 0 ? Number(settings?.avgAcceptanceTime) : FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS,
+  avgDeliveryTime: Number(settings?.avgDeliveryTime) > 0 ? Number(settings?.avgDeliveryTime) : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS,
+  useItemPrepTime: settings?.useItemPrepTime !== false,
+});
+
+const getFoodOrderSlaSettings = async (businessId: string): Promise<FoodOrderSlaSettings> => {
+  const outletInfo = await OutLetInfo.findOne({ businessId }).select('foodOrderSla').lean();
+  return normalizeFoodOrderSlaSettings((outletInfo as any)?.foodOrderSla);
+};
+
+const foodCartItemPrepMins = (item: any, fallbackMins: number) => {
+  const prepMins = Number(item?.dish?.avgPrepTime ?? item?.dish?.avgPreparationTime ?? item?.avgPrepTime ?? item?.avgPreparationTime ?? 0);
+  return prepMins > 0 ? prepMins : fallbackMins;
+};
+
+const foodOrderFulfillmentMins = (cart?: any[], settings?: Partial<FoodOrderSlaSettings> | null) => {
+  const normalized = normalizeFoodOrderSlaSettings(settings);
+  if (!hasFoodCartItems(cart)) return 0;
+  const prepMins = normalized.useItemPrepTime ? Math.max(...cart!.map((item) => foodCartItemPrepMins(item, normalized.avgDeliveryTime))) : 0;
+  return prepMins > 0 ? prepMins : normalized.avgDeliveryTime;
+};
 
 const foodCartElemMatch = {
   $elemMatch: {
@@ -418,8 +440,10 @@ const buildHistoryAlertQuery = async ({
   return andClauses.length ? { ...query, $and: andClauses } : query;
 };
 
-const hydrateHistoryAlerts = async (alerts: any[]) => {
+const hydrateHistoryAlerts = async (alerts: any[], businessId?: string) => {
   const alertIds = alerts.map((alert) => alert._id);
+  const resolvedBusinessId = businessId || alerts.find((alert) => alert?.businessId)?.businessId?.toString();
+  const foodOrderSlaSettings = resolvedBusinessId ? await getFoodOrderSlaSettings(resolvedBusinessId) : normalizeFoodOrderSlaSettings();
   const roomChats = alertIds.length
     ? await HotelRoomChat.find({
         alertId: { $in: alertIds },
@@ -438,6 +462,7 @@ const hydrateHistoryAlerts = async (alerts: any[]) => {
     return {
       ...alert,
       cart: hasFoodCartItems(alertCart) ? alertCart : hasFoodCartItems(chatCart) ? chatCart : [],
+      foodOrderSlaSettings,
       createdBy: alert.createdBy || chat?.userId,
       createdAt: alert.createdAt || chat?.date,
     };
@@ -1544,6 +1569,8 @@ const hotelAlertRouter = new Hono()
         : [];
       const chatByAlertId = new Map(roomChats.map((chat: any) => [String(chat.alertId), chat]));
 
+      const foodOrderSlaSettings = await getFoodOrderSlaSettings(businessId);
+
       const hydratedAlerts = alerts.map((alert: any) => {
         const chat = chatByAlertId.get(String(alert._id));
         const alertCart = Array.isArray(alert.cart) ? alert.cart : [];
@@ -1551,6 +1578,7 @@ const hotelAlertRouter = new Hono()
         return {
           ...alert,
           cart: hasFoodCartItems(alertCart) ? alertCart : hasFoodCartItems(chatCart) ? chatCart : [],
+          foodOrderSlaSettings,
           createdBy: alert.createdBy || chat?.userId,
           createdAt: alert.createdAt || chat?.date,
         };
@@ -1654,7 +1682,7 @@ const hotelAlertRouter = new Hono()
         .filter((id) => Types.ObjectId.isValid(id))
         .map((id) => new Types.ObjectId(id));
       const staffUsers = staffIds.length ? await User.find({ _id: { $in: staffIds } }).select('name').sort({ name: 1 }).lean() : [];
-      const rows = await hydrateHistoryAlerts(alerts);
+      const rows = await hydrateHistoryAlerts(alerts, businessId);
       const serviceOptions = [
         ...new Set([...(summary.food > 0 ? ['Food Order'] : []), ...services.map((item: any) => item?.name).filter(Boolean)]),
       ].sort();
@@ -2023,6 +2051,7 @@ const hotelAlertRouter = new Hono()
       let serviceData: HotelServiceType = {
         businessId: '',
         name: '',
+        sequence: 0,
         availability: false,
         categoryId: '',
         avgCompletionTime: 0,
@@ -2055,6 +2084,8 @@ const hotelAlertRouter = new Hono()
       }
 
       const isFoodOrderAlert = hasFoodCartItems(requestData.cart);
+      const foodOrderSlaSettings = isFoodOrderAlert ? await getFoodOrderSlaSettings(requestData.businessId) : null;
+      const foodOrderCompletionMins = foodOrderFulfillmentMins(requestData.cart, foodOrderSlaSettings);
       const cartRestaurantIds = isFoodOrderAlert ? getCartRestaurantIds(requestData.cart, requestData.businessId) : [];
       const serviceIds = requestData.serviceIds || [];
       const servicesById = new Map<string, any>();
@@ -2175,11 +2206,12 @@ const hotelAlertRouter = new Hono()
           : {
               businessId: requestData.businessId,
               name: 'Food Order',
+              sequence: 0,
               availability: true,
               categoryId: '',
-              avgCompletionTime: 0,
-              avgAcceptanceTime: 0,
-              avgDeliveryTime: 0,
+              avgCompletionTime: foodOrderCompletionMins,
+              avgAcceptanceTime: foodOrderSlaSettings?.avgAcceptanceTime ?? FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS,
+              avgDeliveryTime: foodOrderCompletionMins,
               quantityLimit: 1,
               serviceBehavior: {
                 instructionEnabled: false,
@@ -2369,7 +2401,8 @@ const hotelAlertRouter = new Hono()
       const primaryServiceId = primaryServiceRef?._id || primaryServiceRef;
       const isFoodOrderAlert = hasFoodCartItems(alert.cart);
       const alertServiceName = primaryServiceRef?.name || (isFoodOrderAlert ? 'Food Order' : 'other');
-      const foodOrderCompletionMins = foodOrderFulfillmentMins(alert.cart);
+      const foodOrderSlaSettings = isFoodOrderAlert ? await getFoodOrderSlaSettings(String(alert.businessId)) : null;
+      const foodOrderCompletionMins = foodOrderFulfillmentMins(alert.cart, foodOrderSlaSettings);
 
       const captainData = await User.findById(userId);
 

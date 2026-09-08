@@ -162,6 +162,11 @@ export interface IOutletInfo {
   shareCart: boolean;
   posWithOnlyMenu: boolean;
   orderEditWindowMinutes?: number;
+  foodOrderSla?: {
+    avgAcceptanceTime?: number;
+    avgDeliveryTime?: number;
+    useItemPrepTime?: boolean;
+  };
 }
 
 export interface Order {
@@ -506,6 +511,11 @@ export interface IBizPayload {
   address?: string;
   hotelBanners?: string[];
   orderEditWindowMinutes?: number;
+  foodOrderSla?: {
+    avgAcceptanceTime?: number;
+    avgDeliveryTime?: number;
+    useItemPrepTime?: boolean;
+  };
 }
 
 export interface IBannerPayload {

@@ -1,4 +1,4 @@
-import { Business, Cart, HotelAlert, HotelAnalytics, HotelRoomChat, Reviews } from '@hi/db-models';
+import { Business, Cart, HotelAlert, HotelAnalytics, HotelRoomChat, OutLetInfo, Reviews } from '@hi/db-models';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { stream } from 'hono/streaming';
@@ -19,7 +19,20 @@ import { respond } from '../../utils/response';
 // endpoint can't be abused with a "from=0, to=now" range.
 const MAX_REPORT_RANGE_MS = 92 * 24 * 60 * 60 * 1000;
 const CSV_BATCH_FLUSH = 500;
+const FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS = 0.5;
 const FOOD_ORDER_FULFILLMENT_FALLBACK_MINS = 30;
+
+type FoodOrderSlaSettings = {
+  avgAcceptanceTime: number;
+  avgDeliveryTime: number;
+  useItemPrepTime: boolean;
+};
+
+const normalizeFoodOrderSlaSettings = (settings?: Partial<FoodOrderSlaSettings> | null): FoodOrderSlaSettings => ({
+  avgAcceptanceTime: Number(settings?.avgAcceptanceTime) > 0 ? Number(settings?.avgAcceptanceTime) : FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS,
+  avgDeliveryTime: Number(settings?.avgDeliveryTime) > 0 ? Number(settings?.avgDeliveryTime) : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS,
+  useItemPrepTime: settings?.useItemPrepTime !== false,
+});
 
 const CSV_HEADERS = [
   "Guest Name",
@@ -170,13 +183,20 @@ const buildOrderItems = (cart?: any[]) => {
 const hasFoodCartItems = (cart?: any[]) =>
   Boolean(cart?.some((item) => item?.dish || item?.dishId || item?.name || item?.dishName));
 
-const foodCartItemPrepMins = (item: any) => {
+const foodCartItemPrepMins = (item: any, fallbackMins: number) => {
   const prepMins = Number(item?.dish?.avgPrepTime ?? item?.dish?.avgPreparationTime ?? item?.avgPrepTime ?? item?.avgPreparationTime ?? 0);
-  return prepMins > 0 ? prepMins : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS;
+  return prepMins > 0 ? prepMins : fallbackMins;
 };
 
-const foodOrderFulfillmentSla = (cart?: any[]) =>
-  hasFoodCartItems(cart) ? Math.max(...cart!.map(foodCartItemPrepMins)) : 0;
+const foodOrderFulfillmentSla = (cart?: any[], settings?: Partial<FoodOrderSlaSettings> | null) => {
+  if (!hasFoodCartItems(cart)) return 0;
+  const normalized = normalizeFoodOrderSlaSettings(settings);
+  const prepMins = normalized.useItemPrepTime ? Math.max(...cart!.map((item) => foodCartItemPrepMins(item, normalized.avgDeliveryTime))) : 0;
+  return prepMins > 0 ? prepMins : normalized.avgDeliveryTime;
+};
+
+const foodOrderAcceptanceSla = (cart?: any[], settings?: Partial<FoodOrderSlaSettings> | null) =>
+  hasFoodCartItems(cart) ? normalizeFoodOrderSlaSettings(settings).avgAcceptanceTime : 0;
 
 const joinNames = (items?: { name?: string }[]) =>
   items?.map((item) => item?.name).filter(Boolean).join(", ") || "";
@@ -223,18 +243,20 @@ const closedStatusPerformanceLabel = (status?: string) => {
 // SLA analysis for the CSV — mirrors the client's computePerf so the download
 // matches the on-screen report. Standards come from each service's
 // avgAcceptanceTime / avgDeliveryTime (minutes); actuals from the timestamps.
-const slaAnalysis = (alert: any) => {
+const slaAnalysis = (alert: any, foodOrderSlaSettings?: Partial<FoodOrderSlaSettings> | null) => {
   const services = alert?.serviceIds ?? [];
-  const accSla = services.reduce(
+  const effectiveFoodOrderSlaSettings = alert?.foodOrderSlaSettings || foodOrderSlaSettings;
+  const serviceAccSla = services.reduce(
     (sum: number, s: any) => sum + (s?.avgAcceptanceTime ?? 0),
     0,
   );
+  const accSla = serviceAccSla > 0 ? serviceAccSla : foodOrderAcceptanceSla(alert?.cart, effectiveFoodOrderSlaSettings);
   const serviceDelSla = services.reduce(
     (sum: number, s: any) =>
       sum + (s?.avgDeliveryTime ?? s?.avgCompletionTime ?? 0),
     0,
   );
-  const delSla = serviceDelSla > 0 ? serviceDelSla : foodOrderFulfillmentSla(alert?.cart);
+  const delSla = serviceDelSla > 0 ? serviceDelSla : foodOrderFulfillmentSla(alert?.cart, effectiveFoodOrderSlaSettings);
   const totalSla = accSla + delSla;
   const totalActual =
     alert?.createdAt && alert?.deliveredAt && alert.deliveredAt >= alert.createdAt
@@ -461,6 +483,11 @@ const hotelReportRouter = new Hono()
         to,
       });
 
+      const outletInfo = await OutLetInfo.findOne({ businessId })
+        .select("foodOrderSla")
+        .lean();
+      const foodOrderSlaSettings = normalizeFoodOrderSlaSettings((outletInfo as any)?.foodOrderSla);
+
       const alerts = await HotelAlert.find({
         businessId,
         createdAt: { $gte: from, $lte: to },
@@ -495,6 +522,7 @@ const hotelReportRouter = new Hono()
         return {
           ...alert,
           cart: alertCart.length ? alertCart : chatCart,
+          foodOrderSlaSettings,
           createdBy: alert.createdBy || chat?.userId,
           createdAt: alert.createdAt || chat?.date,
         };
@@ -666,7 +694,7 @@ const hotelReportRouter = new Hono()
           ]
             .filter(Boolean),
         ).size;
-        const escalated = (hydratedAlerts as any[]).filter((a) => a.isEscalated || slaAnalysis(a).breachedLegSla).length;
+        const escalated = (hydratedAlerts as any[]).filter((a) => a.isEscalated || slaAnalysis(a, foodOrderSlaSettings).breachedLegSla).length;
         const summary = [
           "HOTEL GUEST EXPERIENCE REPORT",
           `Total Service Requests: ${hydratedAlerts.length}`,
@@ -692,7 +720,7 @@ const hotelReportRouter = new Hono()
             stay?.guests,
             phone,
           );
-          const sla = slaAnalysis(alert);
+          const sla = slaAnalysis(alert, foodOrderSlaSettings);
           const isEscalated = Boolean(alert.isEscalated || sla.breachedLegSla);
 
           const row = [
