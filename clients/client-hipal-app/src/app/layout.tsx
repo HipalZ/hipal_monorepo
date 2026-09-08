@@ -59,6 +59,13 @@ const DynamicSessionOut = dynamic(
   }
 );
 
+const DynamicSessionExpiredBlocker = dynamic(
+  () => import("@/components/atoms/sessionExpiredBlocker"),
+  {
+    ssr: false,
+  }
+);
+
 const ErrorPopupComponent = dynamic(
   () => import("@/components/atoms/ErrorPopup"),
   {
@@ -288,6 +295,7 @@ export default function RootLayout({
           </QueryComponent>
           <DynamicScanPage />
           <DynamicSessionOut />
+          <DynamicSessionExpiredBlocker />
           <DynamicThemes />
           <ErrorPopupComponent />
         </Suspense>
