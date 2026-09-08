@@ -18,6 +18,11 @@ interface Alert {
   deliveredAt: number;
   isEscalated: boolean;
   level: number;
+  foodOrderSlaSettings?: {
+    avgAcceptanceTime?: number;
+    avgDeliveryTime?: number;
+    useItemPrepTime?: boolean;
+  };
   serviceInstructionSnapshot?: {
     message?: string;
   };
@@ -31,6 +36,17 @@ interface Props {
 
 const minsToHours = (minutes: number) => (minutes / 60).toFixed(2);
 
+const FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS = 0.5;
+const FOOD_ORDER_FULFILLMENT_FALLBACK_MINS = 30;
+
+const normalizeFoodOrderSlaSettings = (settings?: Alert['foodOrderSlaSettings']) => ({
+  avgAcceptanceTime:
+    Number(settings?.avgAcceptanceTime) > 0 ? Number(settings?.avgAcceptanceTime) : FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS,
+  avgDeliveryTime:
+    Number(settings?.avgDeliveryTime) > 0 ? Number(settings?.avgDeliveryTime) : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS,
+  useItemPrepTime: settings?.useItemPrepTime !== false,
+});
+
 const formatMinutes = (minutes: number) => {
   if (minutes < 1) return `${Math.round(minutes * 60)} sec`;
   const rounded = Math.round(minutes * 10) / 10;
@@ -39,6 +55,11 @@ const formatMinutes = (minutes: number) => {
 
 const hasFoodCartItems = (cart?: Alert['cart']) =>
   Boolean(cart?.some((item) => item?.dish || (item as any)?.dishId || (item as any)?.name || (item as any)?.dishName));
+
+const foodCartItemPrepMins = (item: NonNullable<Alert['cart']>[number], fallbackMins: number) => {
+  const prepMins = Number((item?.dish as any)?.avgPrepTime ?? (item?.dish as any)?.avgPreparationTime ?? (item as any)?.avgPrepTime ?? 0);
+  return prepMins > 0 ? prepMins : fallbackMins;
+};
 
 const buildOrderItems = (cart?: Alert['cart']) =>
   hasFoodCartItems(cart)
@@ -105,9 +126,13 @@ const MemoizedServicesData = ({ servicesData, setIsDialogOpen }: Props) => {
               const quantityLabel = getServiceQuantityLabel(alert);
               const serviceInstruction = alert.serviceInstructionSnapshot?.message?.trim();
               const orderItems = buildOrderItems(alert.cart);
-              const serviceAcceptSla = svc?.avgAcceptanceTime ?? (hasCart ? 2 : 0);
-              const foodPrepMins = hasCart ? alert.cart?.reduce((max, item) => Math.max(max, Number((item?.dish as any)?.avgPrepTime || 0)), 0) || 0 : 0;
-              const serviceDeliverSla = svc?.avgDeliveryTime ?? (hasCart ? foodPrepMins || 30 : 0);
+              const foodOrderSla = normalizeFoodOrderSlaSettings(alert.foodOrderSlaSettings);
+              const serviceAcceptSla = svc?.avgAcceptanceTime ?? (hasCart ? foodOrderSla.avgAcceptanceTime : 0);
+              const foodPrepMins =
+                hasCart && foodOrderSla.useItemPrepTime
+                  ? alert.cart?.reduce((max, item) => Math.max(max, foodCartItemPrepMins(item, foodOrderSla.avgDeliveryTime)), 0) || 0
+                  : 0;
+              const serviceDeliverSla = svc?.avgDeliveryTime ?? (hasCart ? foodPrepMins || foodOrderSla.avgDeliveryTime : 0);
               const acceptM = (alert.acceptedAt - alert.createdAt) / 1000 / 60;
               const deliverM = (alert.deliveredAt - alert.acceptedAt) / 1000 / 60;
               const lateAccept = serviceAcceptSla > 0 && acceptM > serviceAcceptSla;

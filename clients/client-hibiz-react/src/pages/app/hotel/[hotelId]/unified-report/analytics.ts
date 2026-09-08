@@ -14,7 +14,20 @@ const serviceAcceptanceSla = (service?: { avgAcceptanceTime?: number }): number 
 const serviceCompletionSla = (service?: { avgDeliveryTime?: number; avgCompletionTime?: number }): number =>
   service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0;
 
+const FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS = 0.5;
 const FOOD_ORDER_FULFILLMENT_FALLBACK_MINS = 30;
+
+type FoodOrderSlaSettings = {
+  avgAcceptanceTime: number;
+  avgDeliveryTime: number;
+  useItemPrepTime: boolean;
+};
+
+const normalizeFoodOrderSlaSettings = (settings?: Partial<FoodOrderSlaSettings> | null): FoodOrderSlaSettings => ({
+  avgAcceptanceTime: Number(settings?.avgAcceptanceTime) > 0 ? Number(settings?.avgAcceptanceTime) : FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS,
+  avgDeliveryTime: Number(settings?.avgDeliveryTime) > 0 ? Number(settings?.avgDeliveryTime) : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS,
+  useItemPrepTime: settings?.useItemPrepTime !== false,
+});
 
 const cartItemName = (item: any): string => {
   const dishName = item?.dish?.name || item?.name || item?.dishName || '';
@@ -30,13 +43,20 @@ const cartItemName = (item: any): string => {
 const hasFoodCartItems = (cart?: any[]): boolean =>
   Boolean(cart?.some((item) => item?.dish || item?.dishId || item?.name || item?.dishName));
 
-const foodCartItemPrepMins = (item: any): number => {
+const foodCartItemPrepMins = (item: any, fallbackMins: number): number => {
   const prepMins = Number(item?.dish?.avgPrepTime ?? item?.dish?.avgPreparationTime ?? item?.avgPrepTime ?? item?.avgPreparationTime ?? 0);
-  return prepMins > 0 ? prepMins : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS;
+  return prepMins > 0 ? prepMins : fallbackMins;
 };
 
-const foodOrderFulfillmentSla = (cart?: any[]): number =>
-  hasFoodCartItems(cart) ? Math.max(...cart!.map(foodCartItemPrepMins)) : 0;
+const foodOrderFulfillmentSla = (cart?: any[], settings?: Partial<FoodOrderSlaSettings> | null): number => {
+  if (!hasFoodCartItems(cart)) return 0;
+  const normalized = normalizeFoodOrderSlaSettings(settings);
+  const prepMins = normalized.useItemPrepTime ? Math.max(...cart!.map((item) => foodCartItemPrepMins(item, normalized.avgDeliveryTime))) : 0;
+  return prepMins > 0 ? prepMins : normalized.avgDeliveryTime;
+};
+
+const foodOrderAcceptanceSla = (cart?: any[], settings?: Partial<FoodOrderSlaSettings> | null): number =>
+  hasFoodCartItems(cart) ? normalizeFoodOrderSlaSettings(settings).avgAcceptanceTime : 0;
 
 const buildOrderItems = (cart?: any[]): string =>
   hasFoodCartItems(cart)
@@ -127,6 +147,7 @@ type GuestAlert = {
   acceptedBy?: { name?: string };
   deliveredBy?: { name?: string };
   cart?: any[];
+  foodOrderSlaSettings?: Partial<FoodOrderSlaSettings>;
   serviceRequestItems?: Array<{ quantity?: number }>;
   serviceInstructionSnapshot?: { message?: string };
 };
@@ -150,9 +171,10 @@ export const mapGuestAlert = (
 ): UnifiedRow => {
   const { rating, feedback } = reviewOf(a, reviews);
   const services = a.serviceIds ?? [];
-  const acceptSla = services.reduce((s, x) => s + serviceAcceptanceSla(x), 0);
+  const serviceAcceptSla = services.reduce((s, x) => s + serviceAcceptanceSla(x), 0);
+  const acceptSla = serviceAcceptSla > 0 ? serviceAcceptSla : foodOrderAcceptanceSla(a.cart, a.foodOrderSlaSettings);
   const serviceDeliverSla = services.reduce((s, x) => s + serviceCompletionSla(x), 0);
-  const deliverSla = serviceDeliverSla > 0 ? serviceDeliverSla : foodOrderFulfillmentSla(a.cart);
+  const deliverSla = serviceDeliverSla > 0 ? serviceDeliverSla : foodOrderFulfillmentSla(a.cart, a.foodOrderSlaSettings);
   const totalSla = acceptSla + deliverSla;
   const acceptMins = minutes(a.createdAt, a.acceptedAt);
   const deliverMins = minutes(a.acceptedAt, a.deliveredAt);

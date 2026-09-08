@@ -21,6 +21,11 @@ interface BusinessSettingPayload {
   gst?: string;
   logoUrl?: string;
   orderEditWindowMinutes?: number;
+  foodOrderSla?: {
+    avgAcceptanceTime?: number;
+    avgDeliveryTime?: number;
+    useItemPrepTime?: boolean;
+  };
   phone?: string;
   specialBannerUrl?: string;
   startBillTime?: number;

@@ -53,6 +53,9 @@ const BusinessSettingsHotel = () => {
     startTime: '04:00',
     endTime: '03:59',
     orderEditWindowMinutes: businessData?.orderEditWindowMinutes ?? 2,
+    foodOrderAcceptanceTime: businessData?.foodOrderSla?.avgAcceptanceTime ?? 0.5,
+    foodOrderDeliveryTime: businessData?.foodOrderSla?.avgDeliveryTime ?? 30,
+    foodOrderUseItemPrepTime: businessData?.foodOrderSla?.useItemPrepTime ?? true,
     phoneNumber: businessData?.phone || '',
     googleMapsDirection: businessData?.location || '',
   });
@@ -74,6 +77,9 @@ const BusinessSettingsHotel = () => {
       startTime: savedStartTime,
       endTime: savedEndTime,
       orderEditWindowMinutes: businessData.orderEditWindowMinutes ?? 2,
+      foodOrderAcceptanceTime: businessData.foodOrderSla?.avgAcceptanceTime ?? 0.5,
+      foodOrderDeliveryTime: businessData.foodOrderSla?.avgDeliveryTime ?? 30,
+      foodOrderUseItemPrepTime: businessData.foodOrderSla?.useItemPrepTime ?? true,
       phoneNumber: businessData.phone || '',
       googleMapsDirection: businessData.location || '',
     }));
@@ -139,6 +145,11 @@ const BusinessSettingsHotel = () => {
       phone: formData.phoneNumber,
       location: formData.googleMapsDirection,
       orderEditWindowMinutes: formData.orderEditWindowMinutes,
+      foodOrderSla: {
+        avgAcceptanceTime: Math.min(5760, Math.max(0.5, Number(formData.foodOrderAcceptanceTime) || 0.5)),
+        avgDeliveryTime: Math.min(5760, Math.max(1, Number(formData.foodOrderDeliveryTime) || 30)),
+        useItemPrepTime: Boolean(formData.foodOrderUseItemPrepTime),
+      },
     };
 
     setErrors(newErrors);
@@ -293,6 +304,64 @@ const BusinessSettingsHotel = () => {
                   className="max-w-28"
                 />
                 <span className="text-muted-foreground text-sm font-medium">minutes</span>
+              </div>
+
+              <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="foodOrderAcceptanceTime" className="text-sm font-semibold">
+                    Food order acceptance SLA
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      id="foodOrderAcceptanceTime"
+                      type="number"
+                      min={0.5}
+                      max={5760}
+                      step={0.5}
+                      value={formData.foodOrderAcceptanceTime}
+                      onChange={(e) => handleInputChange('foodOrderAcceptanceTime', Math.min(5760, Math.max(0.5, Number(e.target.value) || 0.5)))}
+                      className="max-w-28"
+                    />
+                    <span className="text-muted-foreground text-sm font-medium">minutes</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="foodOrderDeliveryTime" className="text-sm font-semibold">
+                    Default fulfillment SLA
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      id="foodOrderDeliveryTime"
+                      type="number"
+                      min={1}
+                      max={5760}
+                      value={formData.foodOrderDeliveryTime}
+                      onChange={(e) => handleInputChange('foodOrderDeliveryTime', Math.min(5760, Math.max(1, Number(e.target.value) || 30)))}
+                      className="max-w-28"
+                    />
+                    <span className="text-muted-foreground text-sm font-medium">minutes</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-indigo-100 bg-indigo-50/70 p-4">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="foodOrderUseItemPrepTime"
+                    checked={formData.foodOrderUseItemPrepTime}
+                    onCheckedChange={(checked) => handleInputChange('foodOrderUseItemPrepTime', Boolean(checked))}
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <Label htmlFor="foodOrderUseItemPrepTime" className="font-semibold text-indigo-950">
+                      Use menu item preparation time when available
+                    </Label>
+                    <p className="mt-1 text-sm text-indigo-900/70">
+                      Reports use the longest item prep time in the cart. If an item has no prep time, this default fulfillment SLA is used.
+                    </p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

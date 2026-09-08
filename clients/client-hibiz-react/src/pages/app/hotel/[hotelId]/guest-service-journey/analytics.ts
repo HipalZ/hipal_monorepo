@@ -113,10 +113,45 @@ const serviceAcceptanceSla = (service?: { avgAcceptanceTime?: number }): number 
 const serviceCompletionSla = (service?: { avgDeliveryTime?: number; avgCompletionTime?: number }): number =>
   service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0;
 
+const FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS = 0.5;
+const FOOD_ORDER_FULFILLMENT_FALLBACK_MINS = 30;
+
+type FoodOrderSlaSettings = {
+  avgAcceptanceTime: number;
+  avgDeliveryTime: number;
+  useItemPrepTime: boolean;
+};
+
+const normalizeFoodOrderSlaSettings = (settings?: Partial<FoodOrderSlaSettings> | null): FoodOrderSlaSettings => ({
+  avgAcceptanceTime: Number(settings?.avgAcceptanceTime) > 0 ? Number(settings?.avgAcceptanceTime) : FOOD_ORDER_ACCEPTANCE_FALLBACK_MINS,
+  avgDeliveryTime: Number(settings?.avgDeliveryTime) > 0 ? Number(settings?.avgDeliveryTime) : FOOD_ORDER_FULFILLMENT_FALLBACK_MINS,
+  useItemPrepTime: settings?.useItemPrepTime !== false,
+});
+
+const hasFoodCartItems = (cart?: AlertItem['cart']): boolean =>
+  Boolean(cart?.some((item) => item?.dish || item?.dishId || item?.name || item?.dishName));
+
+const foodCartItemPrepMins = (item: NonNullable<AlertItem['cart']>[number], fallbackMins: number): number => {
+  const prepMins = Number(item?.dish?.avgPrepTime ?? item?.dish?.avgPreparationTime ?? item?.avgPrepTime ?? item?.avgPreparationTime ?? 0);
+  return prepMins > 0 ? prepMins : fallbackMins;
+};
+
+const foodOrderAcceptanceSla = (cart?: AlertItem['cart'], settings?: Partial<FoodOrderSlaSettings> | null): number =>
+  hasFoodCartItems(cart) ? normalizeFoodOrderSlaSettings(settings).avgAcceptanceTime : 0;
+
+const foodOrderFulfillmentSla = (cart?: AlertItem['cart'], settings?: Partial<FoodOrderSlaSettings> | null): number => {
+  if (!hasFoodCartItems(cart)) return 0;
+  const normalized = normalizeFoodOrderSlaSettings(settings);
+  const prepMins = normalized.useItemPrepTime ? Math.max(...cart!.map((item) => foodCartItemPrepMins(item, normalized.avgDeliveryTime))) : 0;
+  return prepMins > 0 ? prepMins : normalized.avgDeliveryTime;
+};
+
 export const computePerf = (alert: AlertItem): ServicePerf => {
   const services = alert.serviceIds ?? [];
-  const acceptSla = services.reduce((sum, s) => sum + serviceAcceptanceSla(s), 0);
-  const deliverSla = services.reduce((sum, s) => sum + serviceCompletionSla(s), 0);
+  const serviceAcceptSla = services.reduce((sum, s) => sum + serviceAcceptanceSla(s), 0);
+  const acceptSla = serviceAcceptSla > 0 ? serviceAcceptSla : foodOrderAcceptanceSla(alert.cart, alert.foodOrderSlaSettings);
+  const serviceDeliverSla = services.reduce((sum, s) => sum + serviceCompletionSla(s), 0);
+  const deliverSla = serviceDeliverSla > 0 ? serviceDeliverSla : foodOrderFulfillmentSla(alert.cart, alert.foodOrderSlaSettings);
   const acceptMins = minutesBetween(alert.createdAt, alert.acceptedAt);
   const deliverMins = minutesBetween(alert.acceptedAt, alert.deliveredAt);
   const totalActual = minutesBetween(alert.createdAt, alert.deliveredAt);
@@ -141,6 +176,12 @@ const serviceNames = (services?: { name?: string }[]): string =>
     ?.map((s) => s?.name)
     .filter(Boolean)
     .join(', ') || '';
+
+const serviceLabel = (alert: AlertItem): string => {
+  const names = serviceNames(alert.serviceIds);
+  if (names) return names;
+  return hasFoodCartItems(alert.cart) ? 'Food Order' : '';
+};
 
 const orderItemsLabel = (cart?: AlertItem['cart']): string =>
   cart
@@ -174,7 +215,7 @@ export const buildRequestRows = (alerts: AlertItem[], ctx: ReportContext): Reque
       guestName: alert.createdBy?.name || 'Guest',
       guestPhone,
       roomNo: alert.roomId?.name || '',
-      serviceRequested: serviceNames(alert.serviceIds),
+      serviceRequested: serviceLabel(alert),
       orderItems: orderItemsLabel(alert.cart),
       acceptedByStaff: alert.acceptedBy?.name || '',
       acceptedAt: formatDateTime(alert.acceptedAt),
