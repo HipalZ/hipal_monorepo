@@ -9,7 +9,7 @@ import type { CategoryType, DishType } from '@hi/db-models/src/validators';
 import dynamic from 'next/dynamic';
 import { memo, useEffect, useMemo, useState } from 'react';
 import {
-  applyCategoryTimingAvailability,
+  applyMenuTimingAvailability,
   type CategoryWithTimingState,
 } from '@/components/utils/categoryAvailability';
 
@@ -44,15 +44,12 @@ const DishesList = ({ childCategory, parentCategory, menuLayout }: IDishesProps)
     return () => window.clearInterval(intervalId);
   }, []);
 
-  const timedChildCategories = useMemo(() => {
+  const timedCategories = useMemo(() => {
     const now = new Date(availabilityTick);
-    return (childCategory || []).map((category) => applyCategoryTimingAvailability(category, now));
-  }, [childCategory, availabilityTick]);
+    return applyMenuTimingAvailability(parentCategory || [], childCategory || [], now);
+  }, [childCategory, parentCategory, availabilityTick]);
 
-  const timedParentCategories = useMemo(() => {
-    const now = new Date(availabilityTick);
-    return (parentCategory || []).map((category) => applyCategoryTimingAvailability(category, now));
-  }, [parentCategory, availabilityTick]);
+  const { timedChildCategories, timedParentCategories } = timedCategories;
 
   const subTypes = useMemo(() => {
     const hasVisibleDishes = (category: CategoryWithTimingState): boolean => {

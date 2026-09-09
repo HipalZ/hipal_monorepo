@@ -26,6 +26,8 @@ type FoodOrderSlaSettings = {
   avgAcceptanceTime: number;
   avgDeliveryTime: number;
   useItemPrepTime: boolean;
+  effectiveFulfillmentTime?: number;
+  capturedAt?: number;
 };
 
 const normalizeFoodOrderSlaSettings = (settings?: Partial<FoodOrderSlaSettings> | null): FoodOrderSlaSettings => ({
@@ -198,6 +200,15 @@ const foodOrderFulfillmentSla = (cart?: any[], settings?: Partial<FoodOrderSlaSe
 const foodOrderAcceptanceSla = (cart?: any[], settings?: Partial<FoodOrderSlaSettings> | null) =>
   hasFoodCartItems(cart) ? normalizeFoodOrderSlaSettings(settings).avgAcceptanceTime : 0;
 
+const foodOrderFulfillmentSlaFromAlert = (
+  alert: any,
+  settings?: Partial<FoodOrderSlaSettings> | null,
+) => {
+  const snapshotFulfillment = Number(alert?.foodOrderSlaSnapshot?.effectiveFulfillmentTime);
+  if (snapshotFulfillment > 0 && hasFoodCartItems(alert?.cart)) return snapshotFulfillment;
+  return foodOrderFulfillmentSla(alert?.cart, settings);
+};
+
 const joinNames = (items?: { name?: string }[]) =>
   items?.map((item) => item?.name).filter(Boolean).join(", ") || "";
 
@@ -245,7 +256,7 @@ const closedStatusPerformanceLabel = (status?: string) => {
 // avgAcceptanceTime / avgDeliveryTime (minutes); actuals from the timestamps.
 const slaAnalysis = (alert: any, foodOrderSlaSettings?: Partial<FoodOrderSlaSettings> | null) => {
   const services = alert?.serviceIds ?? [];
-  const effectiveFoodOrderSlaSettings = alert?.foodOrderSlaSettings || foodOrderSlaSettings;
+  const effectiveFoodOrderSlaSettings = alert?.foodOrderSlaSnapshot || alert?.foodOrderSlaSettings || foodOrderSlaSettings;
   const serviceAccSla = services.reduce(
     (sum: number, s: any) => sum + (s?.avgAcceptanceTime ?? 0),
     0,
@@ -256,8 +267,8 @@ const slaAnalysis = (alert: any, foodOrderSlaSettings?: Partial<FoodOrderSlaSett
       sum + (s?.avgDeliveryTime ?? s?.avgCompletionTime ?? 0),
     0,
   );
-  const delSla = serviceDelSla > 0 ? serviceDelSla : foodOrderFulfillmentSla(alert?.cart, effectiveFoodOrderSlaSettings);
-  const totalSla = accSla + delSla;
+  const effectiveDelSla = serviceDelSla > 0 ? serviceDelSla : foodOrderFulfillmentSlaFromAlert(alert, effectiveFoodOrderSlaSettings);
+  const totalSla = accSla + effectiveDelSla;
   const totalActual =
     alert?.createdAt && alert?.deliveredAt && alert.deliveredAt >= alert.createdAt
       ? (alert.deliveredAt - alert.createdAt) / 60000
@@ -270,7 +281,7 @@ const slaAnalysis = (alert: any, foodOrderSlaSettings?: Partial<FoodOrderSlaSett
     alert?.acceptedAt && alert?.deliveredAt && alert.deliveredAt >= alert.acceptedAt
       ? (alert.deliveredAt - alert.acceptedAt) / 60000
       : null;
-  const breachedLegSla = isSlaLate(actualAccept, accSla) || isSlaLate(actualDeliver, delSla);
+  const breachedLegSla = isSlaLate(actualAccept, accSla) || isSlaLate(actualDeliver, effectiveDelSla);
 
   let performance = "";
   if (totalSla > 0 && totalActual != null) {
@@ -285,7 +296,7 @@ const slaAnalysis = (alert: any, foodOrderSlaSettings?: Partial<FoodOrderSlaSett
 
   return {
     stdAccept: accSla > 0 ? formatDurationMinutes(accSla) : "",
-    stdDeliver: delSla > 0 ? formatDurationMinutes(delSla) : "",
+    stdDeliver: effectiveDelSla > 0 ? formatDurationMinutes(effectiveDelSla) : "",
     totalStd: totalSla > 0 ? formatDurationMinutes(totalSla) : "",
     totalActual: totalActual != null ? formatDurationMinutes(totalActual) : "",
     performance,
@@ -522,7 +533,7 @@ const hotelReportRouter = new Hono()
         return {
           ...alert,
           cart: alertCart.length ? alertCart : chatCart,
-          foodOrderSlaSettings,
+          foodOrderSlaSettings: alert.foodOrderSlaSnapshot || foodOrderSlaSettings,
           createdBy: alert.createdBy || chat?.userId,
           createdAt: alert.createdAt || chat?.date,
         };

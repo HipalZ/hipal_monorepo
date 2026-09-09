@@ -11,6 +11,8 @@ import { useSearch } from "@/components/store/useSearch";
 import { motion } from "framer-motion";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import {
+  categoryRefsMatch,
+  getCategoryRefId,
   isTimingDisabledCategory,
   type CategoryWithTimingState,
 } from "@/components/utils/categoryAvailability";
@@ -86,7 +88,9 @@ const groupSubcategoriesByParent = (
       // Filter child categories that match this parent and pass filterDishesByType
       const subcats = childCategories.filter(
         (child) =>
-          child.parentCategoryIds?.includes(parent._id || "") &&
+          child.parentCategoryIds?.some((parentId) =>
+            categoryRefsMatch(parentId, parent._id),
+          ) &&
           filterDishesByType(child, activeDishType),
       );
 
@@ -158,7 +162,7 @@ const MemoMainTypes = (props: IMainTypes) => {
 
       // Set parent category if available
       if (category.parentCategoryIds?.length > 0) {
-        setActiveParentCategory(category.parentCategoryIds[0] || "");
+        setActiveParentCategory(getCategoryRefId(category.parentCategoryIds[0]));
       }
 
       // Set active category and child category

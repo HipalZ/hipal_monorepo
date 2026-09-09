@@ -102,6 +102,10 @@ const hotelAlertSchema = new mongoose.Schema<HotelAlertType>({
     type: Object,
     required: false,
   },
+  foodOrderSlaSnapshot: {
+    type: Object,
+    required: false,
+  },
   roomChatComplainId: {
     type: ObjectId,
     required: false,

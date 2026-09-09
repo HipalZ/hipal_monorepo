@@ -43,6 +43,14 @@ const ServiceInstructionSnapshotSchema = z.object({
   ruleTime: z.string().optional(),
 });
 
+const FoodOrderSlaSnapshotSchema = z.object({
+  avgAcceptanceTime: z.coerce.number().nonnegative().max(5760),
+  avgDeliveryTime: z.coerce.number().nonnegative().max(5760),
+  useItemPrepTime: z.boolean().optional().default(true),
+  effectiveFulfillmentTime: z.coerce.number().nonnegative().max(5760).optional(),
+  capturedAt: z.number().optional(),
+});
+
 export const hotelAlert = z.object({
   alertProgress: z.enum(alertProgressEnum).optional().default("CREATED"),
   serviceIds: z.array(ObjectIdSchema),
@@ -64,6 +72,7 @@ export const hotelAlert = z.object({
   cart: z.array(z.object({})).optional(),
   serviceRequestItems: z.array(ServiceRequestItemSchema).optional().default([]),
   serviceInstructionSnapshot: ServiceInstructionSnapshotSchema.optional(),
+  foodOrderSlaSnapshot: FoodOrderSlaSnapshotSchema.optional(),
   roomChatComplainId: ObjectIdSchema.optional(),
   message: z.string().optional(),
   isEscalated: z.boolean().optional().default(false),

@@ -74,6 +74,7 @@ const HorizontalCard = ({
 
   // Determine if we should use a more compact layout
   const compactLayout = isEdgeLayout;
+  const searchLayout = noDescription;
 
   const shouldShowAddButton = useMemo(() => {
     return (
@@ -86,14 +87,21 @@ const HorizontalCard = ({
     <>
       <div
         className={cn(
-          "flex relative min-h-[11.5rem] items-center justify-between border-b border-gray-100",
-          compactLayout ? "p-2" : "px-4 pb-2",
+          "flex relative items-center justify-between border-b border-gray-100",
+          searchLayout
+            ? "min-h-[9rem] gap-3 rounded-2xl border border-emerald-950/5 bg-white p-3 shadow-[0_10px_30px_rgba(15,23,42,0.06)]"
+            : "min-h-[11.5rem]",
+          compactLayout ? "p-2" : searchLayout ? "" : "px-4 pb-2",
         )}
       >
         <div
           className={cn(
-            "flex-1 ",
-            compactLayout ? "pr-2 pb-2 w-[60%]" : "pr-4 w-[70%]",
+            "flex-1 min-w-0",
+            compactLayout
+              ? "pr-2 pb-2 w-[60%]"
+              : searchLayout
+                ? "w-[62%] pr-1"
+                : "pr-4 w-[70%]",
           )}
         >
           {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
@@ -103,10 +111,12 @@ const HorizontalCard = ({
           )}
           <h3
             className={cn(
-              "font-semibold line-clamp-2  max-h-[3.125rem] poppins-regular ",
+              "font-semibold line-clamp-2 poppins-regular ",
               compactLayout
                 ? "text-base leading-4"
-                : "text-lg leading-[1.25rem]",
+                : searchLayout
+                  ? "text-[1.05rem] leading-[1.1rem]"
+                  : "text-lg leading-[1.25rem] max-h-[3.125rem]",
             )}
             style={{ color: primaryColor }}
           >
@@ -114,7 +124,10 @@ const HorizontalCard = ({
           </h3>
 
           <p
-            className="mt-1 text-base font-medium"
+            className={cn(
+              "mt-1 font-medium",
+              searchLayout ? "text-sm" : "text-base",
+            )}
             style={{ color: primaryColor }}
           >
             {outletInfo?.currencySymbol}
@@ -124,7 +137,7 @@ const HorizontalCard = ({
           </p>
           <PrepDeliveryTimeBadge
             minutes={dishData?.avgPrepTime}
-            className={compactLayout ? "mt-1" : "mt-2"}
+            className={compactLayout || searchLayout ? "mt-1" : "mt-2"}
             color={primaryColor}
           />
           {!noDescription && dishData.description && (
@@ -142,7 +155,7 @@ const HorizontalCard = ({
             onClick={openDishDetails}
             className={cn(
               "flex items-center gap-2 text-xs underline",
-              compactLayout ? "mt-1" : "mt-2",
+              compactLayout || searchLayout ? "mt-1" : "mt-2",
             )}
             style={{ color: primaryColor }}
           >
@@ -152,14 +165,14 @@ const HorizontalCard = ({
 
         <div
           className={cn(
-            "relative w-[40%] flex flex-col items-center",
-            compactLayout ? "w-[40%]" : "w-[30%]",
+            "relative flex flex-col items-center shrink-0",
+            compactLayout ? "w-[40%]" : searchLayout ? "w-[6.75rem]" : "w-[30%]",
           )}
         >
           <div
             className={cn(
               "overflow-hidden rounded-md",
-              compactLayout ? "w-28 h-28" : "w-32 h-32",
+              compactLayout ? "w-28 h-28" : searchLayout ? "h-24 w-24" : "w-32 h-32",
             )}
           >
             {dishData?.images?.[0] && dishData.images[0].trim() !== "" ? (
@@ -172,28 +185,32 @@ const HorizontalCard = ({
                 onClick={openDishDetails}
                 className={cn(
                   "rounded-lg !object-cover !object-center cursor-pointer",
-                  compactLayout ? "w-28 h-28" : "w-32 h-32",
+                  compactLayout ? "w-28 h-28" : searchLayout ? "h-24 w-24" : "w-32 h-32",
                   !dishData.availability && "grayscale",
                 )}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center rounded-lg border-2 border-dashed border-gray-100 bg-gray-50">
+              <div className="w-full h-full flex items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50">
                 <CiImageOn className="text-gray-300" size={compactLayout ? 26 : 30} />
               </div>
             )}
           </div>
           <section
-            className= "absolute right-0 flex flex-col items-center justify-center w-full -bottom-4"
+            className={cn(
+              "right-0 flex flex-col items-center justify-center w-full",
+              searchLayout ? "mt-2" : "absolute -bottom-4",
+            )}
           >
             {!dishData.availability ? (
-              <div className="text-xs bg-gray-200 text-gray-500 rounded px-2 py-0.5">
-              Not Available
+              <div className="whitespace-nowrap rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-500">
+                Not available
               </div>
             ) : shouldShowAddButton ? (
               <DishQuantityButton
                 dishData={dishData}
                 primaryColor={primaryColor}
                 secondaryColor={secondaryColor}
+                className={searchLayout ? "h-9 w-full" : undefined}
               />
             ) : null}
           </section>
