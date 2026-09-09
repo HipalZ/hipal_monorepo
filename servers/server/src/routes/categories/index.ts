@@ -188,7 +188,7 @@ const categoriesRouter = new Hono()
             timings: requestData.timings,
             categoryInfo: requestData.categoryInfo,
           },
-          { session },
+          { session, new: true },
         );
         if (!updatedCategory) return respond(c, "Not found", true, 404, {});
 

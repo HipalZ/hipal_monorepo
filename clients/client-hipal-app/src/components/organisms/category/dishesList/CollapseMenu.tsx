@@ -9,6 +9,7 @@ import HorizontalTileCard from "@/components/atoms/card/horizontalTileCard";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import MemoDishPopup from "@/components/atoms/dishPopup";
 import {
+  categoryRefsMatch,
   isTimingDisabledCategory,
   type CategoryWithTimingState,
 } from "@/components/utils/categoryAvailability";
@@ -85,7 +86,9 @@ const closeModal = () => {
   }, [childCategories, setDishes]);
 
   const filteredSubCategories = childCategories.filter((cat) =>
-    cat?.parentCategoryIds.includes(activeMainCategory),
+    cat?.parentCategoryIds.some((parentId) =>
+      categoryRefsMatch(parentId, activeMainCategory),
+    ),
   );
 
   return (
@@ -144,7 +147,7 @@ const closeModal = () => {
                 <span
                   className="text-sm text-center mt-1 line-clamp-2 poppins"
                   style={{
-                    color: primaryColor,
+                    color: isTimingDisabled ? "#6b7280" : primaryColor,
                     fontWeight: isActive ? "700" : "400",
                   }}
                 >
@@ -221,7 +224,7 @@ const closeModal = () => {
                   }}
                 >
                   <div
-                    className={`flex items-center transition-all duration-300 ${
+                    className={`min-w-0 flex flex-1 items-center transition-all duration-300 ${
                       isOpen ? "h-[2rem]" : "h-[4rem]"
                     } gap-3`}
                   >
@@ -236,18 +239,23 @@ const closeModal = () => {
                         } `}
                       />
                     )}
-                    <span
-                      className={`text-sm font-medium poppins ${
-                        isOpen ? "font-semibold" : ""
-                      }`}
-                    >
-                      {category.name}
-                    </span>
-                    {isTimingDisabled && (
-                      <span className="rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
-                        Not available
+                    <div className="min-w-0 flex-1 text-left">
+                      <span
+                        className={`block truncate text-sm font-medium poppins ${
+                          isOpen ? "font-semibold" : ""
+                        }`}
+                        style={{
+                          color: isTimingDisabled ? "#6b7280" : primaryColor,
+                        }}
+                      >
+                        {category.name}
                       </span>
-                    )}
+                      {isTimingDisabled && (
+                        <span className="mt-1 inline-flex rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-semibold leading-none text-gray-500">
+                          Not available
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <article className="flex items-center gap-2">
                     <p className="text-sm bg-gray-50 rounded-full px-2 py-1 text-primary">

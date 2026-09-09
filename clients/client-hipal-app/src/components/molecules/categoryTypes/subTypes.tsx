@@ -17,6 +17,7 @@ import HorizontalCard from "@/components/atoms/card/horizontalCard";
 import OtherOutletCard from "@/components/atoms/card/otherOutletCard";
 import NoDishesCard from "@/components/atoms/empty/NoDishesCard";
 import {
+  getCategoryRefId,
   isTimingDisabledCategory,
   type CategoryWithTimingState,
 } from "@/components/utils/categoryAvailability";
@@ -131,7 +132,7 @@ function MemoSubTypes({
       setObserverActive(false);
 
       if (category.parentCategoryIds?.length) {
-        setActiveParentCategory(category.parentCategoryIds[0]?.toString());
+        setActiveParentCategory(getCategoryRefId(category.parentCategoryIds[0]));
       }
 
       setActiveCategory(category._id?.toString() || "");
@@ -249,7 +250,7 @@ function MemoSubTypes({
                   {/* Fixed-height label area — prevents layout shift */}
                   <span
                     className="mt-1 h-[2rem] w-full text-center text-[11px] font-medium leading-[1rem] line-clamp-2"
-                    style={{ color: active ? primaryColor : isTimingDisabled ? "#6b7280" : "#555" }}
+                    style={{ color: isTimingDisabled ? "#6b7280" : active ? primaryColor : "#555" }}
                   >
                     {cat.name}
                   </span>

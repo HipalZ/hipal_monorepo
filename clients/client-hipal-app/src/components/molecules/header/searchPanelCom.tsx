@@ -210,7 +210,7 @@ const MemoSearchPanelCom = ({
           exit="exit"
         >
           <motion.div
-            className="flex items-center gap-2 rounded-2xl bg-white/95 p-2 text-base shadow-sm ring-1 ring-black/10"
+            className="flex items-center gap-2 rounded-[1.35rem] bg-white p-2 text-base shadow-[0_12px_34px_rgba(15,23,42,0.08)] ring-1 ring-emerald-950/10"
             variants={itemVariants}
           >
             <Search
@@ -229,20 +229,32 @@ const MemoSearchPanelCom = ({
               type="button"
               onClick={handleBack}
               aria-label="Close search"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition hover:bg-slate-200 active:scale-95"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 transition hover:bg-slate-200 active:scale-95"
             >
               <X className="h-5 w-5" />
             </button>
           </motion.div>
           <motion.div
-            className="mt-4 max-h-[calc(100dvh-9.5rem)] min-h-[calc(100dvh-9.5rem)] overscroll-contain space-y-3 overflow-y-auto pr-1"
+            className="mt-4 flex items-center justify-between px-1 text-xs font-semibold text-slate-500"
+            variants={itemVariants}
+          >
+            <span>
+              {searchText.trim()
+                ? `${filteredDishes.length} match${filteredDishes.length === 1 ? "" : "es"}`
+                : "Recommended items"}
+            </span>
+            <span className="rounded-full bg-white/70 px-2.5 py-1 text-[11px] text-slate-500 ring-1 ring-black/5">
+              {isActiveDishType === "all" ? "All" : isActiveDishType}
+            </span>
+          </motion.div>
+          <motion.div
+            className="mt-2 max-h-[calc(100dvh-12rem)] min-h-[calc(100dvh-12rem)] overscroll-contain space-y-3 overflow-y-auto pr-1"
             variants={itemVariants}
           >
             {filteredDishes.length > 0 ? (
               filteredDishes.map((dish, index) => (
                 <motion.div
                   key={`${dish._id}-${index}`}
-                  className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
                   variants={itemVariants}
                 >
                   <HorizontalCard
@@ -254,8 +266,16 @@ const MemoSearchPanelCom = ({
                 </motion.div>
               ))
             ) : (
-              <div className="rounded-2xl bg-white px-4 py-10 text-center text-sm font-medium text-slate-500 ring-1 ring-black/5">
-                No dishes found
+              <div className="rounded-[1.35rem] bg-white px-5 py-12 text-center shadow-[0_12px_34px_rgba(15,23,42,0.06)] ring-1 ring-emerald-950/10">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                  <Search className="h-5 w-5" />
+                </div>
+                <p className="mt-4 text-sm font-semibold text-slate-700">
+                  No matching items
+                </p>
+                <p className="mx-auto mt-1 max-w-[15rem] text-xs leading-5 text-slate-500">
+                  Try another item name or clear the current filter.
+                </p>
               </div>
             )}
           </motion.div>
