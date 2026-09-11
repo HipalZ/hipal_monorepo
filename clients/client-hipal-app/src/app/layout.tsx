@@ -66,6 +66,13 @@ const DynamicSessionExpiredBlocker = dynamic(
   }
 );
 
+const DynamicSubscriptionEndedGuard = dynamic(
+  () => import("@/components/atoms/subscriptionEndedGuard"),
+  {
+    ssr: false,
+  }
+);
+
 const ErrorPopupComponent = dynamic(
   () => import("@/components/atoms/ErrorPopup"),
   {
@@ -288,6 +295,7 @@ export default function RootLayout({
           <QueryComponent>
             <div id="root">
               {children}
+              <DynamicSubscriptionEndedGuard />
               <AutoLoginWrapper />
               <VisitPing />
               <DynamicCombinedLogin />

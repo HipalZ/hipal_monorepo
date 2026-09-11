@@ -16,6 +16,10 @@ export async function fetchCommonData(
   if (!objectIdRegex.test(businessId)) {
     const res = await apiRpc.businesses.n[":customLink"].$get({
       param: { customLink: businessId },
+    }, {
+      init: {
+        cache: "no-store",
+      },
     });
     const response = (await res.json()) as unknown as {
       data: IBusinessData;
@@ -31,6 +35,10 @@ export async function fetchCommonData(
   } else {
     const res = await apiRpc.businesses.get.Single[":businessId"].$get({
       param: { businessId },
+    }, {
+      init: {
+        cache: "no-store",
+      },
     });
     const response = (await res.json()) as unknown as {
       data: IBusinessData;
@@ -62,6 +70,10 @@ export const getBusinessData = async (customLink: string) => {
   try {
     const res = await apiRpc.businesses.n[":customLink"].$get({
       param: { customLink },
+    }, {
+      init: {
+        cache: "no-store",
+      },
     });
 
     const response = (await res.json()) as unknown as {
