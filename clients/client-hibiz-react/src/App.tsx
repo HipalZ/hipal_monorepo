@@ -1,10 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import MainRouter from "./routes";
 import ErrorPopup from "./components/error";
+import SubscriptionEnded, {
+  isSubscriptionEnded,
+} from "./components/atoms/subscriptionEnded";
+import useBusinessData from "./components/store/useBusinessData";
+import { useLocation } from "react-router-dom";
+
+const selectedBusinessPath = /^\/app\/(business|hotel)\/[a-f\d]{24}(?:\/|$)/i;
 
 function App() {
   const isOnlineRef = useRef(navigator.onLine);
   const [isSlow, setIsSlow] = useState(false);
+  const location = useLocation();
+  const businessData = useBusinessData((s) => s.businessData);
+  const outletInfo = useBusinessData((s) => s.outletInfo);
+  const shouldBlockWorkspace =
+    selectedBusinessPath.test(location.pathname) && isSubscriptionEnded(outletInfo);
 
   useEffect(() => {
     const checkOnlineStatus = () => {
@@ -58,7 +70,11 @@ function App() {
           ⚠ Your connection is too slow
         </div>
       )}
-      <MainRouter />
+      {shouldBlockWorkspace ? (
+        <SubscriptionEnded businessName={outletInfo?.name || businessData?.name} />
+      ) : (
+        <MainRouter />
+      )}
       <ErrorPopup />
     </div>
   );

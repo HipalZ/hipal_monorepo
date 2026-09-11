@@ -502,6 +502,46 @@ const businessesRouter = new Hono()
     },
   )
   .put(
+    "/outletInfo/subscription-ended/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    zValidator(
+      "json",
+      z.object({
+        subscriptionEnded: z.boolean(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const { subscriptionEnded } = await c.req.json();
+      const requestKey = c.req.header("x-subscription-key");
+
+      if (!requestKey || requestKey !== "hipalz_superadmin")
+        return respond(c, "invalid subscription keyword", true, 401, {});
+
+      const updateOutletInfo = await OutLetInfo.findOneAndUpdate(
+        { businessId },
+        { subscriptionEnded },
+        { new: true },
+      );
+
+      if (!updateOutletInfo)
+        return respond(c, "outletInfo not found", true, 404, {});
+
+      return respond(c, "subscription status updated", false, 200, {
+        _id: updateOutletInfo._id,
+        businessId: updateOutletInfo.businessId,
+        name: updateOutletInfo.name,
+        subscriptionEnded: updateOutletInfo.subscriptionEnded === true,
+      });
+    },
+  )
+  .put(
     "/outletInfo/update/:businessId",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
@@ -662,12 +702,29 @@ const businessesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
-      const existingBusiness = await Business.findById(businessId);
+      const existingBusiness = await Business.findById(businessId).lean<{
+        _id: string;
+        name?: string;
+        [key: string]: unknown;
+      }>();
+      const outLetInfo = await OutLetInfo.findOne({ businessId })
+        .select("name subscriptionEnded")
+        .lean<{
+          name?: string;
+          subscriptionEnded?: boolean;
+        }>();
 
       pushToken(c);
 
       return c.json({
-        data: existingBusiness,
+        data: existingBusiness
+          ? {
+              ...existingBusiness,
+              businessName: existingBusiness.name,
+              name: outLetInfo?.name || existingBusiness.name,
+              subscriptionEnded: outLetInfo?.subscriptionEnded === true,
+            }
+          : existingBusiness,
         status: 200,
         error: false,
       });
@@ -681,7 +738,13 @@ const businessesRouter = new Hono()
 
     const getBusiness = await Business.findOne({
       customLink: customLink,
-    }).select("_id");
+    })
+      .select("_id name customLink")
+      .lean<{
+        _id: string;
+        name?: string;
+        customLink?: string;
+      }>();
 
     pushToken(c);
 
@@ -714,7 +777,14 @@ const businessesRouter = new Hono()
       });
 
     if (!outLetInfo) return respond(c, "business not found", true, 404, {});
-    return respond(c, "business found", false, 200, outLetInfo);
+    const responseData = outLetInfo.toObject ? outLetInfo.toObject() : outLetInfo;
+    return respond(c, "business found", false, 200, {
+      ...responseData,
+      businessName: getBusiness?.name,
+      name: responseData.name || getBusiness?.name,
+      subscriptionEnded: responseData.subscriptionEnded === true,
+      customLink: getBusiness?.customLink || customLink,
+    });
   })
   .get(
     "/:businessId/loyalty",

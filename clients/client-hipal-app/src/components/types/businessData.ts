@@ -180,6 +180,7 @@ export interface IOutlet {
   shareCart?: boolean;
   birthdayCampaign?: boolean;
   orderEditWindowMinutes?: number;
+  subscriptionEnded?: boolean;
   currencySymbol: string;
   currencyCode: string;
 }
@@ -486,7 +487,9 @@ export interface BusinessDetails {
   hotelBanners: string[];
   _id: string;
   businessId: string;
+  businessName?: string;
   __v: number;
+  subscriptionEnded?: boolean;
   amenities: string[];
   footerDescription: string;
   fssai: string;

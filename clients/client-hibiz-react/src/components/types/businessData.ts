@@ -161,6 +161,7 @@ export interface IOutletInfo {
   isPosEnabled: boolean;
   shareCart: boolean;
   posWithOnlyMenu: boolean;
+  subscriptionEnded?: boolean;
   orderEditWindowMinutes?: number;
   foodOrderSla?: {
     avgAcceptanceTime?: number;

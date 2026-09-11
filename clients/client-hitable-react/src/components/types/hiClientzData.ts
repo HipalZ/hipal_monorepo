@@ -304,6 +304,7 @@ export interface IOutletInfo {
   serviceChargePercentage: number;
   isPosEnabled: boolean;
   shareCart: boolean;
+  subscriptionEnded?: boolean;
 }
 
 export interface OrderData {

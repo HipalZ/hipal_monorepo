@@ -314,6 +314,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Boolean,
     default: true,
   },
+  subscriptionEnded: {
+    type: Boolean,
+    default: false,
+  },
   orderEditWindowMinutes: {
     type: Number,
     default: 2,
