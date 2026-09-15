@@ -157,17 +157,9 @@ export const catalogueSchema = z.object({
 
 export const timingsArraySchema = z
   .array(timingSchema)
-  .max(7, { message: "You can define timings for at most 7 days" })
-  .refine(
-    (arr) => {
-      // If "all days" (-1) exists, it must be the ONLY entry
-      const hasAllDay = arr.some((t) => t.day === -1);
-      return !hasAllDay || arr.length === 1;
-    },
-    {
-      message: "If 'day = -1 (All)', only one object is allowed",
-    },
-  );
+  // A category can have multiple service windows, including multiple
+  // windows that apply to every day (for example, lunch and dinner).
+  .max(14, { message: "You can define timings for at most 14 time slots" });
 
 export const updateCategorySchema = z.object({
   name: z
