@@ -27,6 +27,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHotelStore } from '../store/useHotelStore';
 import { useFormatTimes } from '../utils/helpersHotel';
+import { resolveFoodOrderSla } from './foodOrderSla';
 
 const PAGE_SIZE = 20;
 
@@ -220,11 +221,9 @@ const MemoHistoryHotel = () => {
       (max, service) => Math.max(max, Number(service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0)),
       0,
     );
-    const foodPrepMins = hasFoodCartItems(item?.cart)
-      ? item.cart.reduce((max, cartItem) => Math.max(max, Number(cartItem?.dish?.avgPrepTime || 0)), 0)
-      : 0;
-    const acceptMs = (serviceAcceptMins || (hasFoodCartItems(item?.cart) ? 2 : 0)) * 60_000;
-    const deliverMs = (hasFoodCartItems(item?.cart) ? foodPrepMins || 30 : serviceDeliverMins) * 60_000;
+    const foodOrderSla = resolveFoodOrderSla(item);
+    const acceptMs = (serviceAcceptMins || foodOrderSla.acceptanceMins) * 60_000;
+    const deliverMs = (hasFoodCartItems(item?.cart) ? foodOrderSla.fulfillmentMins : serviceDeliverMins) * 60_000;
     const progress = String(item?.alertProgress || '');
     const now = Date.now();
     const activeOrCompletedAt = completedAt || now;

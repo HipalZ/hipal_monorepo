@@ -17,6 +17,7 @@ import { useHiClientZ } from '../store/useHiClientzData';
 import type { Alert, Cart } from '../types/hotelData';
 import { useAlertsColors } from '../utils/helpersHotel';
 import CartDetailsHotel from './cartDetailsHotel';
+import { resolveFoodOrderSla } from './foodOrderSla';
 import { SlaPanel } from './SlaPanel';
 
 export interface AlertCardProps {
@@ -260,10 +261,9 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const services = alert?.serviceIds || [];
   const serviceAcceptMins = services.reduce((max, service) => Math.max(max, service?.avgAcceptanceTime || 0), 0);
   const serviceDeliverMins = services.reduce((max, service) => Math.max(max, service?.avgDeliveryTime ?? service?.avgCompletionTime ?? 0), 0);
-  const foodPrepMins = hasCart ? alert.cart.reduce((max, item) => Math.max(max, item?.dish?.avgPrepTime || 0), 0) : 0;
-  const foodDeliverMins = hasCart ? foodPrepMins || 30 : 0;
-  const acceptMins = serviceAcceptMins || (hasCart ? 2 : 0);
-  const deliverMins = hasCart ? foodDeliverMins : serviceDeliverMins;
+  const foodOrderSla = resolveFoodOrderSla(alert);
+  const acceptMins = serviceAcceptMins || foodOrderSla.acceptanceMins;
+  const deliverMins = hasCart ? foodOrderSla.fulfillmentMins : serviceDeliverMins;
 
   // The header names the request; extra services collapse into a "+N more".
   const serviceSummaries = services
