@@ -49,6 +49,14 @@ export interface ServiceRequestItem {
   quantity: number;
 }
 
+export interface FoodOrderSlaSettings {
+  avgAcceptanceTime?: number;
+  avgDeliveryTime?: number;
+  useItemPrepTime?: boolean;
+  effectiveFulfillmentTime?: number;
+  capturedAt?: number;
+}
+
 interface CreatedBy {
   _id: string;
   name: string;
@@ -111,6 +119,9 @@ export interface Alert {
     ruleCondition?: 'BEFORE_TIME' | 'AFTER_TIME';
     ruleTime?: string;
   };
+  foodOrderSlaSnapshot?: FoodOrderSlaSettings;
+  /** Hydrated by alert-list/history endpoints for legacy alerts without a snapshot. */
+  foodOrderSlaSettings?: FoodOrderSlaSettings;
   businessId: string;
   userId: string;
   createdAt: number;
