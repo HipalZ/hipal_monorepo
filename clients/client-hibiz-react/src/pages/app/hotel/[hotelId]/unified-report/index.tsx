@@ -13,7 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { buildRows, closedStatusLabel, groupBy, summarize, verdictText } from './analytics';
-import { activeTags, applyFilters, blankFilters, clearFilter, filterOptions, type UnifiedFilters } from './filters';
+import { activeTags, applyFilters, blankFilters, clearFilter, filterOptions, NO_FILTER_OPTIONS_SELECTED, type UnifiedFilters } from './filters';
 import type { UnifiedRow } from './model';
 
 const PAGE_SIZES = [10, 25, 50, 100] as const;
@@ -136,10 +136,17 @@ const MultiSelect = ({
 }) => {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const noneSelected = value.includes(NO_FILTER_OPTIONS_SELECTED);
   const selected = value.filter((v) => options.includes(v));
-  const title = selected.length === 0 || selected.length === options.length ? placeholder : selected.length === 1 ? selected[0] : `${selected.length} selected`;
-  const allChecked = options.length > 0 && (selected.length === 0 || selected.length === options.length);
-  const isChecked = (option: string) => selected.length === 0 || selected.includes(option);
+  const title = noneSelected
+    ? 'None selected'
+    : selected.length === 0 || selected.length === options.length
+      ? placeholder
+      : selected.length === 1
+        ? selected[0]
+        : `${selected.length} selected`;
+  const allChecked = options.length > 0 && !noneSelected && (selected.length === 0 || selected.length === options.length);
+  const isChecked = (option: string) => !noneSelected && (selected.length === 0 || selected.includes(option));
 
   useEffect(() => {
     if (!open) return;
@@ -152,15 +159,21 @@ const MultiSelect = ({
     return () => document.removeEventListener('pointerdown', closeOnOutsidePointer);
   }, [open]);
 
-  const toggleAll = () => onChange([]);
+  const toggleAll = () => onChange(allChecked ? [NO_FILTER_OPTIONS_SELECTED] : []);
   const toggle = (option: string) => {
+    if (noneSelected) {
+      onChange([option]);
+      return;
+    }
+
     if (selected.length === 0) {
-      onChange(options.filter((v) => v !== option));
+      const next = options.filter((v) => v !== option);
+      onChange(next.length > 0 ? next : [NO_FILTER_OPTIONS_SELECTED]);
       return;
     }
 
     const next = selected.includes(option) ? selected.filter((v) => v !== option) : [...selected, option];
-    onChange(next.length === options.length ? [] : next);
+    onChange(next.length === 0 ? [NO_FILTER_OPTIONS_SELECTED] : next.length === options.length ? [] : next);
   };
 
   return (
@@ -186,13 +199,13 @@ const MultiSelect = ({
       >
         <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-2 pb-2">
           <span className="text-xs font-bold text-slate-700">{label}</span>
-          {selected.length > 0 ? (
+          {!allChecked ? (
             <button
               type="button"
               onClick={() => onChange([])}
               className="text-[11px] font-semibold text-slate-400 transition-colors hover:text-rose-600"
             >
-              Clear
+              Select all
             </button>
           ) : null}
         </div>
