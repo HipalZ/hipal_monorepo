@@ -16,6 +16,9 @@ export type UnifiedFilters = {
   q: string;
 };
 
+/** Internal value used by multi-select filters to distinguish "none" from the default "all" state. */
+export const NO_FILTER_OPTIONS_SELECTED = '__NO_FILTER_OPTIONS_SELECTED__';
+
 export const blankFilters = (): UnifiedFilters => ({
   source: 'ALL',
   outcome: 'all',
@@ -30,6 +33,7 @@ export const blankFilters = (): UnifiedFilters => ({
 });
 
 const hasSelected = (values: string[]) => values.length > 0;
+const hasNoOptionsSelected = (values: string[]) => values.includes(NO_FILTER_OPTIONS_SELECTED);
 
 export const matches = (r: UnifiedRow, f: UnifiedFilters): boolean => {
   if (f.source !== 'ALL' && r.source !== f.source) return false;
@@ -80,12 +84,18 @@ export const activeTags = (f: UnifiedFilters): FilterTag[] => {
   if (f.source !== 'ALL') tags.push({ key: 'source', label: f.source === 'GUEST' ? 'Guest requests' : 'Checkout turnover' });
   if (f.outcome !== 'all') tags.push({ key: 'outcome', label: OUTCOME_LABELS[f.outcome] });
   if (f.rating !== 'all') tags.push({ key: 'rating', label: RATING_LABELS[f.rating] });
-  if (hasSelected(f.rooms)) tags.push({ key: 'rooms', label: f.rooms.length === 1 ? `Room: ${f.rooms[0]}` : `Rooms: ${f.rooms.length} selected` });
-  if (hasSelected(f.guest)) tags.push({ key: 'guest', label: f.guest.length === 1 ? `Guest: ${f.guest[0]}` : `Guests: ${f.guest.length} selected` });
-  if (hasSelected(f.frontOffice)) tags.push({ key: 'frontOffice', label: f.frontOffice.length === 1 ? `Front office: ${f.frontOffice[0]}` : `Front office: ${f.frontOffice.length} selected` });
-  if (hasSelected(f.staff)) tags.push({ key: 'staff', label: f.staff.length === 1 ? `Served by ${f.staff[0]}` : `Staff: ${f.staff.length} selected` });
-  if (hasSelected(f.service)) tags.push({ key: 'service', label: f.service.length === 1 ? f.service[0] : `Services: ${f.service.length} selected` });
-  if (hasSelected(f.floor)) tags.push({ key: 'floor', label: f.floor.length === 1 ? f.floor[0] : `Floors: ${f.floor.length} selected` });
+  if (hasNoOptionsSelected(f.rooms)) tags.push({ key: 'rooms', label: 'No rooms selected' });
+  else if (hasSelected(f.rooms)) tags.push({ key: 'rooms', label: f.rooms.length === 1 ? `Room: ${f.rooms[0]}` : `Rooms: ${f.rooms.length} selected` });
+  if (hasNoOptionsSelected(f.guest)) tags.push({ key: 'guest', label: 'No guests selected' });
+  else if (hasSelected(f.guest)) tags.push({ key: 'guest', label: f.guest.length === 1 ? `Guest: ${f.guest[0]}` : `Guests: ${f.guest.length} selected` });
+  if (hasNoOptionsSelected(f.frontOffice)) tags.push({ key: 'frontOffice', label: 'No front office selected' });
+  else if (hasSelected(f.frontOffice)) tags.push({ key: 'frontOffice', label: f.frontOffice.length === 1 ? `Front office: ${f.frontOffice[0]}` : `Front office: ${f.frontOffice.length} selected` });
+  if (hasNoOptionsSelected(f.staff)) tags.push({ key: 'staff', label: 'No staff selected' });
+  else if (hasSelected(f.staff)) tags.push({ key: 'staff', label: f.staff.length === 1 ? `Served by ${f.staff[0]}` : `Staff: ${f.staff.length} selected` });
+  if (hasNoOptionsSelected(f.service)) tags.push({ key: 'service', label: 'No services selected' });
+  else if (hasSelected(f.service)) tags.push({ key: 'service', label: f.service.length === 1 ? f.service[0] : `Services: ${f.service.length} selected` });
+  if (hasNoOptionsSelected(f.floor)) tags.push({ key: 'floor', label: 'No floors selected' });
+  else if (hasSelected(f.floor)) tags.push({ key: 'floor', label: f.floor.length === 1 ? f.floor[0] : `Floors: ${f.floor.length} selected` });
   if (f.q) tags.push({ key: 'q', label: `“${f.q}”` });
   return tags;
 };
