@@ -80,12 +80,23 @@ const serviceQuantity = (items?: Array<{ quantity?: number }>, cart?: any[]): nu
   return foodTotal > 0 ? foodTotal : 1;
 };
 
+const SYSTEM_ALERT_SERVICE_LABELS: Record<string, string> = {
+  CHECKOUT_REQUEST: 'Checkout',
+  WAKE_UP_CALL: 'Wake-up Call',
+};
+
+const systemAlertServiceLabel = (message?: string): string => {
+  const prefix = message?.match(/^([A-Z_]+)::/)?.[1];
+  return prefix ? SYSTEM_ALERT_SERVICE_LABELS[prefix] || '' : '';
+};
+
 const serviceLabel = (services: GuestAlert['serviceIds'] = [], cart?: any[], message?: string): string => {
   const names = services.map((x) => x.name).filter(Boolean).join(', ');
   if (names) return names;
-  // Older checkout-request alerts were saved before the system Checkout
-  // service was guaranteed, so serviceIds can legitimately be empty.
-  if (message?.startsWith('CHECKOUT_REQUEST::')) return 'Checkout';
+  // System-generated alerts intentionally have no serviceIds. Their stable
+  // message prefix is the service identity used by the rest of the hotel UI.
+  const systemLabel = systemAlertServiceLabel(message);
+  if (systemLabel) return systemLabel;
   return hasFoodCartItems(cart) ? 'Food Order' : '—';
 };
 
@@ -153,7 +164,7 @@ type GuestAlert = {
   foodOrderSlaSettings?: Partial<FoodOrderSlaSettings>;
   serviceRequestItems?: Array<{ quantity?: number }>;
   serviceInstructionSnapshot?: { message?: string };
-  /** Legacy checkout requests can predate the system Checkout service link. */
+  /** System-generated requests such as wake-up calls carry a stable prefix. */
   message?: string;
 };
 
