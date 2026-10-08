@@ -80,9 +80,12 @@ const serviceQuantity = (items?: Array<{ quantity?: number }>, cart?: any[]): nu
   return foodTotal > 0 ? foodTotal : 1;
 };
 
-const serviceLabel = (services: GuestAlert['serviceIds'] = [], cart?: any[]): string => {
+const serviceLabel = (services: GuestAlert['serviceIds'] = [], cart?: any[], message?: string): string => {
   const names = services.map((x) => x.name).filter(Boolean).join(', ');
   if (names) return names;
+  // Older checkout-request alerts were saved before the system Checkout
+  // service was guaranteed, so serviceIds can legitimately be empty.
+  if (message?.startsWith('CHECKOUT_REQUEST::')) return 'Checkout';
   return hasFoodCartItems(cart) ? 'Food Order' : '—';
 };
 
@@ -150,6 +153,8 @@ type GuestAlert = {
   foodOrderSlaSettings?: Partial<FoodOrderSlaSettings>;
   serviceRequestItems?: Array<{ quantity?: number }>;
   serviceInstructionSnapshot?: { message?: string };
+  /** Legacy checkout requests can predate the system Checkout service link. */
+  message?: string;
 };
 
 const OPEN_GUEST = new Set(['CREATED', 'ACCEPTED', 'IS_ACCEPTED_AND_WARNING', 'NON_ACCEPTED_AND_WARNING', 'IS_ACCEPTED_AND_ESCALATION', 'NON_ACCEPTED_AND_ESCALATION']);
@@ -187,7 +192,7 @@ export const mapGuestAlert = (
     source: 'GUEST',
     room,
     floor: floorOf(room),
-    service: serviceLabel(services, a.cart),
+    service: serviceLabel(services, a.cart, a.message),
     quantity: serviceQuantity(a.serviceRequestItems, a.cart),
     orderItems: buildOrderItems(a.cart),
     customerInstruction: a.serviceInstructionSnapshot?.message?.trim() || '',
