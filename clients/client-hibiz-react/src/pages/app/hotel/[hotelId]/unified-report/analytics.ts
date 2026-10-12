@@ -85,7 +85,7 @@ const SYSTEM_ALERT_SERVICE_LABELS: Record<string, string> = {
   WAKE_UP_CALL: 'Wake-up Call',
 };
 
-const MISSING_SERVICE_LABEL = 'Service details unavailable';
+export const MISSING_SERVICE_LABEL = 'Service details unavailable';
 
 const systemAlertServiceLabel = (message?: string): string => {
   const prefix = message?.match(/^([A-Z_]+)::/)?.[1];
@@ -366,7 +366,7 @@ export const summarize = (rows: UnifiedRow[]): Summary => {
   };
 };
 
-export type GroupStat = { key: string; total: number; onTime: number; late: number; pct: number };
+export type GroupStat = { key: string; total: number; onTime: number; late: number; pct: number | null };
 
 export const groupBy = (rows: UnifiedRow[], pick: (r: UnifiedRow) => string): GroupStat[] => {
   const map = new Map<string, { total: number; onTime: number; late: number }>();
@@ -379,9 +379,14 @@ export const groupBy = (rows: UnifiedRow[], pick: (r: UnifiedRow) => string): Gr
     map.set(key, s);
   }
   return [...map.entries()]
-    .map(([key, s]) => ({ key, ...s, pct: s.onTime + s.late ? (s.onTime / (s.onTime + s.late)) * 100 : 0 }))
+    .map(([key, s]) => {
+      const judged = s.onTime + s.late;
+      return { key, ...s, pct: judged ? (s.onTime / judged) * 100 : null };
+    })
     .sort((a, b) => b.total - a.total);
 };
+
+export const isServicePerformanceRow = (row: UnifiedRow): boolean => row.onTime != null && row.service !== MISSING_SERVICE_LABEL;
 
 /** "5m 18s" · "1h 9m" — same reading as the timing columns. */
 const dur = (m: number): string => {
