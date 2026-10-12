@@ -18,6 +18,7 @@ export type UnifiedFilters = {
 
 /** Internal value used by multi-select filters to distinguish "none" from the default "all" state. */
 export const NO_FILTER_OPTIONS_SELECTED = '__NO_FILTER_OPTIONS_SELECTED__';
+export const UNKNOWN_SERVICE_LABEL = '—';
 
 export const blankFilters = (): UnifiedFilters => ({
   source: 'ALL',
@@ -109,7 +110,7 @@ export const filterOptions = (rows: UnifiedRow[]) => {
     guests: uniq(rows.filter((r) => r.requesterKind === 'GUEST').map((r) => r.requesterName)),
     frontOffice: uniq(rows.filter((r) => r.requesterKind === 'FRONT_OFFICE').map((r) => r.requesterName)),
     staff: uniq(rows.map((r) => r.servicedBy)),
-    services: uniq(rows.map((r) => r.service)),
+    services: uniq(rows.map((r) => r.service).filter((service) => service !== UNKNOWN_SERVICE_LABEL)),
     floors: uniq(rows.map((r) => r.floor)),
     rooms: uniq(rows.map((r) => r.room)),
   };
