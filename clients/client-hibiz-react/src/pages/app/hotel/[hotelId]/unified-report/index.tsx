@@ -13,7 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { buildRows, closedStatusLabel, groupBy, summarize, verdictText } from './analytics';
-import { activeTags, applyFilters, blankFilters, clearFilter, filterOptions, NO_FILTER_OPTIONS_SELECTED, type UnifiedFilters } from './filters';
+import { activeTags, applyFilters, blankFilters, clearFilter, filterOptions, NO_FILTER_OPTIONS_SELECTED, UNKNOWN_SERVICE_LABEL, type UnifiedFilters } from './filters';
 import type { UnifiedRow } from './model';
 
 const PAGE_SIZES = [10, 25, 50, 100] as const;
@@ -352,7 +352,7 @@ const UnifiedReport = () => {
   const tags = activeTags(filters);
 
   const summary = useMemo(() => summarize(rows), [rows]);
-  const byService = useMemo(() => groupBy(rows, (r) => r.service), [rows]);
+  const byService = useMemo(() => groupBy(rows.filter((r) => r.service !== UNKNOWN_SERVICE_LABEL), (r) => r.service), [rows]);
   const byStaff = useMemo(
     () =>
       groupBy(
