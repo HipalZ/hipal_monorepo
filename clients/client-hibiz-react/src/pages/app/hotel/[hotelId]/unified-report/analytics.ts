@@ -85,6 +85,8 @@ const SYSTEM_ALERT_SERVICE_LABELS: Record<string, string> = {
   WAKE_UP_CALL: 'Wake-up Call',
 };
 
+const MISSING_SERVICE_LABEL = 'Service details unavailable';
+
 const systemAlertServiceLabel = (message?: string): string => {
   const prefix = message?.match(/^([A-Z_]+)::/)?.[1];
   return prefix ? SYSTEM_ALERT_SERVICE_LABELS[prefix] || '' : '';
@@ -97,7 +99,8 @@ const serviceLabel = (services: GuestAlert['serviceIds'] = [], cart?: any[], mes
   // message prefix is the service identity used by the rest of the hotel UI.
   const systemLabel = systemAlertServiceLabel(message);
   if (systemLabel) return systemLabel;
-  return hasFoodCartItems(cart) ? 'Food Order' : 'Service details unavailable';
+  if (message && /check\s*-?\s*out/i.test(message)) return 'Checkout';
+  return hasFoodCartItems(cart) ? 'Food Order' : MISSING_SERVICE_LABEL;
 };
 
 // ── review matching ──────────────────────────────────────────────────────────
