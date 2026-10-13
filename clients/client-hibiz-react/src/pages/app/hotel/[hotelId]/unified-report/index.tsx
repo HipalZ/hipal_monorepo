@@ -12,7 +12,7 @@ import { AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronDown, Download, S
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { buildRows, closedStatusLabel, groupBy, summarize, verdictText } from './analytics';
+import { buildRows, closedStatusLabel, groupBy, isServicePerformanceRow, summarize, verdictText } from './analytics';
 import { activeTags, applyFilters, blankFilters, clearFilter, filterOptions, NO_FILTER_OPTIONS_SELECTED, type UnifiedFilters } from './filters';
 import type { UnifiedRow } from './model';
 
@@ -300,7 +300,7 @@ const Bars = ({ title, subtitle, stats }: { title: string; subtitle: string; sta
                 </span>
               </span>
               <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-sm font-bold tabular-nums text-slate-800 ring-1 ring-slate-200">
-                {Math.round(s.pct)}%
+                {s.pct == null ? 'N/A' : `${Math.round(s.pct)}%`}
               </span>
             </div>
             <div className="mt-1 flex h-3 w-full overflow-hidden rounded-md bg-slate-100">
@@ -347,19 +347,16 @@ const UnifiedReport = () => {
   const setFilter = <K extends keyof UnifiedFilters>(key: K, value: UnifiedFilters[K]) => setFilters((prev) => ({ ...prev, [key]: value }));
 
   const allRows = useMemo(() => buildRows(historyData as never[], tasks, visitsByPhone, reviews), [historyData, tasks, visitsByPhone, reviews]);
-  const options = useMemo(() => filterOptions(allRows), [allRows]);
+  const options = useMemo(() => {
+    const base = filterOptions(allRows);
+    return { ...base, services: filterOptions(allRows.filter(isServicePerformanceRow)).services };
+  }, [allRows]);
   const rows = useMemo(() => applyFilters(allRows, filters), [allRows, filters]);
+  const servicePerformanceRows = useMemo(() => rows.filter(isServicePerformanceRow), [rows]);
   const tags = activeTags(filters);
 
   const summary = useMemo(() => summarize(rows), [rows]);
-  const byService = useMemo(
-    () =>
-      groupBy(
-        rows.filter((r) => r.service && r.service !== '—' && r.service !== 'Service details unavailable'),
-        (r) => r.service,
-      ),
-    [rows],
-  );
+  const byService = useMemo(() => groupBy(servicePerformanceRows, (r) => r.service), [servicePerformanceRows]);
   const byStaff = useMemo(
     () =>
       groupBy(
