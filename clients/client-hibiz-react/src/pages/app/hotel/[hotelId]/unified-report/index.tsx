@@ -352,7 +352,14 @@ const UnifiedReport = () => {
   const tags = activeTags(filters);
 
   const summary = useMemo(() => summarize(rows), [rows]);
-  const byService = useMemo(() => groupBy(rows, (r) => r.service), [rows]);
+  const byService = useMemo(
+    () =>
+      groupBy(
+        rows.filter((r) => r.service && r.service !== '—' && r.service !== 'Service details unavailable'),
+        (r) => r.service,
+      ),
+    [rows],
+  );
   const byStaff = useMemo(
     () =>
       groupBy(

@@ -54,6 +54,11 @@ const hotelAnalyticsSchema = new mongoose.Schema<HotelAnalyticsType>({
   },
 });
 
+// Date-range hotel reports and the lifetime visit-count aggregation.
+hotelAnalyticsSchema.index({ businessId: 1, checkIn: -1 });
+hotelAnalyticsSchema.index({ businessId: 1, checkOut: -1 });
+hotelAnalyticsSchema.index({ businessId: 1, userId: 1 });
+
 const HotelAnalytics: Model<HotelAnalyticsType> =
   mongoose.model<HotelAnalyticsType>("hotelanalytics", hotelAnalyticsSchema);
 export { HotelAnalytics };
