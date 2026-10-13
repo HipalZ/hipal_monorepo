@@ -97,7 +97,7 @@ const serviceLabel = (services: GuestAlert['serviceIds'] = [], cart?: any[], mes
   // message prefix is the service identity used by the rest of the hotel UI.
   const systemLabel = systemAlertServiceLabel(message);
   if (systemLabel) return systemLabel;
-  return hasFoodCartItems(cart) ? 'Food Order' : '—';
+  return hasFoodCartItems(cart) ? 'Food Order' : 'Service details unavailable';
 };
 
 // ── review matching ──────────────────────────────────────────────────────────
@@ -108,13 +108,44 @@ const servicesOverlap = (a?: Array<{ name?: string }>, b?: Array<{ name?: string
   return Boolean(b?.some((s) => names.has(s?.name?.toLowerCase())));
 };
 
-const findReview = (a: GuestAlert, reviews: reviewResponse[]): reviewResponse | undefined => {
-  const exact = reviews.find((r) => {
-    const linked = typeof r.alertId === 'object' && r.alertId ? r.alertId._id : undefined;
-    return a._id && linked === a._id;
-  });
+type ReviewIndex = {
+  byAlertId: Map<string, reviewResponse>;
+  byGuestRoom: Map<string, reviewResponse[]>;
+};
+
+const guestRoomKey = (phone?: string, room?: string) => `${phone || ''}\u0000${room || ''}`;
+
+const buildReviewIndex = (reviews: reviewResponse[]): ReviewIndex => {
+  const byAlertId = new Map<string, reviewResponse>();
+  const byGuestRoom = new Map<string, reviewResponse[]>();
+  for (const review of reviews) {
+    const linked = typeof review.alertId === 'object' && review.alertId ? review.alertId._id : undefined;
+    if (linked && !byAlertId.has(linked)) byAlertId.set(linked, review);
+
+    const user = typeof review.userId === 'object' && review.userId ? review.userId : null;
+    if (!user?.phone || !review.roomId?.name) continue;
+    const key = guestRoomKey(user.phone, review.roomId.name);
+    const candidates = byGuestRoom.get(key) || [];
+    candidates.push(review);
+    byGuestRoom.set(key, candidates);
+  }
+  return { byAlertId, byGuestRoom };
+};
+
+const findReview = (a: GuestAlert, reviews: reviewResponse[], index?: ReviewIndex): reviewResponse | undefined => {
+  const exact = a._id
+    ? index
+      ? index.byAlertId.get(a._id)
+      : reviews.find((review) => {
+          const linked = typeof review.alertId === 'object' && review.alertId ? review.alertId._id : undefined;
+          return linked === a._id;
+        })
+    : undefined;
   if (exact) return exact;
-  return reviews.find((r) => {
+  const candidates = index
+    ? index.byGuestRoom.get(guestRoomKey(a.createdBy?.phone, a.roomId?.name)) || []
+    : reviews;
+  return candidates.find((r) => {
     const user = typeof r.userId === 'object' && r.userId ? r.userId : null;
     const sameGuest = user?.phone && user.phone === a.createdBy?.phone;
     const sameRoom = r.roomId?.name && r.roomId.name === a.roomId?.name;
@@ -126,8 +157,8 @@ const findReview = (a: GuestAlert, reviews: reviewResponse[]): reviewResponse | 
 };
 
 /** Rating (1–5) + free-text feedback pulled off a matched review. */
-const reviewOf = (a: GuestAlert, reviews: reviewResponse[]): { rating: number | null; feedback: string } => {
-  const review = reviews.length ? findReview(a, reviews) : undefined;
+const reviewOf = (a: GuestAlert, reviews: reviewResponse[], index?: ReviewIndex): { rating: number | null; feedback: string } => {
+  const review = reviews.length ? findReview(a, reviews, index) : undefined;
   return {
     rating: review?.reviewRating ?? null,
     feedback:
@@ -184,8 +215,9 @@ export const mapGuestAlert = (
   index: number,
   visitsByPhone: Record<string, number> = {},
   reviews: reviewResponse[] = [],
+  reviewIndex?: ReviewIndex,
 ): UnifiedRow => {
-  const { rating, feedback } = reviewOf(a, reviews);
+  const { rating, feedback } = reviewOf(a, reviews, reviewIndex);
   const services = a.serviceIds ?? [];
   const serviceAcceptSla = services.reduce((s, x) => s + serviceAcceptanceSla(x), 0);
   const acceptSla = serviceAcceptSla > 0 ? serviceAcceptSla : foodOrderAcceptanceSla(a.cart, a.foodOrderSlaSettings);
@@ -300,11 +332,17 @@ export const buildRows = (
   tasks: CheckoutTask[],
   visitsByPhone: Record<string, number> = {},
   reviews: reviewResponse[] = [],
-): UnifiedRow[] =>
-  [
-    ...alerts.map((a, i) => mapGuestAlert(a, i, visitsByPhone, reviews)),
+): UnifiedRow[] => {
+  const reviewIndex = buildReviewIndex(reviews);
+  return [
+    // A rejected request was never serviced, so including it in SLA/staff
+    // performance would incorrectly count it as completed work.
+    ...alerts
+      .filter((alert) => alert.alertProgress !== 'REJECTED')
+      .map((a, i) => mapGuestAlert(a, i, visitsByPhone, reviews, reviewIndex)),
     ...tasks.map((t, i) => mapCheckoutTask(t, i, visitsByPhone)),
   ].sort((a, b) => b.raisedAt - a.raisedAt);
+};
 
 // ── aggregates ───────────────────────────────────────────────────────────────
 

@@ -425,10 +425,8 @@ const roomRouter = new Hono()
       if (fromDate > toDate) {
         return respond(c, "Invalid date range", true, 400, {});
       }
-      const filterAnalytics = await HotelAnalytics.find({
+      const analytics = await HotelAnalytics.find({
         businessId,
-        ...(source ? { source } : {}),
-
         checkIn: {
           $gte: fromDate,
           $lte: toDate,
@@ -448,21 +446,39 @@ const roomRouter = new Hono()
         })
         .lean();
 
+      const filterAnalytics = source
+        ? analytics.filter((entry) => entry.source === source)
+        : analytics;
+
       const uniqueByUser = Object.values(
         filterAnalytics.reduce((acc, curr) => {
           if (curr.userId?._id) {
-            acc[curr.userId._id.toString()] = curr; // keep latest entry per user
+            const userId = curr.userId._id.toString();
+            const existing = acc[userId];
+            if (!existing || curr.checkIn > existing.checkIn) acc[userId] = curr;
           }
           return acc;
         }, {} as Record<string, (typeof filterAnalytics)[number]>)
       );
 
       // Lifetime visit count per guest (all stays ever, keyed by phone) so the
-      // report can flag New / Repeat / VIP customers.
-      const visitAgg = await HotelAnalytics.aggregate([
-        { $match: { businessId: new Types.ObjectId(businessId) } },
-        { $group: { _id: "$userId", count: { $sum: 1 } } },
-      ]);
+      // report can flag New / Repeat / VIP customers. Restrict the lifetime
+      // scan to guests present in this report instead of grouping every guest
+      // the business has ever seen.
+      const reportUserIds = uniqueByUser
+        .map((entry) => entry.userId?._id)
+        .filter((id): id is Types.ObjectId => Boolean(id));
+      const visitAgg = reportUserIds.length
+        ? await HotelAnalytics.aggregate([
+            {
+              $match: {
+                businessId: new Types.ObjectId(businessId),
+                userId: { $in: reportUserIds },
+              },
+            },
+            { $group: { _id: "$userId", count: { $sum: 1 } } },
+          ])
+        : [];
       const countByUser = new Map<string, number>(
         visitAgg.map((v: { _id: unknown; count: number }) => [
           String(v._id),
@@ -477,23 +493,6 @@ const roomRouter = new Hono()
             countByUser.get(String(entry.userId?._id)) ?? 1;
         }
       }
-
-      const analytics = await HotelAnalytics.find({
-        businessId,
-        checkIn: {
-          $gte: fromDate,
-          $lte: toDate,
-        },
-      })
-        .populate({
-          path: "roomId",
-          select: "name",
-        })
-        .populate({
-          path: "userId",
-          select: "name phone",
-        })
-        .lean();
 
       const sourceCount: Record<string, number> = {};
       const userCount: Record<string, number> = {};

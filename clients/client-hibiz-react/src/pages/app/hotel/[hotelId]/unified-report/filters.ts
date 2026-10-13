@@ -109,7 +109,7 @@ export const filterOptions = (rows: UnifiedRow[]) => {
     guests: uniq(rows.filter((r) => r.requesterKind === 'GUEST').map((r) => r.requesterName)),
     frontOffice: uniq(rows.filter((r) => r.requesterKind === 'FRONT_OFFICE').map((r) => r.requesterName)),
     staff: uniq(rows.map((r) => r.servicedBy)),
-    services: uniq(rows.map((r) => r.service)),
+    services: uniq(rows.map((r) => r.service).filter((service) => service !== '—' && service !== 'Service details unavailable')),
     floors: uniq(rows.map((r) => r.floor)),
     rooms: uniq(rows.map((r) => r.room)),
   };
