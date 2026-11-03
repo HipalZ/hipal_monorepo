@@ -20,10 +20,29 @@ export default function GalleryCarousel({ images }: GalleryCarouselProps) {
 
   useEffect(() => {
     if (!isAutoPlaying || images.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, 4000);
-    return () => clearInterval(interval);
+
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const start = () => {
+      if (document.hidden || interval) return;
+      interval = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % images.length);
+      }, 4000);
+    };
+    const stop = () => {
+      if (interval) clearInterval(interval);
+      interval = undefined;
+    };
+    const handleVisibilityChange = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
+    start();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [isAutoPlaying, images.length]);
 
   const goToPrevious = () => {
@@ -61,7 +80,6 @@ export default function GalleryCarousel({ images }: GalleryCarouselProps) {
               alt={images[currentIndex].name || "Property image"}
               fill
               className="object-cover"
-              priority={currentIndex === 0}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
             />
             {/* bottom gradient overlay for readability */}

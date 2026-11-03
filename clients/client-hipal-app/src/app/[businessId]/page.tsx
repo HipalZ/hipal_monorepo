@@ -4,9 +4,7 @@ import { getBusinessData } from "@/apis/commonApis";
 import { apiRpc } from "@hi/common";
 import type { BusinessDetails } from "@/components/types/businessData";
 
-// export const revalidate = 300;
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
+export const revalidate = 300;
 export async function generateMetadata({
   params,
 }: {
