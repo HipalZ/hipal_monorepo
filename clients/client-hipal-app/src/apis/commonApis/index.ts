@@ -6,6 +6,10 @@ import type {
 import { apiRpc } from "@hi/common";
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+const cachedRequestInit: RequestInit & { next: { revalidate: number } } = {
+  cache: "force-cache",
+  next: { revalidate: 300 },
+};
 
 export async function fetchCommonData(
   businessId: string,
@@ -17,9 +21,7 @@ export async function fetchCommonData(
     const res = await apiRpc.businesses.n[":customLink"].$get({
       param: { customLink: businessId },
     }, {
-      init: {
-        cache: "no-store",
-      },
+      init: cachedRequestInit,
     });
     const response = (await res.json()) as unknown as {
       data: IBusinessData;
@@ -36,9 +38,7 @@ export async function fetchCommonData(
     const res = await apiRpc.businesses.get.Single[":businessId"].$get({
       param: { businessId },
     }, {
-      init: {
-        cache: "no-store",
-      },
+      init: cachedRequestInit,
     });
     const response = (await res.json()) as unknown as {
       data: IBusinessData;
@@ -56,7 +56,7 @@ export async function fetchCommonData(
     param: {
       businessId: bizId,
     },
-  });
+  }, { init: cachedRequestInit });
   const settings = await settingsResponse.json();
   data["settings"] = settings?.data?.theme || {};
 
@@ -71,9 +71,7 @@ export const getBusinessData = async (customLink: string) => {
     const res = await apiRpc.businesses.n[":customLink"].$get({
       param: { customLink },
     }, {
-      init: {
-        cache: "no-store",
-      },
+      init: cachedRequestInit,
     });
 
     const response = (await res.json()) as unknown as {

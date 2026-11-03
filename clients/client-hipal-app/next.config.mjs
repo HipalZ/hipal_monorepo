@@ -46,9 +46,17 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // This handles static assets (fonts, etc.) correctly
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
         source:
-          "/:all*(svg|jpg|png|webp|woff|woff2|ttf|otf|eot|map|txt|xml|mp4|webm|mov)",
+          "/:all*(svg|jpg|jpeg|png|gif|webp|avif|ico|js|css|woff|woff2|ttf|otf|eot|map|txt|xml|mp4|webm|mov)",
         locale: false,
         headers: [
           {
@@ -58,12 +66,12 @@ const nextConfig = {
         ],
       },
       {
-        source: "/:all",
+        source: "/manifest.json",
         locale: false,
         headers: [
           {
             key: "Cache-Control",
-            value: "no-cache, no-store, must-revalidate",
+            value: "public, max-age=86400, stale-while-revalidate=604800",
           },
         ],
       },

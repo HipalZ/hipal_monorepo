@@ -121,39 +121,8 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        rel: "icon",
-        type: "image/ico",
-        url: "/favicon/favicon.ico",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "16x16",
-        url: "/apple-touch-icon.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "16x16",
-        url: "/favicon-16x16.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "32x32",
-        url: "/favicon-32x32.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "192x192",
-        url: "/app-icon-192x192.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "512x512",
-        url: "/app-icon-512x512.png",
+        url: "/favicon.ico",
+        type: "image/x-icon",
       },
     ],
     apple: [

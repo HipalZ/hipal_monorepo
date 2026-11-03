@@ -2,9 +2,7 @@ import { fetchCommonData } from "@/apis/commonApis";
 import SubscriptionEnded from "@/components/atoms/subscriptionEnded";
 import type { BusinessDetails } from "@/components/types/businessData";
 
-export const fetchCache = "force-no-store";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 
 export default async function BusinessLayout({
   children,
