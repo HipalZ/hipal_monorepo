@@ -48,4 +48,4 @@ pnpm lock trigger to
 Executive
 SEO
 Trigger Production 
-tyoe
+redeploy
