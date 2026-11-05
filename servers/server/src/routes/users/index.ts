@@ -39,13 +39,7 @@ import { z } from "zod";
 import { recordVisit } from "../../services/visitTracker";
 import { respond } from "../../utils/response";
 import { monadHelperFunction } from "../../utils/monad";
-const admin = require("firebase-admin");
 // Hash a passwordss
-
-const serviceAccount = require("..//../utils/service_account.json");
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
 
 const matchesBusiness = (role: any, businessId: string) =>
   String(role?.businessId) === String(businessId);

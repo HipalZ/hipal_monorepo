@@ -31,6 +31,9 @@ const envSchema = z.object({
 
   // ** REDIS
   REDIS_URL: z.string().optional(),
+
+  // Firebase Admin credentials are supplied as a base64-encoded JSON value.
+  FIREBASE_SERVICE_ACCOUNT_JSON_BASE64: z.string().min(1).optional(),
   // REDIS_PASSWORD: z.string(),
   // REDIS_PORT: z.string(),
 

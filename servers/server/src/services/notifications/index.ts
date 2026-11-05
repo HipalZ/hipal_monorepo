@@ -5,8 +5,7 @@ import {
   DEFAULT_IOS_NOTIFICATION_SOUND,
   type NotificationChannelGroup,
 } from "./sound";
-
-const admin = require("firebase-admin");
+import { getFirebaseMessaging } from "../../utils/firebaseAdmin";
 
 type PushProvider = "fcm" | "expo" | "apns";
 type PushPlatform = "android" | "ios" | "web" | "unknown";
@@ -46,17 +45,6 @@ const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
 const isExpoToken = (token: string) =>
   token.startsWith("ExpoPushToken[") || token.startsWith("ExponentPushToken[");
-
-const getFirebaseMessaging = () => {
-  if (!admin.apps?.length) {
-    const serviceAccount = require("../../utils/service_account.json");
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-  }
-
-  return admin.messaging();
-};
 
 const resolveProvider = (target: PushTarget): PushProvider => {
   if (target.provider) return target.provider;

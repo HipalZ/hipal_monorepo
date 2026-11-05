@@ -14,6 +14,7 @@ infra/*
 # This does not remove any copy that was already committed historically.
 **/service_account*.json
 **/service-account*.json
+servers/server/src/utils/testing.json
 
 
 
