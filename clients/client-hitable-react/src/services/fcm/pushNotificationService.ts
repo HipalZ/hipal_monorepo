@@ -39,29 +39,54 @@ export class PushNotificationService {
     const permission = await PushNotifications.requestPermissions();
 
     if (permission.receive === "granted") {
-      PushNotifications.register();
-
-      return new Promise((resolve, reject) => {
-        PushNotifications.addListener("registration", async (token) => {
-          if (Capacitor.getPlatform() === "ios") {
-            try {
-              const result = await FCM.getToken();
-              resolve(result.token);
-            } catch (error) {
-              console.error("Unable to obtain the iOS FCM token:", error);
-              reject(error);
-            }
-            return;
-          }
-
-          resolve(token.value);
-        });
-
-        PushNotifications.addListener("registrationError", (error) => {
-          console.error("Push registration error:", error);
-          reject(null);
-        });
+      let resolveToken!: (token: string) => void;
+      let rejectToken!: (error: unknown) => void;
+      const tokenPromise = new Promise<string>((resolve, reject) => {
+        resolveToken = resolve;
+        rejectToken = reject;
       });
+
+      // Register listeners before calling register(). Cached Android tokens can
+      // be emitted immediately; attaching listeners afterwards loses the event
+      // and leaves pushToken empty forever.
+      const registrationHandle = await PushNotifications.addListener(
+        "registration",
+        async (token) => {
+          try {
+            if (Capacitor.getPlatform() === "ios") {
+              const result = await FCM.getToken();
+              resolveToken(result.token);
+              return;
+            }
+
+            resolveToken(token.value);
+          } catch (error) {
+            console.error("Unable to obtain the FCM token:", error);
+            rejectToken(error);
+          }
+        },
+      );
+      const registrationErrorHandle = await PushNotifications.addListener(
+        "registrationError",
+        (error) => {
+          console.error("Push registration error:", error);
+          rejectToken(error);
+        },
+      );
+
+      const timeout = setTimeout(
+        () => rejectToken(new Error("Push registration timed out")),
+        15000,
+      );
+
+      try {
+        await PushNotifications.register();
+        return await tokenPromise;
+      } finally {
+        clearTimeout(timeout);
+        await registrationHandle.remove();
+        await registrationErrorHandle.remove();
+      }
     }
 
     return null;
