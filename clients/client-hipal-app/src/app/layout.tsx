@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import QueryComponent from "@/components/atoms/queryComponent";
@@ -196,12 +195,6 @@ export async function generateMetadata({
   };
 }
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  display: "swap",
-});
-
 export default function RootLayout({
   children,
 }: {
@@ -227,6 +220,10 @@ export default function RootLayout({
           rel="preconnect"
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
         />
         <link
           href="https://fonts.googleapis.com/css2?family=Bungee+Inline&display=swap"
@@ -255,7 +252,7 @@ export default function RootLayout({
         <GoogleAnalytics />
       </head>
 
-      <body className={`${plusJakartaSans.className}`}>
+      <body className="plus-jakarta-font">
         <Suspense fallback={<Loading />}>
           <section className="relative !z-[9999]">
             {/* <DynamicInternetConnection /> */}
