@@ -32,10 +32,6 @@ const envSchema = z.object({
   // ** REDIS
   REDIS_URL: z.string().optional(),
 
-<<<<<<< HEAD
-  // Firebase Admin credentials are supplied as a base64-encoded JSON value.
-  FIREBASE_SERVICE_ACCOUNT_JSON_BASE64: z.string().min(1).optional(),
-=======
   // Firebase Admin credentials are supplied by the deployment environment.
   FIREBASE_SERVICE_ACCOUNT_JSON_BASE64: z.string().min(1).optional(),
 
@@ -43,7 +39,6 @@ const envSchema = z.object({
   GOOGLE_OAUTH_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1).optional(),
   GOOGLE_OAUTH_REDIRECT_URI: z.string().url().optional(),
->>>>>>> d819756de (fix:firebase secret)
   // REDIS_PASSWORD: z.string(),
   // REDIS_PORT: z.string(),
 
