@@ -2,14 +2,24 @@ import { Hono } from "hono";
 import { google } from "googleapis";
 import { GoogleAuthTokens } from "@hi/db-models/src/models/googleAuthToken";
 
-const credentials = require("../../utils/credentials_oauth.json").web;
-const { client_id, client_secret, redirect_uris } = credentials;
+const createOAuth2Client = () => {
+  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI;
 
-const oauth2Client = new google.auth.OAuth2(
-  client_id,
-  client_secret,
-  redirect_uris[0],
-);
+  if (!clientId || !clientSecret || !redirectUri) {
+    throw new Error(
+      "Google OAuth credentials are not configured. Set GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REDIRECT_URI.",
+    );
+  }
+
+  return {
+    clientId,
+    clientSecret,
+    redirectUri,
+    oauth2Client: new google.auth.OAuth2(clientId, clientSecret, redirectUri),
+  };
+};
 
 // --------------------- UTIL ---------------------
 async function getTokenRecord(businessId: string, sessionKey: string) {
@@ -35,6 +45,7 @@ const googleSheetsRouter = new Hono()
     }
 
     const state = JSON.stringify({ businessId, sessionKey });
+    const { oauth2Client } = createOAuth2Client();
 
     const url = oauth2Client.generateAuthUrl({
       access_type: "offline",
@@ -56,19 +67,20 @@ const googleSheetsRouter = new Hono()
       const stateRaw = c.req.query("state");
       console.log("OAuth Callback received code:", code);
       console.log("OAuth Callback received state:", stateRaw);
-      console.log("redirect_uri", redirect_uris[0]);
       if (!code || !stateRaw) {
         return c.html("<h3>❌ Missing code or state.</h3>");
       }
 
+      const { oauth2Client, clientId, clientSecret, redirectUri } =
+        createOAuth2Client();
       const { businessId, sessionKey } = JSON.parse(stateRaw);
 
       // 1️⃣ Exchange code for tokens
       const { tokens } = await oauth2Client.getToken({
         code,
-        redirect_uri: redirect_uris[0],
-        client_id,
-        client_secret,
+        redirect_uri: redirectUri,
+        client_id: clientId,
+        client_secret: clientSecret,
       });
       console.log("tokens received:", tokens);
       // 2️⃣ Set credentials EXACTLY AS GOOGLE EXPECTS
@@ -145,6 +157,7 @@ const googleSheetsRouter = new Hono()
         return c.json({ err: true, message: "No saved Google tokens" }, 401);
       }
 
+      const { oauth2Client } = createOAuth2Client();
       // 🟢 Pass ONLY valid token fields
       oauth2Client.setCredentials({
         access_token: tokenDoc.access_token,
@@ -182,6 +195,7 @@ const googleSheetsRouter = new Hono()
       if (!tokenDoc)
         return c.json({ err: true, message: "Not authorized" }, 401);
 
+      const { oauth2Client } = createOAuth2Client();
       oauth2Client.setCredentials({
         access_token: tokenDoc.access_token,
         refresh_token: tokenDoc.refresh_token,
@@ -209,6 +223,7 @@ const googleSheetsRouter = new Hono()
       const tokenDoc = await getTokenRecord(businessId, sessionKey);
       if (!tokenDoc) return c.json({ success: false, error: "Not logged in" });
 
+      const { oauth2Client } = createOAuth2Client();
       oauth2Client.setCredentials({
         access_token: tokenDoc.access_token,
         refresh_token: tokenDoc.refresh_token,
