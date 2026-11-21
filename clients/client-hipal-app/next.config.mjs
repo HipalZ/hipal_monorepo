@@ -5,6 +5,9 @@ const nextConfig = {
 	reactStrictMode: true,
 	swcMinify: true,
 	images: {
+		  // Keep a single output format to avoid duplicate transformations for
+		  // the same source, width, and quality.
+		  formats: ["image/webp"],
 		  domains: [
 			  "picsum.photos",
 			  "pal-tribe.s3.ap-south-1.amazonaws.com",
