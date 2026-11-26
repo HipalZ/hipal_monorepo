@@ -212,7 +212,7 @@ const MemoServiceStepOne = () => {
 
       <article className="mx-6 lg:mx-16 lg:mt-6">
         <label className="font-semibold opacity-50" htmlFor="price">
-          Prices & variants*
+          Price & Variations*
         </label>
         <div className="bg-white rounded-2xl">
           <div className="relative p-3 mt-2">
@@ -240,7 +240,7 @@ const MemoServiceStepOne = () => {
                 type="button"
                 className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
               >
-                + Add more variants
+                + Add more variations
               </button>
             </Background>
           </section>
@@ -251,7 +251,7 @@ const MemoServiceStepOne = () => {
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
                   <th scope="col" className="px-6 py-3">
-                    variants Name
+                    Variation Name
                   </th>
                   <th scope="col" className="px-6 py-3">
                     Price

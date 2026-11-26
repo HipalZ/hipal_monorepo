@@ -272,7 +272,7 @@ const MemoServiceStepOne = () => {
         {isManagerExists ? null : (
           <article>
             <label className="font-semibold opacity-50" htmlFor="price">
-              Prices & Portions*
+              Price & Variations*
             </label>
             <div className="bg-white rounded-2xl">
               <div className="relative p-3 mt-2">
@@ -302,7 +302,7 @@ const MemoServiceStepOne = () => {
                     type="button"
                     className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
                   >
-                    + Add more portions
+                    + Add more variations
                   </button>
                 </Background>
               </section>

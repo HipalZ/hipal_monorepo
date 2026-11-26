@@ -1,5 +1,5 @@
 import MemoizedHeader from "@/components/molecules/header";
-import { memo, useCallback, lazy, Suspense } from "react";
+import { memo, useCallback, lazy, Suspense, useMemo } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -21,17 +21,9 @@ const CheckIn = lazy(() =>
   import("@/components/templates/ZonesAndTables/checkin/index.tsx"),
 );
 
-const navItems = [
-  { text: "Zones" },
-  { text: "Tables" },
-  { text: "Qrs" },
-  {
-    text: "Check In",
-  },
-];
-
 const MemoZonesAndTables = () => {
   const businessData = useBusinessData((s) => s.businessData);
+  const isOtherOutlet = useBusinessData((s) => s.outletInfo?.outLetType === "OTHER");
   const navigate = useNavigate();
   const { selectedTab, setSelectedTab } = useZoneStore((s) => ({
     selectedTab: s.selectedTab,
@@ -43,23 +35,34 @@ const MemoZonesAndTables = () => {
     businessData?._id as string,
   );
   const { isLoading } = useGetAllTables(businessData?._id as string);
+
+  const navItems = useMemo(
+    () => [
+      { text: isOtherOutlet ? "Sections" : "Zones", value: "zones" },
+      { text: isOtherOutlet ? "Instant QR" : "Tables", value: "tables" },
+      { text: "Qrs", value: "qrs" },
+      { text: "Check In", value: "check in" },
+    ],
+    [isOtherOutlet],
+  );
+
   const changeLayout = useCallback((text: string) => {
     setSelectedTab(
       text.toLowerCase() as "zones" | "tables" | "qrs" | "check in",
     );
-  }, []);
+  }, [setSelectedTab]);
 
   const handleBack = useCallback(() => {
     navigate(`/app/business/${businessData?._id}`);
   }, [businessData, navigate]);
 
   if (gettingZones || isLoading || isLoadingStaff) return <LoadingSpinner />;
-  
+
   return (
     <main className="min-h-screen">
       <header className="linear_gradient_background">
         <MemoizedHeader
-          title="Zones And Tables"
+          title={isOtherOutlet ? "Sections & Instant QR" : "Zones And Tables"}
           leftIcon={<FaArrowLeft />}
           onBack={handleBack}
         />
@@ -69,13 +72,13 @@ const MemoZonesAndTables = () => {
           <button
             className={cn(
               "pb-3 pt-4 bg-white ",
-              selectedTab?.toLowerCase() === item.text.toLowerCase()
+              selectedTab?.toLowerCase() === item.value.toLowerCase()
                 ? "border-b-2 border-[#8162e6] transition-all text-[#8162e6] font-semibold text-lg"
                 : "",
             )}
-            key={item.text}
+            key={item.value}
             type="button"
-            onClick={() => changeLayout(item.text)}
+            onClick={() => changeLayout(item.value)}
           >
             {item.text}
           </button>

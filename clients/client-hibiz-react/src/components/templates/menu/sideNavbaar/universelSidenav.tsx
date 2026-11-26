@@ -5,7 +5,7 @@ import { memo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 interface SidebarProps {
-  items: { icon?: string; text: string }[];
+  items: { icon?: string; text: string; value?: string }[];
   selectedNavItem: string;
   changeNav: (str: string) => void;
 }
@@ -37,10 +37,10 @@ const MemoUniversalNav = ({ items, selectedNavItem, changeNav }: SidebarProps) =
           type="button"
           className={cn(
             'sidebar-item flex flex-col items-center',
-            selectedNavItem.toLowerCase() === item.text.toLowerCase() ? '!bg-[#C3B3F850] !transition-all' : '',
+            selectedNavItem.toLowerCase() === (item.value ?? item.text).toLowerCase() ? '!bg-[#C3B3F850] !transition-all' : '',
           )}
-          key={item.text}
-          onClick={() => changeNav(item.text)}
+          key={item.value ?? item.text}
+          onClick={() => changeNav(item.value ?? item.text)}
         >
           <span className="capitalize">{item.text.split('_').join(' ').toLowerCase()}</span>
         </button>
