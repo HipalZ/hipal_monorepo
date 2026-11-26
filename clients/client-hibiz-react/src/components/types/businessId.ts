@@ -14,7 +14,6 @@ import Review from "@/assets/services/review.png";
 import Zones from "@/assets/services/zones.png";
 import Events from "@/assets/services/events.jpg";
 import ImageGrid from "@/assets/services/ImageGrid.png";
-import PosImage from "@/assets/services/posImage.png";
 import PasswordImage from "@/assets/services/password.png";
 import Reports from "@/assets/services/reports.png";
 
@@ -47,12 +46,6 @@ export const getButtons = (
       text: "Reports",
       description: "Download your Reports",
       navigateTo: "reports",
-    },
-    {
-      image: PosImage,
-      text: "Point on Sale",
-      description: "Manage your POS",
-      navigateTo: "pos",
     },
     {
       image: StaffImage,
@@ -158,7 +151,7 @@ export const getButtons = (
     //   description: "Manage your Instagram",
     //   navigateTo: "instagram",
     // },
-    ...(!isPosEnabled
+    ...(!isPosEnabled && outletType !== "OTHER"
       ? [
           {
             image: Analytics,

@@ -1,8 +1,7 @@
 import { useError } from '@/components/store/useError.ts';
 import useReports from '@/components/store/useReports.ts';
-import { formatDate } from '@/components/utils/helper.ts';
+import { formatDate, formatDateToIST } from '@/components/utils/helper.ts';
 import { apiRpc } from '@hi/common';
-import { formatDateToIST } from '@hipal/server/src/utils/reportHelper/dateFormater.ts';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useApiErrorHandler } from './useApiErrorHandler.ts';
