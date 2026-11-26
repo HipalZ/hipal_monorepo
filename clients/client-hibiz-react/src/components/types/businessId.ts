@@ -41,12 +41,16 @@ export const getButtons = (
       description: "All payment related stuff",
       navigateTo: "payments",
     },
-    {
-      image: Reports,
-      text: "Reports",
-      description: "Download your Reports",
-      navigateTo: "reports",
-    },
+    ...(outletType !== "OTHER"
+      ? [
+          {
+            image: Reports,
+            text: "Reports",
+            description: "Download your Reports",
+            navigateTo: "reports",
+          },
+        ]
+      : []),
     {
       image: StaffImage,
       text: "Staff",
