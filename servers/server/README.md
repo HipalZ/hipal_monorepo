@@ -26,3 +26,4 @@ expiry 1hour
 testing production
 retrigger kubernetes now
 production
+trigger

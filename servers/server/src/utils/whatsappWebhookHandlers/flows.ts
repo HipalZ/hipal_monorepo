@@ -3,9 +3,9 @@ import {
   ChatbotSessionModel,
   WhatsappChatbotModel,
 } from "@hi/db-models";
-import path = require("node:path");
 import { google } from "googleapis";
 import type { ChatbotNodeLogType } from "@hi/db-models/src/models/whatsappChatbot/chatbotAnalytics";
+import { getFirebaseServiceAccount } from "../firebaseAdmin";
 
 interface InteractiveParams {
   interactiveTitleOrId: string;
@@ -1019,7 +1019,7 @@ export async function advance(
         }
 
         const auth = new google.auth.GoogleAuth({
-          keyFile: path.join(__dirname, "../testing.json"),
+          credentials: getFirebaseServiceAccount(),
           scopes: ["https://www.googleapis.com/auth/spreadsheets"],
         });
         const client = await auth.getClient();

@@ -39,13 +39,7 @@ import { z } from "zod";
 import { recordVisit } from "../../services/visitTracker";
 import { respond } from "../../utils/response";
 import { monadHelperFunction } from "../../utils/monad";
-const admin = require("firebase-admin");
 // Hash a passwordss
-
-const serviceAccount = require("..//../utils/service_account.json");
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
 
 const matchesBusiness = (role: any, businessId: string) =>
   String(role?.businessId) === String(businessId);
@@ -1641,27 +1635,22 @@ const usersRouter = new Hono()
       const requestData = await c.req.json();
       const { registrationToken, businessId, userId } = requestData;
 
-      const alreadyExist = await DeviceToken.findOne({
-        token: registrationToken,
-      });
-
-      if (!alreadyExist) {
-        const save = await DeviceToken.create({
-          businessId,
-          userId,
-          token: registrationToken,
-        });
-        return c.json({
-          message: "Token saved successfully",
-          err: false,
-          data: save,
-        });
-      }
+      // A Firebase token identifies the installation, but the active user and
+      // business can change. Always rebind it so business-scoped sends do not
+      // keep targeting the first business selected on this device.
+      const savedToken = await DeviceToken.findOneAndUpdate(
+        { token: registrationToken },
+        {
+          $set: { businessId, userId, notification: true },
+          $setOnInsert: { token: registrationToken },
+        },
+        { new: true, upsert: true, setDefaultsOnInsert: true },
+      );
 
       return c.json({
         message: "Token saved successfully",
         err: false,
-        data: alreadyExist,
+        data: savedToken,
       });
     },
   )
@@ -1679,13 +1668,13 @@ const usersRouter = new Hono()
 
     async (c) => {
       const requestData = await c.req.json();
-      const { notification, registrationToken } = requestData;
+      const { notification, registrationToken, businessId, userId } = requestData;
 
       const updateDeviceToken = await DeviceToken.findOneAndUpdate(
         {
           token: registrationToken,
         },
-        { notification: notification },
+        { $set: { notification, businessId, userId } },
         { new: true },
       );
 

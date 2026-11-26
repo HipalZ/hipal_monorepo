@@ -36,12 +36,12 @@ import { schedule } from 'node-cron';
 import { z } from 'zod';
 import { sendPushToToken, sendPushToTokens } from '../../services/notifications';
 import { DEFAULT_IOS_NOTIFICATION_SOUND } from '../../services/notifications/sound';
+import { getFirebaseMessaging } from '../../utils/firebaseAdmin';
 import { isCurrentOccupant, requireRoomOccupancy, requireRoomOccupancyByChatReply } from '../../utils/requireRoomOccupancy';
 import { respond } from '../../utils/response';
 import whatsAppApiBaseUrl from '../../utils/whatsAppApiBaseUrl/apiPaths';
 import { endOfToday, startOfToday } from '../payments';
 import { returnHotelBodyComponents } from './rooms';
-const admin = require('firebase-admin');
 
 const getCartRestaurantIds = (cart: any[] = [], hotelBusinessId?: string) =>
   Array.from(
@@ -671,7 +671,7 @@ const sendPushNotification = async (token: string, businessId: string, hotelNo: 
       note: 'raw hotel service payload',
     });
 
-    const response = await admin.messaging().send(pushMessage);
+    const response = await getFirebaseMessaging().send(pushMessage);
     return { success: true, response };
   } catch (error) {
     console.error('[hotelAlert:push:failed]', {
@@ -721,7 +721,7 @@ const sendPushNotificationForNotDeliverd = async (token: string, businessId: str
       iosSound: pushMessage.apns.payload.aps.sound,
     });
 
-    const response = await admin.messaging().send(pushMessage);
+    const response = await getFirebaseMessaging().send(pushMessage);
     return { success: true, response };
   } catch (error) {
     console.error('[hotelAlert:deliveryPush:failed]', {

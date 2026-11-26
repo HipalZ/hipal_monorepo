@@ -37,6 +37,7 @@ import { z } from "zod";
 import { raiseCheckoutTasks } from "../../services/checkoutTasks/raise";
 import { ensureQuickActionDefaults } from "../../services/hotel/quickActions";
 import { DEFAULT_IOS_NOTIFICATION_SOUND } from "../../services/notifications/sound";
+import { getFirebaseMessaging } from "../../utils/firebaseAdmin";
 import { buildBackendUrl } from "../../utils/backendBaseUrl";
 import {
   requireRoomOccupancy,
@@ -50,7 +51,6 @@ import {
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 import { endOfToday, startOfToday } from "../payments/index.js";
-const admin = require("firebase-admin");
 
 const sendPushNotification = async (token: string, hotelNo: string) => {
   const pushMessage = {
@@ -78,7 +78,7 @@ const sendPushNotification = async (token: string, hotelNo: string) => {
       roomName: hotelNo,
       iosSound: pushMessage.apns.payload.aps.sound,
     });
-    const response = await admin.messaging().send(pushMessage);
+    const response = await getFirebaseMessaging().send(pushMessage);
     return { success: true, response };
   } catch (error) {
     console.error("Error sending FCM message:", error);
@@ -1576,7 +1576,7 @@ const roomRouter = new Hono()
                 tokenTail: obj.token.slice(-12),
                 iosSound: pushMessage.apns.payload.aps.sound,
               });
-              return admin.messaging().send(pushMessage);
+              return getFirebaseMessaging().send(pushMessage);
             })
           ).then(async (results) => {
             // FCM-rejected tokens are dead (uninstalled/expired) — prune them
