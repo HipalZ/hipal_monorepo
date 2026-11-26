@@ -17,7 +17,6 @@ import type {
   CurrencyCodeSymbol,
 } from "@/components/types/businessData.ts";
 
-const Amenities = lazy(() => import("./amenities"));
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 
 const currencyOptions = [
@@ -251,8 +250,6 @@ const MemoContactInfo = () => {
                 </SelectContent>
               </Select>
             </div>
-
-            <Amenities />
           </section>
           <section className="flex gap-6 my-4">
             <article

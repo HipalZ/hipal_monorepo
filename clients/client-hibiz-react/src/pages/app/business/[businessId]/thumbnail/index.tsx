@@ -2,11 +2,12 @@ import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { FolderIcon, FolderOpenIcon, RefreshCwIcon, ImageIcon } from "lucide-react"
+import { FolderIcon, FolderOpenIcon, RefreshCwIcon, ImageIcon, type LucideIcon } from "lucide-react"
 import { useGetBucketByBusinessId } from "@/hooks/useAdminUpload"
 import { useNavigate, useParams } from "react-router-dom"
 import { AddBusinessCategoryModal } from "@/components/businessImageUploader/AddImageCategory"
 import MemoizedHeader from "@/components/molecules/header"
+import useBusinessData from "@/components/store/useBusinessData"
 
 const container = {
   hidden: { opacity: 0 },
@@ -29,9 +30,15 @@ const Thumbnail = () => {
   const { buckets, isLoading, isError } = useGetBucketByBusinessId(businessId as string)
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const navigate = useNavigate()
+  const outLetType = useBusinessData((state) => state.outletInfo?.outLetType)
+
+  const getCategoryLabel = (categoryName: string) =>
+    outLetType === "OTHER" && categoryName.toLowerCase() === "food"
+      ? "services"
+      : categoryName
 
   // 3D Icon component with shadow and transform effects
-  const Icon3D = ({ icon: IconComponent, color = "green" }: { icon: any; color?: string }) => (
+  const Icon3D = ({ icon: IconComponent, color = "green" }: { icon: LucideIcon; color?: string }) => (
     <motion.div
       className={`relative p-3 rounded-full bg-${color}-100 shadow-lg`}
       initial={{ scale: 1 }}
@@ -219,7 +226,7 @@ const Thumbnail = () => {
                           <FolderIcon className="w-6 h-6 text-green-400" />
                         )}
                       </motion.div>
-                      <CardTitle>{category.categoryName}</CardTitle>
+                      <CardTitle>{getCategoryLabel(category.categoryName)}</CardTitle>
                       <CardDescription>
                         {category.images.length} image{category.images.length !== 1 ? "s" : ""}
                       </CardDescription>

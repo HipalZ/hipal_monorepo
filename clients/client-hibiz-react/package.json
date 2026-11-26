@@ -20,7 +20,9 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@fontsource/inter": "^5.0.18",
     "@headlessui/react": "^2.0.4",
+    "@hookform/resolvers": "^5.2.2",
     "@hi/common": "workspace:*",
+    "@hi/db-models": "workspace:*",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.2",
@@ -89,6 +91,7 @@
     "vite-plugin-babel": "^1.2.0",
     "vite-plugin-pages": "^0.32.2",
     "vite-plugin-svgr": "^4.2.0",
+    "zod": "^3.25.76",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

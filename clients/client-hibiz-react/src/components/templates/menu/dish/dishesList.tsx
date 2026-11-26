@@ -23,15 +23,20 @@ const MemoListOfDishes = () => {
   const setEditDishFunction = useMenuPageStore((s) => s.setEditDishFunction);
 
   const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
+  const isServiceOutlet = outLetType === 'OTHER';
   const { dishes } = useDishesStore((s) => ({ dishes: s.dishes }));
   const { isLoading, refetch } = useDishes();
 
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
 
-  const fuse = new Fuse(dishes, {
-    keys: ['name', 'description'],
-    threshold: 0.1,
-  });
+  const fuse = useMemo(
+    () =>
+      new Fuse(dishes, {
+        keys: ['name', 'description'],
+        threshold: 0.1,
+      }),
+    [dishes],
+  );
 
   const filteredDishes = useMemo(() => {
     let filtered = dishes?.slice() || [];
@@ -74,7 +79,7 @@ const MemoListOfDishes = () => {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between">
         <h3 className="flex items-center text-xl font-semibold">
-          {outLetType === 'OTHER' ? 'Services' : 'Dishes'} ({filteredDishes?.length})
+          {isServiceOutlet ? 'Services' : 'Dishes'} ({filteredDishes?.length})
           <Button onClick={() => refetch()} variant="outline" size="sm" className="ml-4 flex items-center gap-2">
             <RefreshCw />
           </Button>
@@ -112,7 +117,7 @@ const MemoListOfDishes = () => {
                 className="flex h-[4.5rem] w-full items-center justify-between gap-2 rounded-2xl bg-white p-3 shadow transition-all hover:shadow-md md:max-w-[21rem] lg:max-w-[20rem] xl:max-w-[20rem] 2xl:max-w-[21.5rem]"
               >
                 <section className="flex items-center gap-2">
-                  <MemoFoodType types={dish?.dishTypes} />
+                  {!isServiceOutlet && <MemoFoodType types={dish?.dishTypes} />}
                   <h3 title={dish.name} className="text-left text-lg font-semibold">
                     {dish.name}
                   </h3>
@@ -124,7 +129,7 @@ const MemoListOfDishes = () => {
               </button>
             ))
           ) : (
-            <p className="text-gray-500">No dishes found.</p>
+            <p className="text-gray-500">No {isServiceOutlet ? 'services' : 'dishes'} found.</p>
           )}
         </div>
       )}
@@ -135,12 +140,12 @@ const MemoListOfDishes = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Dish</TableHead>
-                <TableHead>Type</TableHead>
+                <TableHead>{isServiceOutlet ? 'Service' : 'Dish'}</TableHead>
+                {!isServiceOutlet && <TableHead>Type</TableHead>}
                 <TableHead>Price</TableHead>
                 <TableHead>Visibility</TableHead>
                 <TableHead>Availability</TableHead>
-                <TableHead>Prep / Delivery</TableHead>
+                {!isServiceOutlet && <TableHead>Prep / Delivery</TableHead>}
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -149,9 +154,11 @@ const MemoListOfDishes = () => {
                 filteredDishes.map((dish) => (
                   <TableRow key={dish._id} className="hover:bg-gray-50">
                     <TableCell className="font-medium">{dish.name}</TableCell>
-                    <TableCell>
-                      <MemoFoodType types={dish.dishTypes} />
-                    </TableCell>
+                    {!isServiceOutlet && (
+                      <TableCell>
+                        <MemoFoodType types={dish.dishTypes} />
+                      </TableCell>
+                    )}
                     <TableCell>₹{dish.price}</TableCell>
                     <TableCell>
                       {dish.visibility ? <span className="text-green-600">Visible</span> : <span className="text-red-500">Hidden</span>}
@@ -159,7 +166,7 @@ const MemoListOfDishes = () => {
                     <TableCell>
                       {dish.availability ? <span className="text-green-600">Available</span> : <span className="text-red-500">N/A</span>}
                     </TableCell>
-                    <TableCell>{dish.avgPrepTime ?? '--'} min</TableCell>
+                    {!isServiceOutlet && <TableCell>{dish.avgPrepTime ?? '--'} min</TableCell>}
                     <TableCell>
                       <Button variant="outline" size="sm" onClick={() => handleEditDish(dish)} className="text-[#8C63FF] hover:bg-[#8C63FF]/10">
                         Edit
@@ -169,8 +176,8 @@ const MemoListOfDishes = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-gray-500">
-                    No dishes found.
+                  <TableCell colSpan={isServiceOutlet ? 5 : 7} className="text-center text-gray-500">
+                    No {isServiceOutlet ? 'services' : 'dishes'} found.
                   </TableCell>
                 </TableRow>
               )}
